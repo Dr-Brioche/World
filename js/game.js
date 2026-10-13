@@ -391,13 +391,15 @@ const Game = {
   isPreparing(a) { return this.tick < a.startTick; },
 
   // Choisit une case du front, en préférant celles bien entourées (front plus régulier).
+  // Le relief compte : une plaine est plus attirante qu'une montagne.
   pickFrontier(a) {
     let best = -1, bestScore = -1;
-    for (let k = 0; k < 3 && a.list.length > 0; k++) {
+    for (let k = 0; k < 4 && a.list.length > 0; k++) {
       const idx = (Math.random() * a.list.length) | 0;
       const t = a.list[idx];
-      const score = this.countNeighborsOwnedBy(t, a.attacker);
-      if (!a.set.has(t) || this.owner[t] !== a.target || score === 0) {
+      const around = this.countNeighborsOwnedBy(t, a.attacker);
+      const score = around / TERRAIN_INFO[this.terrain[t]].cost;
+      if (!a.set.has(t) || this.owner[t] !== a.target || around === 0) {
         a.list[idx] = a.list[a.list.length - 1];
         a.list.pop();
         a.set.delete(t);
@@ -426,10 +428,20 @@ const Game = {
       a.list = this.buildFrontier(a.attacker, a.target);
       a.set = new Set(a.list);
     }
-    let budget = Math.max(1, Math.floor(Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED));
-    while (budget-- > 0 && !a.done) {
+    // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
+    // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5). On avance donc vite en plaine
+    // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
+    const speed = Math.max(1, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
+    a.move = Math.min((a.move || 0) + speed, speed * 2);
+    while (!a.done) {
       const t = this.pickFrontier(a);
       if (t < 0) return this.endAttack(a);
+      const steps = TERRAIN_INFO[this.terrain[t]].cost;
+      if (a.move < steps) {
+        a.set.add(t); // pas assez de points ce tour-ci : on réessaiera
+        return;
+      }
+      a.move -= steps;
       const cost = this.tileCost(a, t);
       if (a.troops < cost) return this.endAttack(a);
       a.troops -= cost;
