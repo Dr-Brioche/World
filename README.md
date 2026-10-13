@@ -41,7 +41,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    sans pouvoir en place : chaque soldat ne compte que pour **0,8**.
 
    **🗺️ Choisir l'itinéraire** : le premier clic sur un château (ou une église) ennemi **choisit la cible**.
-   Ensuite, clique sur ses terres pour placer des **points de passage** (numérotés 1, 2, 3…) :
+   Ensuite, clique sur ses terres pour placer jusqu'à **3 points de passage** (numérotés 1, 2, 3) :
    l'armée passera par chacun d'eux, dans l'ordre, en prenant toujours le chemin le plus facile (les plaines)
    entre deux points. En survolant la carte, tu vois en blanc le chemin si tu ajoutais un point à cet endroit.
    Reclique sur un point pour l'enlever. Puis **clique 2 fois sur la cible pour lancer l'assaut**.
@@ -188,6 +188,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.29.2** : 3 points de passage au maximum par assaut
 - **v0.29.1** : on ne peut viser que les châteaux et églises d'un royaume tant qu'il en a ; sans eux, l'assaut se fait de front sur tout son territoire, et toutes ses troupes défendent d'office (à 0,8, désorganisées)
 - **v0.29** : choisis l'itinéraire de tes assauts : après avoir cliqué sur la cible, place des points de passage, puis 2 clics sur la cible pour lancer (3 clics = tout droit)
 - **v0.28.1** : une église se construit assez loin de tes châteaux pour ne jamais finir dans leur muraille (cercles rouges pendant la construction), et inversement pour un nouveau château
