@@ -259,6 +259,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.34.1** : menu de départ : bannières plus grandes, règles repliées (on clique pour les dérouler)
 - **v0.34** : 🗺️ 3 types de cartes au choix (Normale avec quelques îlots, Continentale sans mer bordée de montagnes et de grands lacs, Base navale avec plusieurs grandes îles) · 🏔️ sommets enneigés infranchissables au cœur des montagnes · les royaumes coincés sur leur île bâtissent un port et partent en expédition
 - **v0.33.5** : image de l'avant-poste (camp fortifié avec sa palissade et sa tour de guet), visible en zoomant
 - **v0.33.4** : images des 3 niveaux du port (port de pêche, grand port, port royal), visibles en zoomant
