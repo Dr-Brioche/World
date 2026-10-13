@@ -308,8 +308,8 @@ const Render = {
 
   // Flèche rouge d'un assaut, visible par tous : pointillés en légère courbe, un cercle au départ
   // (un peu à l'intérieur du royaume attaquant) et une cible (cercle + point) sur la zone attaquée.
-  // alpha : transparence (plus discrète une fois l'assaut lancé). Renvoie la fonction qui donne
-  // le point de la courbe à l'instant t (0 = départ, 1 = cible), pour y placer la bannière.
+  // alpha : transparence. Renvoie la fonction qui donne le point de la courbe à l'instant t
+  // (0 = départ, 1 = cible).
   drawAttackArrow(x1, y1, x2, y2, alpha, side) {
     const ctx = this.ctx, now = performance.now();
     const red = `rgba(214,36,30,${alpha})`, dark = `rgba(40,8,4,${alpha * 0.7})`;
@@ -378,8 +378,67 @@ const Render = {
     return at;
   },
 
-  // Armées contre les royaumes : une flèche rouge montre l'assaut à tout le monde. Pendant la préparation,
-  // la bannière avance le long de la flèche vers la cible ; ensuite, elle se tient là où se bat l'assaut.
+  // Assaut en préparation : les terres du défenseur juste en face de la bannière scintillent doucement
+  // à la couleur de l'attaquant, et le bâtiment visé (s'il y en a un) est entouré d'un halo qui pulse.
+  drawThreat(ox, oy, a) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    const col = G.players[a.attacker].color.join(',');
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 300);
+    // Les cases menacées : celles du défenseur à moins de R cases du point de départ (calculées une fois),
+    // rangées en anneaux : plus elles sont loin, plus elles sont pâles
+    const R = 7;
+    if (!a.threatTiles) {
+      const st = a.startTile >= 0 ? a.startTile : -1, sx = st % W, sy = (st / W) | 0;
+      a.threatTiles = [[], [], []];
+      for (let dy = -R; dy <= R && st >= 0; dy++) {
+        for (let dx = -R; dx <= R; dx++) {
+          const x = sx + dx, y = sy + dy, d = Math.hypot(dx, dy);
+          if (d > R || x < 0 || y < 0 || x >= W || y >= G.H) continue;
+          const t = y * W + x;
+          if (G.owner[t] === a.target) a.threatTiles[Math.min(2, Math.floor(d / R * 3))].push(t);
+        }
+      }
+    }
+    a.threatTiles.forEach((ring, k) => {
+      ctx.fillStyle = `rgba(${col},${(0.35 + 0.35 * pulse) * (1 - k * 0.3)})`;
+      ctx.beginPath();
+      for (const t of ring) if (G.owner[t] === a.target) ctx.rect(ox + (t % W) * s, oy + ((t / W) | 0) * s, s, s);
+      ctx.fill();
+    });
+    // Liseré pointillé autour de la zone menacée (recalculé seulement si la carte a changé)
+    if (a.threatVersion !== G.version) {
+      a.threatVersion = G.version;
+      const set = new Set(a.threatTiles.flat().filter(t => G.owner[t] === a.target));
+      a.threatEdges = this.zoneEdges(set, (i, n) => set.has(n));
+    }
+    ctx.beginPath();
+    for (const [ex1, ey1, ex2, ey2] of a.threatEdges) {
+      ctx.moveTo(ox + ex1 * s, oy + ey1 * s);
+      ctx.lineTo(ox + ex2 * s, oy + ey2 * s);
+    }
+    ctx.lineWidth = Math.max(1.5, s * 0.2);
+    ctx.strokeStyle = `rgba(${col},${0.6 + 0.4 * pulse})`;
+    ctx.stroke();
+    // Bâtiment visé : un halo qui pulse autour de lui
+    const c = a.targetCastle;
+    if (c >= 0 && G.building[c]) {
+      const half = G.sizeOf(G.building[c]) / 2;
+      const cx = ox + (c % W + half) * s, cy = oy + (((c / W) | 0) + half) * s;
+      const r = (half + 1.2 + pulse * 0.6) * s;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.lineWidth = Math.max(3, s * 0.5);
+      ctx.strokeStyle = `rgba(${col},${0.6 + 0.4 * pulse})`;
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(20,12,4,${0.4 + 0.3 * pulse})`;
+      ctx.stroke();
+    }
+  },
+
+  // Armées contre les royaumes : pendant la préparation, la bannière est plantée sur la frontière
+  // (voir drawThreat) ; une fois l'assaut lancé, une flèche rouge le montre et la bannière se tient
+  // là où se bat l'assaut.
   drawAttackArrows(ox, oy) {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     const now = performance.now();
@@ -413,12 +472,13 @@ const Render = {
         this.drawArmyBanner(a, bx, by, `⚔ ${fmt(a.troops)}${extra}`);
         continue;
       }
+      // Préparation : pas de flèche. Le front menacé scintille à la couleur de l'attaquant,
+      // et sa bannière est plantée sur la frontière, là d'où partira l'assaut, avec le compte à rebours.
+      this.drawThreat(ox, oy, a);
       const remaining = (a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND;
-      const progress = 1 - (a.startTick - G.tick) / a.prepTicks;
-      const at = this.drawAttackArrow(x1, y1, x2, y2, 1, side);
-      // Bannière qui avance le long de la flèche, avec le compte à rebours
-      const b = at(progress);
-      this.drawArmyBanner(a, b.x, b.y, `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
+      const st = a.startTile >= 0 ? a.startTile : -1;
+      const bx = st >= 0 ? ox + (st % G.W + 0.5) * s : x1, by = st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
+      this.drawArmyBanner(a, bx, by, `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
     }
   },
 
