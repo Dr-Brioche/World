@@ -191,9 +191,9 @@ const UI = {
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
     if (G.building[i] === B_CASTLE) {
-      const info = G.castleInfo(i);
-      txt += ` · 🏰 ${info.name} (niv. ${G.level[i]}, +${info.bonus} défense)`;
-      if (o === G.human.id && G.upgradeCost(i) !== null) txt += ` · clique pour l'améliorer`;
+      const c = G.anchor[i], info = G.castleInfo(c);
+      txt += ` · 🏰 ${info.name} (niv. ${G.level[c]}, +${info.bonus} défense)`;
+      if (o === G.human.id && G.upgradeCost(c) !== null) txt += ` · clique pour l'améliorer`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
     }
@@ -283,11 +283,11 @@ const UI = {
     // Clic sur un de ses châteaux : proposer l'amélioration
     if (G.building[i] === B_CASTLE && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === B_CASTLE)) {
       this.selectBuild(0);
-      this.showUpgrade(i);
+      this.showUpgrade(G.anchor[i]);
       return;
     }
     if (this.selectedBuild) {
-      const err = G.tryBuild(h, i, this.selectedBuild);
+      const err = G.tryBuild(h, Render.anchorAt(sx, sy), this.selectedBuild);
       if (err) this.log(err, 'warn');
       else this.selectBuild(0);
       return;
@@ -333,6 +333,7 @@ function setupInput(canvas) {
 
   canvas.addEventListener('pointermove', e => {
     Render.hover = Render.tileAt(e.clientX, e.clientY);
+    Render.mouse = { x: e.clientX, y: e.clientY };
     if (!pointers.has(e.pointerId)) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 1 && drag) {

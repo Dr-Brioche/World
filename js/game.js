@@ -12,7 +12,9 @@ const Game = {
     this.terrain = map.terrain;
     this.owner = new Int16Array(this.N).fill(-1);
     this.building = new Uint8Array(this.N);
-    this.level = new Uint8Array(this.N); // niveau des châteaux (1 à 3)
+    this.level = new Uint8Array(this.N); // niveau des châteaux (1 à 3), sur la case d'ancrage
+    // Un bâtiment occupe 2x2 cases. anchor[i] = case en haut à gauche du bâtiment (-1 si aucun)
+    this.anchor = new Int32Array(this.N).fill(-1);
     this.players = [];
     this.attacks = [];
     this.nextAttackId = 1;
@@ -76,7 +78,8 @@ const Game = {
     const old = this.owner[i];
     if (old === pid) return;
     const x = i % this.W, y = (i / this.W) | 0;
-    const b = this.building[i];
+    // Un bâtiment n'est compté qu'une fois : sur sa case d'ancrage
+    const b = this.anchor[i] === i ? this.building[i] : 0;
     if (old >= 0) {
       const o = this.players[old];
       o.tiles--; o.sumX -= x; o.sumY -= y;
@@ -91,12 +94,28 @@ const Game = {
       if (p.tiles > p.maxTiles) p.maxTiles = p.tiles;
     }
     Render.markDirty(i);
+    // Prendre une case d'un bâtiment, c'est prendre tout le bâtiment
+    if (this.building[i]) {
+      for (const j of this.footprint(this.anchor[i])) if (this.owner[j] !== pid) this.setOwner(j, pid);
+    }
     if (old >= 0 && this.players[old].tiles === 0) this.eliminate(old, pid);
+  },
+
+  // Les 4 cases d'un bâtiment dont "a" est la case en haut à gauche
+  footprint(a) { return [a, a + 1, a + this.W, a + this.W + 1]; },
+
+  // Peut-on poser un bâtiment 2x2 avec "a" en haut à gauche ?
+  canPlace(pid, a) {
+    if (a < 0 || a % this.W === this.W - 1 || a >= this.N - this.W) return false;
+    return this.footprint(a).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]);
   },
 
   placeBuilding(i, type) {
     this.version++;
-    this.building[i] = type;
+    for (const j of this.footprint(i)) {
+      this.building[j] = type;
+      this.anchor[j] = i;
+    }
     const o = this.owner[i];
     if (o >= 0) this.players[o].bCount[type]++;
     this.buildingTiles.push(i);
@@ -130,13 +149,19 @@ const Game = {
   castleZone(c, pid, level) {
     const R = CASTLE_LEVELS[level || this.level[c] || 1].radius;
     const cx = c % this.W, cy = (c / this.W) | 0, zone = [];
-    for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R); y++) {
-      for (let x = Math.max(0, cx - R); x <= Math.min(this.W - 1, cx + R); x++) {
+    for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R + 1); y++) {
+      for (let x = Math.max(0, cx - R); x <= Math.min(this.W - 1, cx + R + 1); x++) {
         const i = y * this.W + x;
-        if ((x - cx) ** 2 + (y - cy) ** 2 <= R * R && this.owner[i] === pid) zone.push(i);
+        if (this.inCastleRange(c, x, y, R) && this.owner[i] === pid) zone.push(i);
       }
     }
     return zone;
+  },
+
+  // La case (x, y) est-elle à moins de R du centre du château (milieu de ses 2x2 cases) ?
+  inCastleRange(c, x, y, R) {
+    const dx = (c % this.W) + 0.5 - x, dy = ((c / this.W) | 0) + 0.5 - y;
+    return dx * dx + dy * dy <= R * R;
   },
 
   // Défense d'une case = celle du terrain, + le bonus du meilleur château qui la protège
@@ -151,8 +176,7 @@ const Game = {
     for (const c of this.castles) {
       if (this.owner[c] !== pid) continue;
       const info = this.castleInfo(c);
-      const dx = (c % this.W) - x, dy = ((c / this.W) | 0) - y;
-      if (dx * dx + dy * dy <= info.radius ** 2 && info.bonus > best) best = info.bonus;
+      if (info.bonus > best && this.inCastleRange(c, x, y, info.radius)) best = info.bonus;
     }
     return best;
   },
@@ -184,7 +208,19 @@ const Game = {
       }
     }
     p.capital = center;
-    this.placeBuilding(center, B_CASTLE); // la capitale est un château gratuit
+    // La capitale est un château gratuit : on cherche 2x2 cases libres, au plus près du centre
+    let best = -1, bestDist = Infinity;
+    for (let dy = -r - 1; dy <= r; dy++) {
+      for (let dx = -r - 1; dx <= r; dx++) {
+        const x = cx + dx, y = cy + dy, d = (dx + 0.5) ** 2 + (dy + 0.5) ** 2;
+        if (x < 0 || y < 0 || x >= this.W - 1 || y >= this.H - 1 || d >= bestDist) continue;
+        if (this.canPlace(p.id, y * this.W + x)) { best = y * this.W + x; bestDist = d; }
+      }
+    }
+    if (best >= 0) {
+      this.placeBuilding(best, B_CASTLE);
+      p.capital = best;
+    }
   },
 
   startGame(humanTile) {
@@ -225,9 +261,9 @@ const Game = {
   },
 
   // Renvoie un message d'erreur, ou null si la construction a réussi.
+  // i = case en haut à gauche du bâtiment (2x2 cases)
   tryBuild(p, i, type) {
-    if (this.owner[i] !== p.id) return 'Tu dois construire sur ton territoire.';
-    if (this.building[i]) return 'Il y a déjà un bâtiment ici.';
+    if (!this.canPlace(p.id, i)) return 'Il faut 2x2 cases libres sur ton territoire (pas de mer).';
     const cost = this.buildCost(p, type);
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;

@@ -35,7 +35,9 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
    Contre un royaume, l'armée se **prépare pendant 5 secondes** avant d'attaquer :
    une ligne pointillée avec une bannière ⚔️ montre à tout le monde où elle va frapper.
    Les royaumes visés ont le temps de réagir… toi aussi !
-3. **Construis** (touches `1`, `2`, `3`, puis clic sur ton territoire) :
+3. **Construis** (touches `1`, `2`, `3`, puis clic sur ton territoire).
+   Chaque bâtiment occupe **2x2 cases** de ton territoire (pas de mer). Si un ennemi prend
+   une seule de ces cases, il capture tout le bâtiment !
    - 🌾 **Ferme** : rapporte de l'or
    - ⚔️ **Caserne** : plus de soldats, recrutés plus vite
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
@@ -65,6 +67,7 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 
 ## 🆕 Nouveautés
 
+- **v0.7** : les bâtiments occupent 2x2 cases sur la carte, avec un aperçu de l'emplacement avant de construire
 - **v0.6** : châteaux à 3 niveaux (fort en bois, château, citadelle) avec leurs images quand on zoome ; chaque niveau agrandit la muraille et augmente la défense (+1, +2, +4)
 - **v0.5.1** : ton royaume est vert par défaut (le bleu se confondait avec la mer)
 - **v0.5** : la zone des châteaux devient une muraille crénelée qui suit les frontières · le bonus du château s'ajoute à la défense du terrain, seulement dans sa muraille
