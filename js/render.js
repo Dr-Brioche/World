@@ -615,7 +615,6 @@ const Render = {
     if (G.phase !== 'playing' || h < 0 || UI.selectedBuild || !G.human.alive) return;
     const o = G.owner[h];
     if ((G.building[h] !== B_CASTLE && G.building[h] !== B_CHURCH) || o < 0 || o === G.human.id || G.areAllied(o, G.human.id)) return;
-    if (G.building[h] === B_CHURCH && !G.hasHomeCastle(o)) return; // sans château : attaque de front
     const c = G.anchor[h], key = c + ':' + G.version;
     if (this.previewKey !== key) {
       this.previewKey = key;

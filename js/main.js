@@ -308,7 +308,7 @@ const UI = {
     }
     if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
     // Conseils d'attaque contre un royaume ennemi
-    if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && (G.hasHomeCastle(o) || G.building[i] === B_CASTLE)) {
+    if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && G.isProtected(o)) {
       const b = G.building[i];
       if (b === B_CASTLE || b === B_CHURCH) {
         txt += Render.castlePreview && Render.castlePreview.path
@@ -317,6 +317,8 @@ const UI = {
       } else {
         txt += ' · 🏰 protégé : vise un de ses châteaux ou une de ses églises';
       }
+    } else if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id)) {
+      txt += ' · ⚔️ sans château ni église : clique pour l\'attaquer de front (ses troupes défendent, désorganisées)';
     }
     return txt;
   },
@@ -542,7 +544,7 @@ const UI = {
     const target = G.owner[i];
     // Château (ou église) ennemi sans assaut en cours : on prépare l'itinéraire avant de lancer
     const b = G.building[i], c = G.anchor[i];
-    const aimed = target >= 0 && (b === B_CASTLE || (b === B_CHURCH && G.hasHomeCastle(target)));
+    const aimed = target >= 0 && (b === B_CASTLE || b === B_CHURCH) && G.isProtected(target);
     const running = aimed && G.attacks.some(a => !a.done && a.attacker === h.id && a.targetCastle === c);
     const attack = () => {
       if (aimed && !running) return this.startPlan(target, c);

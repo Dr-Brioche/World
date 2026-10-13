@@ -593,9 +593,10 @@ const Game = {
     return k === r.main[o] || r.size[k] >= this.players[o].tiles * CONFIG.ENCLAVE_RATIO;
   },
 
-  // Le royaume a-t-il encore un château relié à son cœur ? (sinon on peut l'attaquer de front)
-  hasHomeCastle(pid) {
-    return this.castlesOf(pid).some(c => !this.isIsolatedCastle(c));
+  // Le royaume a-t-il encore un château ou une église ? Alors on ne peut l'attaquer qu'en visant
+  // l'un d'eux. Sinon, on peut attaquer tout son territoire de front.
+  isProtected(pid) {
+    return this.castlesOf(pid).length > 0 || this.churchesOf(pid).length > 0;
   },
 
   // Encerclement : un assaut de pid a peut-être coupé le royaume target en morceaux.
@@ -659,18 +660,15 @@ const Game = {
     if (frontier.length === 0) {
       return target < 0 ? 'Aucune terre libre à ta frontière.' : `Tu n'as pas de frontière avec ${this.players[target].name}.`;
     }
-    // Un royaume qui a encore des châteaux ne s'attaque qu'en visant un de ses châteaux, ou une de ses
-    // églises (sans défense). Sans château, on peut attaquer tout son territoire de front.
-    // (un château isolé, coupé de son royaume, ne protège plus le reste : mais on peut toujours le viser)
+    // Un royaume qui a encore un château ou une église ne s'attaque qu'en visant l'un d'eux.
+    // Sans château ni église, on peut attaquer tout son territoire de front (comme une terre libre).
     // castle = château ou église visé par l'assaut
     let castle = -1, path = null;
-    if (target >= 0 && this.castlesOf(target).length) {
+    if (target >= 0 && this.isProtected(target)) {
       const name = this.players[target].name, b = aimTile !== undefined ? this.building[aimTile] : 0;
-      if ((b === B_CASTLE || (b === B_CHURCH && this.hasHomeCastle(target))) && this.owner[aimTile] === target) {
-        castle = this.anchor[aimTile];
-      }
-      if (castle < 0 && this.hasHomeCastle(target)) {
-        return `${name} est protégé par ses châteaux : clique sur l'un d'eux (ou sur une de ses églises) pour lancer un assaut.`;
+      if ((b === B_CASTLE || b === B_CHURCH) && this.owner[aimTile] === target) castle = this.anchor[aimTile];
+      if (castle < 0) {
+        return `${name} est protégé : clique sur un de ses châteaux ou une de ses églises pour lancer un assaut.`;
       }
     }
     let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined);
@@ -707,7 +705,8 @@ const Game = {
         this.aimArrow(a, frontier, aimTile);
         if (this.players[target].isHuman) {
           UI.log(`⚠️ ${p.name} prépare un assaut contre toi (${fmt(troops)} soldats) ! ` +
-            'Clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.', 'warn', p);
+            (castle < 0 ? 'Sans château ni église, toutes tes troupes défendront d\'office, désorganisées.'
+              : 'Clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.'), 'warn', p);
         }
       }
       this.attacks.push(a);
@@ -805,7 +804,7 @@ const Game = {
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
   planAssault(pid, target) {
     const castles = this.castlesOf(target).concat(this.churchesOf(target));
-    if (!this.hasHomeCastle(target)) return { castle: null, D: 1.3 };
+    if (!this.isProtected(target)) return { castle: null, D: 1.3 };
     let best = { castle: -1, D: 1 }, bestLen = Infinity;
     for (const c of castles) {
       const path = this.castlePath(pid, c);
@@ -821,7 +820,7 @@ const Game = {
   // -1 = aucun château atteignable, sinon le château le plus proche.
   pickCastleTarget(pid, target) {
     const castles = this.castlesOf(target).concat(this.churchesOf(target));
-    if (!this.hasHomeCastle(target)) return null;
+    if (!this.isProtected(target)) return null;
     let best = -1, bestLen = Infinity;
     for (const c of castles) {
       const path = this.castlePath(pid, c);
@@ -1052,7 +1051,34 @@ const Game = {
   // Combien d'attaquants tombent pour chaque défenseur tué : la défense de l'endroit,
   // corrigée par la force des soldats des deux camps (casernes de niveau 2 et 3)
   combatRatio(a) {
-    return this.frontDefense(a) * this.troopPower(a.target) / this.troopPower(a.attacker);
+    let r = this.frontDefense(a) * this.troopPower(a.target) / this.troopPower(a.attacker);
+    // Royaume sans château ni église : ses troupes, désorganisées, ne comptent que pour 0.8
+    if (this.leaderless(a)) r *= CONFIG.LEADERLESS_DEFENSE;
+    return r;
+  },
+
+  // Assaut de front contre un royaume qui n'a plus ni château ni église
+  leaderless(a) {
+    return a.target >= 0 && a.targetCastle < 0 && !this.isProtected(a.target);
+  },
+
+  // Un royaume sans château ni église n'a plus de pouvoir en place : quand un assaut de front commence,
+  // toutes les troupes encore présentes dans le royaume défendent d'office (partagées entre les assauts
+  // qui commencent en même temps). Les soldats recrutés ensuite restent au royaume.
+  levy() {
+    const byTarget = new Map();
+    for (const a of this.attacks) {
+      if (a.done || a.levied || this.isPreparing(a) || !this.leaderless(a)) continue;
+      a.levied = true;
+      if (!byTarget.has(a.target)) byTarget.set(a.target, []);
+      byTarget.get(a.target).push(a);
+    }
+    for (const [t, list] of byTarget) {
+      const p = this.players[t];
+      if (!p.alive || p.troops <= 0) continue;
+      for (const a of list) a.defenders += p.troops / list.length;
+      p.troops = 0;
+    }
   },
 
   // Combat entre l'assaut et les défenseurs envoyés : ce n'est pas instantané,
@@ -1370,6 +1396,7 @@ const Game = {
       this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);
     }
 
+    this.levy();
     for (const a of this.attacks.slice()) if (!a.done) this.stepAttack(a);
     // Un assaut a pu couper un royaume en morceaux : les petits morceaux encerclés sont pris
     for (const a of this.attacks) {

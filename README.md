@@ -34,7 +34,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    frontière en **contournant ses autres fortifications**, capture tout sur son passage, puis prend le château.
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
-   de la frontière. Quand un royaume n'a **plus aucun château** (relié à son royaume), tu peux attaquer tout son territoire de front.
+   de la frontière. **Tant qu'un royaume a un château ou une église, tu ne peux viser que ceux-ci.**
+   Quand il n'a **plus ni château ni église**, clique n'importe où sur ses terres : l'assaut se fait
+   **de front, sur tout son territoire** (comme sur une terre libre, sans points de passage).
+   Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
+   sans pouvoir en place : chaque soldat ne compte que pour **0,8**.
 
    **🗺️ Choisir l'itinéraire** : le premier clic sur un château (ou une église) ennemi **choisit la cible**.
    Ensuite, clique sur ses terres pour placer des **points de passage** (numérotés 1, 2, 3…) :
@@ -76,7 +80,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - Un château isolé **continue de produire** pour son royaume (avec les moulins et casernes de sa muraille) :
      il est juste plus difficile à défendre.
    - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend.
-     Il ne protège plus le reste du royaume, et aucune armée ne peut partir de lui.
+     Aucune armée ne peut partir de lui.
    - Pour le sauver, **clique sur ton château isolé** : tu lances un **assaut classique** (préparation de 10 s,
      renforts…) depuis ton royaume, qui traverse les terres ennemies (en évitant leurs murailles) pour le rejoindre.
      **S'il y arrive**, sa route s'élargit un peu : tu récupères des terres entre le château et ton royaume,
@@ -184,6 +188,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.29.1** : on ne peut viser que les châteaux et églises d'un royaume tant qu'il en a ; sans eux, l'assaut se fait de front sur tout son territoire, et toutes ses troupes défendent d'office (à 0,8, désorganisées)
 - **v0.29** : choisis l'itinéraire de tes assauts : après avoir cliqué sur la cible, place des points de passage, puis 2 clics sur la cible pour lancer (3 clics = tout droit)
 - **v0.28.1** : une église se construit assez loin de tes châteaux pour ne jamais finir dans leur muraille (cercles rouges pendant la construction), et inversement pour un nouveau château
 - **v0.28** : on peut attaquer une église ⛪ directement, comme un château (elle n'a ni défense ni garnison) · chaque église améliorée ajoute ses châteaux (elles s'additionnent) · une église ne se construit plus dans la muraille d'un château
