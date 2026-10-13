@@ -41,6 +41,10 @@ const CONFIG = {
   ENEMY_TILE_BASE_COST: 8,     // soldats perdus pour prendre une case ennemie
   DENSITY_FACTOR: 1.0,         // plus l'ennemi a de soldats par case, plus c'est dur
   DEFENDER_LOSS: 0.5,          // part des pertes infligées au défenseur
+  // Prise d'un château : l'assaut finit de conquérir sa zone de défense (un peu élargie),
+  // puis s'arrête, et l'armée doit récupérer avant de pouvoir réattaquer ce royaume.
+  CASTLE_CAPTURE_EXTRA_RADIUS: 2,  // cases conquises en plus autour de la zone du château
+  CASTLE_CAPTURE_COOLDOWN: 30,     // secondes avant de pouvoir réattaquer ce royaume
 
   // --- Alliances ---
   ALLIANCE_REFUSAL_COOLDOWN: 30, // secondes avant de redemander au même royaume

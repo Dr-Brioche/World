@@ -45,6 +45,7 @@ const Game = {
       bCount: [0, 0, 0, 0],
       traitorUntil: 0,
       refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
+      recoverUntil: {}, // royaume id → tick avant lequel on ne peut pas le réattaquer (château pris)
       aiTimer: Math.floor(Math.random() * 20),
       aggression: lo + Math.random() * (hi - lo),
     };
@@ -176,8 +177,8 @@ const Game = {
 
   // Cases protégées par un château : celles de son royaume, dans son rayon.
   // "level" permet de prévisualiser un autre niveau.
-  castleZone(c, pid, level) {
-    const R = CASTLE_LEVELS[level || this.level[c] || 1].radius;
+  castleZone(c, pid, level, extra = 0) {
+    const R = CASTLE_LEVELS[level || this.level[c] || 1].radius + extra;
     const cx = c % this.W, cy = (c / this.W) | 0, zone = [];
     const n = this.sizeOf(B_CASTLE);
     for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R + n); y++) {
@@ -350,6 +351,10 @@ const Game = {
     if (target >= 0 && this.areAllied(pid, target)) {
       return `${this.players[target].name} est ton allié ! Romps l'alliance d'abord.`;
     }
+    const recover = this.recoverTime(p, target);
+    if (recover > 0) {
+      return `Ton armée récupère après la prise d'un château : encore ${recover} s avant d'attaquer ${this.players[target].name}.`;
+    }
     if (troops < 1) return 'Pas assez de soldats !';
     const frontier = this.buildFrontier(pid, target);
     if (frontier.length === 0) {
@@ -396,6 +401,12 @@ const Game = {
 
   isPreparing(a) { return this.tick < a.startTick; },
 
+  // Secondes avant de pouvoir réattaquer ce royaume après lui avoir pris un château (0 = c'est bon)
+  recoverTime(p, target) {
+    if (target < 0) return 0;
+    return Math.max(0, Math.ceil(((p.recoverUntil[target] || 0) - this.tick) / CONFIG.TICKS_PER_SECOND));
+  },
+
   // Choisit une case du front, en préférant celles bien entourées (front plus régulier).
   // Le relief compte : une plaine est plus attirante qu'une montagne.
   pickFrontier(a) {
@@ -405,7 +416,9 @@ const Game = {
       const t = a.list[idx];
       const around = this.countNeighborsOwnedBy(t, a.attacker);
       const score = around / TERRAIN_INFO[this.terrain[t]].cost;
-      if (!a.set.has(t) || this.owner[t] !== a.target || around === 0) {
+      // Après la prise d'un château, l'assaut ne sort plus de la zone du château
+      const outside = a.limitZone && !a.limitZone.has(t);
+      if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside) {
         a.list[idx] = a.list[a.list.length - 1];
         a.list.pop();
         a.set.delete(t);
@@ -455,7 +468,11 @@ const Game = {
         const d = this.players[a.target];
         d.troops = Math.max(0, d.troops - cost * CONFIG.DEFENDER_LOSS);
       }
+      // Prise d'un château : on note sa zone de défense (un peu élargie), l'assaut s'y arrêtera
+      const castle = a.target >= 0 && this.building[t] === B_CASTLE ? this.anchor[t] : -1;
+      const zone = castle >= 0 ? this.castleZone(castle, a.target, 0, CONFIG.CASTLE_CAPTURE_EXTRA_RADIUS) : null;
       this.setOwner(t, a.attacker);
+      if (zone) this.onCastleTaken(a, zone);
       this.forNeighbors(t, n => {
         if (this.owner[n] === a.target && this.isLand(n) && !a.set.has(n)) {
           a.set.add(n);
@@ -472,11 +489,27 @@ const Game = {
     return a;
   },
 
+  onCastleTaken(a, zone) {
+    if (!a.limitZone) a.limitZone = new Set();
+    for (const i of zone) a.limitZone.add(i);
+    a.castleTaken = true;
+    const p = this.players[a.attacker], d = this.players[a.target];
+    if (p.isHuman) UI.log(`🏰 Tu as pris un château de ${d.name} ! Ton armée sécurise ses alentours.`, 'good');
+    else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn');
+  },
+
   endAttack(a) {
     if (a.done) return;
     a.done = true;
     const p = this.players[a.attacker];
     if (p.alive) p.troops += a.troops; // les survivants rentrent à la maison
+    // Après la prise d'un château, l'armée doit récupérer avant de réattaquer ce royaume
+    if (a.castleTaken && p.alive) {
+      p.recoverUntil[a.target] = this.tick + CONFIG.CASTLE_CAPTURE_COOLDOWN * CONFIG.TICKS_PER_SECOND;
+      if (p.isHuman) {
+        UI.log(`⏳ Assaut terminé : ton armée récupère ${CONFIG.CASTLE_CAPTURE_COOLDOWN} s avant de pouvoir réattaquer ${this.players[a.target].name}.`);
+      }
+    }
   },
 
   eliminate(id, by) {
