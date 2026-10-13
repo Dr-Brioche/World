@@ -329,7 +329,8 @@ const UI = {
         const a = G.anchor[i], o = G.outposts.get(a);
         txt += ` · 🛡️ ${fmt(G.garrison[a])} soldats en défense`;
         txt += G.outpostReady(a) ? ' · défense +100 % autour · base pour attaquer depuis la côte'
-          : ` · 🏗️ en construction (${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s, pas encore de défense)`;
+          : ` · 🏗️ en construction (${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s) : ` +
+            `défense ${pct(-CONFIG.OUTPOST_BUILDING_MALUS)} tant qu'il n'est pas bâti, on peut déjà l'attaquer`;
         if (o && G.owner[a] === G.human.id) txt += ' · clique dessus pour envoyer des renforts par la mer';
         txt += ' · un château bâti ou pris dans sa zone en fait une vraie terre du royaume';
       }
