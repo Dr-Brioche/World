@@ -368,17 +368,19 @@ const Render = {
   drawRoads(ox, oy) {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     const w = Math.max(2, s * 0.55);
-    ctx.lineCap = 'round';
+    ctx.lineCap = 'square';
+    ctx.lineJoin = 'miter';
     for (const [a, link] of G.roads()) {
       const c = link.castle, hc = G.sizeOf(B_CASTLE) / 2, hb = G.sizeOf(G.building[a]) / 2;
       const x1 = ox + (c % G.W + hc) * s, y1 = oy + (((c / G.W) | 0) + hc) * s;
       const x2 = ox + (a % G.W + hb) * s, y2 = oy + (((a / G.W) | 0) + hb) * s;
-      // Petite courbe pour un chemin plus naturel (toujours la même pour un bâtiment donné)
-      const side = a % 2 ? 1 : -1;
-      const mx = (x1 + x2) / 2 - (y2 - y1) * 0.15 * side, my = (y1 + y2) / 2 + (x2 - x1) * 0.15 * side;
+      // Tracé en lignes droites avec un coin à 90°, comme des rails :
+      // d'abord à l'horizontale puis à la verticale (ou l'inverse, selon le bâtiment)
+      const [cx, cy] = a % 2 ? [x2, y1] : [x1, y2];
       ctx.beginPath();
       ctx.moveTo(x1, y1);
-      ctx.quadraticCurveTo(mx, my, x2, y2);
+      ctx.lineTo(cx, cy);
+      ctx.lineTo(x2, y2);
       if (link.road === 'paved') {
         ctx.lineWidth = w + 2;
         ctx.strokeStyle = 'rgba(60,58,54,0.85)';
@@ -403,6 +405,7 @@ const Render = {
       }
     }
     ctx.lineCap = 'butt';
+    ctx.lineJoin = 'round';
   },
 
   draw() {

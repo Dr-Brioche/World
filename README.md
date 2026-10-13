@@ -104,6 +104,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.17.1** : les routes des châteaux sont tracées en lignes droites avec des coins à 90°
 - **v0.17** : les alliances deviennent des **pactes** (jusqu'à 3 royaumes, un seul pacte par royaume), entourés d'une frontière dorée visible par tous · il faut maintenant **85 %** des terres pour gagner, avec un bouton « Continuer » pour finir la conquête après la victoire
 - **v0.16.2** : la trêve après la prise d'un château vaut dans les deux sens : le royaume qui l'a perdu ne peut pas contre-attaquer tout de suite
 - **v0.16.1** : le temps de trêve après la prise d'un château s'affiche sous le nom du royaume ennemi sur la carte
