@@ -23,6 +23,21 @@ const UI = {
       builds.appendChild(btn);
     }
 
+    // Choix de la bannière dans le menu (elle donne la couleur du royaume)
+    this.banner = BANNERS.findIndex(b => b.name === 'Aigle vert');
+    $('bannerPick').innerHTML = BANNERS.map((b, k) =>
+      `<button type="button" data-banner="${k}" title="${escapeHtml(b.name)}"><img src="${b.img}" alt="${escapeHtml(b.name)}"></button>`
+    ).join('');
+    const pick = k => {
+      this.banner = k;
+      document.querySelectorAll('#bannerPick button').forEach(b => b.classList.toggle('active', +b.dataset.banner === k));
+      $('bannerName').textContent = BANNERS[k].name;
+    };
+    $('bannerPick').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-banner]');
+      if (btn) pick(+btn.dataset.banner);
+    });
+    pick(this.banner);
     $('startBtn').addEventListener('click', () => this.start());
     $('replayBtn').addEventListener('click', () => location.reload());
     $('continueBtn').addEventListener('click', () => {
@@ -58,12 +73,12 @@ const UI = {
   },
 
   start() {
-    const hex = $('color').value;
     Game.init({
       name: $('name').value.trim() || 'Mon Royaume',
-      color: [1, 3, 5].map(k => parseInt(hex.substr(k, 2), 16)),
+      banner: this.banner,
       difficulty: $('difficulty').value,
     });
+    $('kBanner').src = BANNERS[this.banner].img;
     Render.setupMap();
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
@@ -87,10 +102,17 @@ const UI = {
     $('pauseBtn').textContent = Game.paused ? '▶ Reprendre' : '⏸ Pause';
   },
 
-  log(msg, cls) {
+  // Petite image de la bannière d'un royaume, pour les messages et les listes
+  bannerImg(p, cls = 'bn') {
+    return `<img class="${cls}" src="${BANNERS[p.banner].img}" alt="" title="${escapeHtml(p.name)}">`;
+  },
+
+  // who = royaume (ou liste de royaumes) dont on affiche la bannière devant le message
+  log(msg, cls, who) {
     const el = document.createElement('div');
     el.className = 'msg ' + (cls || '');
-    el.textContent = msg;
+    const people = who ? [].concat(who) : [];
+    el.innerHTML = people.map(p => this.bannerImg(p)).join('') + escapeHtml(msg);
     $('log').prepend(el);
     const old = [...$('log').querySelectorAll('.msg:not(.request)')];
     old.slice(6).forEach(m => m.remove());
@@ -183,7 +205,7 @@ const UI = {
     const text = from.pact >= 0 ? `t'invite dans le <b>${escapeHtml(Game.pactName(from))}</b>.`
       : h.pact >= 0 ? `veut rejoindre ton <b>${escapeHtml(Game.pactName(h))}</b>.`
       : 'te propose de former un pacte.';
-    el.innerHTML = `🤝 <b>${escapeHtml(from.name)}</b> ${text}` +
+    el.innerHTML = `${this.bannerImg(from)}🤝 <b>${escapeHtml(from.name)}</b> ${text}` +
       `<div class="choices"><button data-yes>Accepter</button><button data-no>Refuser</button></div>`;
     const answer = yes => {
       if (!this.pending.has(from.id)) return;
@@ -277,7 +299,7 @@ const UI = {
       const btn = p.isHuman || !h.alive ? '' : allied
         ? `<button data-ally="${p.id}" title="Rompre l'alliance (trahison !)">💔</button>`
         : `<button data-ally="${p.id}" title="Proposer une alliance">🤝</button>`;
-      return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}"><span class="sw" style="background:rgb(${p.color})"></span>` +
+      return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}">${this.bannerImg(p, 'lbb')}` +
         `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${escapeHtml(p.name)}</span>` +
         `<span class="allies" title="${this.alliesTitle(p)}">` +
         G.allies(p.id).map(o => `<i style="background:rgb(${o.color})"></i>`).join('') + `</span>` +
@@ -330,10 +352,11 @@ const UI = {
         if (a.attacker === h.id) {
           const target = a.target < 0 ? 'Terres libres'
             : (a.targetCastle >= 0 ? '🏰 ' : '') + escapeHtml(G.players[a.target].name);
-          return `<div class="attack panel"><span>⚔️ → ${target}</span><b data-troops="${a.id}"></b>` +
+          const flag = a.target >= 0 ? this.bannerImg(G.players[a.target]) : '';
+          return `<div class="attack panel"><span>⚔️ → ${flag}${target}</span><b data-troops="${a.id}"></b>` +
             `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
         }
-        return `<div class="attack panel incoming"><span>🛡️ ${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
+        return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
           `<b data-troops="${a.id}"></b>` +
           `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cet assaut">🛡️ Défendre</button></div>`;
       }).join('') + resting.map(p =>

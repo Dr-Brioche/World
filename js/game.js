@@ -31,18 +31,22 @@ const Game = {
     for (let i = 0; i < this.N; i++) if (this.isLand(i)) this.landCount++;
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
-    this.human = this.addPlayer(opts.name, opts.color, true);
-    const pool = KINGDOMS.slice().sort(() => Math.random() - 0.5);
-    for (let k = 0; k < this.difficulty.bots && k < pool.length; k++) {
-      this.addPlayer(pool[k].name, pool[k].color, false);
+    this.human = this.addPlayer(opts.name, opts.banner, true);
+    const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
+    // Les bots reçoivent au hasard les bannières que le joueur n'a pas prises
+    const banners = BANNERS.map((b, k) => k).filter(k => k !== opts.banner).sort(() => Math.random() - 0.5);
+    for (let k = 0; k < this.difficulty.bots && k < names.length && k < banners.length; k++) {
+      this.addPlayer(names[k], banners[k], false);
     }
     this.phase = 'spawn';
   },
 
-  addPlayer(name, color, isHuman) {
+  addPlayer(name, banner, isHuman) {
     const [lo, hi] = this.difficulty.aggression;
     const p = {
-      id: this.players.length, name, color, isHuman,
+      id: this.players.length, name, isHuman,
+      banner,                        // numéro de la bannière (BANNERS)
+      color: BANNERS[banner].color,  // la couleur du royaume vient de sa bannière
       alive: true, troops: CONFIG.START_TROOPS, gold: CONFIG.START_GOLD,
       tiles: 0, sumX: 0, sumY: 0, maxTiles: 0, kills: 0,
       bCount: [0, 0, 0, 0],
@@ -503,7 +507,7 @@ const Game = {
         this.aimArrow(a, frontier, aimTile);
         if (this.players[target].isHuman) {
           UI.log(`⚠️ ${p.name} prépare un assaut contre toi (${fmt(troops)} soldats) ! ` +
-            'Clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.', 'warn');
+            'Clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.', 'warn', p);
         }
       }
       this.attacks.push(a);
@@ -694,8 +698,8 @@ const Game = {
     a.troops = Math.max(0, a.troops - defLoss * D);
     if (a.troops < 1) {
       const p = this.players[a.attacker], d = this.players[a.target];
-      if (p.isHuman) UI.log(`💥 Ton assaut contre ${d.name} a été repoussé !`, 'warn');
-      else if (d.isHuman) UI.log(`🛡️ Tu as repoussé l'assaut de ${p.name} !`, 'good');
+      if (p.isHuman) UI.log(`💥 Ton assaut contre ${d.name} a été repoussé !`, 'warn', d);
+      else if (d.isHuman) UI.log(`🛡️ Tu as repoussé l'assaut de ${p.name} !`, 'good', p);
       this.endAttack(a);
     } else if (a.defenders + a.garrison < 1) {
       a.defenders = 0;
@@ -787,8 +791,8 @@ const Game = {
     for (const i of zone) a.limitZone.add(i);
     a.castleTaken = true;
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (p.isHuman) UI.log(`🏰 Tu as pris un château de ${d.name} ! Ton armée sécurise ses alentours.`, 'good');
-    else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn');
+    if (p.isHuman) UI.log(`🏰 Tu as pris un château de ${d.name} ! Ton armée sécurise ses alentours.`, 'good', d);
+    else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn', p);
   },
 
   endAttack(a) {
@@ -816,10 +820,10 @@ const Game = {
       const secs = CONFIG.CASTLE_CAPTURE_COOLDOWN;
       if (p.isHuman) {
         UI.log(`⏳ Assaut terminé : trêve de ${secs} s avec ${d.name}. Ton armée se repose ` +
-          `(recrutement x${CONFIG.RECOVER_GROWTH_FACTOR}), et ${d.name} ne peut pas contre-attaquer non plus.`);
+          `(recrutement x${CONFIG.RECOVER_GROWTH_FACTOR}), et ${d.name} ne peut pas contre-attaquer non plus.`, '', d);
       } else if (d.isHuman && d.alive) {
         UI.log(`🛡️ ${p.name} a fini son assaut : trêve de ${secs} s. Ton royaume se réorganise ` +
-          `(recrutement x${CONFIG.RALLY_GROWTH_FACTOR}), mais tu ne peux pas contre-attaquer tout de suite.`, 'good');
+          `(recrutement x${CONFIG.RALLY_GROWTH_FACTOR}), mais tu ne peux pas contre-attaquer tout de suite.`, 'good', p);
       }
     }
   },
@@ -833,7 +837,7 @@ const Game = {
     for (const a of this.attacks) if (a.attacker === id) a.done = true;
     const killer = by >= 0 ? this.players[by] : null;
     if (killer) killer.kills++;
-    UI.log(`☠️ ${p.name} a été anéanti${killer ? ' par ' + killer.name : ''} !`, p.isHuman ? 'warn' : '');
+    UI.log(`☠️ ${p.name} a été anéanti${killer ? ' par ' + killer.name : ''} !`, p.isHuman ? 'warn' : '', killer ? [p, killer] : p);
   },
 
   // --- Alliances : les pactes ---
@@ -919,11 +923,11 @@ const Game = {
       const id = this.nextPactId++;
       this.pacts.set(id, { name: `Pacte ${this.deName(pa.name)}` });
       pa.pact = pb.pact = id;
-      UI.log(`🤝 ${pa.name} et ${pb.name} forment le ${this.pacts.get(id).name} !`, 'good');
+      UI.log(`🤝 ${pa.name} et ${pb.name} forment le ${this.pacts.get(id).name} !`, 'good', [pa, pb]);
     } else {
       const host = pa.pact >= 0 ? pa : pb, joiner = host === pa ? pb : pa;
       joiner.pact = host.pact;
-      UI.log(`🤝 ${joiner.name} rejoint le ${this.pactName(host)} !`, 'good');
+      UI.log(`🤝 ${joiner.name} rejoint le ${this.pactName(host)} !`, 'good', [joiner, host]);
     }
     this.version++;
     // Les combats entre membres du pacte s'arrêtent, les soldats rentrent
@@ -941,7 +945,7 @@ const Game = {
     const traitor = this.players[traitorId], name = this.pactName(traitor);
     this.leavePact(traitor);
     traitor.traitorUntil = this.tick + CONFIG.TRAITOR_DURATION * CONFIG.TICKS_PER_SECOND;
-    UI.log(`🗡️ ${traitor.name} a trahi le ${name} ! Sa défense est affaiblie.`, 'warn');
+    UI.log(`🗡️ ${traitor.name} a trahi le ${name} ! Sa défense est affaiblie.`, 'warn', traitor);
   },
 
   // --- Boucle principale (appelée TICKS_PER_SECOND fois par seconde) ---

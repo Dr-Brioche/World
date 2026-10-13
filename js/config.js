@@ -125,20 +125,26 @@ const BUILDINGS = [
   { name: 'Château', icon: '🏰', tiles: 4, baseCost: 300, desc: 'Muraille : +1 à +4 défense (3 niveaux)' },
 ];
 
-// Les royaumes contrôlés par l'ordinateur.
-const KINGDOMS = [
-  { name: 'Bourgogne',   color: [170, 40, 60] },
-  { name: 'Aquitaine',   color: [230, 170, 40] },
-  { name: 'Normandie',   color: [110, 200, 240] },
-  { name: 'Bretagne',    color: [240, 240, 240] },
-  { name: 'Provence',    color: [200, 90, 200] },
-  { name: 'Lotharingie', color: [40, 170, 170] },
-  { name: 'Saxe',        color: [90, 50, 140] },
-  { name: 'Castille',    color: [230, 110, 40] },
-  { name: 'Écosse',      color: [255, 120, 150] },
-  { name: 'Flandre',     color: [240, 220, 60] },
-  { name: 'Aragon',      color: [120, 10, 10] },
+// Les bannières des royaumes (une par couleur) : la bannière choisie donne sa couleur au royaume.
+const BANNERS = [
+  { name: "Lion", img: 'img/bannieres/b01.webp', color: [196, 19, 19] }, // rouge
+  { name: "Aigle bleu", img: 'img/bannieres/b02.webp', color: [37, 82, 190] }, // bleu
+  { name: "Épées d'azur", img: 'img/bannieres/b07.webp', color: [88, 146, 194] }, // bleu clair
+  { name: "Aigle vert", img: 'img/bannieres/b03.webp', color: [51, 98, 57] }, // vert
+  { name: "Licorne", img: 'img/bannieres/b09.webp', color: [150, 209, 122] }, // vert clair
+  { name: "Dragon", img: 'img/bannieres/b04.webp', color: [229, 175, 34] }, // jaune
+  { name: "Couronne", img: 'img/bannieres/b06.webp', color: [102, 66, 45] }, // brun
+  { name: "Étoile de feu", img: 'img/bannieres/b24.webp', color: [222, 96, 6] }, // orange
+  { name: "Château", img: 'img/bannieres/b05.webp', color: [82, 31, 105] }, // violet
+  { name: "Lys", img: 'img/bannieres/b10.webp', color: [229, 47, 119] }, // rose
+  { name: "Arbre de vie", img: 'img/bannieres/b16.webp', color: [11, 137, 122] }, // turquoise
+  { name: "Hache", img: 'img/bannieres/b21.webp', color: [237, 234, 228] }, // blanc
+  { name: "Bouclier", img: 'img/bannieres/b22.webp', color: [35, 34, 34] }, // noir
 ];
+
+// Les noms des royaumes contrôlés par l'ordinateur (ils reçoivent une bannière au hasard).
+const KINGDOMS = ['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence', 'Lotharingie',
+  'Saxe', 'Castille', 'Écosse', 'Flandre', 'Aragon'];
 
 const DIFFICULTIES = {
   facile:    { bots: 5,  aggression: [0.6, 0.85], hateHuman: 0 },

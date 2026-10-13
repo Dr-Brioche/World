@@ -220,52 +220,30 @@ const Render = {
   // Bannière d'une armée : drapeau à la couleur de l'attaquant avec deux épées croisées,
   // ses soldats au-dessus et, s'il y en a, les défenseurs (bouclier à la couleur du défenseur).
   drawArmyBanner(a, bx, by, label) {
-    const ctx = this.ctx, G = Game, col = G.players[a.attacker].color.join(',');
-    ctx.fillStyle = '#3b2610';
-    ctx.fillRect(bx - 1.5, by - 34, 3, 34); // mât
-    ctx.beginPath();                        // drapeau à queue d'aronde
-    ctx.moveTo(bx + 1.5, by - 34);
-    ctx.lineTo(bx + 34, by - 34);
-    ctx.lineTo(bx + 27, by - 24);
-    ctx.lineTo(bx + 34, by - 14);
-    ctx.lineTo(bx + 1.5, by - 14);
-    ctx.closePath();
-    ctx.fillStyle = `rgb(${col})`;
-    ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = 'rgba(20,12,4,0.9)';
-    ctx.stroke();
+    const ctx = this.ctx, G = Game;
+    // La bannière du royaume attaquant, avec deux épées croisées
+    this.drawBannerImage(G.players[a.attacker], bx + 14, by, 46);
     ctx.font = '13px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('⚔️', bx + 15, by - 24);
+    ctx.fillText('⚔️', bx + 2, by - 40);
     ctx.font = '700 12px Georgia, serif';
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(20,12,4,0.85)';
     ctx.fillStyle = '#fff';
-    ctx.strokeText(label, bx + 16, by - 42);
-    ctx.fillText(label, bx + 16, by - 42);
+    ctx.strokeText(label, bx + 16, by - 52);
+    ctx.fillText(label, bx + 16, by - 52);
     // Défenseurs engagés contre cet assaut
     const defenders = a.defenders + (a.garrison || 0);
     if (a.target >= 0 && defenders >= 1) {
-      const dcol = G.players[a.target].color.join(','), sx = bx + 50, sy = by - 24;
-      ctx.beginPath(); // petit bouclier
-      ctx.moveTo(sx - 9, sy - 10);
-      ctx.lineTo(sx + 9, sy - 10);
-      ctx.lineTo(sx + 9, sy + 1);
-      ctx.quadraticCurveTo(sx + 9, sy + 9, sx, sy + 12);
-      ctx.quadraticCurveTo(sx - 9, sy + 9, sx - 9, sy + 1);
-      ctx.closePath();
-      ctx.fillStyle = `rgb(${dcol})`;
-      ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = 'rgba(20,12,4,0.9)';
-      ctx.stroke();
+      const sx = bx + 50, sy = by;
+      this.drawBannerImage(G.players[a.target], sx, sy, 34); // bannière du défenseur
+      ctx.font = '700 12px Georgia, serif';
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = '#ffe2a8';
-      ctx.strokeText('🛡 ' + fmt(defenders), sx, sy - 18);
-      ctx.fillText('🛡 ' + fmt(defenders), sx, sy - 18);
+      ctx.strokeText('🛡 ' + fmt(defenders), sx, sy - 40);
+      ctx.fillText('🛡 ' + fmt(defenders), sx, sy - 40);
     }
     // Zone cliquable (le défenseur clique dessus pour envoyer ses soldats)
     this.bannerHits.push({ id: a.id, x: bx + 20, y: by - 24 });
@@ -337,6 +315,24 @@ const Render = {
       if (Math.abs(sx - b.x) < 30 && Math.abs(sy - b.y) < 24) return b.id;
     }
     return -1;
+  },
+
+  // Images des bannières des royaumes (chargées une seule fois)
+  bannerImages: BANNERS.map(b => {
+    const img = new Image();
+    img.src = b.img;
+    return img;
+  }),
+
+  // Dessine la bannière d'un royaume ; (x, y) = pied du mât, h = hauteur
+  drawBannerImage(p, x, y, h) {
+    const img = this.bannerImages[p.banner];
+    if (!img.complete || !img.naturalWidth) return 0;
+    const w = h * img.naturalWidth / img.naturalHeight;
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.drawImage(img, x - w / 2, y - h, w, h);
+    this.ctx.imageSmoothingEnabled = false;
+    return w;
   },
 
   // Images de chaque niveau des bâtiments (chargées une seule fois)
@@ -580,6 +576,9 @@ const Render = {
       if (G.isTraitor(p)) label = '🗡️ ' + label;
       ctx.strokeText(label, cx, cy - size * 0.45);
       ctx.fillText(label, cx, cy - size * 0.45);
+      // La bannière du royaume, à gauche de son nom
+      const tw = ctx.measureText(label).width;
+      this.drawBannerImage(p, cx - tw / 2 - size * 0.55, cy + size * 0.6, size * 1.9);
       ctx.font = `600 ${size * 0.75}px Georgia, serif`;
       ctx.strokeText('⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
       ctx.fillText('⚔ ' + fmt(p.troops), cx, cy + size * 0.55);

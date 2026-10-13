@@ -14,7 +14,7 @@
   <!-- Interface en jeu -->
   <div id="hud" class="hidden">
     <div id="topbar" class="panel">
-      <span>👑 <b id="kName"></b></span>
+      <span><img id="kBanner" alt=""> <b id="kName"></b></span>
       <span title="Or">💰 <span id="gold"></span></span>
       <span title="Part des terres">🗺️ <span id="land"></span></span>
       <span id="traitor" class="hidden"></span>
@@ -56,7 +56,8 @@
       <h1>⚔️ World ⚔️</h1>
       <p class="sub">Étends ton royaume, bâtis des châteaux, écrase tes rivaux.</p>
       <label>Nom de ton royaume <input id="name" maxlength="20" value="Mon Royaume"></label>
-      <label>Couleur de ta bannière <input id="color" type="color" value="#22b14c"></label>
+      <div class="pickTitle">Ta bannière : <b id="bannerName"></b> <small>(elle donne sa couleur à ton royaume)</small></div>
+      <div id="bannerPick"></div>
       <label>Difficulté
         <select id="difficulty">
           <option value="facile">Facile (5 royaumes)</option>
