@@ -154,9 +154,10 @@ const Game = {
 
   // Moulins et casernes se construisent dans l'enceinte d'un de ses châteaux, ou près d'une de ses
   // églises qui a encore de la place (pas ailleurs dans l'arrière-pays).
-  // Les châteaux et les églises, eux, se construisent partout sur son territoire.
+  // Les châteaux se construisent partout sur son territoire ; les églises aussi, mais hors des murailles.
   insideWalls(pid, a, type) {
-    if (type === B_CASTLE || type === B_CHURCH) return true;
+    if (type === B_CASTLE) return true;
+    if (type === B_CHURCH) return !this.footprint(a, type).some(j => this.castleProtects(pid, j));
     return this.footprint(a, type).every(j => this.castleProtects(pid, j)) || this.churchFor(pid, a, type) >= 0;
   },
 
@@ -208,14 +209,17 @@ const Game = {
     return -1;
   },
 
-  // Châteaux qu'un royaume peut construire dans la partie : MAX_CASTLES, plus ceux de sa meilleure église
+  // Châteaux qu'un royaume peut construire dans la partie : MAX_CASTLES, plus ceux de chacune de ses églises
+  // (elles s'additionnent : autant d'églises améliorées qu'on peut se payer)
   maxCastles(p) {
     let extra = 0;
     for (const ch of this.buildingTiles) {
-      if (this.building[ch] === B_CHURCH && this.owner[ch] === p.id) extra = Math.max(extra, this.buildingInfo(ch).castles);
+      if (this.building[ch] === B_CHURCH && this.owner[ch] === p.id) extra += this.buildingInfo(ch).castles;
     }
     return CONFIG.MAX_CASTLES + extra;
   },
+
+  churchesOf(pid) { return this.buildingTiles.filter(a => this.building[a] === B_CHURCH && this.owner[a] === pid); },
 
   // Écart obligatoire entre deux bâtiments : CASTLE_SPACING si l'un des deux est un château,
   // sinon BUILDING_SPACING (une zone invisible autour de chaque bâtiment)
@@ -502,6 +506,7 @@ const Game = {
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
+        if (type === B_CHURCH) return 'Une église ne se construit pas dans la muraille d\'un château.';
         return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux, ou près d'une de tes églises ` +
           'qui a encore de la place (pas ailleurs dans l\'arrière-pays).';
       }
@@ -630,25 +635,26 @@ const Game = {
     if (frontier.length === 0) {
       return target < 0 ? 'Aucune terre libre à ta frontière.' : `Tu n'as pas de frontière avec ${this.players[target].name}.`;
     }
-    // Un royaume qui a encore des châteaux ne s'attaque qu'en visant un de ses châteaux.
-    // Sans château, on peut attaquer tout son territoire de front.
+    // Un royaume qui a encore des châteaux ne s'attaque qu'en visant un de ses châteaux, ou une de ses
+    // églises (sans défense). Sans château, on peut attaquer tout son territoire de front.
     // (un château isolé, coupé de son royaume, ne protège plus le reste : mais on peut toujours le viser)
+    // castle = château ou église visé par l'assaut
     let castle = -1, path = null;
     if (target >= 0 && this.castlesOf(target).length) {
-      const name = this.players[target].name;
-      if (aimTile !== undefined && this.building[aimTile] === B_CASTLE && this.owner[aimTile] === target) {
+      const name = this.players[target].name, b = aimTile !== undefined ? this.building[aimTile] : 0;
+      if ((b === B_CASTLE || (b === B_CHURCH && this.hasHomeCastle(target))) && this.owner[aimTile] === target) {
         castle = this.anchor[aimTile];
       }
       if (castle < 0 && this.hasHomeCastle(target)) {
-        return `${name} est protégé par ses châteaux : clique sur l'un d'eux pour lancer un assaut.`;
+        return `${name} est protégé par ses châteaux : clique sur l'un d'eux (ou sur une de ses églises) pour lancer un assaut.`;
       }
     }
     if (castle >= 0) {
       const name = this.players[target].name;
       path = this.castlePath(pid, castle);
       if (!path) {
-        return `Impossible d'atteindre ce château : d'autres fortifications ${this.deName(name)} bloquent le passage. ` +
-          'Prends d\'abord les châteaux de la frontière.';
+        return `Impossible d'atteindre ${this.building[castle] === B_CHURCH ? 'cette église' : 'ce château'} : ` +
+          `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`;
       }
     }
     let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined);
@@ -695,15 +701,17 @@ const Game = {
 
   castlesOf(pid) { return this.castles.filter(c => this.owner[c] === pid); },
 
-  // Pour un assaut sur le château c : peut-on passer par cette case ? Oui si elle est au défenseur
-  // et n'est pas protégée par un de ses AUTRES châteaux (la zone du château visé, elle, se traverse).
+  // Pour un assaut sur le château (ou l'église) c : peut-on passer par cette case ? Oui si elle est au
+  // défenseur et n'est pas protégée par un de ses AUTRES châteaux (la zone du château visé, elle, se traverse).
   castlePassable(c) {
-    const target = this.owner[c], R = this.castleInfo(c).radius;
+    const target = this.owner[c], isCastle = this.building[c] === B_CASTLE;
+    const R = isCastle ? this.castleInfo(c).radius : 0;
     const others = this.castles.filter(o => o !== c && this.owner[o] === target);
     return i => {
       if (this.owner[i] !== target) return false;
       const x = i % this.W, y = (i / this.W) | 0;
-      if (this.inCastleRange(c, x, y, R)) return true;
+      if (isCastle && this.inCastleRange(c, x, y, R)) return true;
+      if (this.anchor[i] === c) return true; // le bâtiment visé lui-même
       return !others.some(o => this.inCastleRange(o, x, y, this.castleInfo(o).radius));
     };
   },
@@ -712,7 +720,7 @@ const Game = {
   // autres fortifications du défenseur. Renvoie la liste des cases, ou null s'il n'y en a pas.
   // Le chemin préfère les terrains faciles (plaines) : chaque case « coûte » sa défense.
   castlePath(pid, c) {
-    const passable = this.castlePassable(c), foot = new Set(this.footprint(c, B_CASTLE));
+    const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
     const target = this.owner[c];
     const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
     const done = new Uint8Array(this.N); // cases déjà traitées (chacune une seule fois)
@@ -742,9 +750,9 @@ const Game = {
     return null;
   },
 
-  // Couloir de l'assaut : le chemin, une case de chaque côté, et le château lui-même
+  // Couloir de l'assaut : le chemin, une case de chaque côté, et le château (ou l'église) lui-même
   corridor(c, path, passable = this.castlePassable(c)) {
-    const zone = new Set(this.footprint(c, B_CASTLE));
+    const zone = new Set(this.footprint(c, this.building[c]));
     for (const i of path) {
       zone.add(i);
       this.forNeighbors(i, n => { if (passable(n)) zone.add(n); });
@@ -755,7 +763,7 @@ const Game = {
   // Pour les bots : quel château viser, et quelle défense de terrain attendre au premier combat ?
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
   planAssault(pid, target) {
-    const castles = this.castlesOf(target);
+    const castles = this.castlesOf(target).concat(this.churchesOf(target));
     if (!this.hasHomeCastle(target)) return { castle: null, D: 1.3 };
     let best = { castle: -1, D: 1 }, bestLen = Infinity;
     for (const c of castles) {
@@ -771,7 +779,7 @@ const Game = {
   // Pour les bots : quel château viser ? null = pas de château (attaque de front),
   // -1 = aucun château atteignable, sinon le château le plus proche.
   pickCastleTarget(pid, target) {
-    const castles = this.castlesOf(target);
+    const castles = this.castlesOf(target).concat(this.churchesOf(target));
     if (!this.hasHomeCastle(target)) return null;
     let best = -1, bestLen = Infinity;
     for (const c of castles) {
@@ -1038,7 +1046,8 @@ const Game = {
 
   // L'assaut vise-t-il un château isolé ? Ses défenseurs ne peuvent alors pas le rejoindre.
   cutOff(a) {
-    return a.targetCastle >= 0 && this.owner[a.targetCastle] === a.target && this.isIsolatedCastle(a.targetCastle);
+    const c = a.targetCastle;
+    return c >= 0 && this.building[c] === B_CASTLE && this.owner[c] === a.target && this.isIsolatedCastle(c);
   },
 
   // Le défenseur envoie des soldats contre un assaut (sans délai, autant qu'il veut)
@@ -1127,6 +1136,11 @@ const Game = {
       if (a.target >= 0 && this.countNeighborsOwnedBy(t, a.target) >= 2) a.cut = true;
       this.setOwner(t, a.attacker);
       if (zone) this.onCastleTaken(a, zone);
+      // Prise de l'église visée : l'assaut s'arrête là
+      if (a.targetCastle >= 0 && this.building[t] === B_CHURCH && this.anchor[t] === a.targetCastle) {
+        this.onChurchTaken(a);
+        return this.endAttack(a);
+      }
       // Assaut de jonction : il touche le morceau de son château isolé, c'est gagné
       if (a.link >= 0 && this.touchesSet(t, a.piece, a.attacker)) return this.linkArrives(a);
       this.forNeighbors(t, n => {
@@ -1152,6 +1166,12 @@ const Game = {
     const p = this.players[a.attacker], d = this.players[a.target];
     if (p.isHuman) UI.log(`🏰 Tu as pris un château de ${d.name} ! Ton armée sécurise ses alentours.`, 'good', d);
     else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn', p);
+  },
+
+  onChurchTaken(a) {
+    const p = this.players[a.attacker], d = this.players[a.target];
+    if (p.isHuman) UI.log(`⛪ Tu as pris une église de ${d.name} !`, 'good', d);
+    else if (d.isHuman) UI.log(`⛪ ${p.name} a pris une de tes églises !`, 'warn', p);
   },
 
   endAttack(a) {

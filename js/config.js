@@ -112,11 +112,12 @@ const CASTLE_LEVELS = [
 // road = chemins vers les moulins et casernes dans la muraille ('dirt' = terre, 'paved' = pavés)
 // roadBonus = bonus de ces bâtiments reliés (0.2 = +20 % d'or ou de soldats produits)
 
-// Les 3 niveaux de l'église. Elle se construit n'importe où sur son territoire, mais elle n'est pas
-// défendue (pas de muraille, pas de garnison).
+// Les 3 niveaux de l'église. Elle se construit n'importe où sur son territoire, sauf dans la muraille
+// d'un château. Elle n'est pas défendue (pas de bonus de défense, pas de garnison) : on peut l'attaquer
+// directement, comme un château.
 // slots = moulins ou casernes qu'on peut construire autour d'elle (à moins de radius cases),
 //         même hors de la muraille d'un château ;
-// castles = châteaux en plus que le royaume peut construire (la meilleure église du royaume compte).
+// castles = châteaux en plus que le royaume peut construire (chaque église compte : elles s'additionnent).
 const CHURCH_LEVELS = [
   null,
   { name: 'Église',        slots: 1, castles: 0, radius: 7,  img: 'img/eglise1.webp', size: 2.6 },
@@ -141,7 +142,7 @@ const BUILDINGS = [
   { name: 'Moulin',  icon: '🌾', tiles: 2, baseCost: 10, desc: `produit de l'or toutes les ${CONFIG.PRODUCTION_INTERVAL} s (2 niveaux)` },
   { name: 'Caserne', icon: '⚔️', tiles: 2, baseCost: 20, desc: `produit des soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande (3 niveaux)` },
   { name: 'Château', icon: '🏰', tiles: 4, baseCost: 30, desc: 'muraille qui protège ses terres (3 niveaux)' },
-  { name: 'Église',  icon: '⛪', tiles: 2, baseCost: 50, desc: 'se construit partout, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)' },
+  { name: 'Église',  icon: '⛪', tiles: 2, baseCost: 50, desc: 'hors des murailles, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)' },
 ];
 
 // Les bannières des royaumes (une par couleur) : la bannière choisie donne sa couleur au royaume.
