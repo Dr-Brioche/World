@@ -8,6 +8,15 @@ const CASTLE_IMG_ZOOM = 7;
 const Render = {
   cam: { x: 0, y: 0, scale: 4 },
   hover: -1,
+  mouse: null, // position de la souris à l'écran
+
+  // Case en haut à gauche d'un bâtiment 2x2 centré sous la souris
+  anchorAt(sx, sy) {
+    const x = Math.floor(this.cam.x + sx / this.cam.scale - 0.5);
+    const y = Math.floor(this.cam.y + sy / this.cam.scale - 0.5);
+    if (x < 0 || y < 0 || x >= Game.W - 1 || y >= Game.H - 1) return -1;
+    return y * Game.W + x;
+  },
 
   init(canvas) {
     this.canvas = canvas;
@@ -188,13 +197,15 @@ const Render = {
 
     // Château survolé : sa zone est mise en avant
     if (this.hover >= 0 && G.building[this.hover] === B_CASTLE && G.owner[this.hover] >= 0) {
-      this.fillTiles(ox, oy, G.castleZone(this.hover, G.owner[this.hover]), 'rgba(255,255,255,0.22)');
+      const c = G.anchor[this.hover];
+      this.fillTiles(ox, oy, G.castleZone(c, G.owner[c]), 'rgba(255,255,255,0.22)');
     }
     // Aperçu de la muraille avant de construire (ou d'améliorer) un château
-    if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0) {
-      const h = this.hover, mine = G.owner[h] === G.human.id;
-      const upgrading = mine && G.building[h] === B_CASTLE;
-      const ok = mine && (!G.building[h] || (upgrading && G.upgradeCost(h) !== null));
+    if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0 && this.mouse) {
+      const upgrading = G.owner[this.hover] === G.human.id && G.building[this.hover] === B_CASTLE;
+      const h = upgrading ? G.anchor[this.hover] : this.anchorAt(this.mouse.x, this.mouse.y);
+      if (h < 0) return;
+      const ok = upgrading ? G.upgradeCost(h) !== null : G.canPlace(G.human.id, h);
       const zone = G.castleZone(h, G.human.id, upgrading ? Math.min(3, G.level[h] + 1) : 1);
       if (!zone.length) return;
       const set = new Set(zone);
@@ -300,9 +311,9 @@ const Render = {
         ctx.strokeStyle = 'rgba(20,12,4,0.85)';
         ctx.fillStyle = '#ffe9a8';
         const roman = ['', 'I', 'II', 'III'][lvl];
-        ctx.strokeText(roman, px + s * 0.9, py - s * 0.6);
-        ctx.fillText(roman, px + s * 0.9, py - s * 0.6);
-        ctx.font = `${Math.max(9, Math.min(30, s * 1.6))}px serif`;
+        ctx.strokeText(roman, px + s * 1.2, py - s * 0.8);
+        ctx.fillText(roman, px + s * 1.2, py - s * 0.8);
+        ctx.font = `${Math.max(9, Math.min(40, s * 2))}px serif`;
       }
       ctx.globalAlpha = 1;
     }
@@ -312,7 +323,7 @@ const Render = {
       const w = CASTLE_LEVELS[lvl].size * s, h = w * img.naturalHeight / img.naturalWidth;
       ctx.globalAlpha = imgAlpha;
       ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(img, px - w / 2, py + s * 0.6 - h, w, h);
+      ctx.drawImage(img, px - w / 2, py + s * 1.1 - h, w, h);
       ctx.imageSmoothingEnabled = false;
       ctx.globalAlpha = 1;
     }
@@ -337,9 +348,10 @@ const Render = {
     // Bâtiments : petites icônes de loin, vraie image des châteaux quand on zoome
     const imgAlpha = Math.max(0, Math.min(1, (s - CASTLE_IMG_ZOOM) / 3));
     if (s >= 3) {
-      ctx.font = `${Math.max(9, Math.min(30, s * 1.6))}px serif`;
+      ctx.font = `${Math.max(9, Math.min(40, s * 2))}px serif`;
       for (const i of G.buildingTiles) {
-        const px = ox + (i % G.W + 0.5) * s, py = oy + (((i / G.W) | 0) + 0.5) * s;
+        // Centre du bâtiment = milieu de ses 2x2 cases
+        const px = ox + (i % G.W + 1) * s, py = oy + (((i / G.W) | 0) + 1) * s;
         if (px < -150 || py < -150 || px > this.vw + 150 || py > this.vh + 150) continue;
         const type = G.building[i];
         if (type === B_CASTLE) {
@@ -359,6 +371,18 @@ const Render = {
         ctx.beginPath();
         ctx.arc(ox + (hx + 0.5) * s, oy + (hy + 0.5) * s, (CONFIG.START_RADIUS + 0.5) * s, 0, Math.PI * 2);
         ctx.stroke();
+      } else if (UI.selectedBuild && this.mouse) {
+        // Aperçu de l'emplacement 2x2 du bâtiment
+        const a = this.anchorAt(this.mouse.x, this.mouse.y);
+        if (a >= 0) {
+          const ok = G.canPlace(G.human.id, a) || (UI.selectedBuild === B_CASTLE && G.building[this.hover] === B_CASTLE);
+          const rx = ox + (a % G.W) * s, ry = oy + ((a / G.W) | 0) * s;
+          ctx.fillStyle = ok ? 'rgba(255,255,255,0.35)' : 'rgba(230,80,70,0.45)';
+          ctx.fillRect(rx, ry, 2 * s, 2 * s);
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = ok ? '#1f6b1a' : '#a3261f';
+          ctx.strokeRect(rx, ry, 2 * s, 2 * s);
+        }
       } else {
         ctx.strokeRect(ox + hx * s, oy + hy * s, s, s);
       }
