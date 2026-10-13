@@ -38,8 +38,10 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 3. **Construis** (touches `1`, `2`, `3`, puis clic sur ton territoire) :
    - 🌾 **Ferme** : rapporte de l'or
    - ⚔️ **Caserne** : plus de soldats, recrutés plus vite
-   - 🏰 **Château** : les cases autour coûtent 2x plus cher à prendre.
-     Sa zone de protection est dessinée sur la carte (pointillés blancs pour tes châteaux)
+   - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
+     La muraille suit tes frontières sans déborder chez le voisin.
+     Seules les cases à l'intérieur de la muraille sont renforcées : **+1 à la défense du terrain**
+     (plaine x1 → x2, forêt x1.6 → x2.6, colline x2.2 → x3.2, montagne x3.5 → x4.5)
 4. **Fais des alliances** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer une alliance.
    Les alliés ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer une alliance : accepte ou refuse.
    Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée.
@@ -48,12 +50,13 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
    et les autres royaumes en profitent pour l'attaquer !
 5. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
 
-🌲 Les forêts, collines et montagnes coûtent plus de soldats à conquérir que les plaines.
+🌲 Chaque terrain a sa défense : plaine x1, forêt x1.6, colline x2.2, montagne x3.5. Plus elle est haute, plus la case coûte de soldats à conquérir.
 
 **Contrôles** : molette = zoom · glisser = déplacer la carte · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.5** : la zone des châteaux devient une muraille crénelée qui suit les frontières · le bonus du château s'ajoute à la défense du terrain, seulement dans sa muraille
 - **v0.4** : attaquer un allié = le trahir, et un traître 🗡️ a sa défense réduite de moitié pendant 2 minutes
 - **v0.3** : alliances (proposer, accepter, refuser, trahir) · les attaques contre un royaume se préparent 5 s avec une flèche et une bannière ⚔️ visibles par tous
 - **v0.2** : zone de protection des châteaux visible sur la carte · attaques en cours affichées en bas de l'écran, avec un bouton pour les annuler

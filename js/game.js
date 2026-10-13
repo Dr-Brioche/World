@@ -19,6 +19,7 @@ const Game = {
     this.buildingTiles = [];
     this.castles = [];
     this.tick = 0;
+    this.version = 0; // augmente à chaque changement de la carte
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.isLand(i)) this.landCount++;
 
@@ -81,6 +82,7 @@ const Game = {
       if (b) o.bCount[b]--;
     }
     this.owner[i] = pid;
+    this.version++;
     if (pid >= 0) {
       const p = this.players[pid];
       p.tiles++; p.sumX += x; p.sumY += y;
@@ -92,11 +94,31 @@ const Game = {
   },
 
   placeBuilding(i, type) {
+    this.version++;
     this.building[i] = type;
     const o = this.owner[i];
     if (o >= 0) this.players[o].bCount[type]++;
     this.buildingTiles.push(i);
     if (type === B_CASTLE) this.castles.push(i);
+  },
+
+  // Cases protégées par un château : celles de son royaume, à moins de CASTLE_RADIUS
+  castleZone(c, pid) {
+    const R = CONFIG.CASTLE_RADIUS, cx = c % this.W, cy = (c / this.W) | 0, zone = [];
+    for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R); y++) {
+      for (let x = Math.max(0, cx - R); x <= Math.min(this.W - 1, cx + R); x++) {
+        const i = y * this.W + x;
+        if ((x - cx) ** 2 + (y - cy) ** 2 <= R * R && this.owner[i] === pid) zone.push(i);
+      }
+    }
+    return zone;
+  },
+
+  // Défense d'une case = celle du terrain, + le bonus si un château du royaume la protège
+  tileDefense(pid, i) {
+    let def = TERRAIN_INFO[this.terrain[i]].cost;
+    if (pid >= 0 && this.castleProtects(pid, i)) def += CONFIG.CASTLE_DEFENSE_BONUS;
+    return def;
   },
 
   castleProtects(pid, i) {
@@ -270,12 +292,10 @@ const Game = {
   },
 
   tileCost(a, t) {
-    const tc = TERRAIN_INFO[this.terrain[t]].cost;
-    if (a.target < 0) return CONFIG.NEUTRAL_TILE_COST * tc;
+    if (a.target < 0) return CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost;
     const d = this.players[a.target];
     const density = d.troops / Math.max(1, d.tiles);
-    let cost = (CONFIG.ENEMY_TILE_BASE_COST + density * CONFIG.DENSITY_FACTOR) * tc;
-    if (this.castleProtects(a.target, t)) cost *= CONFIG.CASTLE_DEFENSE;
+    let cost = (CONFIG.ENEMY_TILE_BASE_COST + density * CONFIG.DENSITY_FACTOR) * this.tileDefense(a.target, t);
     if (this.isTraitor(d)) cost *= CONFIG.TRAITOR_DEFENSE_MALUS;
     return cost;
   },

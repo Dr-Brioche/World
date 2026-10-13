@@ -95,45 +95,107 @@ const Render = {
     this.offCtx.putImageData(this.img, 0, 0);
   },
 
-  // Cercle de protection d'un château (cases à moins de CASTLE_RADIUS).
-  castleCircle(ox, oy, i, color, alpha, width, dashed) {
-    const ctx = this.ctx, G = Game, s = this.cam.scale;
-    const cx = ox + (i % G.W + 0.5) * s, cy = oy + (((i / G.W) | 0) + 0.5) * s;
-    const r = (CONFIG.CASTLE_RADIUS + 0.5) * s;
-    if (cx + r < 0 || cy + r < 0 || cx - r > this.vw || cy - r > this.vh) return;
+  // --- Murailles des châteaux ---
+  // La zone d'un château = les cases de son royaume à moins de CASTLE_RADIUS.
+  // On dessine une muraille sur chaque bord de case qui sépare la zone de l'extérieur :
+  // elle suit donc la frontière sans jamais déborder chez le voisin.
+
+  // Bords d'un ensemble de cases : [x1, y1, x2, y2, nx, ny] (n = direction de l'extérieur)
+  zoneEdges(tiles, inZone) {
+    const G = Game, edges = [];
+    for (const i of tiles) {
+      const x = i % G.W, y = (i / G.W) | 0;
+      if (x === 0 || !inZone(i, i - 1)) edges.push([x, y, x, y + 1, -1, 0]);
+      if (x === G.W - 1 || !inZone(i, i + 1)) edges.push([x + 1, y, x + 1, y + 1, 1, 0]);
+      if (y === 0 || !inZone(i, i - G.W)) edges.push([x, y, x + 1, y, 0, -1]);
+      if (y === G.H - 1 || !inZone(i, i + G.W)) edges.push([x, y + 1, x + 1, y + 1, 0, 1]);
+    }
+    return edges;
+  },
+
+  // Recalcule les murailles seulement quand la carte a changé
+  updateWalls() {
+    const G = Game;
+    if (this.wallsVersion === G.version) return;
+    this.wallsVersion = G.version;
+    if (!this.protOwner || this.protOwner.length !== G.N) this.protOwner = new Int16Array(G.N);
+    const prot = this.protOwner;
+    prot.fill(-1);
+    const tiles = [];
+    for (const c of G.castles) {
+      const o = G.owner[c];
+      if (o < 0) continue;
+      for (const i of G.castleZone(c, o)) {
+        if (prot[i] < 0) tiles.push(i);
+        prot[i] = o;
+      }
+    }
+    this.wallEdges = this.zoneEdges(tiles, (i, n) => prot[n] === prot[i]);
+  },
+
+  // Dessine une muraille crénelée le long des bords donnés
+  drawWall(ox, oy, edges, stone, dark) {
+    if (!edges.length) return;
+    const ctx = this.ctx, s = this.cam.scale;
+    const w = Math.max(2.5, Math.min(9, s * 0.4));
+    ctx.lineCap = 'square';
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${color},${alpha * 0.25})`;
+    for (const [x1, y1, x2, y2] of edges) {
+      ctx.moveTo(ox + x1 * s, oy + y1 * s);
+      ctx.lineTo(ox + x2 * s, oy + y2 * s);
+    }
+    ctx.lineWidth = w + 2;
+    ctx.strokeStyle = dark;
+    ctx.stroke();
+    ctx.lineWidth = w;
+    ctx.strokeStyle = stone;
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+    if (s < 5) return; // trop petit pour voir les créneaux
+    // Créneaux : deux petits blocs par bord de case, côté extérieur
+    const m = w * 0.9;
+    ctx.beginPath();
+    for (const [x1, y1, x2, y2, nx, ny] of edges) {
+      for (const t of [0.25, 0.75]) {
+        const cx = ox + (x1 + (x2 - x1) * t) * s + nx * w * 0.6;
+        const cy = oy + (y1 + (y2 - y1) * t) * s + ny * w * 0.6;
+        ctx.rect(cx - m / 2, cy - m / 2, m, m);
+      }
+    }
+    ctx.fillStyle = stone;
     ctx.fill();
-    // Contour sombre en dessous pour que le cercle se voie sur toutes les couleurs
-    ctx.lineWidth = width + 2;
-    ctx.strokeStyle = `rgba(20,12,4,${alpha * 0.7})`;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = dark;
     ctx.stroke();
-    ctx.setLineDash(dashed ? [6, 4] : []);
-    ctx.lineWidth = width;
-    ctx.strokeStyle = `rgba(${color},${alpha})`;
-    ctx.stroke();
-    ctx.setLineDash([]);
+  },
+
+  // Remplit légèrement des cases (zone survolée ou aperçu)
+  fillTiles(ox, oy, tiles, color) {
+    const ctx = this.ctx, s = this.cam.scale, W = Game.W;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (const i of tiles) ctx.rect(ox + (i % W) * s, oy + ((i / W) | 0) * s, s, s);
+    ctx.fill();
   },
 
   drawCastleZones(ox, oy) {
     const G = Game;
-    // Zones de tous les châteaux, aux couleurs de leur royaume
-    for (const c of G.castles) {
-      const o = G.owner[c];
-      if (o < 0) continue;
-      const mine = G.players[o].isHuman;
-      const color = mine ? '255,255,255' : G.players[o].color.join(',');
-      this.castleCircle(ox, oy, c, color, mine ? 0.85 : 0.6, mine ? 2 : 1.5, true);
+    this.updateWalls();
+    this.drawWall(ox, oy, this.wallEdges, '#b3aa98', 'rgba(30,22,12,0.9)');
+
+    // Château survolé : sa zone est mise en avant
+    if (this.hover >= 0 && G.building[this.hover] === B_CASTLE && G.owner[this.hover] >= 0) {
+      this.fillTiles(ox, oy, G.castleZone(this.hover, G.owner[this.hover]), 'rgba(255,255,255,0.22)');
     }
-    // Château survolé : zone mise en avant
-    if (this.hover >= 0 && G.building[this.hover] === B_CASTLE) {
-      this.castleCircle(ox, oy, this.hover, '255,255,255', 0.9, 2.5, false);
-    }
-    // Aperçu de la zone avant de construire un château
+    // Aperçu de la muraille avant de construire un château
     if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0) {
       const ok = G.owner[this.hover] === G.human.id && !G.building[this.hover];
-      this.castleCircle(ox, oy, this.hover, ok ? '255,230,120' : '220,60,50', 0.9, 2.5, false);
+      const zone = G.castleZone(this.hover, G.human.id);
+      if (!zone.length) return;
+      const set = new Set(zone);
+      this.fillTiles(ox, oy, zone, ok ? 'rgba(255,230,120,0.3)' : 'rgba(220,60,50,0.3)');
+      this.drawWall(ox, oy, this.zoneEdges(zone, (i, n) => set.has(n)),
+        ok ? 'rgba(255,230,140,0.95)' : 'rgba(230,90,80,0.95)', 'rgba(30,22,12,0.8)');
     }
   },
 
