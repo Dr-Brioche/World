@@ -112,8 +112,9 @@ const Render = {
     this.offCtx.putImageData(this.img, 0, 0);
   },
 
-  // --- Murailles des châteaux ---
+  // --- Murailles des châteaux (et des ports de niveau 3) ---
   // La zone d'un château = les cases de son royaume dans le rayon de son niveau (voir CASTLE_LEVELS).
+  // Un port de niveau 3 a aussi une petite muraille, autour de sa zone (comme un fort en bois).
   // On dessine une muraille sur chaque bord de case qui sépare la zone de l'extérieur :
   // elle suit donc la frontière sans jamais déborder chez le voisin.
 
@@ -139,13 +140,15 @@ const Render = {
     const prot = this.protOwner;
     prot.fill(-1);
     const tiles = [];
-    for (const c of G.castles) {
-      const o = G.owner[c];
-      if (o < 0) continue;
-      for (const i of G.castleZone(c, o)) {
+    const add = (zone, o) => {
+      for (const i of zone) {
         if (prot[i] < 0) tiles.push(i);
         prot[i] = o;
       }
+    };
+    for (const c of G.castles) if (G.owner[c] >= 0) add(G.castleZone(c, G.owner[c]), G.owner[c]);
+    for (const a of G.buildingTiles) {
+      if (G.building[a] === B_PORT && G.level[a] >= 3 && G.owner[a] >= 0) add(G.churchZone(a), G.owner[a]);
     }
     this.wallEdges = this.zoneEdges(tiles, (i, n) => prot[n] === prot[i]);
   },
@@ -303,8 +306,80 @@ const Render = {
     this.bannerHits.push({ id: a.id, x: bx + 20, y: by - 24 });
   },
 
-  // Armées contre les royaumes : pendant la préparation, ligne pointillée + bannière qui avance
-  // vers la cible ; ensuite, la bannière se tient là où se bat l'assaut.
+  // Flèche rouge d'un assaut, visible par tous : pointillés en légère courbe, un cercle au départ
+  // (un peu à l'intérieur du royaume attaquant) et une cible (cercle + point) sur la zone attaquée.
+  // alpha : transparence (plus discrète une fois l'assaut lancé). Renvoie la fonction qui donne
+  // le point de la courbe à l'instant t (0 = départ, 1 = cible), pour y placer la bannière.
+  drawAttackArrow(x1, y1, x2, y2, alpha, side) {
+    const ctx = this.ctx, now = performance.now();
+    const red = `rgba(214,36,30,${alpha})`, dark = `rgba(40,8,4,${alpha * 0.7})`;
+    const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+    // Point de contrôle de la courbe : décalé sur le côté, au milieu du trajet
+    const bend = len * 0.18 * side;
+    const mx = (x1 + x2) / 2 - (y2 - y1) / len * bend, my = (y1 + y2) / 2 + (x2 - x1) / len * bend;
+    const at = t => ({
+      x: (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * x2,
+      y: (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * my + t * t * y2,
+    });
+    // (les cercles grossissent un peu avec le zoom ; la cible « bat » doucement)
+    const zoom = Math.min(2.2, Math.max(1, this.cam.scale / 7));
+    const rStart = 7 * zoom, rTarget = (11 + Math.sin(now / 250) * 1.5) * zoom;
+    // La courbe s'arrête au bord des deux cercles
+    const t0 = Math.min(0.45, rStart / len), t1 = Math.max(0.55, 1 - (rTarget + 4) / len);
+    const curve = () => {
+      ctx.beginPath();
+      for (let k = 0; k <= 24; k++) {
+        const p = at(t0 + (t1 - t0) * k / 24);
+        if (k === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      }
+    };
+    ctx.lineCap = 'round';
+    curve();
+    ctx.setLineDash([10, 7]);
+    ctx.lineDashOffset = -now / 40; // les pointillés défilent vers la cible
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = dark;
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = red;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
+    // Pointe de flèche, orientée selon la fin de la courbe
+    const end = at(t1), before = at(t1 - 0.03), ang = Math.atan2(end.y - before.y, end.x - before.x), h = 13;
+    ctx.beginPath();
+    ctx.moveTo(end.x + Math.cos(ang) * 3, end.y + Math.sin(ang) * 3);
+    ctx.lineTo(end.x - h * Math.cos(ang - 0.45), end.y - h * Math.sin(ang - 0.45));
+    ctx.lineTo(end.x - h * Math.cos(ang + 0.45), end.y - h * Math.sin(ang + 0.45));
+    ctx.closePath();
+    ctx.fillStyle = red;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = dark;
+    ctx.stroke();
+    // Cercle de départ
+    const ring = (x, y, r) => {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = dark;
+      ctx.stroke();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = red;
+      ctx.stroke();
+    };
+    ring(x1, y1, rStart);
+    // Cible : un cercle et un point rouge au milieu
+    ring(x2, y2, rTarget);
+    ctx.beginPath();
+    ctx.arc(x2, y2, 3.5 * zoom, 0, Math.PI * 2);
+    ctx.fillStyle = red;
+    ctx.fill();
+    return at;
+  },
+
+  // Armées contre les royaumes : une flèche rouge montre l'assaut à tout le monde. Pendant la préparation,
+  // la bannière avance le long de la flèche vers la cible ; ensuite, elle se tient là où se bat l'assaut.
   drawAttackArrows(ox, oy) {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     const now = performance.now();
@@ -313,7 +388,12 @@ const Render = {
       if (a.done || a.target < 0 || a.fromX === undefined) continue;
       const pending = a.pending.reduce((sum, r) => sum + r.troops, 0);
       const extra = pending ? ` (+${fmt(pending)})` : '';
+      const x1 = ox + a.fromX * s, y1 = oy + a.fromY * s;
+      const x2 = ox + a.toX * s, y2 = oy + a.toY * s;
+      const side = a.id % 2 ? 1 : -1; // courbe d'un côté ou de l'autre, pour que deux flèches se croisent moins
       if (!G.isPreparing(a)) {
+        // (pas de flèche pour un assaut de jonction : sa ligne mène au château isolé)
+        if (a.link === undefined) this.drawAttackArrow(x1, y1, x2, y2, 0.6, side);
         const t = a.frontTile >= 0 ? a.frontTile : -1;
         const bx = t >= 0 ? ox + (t % G.W + 0.5) * s : ox + a.toX * s;
         const by = t >= 0 ? oy + (((t / G.W) | 0) + 0.5) * s : oy + a.toY * s;
@@ -333,46 +413,12 @@ const Render = {
         this.drawArmyBanner(a, bx, by, `⚔ ${fmt(a.troops)}${extra}`);
         continue;
       }
-      const col = G.players[a.attacker].color.join(',');
-      const x1 = ox + a.fromX * s, y1 = oy + a.fromY * s;
-      const x2 = ox + a.toX * s, y2 = oy + a.toY * s;
-      const ang = Math.atan2(y2 - y1, x2 - x1);
       const remaining = (a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND;
       const progress = 1 - (a.startTick - G.tick) / a.prepTicks;
-
-      // Ligne pointillée qui défile vers la cible
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.setLineDash([]);
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = 'rgba(20,12,4,0.55)';
-      ctx.stroke();
-      ctx.setLineDash([10, 7]);
-      ctx.lineDashOffset = -now / 40;
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = `rgb(${col})`;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.lineDashOffset = 0;
-
-      // Pointe de flèche
-      const h = 14;
-      ctx.beginPath();
-      ctx.moveTo(x2, y2);
-      ctx.lineTo(x2 - h * Math.cos(ang - 0.45), y2 - h * Math.sin(ang - 0.45));
-      ctx.lineTo(x2 - h * Math.cos(ang + 0.45), y2 - h * Math.sin(ang + 0.45));
-      ctx.closePath();
-      ctx.fillStyle = `rgb(${col})`;
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(20,12,4,0.8)';
-      ctx.stroke();
-
-      // Bannière qui avance le long de la ligne, avec le compte à rebours
-      const bx = x1 + (x2 - x1) * progress, by = y1 + (y2 - y1) * progress;
-      this.drawArmyBanner(a, bx, by, `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
+      const at = this.drawAttackArrow(x1, y1, x2, y2, 1, side);
+      // Bannière qui avance le long de la flèche, avec le compte à rebours
+      const b = at(progress);
+      this.drawArmyBanner(a, b.x, b.y, `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
     }
   },
 
