@@ -95,6 +95,48 @@ const Render = {
     this.offCtx.putImageData(this.img, 0, 0);
   },
 
+  // Cercle de protection d'un château (cases à moins de CASTLE_RADIUS).
+  castleCircle(ox, oy, i, color, alpha, width, dashed) {
+    const ctx = this.ctx, G = Game, s = this.cam.scale;
+    const cx = ox + (i % G.W + 0.5) * s, cy = oy + (((i / G.W) | 0) + 0.5) * s;
+    const r = (CONFIG.CASTLE_RADIUS + 0.5) * s;
+    if (cx + r < 0 || cy + r < 0 || cx - r > this.vw || cy - r > this.vh) return;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${color},${alpha * 0.25})`;
+    ctx.fill();
+    // Contour sombre en dessous pour que le cercle se voie sur toutes les couleurs
+    ctx.lineWidth = width + 2;
+    ctx.strokeStyle = `rgba(20,12,4,${alpha * 0.7})`;
+    ctx.stroke();
+    ctx.setLineDash(dashed ? [6, 4] : []);
+    ctx.lineWidth = width;
+    ctx.strokeStyle = `rgba(${color},${alpha})`;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  },
+
+  drawCastleZones(ox, oy) {
+    const G = Game;
+    // Zones de tous les châteaux, aux couleurs de leur royaume
+    for (const c of G.castles) {
+      const o = G.owner[c];
+      if (o < 0) continue;
+      const mine = G.players[o].isHuman;
+      const color = mine ? '255,255,255' : G.players[o].color.join(',');
+      this.castleCircle(ox, oy, c, color, mine ? 0.85 : 0.6, mine ? 2 : 1.5, true);
+    }
+    // Château survolé : zone mise en avant
+    if (this.hover >= 0 && G.building[this.hover] === B_CASTLE) {
+      this.castleCircle(ox, oy, this.hover, '255,255,255', 0.9, 2.5, false);
+    }
+    // Aperçu de la zone avant de construire un château
+    if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0) {
+      const ok = G.owner[this.hover] === G.human.id && !G.building[this.hover];
+      this.castleCircle(ox, oy, this.hover, ok ? '255,230,120' : '220,60,50', 0.9, 2.5, false);
+    }
+  },
+
   draw() {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -105,6 +147,8 @@ const Render = {
     const ox = -this.cam.x * s, oy = -this.cam.y * s;
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
+
+    this.drawCastleZones(ox, oy);
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

@@ -25,6 +25,13 @@ const UI = {
     $('startBtn').addEventListener('click', () => this.start());
     $('replayBtn').addEventListener('click', () => location.reload());
     $('pauseBtn').addEventListener('click', () => this.togglePause());
+    $('attacks').addEventListener('click', e => {
+      const id = e.target.dataset.cancel;
+      if (!id) return;
+      const a = Game.cancelAttack(Game.human.id, +id);
+      if (a) this.log(`↩️ Retraite ! ${fmt(a.troops)} soldats rentrent au royaume.`, 'good');
+      this.refreshAttacks();
+    });
 
     window.addEventListener('keydown', e => {
       if (Game.phase !== 'playing' || e.target.tagName === 'INPUT') return;
@@ -115,11 +122,7 @@ const UI = {
       `<span class="nm">${escapeHtml(p.name)}</span><span>${(p.tiles / G.landCount * 100).toFixed(1)}%</span></li>`
     ).join('');
 
-    const mine = G.attacks.filter(a => !a.done && a.attacker === h.id);
-    const incoming = G.attacks.filter(a => !a.done && a.target === h.id);
-    $('campaigns').innerHTML =
-      mine.map(a => `<div>⚔️ → ${a.target < 0 ? 'Terres libres' : escapeHtml(G.players[a.target].name)} : ${fmt(a.troops)}</div>`).join('') +
-      incoming.map(a => `<div class="danger">🛡️ ← ${escapeHtml(G.players[a.attacker].name)} : ${fmt(a.troops)}</div>`).join('');
+    this.refreshAttacks();
 
     if (G.phase === 'playing') {
       $('hint').textContent = this.selectedBuild
@@ -127,6 +130,31 @@ const UI = {
         : UI.describeTile(Render.hover) || 'Clique sur une terre voisine pour attaquer · molette = zoom · glisser = déplacer';
     } else if (G.phase === 'over') {
       $('hint').textContent = '';
+    }
+  },
+
+  // Attaques en cours, en bas de l'écran. On ne reconstruit la liste que si elle change,
+  // sinon les boutons "Annuler" seraient recréés pendant qu'on clique dessus.
+  refreshAttacks() {
+    const G = Game, h = G.human;
+    const list = G.attacks.filter(a => !a.done && (a.attacker === h.id || a.target === h.id));
+    const key = list.map(a => a.id).join(',');
+    const box = $('attacks');
+    if (key !== this.attacksKey) {
+      this.attacksKey = key;
+      box.innerHTML = list.map(a => {
+        if (a.attacker === h.id) {
+          const target = a.target < 0 ? 'Terres libres' : escapeHtml(G.players[a.target].name);
+          return `<div class="attack panel"><span>⚔️ → ${target}</span><b data-troops="${a.id}"></b>` +
+            `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
+        }
+        return `<div class="attack panel incoming"><span>🛡️ ${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
+          `<b data-troops="${a.id}"></b></div>`;
+      }).join('');
+    }
+    for (const a of list) {
+      const el = box.querySelector(`[data-troops="${a.id}"]`);
+      if (el) el.textContent = `${fmt(a.troops)} soldats`;
     }
   },
 
