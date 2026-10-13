@@ -21,7 +21,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Trois bâtiments** pour développer ton royaume
 - 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
-- 🤝 **Des alliances** : fais-toi des alliés… et trahis-les quand ça t'arrange
+- 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normal, Difficile
 
 ## 🕹️ Comment jouer
@@ -80,12 +80,14 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      Exemple : une forêt (x1.6) protégée par une citadelle passe à x5.6.
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
-4. **Fais des alliances** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer une alliance.
-   Les alliés ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer une alliance : accepte ou refuse.
-   **Qui est allié avec qui ?** Les petits carrés de couleur à côté de chaque royaume, dans le classement,
-   montrent ses alliés. Survole un royaume sur la carte pour voir ses alliances (lignes dorées 🤝),
-   ou appuie sur `A` (ou le bouton 🤝 du classement) pour afficher toutes les alliances.
-   Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée.
+4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer de t'allier.
+   Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
+   **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
+   Les membres d'un pacte ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer un pacte : accepte ou refuse.
+   **Qui est allié avec qui ?** Chaque pacte est entouré d'une **grande frontière dorée**, visible par tous,
+   qui fait le tour de tous ses membres. Les petits carrés de couleur dans le classement montrent aussi les alliés.
+   Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée,
+   et tu quittes le pacte.
    Mais attention, un **traître** 🗡️ le paie cher pendant 2 minutes : **sa défense est réduite de moitié**
    (ses terres coûtent 2x moins de soldats à prendre), personne ne veut s'allier avec lui,
    et les autres royaumes en profitent pour l'attaquer !
@@ -93,14 +95,16 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    recrutes par seconde. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
    puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée est pleine.
    Envoie donc tes troupes au combat plutôt que de les garder !
-6. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
+6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
+   Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
 🌲 Chaque terrain a sa défense : plaine x1, forêt x1.6, colline x2.2, montagne x3.5. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 
-**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` = choisir un bâtiment (puis clic pour le poser) · `A` = afficher toutes les alliances · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.17** : les alliances deviennent des **pactes** (jusqu'à 3 royaumes, un seul pacte par royaume), entourés d'une frontière dorée visible par tous · il faut maintenant **85 %** des terres pour gagner, avec un bouton « Continuer » pour finir la conquête après la victoire
 - **v0.16.2** : la trêve après la prise d'un château vaut dans les deux sens : le royaume qui l'a perdu ne peut pas contre-attaquer tout de suite
 - **v0.16.1** : le temps de trêve après la prise d'un château s'affiche sous le nom du royaume ennemi sur la carte
 - **v0.16** : les châteaux de niveau 2 et 3 tracent des chemins de terre puis des routes pavées vers les moulins et casernes de leur muraille, qui produisent +20 % puis +50 %
@@ -128,7 +132,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 💡 Idées pour la suite
 
 - ⛵ Bateaux pour traverser la mer
-- 🤝 Plus de diplomatie : trêves, tributs en or, demandes d'aide aux alliés
+- 🤝 Plus de diplomatie : tributs en or, demandes d'aide aux membres du pacte
 - 🗼 Nouveaux bâtiments : tours de guet, ports, cathédrales
 - 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
 - 👑 Héros ou rois avec des pouvoirs spéciaux

@@ -19,7 +19,8 @@ const Game = {
     this.players = [];
     this.attacks = [];
     this.nextAttackId = 1;
-    this.alliances = new Set();
+    this.pacts = new Map(); // id du pacte → { name }
+    this.nextPactId = 0;
     this.buildingTiles = [];
     this.castles = [];
     this.tick = 0;
@@ -45,6 +46,7 @@ const Game = {
       tiles: 0, sumX: 0, sumY: 0, maxTiles: 0, kills: 0,
       bCount: [0, 0, 0, 0],
       traitorUntil: 0,
+      pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
       refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
       recoverUntil: {}, // royaume id → fin de la trêve avec lui (château pris) : pas d'attaque avant
       restUntil: 0,     // tick jusqu'auquel l'armée se repose (recrute moins vite) après avoir pris un château
@@ -571,27 +573,62 @@ const Game = {
     if (!p.alive) return;
     p.alive = false;
     p.troops = 0;
-    for (const o of this.players) if (o.id !== id) this.alliances.delete(this.allyKey(id, o.id));
+    this.leavePact(p);
     for (const a of this.attacks) if (a.attacker === id) a.done = true;
     const killer = by >= 0 ? this.players[by] : null;
     if (killer) killer.kills++;
     UI.log(`☠️ ${p.name} a été anéanti${killer ? ' par ' + killer.name : ''} !`, p.isHuman ? 'warn' : '');
   },
 
-  // --- Alliances ---
-  allyKey(a, b) { return a < b ? a + '-' + b : b + '-' + a; },
+  // --- Alliances : les pactes ---
+  // Des royaumes alliés forment un pacte. Un royaume ne peut faire partie que d'un seul pacte.
+  areAllied(a, b) {
+    const pa = this.players[a].pact;
+    return a !== b && pa >= 0 && pa === this.players[b].pact;
+  },
 
-  areAllied(a, b) { return this.alliances.has(this.allyKey(a, b)); },
+  allies(pid) { return this.players.filter(p => p.alive && this.areAllied(pid, p.id)); },
 
-  allies(pid) { return this.players.filter(p => p.alive && p.id !== pid && this.areAllied(pid, p.id)); },
+  pactMembers(id) { return this.players.filter(p => p.alive && p.pact === id); },
+
+  pactName(p) { return p.pact >= 0 ? this.pacts.get(p.pact).name : ''; },
+
+  // Pourquoi ces deux royaumes ne peuvent pas s'allier (null si c'est possible)
+  pactBlock(a, b) {
+    const pa = this.players[a], pb = this.players[b];
+    if (pa.pact >= 0 && pb.pact >= 0) {
+      return pa.isHuman ? `Tu fais déjà partie d'un pacte, et ${pb.name} d'un autre.`
+        : `${pa.name} et ${pb.name} sont déjà dans des pactes différents.`;
+    }
+    const pact = pa.pact >= 0 ? pa.pact : pb.pact;
+    if (pact >= 0 && this.pactMembers(pact).length >= CONFIG.MAX_PACT_SIZE) {
+      return `Le ${this.pacts.get(pact).name} est complet (${CONFIG.MAX_PACT_SIZE} royaumes maximum).`;
+    }
+    return null;
+  },
+
+  // Quitter son pacte ; s'il ne reste qu'un seul royaume, le pacte disparaît
+  leavePact(p) {
+    const id = p.pact;
+    if (id < 0) return;
+    p.pact = -1;
+    const rest = this.pactMembers(id);
+    if (rest.length < 2) {
+      for (const m of rest) m.pact = -1;
+      this.pacts.delete(id);
+    }
+    this.version++;
+  },
 
   // Un royaume (bot) accepte-t-il l'alliance proposée par "from" ?
   wouldAccept(bot, from) {
-    if (this.tick < from.traitorUntil) return false; // personne ne fait confiance à un traître
+    if (this.isTraitor(from)) return false; // personne ne fait confiance à un traître
+    // Un pacte n'accueille pas un traître
+    if (this.isTraitor(bot) && from.pact >= 0) return false;
     // Un allié puissant est plus intéressant
     let chance = 0.2 + 0.3 * Math.min(from.troops / Math.max(1, bot.troops), 1.5);
     if (from.isHuman) chance -= this.difficulty.hateHuman * 0.5;
-    if (this.allies(bot.id).length >= 2) chance *= 0.5;
+    if (this.allies(bot.id).length + this.allies(from.id).length >= 2) chance *= 0.5;
     if (this.attacks.some(a => !a.done && a.attacker === from.id && a.target === bot.id)) chance *= 0.3;
     return Math.random() < chance;
   },
@@ -601,6 +638,8 @@ const Game = {
     const from = this.players[fromId], to = this.players[toId];
     if (!from.alive || !to.alive || fromId === toId) return 'Ce royaume n\'existe plus.';
     if (this.areAllied(fromId, toId)) return `Tu es déjà allié avec ${to.name}.`;
+    const block = this.pactBlock(fromId, toId);
+    if (block) return block;
     const wait = (from.refusedUntil[toId] || 0) - this.tick;
     if (wait > 0) return `${to.name} a refusé récemment. Réessaie dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`;
     if (to.isHuman) return UI.askAlliance(from) ? 'pending' : 'refused';
@@ -616,24 +655,38 @@ const Game = {
     this.players[fromId].refusedUntil[toId] = this.tick + CONFIG.ALLIANCE_REFUSAL_COOLDOWN * CONFIG.TICKS_PER_SECOND;
   },
 
+  // a et b s'allient : soit ils créent un nouveau pacte, soit l'un rejoint le pacte de l'autre
   makeAlliance(a, b) {
-    this.alliances.add(this.allyKey(a, b));
-    // Les combats entre les deux royaumes s'arrêtent, les soldats rentrent
-    for (const at of this.attacks) {
-      if ((at.attacker === a && at.target === b) || (at.attacker === b && at.target === a)) this.endAttack(at);
+    const pa = this.players[a], pb = this.players[b];
+    if (this.areAllied(a, b) || this.pactBlock(a, b)) return;
+    if (pa.pact < 0 && pb.pact < 0) {
+      const id = this.nextPactId++;
+      const de = /^[AEIOUÉÈÊÂÎÔY]/i.test(pa.name) ? "d'" : 'de ';
+      this.pacts.set(id, { name: `Pacte ${de}${pa.name}` });
+      pa.pact = pb.pact = id;
+      UI.log(`🤝 ${pa.name} et ${pb.name} forment le ${this.pacts.get(id).name} !`, 'good');
+    } else {
+      const host = pa.pact >= 0 ? pa : pb, joiner = host === pa ? pb : pa;
+      joiner.pact = host.pact;
+      UI.log(`🤝 ${joiner.name} rejoint le ${this.pactName(host)} !`, 'good');
     }
-    UI.log(`🤝 ${this.players[a].name} et ${this.players[b].name} sont maintenant alliés !`, 'good');
+    this.version++;
+    // Les combats entre membres du pacte s'arrêtent, les soldats rentrent
+    for (const at of this.attacks) {
+      if (at.target >= 0 && this.areAllied(at.attacker, at.target)) this.endAttack(at);
+    }
   },
 
   // Un traître a sa défense affaiblie pendant TRAITOR_DURATION secondes
   isTraitor(p) { return this.tick < p.traitorUntil; },
 
+  // Trahir un allié = quitter son pacte (en traître)
   breakAlliance(traitorId, otherId) {
     if (!this.areAllied(traitorId, otherId)) return;
-    this.alliances.delete(this.allyKey(traitorId, otherId));
-    const traitor = this.players[traitorId];
+    const traitor = this.players[traitorId], name = this.pactName(traitor);
+    this.leavePact(traitor);
     traitor.traitorUntil = this.tick + CONFIG.TRAITOR_DURATION * CONFIG.TICKS_PER_SECOND;
-    UI.log(`🗡️ ${traitor.name} a trahi ${this.players[otherId].name} ! Sa défense est affaiblie.`, 'warn');
+    UI.log(`🗡️ ${traitor.name} a trahi le ${name} ! Sa défense est affaiblie.`, 'warn');
   },
 
   // --- Boucle principale (appelée TICKS_PER_SECOND fois par seconde) ---
@@ -664,10 +717,18 @@ const Game = {
       return;
     }
     const botsAlive = this.players.some(p => !p.isHuman && p.alive);
-    if (h.tiles / this.landCount >= CONFIG.WIN_RATIO || !botsAlive) {
+    // Victoire : 85 % des terres (une seule fois, on peut ensuite continuer à jouer),
+    // ou plus aucun royaume rival (fin de la partie)
+    if (!botsAlive || (!this.victoryShown && h.tiles / this.landCount >= CONFIG.WIN_RATIO)) {
+      this.victoryShown = true;
       this.phase = 'over';
-      UI.showEnd(true);
+      UI.showEnd(true, botsAlive);
     }
+  },
+
+  // Après la victoire, reprendre la partie pour finir la conquête
+  continueAfterVictory() {
+    this.phase = 'playing';
   },
 
   // Combien de cases de frontière avec chaque voisin (-1 = terres libres).

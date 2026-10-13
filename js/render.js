@@ -332,37 +332,36 @@ const Render = {
     }
   },
 
-  // Lignes d'alliance (pointillés dorés + 🤝) : celles du royaume survolé,
-  // ou toutes si on les a affichées avec la touche A.
-  drawAlliances(ox, oy) {
-    const ctx = this.ctx, G = Game, s = this.cam.scale;
-    if (G.phase !== 'playing' && G.phase !== 'over') return;
-    const focus = this.hover >= 0 ? G.owner[this.hover] : -1;
-    if (!UI.showAlliances && focus < 0) return;
-    const center = p => [ox + (p.sumX / p.tiles + 0.5) * s, oy + (p.sumY / p.tiles + 0.5) * s];
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (const key of G.alliances) {
-      const [a, b] = key.split('-').map(Number);
-      if (!UI.showAlliances && a !== focus && b !== focus) continue;
-      const pa = G.players[a], pb = G.players[b];
-      if (!pa.alive || !pb.alive || !pa.tiles || !pb.tiles) continue;
-      const [x1, y1] = center(pa), [x2, y2] = center(pb);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.setLineDash([]);
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = 'rgba(20,12,4,0.5)';
-      ctx.stroke();
-      ctx.setLineDash([8, 6]);
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = '#f2cf5b';
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.font = '18px serif';
-      ctx.fillText('🤝', (x1 + x2) / 2, (y1 + y2) / 2);
+  // Frontière dorée autour de chaque pacte : on trace les bords des cases d'un royaume
+  // membre d'un pacte qui touchent une case hors du pacte (autre royaume, terre libre, mer).
+  // Les frontières entre alliés ne sont donc pas dorées : le pacte forme un seul bloc.
+  updatePactEdges() {
+    const G = Game;
+    if (this.pactVersion === G.version) return;
+    this.pactVersion = G.version;
+    const pactOf = i => (G.owner[i] >= 0 ? G.players[G.owner[i]].pact : -1);
+    const tiles = [];
+    for (let i = 0; i < G.N; i++) if (pactOf(i) >= 0) tiles.push(i);
+    this.pactEdges = this.zoneEdges(tiles, (i, n) => pactOf(n) === pactOf(i));
+  },
+
+  drawPactBorders(ox, oy) {
+    this.updatePactEdges();
+    if (!this.pactEdges.length) return;
+    const ctx = this.ctx, s = this.cam.scale;
+    ctx.beginPath();
+    for (const [x1, y1, x2, y2] of this.pactEdges) {
+      ctx.moveTo(ox + x1 * s, oy + y1 * s);
+      ctx.lineTo(ox + x2 * s, oy + y2 * s);
     }
+    ctx.lineCap = 'square';
+    ctx.lineWidth = Math.max(3, s * 0.35) + 2;
+    ctx.strokeStyle = 'rgba(60,40,5,0.75)';
+    ctx.stroke();
+    ctx.lineWidth = Math.max(3, s * 0.35);
+    ctx.strokeStyle = '#f2c94c';
+    ctx.stroke();
+    ctx.lineCap = 'butt';
   },
 
   // Routes des châteaux (niveau 2 : chemins de terre, niveau 3 : routes pavées)
@@ -418,6 +417,7 @@ const Render = {
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
 
     this.drawRoads(ox, oy);
+    this.drawPactBorders(ox, oy);
     this.drawCastleZones(ox, oy);
 
     ctx.textAlign = 'center';
@@ -467,7 +467,6 @@ const Render = {
       }
     }
 
-    this.drawAlliances(ox, oy);
 
     // Noms des royaumes
     for (const p of G.players) {
