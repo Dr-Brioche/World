@@ -281,9 +281,13 @@ const UI = {
     $('troopPeak').style.left = CONFIG.TROOP_PEAK_RATIO * 100 + '%';
     $('troopText').textContent = `⚔️ ${fmt(h.troops)} / ${fmt(max)}`;
     let tip = '';
-    if (r >= 0.98) tip = ' · armée pleine !';
-    else if (eff < 0.45) tip = ' · trop de soldats, le recrutement ralentit';
-    else if (eff > 0.85) tip = ' · recrutement au top';
+    const f = G.recoveryFactor(h);
+    if (G.isRecovering(h) && G.isRallying(h)) tip += ` · repos et réorganisation (x${+f.toFixed(2)})`;
+    else if (G.isRecovering(h)) tip += ` · armée au repos (x${CONFIG.RECOVER_GROWTH_FACTOR})`;
+    else if (G.isRallying(h)) tip += ` · réorganisation (x${CONFIG.RALLY_GROWTH_FACTOR})`;
+    if (r >= 0.98) tip += ' · armée pleine !';
+    else if (eff < 0.45) tip += ' · trop de soldats, le recrutement ralentit';
+    else if (eff > 0.85) tip += ' · recrutement au top';
     $('troopRate').innerHTML = `<b style="color:${color}">+${fmt(G.troopRate(h))}/s</b>${tip}`;
   },
 
