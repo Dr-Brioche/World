@@ -317,8 +317,8 @@ const UI = {
         return `<div class="attack panel incoming"><span>🛡️ ${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
           `<b data-troops="${a.id}"></b></div>`;
       }).join('') + resting.map(p =>
-        `<div class="attack panel resting" title="Ton armée récupère après la prise d'un château">` +
-        `<span>⏳ Repos avant d'attaquer ${escapeHtml(p.name)}</span><b data-rest="${p.id}"></b></div>`
+        `<div class="attack panel resting" title="Trêve après la prise d'un château : pas d'attaque dans les deux sens">` +
+        `<span>⏳ Trêve avec ${escapeHtml(p.name)}</span><b data-rest="${p.id}"></b></div>`
       ).join('');
     }
     for (const p of resting) {

@@ -40,7 +40,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    réattaquer ce royaume : une **trêve**, dont le temps restant s'affiche entre parenthèses sous le nom
    de ce royaume sur la carte, et en bas de l'écran. Pendant ces 30 secondes,
    ton **recrutement est divisé par 2**, et celui du royaume attaqué est **multiplié par 1.5**
-   pour qu'il ait le temps de se défendre. Les bots suivent la même règle.
+   pour qu'il ait le temps de se défendre. La trêve vaut **dans les deux sens** : le royaume qui a perdu
+   son château ne peut pas non plus contre-attaquer avant la fin. Les bots suivent la même règle.
 3. **Construis** : appuie sur `1`, `2` ou `3` (ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
@@ -100,6 +101,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.16.2** : la trêve après la prise d'un château vaut dans les deux sens : le royaume qui l'a perdu ne peut pas contre-attaquer tout de suite
 - **v0.16.1** : le temps de trêve après la prise d'un château s'affiche sous le nom du royaume ennemi sur la carte
 - **v0.16** : les châteaux de niveau 2 et 3 tracent des chemins de terre puis des routes pavées vers les moulins et casernes de leur muraille, qui produisent +20 % puis +50 %
 - **v0.15** : pendant les 30 s de repos après la prise d'un château, l'attaquant recrute 2x moins vite et le défenseur 1.5x plus vite
