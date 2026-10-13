@@ -221,6 +221,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Le jeu ne montre **pas de chiffres précis** (pas de « +X par seconde ») : seulement des pourcentages.
    À toi de voir ce qui marche le mieux !
    La jauge en bas de l'écran montre tes soldats, et au-dessus si ton recrutement va bien.
+   **Les garnisons sont fixes** : leurs soldats ne quittent jamais leur château, port ou avant-poste
+   (ils ne servent qu'à le défendre ; pour attaquer, tu utilises tes soldats disponibles).
    **Les soldats en garnison** (châteaux, port royal, avant-postes) **comptent aussi dans ton armée** :
    ensemble, ils ne peuvent pas dépasser le maximum. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
    puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée est pleine.
