@@ -16,8 +16,9 @@ const UI = {
       const btn = document.createElement('button');
       btn.className = 'build';
       btn.dataset.type = t;
-      btn.title = `${b.name} : ${b.desc} (touche ${t})`;
-      btn.innerHTML = `<span class="icon">${b.icon}</span><span>${b.name}</span><span class="cost"></span>`;
+      btn.title = `${b.name} : ${b.desc} (touche ${t} : construit directement sous la souris)`;
+      btn.innerHTML = `<span class="key">${t}</span><span class="icon">${b.icon}</span>` +
+        `<span>${b.name}</span><span class="cost"></span>`;
       btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
       builds.appendChild(btn);
     }
@@ -41,7 +42,7 @@ const UI = {
 
     window.addEventListener('keydown', e => {
       if (Game.phase !== 'playing' || e.target.tagName === 'INPUT') return;
-      if (e.key >= '1' && e.key <= String(BUILDINGS.length - 1)) this.selectBuild(+e.key);
+      if (e.key >= '1' && e.key <= String(BUILDINGS.length - 1)) this.quickBuild(+e.key);
       if (e.key === 'Escape') this.selectBuild(0);
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
@@ -58,6 +59,22 @@ const UI = {
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
     $('hint').textContent = '👑 Clique sur une terre pour fonder ta capitale';
+  },
+
+  // Touche 1, 2 ou 3 : construit tout de suite sous la souris.
+  // Sur un de ses bâtiments du même type, l'améliore directement.
+  quickBuild(t) {
+    const G = Game, h = G.human, i = Render.hover;
+    if (!h.alive || !Render.mouse || i < 0) return this.selectBuild(t);
+    if (G.building[i] === t && G.owner[i] === h.id && BUILDING_LEVELS[t]) {
+      const a = G.anchor[i], err = G.upgradeBuilding(h, a);
+      if (err) this.log(err, 'warn');
+      else this.log(`${BUILDINGS[t].icon} Amélioration terminée : ${G.buildingInfo(a).name} !`, 'good');
+      return;
+    }
+    const err = G.tryBuild(h, Render.anchorAt(Render.mouse.x, Render.mouse.y, t), t);
+    if (err) this.log(err, 'warn');
+    else this.selectBuild(0);
   },
 
   selectBuild(t) {
