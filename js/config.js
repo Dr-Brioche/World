@@ -119,9 +119,9 @@ const CASTLE_LEVELS = [
 // castles = châteaux en plus que le royaume peut construire (la meilleure église du royaume compte).
 const CHURCH_LEVELS = [
   null,
-  { name: 'Église',        slots: 1, castles: 0, radius: 7 },
-  { name: 'Grande église', slots: 2, castles: 1, radius: 8,  upgradeCost: 100 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, upgradeCost: 200 },
+  { name: 'Église',        slots: 1, castles: 0, radius: 7,  img: 'img/eglise1.webp', size: 2.6 },
+  { name: 'Grande église', slots: 2, castles: 1, radius: 8,  img: 'img/eglise2.webp', size: 3,   upgradeCost: 100 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 200 },
 ];
 
 // Production des moulins et casernes selon le terrain où ils sont construits

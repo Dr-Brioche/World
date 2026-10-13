@@ -171,6 +171,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.27.1** : images des 3 niveaux de l'église (église en bois, grande église, cathédrale), visibles en zoomant
 - **v0.27** : nouveau bâtiment ⛪ **église** (3 niveaux jusqu'à la cathédrale) : se construit partout, permet des moulins et casernes autour d'elle et débloque des châteaux en plus, mais n'est pas défendue · la caserne de niveau 1 rend aussi les soldats 10 % plus forts
 - **v0.26** : une caserne de niveau 2 rend **tous** les soldats du royaume 20 % plus forts au combat, une de niveau 3 50 % plus forts (la meilleure caserne compte)
 - **v0.25** : un château encerclé garde les terres de sa muraille et continue de produire · plus d'« armée de secours » : on clique sur son château isolé pour lancer un assaut classique qui le relie au royaume (la route s'élargit s'il réussit)
@@ -235,4 +236,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-| `img/` | Les images des bâtiments (3 niveaux de château, 3 de caserne, 2 de moulin) et des bannières (`img/bannieres/`) |
+| `img/` | Les images des bâtiments (3 niveaux de château, 3 de caserne, 3 d'église, 2 de moulin) et des bannières (`img/bannieres/`) |
