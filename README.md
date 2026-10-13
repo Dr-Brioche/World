@@ -80,10 +80,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
      (un peu élargie), puis les survivants rentrent. Tu peux relancer un nouvel assaut aussitôt.
 
-   **✂️ Encercler** : si ton assaut **coupe** un morceau du royaume ennemi, et que ce morceau fait
-   **moins de 20 %** de son territoire et touche le tien, il est **pris d'un coup** !
-   S'il y a un château dedans, le château reste à l'ennemi **avec les terres dans sa muraille** :
-   il tient seul, **isolé** 🚩 au milieu de tes terres.
+   **✂️ Encercler** : quand un morceau d'un royaume est **coupé** du reste (par un assaut, un débarquement…)
+   et qu'il fait **moins de 20 %** de son territoire, il est **englobé d'un coup par le royaume qui l'entoure
+   le plus** (celui qui a le plus de frontière avec lui), pas forcément celui qui l'a coupé !
+   S'il y a un château dedans, le château reste à son royaume **avec les terres dans sa muraille** :
+   il tient seul, **isolé** 🚩 au milieu des terres ennemies.
    - Un château isolé **continue de produire** pour son royaume (avec les moulins et casernes de sa muraille) :
      il est juste plus difficile à défendre.
    - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend.
@@ -262,6 +263,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.35** : les armées avancent 4 fois moins vite sur la carte (on voit mieux ce qui se passe) · un petit morceau de royaume coupé du reste est englobé par le royaume qui l'entoure le plus
 - **v0.34.7** : dans le menu de départ, on peut **interdire les pactes** (chacun pour soi)
 - **v0.34.6** : en survolant un royaume, tout son territoire s'illumine et ses bâtiments sont entourés d'un cercle doré
 - **v0.34.5** : clic droit chez un allié : 🎁 lui envoyer des soldats (il en reçoit 75 %)

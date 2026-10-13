@@ -45,7 +45,8 @@ const CONFIG = {
                              // les châteaux pris à l'ennemi ne comptent pas). Une église en débloque d'autres.
 
   // --- Combat ---
-  ATTACK_SPEED: 1,             // vitesse de conquête
+  ATTACK_SPEED: 0.25,          // vitesse de conquête (plus petit = les armées avancent plus lentement sur la carte)
+  MIN_ATTACK_SPEED: 0.25,      // vitesse minimum d'une petite armée (cases de plaine par tour)
   ATTACK_PREP_TIME: 10,        // secondes de préparation avant un assaut contre un royaume
                                // (on peut y ajouter des soldats tout de suite)
   REINFORCE_DELAY: 5,          // une fois l'assaut lancé, les renforts mettent 5 s à arriver
