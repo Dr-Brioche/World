@@ -283,6 +283,7 @@ const UI = {
   describeTile(i) {
     if (i < 0) return '';
     const G = Game, t = TERRAIN_INFO[G.terrain[i]];
+    if (G.terrain[i] === TERRAIN.GREAT_RIVER) return '🌊 Grand fleuve (infranchissable)';
     if (!G.isLand(i)) return '🌊 Mer';
     const o = G.owner[i];
     let txt = t.cost > 1 ? `${t.name} (défense ${pct(t.cost - 1)})` : t.name;

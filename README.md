@@ -184,14 +184,18 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +250 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 
-🌊 **Les fleuves** naissent au pied des montagnes et descendent jusqu'à la mer : ce sont des **frontières naturelles**.
+🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont des **frontières naturelles**.
 Ils sont très longs à traverser, et un défenseur qui intercepte un ennemi sur un fleuve de son royaume
 a un **gros bonus de défense (+3, soit +300 %)**. Il y a entre **3 et 12 fleuves** par partie, au hasard. On ne peut rien construire dessus.
+Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
+un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer.
+Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une grande île entourée d'océan.
 
 **Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` `4` (ou `&` `é` `"` `'`) = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.31** : les fleuves qui se rejoignent grossissent (2 fleuves = double largeur, 3 = grand fleuve infranchissable) · quelques lacs sur les fleuves · les fleuves naissent dans les montagnes · toujours de l'océan au bord de la carte (plus de terre coupée net)
 - **v0.30.1** : bonus de défense des fleuves réduit à +3 · entre 3 et 12 fleuves par partie, au hasard · carte un peu plus grande (240 x 156 cases au lieu de 200 x 130)
 - **v0.30** : 🌊 des fleuves sur la carte, du pied des montagnes jusqu'à la mer : longs à traverser, et +5 de défense pour celui qui y intercepte un ennemi
 - **v0.29.2** : 3 points de passage au maximum par assaut
