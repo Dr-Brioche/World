@@ -96,7 +96,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
    **Les moulins et casernes se construisent dans l'enceinte d'un de tes châteaux** (dans sa muraille),
-   **ou près d'une de tes églises** qui a encore de la place, pas ailleurs dans l'arrière-pays.
+   **ou près d'une de tes églises** (ou d'un port amélioré) qui a encore de la place, pas ailleurs dans l'arrière-pays.
    Les châteaux et les églises, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
    (l'aperçu devient rouge si c'est trop près).
@@ -165,11 +165,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      on peut l'attaquer directement, comme un château. **Toutes les 10 secondes**, il rapporte de l'or.
      **Clique dessus pour l'améliorer** (3 niveaux) :
 
-     | Niveau | Or produit | Expéditions maritimes | Prix |
-     |---|---|---|---|
-     | 1. Port | un peu | non | 💰 60 (puis plus cher à chaque port) |
-     | 2. Grand port | +100 % | **oui** | 💰 120 |
-     | 3. Port royal | +67 % | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** (comme un fort en bois) | 💰 250 |
+     | Niveau | Or produit | Moulins ou casernes autour | Expéditions maritimes | Prix |
+     |---|---|---|---|---|
+     | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
+     | 2. Grand port | +100 % | 1 | **oui** | 💰 120 |
+     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** (comme un fort en bois) | 💰 250 |
+
+     Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 
@@ -225,7 +227,7 @@ Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une g
 
 ## 🆕 Nouveautés
 
-- **v0.32.1** : une expédition emmène le % de soldats choisi (petite perte en mer), qui défendent seuls l'avant-poste · le port royal (niveau 3) a une petite garnison · les soldats en garnison comptent dans l'armée maximum
+- **v0.32.1** : une expédition emmène le % de soldats choisi (petite perte en mer), qui défendent seuls l'avant-poste · le port royal (niveau 3) a une petite garnison · on peut construire 1 bâtiment autour d'un grand port, 3 autour d'un port royal · les soldats en garnison comptent dans l'armée maximum
 - **v0.32** : ⚓ nouveau bâtiment **port** (3 niveaux, au bord de l'eau, produit de l'or, attaquable) · ⛵ **expéditions maritimes** dès le niveau 2 : clic droit sur une côte → Débarquer, un bateau traverse la mer et plante un **avant-poste** ⛺ d'où l'on peut attaquer · menu d'actions au clic droit
 - **v0.31.1** : zone de jeu 50 % plus grande (carte de 294 x 192 cases, vue plus dézoomée au départ)
 - **v0.31** : les fleuves qui se rejoignent grossissent (2 fleuves = double largeur, 3 = grand fleuve infranchissable) · quelques lacs sur les fleuves · les fleuves naissent dans les montagnes · toujours de l'océan au bord de la carte (plus de terre coupée net)

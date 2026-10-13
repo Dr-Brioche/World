@@ -149,6 +149,7 @@ const UI = {
     if (type === B_PORT) {
       return `or toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
         (info.boatSpeed ? `, expéditions maritimes${info.landingCost < 1 ? ' moins chères et plus rapides' : ''}` : '') +
+        (info.slots ? `, ${info.slots} ${info.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} autour de lui` : '') +
         (info.garrison ? ', petite garnison' : '');
     }
     if (type === B_CASTLE) {
@@ -170,7 +171,8 @@ const UI = {
   // Ce que change une amélioration, en pourcentages par rapport au niveau actuel
   upgradeEffect(type, cur, next) {
     if (type === B_PORT) {
-      return `or produit ${pct(next.gold / cur.gold - 1)}, ` + (cur.boatSpeed
+      return `or produit ${pct(next.gold / cur.gold - 1)}, ${next.slots} ${next.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} ` +
+        'autour de lui, ' + (cur.boatSpeed
         ? `débarquements ${pct(next.landingCost / cur.landingCost - 1)} moins chers, bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)} plus rapides` +
           (next.garrison ? ', et une petite garnison pour le défendre' : '')
         : 'débloque les expéditions maritimes (clic droit sur une côte → ⛵ Débarquer)');
@@ -313,6 +315,7 @@ const UI = {
       }
       if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain : ${prodText(G.terrainFactor(a, G.building[i]))}`;
       if (G.building[i] === B_PORT) {
+        if (info.slots) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots}`;
         txt += info.garrison ? ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} %` : '';
         txt += ' · ⚠️ pas de muraille : on peut l\'attaquer directement';
       }

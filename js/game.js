@@ -235,11 +235,17 @@ const Game = {
     return n;
   },
 
-  // Une église du royaume qui accepte ce bâtiment (il est dans sa zone et elle a de la place), ou -1
+  // Bâtiment qui permet de construire autour de lui : une église, ou un port de niveau 2 ou 3
+  hasSlots(a) {
+    const t = this.building[a];
+    return (t === B_CHURCH || t === B_PORT) && this.buildingInfo(a).slots > 0;
+  },
+
+  // Une église (ou un port) du royaume qui accepte ce bâtiment (il est dans sa zone et elle a de la place), ou -1
   churchFor(pid, a, type) {
     const cells = this.footprint(a, type);
     for (const ch of this.buildingTiles) {
-      if (this.building[ch] !== B_CHURCH || this.owner[ch] !== pid) continue;
+      if (!this.hasSlots(ch) || this.owner[ch] !== pid) continue;
       const info = this.buildingInfo(ch);
       if (cells.every(j => this.inChurchRange(ch, j, info.radius)) && this.churchUsed(ch) < info.slots) return ch;
     }
@@ -586,7 +592,7 @@ const Game = {
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
-        return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux, ou près d'une de tes églises ` +
+        return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux, ou près d'une de tes églises (ou d'un port amélioré) ` +
           'qui a encore de la place (pas ailleurs dans l\'arrière-pays).';
       }
       if (i >= 0 && this.owner[i] === p.id && this.churchCastleConflict(p.id, i, type)) {
