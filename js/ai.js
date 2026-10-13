@@ -32,6 +32,7 @@ const AI = {
       const e = Game.players[o];
       let score = p.troops / (e.troops + 50) + Math.random() * 0.3;
       if (e.isHuman) score += Game.difficulty.hateHuman;
+      if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
       if (score > bestScore) { bestScore = score; best = o; }
     }
     const full = p.troops >= max * 0.95;

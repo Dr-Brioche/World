@@ -86,12 +86,32 @@ const UI = {
     const G = Game, h = G.human, other = G.players[id];
     if (G.phase !== 'playing' || !h.alive) return;
     if (G.areAllied(h.id, id)) {
-      G.breakAlliance(h.id, id);
+      this.confirmBetrayal(other, () => G.breakAlliance(h.id, id));
       return;
     }
     const res = G.proposeAlliance(h.id, id);
     if (res === 'refused') this.log(`🚫 ${other.name} refuse ton alliance.`, 'warn');
     else if (res !== 'accepted') this.log(res, 'warn');
+  },
+
+  // Demande confirmation avant de trahir un allié.
+  confirmBetrayal(other, onConfirm) {
+    if (this.betrayalBox) this.betrayalBox.remove();
+    const el = document.createElement('div');
+    this.betrayalBox = el;
+    el.className = 'msg request betray';
+    const pct = Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100);
+    el.innerHTML = `🗡️ Trahir <b>${escapeHtml(other.name)}</b> ? Ta défense sera affaiblie de ${pct} % ` +
+      `pendant ${CONFIG.TRAITOR_DURATION / 60} min et personne ne voudra s'allier avec toi.` +
+      `<div class="choices"><button data-yes>Trahir</button><button data-no>Annuler</button></div>`;
+    const close = () => { el.remove(); if (this.betrayalBox === el) this.betrayalBox = null; };
+    el.querySelector('[data-yes]').addEventListener('click', () => {
+      close();
+      if (Game.phase === 'playing' && Game.human.alive && Game.areAllied(Game.human.id, other.id)) onConfirm();
+    });
+    el.querySelector('[data-no]').addEventListener('click', close);
+    $('log').prepend(el);
+    setTimeout(close, 10000);
   },
 
   // Un royaume propose une alliance au joueur. Renvoie false si une demande est déjà en cours.
@@ -138,6 +158,7 @@ const UI = {
     let txt = `${t.name} (coût x${t.cost})`;
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
+    if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
     if (G.building[i]) txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
     if (o >= 0 && G.castleProtects(o, i)) txt += ' · 🛡️ protégée';
     return txt;
@@ -151,6 +172,10 @@ const UI = {
     $('gold').textContent = `${fmt(h.gold)} (+${G.goldRate(h).toFixed(1)}/s)`;
     $('troops').textContent = `${fmt(h.troops)} / ${fmt(G.maxTroops(h))} (+${Math.round(G.troopRate(h))}/s)`;
     $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + ' %';
+    const traitorSecs = Math.ceil((h.traitorUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
+    $('traitor').classList.toggle('hidden', !G.isTraitor(h));
+    $('traitor').textContent = `🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % ` +
+      `(${Math.floor(traitorSecs / 60)}:${String(traitorSecs % 60).padStart(2, '0')})`;
     $('ratioVal').textContent = `${Math.round(this.ratio * 100)} % (${fmt(h.troops * this.ratio)})`;
 
     document.querySelectorAll('.build').forEach(btn => {
@@ -166,7 +191,7 @@ const UI = {
         ? `<button data-ally="${p.id}" title="Rompre l'alliance (trahison !)">💔</button>`
         : `<button data-ally="${p.id}" title="Proposer une alliance">🤝</button>`;
       return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}"><span class="sw" style="background:rgb(${p.color})"></span>` +
-        `<span class="nm">${allied ? '🤝 ' : ''}${escapeHtml(p.name)}</span><span class="pct">${(p.tiles / G.landCount * 100).toFixed(1)}%</span>${btn}</li>`;
+        `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${escapeHtml(p.name)}</span><span class="pct">${(p.tiles / G.landCount * 100).toFixed(1)}%</span>${btn}</li>`;
     }).join('');
 
     this.refreshAttacks();
@@ -225,8 +250,17 @@ const UI = {
       return;
     }
     if (!G.isLand(i) || G.owner[i] === h.id) return;
-    const err = G.launchAttack(h.id, G.owner[i], h.troops * this.ratio, i);
-    if (err) this.log(err, 'warn');
+    const target = G.owner[i];
+    const attack = () => {
+      const err = G.launchAttack(h.id, target, h.troops * this.ratio, i);
+      if (err) this.log(err, 'warn');
+    };
+    // Attaquer un allié = le trahir (après confirmation)
+    if (target >= 0 && G.areAllied(h.id, target)) {
+      this.confirmBetrayal(G.players[target], () => { G.breakAlliance(h.id, target); attack(); });
+      return;
+    }
+    attack();
   },
 };
 
