@@ -85,11 +85,11 @@ html, body {
 #kBanner { height: 26px; vertical-align: middle; }
 #kName { text-shadow: 0 0 2px #000, 0 0 1px #000; } /* lisible même avec une bannière claire */
 .pickTitle { text-align: left; margin: 10px 0 4px; }
-#bannerPick { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+#bannerPick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 6px 0 4px; }
 #bannerPick button { padding: 2px; background: transparent; border: 2px solid transparent; }
 #bannerPick button:hover { background: var(--parchment-dark); }
 #bannerPick button.active { border-color: var(--wood); background: var(--gold); }
-#bannerPick img { height: 52px; display: block; }
+#bannerPick img { height: 92px; display: block; }
 .sw {
   display: inline-block;
   width: 12px;
@@ -270,8 +270,10 @@ button:hover { background: #e8d6a8; }
   border: 4px double var(--wood);
   border-radius: 10px;
   padding: 24px 28px;
-  max-width: 480px;
+  max-width: 640px;
   width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   text-align: center;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
@@ -298,6 +300,7 @@ button:hover { background: #e8d6a8; }
   background: #fffaf0;
 }
 .card input[type=color] { padding: 0; width: 60px; height: 32px; }
+.card select { max-width: 62%; }
 .big {
   font-family: Cinzel, Georgia, serif;
   font-size: 18px;
@@ -310,11 +313,16 @@ button:hover { background: #e8d6a8; }
   text-align: left;
   font-size: 13px;
   padding-left: 18px;
-  margin-bottom: 0;
+  margin: 6px 0 0;
 }
+/* Règles repliées : on clique sur le titre pour les dérouler */
+.rulesBox { margin-top: 14px; text-align: left; border-top: 1px solid var(--parchment-dark); padding-top: 8px; }
+.rulesBox summary { cursor: pointer; font-weight: bold; font-family: Cinzel, Georgia, serif; }
+.rulesBox summary small { font-weight: normal; font-family: Georgia, serif; opacity: 0.7; }
 .rules li { margin: 4px 0; }
 
 @media (max-width: 760px) {
+  #bannerPick img { height: 60px; }
   .panel { font-size: 12px; padding: 4px 8px; }
   #topbar { gap: 8px; left: 8px; right: 8px; transform: none; flex-wrap: wrap; justify-content: center; white-space: normal; }
   #side { top: auto; bottom: 120px; width: 170px; font-size: 11px; }
