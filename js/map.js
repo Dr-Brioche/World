@@ -1,5 +1,5 @@
 // 🗺️ GÉNÉRATION DE LA CARTE
-// Crée une carte aléatoire (mer, plaines, forêts, collines, montagnes)
+// Crée une carte aléatoire (mer, plaines, forêts, collines, montagnes, fleuves)
 // à partir d'un "bruit" mathématique qui donne des formes naturelles.
 
 // Générateur de nombres aléatoires à partir d'une graine (même graine = même carte).
@@ -110,9 +110,66 @@ function generateMap(seed) {
     if (terrain[i] !== TERRAIN.WATER && comp[i] !== best) terrain[i] = TERRAIN.WATER;
   }
 
-  // 4. Petites variations de couleur pour un rendu moins plat.
+  // 4. Les fleuves : chacun part d'une montagne et descend la pente jusqu'à la mer.
+  addRivers(terrain, elev, W, H, rand);
+
+  // 5. Petites variations de couleur pour un rendu moins plat.
   const shade = new Int8Array(N);
   for (let i = 0; i < N; i++) shade[i] = Math.round((rand() - 0.5) * 12);
 
   return { W, H, N, terrain, shade };
+}
+
+// Trace CONFIG.RIVERS fleuves. Un fleuve part du pied d'une montagne et suit la pente jusqu'à la mer
+// (ou jusqu'à un autre fleuve, dont il devient un affluent).
+function addRivers(terrain, elev, W, H, rand) {
+  const N = W * H;
+  const neighbors = i => {
+    const x = i % W, out = [];
+    if (x > 0) out.push(i - 1);
+    if (x < W - 1) out.push(i + 1);
+    if (i >= W) out.push(i - W);
+    if (i < N - W) out.push(i + W);
+    return out;
+  };
+  // 1. Pour chaque case, la direction de l'eau qui coule vers la mer. On « remplit » la carte depuis
+  //    la mer en montant toujours par le point le plus bas : l'eau ne reste jamais coincée dans un creux.
+  //    (MinHeap est défini dans game.js)
+  const down = new Int32Array(N).fill(-1), done = new Uint8Array(N), heap = new MinHeap();
+  for (let i = 0; i < N; i++) if (terrain[i] === TERRAIN.WATER) { done[i] = 1; heap.push(-1, i); }
+  while (heap.size) {
+    const [level, i] = heap.pop();
+    for (const n of neighbors(i)) {
+      if (done[n]) continue;
+      done[n] = 1;
+      down[n] = i; // l'eau de n coule vers i
+      heap.push(Math.max(level, elev[n]) + rand() * 0.006, n); // un peu de hasard : des méandres
+    }
+  }
+  // 2. Sources : une case de montagne qui touche une case sans montagne (le pied de la montagne)
+  const sources = [];
+  for (let i = 0; i < N; i++) {
+    if (terrain[i] === TERRAIN.MOUNTAIN && neighbors(i).some(n => terrain[n] !== TERRAIN.MOUNTAIN && terrain[n] !== TERRAIN.WATER)) {
+      sources.push(i);
+    }
+  }
+  // 3. On suit l'eau depuis des sources tirées au hasard
+  const starts = [];
+  let made = 0;
+  for (let tries = 0; tries < 300 && made < CONFIG.RIVERS && sources.length; tries++) {
+    const s = sources[(rand() * sources.length) | 0];
+    const sx = s % W, sy = (s / W) | 0;
+    if (starts.some(t => Math.abs(t % W - sx) + Math.abs(((t / W) | 0) - sy) < 25)) continue; // sources éloignées
+    const path = [];
+    let cur = down[s], left = false;
+    while (cur >= 0 && terrain[cur] !== TERRAIN.WATER && terrain[cur] !== TERRAIN.RIVER) {
+      if (terrain[cur] !== TERRAIN.MOUNTAIN) left = true; // le fleuve commence au pied de la montagne
+      if (left) path.push(cur);
+      cur = down[cur];
+    }
+    if (path.length < 12) continue; // trop court : on essaie une autre source
+    for (const i of path) terrain[i] = TERRAIN.RIVER;
+    starts.push(s);
+    made++;
+  }
 }

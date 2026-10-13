@@ -148,7 +148,8 @@ const Game = {
   canPlace(pid, a, type) {
     const n = this.sizeOf(type);
     if (a < 0 || a % this.W > this.W - n || ((a / this.W) | 0) > this.H - n) return false;
-    return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j])
+    return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]
+      && this.terrain[j] !== TERRAIN.RIVER)
       && this.insideWalls(pid, a, type) && !this.tooCloseToBuilding(a, type)
       && !this.churchCastleConflict(pid, a, type);
   },
@@ -349,7 +350,7 @@ const Game = {
 
   // --- Apparition des royaumes ---
   canSpawnAt(i, minDist) {
-    if (!this.isLand(i) || this.owner[i] !== -1) return false;
+    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER || this.owner[i] !== -1) return false;
     const x = i % this.W, y = (i / this.W) | 0;
     for (const p of this.players) {
       if (p.capital === undefined) continue;
@@ -376,7 +377,7 @@ const Game = {
     // du centre (sur la terre, libre ou à soi ; les cases libres sont alors prises)
     const n = this.sizeOf(B_CASTLE), half = (n - 1) / 2;
     const fits = a => this.footprint(a, B_CASTLE).every(j =>
-      this.isLand(j) && !this.building[j] && (this.owner[j] === p.id || this.owner[j] === -1));
+      this.isLand(j) && this.terrain[j] !== TERRAIN.RIVER && !this.building[j] && (this.owner[j] === p.id || this.owner[j] === -1));
     let best = -1, bestDist = Infinity;
     for (let dy = -r - n; dy <= r; dy++) {
       for (let dx = -r - n; dx <= r; dx++) {
@@ -1181,7 +1182,7 @@ const Game = {
     // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
     const speed = Math.max(1, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
-    a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, TERRAIN_INFO[TERRAIN.MOUNTAIN].cost));
+    a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
     while (!a.done) {
       const t = this.pickFrontier(a);
       if (t < 0) return this.endAttack(a);

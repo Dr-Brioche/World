@@ -95,6 +95,9 @@ const Render = {
       const pc = G.players[o].color;
       if (this.isBorder(i, o)) {
         r = pc[0] * 0.7; g = pc[1] * 0.7; b = pc[2] * 0.7;
+      } else if (G.terrain[i] === TERRAIN.RIVER) {
+        // un fleuve reste bien visible dans un royaume
+        r = r * 0.7 + pc[0] * 0.3; g = g * 0.7 + pc[1] * 0.3; b = b * 0.7 + pc[2] * 0.3;
       } else {
         r = r * 0.45 + pc[0] * 0.55; g = g * 0.45 + pc[1] * 0.55; b = b * 0.45 + pc[2] * 0.55;
       }

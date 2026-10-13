@@ -7,6 +7,7 @@ const CONFIG = {
   MAP_WIDTH: 200,          // largeur de la carte (en cases)
   MAP_HEIGHT: 130,         // hauteur de la carte (en cases)
   WATER_RATIO: 0.40,       // part de mer sur la carte (0.4 = 40 %)
+  RIVERS: 6,               // nombre de fleuves (ils partent des montagnes et vont jusqu'à la mer)
 
   // --- Vitesse ---
   TICKS_PER_SECOND: 10,    // nombre de "tours" de jeu par seconde
@@ -71,7 +72,7 @@ const CONFIG = {
   WIN_RATIO: 0.85,         // posséder 85 % des terres = victoire
 };
 
-const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4 };
+const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5 };
 
 const TERRAIN_INFO = [
   { name: 'Mer',      color: [52, 92, 130],   cost: Infinity },
@@ -79,7 +80,13 @@ const TERRAIN_INFO = [
   { name: 'Forêt',    color: [92, 124, 70],   cost: 1.6 },
   { name: 'Colline',  color: [162, 146, 104], cost: 2.2 },
   { name: 'Montagne', color: [130, 124, 118], cost: 3.5 },
+  // Fleuve : une frontière naturelle, longue à traverser, et un gros bonus de défense (+5)
+  { name: 'Fleuve',   color: [74, 132, 184],  cost: 6 },
 ];
+// cost = défense de la case (et temps pour la traverser) : 1 en plaine, plus ailleurs.
+// On ne peut rien construire sur un fleuve.
+// Le terrain le plus long à traverser (une armée doit toujours pouvoir avancer d'une case)
+const MAX_LAND_COST = Math.max(...TERRAIN_INFO.slice(1).map(t => t.cost));
 
 const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4;
 
@@ -129,10 +136,10 @@ const CHURCH_LEVELS = [
 ];
 
 // Production des moulins et casernes selon le terrain où ils sont construits
-// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne.
+// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve.
 const TERRAIN_PRODUCTION = {
-  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7], // les moulins aiment les plaines
-  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9], // les casernes, les forêts et les collines
+  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0], // les moulins aiment les plaines
+  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0], // les casernes, les forêts et les collines
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
