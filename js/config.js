@@ -6,7 +6,11 @@ const CONFIG = {
   // --- Carte ---
   MAP_WIDTH: 294,          // largeur de la carte (en cases)
   MAP_HEIGHT: 192,         // hauteur de la carte (en cases)
-  WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %)
+  WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
+  NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
+  ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
+  ISLETS: [3, 8],          // nombre d'îlots ajoutés à la carte « Normale »
+  MIN_SPAWN_LAND: 200,     // une capitale se fonde sur une terre d'au moins 200 cases (pas sur un îlot)
   RIVERS_MIN: 3,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
   RIVERS_MAX: 12,          // (ils partent des montagnes et vont jusqu'à la mer)
 
@@ -83,7 +87,7 @@ const CONFIG = {
   WIN_RATIO: 0.85,         // posséder 85 % des terres = victoire
 };
 
-const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6 };
+const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6, PEAK: 7 };
 
 const TERRAIN_INFO = [
   { name: 'Mer',      color: [52, 92, 130],   cost: Infinity },
@@ -95,6 +99,8 @@ const TERRAIN_INFO = [
   { name: 'Fleuve',   color: [74, 132, 184],  cost: 4 },
   // Grand fleuve (là où 3 fleuves se sont rejoints) : infranchissable, comme la mer
   { name: 'Grand fleuve', color: [58, 108, 160], cost: Infinity },
+  // Sommet (le cœur des montagnes) : infranchissable
+  { name: 'Sommet', color: [226, 228, 232], cost: Infinity },
 ];
 // cost = défense de la case (et temps pour la traverser) : 1 en plaine, plus ailleurs.
 // On ne peut rien construire sur un fleuve.
@@ -162,10 +168,10 @@ const PORT_LEVELS = [
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
 
 // Production des moulins et casernes selon le terrain où ils sont construits
-// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve.
+// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve, sommet.
 const TERRAIN_PRODUCTION = {
-  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0], // les moulins aiment les plaines
-  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0], // les casernes, les forêts et les collines
+  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0, 0], // les moulins aiment les plaines
+  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0, 0], // les casernes, les forêts et les collines
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)

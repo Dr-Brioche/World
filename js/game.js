@@ -10,7 +10,8 @@ const GameRules = {
   paused: false,
 
   init(opts) {
-    const map = generateMap((Math.random() * 1e9) | 0);
+    this.mapType = opts.mapType || 'normal';
+    const map = generateMap((Math.random() * 1e9) | 0, this.mapType);
     this.map = map;
     this.W = map.W; this.H = map.H; this.N = map.N;
     this.terrain = map.terrain;
@@ -70,8 +71,11 @@ const GameRules = {
   },
 
   // --- Outils sur les cases ---
-  // Terre = tout sauf la mer et les grands fleuves (infranchissables)
-  isLand(i) { return this.terrain[i] !== TERRAIN.WATER && this.terrain[i] !== TERRAIN.GREAT_RIVER; },
+  // Terre = tout sauf la mer, les grands fleuves et les sommets (infranchissables)
+  isLand(i) {
+    const t = this.terrain[i];
+    return t !== TERRAIN.WATER && t !== TERRAIN.GREAT_RIVER && t !== TERRAIN.PEAK;
+  },
 
   forNeighbors(i, cb) {
     const x = i % this.W, y = (i / this.W) | 0;
@@ -486,8 +490,28 @@ const GameRules = {
   castleProtects(pid, i) { return this.castleBonus(pid, i) > 0; },
 
   // --- Apparition des royaumes ---
+  // Taille du morceau de terre (île ou continent) de chaque case (calculée une fois)
+  landSize() {
+    if (this.landSizes && this.landSizes.length === this.N && this.landSizesMap === this.map) return this.landSizes;
+    const size = new Int32Array(this.N), comp = new Int32Array(this.N).fill(-1), order = [];
+    for (let s = 0; s < this.N; s++) {
+      if (!this.isLand(s) || comp[s] >= 0) continue;
+      order.length = 0;
+      comp[s] = s;
+      order.push(s);
+      for (let q = 0; q < order.length; q++) {
+        this.forNeighbors(order[q], n => { if (this.isLand(n) && comp[n] < 0) { comp[n] = s; order.push(n); } });
+      }
+      for (const i of order) size[i] = order.length;
+    }
+    this.landSizes = size;
+    this.landSizesMap = this.map;
+    return size;
+  },
+
   canSpawnAt(i, minDist) {
     if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER || this.owner[i] !== -1) return false;
+    if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return false; // pas de capitale sur un îlot
     const x = i % this.W, y = (i / this.W) | 0;
     for (const p of this.players) {
       if (p.capital === undefined) continue;
