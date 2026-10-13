@@ -231,7 +231,7 @@ const UI = {
     $('kName').textContent = h.name;
     $('kName').style.color = `rgb(${h.color})`;
     $('gold').textContent = `${fmt(h.gold)} (+${G.goldRate(h).toFixed(1)}/s)`;
-    $('troops').textContent = `${fmt(h.troops)} / ${fmt(G.maxTroops(h))} (+${Math.round(G.troopRate(h))}/s)`;
+    this.refreshTroopGauge();
     $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + ' %';
     const traitorSecs = Math.ceil((h.traitorUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
     $('traitor').classList.toggle('hidden', !G.isTraitor(h));
@@ -267,6 +267,22 @@ const UI = {
     } else if (G.phase === 'over') {
       $('hint').textContent = '';
     }
+  },
+
+  // Jauge des soldats en bas de l'écran, avec le recrutement par seconde au-dessus
+  refreshTroopGauge() {
+    const G = Game, h = G.human, max = G.maxTroops(h), r = Math.min(1, h.troops / max);
+    const eff = G.growthFactor(r) / CONFIG.TROOP_GROWTH_AT_PEAK; // 1 = recrutement au top
+    const color = eff > 0.85 ? '#3f9a3a' : eff > 0.45 ? '#d99a1e' : '#b8322a';
+    $('troopFill').style.width = (r * 100).toFixed(1) + '%';
+    $('troopFill').style.background = color;
+    $('troopPeak').style.left = CONFIG.TROOP_PEAK_RATIO * 100 + '%';
+    $('troopText').textContent = `⚔️ ${fmt(h.troops)} / ${fmt(max)}`;
+    let tip = '';
+    if (r >= 0.98) tip = ' · armée pleine !';
+    else if (eff < 0.45) tip = ' · trop de soldats, le recrutement ralentit';
+    else if (eff > 0.85) tip = ' · recrutement au top';
+    $('troopRate').innerHTML = `<b style="color:${color}">+${fmt(G.troopRate(h))}/s</b>${tip}`;
   },
 
   // Attaques en cours, en bas de l'écran. On ne reconstruit la liste que si elle change,

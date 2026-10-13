@@ -107,6 +107,45 @@ html, body {
 }
 #bottomwrap .panel { position: static; }
 
+/* Jauge des soldats */
+#troopGauge {
+  width: min(420px, calc(100vw - 32px));
+  padding: 4px 10px 6px;
+  text-align: center;
+  font-size: 13px;
+}
+#troopRate { margin-bottom: 3px; }
+#troopGauge .gauge {
+  position: relative;
+  height: 20px;
+  background: #d8c8a2;
+  border: 2px solid var(--wood);
+  border-radius: 10px;
+  overflow: hidden;
+}
+#troopFill {
+  height: 100%;
+  width: 0;
+  transition: width 0.2s linear, background 0.3s;
+}
+#troopPeak {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--gold);
+  box-shadow: 0 0 0 1px rgba(43, 29, 14, 0.6);
+}
+#troopText {
+  position: absolute;
+  inset: 0;
+  line-height: 16px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 3px #000, 0 0 2px #000;
+}
+
 #attacks {
   display: flex;
   flex-wrap: wrap;
