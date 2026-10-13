@@ -76,12 +76,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Envoie donc tes troupes au combat plutôt que de les garder !
 6. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
 
-🌲 Chaque terrain a sa défense : plaine x1, forêt x1.6, colline x2.2, montagne x3.5. Plus elle est haute, plus la case coûte de soldats à conquérir.
+🌲 Chaque terrain a sa défense : plaine x1, forêt x1.6, colline x2.2, montagne x3.5. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 
 **Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` = choisir un bâtiment (puis clic pour le poser) · `A` = afficher toutes les alliances · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.12** : le relief ralentit la conquête : on avance vite en plaine, lentement en forêt, colline et montagne, et le territoire épouse le relief
 - **v0.11** : jauge des soldats en bas de l'écran, avec le recrutement par seconde ; le recrutement est maximal vers 40 % de l'armée puis ralentit si on garde trop de soldats
 - **v0.10** : alliances visibles pour tout le monde : carrés de couleur dans le classement, lignes dorées 🤝 au survol d'un royaume, touche `A` pour tout afficher · les touches `1`, `2`, `3` mettent le bâtiment sous la souris, un clic le pose
 - **v0.9.2** : les touches `1`, `2`, `3` posent le bâtiment directement sous la souris (ou l'améliorent)
