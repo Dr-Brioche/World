@@ -120,7 +120,7 @@ function generateMap(seed) {
   return { W, H, N, terrain, shade };
 }
 
-// Trace CONFIG.RIVERS fleuves. Un fleuve part du pied d'une montagne et suit la pente jusqu'à la mer
+// Trace entre CONFIG.RIVERS_MIN et CONFIG.RIVERS_MAX fleuves (au hasard). Un fleuve part du pied d'une montagne et suit la pente jusqu'à la mer
 // (ou jusqu'à un autre fleuve, dont il devient un affluent).
 function addRivers(terrain, elev, W, H, rand) {
   const N = W * H;
@@ -154,12 +154,13 @@ function addRivers(terrain, elev, W, H, rand) {
     }
   }
   // 3. On suit l'eau depuis des sources tirées au hasard
+  const wanted = CONFIG.RIVERS_MIN + Math.floor(rand() * (CONFIG.RIVERS_MAX - CONFIG.RIVERS_MIN + 1));
   const starts = [];
   let made = 0;
-  for (let tries = 0; tries < 300 && made < CONFIG.RIVERS && sources.length; tries++) {
+  for (let tries = 0; tries < 1000 && made < wanted && sources.length; tries++) {
     const s = sources[(rand() * sources.length) | 0];
     const sx = s % W, sy = (s / W) | 0;
-    if (starts.some(t => Math.abs(t % W - sx) + Math.abs(((t / W) | 0) - sy) < 25)) continue; // sources éloignées
+    if (starts.some(t => Math.abs(t % W - sx) + Math.abs(((t / W) | 0) - sy) < 15)) continue; // sources éloignées
     const path = [];
     let cur = down[s], left = false;
     while (cur >= 0 && terrain[cur] !== TERRAIN.WATER && terrain[cur] !== TERRAIN.RIVER) {

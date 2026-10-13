@@ -186,12 +186,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 🌊 **Les fleuves** naissent au pied des montagnes et descendent jusqu'à la mer : ce sont des **frontières naturelles**.
 Ils sont très longs à traverser, et un défenseur qui intercepte un ennemi sur un fleuve de son royaume
-a un **énorme bonus de défense (+5, soit +500 %)**. On ne peut rien construire dessus.
+a un **gros bonus de défense (+3, soit +300 %)**. Il y a entre **3 et 12 fleuves** par partie, au hasard. On ne peut rien construire dessus.
 
 **Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` `4` (ou `&` `é` `"` `'`) = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.30.1** : bonus de défense des fleuves réduit à +3 · entre 3 et 12 fleuves par partie, au hasard · carte un peu plus grande (240 x 156 cases au lieu de 200 x 130)
 - **v0.30** : 🌊 des fleuves sur la carte, du pied des montagnes jusqu'à la mer : longs à traverser, et +5 de défense pour celui qui y intercepte un ennemi
 - **v0.29.2** : 3 points de passage au maximum par assaut
 - **v0.29.1** : on ne peut viser que les châteaux et églises d'un royaume tant qu'il en a ; sans eux, l'assaut se fait de front sur tout son territoire, et toutes ses troupes défendent d'office (à 0,8, désorganisées)

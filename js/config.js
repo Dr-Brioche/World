@@ -4,10 +4,11 @@
 
 const CONFIG = {
   // --- Carte ---
-  MAP_WIDTH: 200,          // largeur de la carte (en cases)
-  MAP_HEIGHT: 130,         // hauteur de la carte (en cases)
+  MAP_WIDTH: 240,          // largeur de la carte (en cases)
+  MAP_HEIGHT: 156,         // hauteur de la carte (en cases)
   WATER_RATIO: 0.40,       // part de mer sur la carte (0.4 = 40 %)
-  RIVERS: 6,               // nombre de fleuves (ils partent des montagnes et vont jusqu'à la mer)
+  RIVERS_MIN: 3,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
+  RIVERS_MAX: 12,          // (ils partent des montagnes et vont jusqu'à la mer)
 
   // --- Vitesse ---
   TICKS_PER_SECOND: 10,    // nombre de "tours" de jeu par seconde
@@ -16,7 +17,7 @@ const CONFIG = {
   START_TROOPS: 10,       // soldats au départ (on commence petit !)
   START_GOLD: 10,
   START_RADIUS: 3,         // taille du territoire de départ
-  MIN_SPAWN_DISTANCE: 14,  // distance minimale entre deux capitales
+  MIN_SPAWN_DISTANCE: 16,  // distance minimale entre deux capitales
 
   // --- Soldats ---
   BASE_MAX_TROOPS: 20,
@@ -80,8 +81,8 @@ const TERRAIN_INFO = [
   { name: 'Forêt',    color: [92, 124, 70],   cost: 1.6 },
   { name: 'Colline',  color: [162, 146, 104], cost: 2.2 },
   { name: 'Montagne', color: [130, 124, 118], cost: 3.5 },
-  // Fleuve : une frontière naturelle, longue à traverser, et un gros bonus de défense (+5)
-  { name: 'Fleuve',   color: [74, 132, 184],  cost: 6 },
+  // Fleuve : une frontière naturelle, longue à traverser, et un gros bonus de défense (+3)
+  { name: 'Fleuve',   color: [74, 132, 184],  cost: 4 },
 ];
 // cost = défense de la case (et temps pour la traverser) : 1 en plaine, plus ailleurs.
 // On ne peut rien construire sur un fleuve.
