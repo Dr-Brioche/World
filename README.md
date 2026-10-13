@@ -76,9 +76,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
      où se bat l'assaut (forêt +60 %, colline +120 %, montagne +250 %, + bonus du château dans sa muraille).
      L'assaut choisit donc un chemin qui passe le plus possible par les plaines.
+   - **La supériorité en nombre** compte : un camp qui a **plus de 2 fois plus de soldats** que l'autre
+     tue plus vite et perd moins de soldats par ennemi tué (jusqu'à **x5** pour un écrasement, comme 300 contre 4).
+     Envoyer 2 ou 3 défenseurs à la fois ne suffit donc pas à bloquer une grosse armée !
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
-   - **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
-     (un peu élargie), puis les survivants rentrent. Tu peux relancer un nouvel assaut aussitôt.
+   - **Prendre un château** te donne d'un coup **toute sa zone de défense** (dans sa muraille) et
+     **les moulins et casernes** qui s'y trouvent. L'assaut s'arrête alors et les survivants rentrent.
+     Tu peux relancer un nouvel assaut aussitôt.
 
    **✂️ Encercler** : quand un morceau d'un royaume est **coupé** du reste (par un assaut, un débarquement…)
    et qu'il fait **moins de 20 %** de son territoire, il est **englobé d'un coup par le royaume qui l'entoure
@@ -263,6 +267,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.36** : ⚔️ supériorité en nombre : le camp le plus nombreux (plus de 2 fois plus de soldats) tue plus vite et perd moins de soldats, jusqu'à x5 · une petite poignée de défenseurs ne bloque plus une grosse armée · 🏰 prendre un château donne d'un coup toute sa zone de défense et les bâtiments qui s'y trouvent
 - **v0.35** : les armées avancent 4 fois moins vite sur la carte (on voit mieux ce qui se passe) · un petit morceau de royaume coupé du reste est englobé par le royaume qui l'entoure le plus
 - **v0.34.7** : dans le menu de départ, on peut **interdire les pactes** (chacun pour soi)
 - **v0.34.6** : en survolant un royaume, tout son territoire s'illumine et ses bâtiments sont entourés d'un cercle doré
