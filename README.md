@@ -30,7 +30,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
    porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
 2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
-   **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** : ton armée se fraie un chemin depuis ta
+   **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** (ou une de ses églises ⛪, sans défense) : ton armée se fraie un chemin depuis ta
    frontière en **contournant ses autres fortifications**, capture tout sur son passage, puis prend le château.
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
@@ -128,10 +128,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Au niveau 3, ce sont des **routes pavées** 🛣️ grises : **+50 %**.
 
      Exemple : une forêt (+60 %) protégée par une citadelle passe à +460 %.
-   - ⛪ **Église** : elle coûte cher, mais **se construit n'importe où** sur ton territoire.
+   - ⛪ **Église** : elle coûte cher, mais **se construit n'importe où** sur ton territoire,
+     **sauf dans la muraille d'un château**.
      Elle permet de construire des **moulins ou casernes autour d'elle**, même hors de la muraille d'un château
      (quand tu choisis un moulin ou une caserne, sa zone s'affiche en pointillés clairs).
-     Attention : elle **n'est pas défendue** (pas de muraille, pas de garnison).
+     Attention : elle **n'est pas défendue** (pas de bonus de défense, pas de garnison), et on peut
+     **l'attaquer directement, comme un château** : clique sur une église ennemie pour lancer un assaut
+     (il contourne les murailles des châteaux et s'arrête une fois l'église prise).
      **Clique dessus pour l'améliorer** (3 niveaux) :
 
      | Niveau | Moulins ou casernes autour d'elle | Châteaux en plus dans le royaume | Prix |
@@ -140,7 +143,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | 2. Grande église | 2 | +1 | 💰 100 |
      | 3. Cathédrale | 5 | +2 | 💰 200 |
 
-     Les châteaux en plus viennent de ta meilleure église (ça ne s'additionne pas entre églises).
+     **Chaque église améliorée** ajoute ses châteaux : elles s'additionnent, tu peux en construire autant
+     que ton or le permet.
 
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer de t'allier.
@@ -171,6 +175,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.28** : on peut attaquer une église ⛪ directement, comme un château (elle n'a ni défense ni garnison) · chaque église améliorée ajoute ses châteaux (elles s'additionnent) · une église ne se construit plus dans la muraille d'un château
 - **v0.27.1** : images des 3 niveaux de l'église (église en bois, grande église, cathédrale), visibles en zoomant
 - **v0.27** : nouveau bâtiment ⛪ **église** (3 niveaux jusqu'à la cathédrale) : se construit partout, permet des moulins et casernes autour d'elle et débloque des châteaux en plus, mais n'est pas défendue · la caserne de niveau 1 rend aussi les soldats 10 % plus forts
 - **v0.26** : une caserne de niveau 2 rend **tous** les soldats du royaume 20 % plus forts au combat, une de niveau 3 50 % plus forts (la meilleure caserne compte)

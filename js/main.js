@@ -169,7 +169,7 @@ const UI = {
     if (type === B_CHURCH) {
       return `zone plus grande, ${next.slots} moulins ou casernes autour d'elle (au lieu de ${cur.slots}), ` +
         `${next.castles} château${next.castles > 1 ? 'x' : ''} de plus à construire dans le royaume ` +
-        '(la meilleure église compte)';
+        '(les églises s\'additionnent)';
     }
     if (type === B_BARRACKS) {
       return `soldats produits ${pct(next.troops / cur.troops - 1)}, bonus d'armée max ${pct(next.maxTroops / cur.maxTroops - 1)}, ` +
@@ -293,7 +293,7 @@ const UI = {
           : ' · 🚩 isolé : aucun renfort ne peut le rejoindre';
       }
       if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain : ${prodText(G.terrainFactor(a, G.building[i]))}`;
-      if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense`;
+      if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (o === G.human.id && G.upgradeCost(a) !== null && !(G.building[i] === B_CASTLE && G.isIsolatedCastle(a))) txt += ` · clique pour l'améliorer`;
@@ -303,11 +303,13 @@ const UI = {
     if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
     // Conseils d'attaque contre un royaume ennemi
     if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && (G.hasHomeCastle(o) || G.building[i] === B_CASTLE)) {
-      if (G.building[i] === B_CASTLE) {
-        txt += Render.castlePreview && Render.castlePreview.path ? ' · 🎯 clique pour lancer un assaut sur ce château'
-          : ' · 🚫 inaccessible : d\'autres châteaux bloquent le passage';
+      const b = G.building[i];
+      if (b === B_CASTLE || b === B_CHURCH) {
+        txt += Render.castlePreview && Render.castlePreview.path
+          ? ` · 🎯 clique pour lancer un assaut sur ${b === B_CASTLE ? 'ce château' : 'cette église'}`
+          : ' · 🚫 inaccessible : des châteaux bloquent le passage';
       } else {
-        txt += ' · 🏰 protégé : vise un de ses châteaux';
+        txt += ' · 🏰 protégé : vise un de ses châteaux ou une de ses églises';
       }
     }
     return txt;
@@ -396,7 +398,7 @@ const UI = {
         }
         if (a.attacker === h.id) {
           const target = a.target < 0 ? 'Terres libres'
-            : (a.targetCastle >= 0 ? '🏰 ' : '') + escapeHtml(G.players[a.target].name);
+            : (a.targetCastle >= 0 ? BUILDINGS[G.building[a.targetCastle]].icon + ' ' : '') + escapeHtml(G.players[a.target].name);
           const flag = a.target >= 0 ? this.bannerImg(G.players[a.target]) : '';
           return `<div class="attack panel"><span>⚔️ → ${flag}${target}</span><b data-troops="${a.id}"></b>` +
             `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
