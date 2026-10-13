@@ -276,7 +276,7 @@ const UI = {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
       if (G.building[i] === B_CASTLE) txt += ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} %`;
       if (G.building[i] === B_CASTLE && G.isIsolatedCastle(a)) {
-        txt += o === G.human.id ? ' · 🚩 coupé de ton royaume : clique pour lui envoyer une armée de secours'
+        txt += o === G.human.id ? ' · 🚩 coupé de ton royaume (il produit toujours) : clique pour lancer un assaut qui le relie à ton royaume'
           : ' · 🚩 isolé : aucun renfort ne peut le rejoindre';
       }
       if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain : ${prodText(G.terrainFactor(a, G.building[i]))}`;
@@ -370,19 +370,15 @@ const UI = {
     if (key !== this.attacksKey) {
       this.attacksKey = key;
       box.innerHTML = list.map(a => {
-        if (a.relief !== undefined && a.attacker === h.id) {
-          return `<div class="attack panel"><span>🚩 Secours → 🏰 ton château isolé</span><b data-troops="${a.id}"></b>` +
+        if (a.link !== undefined && a.attacker === h.id) {
+          return `<div class="attack panel"><span>⚔️ → 🏰 ton château isolé</span><b data-troops="${a.id}"></b>` +
             `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
         }
-        if (a.relief !== undefined) {
-          return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}🚩 Secours ${escapeHtml(this.deNameOf(a.attacker))} à travers tes terres</span>` +
-            `<b data-troops="${a.id}"></b>` +
-            `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cette armée">🛡️ Défendre</button></div>`;
-        }
         if (G.cutOff(a) && a.target === h.id) {
-          return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque ton château isolé</span>` +
-            `<b data-troops="${a.id}"></b>` +
-            `<button data-defend="${a.id}" title="Ton château est coupé de ton royaume : envoie une armée de secours le rejoindre">🚩 Secours</button></div>`;
+          // Pas de bouton « Défendre » : le château est coupé du royaume
+          return `<div class="attack panel incoming" title="Ton château est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie">` +
+            `<span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque ton château isolé 🚩</span>` +
+            `<b data-troops="${a.id}"></b></div>`;
         }
         if (a.attacker === h.id) {
           const target = a.target < 0 ? 'Terres libres'
@@ -418,22 +414,22 @@ const UI = {
   // Envoyer des soldats (selon le curseur « Envoyer ») contre un assaut ennemi
   defend(attackId) {
     const G = Game, h = G.human;
-    // Château isolé : les défenseurs ne peuvent pas le rejoindre, on envoie une armée de secours
+    // Château isolé : les défenseurs ne peuvent pas le rejoindre
     const target = G.attacks.find(x => x.id === attackId && !x.done);
-    if (target && G.cutOff(target)) return this.relief(target.targetCastle);
+    if (target && G.cutOff(target)) {
+      return this.log('🚫 Ton château est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
+        'Clique sur le château pour lancer un assaut qui le relie à ton royaume.', 'warn');
+    }
     const a = G.sendDefenders(h.id, attackId, h.troops * this.ratio);
     if (a) this.log(`🛡️ Tes défenseurs partent contrer l'assaut de ${G.players[a.attacker].name} !`, 'good');
     else this.log('Pas assez de soldats pour défendre !', 'warn');
   },
 
-  deNameOf(pid) { return Game.deName(Game.players[pid].name); },
-
-  // Envoyer une armée de secours (selon le curseur « Envoyer ») vers un château isolé
-  relief(c) {
+  // Assaut (selon le curseur « Envoyer ») pour relier un château isolé à son royaume
+  link(c) {
     const G = Game, h = G.human;
-    const err = G.launchRelief(h.id, c, h.troops * this.ratio);
+    const err = G.launchLink(h.id, c, h.troops * this.ratio);
     if (err) this.log(err, 'warn');
-    else this.log('🚩 Ton armée de secours traverse les terres ennemies vers ton château isolé !', 'good');
   },
 
   onMapClick(sx, sy) {
@@ -453,9 +449,9 @@ const UI = {
     if (assault && assault.target === h.id) return this.defend(banner);
     // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
     const t = G.building[i];
-    // Clic sur un de ses châteaux isolés : armée de secours
+    // Clic sur un de ses châteaux isolés : assaut pour le relier au royaume
     if (t === B_CASTLE && G.owner[i] === h.id && !this.selectedBuild && G.isIsolatedCastle(G.anchor[i])) {
-      return this.relief(G.anchor[i]);
+      return this.link(G.anchor[i]);
     }
     if (BUILDING_LEVELS[t] && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === t)) {
       this.selectBuild(0);
