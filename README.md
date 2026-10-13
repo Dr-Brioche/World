@@ -19,7 +19,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes, fleuves et mers
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
-- 🏰 **Quatre bâtiments** pour développer ton royaume : moulin, caserne, château et église
+- 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
+- ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
 - 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normal, Difficile
@@ -30,12 +31,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
    porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
 2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
-   **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** (ou une de ses églises ⛪, sans défense) : ton armée se fraie un chemin depuis ta
+   **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** (ou une de ses églises ⛪, ports ⚓ ou avant-postes ⛺, sans défense) : ton armée se fraie un chemin depuis ta
    frontière en **contournant ses autres fortifications**, capture tout sur son passage, puis prend le château.
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
-   de la frontière. **Tant qu'un royaume a un château ou une église, tu ne peux viser que ceux-ci.**
-   Quand il n'a **plus ni château ni église**, clique n'importe où sur ses terres : l'assaut se fait
+   de la frontière. **Tant qu'un royaume a un château, une église, un port ou un avant-poste, tu ne peux viser que ceux-ci.**
+   Quand il n'en a **plus aucun**, clique n'importe où sur ses terres : l'assaut se fait
    **de front, sur tout son territoire** (comme sur une terre libre, sans points de passage).
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
    sans pouvoir en place : chaque soldat ne compte que pour **0,8**.
@@ -86,7 +87,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **S'il y arrive**, sa route s'élargit un peu : tu récupères des terres entre le château et ton royaume,
      ils sont **réunis** et tu peux le défendre comme avant. Si le château était attaqué, les soldats
      de ton assaut rejoignent sa défense.
-3. **Construis** : appuie sur `1`, `2`, `3` ou `4` (ou `&`, `é`, `"`, `'` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
+3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise) ; les châteaux pris à l'ennemi
@@ -159,7 +160,31 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **Chaque église améliorée** ajoute ses châteaux : elles s'additionnent, tu peux en construire autant
      que ton or le permet.
 
+   - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
+     que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Il **n'est pas défendu** :
+     on peut l'attaquer directement, comme un château. **Toutes les 10 secondes**, il rapporte de l'or.
+     **Clique dessus pour l'améliorer** (3 niveaux) :
+
+     | Niveau | Or produit | Expéditions maritimes | Prix |
+     |---|---|---|---|
+     | 1. Port | un peu | non | 💰 60 (puis plus cher à chaque port) |
+     | 2. Grand port | +100 % | **oui** | 💰 120 |
+     | 3. Port royal | +67 % | moitié prix, bateaux 80 % plus rapides | 💰 250 |
+
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
+
+   **⛵ Expéditions maritimes** (avec un port de niveau 2 ou 3) : fais un **clic droit** sur une côte
+   (au bord de la mer ou d'un fleuve) et choisis **⛵ Débarquer**. Un bateau part de ton port le plus rapide,
+   navigue sur la mer et les fleuves (tout le monde le voit passer), puis débarque : tu prends une **petite
+   zone en demi-cercle le long de la côte** et tu y bâtis un **avant-poste ⛺**. L'expédition coûte un peu d'or
+   (un peu plus à chaque avant-poste).
+   - On peut débarquer **partout** (terre libre ou ennemie), mais un débarquement **ne prend jamais
+     un bâtiment** : il se pose juste à côté.
+   - **Depuis l'avant-poste**, tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
+   - Les ennemis peuvent **viser l'avant-poste** pour le détruire ; sans lui, ses terres sont à nouveau
+     un petit morceau isolé, facile à encercler.
+
+   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🏗️ Construire · ⛵ Débarquer).
 4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
    **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
@@ -191,10 +216,11 @@ Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un tro
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer.
 Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une grande île entourée d'océan.
 
-**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` `4` (ou `&` `é` `"` `'`) = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.32** : ⚓ nouveau bâtiment **port** (3 niveaux, au bord de l'eau, produit de l'or, attaquable) · ⛵ **expéditions maritimes** dès le niveau 2 : clic droit sur une côte → Débarquer, un bateau traverse la mer et plante un **avant-poste** ⛺ d'où l'on peut attaquer · menu d'actions au clic droit
 - **v0.31.1** : zone de jeu 50 % plus grande (carte de 294 x 192 cases, vue plus dézoomée au départ)
 - **v0.31** : les fleuves qui se rejoignent grossissent (2 fleuves = double largeur, 3 = grand fleuve infranchissable) · quelques lacs sur les fleuves · les fleuves naissent dans les montagnes · toujours de l'océan au bord de la carte (plus de terre coupée net)
 - **v0.30.1** : bonus de défense des fleuves réduit à +3 · entre 3 et 12 fleuves par partie, au hasard · carte un peu plus grande (240 x 156 cases au lieu de 200 x 130)
@@ -245,9 +271,8 @@ Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une g
 
 ## 💡 Idées pour la suite
 
-- ⛵ Bateaux pour traverser la mer
 - 🤝 Plus de diplomatie : tributs en or, demandes d'aide aux membres du pacte
-- 🗼 Nouveaux bâtiments : tours de guet, ports
+- 🗼 Nouveaux bâtiments : tours de guet
 - 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
 - 👑 Héros ou rois avec des pouvoirs spéciaux
 - 🌐 Multijoueur en ligne
@@ -269,4 +294,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-| `img/` | Les images des bâtiments (3 niveaux de château, 3 de caserne, 3 d'église, 2 de moulin) et des bannières (`img/bannieres/`) |
+| `img/` | Les images des bâtiments (3 niveaux de château, 3 de caserne, 3 d'église, 2 de moulin ; le port et l'avant-poste ont pour l'instant une icône) et des bannières (`img/bannieres/`) |
