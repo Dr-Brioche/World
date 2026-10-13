@@ -327,7 +327,8 @@ const UI = {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
       if (G.building[i] === B_OUTPOST) {
         const a = G.anchor[i], o = G.outposts.get(a);
-        txt += ` · 🛡️ ${fmt(G.garrison[a])} soldats en défense`;
+        txt += G.outpostReady(a) ? ` · 🛡️ ${fmt(G.garrison[a])} en garnison (fixe) · ⚔️ ${fmt(o.stationed)} stationnés (peuvent attaquer)`
+          : ` · 🛡️ ${fmt(G.garrison[a])} soldats sur place`;
         txt += G.outpostReady(a) ? ' · défense +100 % autour · base pour attaquer depuis la côte'
           : ` · 🏗️ en construction (${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s) : ` +
             `ses soldats bâtissent et ne peuvent rien faire d'autre (pas d'attaque depuis lui), ` +
@@ -404,13 +405,15 @@ const UI = {
   // Jauge des soldats en bas de l'écran, avec le recrutement par seconde au-dessus
   refreshTroopGauge() {
     // (les soldats en garnison dans les châteaux et avant-postes comptent aussi pour le maximum)
-    const G = Game, h = G.human, max = G.maxTroops(h), gar = G.garrisonOf(h), r = Math.min(1, (h.troops + gar) / max);
+    const G = Game, h = G.human, max = G.maxTroops(h), gar = G.garrisonOf(h), r = Math.min(1, G.armySize(h) / max);
     const eff = G.growthFactor(r) / CONFIG.TROOP_GROWTH_AT_PEAK; // 1 = recrutement au top
     const color = eff > 0.85 ? '#3f9a3a' : eff > 0.45 ? '#d99a1e' : '#b8322a';
     $('troopFill').style.width = (r * 100).toFixed(1) + '%';
     $('troopFill').style.background = color;
     $('troopPeak').style.left = CONFIG.TROOP_PEAK_RATIO * 100 + '%';
-    $('troopText').textContent = `⚔️ ${fmt(h.troops)}` + (gar >= 1 ? ` · 🛡️ ${fmt(gar)} en garnison` : '');
+    const st = G.stationedOf(h);
+    $('troopText').textContent = `⚔️ ${fmt(h.troops)}` + (gar >= 1 ? ` · 🛡️ ${fmt(gar)} en garnison` : '') +
+      (st >= 1 ? ` · ⛺ ${fmt(st)} aux avant-postes` : '');
     // Pas de chiffre précis : juste l'état du recrutement
     let tip = 'recrutement normal';
     if (r >= 0.98) tip = 'armée pleine !';
@@ -446,7 +449,8 @@ const UI = {
           const target = a.target < 0 ? 'Terres libres'
             : (a.targetCastle >= 0 ? BUILDINGS[G.building[a.targetCastle]].icon + ' ' : '') + escapeHtml(G.players[a.target].name);
           const flag = a.target >= 0 ? this.bannerImg(G.players[a.target]) : '';
-          return `<div class="attack panel"><span>⚔️ → ${flag}${target}</span><b data-troops="${a.id}"></b>` +
+          const from = G.sourceOfAttack(a) >= 0 ? '⛺ ' : '';
+          return `<div class="attack panel"><span>${from}⚔️ → ${flag}${target}</span><b data-troops="${a.id}"></b>` +
             `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
         }
         return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
@@ -479,8 +483,12 @@ const UI = {
     // Château isolé ou avant-poste : les défenseurs ne peuvent pas le rejoindre
     const target = G.attacks.find(x => x.id === attackId && !x.done);
     if (target && G.cutOff(target)) {
-      if (G.building[target.targetCastle] === B_OUTPOST) {
-        return this.log('🚫 Ton avant-poste est au-delà des mers : seule sa garnison le défend. ' +
+      const op = target.targetCastle;
+      if (G.building[op] === B_OUTPOST) {
+        // Avant-poste : ses soldats stationnés peuvent le défendre (pas ceux du royaume, au-delà des mers)
+        const a = G.sendDefenders(h.id, attackId, G.troopsAt(h.id, op) * this.ratio);
+        if (a) return this.log('🛡️ Les soldats stationnés à ton avant-poste partent le défendre !', 'good');
+        return this.log('🚫 Ton avant-poste est au-delà des mers : seuls ses soldats le défendent, et il n\'en a plus de libres. ' +
           'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.', 'warn');
       }
       return this.log('🚫 Ton château est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
@@ -504,11 +512,17 @@ const UI = {
   // 2 clics d'affilée sur la cible : l'assaut part. (3 clics sur la cible = tout droit)
   startPlan(target, c) {
     const G = Game, h = G.human;
-    if (!G.castlePath(h.id, c)) {
+    // D'où part l'armée : du royaume ou d'un avant-poste bâti (le chemin le plus court)
+    let source = null, best = Infinity;
+    for (const src of [-1, ...[...G.outposts.keys()].filter(a => G.owner[a] === h.id && G.outpostReady(a))]) {
+      const path = G.castlePath(h.id, c, [], src);
+      if (path && path.length < best) { best = path.length; source = src; }
+    }
+    if (source === null) {
       return this.log(`Impossible d'atteindre ${G.targetLabel(c)} : ` +
         'des fortifications bloquent le passage. Prends d\'abord les châteaux de la frontière.', 'warn');
     }
-    this.plan = { target, castle: c, waypoints: [], clicks: 0 };
+    this.plan = { target, castle: c, waypoints: [], clicks: 0, source };
   },
 
   cancelPlan() { this.plan = null; },
@@ -530,7 +544,7 @@ const UI = {
     if (G.anchor[i] === p.castle) {
       if (++p.clicks < 2) return;
       this.cancelPlan();
-      const err = G.launchAttack(h.id, p.target, h.troops * this.ratio, p.castle, p.waypoints);
+      const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, p.source) * this.ratio, p.castle, p.waypoints, p.source);
       if (err) this.log(err, 'warn');
       return;
     }
@@ -544,7 +558,7 @@ const UI = {
     }
     if (p.waypoints.length >= MAX_WAYPOINTS) return this.log(`${MAX_WAYPOINTS} points de passage au maximum.`, 'warn');
     const wp = p.waypoints.concat([i]);
-    if (!G.castlePath(h.id, p.castle, wp)) return this.log('L\'armée ne peut pas passer par là.', 'warn');
+    if (!G.castlePath(h.id, p.castle, wp, p.source)) return this.log('L\'armée ne peut pas passer par là.', 'warn');
     p.waypoints = wp;
   },
 
@@ -568,6 +582,10 @@ const UI = {
     }
     if (G.isCoastal(i) && G.landable(h.id, i)) {
       const plan = G.planLanding(h.id, i);
+      const sending = Math.floor(h.troops * this.ratio);
+      if (!plan.error && sending < plan.minTroops) {
+        plan.error = `Il faut au moins ${plan.minTroops} soldats (pour remplir la garnison de l'avant-poste) : augmente le curseur « Envoyer ».`;
+      }
       items.push(plan.error
         ? { label: '⛵ Débarquer', disabled: plan.error }
         : { label: `⛵ Débarquer avec ${fmt(h.troops * this.ratio)} soldats (💰 ${plan.cost}, ` +
@@ -652,10 +670,12 @@ const UI = {
     // Château (ou église) ennemi sans assaut en cours : on prépare l'itinéraire avant de lancer
     const b = G.building[i], c = G.anchor[i];
     const aimed = target >= 0 && TARGET_TYPES.includes(b) && G.isProtected(target);
-    const running = aimed && G.attacks.some(a => !a.done && a.attacker === h.id && a.targetCastle === c);
+    const running = aimed && G.attacks.find(a => !a.done && a.attacker === h.id && a.targetCastle === c);
     const attack = () => {
       if (aimed && !running) return this.startPlan(target, c);
-      const err = G.launchAttack(h.id, target, h.troops * this.ratio, i);
+      // L'armée part du royaume ou d'un avant-poste bâti (avec ses soldats stationnés)
+      const src = running ? G.sourceOfAttack(running) : G.bestSource(h.id, target, i);
+      const err = G.launchAttack(h.id, target, G.troopsAt(h.id, src) * this.ratio, i, undefined, src);
       if (err) this.log(err, 'warn');
     };
     // Attaquer un allié = le trahir (après confirmation)

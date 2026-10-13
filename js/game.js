@@ -93,10 +93,14 @@ const GameRules = {
   // La case touche-t-elle notre territoire ou celui d'un allié du pacte ?
   // (on peut attaquer depuis les terres de ses alliés, même sans être voisin soi-même)
   // Un petit morceau coupé du royaume (un château isolé) ne compte pas : aucune armée ne peut partir de là.
-  touchesFriend(i, pid) {
+  // source (facultatif) : seulement les terres d'où part cette armée (-1 = le royaume, sinon un avant-poste)
+  touchesFriend(i, pid, source) {
     let found = false;
     this.forNeighbors(i, n => {
-      if (!found && this.isFriend(pid, this.owner[n]) && this.isBase(n)) found = true;
+      if (found || !this.isFriend(pid, this.owner[n])) return;
+      if (source === undefined) { if (this.isBase(n)) found = true; return; }
+      const s = this.owner[n] === pid ? this.sourceOf(n) : (this.isBase(n) ? -1 : null);
+      if (s === source) found = true;
     });
     return found;
   },
@@ -418,17 +422,26 @@ const GameRules = {
       const p = this.players[this.owner[a]];
       if (this.tick === o.ready) {
         this.version++; // l'avant-poste devient une base d'attaque
-        if (p && p.isHuman) UI.log('⛺ Ton avant-poste est bâti : il défend ses alentours (+1) et tu peux attaquer depuis lui.', 'good');
+        // Une petite garnison fixe reste ; les autres soldats stationnent et peuvent partir à l'attaque
+        const keep = Math.min(CONFIG.OUTPOST_GARRISON, this.garrison[a]);
+        o.stationed += this.garrison[a] - keep;
+        this.garrison[a] = keep;
+        if (p && p.isHuman) {
+          UI.log(`⛺ Ton avant-poste est bâti : ${fmt(keep)} soldats y restent en garnison, ${fmt(o.stationed)} stationnent ` +
+            'et peuvent attaquer depuis lui (curseur « Envoyer »).', 'good');
+        }
       }
     }
     if (this.tick % CONFIG.TICKS_PER_SECOND) return;
     const r = this.regions();
-    for (const [a] of this.outposts) {
+    for (const [a, o] of this.outposts) {
       const pid = this.owner[a], k = r.comp[a];
+      // Relié par la terre au royaume : ses soldats stationnés rejoignent l'armée du royaume
+      if (k === r.main[pid] && o.stationed > 0) { this.players[pid].troops += o.stationed; o.stationed = 0; }
       const castle = this.castles.find(c => this.owner[c] === pid && r.comp[c] === k);
       if (castle === undefined) continue;
       const p = this.players[pid];
-      p.troops += this.garrison[a];
+      p.troops += this.garrison[a] + o.stationed;
       this.colonies.set(castle, pid);
       this.removeBuilding(a);
       if (p.isHuman) UI.log('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', 'good');
@@ -622,7 +635,7 @@ const GameRules = {
   // Un avant-poste n'a pas de maximum : sa garnison, ce sont les soldats débarqués (elle ne se reconstitue pas).
   garrisonMax(a) {
     const t = this.building[a];
-    if (t === B_OUTPOST) return Infinity;
+    if (t === B_OUTPOST) return this.outpostReady(a) ? CONFIG.OUTPOST_GARRISON : Infinity; // en construction : tous
     if (t === B_CASTLE || t === B_PORT) return this.buildingInfo(a).garrison || 0;
     return 0;
   },
@@ -634,8 +647,16 @@ const GameRules = {
     return sum;
   },
 
-  // Toute l'armée du royaume : les soldats disponibles + ceux en garnison (ils comptent pour le maximum)
-  armySize(p) { return p.troops + this.garrisonOf(p); },
+  // Soldats stationnés dans les avant-postes du royaume (ils peuvent attaquer depuis là)
+  stationedOf(p) {
+    let sum = 0;
+    for (const [a, o] of this.outposts) if (this.owner[a] === p.id) sum += o.stationed;
+    return sum;
+  },
+
+  // Toute l'armée du royaume : les soldats disponibles + ceux en garnison + ceux stationnés aux avant-postes
+  // (ils comptent tous pour le maximum)
+  armySize(p) { return p.troops + this.garrisonOf(p) + this.stationedOf(p); },
 
   troopRate(p) {
     const max = this.maxTroops(p), army = this.armySize(p);
@@ -703,7 +724,7 @@ const GameRules = {
   regions() {
     if (this.regionsVersion === this.version) return this.regionsCache;
     const comp = new Int32Array(this.N).fill(-1), order = new Int32Array(this.N);
-    const size = [], start = [], owner = [], outpost = [];
+    const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [];
     const main = new Array(this.players.length).fill(-1); // royaume → son plus grand morceau
     let n = 0;
     for (let i = 0; i < this.N; i++) {
@@ -719,17 +740,18 @@ const GameRules = {
         });
       }
       size.push(n - s); start.push(s); owner.push(o);
-      // Morceau qui sert de base : avec un avant-poste bâti, ou le château d'une ancienne zone d'avant-poste
-      let base = false;
-      for (let q = s; q < n && !base; q++) {
+      // Ce morceau a-t-il un avant-poste (bâti ou non), ou le château d'une ancienne zone d'avant-poste ?
+      let op = -1, anyOp = false, col = false;
+      for (let q = s; q < n; q++) {
         const t = order[q], b = this.building[t];
-        if (b === B_OUTPOST && this.outpostReady(this.anchor[t])) base = true;
-        if (b === B_CASTLE && this.colonies.get(this.anchor[t]) === o) base = true;
+        if (b === B_OUTPOST) { anyOp = true; if (this.outpostReady(this.anchor[t])) op = this.anchor[t]; }
+        if (b === B_CASTLE && this.colonies.get(this.anchor[t]) === o) col = true;
       }
-      outpost.push(base);
+      outpost.push(op); anyOutpost.push(anyOp); colony.push(col);
       if (main[o] < 0 || size[k] > size[main[o]]) main[o] = k;
     }
-    this.regionsCache = { comp, order, size, start, owner, main, outpost };
+    // outpost[k] = avant-poste bâti du morceau k (-1 s'il n'y en a pas)
+    this.regionsCache = { comp, order, size, start, owner, main, outpost, anyOutpost, colony };
     this.regionsVersion = this.version;
     return this.regionsCache;
   },
@@ -750,7 +772,49 @@ const GameRules = {
     const o = this.owner[i];
     if (o < 0) return false;
     const r = this.regions(), k = r.comp[i];
-    return k === r.main[o] || r.outpost[k] || r.size[k] >= this.players[o].tiles * CONFIG.ENCLAVE_RATIO;
+    return k === r.main[o] || r.outpost[k] >= 0 || r.colony[k] || r.size[k] >= this.players[o].tiles * CONFIG.ENCLAVE_RATIO;
+  },
+
+  // D'où part une armée qui passe par cette case du royaume ? -1 = du royaume (ses soldats disponibles),
+  // sinon de l'avant-poste (son ancre : ses soldats stationnés). null = d'aucun endroit.
+  sourceOf(i) {
+    const o = this.owner[i];
+    if (o < 0) return null;
+    const r = this.regions(), k = r.comp[i];
+    if (k === r.main[o]) return -1;
+    if (r.outpost[k] >= 0) return r.outpost[k];
+    return this.isBase(i) ? -1 : null;
+  },
+
+  // Soldats disponibles pour une armée qui part de source (-1 = le royaume, sinon un avant-poste)
+  troopsAt(pid, source) {
+    if (source < 0) return this.players[pid].troops;
+    const o = this.outposts.get(source);
+    return o && this.owner[source] === pid ? o.stationed : 0;
+  },
+  takeTroops(pid, source, n) {
+    if (source < 0) this.players[pid].troops -= n;
+    else this.outposts.get(source).stationed -= n;
+  },
+  // Des soldats rentrent : à leur avant-poste s'il existe encore, sinon au royaume
+  giveTroops(pid, source, n) {
+    const o = source >= 0 && this.owner[source] === pid ? this.outposts.get(source) : null;
+    if (o) o.stationed += n;
+    else if (this.players[pid].alive) this.players[pid].troops += n;
+  },
+
+  // Meilleur point de départ pour attaquer target vers la case tile : le royaume ou un de ses avant-postes
+  // bâtis (celui dont la frontière est la plus proche de la case)
+  bestSource(pid, target, tile) {
+    let best = -1, bestD = Infinity;
+    const tx = tile % this.W, ty = (tile / this.W) | 0;
+    for (const src of [-1, ...[...this.outposts.keys()].filter(a => this.owner[a] === pid && this.outpostReady(a))]) {
+      for (const i of this.buildFrontier(pid, target, src)) {
+        const d = (i % this.W - tx) ** 2 + (((i / this.W) | 0) - ty) ** 2;
+        if (d < bestD) { bestD = d; best = src; }
+      }
+    }
+    return best;
   },
 
   // Le royaume a-t-il encore un château ou une église ? Alors on ne peut l'attaquer qu'en visant
@@ -769,7 +833,7 @@ const GameRules = {
     const r = this.regions(), pieces = [];
     for (let k = 0; k < r.size.length; k++) {
       if (r.owner[k] !== target || k === r.main[target] || r.size[k] >= T.tiles * CONFIG.ENCLAVE_RATIO) continue;
-      if (r.outpost[k]) continue; // un avant-poste se défend : il faut le viser pour le détruire
+      if (r.anyOutpost[k] || r.colony[k]) continue; // un avant-poste se défend : il faut le viser pour le détruire
       const tiles = Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k]));
       if (tiles.some(i => this.hasNeighborOwnedBy(i, pid))) pieces.push(tiles);
     }
@@ -798,26 +862,30 @@ const GameRules = {
   },
 
   // --- Attaques ---
-  buildFrontier(pid, target) {
+  buildFrontier(pid, target, source) {
     const list = [];
     for (let i = 0; i < this.N; i++) {
-      if (this.owner[i] === target && this.isLand(i) && this.touchesFriend(i, pid)) list.push(i);
+      if (this.owner[i] === target && this.isLand(i) && this.touchesFriend(i, pid, source)) list.push(i);
     }
     return list;
   },
 
   // target = -1 pour les terres libres. aimTile = case visée (pour la flèche sur la carte).
   // waypoints = points de passage de l'armée (assaut sur un château ou une église).
+  // source = d'où part l'armée : -1 = le royaume (par défaut), sinon un avant-poste et ses soldats stationnés.
   // Renvoie un message d'erreur, ou null.
-  launchAttack(pid, target, troops, aimTile, waypoints) {
+  launchAttack(pid, target, troops, aimTile, waypoints, source = -1) {
     const p = this.players[pid];
-    troops = Math.floor(Math.min(troops, p.troops));
+    if (source >= 0 && !(this.owner[source] === pid && this.outpostReady(source))) {
+      return 'Cet avant-poste ne peut pas (ou plus) lancer d\'attaque.';
+    }
+    troops = Math.floor(Math.min(troops, this.troopsAt(pid, source)));
     if (target === pid) return null;
     if (target >= 0 && this.areAllied(pid, target)) {
       return `${this.players[target].name} est ton allié ! Romps l'alliance d'abord.`;
     }
     if (troops < 1) return 'Pas assez de soldats !';
-    const frontier = this.buildFrontier(pid, target);
+    const frontier = this.buildFrontier(pid, target, source);
     if (frontier.length === 0) {
       // (un avant-poste en construction ne sert pas encore de base : ses soldats bâtissent)
       const building = [...this.outposts.keys()].some(a => this.owner[a] === pid && !this.outpostReady(a));
@@ -835,13 +903,14 @@ const GameRules = {
         return `${name} est protégé : clique sur un de ses châteaux, églises, ports ou avant-postes pour lancer un assaut.`;
       }
     }
-    let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined);
+    let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined
+      && this.sourceOfAttack(a) === source);
     if (a && a.targetCastle !== castle) return `Un assaut contre ${this.players[target].name} est déjà en cours.`;
     // Assaut déjà en préparation : il garde ses points de passage
     if (!waypoints) waypoints = a && a.waypoints ? a.waypoints : [];
     if (castle >= 0) {
       const name = this.players[target].name;
-      path = this.castlePath(pid, castle, waypoints);
+      path = this.castlePath(pid, castle, waypoints, source);
       if (!path) {
         return `Impossible d'atteindre ${this.targetLabel(castle)} : ` +
           `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`;
@@ -849,7 +918,7 @@ const GameRules = {
     }
     // Assaut déjà lancé : les renforts partent et arrivent dans REINFORCE_DELAY secondes
     if (a && target >= 0 && !this.isPreparing(a)) {
-      p.troops -= troops;
+      this.takeTroops(pid, source, troops);
       a.pending.push({ troops, tick: this.tick + CONFIG.REINFORCE_DELAY * CONFIG.TICKS_PER_SECOND });
       return null;
     }
@@ -857,6 +926,7 @@ const GameRules = {
       a = {
         id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false, startTick: this.tick,
         targetCastle: castle,
+        source,        // d'où part l'armée (-1 = royaume, sinon avant-poste)
         waypoints,     // points de passage choisis
         defenders: 0,  // soldats envoyés par le défenseur pour contrer cet assaut
         pending: [],   // renforts en route : { troops, tick d'arrivée }
@@ -883,10 +953,12 @@ const GameRules = {
       a.limitZone = this.corridor(castle, path);
       if (a.frontTile < 0 || this.owner[a.frontTile] !== target) a.frontTile = path[0]; // on se bat au début du chemin
     }
-    p.troops -= troops;
+    this.takeTroops(pid, source, troops);
     a.troops += troops;
     return null;
   },
+
+  sourceOfAttack(a) { return a.source === undefined ? -1 : a.source; },
 
   // « de Bourgogne » mais « d'Aragon »
   deName(name) { return (/^[AEIOUÉÈÊÂÎÔY]/i.test(name) ? "d'" : 'de ') + name; },
@@ -913,7 +985,7 @@ const GameRules = {
   // Le chemin préfère les terrains faciles (plaines) : chaque case « coûte » sa défense.
   // waypoints = points de passage choisis par le joueur : l'armée passe par chacun d'eux, dans l'ordre,
   // en prenant à chaque fois le chemin le plus facile.
-  castlePath(pid, c, waypoints = []) {
+  castlePath(pid, c, waypoints = [], source) {
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
     const target = this.owner[c];
     // (un point de passage devenu impossible, par exemple pris entre-temps, est oublié)
@@ -921,7 +993,7 @@ const GameRules = {
     goals.push(foot);
     let path = [], from = -1; // -1 = on part de la frontière
     for (const goal of goals) {
-      const seg = this.searchPath(pid, from, goal, passable, target);
+      const seg = this.searchPath(pid, from, goal, passable, target, source);
       if (!seg) return null;
       path = path.concat(from < 0 ? seg : seg.slice(1));
       from = seg[seg.length - 1];
@@ -931,13 +1003,13 @@ const GameRules = {
 
   // Recherche du chemin le plus facile (algorithme de Dijkstra) depuis la case from
   // (ou depuis toute la frontière de pid si from = -1) jusqu'à une case de goal.
-  searchPath(pid, from, goal, passable, target) {
+  searchPath(pid, from, goal, passable, target, source) {
     const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
     const done = new Uint8Array(this.N); // cases déjà traitées (chacune une seule fois)
     const heap = new MinHeap();
     const start = i => { dist[i] = this.tileDefense(target, i); prev[i] = -1; heap.push(dist[i], i); };
     if (from >= 0) start(from);
-    else for (let i = 0; i < this.N; i++) if (passable(i) && this.touchesFriend(i, pid)) start(i);
+    else for (let i = 0; i < this.N; i++) if (passable(i) && this.touchesFriend(i, pid, source)) start(i);
     while (heap.size) {
       const [d, i] = heap.pop();
       if (done[i]) continue;
@@ -1233,6 +1305,8 @@ const GameRules = {
     }
     if (!best) return { error: 'Aucun de tes ports ne peut rejoindre cette côte par l\'eau.' };
     best.cost = Math.round(this.buildCost(p, B_OUTPOST) * this.buildingInfo(best.port).landingCost);
+    // assez de soldats pour remplir la garnison de l'avant-poste une fois arrivés
+    best.minTroops = Math.ceil(CONFIG.OUTPOST_GARRISON / (1 - this.seaLoss(best.time)));
     best.zone = zone;
     return best;
   },
@@ -1247,7 +1321,10 @@ const GameRules = {
     if (plan.error) return plan.error;
     if (p.gold < plan.cost) return `Pas assez d'or pour l'expédition (💰 ${plan.cost}).`;
     troops = Math.floor(Math.min(troops, p.troops));
-    if (troops < 1) return 'Pas assez de soldats pour l\'expédition !';
+    if (troops < plan.minTroops) {
+      return `Il faut au moins ${plan.minTroops} soldats pour l'expédition : de quoi remplir la garnison ` +
+        'de l\'avant-poste (pertes en mer comprises).';
+    }
     p.gold -= plan.cost;
     p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
@@ -1339,7 +1416,13 @@ const GameRules = {
         if (e.interceptors.length) e.troops = this.seaBattle(e);
         if (e.troops < 1) continue;
         if (this.building[e.reinforce] === B_OUTPOST && this.owner[e.reinforce] === e.pid) {
-          this.garrison[e.reinforce] += e.troops;
+          // bâti : on complète la garnison, les autres stationnent (prêts à agir) ; en construction : tous bâtissent
+          const a = e.reinforce, o = this.outposts.get(a);
+          if (this.outpostReady(a)) {
+            const add = Math.min(e.troops, Math.max(0, CONFIG.OUTPOST_GARRISON - this.garrison[a]));
+            this.garrison[a] += add;
+            o.stationed += e.troops - add;
+          } else this.garrison[a] += e.troops;
           if (p.isHuman) UI.log(`⛺ ${fmt(e.troops)} soldats renforcent ton avant-poste.`, 'good');
         } else {
           p.troops += e.troops;
@@ -1367,7 +1450,8 @@ const GameRules = {
       }
       this.placeBuilding(zone.anchor, B_OUTPOST);
       this.garrison[zone.anchor] = e.troops; // tous les soldats débarqués défendent l'avant-poste
-      this.outposts.set(zone.anchor, { ready: this.tick + CONFIG.OUTPOST_BUILD_TIME * CONFIG.TICKS_PER_SECOND, landing: e.landing });
+      this.outposts.set(zone.anchor, { ready: this.tick + CONFIG.OUTPOST_BUILD_TIME * CONFIG.TICKS_PER_SECOND,
+        landing: e.landing, stationed: 0 });
       if (p.isHuman) {
         UI.log(`⛺ Débarquement réussi ! ${fmt(e.troops)} soldats défendent ton avant-poste ` +
           `(${fmt(e.sent - e.troops)} perdus en mer). Il sera bâti dans ${CONFIG.OUTPOST_BUILD_TIME} s.`, 'good');
@@ -1529,10 +1613,18 @@ const GameRules = {
   sendDefenders(pid, attackId, troops) {
     const p = this.players[pid];
     const a = this.attacks.find(a => a.id === attackId && a.target === pid && !a.done);
-    troops = Math.floor(Math.min(troops, p.troops));
-    if (!a || troops < 1 || this.cutOff(a)) return null;
-    p.troops -= troops;
+    if (!a) return null;
+    // Château isolé : personne ne peut le rejoindre. Avant-poste bâti : ses soldats stationnés le défendent.
+    let src = -1;
+    if (this.cutOff(a)) {
+      if (this.building[a.targetCastle] !== B_OUTPOST || !this.outpostReady(a.targetCastle)) return null;
+      src = a.targetCastle;
+    }
+    troops = Math.floor(Math.min(troops, this.troopsAt(pid, src)));
+    if (troops < 1) return null;
+    this.takeTroops(pid, src, troops);
     a.defenders += troops;
+    if (src >= 0) a.defSource = src;
     return a;
   },
 
@@ -1540,11 +1632,12 @@ const GameRules = {
     if (this.isPreparing(a)) return;
     if (a.prepTicks && this.tick === a.startTick) {
       // Fin de la préparation : la frontière a pu bouger entre-temps
-      a.list = this.buildFrontier(a.attacker, a.target);
+      a.list = this.buildFrontier(a.attacker, a.target, this.sourceOfAttack(a));
       a.set = new Set(a.list);
       // Assaut sur un château : le chemin est-il toujours libre ?
       if (a.targetCastle >= 0 && !a.castleTaken) {
-        const path = this.owner[a.targetCastle] === a.target ? this.castlePath(a.attacker, a.targetCastle, a.waypoints) : null;
+        const path = this.owner[a.targetCastle] === a.target
+          ? this.castlePath(a.attacker, a.targetCastle, a.waypoints, this.sourceOfAttack(a)) : null;
         if (!path) {
           if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers le château est bloqué : assaut annulé.', 'warn');
           return this.endAttack(a);
@@ -1658,10 +1751,12 @@ const GameRules = {
     if (a.done) return;
     a.done = true;
     const p = this.players[a.attacker];
-    // Les survivants (et les renforts encore en route) rentrent à la maison
-    if (p.alive) p.troops += a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
+    // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste)
+    this.giveTroops(a.attacker, this.sourceOfAttack(a), a.troops + a.pending.reduce((s, r) => s + r.troops, 0));
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château
-    if (a.target >= 0 && this.players[a.target].alive) this.players[a.target].troops += a.defenders;
+    if (a.target >= 0 && this.players[a.target].alive) {
+      this.giveTroops(a.target, a.defSource === undefined ? -1 : a.defSource, a.defenders);
+    }
     const c = a.targetCastle;
     if (c >= 0 && a.garrison > 0 && this.owner[c] === a.target) {
       this.garrison[c] = Math.min(this.garrisonMax(c), this.garrison[c] + a.garrison);

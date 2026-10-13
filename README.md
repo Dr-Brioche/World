@@ -180,19 +180,26 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    navigue sur la mer et les fleuves (tout le monde le voit passer), puis débarque : tu prends une **petite
    zone en demi-cercle le long de la côte** et tu y bâtis un **avant-poste ⛺**. L'expédition coûte un peu d'or
    (un peu plus à chaque avant-poste) et emmène **le % de soldats choisi** avec le curseur « Envoyer » :
-   choisis bien avant de partir ! Une petite partie se perd en mer (1 % par seconde de traversée, 25 % au plus),
-   et **tous les soldats débarqués défendent l'avant-poste** : au-delà des mers, ton royaume ne peut pas lui
-   envoyer d'autres défenseurs.
+   choisis bien avant de partir ! Une petite partie se perd en mer (1 % par seconde de traversée, 25 % au plus).
+   Il faut emmener **au moins de quoi remplir la garnison** de l'avant-poste (5 soldats, pertes en mer comprises).
+   - Pendant la construction, tous les soldats débarqués sont sur place. Une fois l'avant-poste bâti,
+     **5 restent en garnison** (fixe : ils ne bougent jamais) et **les autres stationnent** à l'avant-poste.
+   - **Les soldats stationnés peuvent partir à l'attaque depuis l'avant-poste** : clique sur une terre
+     proche de l'avant-poste (ou sur un château ennemi accessible depuis lui), le curseur « Envoyer » prend alors
+     le % de ses soldats stationnés. Les survivants y reviennent. Ils peuvent aussi défendre l'avant-poste
+     (bannière de l'assaut ou « Défendre »).
    - On peut débarquer **partout** (terre libre ou ennemie), mais un débarquement **ne prend jamais
      un bâtiment** : il se pose juste à côté.
    - L'avant-poste met **20 secondes à être bâti** après le débarquement (compte à rebours sur la carte).
      Pendant ce temps, ses soldats bâtissent et **ne peuvent rien faire d'autre** (pas d'attaque depuis lui) ;
      on peut déjà l'attaquer, et ses défenseurs, occupés à bâtir, ont **-0,2 de défense**. Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
      tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
-   - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** : clique sur
+   - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** (au-delà des
+     mers, ton royaume ne peut pas lui envoyer de défenseurs ; une fois relié, ses soldats stationnés rejoignent
+     ton armée) : clique sur
      ton avant-poste pour lui **envoyer des renforts par la mer** (depuis un port de niveau 2 ou plus).
-     Les renforts qui arrivent sur un avant-poste **déjà bâti** sont tout de suite opérationnels
-     (pas de nouvelle construction à attendre).
+     Les renforts qui arrivent sur un avant-poste **déjà bâti** complètent sa garnison, et les autres
+     stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
    - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
      ton armée : l'avant-poste disparaît et ses soldats rejoignent tes troupes.
    - Les ennemis peuvent **viser l'avant-poste** pour le détruire ; sans lui, ses terres sont à nouveau
@@ -222,8 +229,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    À toi de voir ce qui marche le mieux !
    La jauge en bas de l'écran montre tes soldats, et au-dessus si ton recrutement va bien.
    **Les garnisons sont fixes** : leurs soldats ne quittent jamais leur château, port ou avant-poste
-   (ils ne servent qu'à le défendre ; pour attaquer, tu utilises tes soldats disponibles).
-   **Les soldats en garnison** (châteaux, port royal, avant-postes) **comptent aussi dans ton armée** :
+   (ils ne servent qu'à le défendre ; pour attaquer, tu utilises tes soldats disponibles, ou ceux stationnés
+   à un avant-poste). **Les soldats en garnison et stationnés** comptent aussi dans ton armée (la jauge les affiche) :
    ensemble, ils ne peuvent pas dépasser le maximum. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
    puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée est pleine.
    Envoie donc tes troupes au combat plutôt que de les garder !
@@ -243,6 +250,7 @@ Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une g
 
 ## 🆕 Nouveautés
 
+- **v0.33.3** : avant-postes : il faut emmener de quoi remplir leur garnison ; une fois bâtis, 5 soldats restent en garnison (fixe) et les autres stationnent, prêts à attaquer depuis l'avant-poste ou à le défendre
 - **v0.33.2** : un avant-poste en construction peut être attaqué, et ses défenseurs ont -0,2 de défense ; ses soldats ne peuvent rien faire avant la fin des travaux (message clair si on essaie d'attaquer depuis lui)
 - **v0.33.1** : un avant-poste met 20 s à être bâti, puis donne +1 de défense ; clique dessus pour lui envoyer des renforts par la mer ; un château bâti ou pris dans sa zone en fait une vraie terre du royaume · le jeu est de nouveau plus rapide (correction d'un ralentissement)
 - **v0.33** : ⚓ avec un port, clique sur le bateau d'une expédition ennemie pour envoyer des soldats l'intercepter : bataille en mer s'ils arrivent avant elle
