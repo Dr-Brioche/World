@@ -37,6 +37,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Les royaumes visés ont le temps de réagir… toi aussi !
 3. **Construis** (touches `1`, `2`, `3`, puis clic sur ton territoire).
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
+   Il faut aussi laisser **2 cases d'écart** autour de chaque bâtiment (l'aperçu devient rouge si c'est trop près).
    Si un ennemi prend une seule de ces cases, il capture tout le bâtiment !
    - 🌾 **Moulin** : rapporte de l'or. **Clique dessus pour l'améliorer** (2 niveaux) :
 
@@ -73,6 +74,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.9.1** : 2 cases d'écart obligatoires autour de chaque bâtiment, pour qu'ils ne se chevauchent plus
 - **v0.9** : les châteaux occupent 4x4 cases et paraissent plus grands sur la carte
 - **v0.8.2** : nouveaux visuels pour les trois niveaux du château
 - **v0.8.1** : nouveaux visuels pour les deux niveaux du moulin
