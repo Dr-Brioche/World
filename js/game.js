@@ -149,15 +149,34 @@ const Game = {
     const n = this.sizeOf(type);
     if (a < 0 || a % this.W > this.W - n || ((a / this.W) | 0) > this.H - n) return false;
     return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j])
-      && this.insideWalls(pid, a, type) && !this.tooCloseToBuilding(a, type);
+      && this.insideWalls(pid, a, type) && !this.tooCloseToBuilding(a, type)
+      && !this.churchCastleConflict(pid, a, type);
+  },
+
+  // Une église doit rester assez loin des châteaux de son royaume pour ne jamais se retrouver dans
+  // leur muraille, même améliorée (la plus grande muraille possible). Et inversement : pas de nouveau
+  // château trop près d'une de ses églises.
+  churchCastleRange() { return CASTLE_LEVELS[CASTLE_LEVELS.length - 1].radius; },
+
+  churchCastleConflict(pid, a, type) {
+    const R = this.churchCastleRange(), W = this.W;
+    const inRange = (c, cells) => cells.some(j => this.inCastleRange(c, j % W, (j / W) | 0, R));
+    if (type === B_CHURCH) {
+      const cells = this.footprint(a, type);
+      return this.castles.some(c => this.owner[c] === pid && inRange(c, cells));
+    }
+    if (type === B_CASTLE) {
+      return this.churchesOf(pid).some(ch => inRange(a, this.footprint(ch, B_CHURCH)));
+    }
+    return false;
   },
 
   // Moulins et casernes se construisent dans l'enceinte d'un de ses châteaux, ou près d'une de ses
   // églises qui a encore de la place (pas ailleurs dans l'arrière-pays).
-  // Les châteaux se construisent partout sur son territoire ; les églises aussi, mais hors des murailles.
+  // Les châteaux et les églises se construisent partout sur son territoire
+  // (mais une église reste loin des châteaux : voir churchCastleConflict).
   insideWalls(pid, a, type) {
-    if (type === B_CASTLE) return true;
-    if (type === B_CHURCH) return !this.footprint(a, type).some(j => this.castleProtects(pid, j));
+    if (type === B_CASTLE || type === B_CHURCH) return true;
     return this.footprint(a, type).every(j => this.castleProtects(pid, j)) || this.churchFor(pid, a, type) >= 0;
   },
 
@@ -506,9 +525,13 @@ const Game = {
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
-        if (type === B_CHURCH) return 'Une église ne se construit pas dans la muraille d\'un château.';
         return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux, ou près d'une de tes églises ` +
           'qui a encore de la place (pas ailleurs dans l\'arrière-pays).';
+      }
+      if (i >= 0 && this.owner[i] === p.id && this.churchCastleConflict(p.id, i, type)) {
+        return type === B_CHURCH
+          ? 'Trop près d\'un de tes châteaux : une église doit rester hors de portée de sa muraille, même améliorée (cercle rouge).'
+          : 'Trop près d\'une de tes églises : la muraille de ce château pourrait l\'englober (cercle rouge).';
       }
       if (i >= 0 && this.tooCloseToBuilding(i, type)) {
         return `Trop près d'un autre bâtiment : il faut ${this.tooCloseToBuilding(i, type)} cases d'écart.`;

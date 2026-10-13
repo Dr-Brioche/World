@@ -129,7 +129,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      Exemple : une forêt (+60 %) protégée par une citadelle passe à +460 %.
    - ⛪ **Église** : elle coûte cher, mais **se construit n'importe où** sur ton territoire,
-     **sauf dans la muraille d'un château**.
+     **sauf trop près de tes châteaux** : elle doit rester hors de portée de leur muraille, même améliorée
+     au maximum (quand tu places une église, un **cercle rouge** entoure chacun de tes châteaux).
+     De même, un nouveau château ne peut pas être construit trop près d'une de tes églises.
      Elle permet de construire des **moulins ou casernes autour d'elle**, même hors de la muraille d'un château
      (quand tu choisis un moulin ou une caserne, sa zone s'affiche en pointillés clairs).
      Attention : elle **n'est pas défendue** (pas de bonus de défense, pas de garnison), et on peut
@@ -175,6 +177,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.28.1** : une église se construit assez loin de tes châteaux pour ne jamais finir dans leur muraille (cercles rouges pendant la construction), et inversement pour un nouveau château
 - **v0.28** : on peut attaquer une église ⛪ directement, comme un château (elle n'a ni défense ni garnison) · chaque église améliorée ajoute ses châteaux (elles s'additionnent) · une église ne se construit plus dans la muraille d'un château
 - **v0.27.1** : images des 3 niveaux de l'église (église en bois, grande église, cathédrale), visibles en zoomant
 - **v0.27** : nouveau bâtiment ⛪ **église** (3 niveaux jusqu'à la cathédrale) : se construit partout, permet des moulins et casernes autour d'elle et débloque des châteaux en plus, mais n'est pas défendue · la caserne de niveau 1 rend aussi les soldats 10 % plus forts
