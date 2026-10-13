@@ -46,7 +46,8 @@ const Game = {
       bCount: [0, 0, 0, 0],
       traitorUntil: 0,
       refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
-      recoverUntil: {}, // royaume id → tick avant lequel on ne peut pas le réattaquer (château pris)
+      recoverUntil: {}, // royaume id → fin de la trêve avec lui (château pris) : pas d'attaque avant
+      restUntil: 0,     // tick jusqu'auquel l'armée se repose (recrute moins vite) après avoir pris un château
       rallyUntil: 0,    // tick jusqu'auquel ce royaume recrute plus vite (il vient de perdre un château)
       aiTimer: Math.floor(Math.random() * 20),
       aggression: lo + Math.random() * (hi - lo),
@@ -331,7 +332,7 @@ const Game = {
 
   // Après la prise d'un château : l'armée de l'attaquant se repose (recrutement réduit)
   // et le défenseur se réorganise (recrutement accéléré).
-  isRecovering(p) { return Object.values(p.recoverUntil).some(t => t > this.tick); },
+  isRecovering(p) { return p.restUntil > this.tick; },
   isRallying(p) { return p.rallyUntil > this.tick; },
 
   recoveryFactor(p) {
@@ -394,7 +395,7 @@ const Game = {
     }
     const recover = this.recoverTime(p, target);
     if (recover > 0) {
-      return `Ton armée récupère après la prise d'un château : encore ${recover} s avant d'attaquer ${this.players[target].name}.`;
+      return `Trêve après la prise d'un château : encore ${recover} s avant de pouvoir attaquer ${this.players[target].name}.`;
     }
     if (troops < 1) return 'Pas assez de soldats !';
     const frontier = this.buildFrontier(pid, target);
@@ -544,18 +545,23 @@ const Game = {
     a.done = true;
     const p = this.players[a.attacker];
     if (p.alive) p.troops += a.troops; // les survivants rentrent à la maison
-    // Après la prise d'un château, l'armée doit récupérer avant de réattaquer ce royaume
+    // Après la prise d'un château : trêve dans les deux sens. L'attaquant se repose
+    // (recrute moins vite) et le défenseur se réorganise (recrute plus vite),
+    // mais aucun des deux ne peut attaquer l'autre avant la fin de la trêve.
     if (a.castleTaken && p.alive) {
       const until = this.tick + CONFIG.CASTLE_CAPTURE_COOLDOWN * CONFIG.TICKS_PER_SECOND;
       const d = this.players[a.target];
       p.recoverUntil[a.target] = until;
+      d.recoverUntil[a.attacker] = Math.max(d.recoverUntil[a.attacker] || 0, until);
+      p.restUntil = Math.max(p.restUntil, until);
       d.rallyUntil = Math.max(d.rallyUntil, until);
       const secs = CONFIG.CASTLE_CAPTURE_COOLDOWN;
       if (p.isHuman) {
-        UI.log(`⏳ Assaut terminé : ton armée récupère ${secs} s avant de pouvoir réattaquer ${d.name} ` +
-          `(recrutement x${CONFIG.RECOVER_GROWTH_FACTOR} pendant ce temps).`);
+        UI.log(`⏳ Assaut terminé : trêve de ${secs} s avec ${d.name}. Ton armée se repose ` +
+          `(recrutement x${CONFIG.RECOVER_GROWTH_FACTOR}), et ${d.name} ne peut pas contre-attaquer non plus.`);
       } else if (d.isHuman && d.alive) {
-        UI.log(`🛡️ ${p.name} a fini son assaut : ton royaume se réorganise, recrutement x${CONFIG.RALLY_GROWTH_FACTOR} pendant ${secs} s !`, 'good');
+        UI.log(`🛡️ ${p.name} a fini son assaut : trêve de ${secs} s. Ton royaume se réorganise ` +
+          `(recrutement x${CONFIG.RALLY_GROWTH_FACTOR}), mais tu ne peux pas contre-attaquer tout de suite.`, 'good');
       }
     }
   },
