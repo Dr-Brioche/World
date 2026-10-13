@@ -60,6 +60,9 @@ const CONFIG = {
   LEADERLESS_DEFENSE: 0.8,
   // Expéditions maritimes : en débarquant, on prend les terres libres autour du point de débarquement
   LANDING_RADIUS: 4,
+  // Les soldats embarqués défendent l'avant-poste ; pendant la traversée, une petite partie se perd :
+  SEA_LOSS_PER_SECOND: 0.01, // 1 % des soldats par seconde de mer...
+  SEA_LOSS_MAX: 0.25,        // ...au plus 25 %
   // Un château isolé peut être relié à nouveau par un assaut lancé depuis le royaume (en cliquant dessus).
   // S'il arrive, sa route s'élargit de 2 cases de chaque côté.
   LINK_WIDEN_RADIUS: 2,
@@ -148,8 +151,9 @@ const PORT_LEVELS = [
   null,
   { name: 'Port',       gold: 3,  boatSpeed: 0 },
   { name: 'Grand port', gold: 6,  boatSpeed: 5, landingCost: 1,   upgradeCost: 120 },
-  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, upgradeCost: 250 },
+  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, upgradeCost: 250, garrison: 5 },
 ];
+// garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
 
 // Production des moulins et casernes selon le terrain où ils sont construits
 // (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve.

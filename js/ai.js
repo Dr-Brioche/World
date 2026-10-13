@@ -63,7 +63,7 @@ const AI = {
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
       if (score > bestScore) { bestScore = score; best = o; bestAim = aim; }
     }
-    const full = p.troops >= max * 0.95;
+    const full = Game.armySize(p) >= max * 0.95; // (garnisons comprises)
     if (best !== null && (bestScore > 1.2 || (full && bestScore > 0.7))) {
       Game.launchAttack(p.id, best, p.troops * 0.7, bestAim === null ? undefined : bestAim);
     } else if (nb.has(-1)) {
@@ -84,7 +84,7 @@ const AI = {
       if (needed <= 0) continue;
       // Château isolé : impossible d'y envoyer des défenseurs, on tente de le rejoindre par un assaut
       if (Game.cutOff(a)) {
-        if (!Game.linkFor(a.targetCastle)) Game.launchLink(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
+        if (Game.building[a.targetCastle] === B_CASTLE && !Game.linkFor(a.targetCastle)) Game.launchLink(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
         continue;
       }
       Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));
@@ -122,7 +122,7 @@ const AI = {
     for (let k = 0; k < 15; k++) {
       const i = (Math.random() * Game.N) | 0;
       if (!Game.isCoastal(i) || !Game.landable(p.id, i)) continue;
-      if (!Game.launchExpedition(p.id, i)) return;
+      if (!Game.launchExpedition(p.id, i, p.troops * 0.3)) return;
     }
   },
 

@@ -396,6 +396,14 @@ const Render = {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('⛵', x, y);
+      // soldats à bord (ils diminuent un peu pendant la traversée)
+      const aboard = e.sent - (e.sent - e.troops) * t;
+      ctx.font = '700 12px Georgia, serif';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+      ctx.fillStyle = '#fff';
+      ctx.strokeText('⚔ ' + fmt(aboard), x, y - 18);
+      ctx.fillText('⚔ ' + fmt(aboard), x, y - 18);
     }
   },
 

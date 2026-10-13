@@ -113,7 +113,7 @@ const Game = {
     const x = i % this.W, y = (i / this.W) | 0;
     // Un bâtiment n'est compté qu'une fois : sur sa case d'ancrage
     const b = this.anchor[i] === i ? this.building[i] : 0;
-    if (b === B_CASTLE) this.garrison[i] = 0; // château pris : sa garnison est perdue
+    if (b) this.garrison[i] = 0; // château (ou avant-poste) pris : sa garnison est perdue
     if (old >= 0) {
       const o = this.players[old];
       o.tiles--; o.sumX -= x; o.sumY -= y;
@@ -271,6 +271,7 @@ const Game = {
     const type = this.building[a], o = this.owner[a];
     for (const j of this.footprint(a, type)) { this.building[j] = 0; this.anchor[j] = -1; Render.markDirty(j); }
     this.level[a] = 0;
+    this.garrison[a] = 0;
     if (o >= 0) this.players[o].bCount[type]--;
     this.buildingTiles = this.buildingTiles.filter(b => b !== a);
     this.castles = this.castles.filter(c => c !== a);
@@ -487,7 +488,7 @@ const Game = {
       if (t === B_MILL || t === B_PORT) p.gold += amount;
       else {
         // une caserne ne fait pas dépasser l'armée maximum
-        shown = Math.max(0, Math.min(amount, this.maxTroops(p) - p.troops));
+        shown = Math.max(0, Math.min(amount, this.maxTroops(p) - this.armySize(p)));
         p.troops += shown;
       }
       // Le joueur ne voit que la production de ses propres bâtiments
@@ -532,11 +533,30 @@ const Game = {
       + this.levelSum(p, B_BARRACKS, 'maxTroops');
   },
 
+  // Garnison maximum d'un bâtiment : celle de son niveau (château, port royal), 0 s'il n'en a pas.
+  // Un avant-poste n'a pas de maximum : sa garnison, ce sont les soldats débarqués (elle ne se reconstitue pas).
+  garrisonMax(a) {
+    const t = this.building[a];
+    if (t === B_OUTPOST) return Infinity;
+    if (t === B_CASTLE || t === B_PORT) return this.buildingInfo(a).garrison || 0;
+    return 0;
+  },
+
+  // Soldats en garnison dans les châteaux, ports et avant-postes du royaume
+  garrisonOf(p) {
+    let sum = 0;
+    for (const a of this.buildingTiles) if (this.owner[a] === p.id) sum += this.garrison[a];
+    return sum;
+  },
+
+  // Toute l'armée du royaume : les soldats disponibles + ceux en garnison (ils comptent pour le maximum)
+  armySize(p) { return p.troops + this.garrisonOf(p); },
+
   troopRate(p) {
-    const max = this.maxTroops(p);
-    if (p.troops >= max) return 0;
+    const max = this.maxTroops(p), army = this.armySize(p);
+    if (army >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
-    return base * this.growthFactor(p.troops / max);
+    return base * this.growthFactor(army / max);
   },
 
   // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
@@ -754,8 +774,10 @@ const Game = {
         a.prepTicks = a.startTick - this.tick;
         this.aimArrow(a, frontier, aimTile);
         if (this.players[target].isHuman) {
+          const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
           UI.log(`⚠️ ${p.name} prépare un assaut contre toi (${fmt(troops)} soldats) ! ` +
             (castle < 0 ? 'Sans château ni église, toutes tes troupes défendront d\'office, désorganisées.'
+              : alone ? 'Il vise ton avant-poste : seuls les soldats débarqués le défendront.'
               : 'Clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.'), 'warn', p);
         }
       }
@@ -1113,14 +1135,22 @@ const Game = {
     return best;
   },
 
-  // Lance une expédition : le bateau part du port, et débarque en arrivant. Renvoie un message d'erreur, ou null.
-  launchExpedition(pid, i) {
+  // Part des soldats perdus pendant une traversée de `time` secondes
+  seaLoss(time) { return Math.min(CONFIG.SEA_LOSS_MAX, time * CONFIG.SEA_LOSS_PER_SECOND); },
+
+  // Lance une expédition avec `troops` soldats : le bateau part du port et débarque en arrivant.
+  // Les soldats arrivés défendent l'avant-poste. Renvoie un message d'erreur, ou null.
+  launchExpedition(pid, i, troops) {
     const plan = this.planLanding(pid, i), p = this.players[pid];
     if (plan.error) return plan.error;
     if (p.gold < plan.cost) return `Pas assez d'or pour l'expédition (💰 ${plan.cost}).`;
+    troops = Math.floor(Math.min(troops, p.troops));
+    if (troops < 1) return 'Pas assez de soldats pour l\'expédition !';
     p.gold -= plan.cost;
+    p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
-    this.expeditions.push({ pid, landing: i, path: plan.path, cost: plan.cost,
+    this.expeditions.push({ pid, landing: i, path: plan.path, cost: plan.cost, sent: troops,
+      troops: troops * (1 - this.seaLoss(plan.time)), // ceux qui arriveront
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(plan.time * TPS)) });
     return null;
   },
@@ -1135,7 +1165,8 @@ const Game = {
       const zone = this.landingZone(e.pid, e.landing);
       if (!this.landable(e.pid, e.landing) || zone.anchor < 0) {
         p.gold += e.cost; // la côte n'est plus possible (prise par soi ou un allié, bâtie…) : l'or est rendu
-        if (p.isHuman) UI.log('⛵ Impossible de débarquer sur la côte visée : l\'expédition rentre (or rendu).', 'warn');
+        p.troops += e.troops; // et les soldats rentrent
+        if (p.isHuman) UI.log('⛵ Impossible de débarquer sur la côte visée : l\'expédition rentre (or et soldats rendus).', 'warn');
         continue;
       }
       const victims = new Set(zone.tiles.map(j => this.owner[j]).filter(o => o >= 0));
@@ -1144,8 +1175,10 @@ const Game = {
         if (this.players[o].isHuman) UI.log(`⛵ ${p.name} a débarqué sur ta côte et y a planté un avant-poste ! Vise-le pour le détruire.`, 'warn', p);
       }
       this.placeBuilding(zone.anchor, B_OUTPOST);
+      this.garrison[zone.anchor] = e.troops; // tous les soldats débarqués défendent l'avant-poste
       if (p.isHuman) {
-        UI.log('⛺ Débarquement réussi ! Depuis ton avant-poste, tu peux attaquer et prendre des terres.', 'good');
+        UI.log(`⛺ Débarquement réussi ! ${fmt(e.troops)} soldats défendent ton avant-poste ` +
+          `(${fmt(e.sent - e.troops)} perdus en mer). Depuis lui, tu peux attaquer et prendre des terres.`, 'good');
         Render.floatText(zone.anchor, B_OUTPOST, '⛵ Débarquement !');
       }
     }
@@ -1291,9 +1324,10 @@ const Game = {
   },
 
   // L'assaut vise-t-il un château isolé ? Ses défenseurs ne peuvent alors pas le rejoindre.
+  // (un avant-poste, au-delà des mers, ne peut compter que sur sa garnison)
   cutOff(a) {
-    const c = a.targetCastle;
-    return c >= 0 && this.building[c] === B_CASTLE && this.owner[c] === a.target && this.isIsolatedCastle(c);
+    const c = a.targetCastle, b = this.building[c];
+    return c >= 0 && (b === B_CASTLE || b === B_OUTPOST) && this.owner[c] === a.target && this.isIsolatedCastle(c);
   },
 
   // Le défenseur envoie des soldats contre un assaut (sans délai, autant qu'il veut)
@@ -1435,7 +1469,7 @@ const Game = {
     if (a.target >= 0 && this.players[a.target].alive) this.players[a.target].troops += a.defenders;
     const c = a.targetCastle;
     if (c >= 0 && a.garrison > 0 && this.owner[c] === a.target) {
-      this.garrison[c] = Math.min(this.castleInfo(c).garrison, this.garrison[c] + a.garrison);
+      this.garrison[c] = Math.min(this.garrisonMax(c), this.garrison[c] + a.garrison);
     }
   },
 
@@ -1572,11 +1606,13 @@ const Game = {
     }
     this.produce();
 
-    // Les garnisons des châteaux se reconstituent (sauf celle qui est en train de combattre)
+    // Les garnisons des châteaux se reconstituent (sauf celle qui est en train de combattre,
+    // et pas si l'armée du royaume, garnisons comprises, est déjà au maximum)
     const besieged = new Set(this.attacks.filter(a => !a.done && !this.isPreparing(a)).map(a => a.targetCastle));
-    for (const c of this.castles) {
-      if (this.owner[c] < 0 || besieged.has(c)) continue;
-      const max = this.castleInfo(c).garrison;
+    const full = this.players.map(p => p.alive && this.armySize(p) >= this.maxTroops(p));
+    for (const c of this.buildingTiles) {
+      const max = this.garrisonMax(c);
+      if (!max || max === Infinity || this.owner[c] < 0 || besieged.has(c) || full[this.owner[c]]) continue;
       this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);
     }
 

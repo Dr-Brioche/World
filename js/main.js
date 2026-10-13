@@ -148,7 +148,8 @@ const UI = {
   levelEffect(type, info) {
     if (type === B_PORT) {
       return `or toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
-        (info.boatSpeed ? `, expéditions maritimes${info.landingCost < 1 ? ' moins chères et plus rapides' : ''}` : '');
+        (info.boatSpeed ? `, expéditions maritimes${info.landingCost < 1 ? ' moins chères et plus rapides' : ''}` : '') +
+        (info.garrison ? ', petite garnison' : '');
     }
     if (type === B_CASTLE) {
       const road = info.road === 'paved' ? 'routes pavées' : 'chemins de terre';
@@ -170,7 +171,8 @@ const UI = {
   upgradeEffect(type, cur, next) {
     if (type === B_PORT) {
       return `or produit ${pct(next.gold / cur.gold - 1)}, ` + (cur.boatSpeed
-        ? `débarquements ${pct(next.landingCost / cur.landingCost - 1)} moins chers et bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)} plus rapides`
+        ? `débarquements ${pct(next.landingCost / cur.landingCost - 1)} moins chers, bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)} plus rapides` +
+          (next.garrison ? ', et une petite garnison pour le défendre' : '')
         : 'débloque les expéditions maritimes (clic droit sur une côte → ⛵ Débarquer)');
     }
     if (type === B_CASTLE) {
@@ -310,14 +312,20 @@ const UI = {
           : ' · 🚩 isolé : aucun renfort ne peut le rejoindre';
       }
       if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain : ${prodText(G.terrainFactor(a, G.building[i]))}`;
-      if (G.building[i] === B_PORT) txt += ' · ⚠️ sans défense : on peut l\'attaquer directement';
+      if (G.building[i] === B_PORT) {
+        txt += info.garrison ? ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} %` : '';
+        txt += ' · ⚠️ pas de muraille : on peut l\'attaquer directement';
+      }
       if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (o === G.human.id && G.upgradeCost(a) !== null && !(G.building[i] === B_CASTLE && G.isIsolatedCastle(a))) txt += ` · clique pour l'améliorer`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
-      if (G.building[i] === B_OUTPOST) txt += ' (base pour attaquer depuis la côte ; l\'ennemi peut le viser pour le détruire)';
+      if (G.building[i] === B_OUTPOST) {
+        txt += ` · 🛡️ ${fmt(G.garrison[G.anchor[i]])} soldats en défense (base pour attaquer depuis la côte ; ` +
+          'l\'ennemi peut le viser pour le détruire)';
+      }
     }
     if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
     // Conseils d'attaque contre un royaume ennemi
@@ -386,13 +394,14 @@ const UI = {
 
   // Jauge des soldats en bas de l'écran, avec le recrutement par seconde au-dessus
   refreshTroopGauge() {
-    const G = Game, h = G.human, max = G.maxTroops(h), r = Math.min(1, h.troops / max);
+    // (les soldats en garnison dans les châteaux et avant-postes comptent aussi pour le maximum)
+    const G = Game, h = G.human, max = G.maxTroops(h), gar = G.garrisonOf(h), r = Math.min(1, (h.troops + gar) / max);
     const eff = G.growthFactor(r) / CONFIG.TROOP_GROWTH_AT_PEAK; // 1 = recrutement au top
     const color = eff > 0.85 ? '#3f9a3a' : eff > 0.45 ? '#d99a1e' : '#b8322a';
     $('troopFill').style.width = (r * 100).toFixed(1) + '%';
     $('troopFill').style.background = color;
     $('troopPeak').style.left = CONFIG.TROOP_PEAK_RATIO * 100 + '%';
-    $('troopText').textContent = `⚔️ ${fmt(h.troops)}`;
+    $('troopText').textContent = `⚔️ ${fmt(h.troops)}` + (gar >= 1 ? ` · 🛡️ ${fmt(gar)} en garnison` : '');
     // Pas de chiffre précis : juste l'état du recrutement
     let tip = 'recrutement normal';
     if (r >= 0.98) tip = 'armée pleine !';
@@ -418,7 +427,8 @@ const UI = {
         if (G.cutOff(a) && a.target === h.id) {
           // Pas de bouton « Défendre » : le château est coupé du royaume
           return `<div class="attack panel incoming" title="Ton château est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie">` +
-            `<span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque ton château isolé 🚩</span>` +
+            `<span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque ` +
+            `${G.building[a.targetCastle] === B_OUTPOST ? 'ton avant-poste ⛺' : 'ton château isolé 🚩'}</span>` +
             `<b data-troops="${a.id}"></b></div>`;
         }
         if (a.attacker === h.id) {
@@ -455,9 +465,12 @@ const UI = {
   // Envoyer des soldats (selon le curseur « Envoyer ») contre un assaut ennemi
   defend(attackId) {
     const G = Game, h = G.human;
-    // Château isolé : les défenseurs ne peuvent pas le rejoindre
+    // Château isolé ou avant-poste : les défenseurs ne peuvent pas le rejoindre
     const target = G.attacks.find(x => x.id === attackId && !x.done);
     if (target && G.cutOff(target)) {
+      if (G.building[target.targetCastle] === B_OUTPOST) {
+        return this.log('🚫 Ton avant-poste est au-delà des mers : seuls les soldats débarqués le défendent.', 'warn');
+      }
       return this.log('🚫 Ton château est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
         'Clique sur le château pour lancer un assaut qui le relie à ton royaume.', 'warn');
     }
@@ -545,10 +558,11 @@ const UI = {
       const plan = G.planLanding(h.id, i);
       items.push(plan.error
         ? { label: '⛵ Débarquer', disabled: plan.error }
-        : { label: `⛵ Débarquer (💰 ${plan.cost}, ${Math.max(1, Math.round(plan.time))} s de mer)`, run: () => {
-          const err = G.launchExpedition(h.id, i);
+        : { label: `⛵ Débarquer avec ${fmt(h.troops * this.ratio)} soldats (💰 ${plan.cost}, ` +
+            `${Math.max(1, Math.round(plan.time))} s de mer, environ ${Math.round(G.seaLoss(plan.time) * 100)} % de pertes)`, run: () => {
+          const err = G.launchExpedition(h.id, i, h.troops * this.ratio);
           if (err) this.log(err, 'warn');
-          else this.log('⛵ Ton expédition prend la mer ! Elle débarquera à l\'arrivée et bâtira un avant-poste.', 'good');
+          else this.log('⛵ Ton expédition prend la mer ! Ses soldats défendront l\'avant-poste qu\'elle bâtira à l\'arrivée.', 'good');
         } });
     }
     if (!items.length) return;
