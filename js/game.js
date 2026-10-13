@@ -117,7 +117,21 @@ const Game = {
   canPlace(pid, a, type) {
     const n = this.sizeOf(type);
     if (a < 0 || a % this.W > this.W - n || ((a / this.W) | 0) > this.H - n) return false;
-    return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]);
+    return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j])
+      && !this.tooCloseToBuilding(a, type);
+  },
+
+  // Y a-t-il un bâtiment à moins de BUILDING_SPACING cases autour de cet emplacement ?
+  // (une zone invisible autour de chaque bâtiment, pour éviter qu'ils se chevauchent)
+  tooCloseToBuilding(a, type) {
+    const n = this.sizeOf(type), m = CONFIG.BUILDING_SPACING;
+    const x0 = a % this.W, y0 = (a / this.W) | 0;
+    for (let y = Math.max(0, y0 - m); y <= Math.min(this.H - 1, y0 + n - 1 + m); y++) {
+      for (let x = Math.max(0, x0 - m); x <= Math.min(this.W - 1, x0 + n - 1 + m); x++) {
+        if (this.building[y * this.W + x]) return true;
+      }
+    }
+    return false;
   },
 
   placeBuilding(i, type) {
@@ -292,6 +306,9 @@ const Game = {
   tryBuild(p, i, type) {
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
+      if (i >= 0 && this.tooCloseToBuilding(i, type)) {
+        return `Trop près d'un autre bâtiment : il faut ${CONFIG.BUILDING_SPACING} cases d'écart.`;
+      }
       return `Il faut ${n}x${n} cases libres sur ton territoire (pas de mer).`;
     }
     const cost = this.buildCost(p, type);

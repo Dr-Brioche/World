@@ -29,6 +29,7 @@ const CONFIG = {
   BASE_GOLD: 1,            // or par seconde au minimum
   GOLD_PER_TILE: 0.01,
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type coûte x1.5 plus cher
+  BUILDING_SPACING: 2,       // cases vides obligatoires autour de chaque bâtiment
 
   // --- Combat ---
   ATTACK_SPEED: 0.15,          // vitesse de conquête
