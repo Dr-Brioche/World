@@ -15,6 +15,7 @@ const Game = {
     this.players = [];
     this.attacks = [];
     this.nextAttackId = 1;
+    this.alliances = new Set();
     this.buildingTiles = [];
     this.castles = [];
     this.tick = 0;
@@ -37,6 +38,8 @@ const Game = {
       alive: true, troops: CONFIG.START_TROOPS, gold: CONFIG.START_GOLD,
       tiles: 0, sumX: 0, sumY: 0, maxTiles: 0, kills: 0,
       bCount: [0, 0, 0, 0],
+      traitorUntil: 0,
+      refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
       aiTimer: Math.floor(Math.random() * 20),
       aggression: lo + Math.random() * (hi - lo),
     };
@@ -191,11 +194,15 @@ const Game = {
     return list;
   },
 
-  // target = -1 pour les terres libres. Renvoie un message d'erreur, ou null.
-  launchAttack(pid, target, troops) {
+  // target = -1 pour les terres libres. aimTile = case visée (pour la flèche sur la carte).
+  // Renvoie un message d'erreur, ou null.
+  launchAttack(pid, target, troops, aimTile) {
     const p = this.players[pid];
     troops = Math.floor(Math.min(troops, p.troops));
     if (target === pid) return null;
+    if (target >= 0 && this.areAllied(pid, target)) {
+      return `${this.players[target].name} est ton allié ! Romps l'alliance d'abord.`;
+    }
     if (troops < 1) return 'Pas assez de soldats !';
     const frontier = this.buildFrontier(pid, target);
     if (frontier.length === 0) {
@@ -203,11 +210,17 @@ const Game = {
     }
     let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target);
     if (!a) {
-      a = { id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false };
-      this.attacks.push(a);
-      if (target >= 0 && this.players[target].isHuman) {
-        UI.log(`⚠️ ${p.name} t'attaque avec ${fmt(troops)} soldats !`, 'warn');
+      a = { id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false, startTick: this.tick };
+      if (target >= 0) {
+        // Contre un royaume, l'armée se prépare d'abord : tout le monde la voit venir
+        a.startTick = this.tick + CONFIG.ATTACK_PREP_TIME * CONFIG.TICKS_PER_SECOND;
+        a.prepTicks = a.startTick - this.tick;
+        this.aimArrow(a, frontier, aimTile);
+        if (this.players[target].isHuman) {
+          UI.log(`⚠️ ${p.name} prépare une attaque contre toi (${fmt(troops)} soldats) !`, 'warn');
+        }
       }
+      this.attacks.push(a);
     }
     a.list = frontier;
     a.set = new Set(frontier);
@@ -215,6 +228,26 @@ const Game = {
     a.troops += troops;
     return null;
   },
+
+  // Flèche de l'attaque : du cœur du royaume attaquant vers la case visée
+  // (ou, à défaut, vers la case du front la plus proche).
+  aimArrow(a, frontier, aimTile) {
+    const p = this.players[a.attacker];
+    a.fromX = p.sumX / p.tiles + 0.5;
+    a.fromY = p.sumY / p.tiles + 0.5;
+    let aim = aimTile;
+    if (aim === undefined || this.owner[aim] !== a.target) {
+      let best = Infinity;
+      for (const t of frontier) {
+        const d = (t % this.W - a.fromX) ** 2 + (((t / this.W) | 0) - a.fromY) ** 2;
+        if (d < best) { best = d; aim = t; }
+      }
+    }
+    a.toX = aim % this.W + 0.5;
+    a.toY = ((aim / this.W) | 0) + 0.5;
+  },
+
+  isPreparing(a) { return this.tick < a.startTick; },
 
   // Choisit une case du front, en préférant celles bien entourées (front plus régulier).
   pickFrontier(a) {
@@ -247,6 +280,12 @@ const Game = {
   },
 
   stepAttack(a) {
+    if (this.isPreparing(a)) return;
+    if (a.prepTicks && this.tick === a.startTick) {
+      // Fin de la préparation : la frontière a pu bouger entre-temps
+      a.list = this.buildFrontier(a.attacker, a.target);
+      a.set = new Set(a.list);
+    }
     let budget = Math.max(1, Math.floor(Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED));
     while (budget-- > 0 && !a.done) {
       const t = this.pickFrontier(a);
@@ -287,10 +326,66 @@ const Game = {
     if (!p.alive) return;
     p.alive = false;
     p.troops = 0;
+    for (const o of this.players) if (o.id !== id) this.alliances.delete(this.allyKey(id, o.id));
     for (const a of this.attacks) if (a.attacker === id) a.done = true;
     const killer = by >= 0 ? this.players[by] : null;
     if (killer) killer.kills++;
     UI.log(`☠️ ${p.name} a été anéanti${killer ? ' par ' + killer.name : ''} !`, p.isHuman ? 'warn' : '');
+  },
+
+  // --- Alliances ---
+  allyKey(a, b) { return a < b ? a + '-' + b : b + '-' + a; },
+
+  areAllied(a, b) { return this.alliances.has(this.allyKey(a, b)); },
+
+  allies(pid) { return this.players.filter(p => p.alive && p.id !== pid && this.areAllied(pid, p.id)); },
+
+  // Un royaume (bot) accepte-t-il l'alliance proposée par "from" ?
+  wouldAccept(bot, from) {
+    if (this.tick < from.traitorUntil) return false; // personne ne fait confiance à un traître
+    // Un allié puissant est plus intéressant
+    let chance = 0.2 + 0.3 * Math.min(from.troops / Math.max(1, bot.troops), 1.5);
+    if (from.isHuman) chance -= this.difficulty.hateHuman * 0.5;
+    if (this.allies(bot.id).length >= 2) chance *= 0.5;
+    if (this.attacks.some(a => !a.done && a.attacker === from.id && a.target === bot.id)) chance *= 0.3;
+    return Math.random() < chance;
+  },
+
+  // Renvoie 'accepted', 'refused', 'pending' (en attente de la réponse du joueur) ou un message d'erreur.
+  proposeAlliance(fromId, toId) {
+    const from = this.players[fromId], to = this.players[toId];
+    if (!from.alive || !to.alive || fromId === toId) return 'Ce royaume n\'existe plus.';
+    if (this.areAllied(fromId, toId)) return `Tu es déjà allié avec ${to.name}.`;
+    const wait = (from.refusedUntil[toId] || 0) - this.tick;
+    if (wait > 0) return `${to.name} a refusé récemment. Réessaie dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`;
+    if (to.isHuman) return UI.askAlliance(from) ? 'pending' : 'refused';
+    if (this.wouldAccept(to, from)) {
+      this.makeAlliance(fromId, toId);
+      return 'accepted';
+    }
+    this.refuseAlliance(fromId, toId);
+    return 'refused';
+  },
+
+  refuseAlliance(fromId, toId) {
+    this.players[fromId].refusedUntil[toId] = this.tick + CONFIG.ALLIANCE_REFUSAL_COOLDOWN * CONFIG.TICKS_PER_SECOND;
+  },
+
+  makeAlliance(a, b) {
+    this.alliances.add(this.allyKey(a, b));
+    // Les combats entre les deux royaumes s'arrêtent, les soldats rentrent
+    for (const at of this.attacks) {
+      if ((at.attacker === a && at.target === b) || (at.attacker === b && at.target === a)) this.endAttack(at);
+    }
+    UI.log(`🤝 ${this.players[a].name} et ${this.players[b].name} sont maintenant alliés !`, 'good');
+  },
+
+  breakAlliance(traitorId, otherId) {
+    if (!this.areAllied(traitorId, otherId)) return;
+    this.alliances.delete(this.allyKey(traitorId, otherId));
+    const traitor = this.players[traitorId];
+    traitor.traitorUntil = this.tick + CONFIG.TRAITOR_DURATION * CONFIG.TICKS_PER_SECOND;
+    UI.log(`💔 ${traitor.name} a rompu son alliance avec ${this.players[otherId].name} !`, 'warn');
   },
 
   // --- Boucle principale (appelée TICKS_PER_SECOND fois par seconde) ---

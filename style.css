@@ -54,7 +54,7 @@ html, body {
 #side {
   top: 8px;
   right: 8px;
-  width: 210px;
+  width: 250px;
 }
 #side h3 {
   margin: 0 0 4px;
@@ -65,8 +65,11 @@ html, body {
   margin: 0;
   padding-left: 22px;
 }
-#lb li { margin: 2px 0; }
+#lb li { margin: 2px 0; white-space: nowrap; }
 #lb li.me { font-weight: bold; }
+#lb li.ally .nm { color: var(--good); font-weight: bold; }
+#lb .pct { display: inline-block; width: 42px; text-align: right; }
+#lb button { padding: 0 4px; margin-left: 4px; font-size: 13px; line-height: 18px; }
 #lb li > * { vertical-align: middle; }
 .sw {
   display: inline-block;
@@ -77,7 +80,7 @@ html, body {
 }
 .nm {
   display: inline-block;
-  width: 115px;
+  width: 105px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -170,6 +173,14 @@ button:hover { background: #e8d6a8; }
 .msg.warn { border-left-color: var(--danger); }
 .msg.good { border-left-color: var(--good); }
 .msg.fade { opacity: 0; }
+.msg.request {
+  pointer-events: auto;
+  border-left-color: var(--gold);
+  font-size: 14px;
+}
+.msg.request .choices { display: flex; gap: 6px; margin-top: 6px; }
+.msg.request button:first-child { background: #b9d7a4; }
+.msg.request button:last-child { background: #e9b5a8; }
 
 .overlay {
   position: fixed;

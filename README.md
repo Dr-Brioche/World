@@ -20,7 +20,8 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 - 👑 **Ton royaume** : choisis son nom et la couleur de ta bannière
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Trois bâtiments** pour développer ton royaume
-- 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent et attaquent tout seuls
+- 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
+- 🤝 **Des alliances** : fais-toi des alliés… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normal, Difficile
 
 ## 🕹️ Comment jouer
@@ -31,12 +32,18 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
    le bouton **✖ Annuler** fait rentrer les survivants au royaume.
    Les attaques ennemies contre toi y apparaissent aussi, en rouge.
+   Contre un royaume, l'armée se **prépare pendant 5 secondes** avant d'attaquer :
+   une ligne pointillée avec une bannière ⚔️ montre à tout le monde où elle va frapper.
+   Les royaumes visés ont le temps de réagir… toi aussi !
 3. **Construis** (touches `1`, `2`, `3`, puis clic sur ton territoire) :
    - 🌾 **Ferme** : rapporte de l'or
    - ⚔️ **Caserne** : plus de soldats, recrutés plus vite
    - 🏰 **Château** : les cases autour coûtent 2x plus cher à prendre.
      Sa zone de protection est dessinée sur la carte (pointillés blancs pour tes châteaux)
-4. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
+4. **Fais des alliances** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer une alliance.
+   Les alliés ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer une alliance : accepte ou refuse.
+   Le bouton 💔 rompt l'alliance… mais un traître est mal vu : personne ne voudra s'allier avec lui pendant 2 minutes !
+5. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
 
 🌲 Les forêts, collines et montagnes coûtent plus de soldats à conquérir que les plaines.
 
@@ -44,13 +51,14 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 
 ## 🆕 Nouveautés
 
+- **v0.3** : alliances (proposer, accepter, refuser, trahir) · les attaques contre un royaume se préparent 5 s avec une flèche et une bannière ⚔️ visibles par tous
 - **v0.2** : zone de protection des châteaux visible sur la carte · attaques en cours affichées en bas de l'écran, avec un bouton pour les annuler
 - **v0.1** : première version jouable (carte aléatoire, conquête, or, 3 bâtiments, royaumes rivaux, victoire/défaite)
 
 ## 💡 Idées pour la suite
 
 - ⛵ Bateaux pour traverser la mer
-- 🤝 Diplomatie : alliances, trêves, trahisons
+- 🤝 Plus de diplomatie : trêves, tributs en or, demandes d'aide aux alliés
 - 🗼 Nouveaux bâtiments : tours de guet, ports, cathédrales
 - 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
 - 👑 Héros ou rois avec des pouvoirs spéciaux

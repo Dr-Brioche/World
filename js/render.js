@@ -137,6 +137,81 @@ const Render = {
     }
   },
 
+  // Armées en préparation : ligne pointillée + bannière ⚔ qui avance vers la cible.
+  drawAttackArrows(ox, oy) {
+    const ctx = this.ctx, G = Game, s = this.cam.scale;
+    const now = performance.now();
+    for (const a of G.attacks) {
+      if (a.done || !G.isPreparing(a) || a.fromX === undefined) continue;
+      const p = G.players[a.attacker], col = p.color.join(',');
+      const x1 = ox + a.fromX * s, y1 = oy + a.fromY * s;
+      const x2 = ox + a.toX * s, y2 = oy + a.toY * s;
+      const ang = Math.atan2(y2 - y1, x2 - x1);
+      const remaining = (a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND;
+      const progress = 1 - (a.startTick - G.tick) / a.prepTicks;
+
+      // Ligne pointillée qui défile vers la cible
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.setLineDash([]);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = 'rgba(20,12,4,0.55)';
+      ctx.stroke();
+      ctx.setLineDash([10, 7]);
+      ctx.lineDashOffset = -now / 40;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgb(${col})`;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineDashOffset = 0;
+
+      // Pointe de flèche
+      const h = 14;
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - h * Math.cos(ang - 0.45), y2 - h * Math.sin(ang - 0.45));
+      ctx.lineTo(x2 - h * Math.cos(ang + 0.45), y2 - h * Math.sin(ang + 0.45));
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${col})`;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(20,12,4,0.8)';
+      ctx.stroke();
+
+      // Bannière qui avance le long de la ligne
+      const bx = x1 + (x2 - x1) * progress, by = y1 + (y2 - y1) * progress;
+      ctx.fillStyle = '#3b2610';
+      ctx.fillRect(bx - 1.5, by - 34, 3, 34); // mât
+      ctx.beginPath();                        // drapeau à queue d'aronde
+      ctx.moveTo(bx + 1.5, by - 34);
+      ctx.lineTo(bx + 34, by - 34);
+      ctx.lineTo(bx + 27, by - 24);
+      ctx.lineTo(bx + 34, by - 14);
+      ctx.lineTo(bx + 1.5, by - 14);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${col})`;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(20,12,4,0.9)';
+      ctx.stroke();
+      ctx.font = '13px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚔️', bx + 15, by - 24);
+
+      // Compte à rebours et soldats
+      ctx.font = '700 12px Georgia, serif';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+      ctx.fillStyle = '#fff';
+      const label = `${Math.ceil(remaining)} s · ${fmt(a.troops)}`;
+      ctx.strokeText(label, bx + 16, by - 42);
+      ctx.fillText(label, bx + 16, by - 42);
+    }
+  },
+
   draw() {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -189,11 +264,15 @@ const Render = {
       ctx.lineWidth = Math.max(2, size / 5);
       ctx.strokeStyle = 'rgba(20,12,4,0.75)';
       ctx.fillStyle = p.isHuman ? '#ffe9a8' : '#fff';
-      ctx.strokeText(p.name, cx, cy - size * 0.45);
-      ctx.fillText(p.name, cx, cy - size * 0.45);
+      const label = !p.isHuman && G.areAllied(p.id, G.human.id) ? '🤝 ' + p.name : p.name;
+      ctx.strokeText(label, cx, cy - size * 0.45);
+      ctx.fillText(label, cx, cy - size * 0.45);
       ctx.font = `600 ${size * 0.75}px Georgia, serif`;
       ctx.strokeText('⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
       ctx.fillText('⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
     }
+
+    // Par-dessus tout le reste, pour bien les voir
+    this.drawAttackArrows(ox, oy);
   },
 };

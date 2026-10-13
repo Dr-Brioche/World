@@ -33,6 +33,12 @@ const UI = {
       this.refreshAttacks();
     });
 
+    // pointerdown plutôt que click : le classement est redessiné souvent
+    $('lb').addEventListener('pointerdown', e => {
+      const btn = e.target.closest('button[data-ally]');
+      if (btn) this.onAllyButton(+btn.dataset.ally);
+    });
+
     window.addEventListener('keydown', e => {
       if (Game.phase !== 'playing' || e.target.tagName === 'INPUT') return;
       if (e.key >= '1' && e.key <= String(BUILDINGS.length - 1)) this.selectBuild(+e.key);
@@ -70,9 +76,45 @@ const UI = {
     el.className = 'msg ' + (cls || '');
     el.textContent = msg;
     $('log').prepend(el);
-    while ($('log').children.length > 6) $('log').lastChild.remove();
+    const old = [...$('log').querySelectorAll('.msg:not(.request)')];
+    old.slice(6).forEach(m => m.remove());
     setTimeout(() => el.classList.add('fade'), 6000);
     setTimeout(() => el.remove(), 7000);
+  },
+
+  onAllyButton(id) {
+    const G = Game, h = G.human, other = G.players[id];
+    if (G.phase !== 'playing' || !h.alive) return;
+    if (G.areAllied(h.id, id)) {
+      G.breakAlliance(h.id, id);
+      return;
+    }
+    const res = G.proposeAlliance(h.id, id);
+    if (res === 'refused') this.log(`🚫 ${other.name} refuse ton alliance.`, 'warn');
+    else if (res !== 'accepted') this.log(res, 'warn');
+  },
+
+  // Un royaume propose une alliance au joueur. Renvoie false si une demande est déjà en cours.
+  askAlliance(from) {
+    this.pending = this.pending || new Set();
+    if (this.pending.has(from.id)) return false;
+    this.pending.add(from.id);
+    const el = document.createElement('div');
+    el.className = 'msg request';
+    el.innerHTML = `🤝 <b>${escapeHtml(from.name)}</b> te propose une alliance.` +
+      `<div class="choices"><button data-yes>Accepter</button><button data-no>Refuser</button></div>`;
+    const answer = yes => {
+      if (!this.pending.has(from.id)) return;
+      this.pending.delete(from.id);
+      el.remove();
+      if (yes && from.alive && Game.human.alive) Game.makeAlliance(from.id, Game.human.id);
+      else Game.refuseAlliance(from.id, Game.human.id);
+    };
+    el.querySelector('[data-yes]').addEventListener('click', () => answer(true));
+    el.querySelector('[data-no]').addEventListener('click', () => answer(false));
+    $('log').prepend(el);
+    setTimeout(() => answer(false), CONFIG.ALLIANCE_REQUEST_TIMEOUT * 1000);
+    return true;
   },
 
   showEnd(win) {
@@ -95,6 +137,7 @@ const UI = {
     const o = G.owner[i];
     let txt = `${t.name} (coût x${t.cost})`;
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
+    if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (G.building[i]) txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
     if (o >= 0 && G.castleProtects(o, i)) txt += ' · 🛡️ protégée';
     return txt;
@@ -117,10 +160,14 @@ const UI = {
     });
 
     const ranking = G.players.filter(p => p.alive && p.tiles > 0).sort((a, b) => b.tiles - a.tiles);
-    $('lb').innerHTML = ranking.slice(0, 10).map(p =>
-      `<li class="${p.isHuman ? 'me' : ''}"><span class="sw" style="background:rgb(${p.color})"></span>` +
-      `<span class="nm">${escapeHtml(p.name)}</span><span>${(p.tiles / G.landCount * 100).toFixed(1)}%</span></li>`
-    ).join('');
+    $('lb').innerHTML = ranking.slice(0, 10).map(p => {
+      const allied = G.areAllied(p.id, h.id);
+      const btn = p.isHuman || !h.alive ? '' : allied
+        ? `<button data-ally="${p.id}" title="Rompre l'alliance (trahison !)">💔</button>`
+        : `<button data-ally="${p.id}" title="Proposer une alliance">🤝</button>`;
+      return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}"><span class="sw" style="background:rgb(${p.color})"></span>` +
+        `<span class="nm">${allied ? '🤝 ' : ''}${escapeHtml(p.name)}</span><span class="pct">${(p.tiles / G.landCount * 100).toFixed(1)}%</span>${btn}</li>`;
+    }).join('');
 
     this.refreshAttacks();
 
@@ -154,7 +201,9 @@ const UI = {
     }
     for (const a of list) {
       const el = box.querySelector(`[data-troops="${a.id}"]`);
-      if (el) el.textContent = `${fmt(a.troops)} soldats`;
+      if (!el) continue;
+      const wait = Math.ceil((a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND);
+      el.textContent = `${fmt(a.troops)} soldats` + (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '');
     }
   },
 
@@ -176,7 +225,7 @@ const UI = {
       return;
     }
     if (!G.isLand(i) || G.owner[i] === h.id) return;
-    const err = G.launchAttack(h.id, G.owner[i], h.troops * this.ratio);
+    const err = G.launchAttack(h.id, G.owner[i], h.troops * this.ratio, i);
     if (err) this.log(err, 'warn');
   },
 };
