@@ -155,12 +155,12 @@ const UI = {
     const G = Game, t = TERRAIN_INFO[G.terrain[i]];
     if (!G.isLand(i)) return '🌊 Mer';
     const o = G.owner[i];
-    let txt = `${t.name} (coût x${t.cost})`;
+    let txt = `${t.name} (défense x${t.cost})`;
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
     if (G.building[i]) txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
-    if (o >= 0 && G.castleProtects(o, i)) txt += ' · 🛡️ protégée';
+    if (o >= 0 && G.castleProtects(o, i)) txt += ` · 🏰 dans la muraille : défense x${+G.tileDefense(o, i).toFixed(1)}`;
     return txt;
   },
 

@@ -39,7 +39,8 @@ const CONFIG = {
   DENSITY_FACTOR: 1.0,         // plus l'ennemi a de soldats par case, plus c'est dur
   DEFENDER_LOSS: 0.5,          // part des pertes infligées au défenseur
   CASTLE_RADIUS: 8,            // rayon de protection d'un château
-  CASTLE_DEFENSE: 2,           // les cases protégées coûtent x2 à prendre
+  CASTLE_DEFENSE_BONUS: 1,     // +1 à la défense du terrain dans la zone d'un château
+                               // (plaine x1 → x2, forêt x1.6 → x2.6, montagne x3.5 → x4.5)
 
   // --- Alliances ---
   ALLIANCE_REFUSAL_COOLDOWN: 30, // secondes avant de redemander au même royaume
@@ -68,7 +69,7 @@ const BUILDINGS = [
   null,
   { name: 'Ferme',   icon: '🌾', baseCost: 100, desc: `+${CONFIG.GOLD_PER_FARM} or/s` },
   { name: 'Caserne', icon: '⚔️', baseCost: 200, desc: '+recrutement, +soldats max' },
-  { name: 'Château', icon: '🏰', baseCost: 300, desc: 'Défense x2 autour' },
+  { name: 'Château', icon: '🏰', baseCost: 300, desc: `+${CONFIG.CASTLE_DEFENSE_BONUS} défense dans sa muraille` },
 ];
 
 // Les royaumes contrôlés par l'ordinateur.
