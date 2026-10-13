@@ -1,4 +1,4 @@
-# ⚔️ Royaumes en Guerre
+# ⚔️ World
 
 Un petit jeu de conquête médiévale dans le navigateur, inspiré d'OpenFront.
 Étends ton royaume, bâtis des fermes, des casernes et des châteaux, et écrase les royaumes rivaux !
