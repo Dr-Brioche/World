@@ -88,6 +88,7 @@ const UI = {
       banner: this.banner,
       difficulty: $('difficulty').value,
       mapType: $('mapType').value,
+      pacts: $('pacts').value === 'oui',
     });
     $('kBanner').src = BANNERS[this.banner].img;
     Render.setupMap();
@@ -382,7 +383,7 @@ const UI = {
     const ranking = G.players.filter(p => p.alive && p.tiles > 0).sort((a, b) => b.tiles - a.tiles);
     $('lb').innerHTML = ranking.slice(0, 10).map(p => {
       const allied = G.areAllied(p.id, h.id);
-      const btn = p.isHuman || !h.alive ? '' : allied
+      const btn = p.isHuman || !h.alive || !G.pactsAllowed ? '' : allied
         ? `<button data-ally="${p.id}" title="Rompre l'alliance (trahison !)">💔</button>`
         : `<button data-ally="${p.id}" title="Proposer une alliance">🤝</button>`;
       return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}">${this.bannerImg(p, 'lbb')}` +
@@ -574,7 +575,7 @@ const UI = {
     if (G.isLand(i) && !own) items.push({ label: '⚔️ Attaquer', run: () => this.onMapClick(sx, sy) });
     // Sur un royaume ennemi : lui proposer une alliance (ou, s'il est allié, rompre le pacte)
     const o = G.owner[i];
-    if (o >= 0 && !own && G.players[o].alive) {
+    if (o >= 0 && !own && G.players[o].alive && G.pactsAllowed) {
       const name = escapeHtml(G.players[o].name);
       if (G.areAllied(h.id, o)) {
         const n = Math.floor(h.troops * this.ratio);

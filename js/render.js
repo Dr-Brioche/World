@@ -473,6 +473,55 @@ const Render = {
     return img;
   }),
 
+  // Royaume survolé (un autre que le sien) : tout son territoire est mis en surbrillance
+  hoveredKingdom() {
+    const G = Game, h = this.hover;
+    if (G.phase !== 'playing' || h < 0 || UI.selectedBuild || UI.plan) return -1;
+    const o = G.owner[h];
+    return o >= 0 && G.human && o !== G.human.id ? o : -1;
+  },
+
+  drawHoveredKingdom(ox, oy) {
+    const G = Game, o = this.hoveredKingdom();
+    if (o < 0) return;
+    // Une petite image (1 pixel = 1 case) des terres de ce royaume, refaite seulement si la carte a changé
+    const key = o + ':' + G.version;
+    if (this.hlKey !== key) {
+      this.hlKey = key;
+      if (!this.hlCanvas) {
+        this.hlCanvas = document.createElement('canvas');
+        this.hlCanvas.width = G.W; this.hlCanvas.height = G.H;
+        this.hlImg = this.hlCanvas.getContext('2d').createImageData(G.W, G.H);
+      }
+      const d = this.hlImg.data;
+      for (let i = 0; i < G.N; i++) {
+        const k = i * 4, mine = G.owner[i] === o;
+        d[k] = 255; d[k + 1] = 245; d[k + 2] = 200; d[k + 3] = mine ? 115 : 0;
+      }
+      this.hlCanvas.getContext('2d').putImageData(this.hlImg, 0, 0);
+    }
+    const ctx = this.ctx, s = this.cam.scale;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.hlCanvas, ox, oy, G.W * s, G.H * s);
+  },
+
+  // ... et ses bâtiments (ses « propriétés ») sont entourés d'un cercle doré
+  drawHoveredBuildings(ox, oy) {
+    const G = Game, o = this.hoveredKingdom();
+    if (o < 0) return;
+    const ctx = this.ctx, s = this.cam.scale;
+    for (const a of G.buildingTiles) {
+      if (G.owner[a] !== o) continue;
+      const half = G.sizeOf(G.building[a]) / 2;
+      const x = ox + (a % G.W + half) * s, y = oy + (((a / G.W) | 0) + half) * s;
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(9, s * half * 1.5), 0, Math.PI * 2);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = 'rgba(255,215,90,0.95)';
+      ctx.stroke();
+    }
+  },
+
   // Petite étiquette au-dessus d'un bâtiment : garnison, soldats stationnés, temps de construction
   drawBuildingLabel(a, type, x, y) {
     const G = Game, ctx = this.ctx, parts = [];
@@ -748,6 +797,7 @@ const Render = {
     const ox = -this.cam.x * s, oy = -this.cam.y * s;
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
+    this.drawHoveredKingdom(ox, oy);
 
     this.drawRoads(ox, oy);
     this.drawPactBorders(ox, oy);
@@ -830,6 +880,7 @@ const Render = {
     }
 
     this.drawCastleAssaultPreview(ox, oy);
+    this.drawHoveredBuildings(ox, oy);
     this.drawFloaters(ox, oy);
 
     // Par-dessus tout le reste, pour bien les voir
