@@ -82,6 +82,7 @@ const CONFIG = {
   TRAITOR_DURATION: 120,         // secondes pendant lesquelles un traître est mal vu
   TRAITOR_DEFENSE_MALUS: 0.5,    // les terres d'un traître coûtent 2x moins cher à prendre
   ALLIANCE_REQUEST_TIMEOUT: 15,  // secondes pour répondre à une demande d'alliance
+  ALLY_GIFT_RATIO: 0.75,         // soldats envoyés à un allié : il n'en reçoit que 75 % (le voyage en coûte)
 
   // --- Victoire ---
   WIN_RATIO: 0.85,         // posséder 85 % des terres = victoire

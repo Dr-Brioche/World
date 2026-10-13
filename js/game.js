@@ -1900,6 +1900,23 @@ const GameRules = {
   },
 
   // Un traître a sa défense affaiblie pendant TRAITOR_DURATION secondes
+  // Envoyer des soldats à un allié : il n'en reçoit que ALLY_GIFT_RATIO (sans dépasser son armée maximum).
+  // Renvoie un message d'erreur, ou le nombre de soldats reçus.
+  sendTroopsToAlly(pid, ally, troops) {
+    const p = this.players[pid], q = this.players[ally];
+    if (!q || !q.alive || !this.areAllied(pid, ally)) return 'On ne peut envoyer des soldats qu\'à un allié.';
+    troops = Math.floor(Math.min(troops, p.troops));
+    // pas plus que la place qu'il lui reste dans son armée
+    const room = Math.max(0, this.maxTroops(q) - this.armySize(q));
+    troops = Math.min(troops, Math.floor(room / CONFIG.ALLY_GIFT_RATIO));
+    if (troops < 1) return room < 1 ? `L'armée ${this.deName(q.name)} est déjà pleine.` : 'Pas assez de soldats !';
+    const got = troops * CONFIG.ALLY_GIFT_RATIO;
+    p.troops -= troops;
+    q.troops += got;
+    if (q.isHuman) UI.log(`🎁 ${p.name} t'envoie ${fmt(got)} soldats !`, 'good', p);
+    return got;
+  },
+
   isTraitor(p) { return this.tick < p.traitorUntil; },
 
   // Trahir un allié = quitter son pacte (en traître)
