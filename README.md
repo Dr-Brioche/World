@@ -16,7 +16,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 📜 Le jeu en bref
 
-- 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes, fleuves et mers
+- 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
+  avec **3 types de cartes** au choix : Normale, Continentale ou Base navale
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
@@ -27,7 +28,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis ta bannière dans le menu, puis clique sur une terre au début de la partie.
+1. **Fonde ta capitale** : choisis ta bannière et le **type de carte** dans le menu, puis clique sur une terre au début de la partie
+   (pas sur un îlot : il faut une terre assez grande).
+   - **Normale** : un grand continent entouré d'océan, et parfois quelques îlots au large.
+   - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
+     de carte ; les fleuves s'y jettent dans de **grands lacs**.
+   - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
    Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
    porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
 2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
@@ -244,12 +250,16 @@ Ils sont très longs à traverser, et un défenseur qui intercepte un ennemi sur
 a un **gros bonus de défense (+3, soit +300 %)**. Il y a entre **3 et 12 fleuves** par partie, au hasard. On ne peut rien construire dessus.
 Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer.
-Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une grande île entourée d'océan.
+Certains fleuves forment aussi un **lac** en chemin.
+
+🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
+il faut les contourner.
 
 **Contrôles** : molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.34** : 🗺️ 3 types de cartes au choix (Normale avec quelques îlots, Continentale sans mer bordée de montagnes et de grands lacs, Base navale avec plusieurs grandes îles) · 🏔️ sommets enneigés infranchissables au cœur des montagnes · les royaumes coincés sur leur île bâtissent un port et partent en expédition
 - **v0.33.5** : image de l'avant-poste (camp fortifié avec sa palissade et sa tour de guet), visible en zoomant
 - **v0.33.4** : images des 3 niveaux du port (port de pêche, grand port, port royal), visibles en zoomant
 - **v0.33.3** : avant-postes : il faut emmener de quoi remplir leur garnison ; une fois bâtis, 5 soldats restent en garnison (fixe) et les autres stationnent, prêts à attaquer depuis l'avant-poste ou à le défendre

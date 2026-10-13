@@ -87,6 +87,7 @@ const UI = {
       name: $('name').value.trim() || 'Mon Royaume',
       banner: this.banner,
       difficulty: $('difficulty').value,
+      mapType: $('mapType').value,
     });
     $('kBanner').src = BANNERS[this.banner].img;
     Render.setupMap();
@@ -298,6 +299,7 @@ const UI = {
     if (i < 0) return '';
     const G = Game, t = TERRAIN_INFO[G.terrain[i]];
     if (G.terrain[i] === TERRAIN.GREAT_RIVER) return '🌊 Grand fleuve (infranchissable)';
+    if (G.terrain[i] === TERRAIN.PEAK) return '🏔️ Sommet (infranchissable)';
     if (!G.isLand(i)) return '🌊 Mer';
     const o = G.owner[i];
     let txt = t.cost > 1 ? `${t.name} (défense ${pct(t.cost - 1)})` : t.name;
@@ -623,6 +625,7 @@ const UI = {
     if (i < 0) return;
     if (G.phase === 'spawn') {
       if (!G.isLand(i)) return this.log('Choisis une terre, pas la mer !', 'warn');
+      if (G.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return this.log('Cette île est trop petite pour y fonder ta capitale.', 'warn');
       G.startGame(i);
       this.log('👑 Ta capitale est fondée ! Clique sur les terres voisines pour t\'étendre.', 'good');
       return;

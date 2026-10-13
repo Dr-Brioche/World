@@ -8,6 +8,7 @@ const AI = {
 
     if (Math.random() < 0.4) this.tryBuild(p);
     if (Math.random() < 0.05) this.tryExpedition(p);
+    if (this.stuckOnIsland(p)) this.goToSea(p);
     if (Math.random() < 0.08) this.tryAlliance(p);
 
     this.reactToThreats(p);
@@ -138,17 +139,36 @@ const AI = {
     Game.launchAttack(p.id, victim.id, p.troops * 0.5, aim === null ? undefined : aim);
   },
 
-  // Avec un grand port : parfois, une expédition vers une côte au hasard
-  tryExpedition(p) {
+  // Plus rien à prendre par la terre (ni terre libre, ni ennemi voisin) : il faut partir en mer
+  stuckOnIsland(p) {
+    for (const [o] of Game.neighborStats(p.id)) if (o < 0 || !Game.areAllied(p.id, o)) return false;
+    return true;
+  },
+
+  // Bloqué sur son île : bâtir un port, l'améliorer, puis lancer des expéditions (vers des terres libres d'abord)
+  goToSea(p) {
+    const ports = Game.buildingTiles.filter(a => Game.building[a] === B_PORT && Game.owner[a] === p.id);
+    if (!ports.length) return this.tryBuild(p, B_PORT);
+    if (!Game.expeditionPorts(p.id).length) {
+      const port = ports[0];
+      if (Game.upgradeCost(port) !== null && p.gold >= Game.upgradeCost(port)) Game.upgradeBuilding(p, port);
+      return;
+    }
+    if (Math.random() < 0.3) this.tryExpedition(p, true);
+  },
+
+  // Avec un grand port : parfois, une expédition vers une côte au hasard (freeFirst : de préférence une terre libre)
+  tryExpedition(p, freeFirst) {
     if (!Game.expeditionPorts(p.id).length || p.gold < 40) return;
-    for (let k = 0; k < 15; k++) {
+    for (let k = 0; k < (freeFirst ? 60 : 15); k++) {
       const i = (Math.random() * Game.N) | 0;
       if (!Game.isCoastal(i) || !Game.landable(p.id, i)) continue;
+      if (freeFirst && k < 45 && Game.owner[i] !== -1) continue;
       if (!Game.launchExpedition(p.id, i, Math.max(p.troops * 0.3, 12))) return;
     }
   },
 
-  tryBuild(p) {
+  tryBuild(p, forced) {
     // Parfois, améliorer un château ou un moulin plutôt que construire
     if (Math.random() < 0.3) {
       const mine = Game.buildingTiles.filter(a => Game.owner[a] === p.id
@@ -161,6 +181,7 @@ const AI = {
     else if (Math.random() < 0.2 && p.castlesBuilt < Game.maxCastles(p)) type = B_CASTLE;
     else if (Math.random() < 0.1 && c[B_CHURCH] < 2) type = B_CHURCH;
     else if (Math.random() < 0.1 && c[B_PORT] < 2) type = B_PORT;
+    if (forced) type = forced;
     if (p.gold < Game.buildCost(p, type)) return;
 
     const tiles = [];

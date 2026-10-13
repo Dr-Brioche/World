@@ -48,7 +48,9 @@ function fbm(noise, x, y, octaves) {
 // Largeur (en cases) de la bande près des bords où la terre s'enfonce dans l'océan
 const EDGE_MARGIN = 14;
 
-function generateMap(seed) {
+// type : 'normal' (un continent et quelques îlots), 'continental' (que de la terre, bordée de montagnes
+// infranchissables, avec de grands lacs), 'naval' (plusieurs grandes îles)
+function generateMap(seed, type = 'normal') {
   const W = CONFIG.MAP_WIDTH, H = CONFIG.MAP_HEIGHT, N = W * H;
   const rand = mulberry32(seed);
   const elevNoise = makeValueNoise(rand);
@@ -56,46 +58,75 @@ function generateMap(seed) {
   const reliefNoise = makeValueNoise(rand);
 
   // 1. Altitude : du bruit, plus bas sur les bords pour former un continent.
+  //    (carte « Base navale » : plus bas loin de plusieurs centres, pour former plusieurs îles)
+  const centers = type === 'naval' ? islandCenters(W, H, rand) : null;
+  const cont = type === 'continental';
   const elev = new Float32Array(N);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const nx = (x / W - 0.5) * 2, ny = (y / H - 0.5) * 2;
-      const d = nx * nx + ny * ny;
+      let d = nx * nx + ny * ny;
+      if (centers) {
+        d = Infinity;
+        for (const [cx, cy] of centers) d = Math.min(d, ((x - cx) / (W * 0.16)) ** 2 + ((y - cy) / (H * 0.17)) ** 2);
+        d *= 0.55;
+      }
       // Près des bords, le terrain plonge dans l'océan : la terre n'est jamais coupée net par le bord
       const edge = Math.min(x, y, W - 1 - x, H - 1 - y);
       const sink = edge < EDGE_MARGIN ? ((EDGE_MARGIN - edge) / EDGE_MARGIN) ** 2 : 0;
-      elev[y * W + x] = fbm(elevNoise, x / 40, y / 40, 5) - 0.6 * d - sink;
+      elev[y * W + x] = cont ? fbm(elevNoise, x / 40, y / 40, 5) : fbm(elevNoise, x / 40, y / 40, 5) - 0.6 * d - sink;
     }
   }
 
   // 2. On choisit les niveaux de mer/collines/montagnes selon des pourcentages.
   const sorted = Float32Array.from(elev).sort();
-  const waterLvl = sorted[Math.floor(N * CONFIG.WATER_RATIO)];
+  const waterLvl = sorted[Math.floor(N * (cont ? 0.05 : type === 'naval' ? CONFIG.NAVAL_WATER_RATIO : CONFIG.WATER_RATIO))];
+
+  // Le relief suit son propre bruit : des chaînes de montagnes éparpillées.
+  // Les sommets (infranchissables) sont les points les plus hauts : environ 3 % des terres.
+  const relief = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const x = i % W, y = (i / W) | 0;
+    relief[i] = fbm(reliefNoise, x / 22, y / 22, 4) + (elev[i] - waterLvl) * 0.5;
+  }
+  const landRelief = Array.from(relief).filter((r, i) => cont || elev[i] >= waterLvl).sort((a, b) => a - b);
+  const peakLvl = Math.max(0.8, landRelief[Math.floor(landRelief.length * 0.97)]);
 
   const terrain = new Uint8Array(N);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x, e = elev[i];
-      if (x === 0 || y === 0 || x === W - 1 || y === H - 1 || e < waterLvl) terrain[i] = TERRAIN.WATER;
+      // Carte continentale : pas de mer, mais une barrière de montagnes infranchissables tout autour
+      const edge = Math.min(x, y, W - 1 - x, H - 1 - y);
+      const wall = 3 + fbm(reliefNoise, x / 9 + 50, y / 9 + 50, 2) * 7; // épaisseur irrégulière
+      if (cont && edge < wall) terrain[i] = TERRAIN.PEAK;
+      else if (cont && edge < wall + 3) terrain[i] = TERRAIN.MOUNTAIN;
+      else if (!cont && (x === 0 || y === 0 || x === W - 1 || y === H - 1 || e < waterLvl)) terrain[i] = TERRAIN.WATER;
       else {
-        // Le relief suit son propre bruit : des chaînes de montagnes éparpillées
-        const relief = fbm(reliefNoise, x / 22, y / 22, 4) + (e - waterLvl) * 0.5;
-        if (relief > 0.72) terrain[i] = TERRAIN.MOUNTAIN;
-        else if (relief > 0.64) terrain[i] = TERRAIN.HILLS;
+        const r = relief[i];
+        if (r > peakLvl) terrain[i] = TERRAIN.PEAK; // le cœur des montagnes : infranchissable
+        else if (r > 0.72) terrain[i] = TERRAIN.MOUNTAIN;
+        else if (r > 0.64) terrain[i] = TERRAIN.HILLS;
         else if (fbm(forestNoise, x / 14, y / 14, 3) > 0.56) terrain[i] = TERRAIN.FOREST;
         else terrain[i] = TERRAIN.PLAINS;
       }
     }
   }
 
-  // 3. On garde seulement le plus grand continent (pas encore de bateaux !).
-  keepMainland(terrain, W, H);
+  // 3. On garde toutes les terres sauf les miettes ; la carte « Normale » reçoit quelques îlots,
+  //    la carte continentale de grands lacs (où finiront ses fleuves).
+  const minLand = 12;
+  keepMainland(terrain, W, H, minLand);
+  if (type === 'normal') addIslets(terrain, W, H, rand);
+  if (cont) addLakes(terrain, elev, W, H, rand);
 
-  // 4. Les fleuves : chacun part d'une montagne et descend la pente jusqu'à la mer.
+  // 4. Les fleuves : chacun part d'une montagne et descend la pente jusqu'à la mer (ou un lac).
   addRivers(terrain, elev, W, H, rand);
 
-  // 5. Un grand fleuve a pu isoler un petit bout de terre : on ne garde que le continent principal.
-  keepMainland(terrain, W, H);
+  // 5. Un grand fleuve a pu isoler un petit bout de terre : on le retire.
+  keepMainland(terrain, W, H, minLand);
+  // Un creux enfermé par des sommets, sans accès à l'eau, serait inaccessible : il devient sommet aussi.
+  fillPockets(terrain, W, H);
 
   // 6. Petites variations de couleur pour un rendu moins plat.
   const shade = new Int8Array(N);
@@ -195,7 +226,9 @@ const LAKES_MAX = 3, LAKE_CHANCE = 0.3;
 
 // Garde seulement le plus grand morceau de terre (la mer et les grands fleuves séparent les terres) :
 // les autres morceaux deviennent de la mer.
-function keepMainland(terrain, W, H) {
+// (minSize donné : on garde tous les morceaux d'au moins minSize cases)
+// (les sommets comptent comme de la terre ici : ce sont la mer et les grands fleuves qui séparent les îles)
+function keepMainland(terrain, W, H, minSize) {
   const N = W * H;
   const isLand = i => terrain[i] !== TERRAIN.WATER && terrain[i] !== TERRAIN.GREAT_RIVER;
   const comp = new Int32Array(N).fill(-1);
@@ -221,7 +254,95 @@ function keepMainland(terrain, W, H) {
     if (size > bestSize) { bestSize = size; best = label; }
     label++;
   }
+  const sizes = [];
+  for (let i = 0; i < N; i++) if (comp[i] >= 0) sizes[comp[i]] = (sizes[comp[i]] || 0) + 1;
   for (let i = 0; i < N; i++) {
-    if (isLand(i) && comp[i] !== best) terrain[i] = TERRAIN.WATER;
+    if (!isLand(i)) continue;
+    if (minSize === undefined ? comp[i] !== best : sizes[comp[i]] < minSize) terrain[i] = TERRAIN.WATER;
+  }
+}
+
+// Terres enfermées par des sommets (sans le plus grand morceau, et sans accès à la mer ou à un grand fleuve) :
+// personne ne pourrait les atteindre, elles deviennent des sommets
+function fillPockets(terrain, W, H) {
+  const N = W * H;
+  const isLand = i => terrain[i] !== TERRAIN.WATER && terrain[i] !== TERRAIN.GREAT_RIVER && terrain[i] !== TERRAIN.PEAK;
+  const isWater = i => terrain[i] === TERRAIN.WATER || terrain[i] === TERRAIN.GREAT_RIVER;
+  const seen = new Uint8Array(N), pieces = [];
+  for (let s = 0; s < N; s++) {
+    if (!isLand(s) || seen[s]) continue;
+    const tiles = [s];
+    let coast = false;
+    seen[s] = 1;
+    for (let q = 0; q < tiles.length; q++) {
+      const i = tiles[q], x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
+        if (n < 0 || n >= N) continue;
+        if (isWater(n)) coast = true;
+        else if (isLand(n) && !seen[n]) { seen[n] = 1; tiles.push(n); }
+      }
+    }
+    pieces.push({ tiles, coast });
+  }
+  const biggest = pieces.reduce((b, p) => (!b || p.tiles.length > b.tiles.length ? p : b), null);
+  for (const p of pieces) if (p !== biggest && !p.coast) for (const i of p.tiles) terrain[i] = TERRAIN.PEAK;
+}
+
+// Grands lacs de la carte continentale : dans les creux, loin des bords et les uns des autres
+function addLakes(terrain, elev, W, H, rand) {
+  const want = 2 + Math.floor(rand() * 3), lakes = [];
+  for (let k = 0; k < want; k++) {
+    // le point le plus bas parmi quelques endroits tirés au hasard
+    let best = null;
+    for (let t = 0; t < 40; t++) {
+      const x = 30 + Math.floor(rand() * (W - 60)), y = 30 + Math.floor(rand() * (H - 60));
+      if (lakes.some(([lx, ly]) => Math.hypot(x - lx, y - ly) < 55)) continue;
+      if (!best || elev[y * W + x] < elev[best[1] * W + best[0]]) best = [x, y];
+    }
+    if (!best) continue;
+    lakes.push(best);
+    const [cx, cy] = best, r = 7 + rand() * 6;
+    for (let y = Math.floor(cy - r - 2); y <= cy + r + 2; y++) {
+      for (let x = Math.floor(cx - r - 2); x <= cx + r + 2; x++) {
+        // un lac aux bords irréguliers (un peu allongé)
+        const d = Math.hypot((x - cx) / 1.3, y - cy);
+        if (d <= r + (rand() - 0.5) * 2 && terrain[y * W + x] !== TERRAIN.PEAK) terrain[y * W + x] = TERRAIN.WATER;
+      }
+    }
+  }
+}
+
+// Centres des grandes îles de la carte « Base navale », bien écartés les uns des autres
+function islandCenters(W, H, rand) {
+  const want = CONFIG.ISLANDS[0] + Math.floor(rand() * (CONFIG.ISLANDS[1] - CONFIG.ISLANDS[0] + 1));
+  const centers = [];
+  for (let tries = 0; tries < 500 && centers.length < want; tries++) {
+    const x = W * (0.18 + rand() * 0.64), y = H * (0.2 + rand() * 0.6);
+    if (centers.every(([cx, cy]) => ((x - cx) / W) ** 2 + ((y - cy) / H) ** 2 > 0.33 ** 2)) centers.push([x, y]);
+  }
+  return centers;
+}
+
+// Quelques îlots au large de la carte « Normale » : de petites taches de terre dans la mer
+function addIslets(terrain, W, H, rand) {
+  const want = CONFIG.ISLETS[0] + Math.floor(rand() * (CONFIG.ISLETS[1] - CONFIG.ISLETS[0] + 1));
+  let made = 0;
+  for (let tries = 0; tries < 400 && made < want; tries++) {
+    const cx = 20 + Math.floor(rand() * (W - 40)), cy = 20 + Math.floor(rand() * (H - 40));
+    const r = 2 + rand() * 3.5;
+    // en pleine mer : pas de terre à moins de r + 4 cases
+    let free = true;
+    for (let y = cy - r - 4; y <= cy + r + 4 && free; y++) {
+      for (let x = cx - r - 4; x <= cx + r + 4; x++) {
+        if (terrain[Math.round(y) * W + Math.round(x)] !== TERRAIN.WATER) { free = false; break; }
+      }
+    }
+    if (!free) continue;
+    for (let y = Math.floor(cy - r - 1); y <= cy + r + 1; y++) {
+      for (let x = Math.floor(cx - r - 1); x <= cx + r + 1; x++) {
+        if (Math.hypot(x - cx, y - cy) <= r + (rand() - 0.5) * 1.5) terrain[y * W + x] = rand() < 0.3 ? TERRAIN.FOREST : TERRAIN.PLAINS;
+      }
+    }
+    made++;
   }
 }
