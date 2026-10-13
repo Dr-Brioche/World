@@ -52,7 +52,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ce sont les **défenseurs** ennemis.
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Le défenseur peut en envoyer autant qu'il veut, **sans délai**.
-   - **La garnison** : chaque château a ses propres défenseurs (300 / 800 / 2 000 selon son niveau),
+   - **La garnison** : chaque château a ses propres défenseurs (5 / 15 / 35 selon son niveau),
      qui sortent le défendre seuls le temps que le royaume réagisse. Ils se reconstituent ensuite peu à peu.
    - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
      **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
@@ -78,16 +78,16 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Or rapporté | Prix |
      |---|---|---|
-     | 1. Moulin | +2.5 or/s | prix du moulin |
-     | 2. Grand moulin | +6 or/s | 💰 400 |
+     | 1. Moulin | +0.15 or/s | prix du moulin |
+     | 2. Grand moulin | +0.36 or/s | 💰 40 |
 
    - ⚔️ **Caserne** : plus de soldats, recrutés plus vite. **Clique dessus pour l'améliorer** (3 niveaux) :
 
      | Niveau | Soldats max en plus | Recrutement en plus | Prix |
      |---|---|---|---|
-     | 1. Camp d'entraînement | +1 500 | +30 % | prix de la caserne |
-     | 2. Caserne | +3 000 | +50 % | 💰 400 |
-     | 3. Grande caserne | +5 000 | +80 % | 💰 1000 |
+     | 1. Camp d'entraînement | +25 | +30 % | prix de la caserne |
+     | 2. Caserne | +50 | +50 % | 💰 40 |
+     | 3. Grande caserne | +80 | +80 % | 💰 100 |
 
      Les bonus de toutes tes casernes s'additionnent.
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
@@ -97,9 +97,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Bonus de défense | Rayon de la muraille | Garnison | Prix |
      |---|---|---|---|---|
-     | 1. Fort en bois | +1 | 7 cases | 300 | prix du château |
-     | 2. Château | +2 | 10 cases | 800 | 💰 600 |
-     | 3. Citadelle | +4 | 13 cases | 2 000 | 💰 1500 |
+     | 1. Fort en bois | +1 | 7 cases | 5 | prix du château |
+     | 2. Château | +2 | 10 cases | 15 | 💰 60 |
+     | 3. Citadelle | +4 | 13 cases | 35 | 💰 150 |
 
      **Routes** : un château de niveau 2 trace des **chemins de terre** 🛤️ vers tes moulins et casernes
      qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, recrutement des casernes).
@@ -118,7 +118,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Mais attention, un **traître** 🗡️ le paie cher pendant 2 minutes : **sa défense est réduite de moitié**
    (ses terres coûtent 2x moins de soldats à prendre), personne ne veut s'allier avec lui,
    et les autres royaumes en profitent pour l'attaquer !
-5. **Gère ton armée** : la jauge en bas de l'écran montre tes soldats, et au-dessus combien tu en
+5. **Gère ton armée** : tu commences petit, avec **10 soldats** et **10 pièces d'or**, puis ton royaume grandit peu à peu.
+   La jauge en bas de l'écran montre tes soldats, et au-dessus combien tu en
    recrutes par seconde. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
    puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée est pleine.
    Envoie donc tes troupes au combat plutôt que de les garder !
@@ -131,6 +132,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.22** : nouvelle échelle plus progressive : on commence avec 10 soldats et 10 pièces d'or, le recrutement et les revenus grandissent lentement (prix des bâtiments 10 / 20 / 30)
 - **v0.21** : suppression de la trêve après la prise d'un château (plus de délai avant de réattaquer, plus de bonus ou malus de recrutement)
 - **v0.20** : 13 bannières de royaume (une par couleur) à choisir au début ; elles s'affichent à côté des noms, portent les armées et accompagnent les messages
 - **v0.19** : nouveaux combats : 10 s de préparation (on ajoute des soldats), renforts en 5 s, le défenseur envoie ses soldats en cliquant sur la bannière, combats visibles en direct, bonus de terrain pour le défenseur, garnison dans les châteaux · on peut attaquer depuis les terres d'un allié du pacte · production des moulins et casernes selon le terrain · 3 châteaux construits maximum par partie
