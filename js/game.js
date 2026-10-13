@@ -14,6 +14,7 @@ const Game = {
     this.building = new Uint8Array(this.N);
     this.players = [];
     this.attacks = [];
+    this.nextAttackId = 1;
     this.buildingTiles = [];
     this.castles = [];
     this.tick = 0;
@@ -202,7 +203,7 @@ const Game = {
     }
     let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target);
     if (!a) {
-      a = { attacker: pid, target, troops: 0, done: false };
+      a = { id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false };
       this.attacks.push(a);
       if (target >= 0 && this.players[target].isHuman) {
         UI.log(`⚠️ ${p.name} t'attaque avec ${fmt(troops)} soldats !`, 'warn');
@@ -265,6 +266,13 @@ const Game = {
         }
       });
     }
+  },
+
+  // Rappelle les soldats d'une attaque (seulement les siennes).
+  cancelAttack(pid, attackId) {
+    const a = this.attacks.find(a => a.id === attackId && a.attacker === pid && !a.done);
+    if (a) this.endAttack(a);
+    return a;
   },
 
   endAttack(a) {

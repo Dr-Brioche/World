@@ -28,10 +28,14 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 1. **Fonde ta capitale** : clique sur une terre au début de la partie.
 2. **Étends-toi** : clique sur une terre voisine (libre ou ennemie) pour l'attaquer.
    Le curseur « Envoyer » choisit le % de tes soldats qui partent en campagne.
+   Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
+   le bouton **✖ Annuler** fait rentrer les survivants au royaume.
+   Les attaques ennemies contre toi y apparaissent aussi, en rouge.
 3. **Construis** (touches `1`, `2`, `3`, puis clic sur ton territoire) :
    - 🌾 **Ferme** : rapporte de l'or
    - ⚔️ **Caserne** : plus de soldats, recrutés plus vite
-   - 🏰 **Château** : les cases autour coûtent 2x plus cher à prendre
+   - 🏰 **Château** : les cases autour coûtent 2x plus cher à prendre.
+     Sa zone de protection est dessinée sur la carte (pointillés blancs pour tes châteaux)
 4. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
 
 🌲 Les forêts, collines et montagnes coûtent plus de soldats à conquérir que les plaines.
@@ -40,6 +44,7 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 
 ## 🆕 Nouveautés
 
+- **v0.2** : zone de protection des châteaux visible sur la carte · attaques en cours affichées en bas de l'écran, avec un bouton pour les annuler
 - **v0.1** : première version jouable (carte aléatoire, conquête, or, 3 bâtiments, royaumes rivaux, victoire/défaite)
 
 ## 💡 Idées pour la suite
