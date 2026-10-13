@@ -473,6 +473,24 @@ const Render = {
     return img;
   }),
 
+  // Petite étiquette au-dessus d'un bâtiment : garnison, soldats stationnés, temps de construction
+  drawBuildingLabel(a, type, x, y) {
+    const G = Game, ctx = this.ctx, parts = [];
+    if (G.garrison[a] >= 1) parts.push('🛡️ ' + fmt(G.garrison[a]));
+    const o = type === B_OUTPOST ? G.outposts.get(a) : null;
+    if (o && G.outpostReady(a) && o.stationed >= 1) parts.push('⚔ ' + fmt(o.stationed));
+    if (o && !G.outpostReady(a)) parts.push(`🏗️ ${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s`);
+    if (!parts.length) return;
+    const f = ctx.font, txt = parts.join('  ');
+    ctx.font = '700 12px Georgia, serif';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+    ctx.fillStyle = '#ffe9a8';
+    ctx.strokeText(txt, x, y);
+    ctx.fillText(txt, x, y);
+    ctx.font = f;
+  },
+
   // Bâtiment sans niveaux : icône de loin, image quand on zoome (s'il en a une)
   drawSimpleBuilding(type, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, img = this.simpleImages[type];
@@ -747,34 +765,14 @@ const Render = {
         const px = ox + (i % G.W + half) * s, py = oy + (((i / G.W) | 0) + half) * s;
         if (px < -300 || py < -300 || px > this.vw + 300 || py > this.vh + 300) continue;
         ctx.font = `${Math.max(9, Math.min(20 * half, s * half * 2))}px serif`;
-        if (BUILDING_LEVELS[type]) {
-          this.drawLeveledBuilding(i, px, py, imgAlpha);
-          continue;
-        }
-        this.drawSimpleBuilding(type, px, py, imgAlpha);
-        // Avant-poste bâti : ses soldats stationnés
-        if (type === B_OUTPOST && G.outpostReady(i) && G.outposts.get(i).stationed >= 1) {
-          const f = ctx.font;
-          ctx.font = '700 12px Georgia, serif';
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = 'rgba(20,12,4,0.85)';
-          ctx.fillStyle = '#fff';
-          const txt = '⚔ ' + fmt(G.outposts.get(i).stationed);
-          ctx.strokeText(txt, px, py - s * half - 8);
-          ctx.fillText(txt, px, py - s * half - 8);
-          ctx.font = f;
-        }
-        // Avant-poste en construction : le temps restant
-        if (type === B_OUTPOST && !G.outpostReady(i) && G.outposts.has(i)) {
-          const left = Math.ceil((G.outposts.get(i).ready - G.tick) / CONFIG.TICKS_PER_SECOND);
-          const f = ctx.font;
-          ctx.font = '700 12px Georgia, serif';
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = 'rgba(20,12,4,0.85)';
-          ctx.fillStyle = '#ffe9a8';
-          ctx.strokeText(`🏗️ ${left} s`, px, py - s * half - 8);
-          ctx.fillText(`🏗️ ${left} s`, px, py - s * half - 8);
-          ctx.font = f;
+        if (BUILDING_LEVELS[type]) this.drawLeveledBuilding(i, px, py, imgAlpha);
+        else this.drawSimpleBuilding(type, px, py, imgAlpha);
+        // Au-dessus du bâtiment : 🛡 sa garnison, ⚔ les soldats stationnés (avant-poste), 🏗️ la construction
+        if (s >= 4) {
+          // (au-dessus de l'image quand on la voit, sinon au-dessus de l'icône)
+          const info = BUILDING_LEVELS[type] ? BUILDING_LEVELS[type][G.level[i] || 1] : BUILDINGS[type];
+          const top = imgAlpha > 0.5 && info.size ? info.size * 0.8 : half;
+          this.drawBuildingLabel(i, type, px, py - s * top - 8);
         }
       }
     }

@@ -259,6 +259,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.34.2** : un bouclier 🛡️ au-dessus des châteaux, ports royaux et avant-postes montre les soldats de leur garnison (et ⚔ les soldats stationnés d'un avant-poste)
 - **v0.34.1** : menu de départ : bannières plus grandes, règles repliées (on clique pour les dérouler)
 - **v0.34** : 🗺️ 3 types de cartes au choix (Normale avec quelques îlots, Continentale sans mer bordée de montagnes et de grands lacs, Base navale avec plusieurs grandes îles) · 🏔️ sommets enneigés infranchissables au cœur des montagnes · les royaumes coincés sur leur île bâtissent un port et partent en expédition
 - **v0.33.5** : image de l'avant-poste (camp fortifié avec sa palissade et sa tour de guet), visible en zoomant
