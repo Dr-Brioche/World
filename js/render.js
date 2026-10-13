@@ -332,6 +332,39 @@ const Render = {
     }
   },
 
+  // Lignes d'alliance (pointillés dorés + 🤝) : celles du royaume survolé,
+  // ou toutes si on les a affichées avec la touche A.
+  drawAlliances(ox, oy) {
+    const ctx = this.ctx, G = Game, s = this.cam.scale;
+    if (G.phase !== 'playing' && G.phase !== 'over') return;
+    const focus = this.hover >= 0 ? G.owner[this.hover] : -1;
+    if (!UI.showAlliances && focus < 0) return;
+    const center = p => [ox + (p.sumX / p.tiles + 0.5) * s, oy + (p.sumY / p.tiles + 0.5) * s];
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const key of G.alliances) {
+      const [a, b] = key.split('-').map(Number);
+      if (!UI.showAlliances && a !== focus && b !== focus) continue;
+      const pa = G.players[a], pb = G.players[b];
+      if (!pa.alive || !pb.alive || !pa.tiles || !pb.tiles) continue;
+      const [x1, y1] = center(pa), [x2, y2] = center(pb);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.setLineDash([]);
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(20,12,4,0.5)';
+      ctx.stroke();
+      ctx.setLineDash([8, 6]);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#f2cf5b';
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '18px serif';
+      ctx.fillText('🤝', (x1 + x2) / 2, (y1 + y2) / 2);
+    }
+  },
+
   draw() {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -391,6 +424,8 @@ const Render = {
         ctx.strokeRect(ox + hx * s, oy + hy * s, s, s);
       }
     }
+
+    this.drawAlliances(ox, oy);
 
     // Noms des royaumes
     for (const p of G.players) {
