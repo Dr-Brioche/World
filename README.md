@@ -70,7 +70,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Mais attention, un **traître** 🗡️ le paie cher pendant 2 minutes : **sa défense est réduite de moitié**
    (ses terres coûtent 2x moins de soldats à prendre), personne ne veut s'allier avec lui,
    et les autres royaumes en profitent pour l'attaquer !
-5. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
+5. **Gère ton armée** : la jauge en bas de l'écran montre tes soldats, et au-dessus combien tu en
+   recrutes par seconde. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
+   puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée est pleine.
+   Envoie donc tes troupes au combat plutôt que de les garder !
+6. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
 
 🌲 Chaque terrain a sa défense : plaine x1, forêt x1.6, colline x2.2, montagne x3.5. Plus elle est haute, plus la case coûte de soldats à conquérir.
 
@@ -78,6 +82,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.11** : jauge des soldats en bas de l'écran, avec le recrutement par seconde ; le recrutement est maximal vers 40 % de l'armée puis ralentit si on garde trop de soldats
 - **v0.10** : alliances visibles pour tout le monde : carrés de couleur dans le classement, lignes dorées 🤝 au survol d'un royaume, touche `A` pour tout afficher · les touches `1`, `2`, `3` mettent le bâtiment sous la souris, un clic le pose
 - **v0.9.2** : les touches `1`, `2`, `3` posent le bâtiment directement sous la souris (ou l'améliorent)
 - **v0.9.1** : 2 cases d'écart obligatoires autour de chaque bâtiment, pour qu'ils ne se chevauchent plus

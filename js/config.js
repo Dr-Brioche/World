@@ -24,6 +24,11 @@ const CONFIG = {
   BASE_TROOP_GROWTH: 15,       // soldats gagnés par seconde au minimum
   TROOP_GROWTH_PER_TILE: 0.3,  // soldats/seconde en plus par case possédée
   BARRACKS_GROWTH_BONUS: 0.3,  // +30 % de recrutement par caserne
+  // Le recrutement dépend du remplissage de l'armée : il monte jusqu'à TROOP_PEAK_RATIO
+  // du maximum, puis baisse jusqu'à 0 quand on s'approche du maximum.
+  TROOP_PEAK_RATIO: 0.4,       // remplissage idéal (40 % du maximum)
+  TROOP_GROWTH_AT_ZERO: 0.7,   // vitesse de recrutement quand l'armée est vide (x0.7)
+  TROOP_GROWTH_AT_PEAK: 1.3,   // vitesse au remplissage idéal (x1.3)
 
   // --- Or ---
   BASE_GOLD: 1,            // or par seconde au minimum

@@ -286,7 +286,15 @@ const Game = {
     if (p.troops >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
     const bonus = 1 + p.bCount[B_BARRACKS] * CONFIG.BARRACKS_GROWTH_BONUS;
-    return base * bonus * (1 - 0.8 * p.troops / max);
+    return base * bonus * this.growthFactor(p.troops / max);
+  },
+
+  // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
+  // il monte jusqu'au remplissage idéal, puis redescend jusqu'à 0 au maximum.
+  growthFactor(r) {
+    const peak = CONFIG.TROOP_PEAK_RATIO, lo = CONFIG.TROOP_GROWTH_AT_ZERO, hi = CONFIG.TROOP_GROWTH_AT_PEAK;
+    if (r <= peak) return lo + (hi - lo) * (r / peak);
+    return hi * Math.max(0, (1 - r) / (1 - peak));
   },
 
   goldRate(p) {
