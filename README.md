@@ -37,7 +37,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Les royaumes visés ont le temps de réagir… toi aussi !
    **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
    (un peu élargie), puis rentre. Elle doit ensuite **récupérer 30 secondes** avant de pouvoir
-   réattaquer ce royaume (le temps restant s'affiche en bas de l'écran). Pendant ces 30 secondes,
+   réattaquer ce royaume : une **trêve**, dont le temps restant s'affiche entre parenthèses sous le nom
+   de ce royaume sur la carte, et en bas de l'écran. Pendant ces 30 secondes,
    ton **recrutement est divisé par 2**, et celui du royaume attaqué est **multiplié par 1.5**
    pour qu'il ait le temps de se défendre. Les bots suivent la même règle.
 3. **Construis** : appuie sur `1`, `2` ou `3` (ou clique sur un bouton en bas) : le bâtiment apparaît
@@ -99,6 +100,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.16.1** : le temps de trêve après la prise d'un château s'affiche sous le nom du royaume ennemi sur la carte
 - **v0.16** : les châteaux de niveau 2 et 3 tracent des chemins de terre puis des routes pavées vers les moulins et casernes de leur muraille, qui produisent +20 % puis +50 %
 - **v0.15** : pendant les 30 s de repos après la prise d'un château, l'attaquant recrute 2x moins vite et le défenseur 1.5x plus vite
 - **v0.14** : prendre un château arrête l'assaut après la conquête de sa zone, puis 30 s de repos avant de réattaquer le même royaume
