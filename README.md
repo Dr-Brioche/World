@@ -3,7 +3,7 @@
 **Un petit jeu de conquête médiévale, jouable directement dans le navigateur.**
 
 Inspiré d'OpenFront, mais à la sauce médiévale : fonde ta capitale, étends ton royaume case par case,
-bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour dominer le continent !
+bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour dominer le continent !
 
 ## 🎮 [▶️ JOUER MAINTENANT](https://dr-brioche.github.io/World/)
 
@@ -38,7 +38,13 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 3. **Construis** (touches `1`, `2`, `3`, puis clic sur ton territoire).
    Chaque bâtiment occupe **2x2 cases** de ton territoire (pas de mer). Si un ennemi prend
    une seule de ces cases, il capture tout le bâtiment !
-   - 🌾 **Ferme** : rapporte de l'or
+   - 🌾 **Moulin** : rapporte de l'or. **Clique dessus pour l'améliorer** (2 niveaux) :
+
+     | Niveau | Or rapporté | Prix |
+     |---|---|---|
+     | 1. Moulin | +2.5 or/s | prix du moulin |
+     | 2. Grand moulin | +6 or/s | 💰 400 |
+
    - ⚔️ **Caserne** : plus de soldats, recrutés plus vite
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
@@ -52,7 +58,7 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
      | 3. Citadelle | +4 | 13 cases | 💰 1500 |
 
      Exemple : une forêt (x1.6) protégée par une citadelle passe à x5.6.
-     Zoome sur la carte pour voir apparaître l'image de chaque château !
+     Zoome sur la carte pour voir apparaître l'image de chaque château et de chaque moulin !
 4. **Fais des alliances** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer une alliance.
    Les alliés ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer une alliance : accepte ou refuse.
    Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée.
@@ -67,6 +73,7 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 
 ## 🆕 Nouveautés
 
+- **v0.8** : la ferme devient un **moulin** à 2 niveaux (moulin, grand moulin) avec ses images quand on zoome
 - **v0.7** : les bâtiments occupent 2x2 cases sur la carte, avec un aperçu de l'emplacement avant de construire
 - **v0.6** : châteaux à 3 niveaux (fort en bois, château, citadelle) avec leurs images quand on zoome ; chaque niveau agrandit la muraille et augmente la défense (+1, +2, +4)
 - **v0.5.1** : ton royaume est vert par défaut (le bleu se confondait avec la mer)
@@ -102,4 +109,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-| `img/` | Les images des 3 niveaux de château |
+| `img/` | Les images des bâtiments (3 niveaux de château, 2 niveaux de moulin) |

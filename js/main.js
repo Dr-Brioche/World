@@ -94,29 +94,34 @@ const UI = {
     else if (res !== 'accepted') this.log(res, 'warn');
   },
 
-  // Petite fenêtre pour améliorer un château
-  showUpgrade(c) {
-    const G = Game;
+  // Ce que rapporte un niveau de bâtiment, en quelques mots
+  levelEffect(type, info) {
+    return type === B_CASTLE ? `+${info.bonus} défense, rayon ${info.radius}` : `+${info.gold} or/s`;
+  },
+
+  // Petite fenêtre pour améliorer un bâtiment (château, moulin)
+  showUpgrade(a) {
+    const G = Game, type = G.building[a], icon = BUILDINGS[type].icon;
     if (this.upgradeBox) this.upgradeBox.remove();
     const el = document.createElement('div');
     this.upgradeBox = el;
     el.className = 'msg request upgrade';
-    const cur = G.castleInfo(c), cost = G.upgradeCost(c);
+    const cur = G.buildingInfo(a), cost = G.upgradeCost(a);
     const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
     if (cost === null) {
-      el.innerHTML = `🏰 <b>${cur.name}</b> (niveau 3) : ton château est déjà au maximum ! ` +
-        `+${cur.bonus} défense, rayon ${cur.radius}.<div class="choices"><button data-no>OK</button></div>`;
+      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : déjà au maximum ! ` +
+        `${this.levelEffect(type, cur)}.<div class="choices"><button data-no>OK</button></div>`;
     } else {
-      const next = CASTLE_LEVELS[G.level[c] + 1];
-      el.innerHTML = `🏰 <b>${cur.name}</b> (niveau ${G.level[c]}) → <b>${next.name}</b> (niveau ${G.level[c] + 1})<br>` +
+      const next = BUILDING_LEVELS[type][G.level[a] + 1];
+      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
         `<img src="${next.img}" alt="">` +
-        `Défense +${cur.bonus} → <b>+${next.bonus}</b> · Rayon ${cur.radius} → <b>${next.radius}</b>` +
+        `${this.levelEffect(type, cur)} → <b>${this.levelEffect(type, next)}</b>` +
         `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button><button data-no>Fermer</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
-        const err = G.upgradeCastle(G.human, c);
+        const err = G.upgradeBuilding(G.human, a);
         if (err) return this.log(err, 'warn');
         close();
-        this.log(`🏰 Ton château devient : ${G.castleInfo(c).name} !`, 'good');
+        this.log(`${icon} Amélioration terminée : ${G.buildingInfo(a).name} !`, 'good');
       });
     }
     el.querySelector('[data-no]').addEventListener('click', close);
@@ -190,10 +195,11 @@ const UI = {
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
-    if (G.building[i] === B_CASTLE) {
-      const c = G.anchor[i], info = G.castleInfo(c);
-      txt += ` · 🏰 ${info.name} (niv. ${G.level[c]}, +${info.bonus} défense)`;
-      if (o === G.human.id && G.upgradeCost(c) !== null) txt += ` · clique pour l'améliorer`;
+    const info = G.building[i] ? G.buildingInfo(G.anchor[i]) : null;
+    if (info) {
+      const a = G.anchor[i];
+      txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
+      if (o === G.human.id && G.upgradeCost(a) !== null) txt += ` · clique pour l'améliorer`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
     }
@@ -280,8 +286,9 @@ const UI = {
     }
     if (G.phase !== 'playing' || !G.human.alive) return;
     const h = G.human;
-    // Clic sur un de ses châteaux : proposer l'amélioration
-    if (G.building[i] === B_CASTLE && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === B_CASTLE)) {
+    // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
+    const t = G.building[i];
+    if (BUILDING_LEVELS[t] && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === t)) {
       this.selectBuild(0);
       this.showUpgrade(G.anchor[i]);
       return;

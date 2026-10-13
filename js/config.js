@@ -28,7 +28,6 @@ const CONFIG = {
   // --- Or ---
   BASE_GOLD: 1,            // or par seconde au minimum
   GOLD_PER_TILE: 0.01,
-  GOLD_PER_FARM: 2.5,
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type coûte x1.5 plus cher
 
   // --- Combat ---
@@ -59,7 +58,14 @@ const TERRAIN_INFO = [
   { name: 'Montagne', color: [130, 124, 118], cost: 3.5 },
 ];
 
-const B_FARM = 1, B_BARRACKS = 2, B_CASTLE = 3;
+const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3;
+
+// Les 2 niveaux du moulin : chacun rapporte de l'or chaque seconde.
+const MILL_LEVELS = [
+  null,
+  { name: 'Moulin',       gold: 2.5, img: 'img/moulin1.webp', size: 2.3 },
+  { name: 'Grand moulin', gold: 6,   img: 'img/moulin2.webp', size: 2.8, upgradeCost: 400 },
+];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
 // dans sa muraille (ex. forêt x1.6 + niveau 3 → x5.6).
@@ -71,10 +77,13 @@ const CASTLE_LEVELS = [
 ];
 // size = largeur de l'image en cases, quand on zoome assez pour la voir
 
+// Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
+const BUILDING_LEVELS = [null, MILL_LEVELS, null, CASTLE_LEVELS];
+
 // L'index dans ce tableau correspond au numéro du bâtiment (0 = aucun).
 const BUILDINGS = [
   null,
-  { name: 'Ferme',   icon: '🌾', baseCost: 100, desc: `+${CONFIG.GOLD_PER_FARM} or/s` },
+  { name: 'Moulin',  icon: '🌾', baseCost: 100, desc: `+${MILL_LEVELS[1].gold} or/s (2 niveaux)` },
   { name: 'Caserne', icon: '⚔️', baseCost: 200, desc: '+recrutement, +soldats max' },
   { name: 'Château', icon: '🏰', baseCost: 300, desc: 'Muraille : +1 à +4 défense (3 niveaux)' },
 ];
