@@ -276,6 +276,7 @@ const Game = {
     const density = d.troops / Math.max(1, d.tiles);
     let cost = (CONFIG.ENEMY_TILE_BASE_COST + density * CONFIG.DENSITY_FACTOR) * tc;
     if (this.castleProtects(a.target, t)) cost *= CONFIG.CASTLE_DEFENSE;
+    if (this.isTraitor(d)) cost *= CONFIG.TRAITOR_DEFENSE_MALUS;
     return cost;
   },
 
@@ -380,12 +381,15 @@ const Game = {
     UI.log(`🤝 ${this.players[a].name} et ${this.players[b].name} sont maintenant alliés !`, 'good');
   },
 
+  // Un traître a sa défense affaiblie pendant TRAITOR_DURATION secondes
+  isTraitor(p) { return this.tick < p.traitorUntil; },
+
   breakAlliance(traitorId, otherId) {
     if (!this.areAllied(traitorId, otherId)) return;
     this.alliances.delete(this.allyKey(traitorId, otherId));
     const traitor = this.players[traitorId];
     traitor.traitorUntil = this.tick + CONFIG.TRAITOR_DURATION * CONFIG.TICKS_PER_SECOND;
-    UI.log(`💔 ${traitor.name} a rompu son alliance avec ${this.players[otherId].name} !`, 'warn');
+    UI.log(`🗡️ ${traitor.name} a trahi ${this.players[otherId].name} ! Sa défense est affaiblie.`, 'warn');
   },
 
   // --- Boucle principale (appelée TICKS_PER_SECOND fois par seconde) ---

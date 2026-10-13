@@ -181,6 +181,10 @@ button:hover { background: #e8d6a8; }
 .msg.request .choices { display: flex; gap: 6px; margin-top: 6px; }
 .msg.request button:first-child { background: #b9d7a4; }
 .msg.request button:last-child { background: #e9b5a8; }
+.msg.betray { border-left-color: var(--danger); }
+.msg.betray button:first-child { background: #e9b5a8; }
+.msg.betray button:last-child { background: var(--parchment-dark); }
+#traitor { color: var(--danger); font-weight: bold; }
 
 .overlay {
   position: fixed;

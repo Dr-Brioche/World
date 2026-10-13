@@ -264,7 +264,8 @@ const Render = {
       ctx.lineWidth = Math.max(2, size / 5);
       ctx.strokeStyle = 'rgba(20,12,4,0.75)';
       ctx.fillStyle = p.isHuman ? '#ffe9a8' : '#fff';
-      const label = !p.isHuman && G.areAllied(p.id, G.human.id) ? '🤝 ' + p.name : p.name;
+      let label = !p.isHuman && G.areAllied(p.id, G.human.id) ? '🤝 ' + p.name : p.name;
+      if (G.isTraitor(p)) label = '🗡️ ' + label;
       ctx.strokeText(label, cx, cy - size * 0.45);
       ctx.fillText(label, cx, cy - size * 0.45);
       ctx.font = `600 ${size * 0.75}px Georgia, serif`;
