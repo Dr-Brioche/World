@@ -34,7 +34,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    frontière en **contournant ses autres fortifications**, capture tout sur son passage, puis prend le château.
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
-   de la frontière. Quand un royaume n'a **plus aucun château**, tu peux attaquer tout son territoire de front.
+   de la frontière. Quand un royaume n'a **plus aucun château** (relié à son royaume), tu peux attaquer tout son territoire de front.
    Le curseur « Envoyer » choisit le % de tes soldats qui partent en campagne.
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
    le bouton **✖ Annuler** fait rentrer les survivants au royaume.
@@ -61,6 +61,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
    - **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
      (un peu élargie), puis les survivants rentrent. Tu peux relancer un nouvel assaut aussitôt.
+
+   **✂️ Encercler** : si ton assaut **coupe** un morceau du royaume ennemi, et que ce morceau fait
+   **moins de 20 %** de son territoire et touche le tien, il est **pris d'un coup** !
+   S'il y a un château dedans, le château, lui, reste à l'ennemi : il tient seul, **isolé** 🚩 au milieu de tes terres.
+   - Un château isolé ne protège plus le reste de son royaume, et son royaume **ne peut plus lui envoyer
+     de défenseurs** : seule sa garnison le défend.
+   - Mais il peut lui envoyer une **armée de secours** 🚩 : clique sur ton château isolé (ou sur **🚩 Secours**
+     quand il est attaqué). L'armée traverse les terres ennemies comme un assaut, en évitant leurs murailles ;
+     **si elle arrive à temps**, ses soldats rejoignent la défense du château. L'ennemi peut l'arrêter en
+     envoyant ses défenseurs contre elle.
+   - Une armée ne peut pas partir d'un château isolé : il faut d'abord le relier à nouveau à ton royaume.
 3. **Construis** : appuie sur `1`, `2` ou `3` (ou `&`, `é`, `"` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
@@ -138,6 +149,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.24** : ✂️ encerclement : un morceau de royaume coupé par un assaut (moins de 20 % du royaume) est pris d'un coup · ses châteaux restent debout, isolés 🚩 : ils ne reçoivent plus de défenseurs, mais leur royaume peut leur envoyer une armée de secours · un assaut de front ne prend plus de château (il faut le viser)
 - **v0.23** : plus de chiffres précis dans le jeu, seulement des pourcentages · les moulins et casernes produisent **toutes les 10 secondes**, avec un petit chiffre qui s'envole au-dessus d'eux (seulement pour tes bâtiments) · revenu de base selon la taille du territoire · les touches `&`, `é`, `"` du clavier AZERTY marchent comme `1`, `2`, `3` · la muraille du fort en bois est un peu plus grande, pour pouvoir y construire
 - **v0.22.1** : nouvelle bannière aux poissons (gris clair)
 - **v0.22** : nouvelle échelle plus progressive : on commence avec 10 soldats et 10 pièces d'or, le recrutement et les revenus grandissent lentement (prix des bâtiments 10 / 20 / 30)
