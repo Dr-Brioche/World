@@ -62,8 +62,8 @@ const CONFIG = {
   // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
   // puis l'assaut s'arrête (les survivants rentrent).
   // Encerclement : un morceau de royaume coupé du reste, plus petit que 20 % de ce royaume,
-  // est englobé d'un coup par le royaume qui l'entoure le plus. Ses châteaux restent debout, isolés,
-  // avec les terres dans leur muraille.
+  // est englobé d'un coup par celui qui l'a coupé, avec tout ce qu'il contient (châteaux compris).
+  // (sauf un morceau avec un avant-poste ou une colonie : une invasion par la mer se défend)
   ENCLAVE_RATIO: 0.2,
   // Un royaume sans château ni église peut être attaqué de front : toutes ses troupes défendent d'office,
   // mais désorganisées (sans pouvoir en place), chaque soldat ne compte que pour 0.8.

@@ -57,8 +57,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
    le bouton **✖ Annuler** fait rentrer les survivants au royaume.
    Les attaques ennemies contre toi y apparaissent aussi, en rouge.
-   **Si tu es dans un pacte**, tu peux aussi lancer des assauts contre les royaumes qui touchent tes alliés,
-   même si tu n'es pas toi-même voisin. Mais les **terres libres**, elles, ne se prennent que depuis ton propre territoire.
+   On n'attaque **que depuis son propre territoire** (ou depuis un avant-poste) : même dans un pacte,
+   impossible de lancer un assaut depuis les terres d'un allié.
 
    **⚔️ Le déroulement d'un assaut**
    - **Préparation (10 s)** : une ligne pointillée et une bannière ⚔️ à ta couleur montrent à tout le monde
@@ -84,11 +84,14 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **les moulins et casernes** qui s'y trouvent. L'assaut s'arrête alors et les survivants rentrent.
      Tu peux relancer un nouvel assaut aussitôt.
 
-   **✂️ Encercler** : quand un morceau d'un royaume est **coupé** du reste (par un assaut, un débarquement…)
-   et qu'il fait **moins de 20 %** de son territoire, il est **englobé d'un coup par le royaume qui l'entoure
-   le plus** (celui qui a le plus de frontière avec lui), pas forcément celui qui l'a coupé !
-   S'il y a un château dedans, le château reste à son royaume **avec les terres dans sa muraille** :
-   il tient seul, **isolé** 🚩 au milieu des terres ennemies.
+   **✂️ Encercler** : un royaume doit rester **d'un seul tenant**. Quand un morceau d'un royaume est **coupé**
+   du reste et qu'il fait **moins de 20 %** de son territoire, **celui qui l'a coupé le prend d'un coup**,
+   avec **tout ce qu'il contient** : châteaux, églises, ports, moulins, casernes (leurs garnisons se rendent).
+   Si personne ne l'a coupé (par exemple après la perte d'un avant-poste), c'est le royaume qui l'entoure
+   le plus qui le prend. Seule exception : un morceau avec un **avant-poste** (une invasion par la mer) se défend.
+
+   **🚩 Château isolé** : si un royaume est coupé en **gros** morceaux (20 % ou plus), un château peut se
+   retrouver isolé au milieu des terres ennemies.
    - Un château isolé **continue de produire** pour son royaume (avec les moulins et casernes de sa muraille) :
      il est juste plus difficile à défendre.
    - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend.
@@ -267,6 +270,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.37** : ✂️ un morceau coupé (moins de 20 % du royaume) va entièrement à celui qui l'a coupé, châteaux et bâtiments compris : un royaume reste d'un seul tenant (sauf invasion par la mer) · 🤝 on ne peut plus attaquer depuis les terres d'un allié, seulement depuis son propre territoire
 - **v0.36** : ⚔️ supériorité en nombre : le camp le plus nombreux (plus de 2 fois plus de soldats) tue plus vite et perd moins de soldats, jusqu'à x5 · une petite poignée de défenseurs ne bloque plus une grosse armée · 🏰 prendre un château donne d'un coup toute sa zone de défense et les bâtiments qui s'y trouvent
 - **v0.35** : les armées avancent 4 fois moins vite sur la carte (on voit mieux ce qui se passe) · un petit morceau de royaume coupé du reste est englobé par le royaume qui l'entoure le plus
 - **v0.34.7** : dans le menu de départ, on peut **interdire les pactes** (chacun pour soi)
