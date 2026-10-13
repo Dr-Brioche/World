@@ -14,9 +14,9 @@ const AI = {
     // Une seule campagne à la fois ; si l'assaut en cours se heurte à des défenseurs, renforts !
     const mine = Game.attacks.find(a => !a.done && a.attacker === p.id);
     if (mine) {
-      // Armée de secours bloquée par des défenseurs : renforts
-      if (mine.relief !== undefined) {
-        if (mine.defenders > mine.troops && p.troops > 2) Game.launchRelief(p.id, mine.relief, p.troops * 0.4);
+      // Assaut de jonction bloqué par des défenseurs : renforts
+      if (mine.link !== undefined) {
+        if (mine.defenders > mine.troops && p.troops > 2) Game.launchLink(p.id, mine.link, p.troops * 0.4);
         return;
       }
       if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) > mine.troops && p.troops > 2) {
@@ -27,6 +27,12 @@ const AI = {
 
     const max = Game.maxTroops(p);
     const nb = Game.neighborStats(p.id);
+
+    // Un de nos châteaux est isolé : de temps en temps, on tente de le relier au royaume
+    if (p.troops > max * 0.4 && Math.random() < 0.2) {
+      const lost = Game.castlesOf(p.id).find(c => Game.isIsolatedCastle(c));
+      if (lost !== undefined && !Game.launchLink(p.id, lost, p.troops * 0.5)) return;
+    }
 
     // S'il reste des terres libres, on s'étend en priorité
     if (nb.has(-1) && p.troops > max * 0.2 && Math.random() < 0.85) {
@@ -72,9 +78,9 @@ const AI = {
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
       const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0);
       if (needed <= 0) continue;
-      // Château isolé : impossible d'y envoyer des défenseurs, on tente une armée de secours
+      // Château isolé : impossible d'y envoyer des défenseurs, on tente de le rejoindre par un assaut
       if (Game.cutOff(a)) {
-        if (!Game.reliefFor(a.targetCastle)) Game.launchRelief(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
+        if (!Game.linkFor(a.targetCastle)) Game.launchLink(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
         continue;
       }
       Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));

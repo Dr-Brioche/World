@@ -264,8 +264,8 @@ const Render = {
         const t = a.frontTile >= 0 ? a.frontTile : -1;
         const bx = t >= 0 ? ox + (t % G.W + 0.5) * s : ox + a.toX * s;
         const by = t >= 0 ? oy + (((t / G.W) | 0) + 0.5) * s : oy + a.toY * s;
-        // Armée de secours : une ligne pointillée montre le château isolé qu'elle veut rejoindre
-        if (a.relief !== undefined) {
+        // Assaut de jonction : une ligne pointillée montre le château isolé qu'il veut rejoindre
+        if (a.link !== undefined) {
           ctx.beginPath();
           ctx.moveTo(bx, by);
           ctx.lineTo(ox + a.toX * s, oy + a.toY * s);
@@ -277,7 +277,7 @@ const Render = {
           ctx.setLineDash([]);
           ctx.lineDashOffset = 0;
         }
-        this.drawArmyBanner(a, bx, by, `${a.relief !== undefined ? '🚩' : '⚔'} ${fmt(a.troops)}${extra}`);
+        this.drawArmyBanner(a, bx, by, `⚔ ${fmt(a.troops)}${extra}`);
         continue;
       }
       const col = G.players[a.attacker].color.join(',');

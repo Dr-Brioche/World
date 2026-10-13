@@ -50,8 +50,12 @@ const CONFIG = {
   // Prise d'un château : l'assaut finit de conquérir sa zone de défense (un peu élargie), puis s'arrête.
   CASTLE_CAPTURE_EXTRA_RADIUS: 2,  // cases conquises en plus autour de la zone du château
   // Encerclement : un morceau de royaume coupé du reste, plus petit que 20 % de ce royaume,
-  // est pris d'un coup par celui qui l'a coupé (s'il le touche). Ses châteaux restent debout, isolés.
+  // est pris d'un coup par celui qui l'a coupé (s'il le touche). Ses châteaux restent debout, isolés,
+  // avec les terres dans leur muraille.
   ENCLAVE_RATIO: 0.2,
+  // Un château isolé peut être relié à nouveau par un assaut lancé depuis le royaume (en cliquant dessus).
+  // S'il arrive, sa route s'élargit de 2 cases de chaque côté.
+  LINK_WIDEN_RADIUS: 2,
 
   // --- Alliances (pactes) ---
   MAX_PACT_SIZE: 3,              // nombre maximum de royaumes dans un même pacte

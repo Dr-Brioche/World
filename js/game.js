@@ -84,13 +84,11 @@ const Game = {
 
   // La case touche-t-elle notre territoire ou celui d'un allié du pacte ?
   // (on peut attaquer depuis les terres de ses alliés, même sans être voisin soi-même)
-  // Un château isolé (coupé de son royaume) ne compte pas : aucune armée ne peut partir de là.
+  // Un petit morceau coupé du royaume (un château isolé) ne compte pas : aucune armée ne peut partir de là.
   touchesFriend(i, pid) {
     let found = false;
     this.forNeighbors(i, n => {
-      if (found || !this.isFriend(pid, this.owner[n])) return;
-      if (this.building[n] === B_CASTLE && this.isIsolatedCastle(this.anchor[n])) return;
-      found = true;
+      if (!found && this.isFriend(pid, this.owner[n]) && this.isBase(n)) found = true;
     });
     return found;
   },
@@ -498,6 +496,15 @@ const Game = {
     return r.comp[c] !== r.main[o];
   },
 
+  // Une armée peut-elle partir de cette case ? Oui si elle est dans le cœur de son royaume
+  // (ou dans un grand morceau), pas si elle est dans un petit morceau coupé du reste.
+  isBase(i) {
+    const o = this.owner[i];
+    if (o < 0) return false;
+    const r = this.regions(), k = r.comp[i];
+    return k === r.main[o] || r.size[k] >= this.players[o].tiles * CONFIG.ENCLAVE_RATIO;
+  },
+
   // Le royaume a-t-il encore un château relié à son cœur ? (sinon on peut l'attaquer de front)
   hasHomeCastle(pid) {
     return this.castlesOf(pid).some(c => !this.isIsolatedCastle(c));
@@ -505,7 +512,8 @@ const Game = {
 
   // Encerclement : un assaut de pid a peut-être coupé le royaume target en morceaux.
   // Chaque petit morceau (moins de ENCLAVE_RATIO de son territoire) qui touche pid est pris d'un coup.
-  // Les châteaux qui s'y trouvent restent au défenseur : ils tiennent seuls, isolés.
+  // Les châteaux qui s'y trouvent restent au défenseur, avec les terres dans leur muraille
+  // (et leurs moulins et casernes, qui continuent de produire) : ils tiennent seuls, isolés.
   captureEnclaves(pid, target) {
     const T = this.players[target], A = this.players[pid];
     if (!T.alive || !A.alive) return;
@@ -513,24 +521,29 @@ const Game = {
     for (let k = 0; k < r.size.length; k++) {
       if (r.owner[k] !== target || k === r.main[target] || r.size[k] >= T.tiles * CONFIG.ENCLAVE_RATIO) continue;
       const tiles = Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k]));
-      if (tiles.every(i => this.building[i] === B_CASTLE)) continue; // juste un château isolé
       if (tiles.some(i => this.hasNeighborOwnedBy(i, pid))) pieces.push(tiles);
     }
     let taken = 0, castles = 0;
     for (const tiles of pieces) {
+      // Les châteaux de ce morceau, et ce qui est dans leur muraille, restent au défenseur
+      const keep = tiles.filter(i => this.building[i] === B_CASTLE && this.anchor[i] === i);
+      const walled = i => keep.some(c => this.inCastleRange(c, i % this.W, (i / this.W) | 0, this.castleInfo(c).radius));
+      let took = 0;
       for (const i of tiles) {
-        if (this.owner[i] !== target) continue;
-        if (this.building[i] === B_CASTLE) { if (this.anchor[i] === i) castles++; continue; }
+        if (this.owner[i] !== target || this.building[i] === B_CASTLE || walled(i)) continue;
+        // un bâtiment à cheval sur la muraille reste au défenseur
+        if (this.building[i] && this.footprint(this.anchor[i], this.building[i]).some(walled)) continue;
         this.setOwner(i, pid);
-        taken++;
+        took++;
       }
+      if (took) { taken += took; castles += keep.length; }
     }
     if (!taken) return;
     const castleTxt = castles ? (castles > 1 ? ' Ses châteaux, eux, tiennent encore, isolés.' : ' Son château, lui, tient encore, isolé.') : '';
     if (A.isHuman) UI.log(`✂️ Tu as encerclé des terres de ${T.name} : elles sont à toi !${castleTxt}`, 'good', T);
     else if (T.isHuman) {
       UI.log(`✂️ ${A.name} a coupé une partie de ton royaume : elle est perdue !` +
-        (castles ? ' Ton château isolé tient encore : clique dessus pour lui envoyer une armée de secours.' : ''), 'warn', A);
+        (castles ? ' Ton château isolé tient encore : clique dessus pour lancer un assaut qui le relie à ton royaume.' : ''), 'warn', A);
     }
   },
 
@@ -578,7 +591,7 @@ const Game = {
           'Prends d\'abord les châteaux de la frontière.';
       }
     }
-    let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.relief === undefined);
+    let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined);
     if (a && a.targetCastle !== castle) return `Un assaut contre ${this.players[target].name} est déjà en cours.`;
     // Assaut déjà lancé : les renforts partent et arrivent dans REINFORCE_DELAY secondes
     if (a && target >= 0 && !this.isPreparing(a)) {
@@ -708,15 +721,27 @@ const Game = {
     return best;
   },
 
-  // --- Armée de secours ---
-  // Un château isolé ne peut pas recevoir de défenseurs. Son royaume peut quand même lui envoyer
-  // une armée qui traverse les terres ennemies (comme un assaut) : si elle arrive à temps,
-  // ses soldats rejoignent la défense du château.
+  // --- Assaut de jonction ---
+  // Un château isolé ne peut pas recevoir de défenseurs. Son royaume peut lancer un assaut
+  // depuis son cœur, à travers les terres ennemies, pour le rejoindre. S'il y arrive, la route
+  // de l'assaut s'élargit un peu : le château est de nouveau relié au royaume, et les soldats
+  // de l'assaut rejoignent sa défense.
 
-  // Chemin du cœur du royaume pid jusqu'au château isolé c, à travers les terres du royaume o
-  // (sans passer dans la muraille d'un château de o). Renvoie la liste des cases, ou null.
-  reliefPath(pid, c, o) {
+  // Cases du morceau de territoire où se trouve le château c (lui et ce qui reste dans sa muraille)
+  castlePiece(c) {
+    const r = this.regions(), k = r.comp[c];
+    return new Set(r.order.subarray(r.start[k], r.start[k] + r.size[k]));
+  },
+
+  // Chemin du cœur du royaume pid jusqu'au morceau isolé `piece`, à travers les terres du royaume o
+  // (sans passer dans la muraille d'un château de o). Renvoie { path, passable }, ou null.
+  linkPath(pid, piece, o) {
     const passable = i => this.owner[i] === o && !this.castleProtects(o, i);
+    const touchesPiece = i => {
+      let found = false;
+      this.forNeighbors(i, n => { if (piece.has(n)) found = true; });
+      return found;
+    };
     const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
     const done = new Uint8Array(this.N), heap = new MinHeap();
     for (let i = 0; i < this.N; i++) {
@@ -730,7 +755,7 @@ const Game = {
       const [d, i] = heap.pop();
       if (done[i]) continue;
       done[i] = 1;
-      if (this.touchesCastle(i, c)) {
+      if (touchesPiece(i)) {
         const path = [];
         for (let j = i; j >= 0; j = prev[j]) path.push(j);
         return { path: path.reverse(), passable };
@@ -744,75 +769,97 @@ const Game = {
     return null;
   },
 
-  // La case touche-t-elle le château c ?
-  touchesCastle(i, c) {
-    let found = false;
-    this.forNeighbors(i, n => { if (this.anchor[n] === c && this.building[n] === B_CASTLE) found = true; });
-    return found;
+  // Meilleur chemin vers le château isolé c : à travers le royaume voisin qui donne le plus court.
+  // Renvoie { path, passable, target, piece }, ou null.
+  linkRoute(pid, c, onlyTarget) {
+    const piece = this.castlePiece(c), around = new Set();
+    for (const j of piece) {
+      this.forNeighbors(j, n => {
+        const o = this.owner[n];
+        if (o >= 0 && o !== pid && !this.areAllied(pid, o)) around.add(o);
+      });
+    }
+    let best = null;
+    for (const o of around) {
+      if (onlyTarget !== undefined && o !== onlyTarget) continue;
+      const r = this.linkPath(pid, piece, o);
+      if (r && (!best || r.path.length < best.path.length)) best = { ...r, target: o, piece };
+    }
+    return best;
   },
 
-  // Une armée de secours déjà en route vers ce château ?
-  reliefFor(c) { return this.attacks.find(a => !a.done && a.relief === c); },
+  // Un assaut de jonction vers ce château est-il déjà lancé ?
+  linkFor(c) { return this.attacks.find(a => !a.done && a.link === c); },
 
-  // Envoie une armée de secours vers le château isolé c. Renvoie un message d'erreur, ou null.
-  launchRelief(pid, c, troops) {
+  // Lance un assaut de jonction vers son château isolé c. Renvoie un message d'erreur, ou null.
+  launchLink(pid, c, troops) {
     const p = this.players[pid];
     troops = Math.floor(Math.min(troops, p.troops));
     if (this.owner[c] !== pid || !this.isIsolatedCastle(c)) return 'Ce château n\'est pas coupé de ton royaume.';
     if (troops < 1) return 'Pas assez de soldats !';
-    // Déjà une armée en route : on lui envoie des renforts (ils arrivent dans REINFORCE_DELAY secondes)
-    let a = this.reliefFor(c);
+    let a = this.linkFor(c);
     if (a) {
       p.troops -= troops;
-      a.pending.push({ troops, tick: this.tick + CONFIG.REINFORCE_DELAY * CONFIG.TICKS_PER_SECOND });
+      // Pendant la préparation, les soldats s'ajoutent tout de suite ; ensuite, ce sont des renforts
+      if (this.isPreparing(a)) a.troops += troops;
+      else a.pending.push({ troops, tick: this.tick + CONFIG.REINFORCE_DELAY * CONFIG.TICKS_PER_SECOND });
       return null;
     }
-    // Quel royaume traverser ? Celui qui donne le chemin le plus court
-    const around = new Set();
-    for (const j of this.footprint(c, B_CASTLE)) {
-      this.forNeighbors(j, n => { const o = this.owner[n]; if (o >= 0 && o !== pid && !this.areAllied(pid, o)) around.add(o); });
-    }
-    let best = null, target = -1;
-    for (const o of around) {
-      const r = this.reliefPath(pid, c, o);
-      if (r && (!best || r.path.length < best.path.length)) { best = r; target = o; }
-    }
-    if (!best) return 'Impossible de rejoindre ce château : des murailles ennemies bloquent le passage.';
+    const route = this.linkRoute(pid, c);
+    if (!route) return 'Impossible de rejoindre ce château : des murailles ennemies bloquent le passage.';
     const half = this.sizeOf(B_CASTLE) / 2;
     a = {
-      id: this.nextAttackId++, attacker: pid, target, troops, done: false, startTick: this.tick,
-      targetCastle: -1, relief: c, // relief = château à rejoindre
-      defenders: 0, pending: [], frontTile: best.path[0],
+      id: this.nextAttackId++, attacker: pid, target: route.target, troops, done: false,
+      targetCastle: -1, link: c, // link = château isolé à rejoindre
+      defenders: 0, pending: [], frontTile: route.path[0], path: route.path, piece: route.piece,
       fromX: p.sumX / p.tiles + 0.5, fromY: p.sumY / p.tiles + 0.5,
       toX: c % this.W + half, toY: ((c / this.W) | 0) + half,
     };
-    a.list = this.buildFrontier(pid, target);
+    // Comme tout assaut contre un royaume : une préparation que tout le monde voit
+    a.startTick = this.tick + CONFIG.ATTACK_PREP_TIME * CONFIG.TICKS_PER_SECOND;
+    a.prepTicks = a.startTick - this.tick;
+    a.list = this.buildFrontier(pid, route.target);
     a.set = new Set(a.list);
-    a.limitZone = this.corridor(c, best.path, best.passable);
+    a.limitZone = this.corridor(c, route.path, route.passable);
     p.troops -= troops;
     this.attacks.push(a);
-    if (this.players[target].isHuman) {
-      UI.log(`⚠️ ${p.name} envoie une armée de secours à travers tes terres vers son château isolé !`, 'warn', p);
+    if (this.players[route.target].isHuman) {
+      UI.log(`⚠️ ${p.name} prépare un assaut à travers tes terres pour rejoindre son château isolé (${fmt(troops)} soldats) !`, 'warn', p);
     }
     return null;
   },
 
-  // L'armée de secours a atteint son château : ses soldats rejoignent sa défense
-  reliefArrives(a) {
-    const c = a.relief, p = this.players[a.attacker];
+  // L'assaut de jonction a rejoint son château : la route s'élargit un peu,
+  // et ses soldats rejoignent la défense du château
+  linkArrives(a) {
+    const c = a.link, p = this.players[a.attacker], R = CONFIG.LINK_WIDEN_RADIUS;
+    // La route s'élargit : on prend les terres ennemies proches du chemin (hors murailles)
+    for (const t of a.path) {
+      const tx = t % this.W, ty = (t / this.W) | 0;
+      for (let dy = -R; dy <= R; dy++) {
+        for (let dx = -R; dx <= R; dx++) {
+          const x = tx + dx, y = ty + dy;
+          if (x < 0 || y < 0 || x >= this.W || y >= this.H || Math.abs(dx) + Math.abs(dy) > R) continue;
+          const i = y * this.W + x;
+          if (this.owner[i] !== a.target || !this.isLand(i) || this.castleProtects(a.target, i)) continue;
+          if (this.building[i] === B_CASTLE) continue;
+          this.setOwner(i, a.attacker);
+        }
+      }
+    }
+    a.cut = true; // la route élargie peut à son tour couper le royaume traversé
     const siege = this.attacks.find(x => !x.done && x.target === a.attacker && x.targetCastle === c);
     if (siege) {
       siege.defenders += a.troops;
     } else {
-      // Pas d'assaut en cours : on remplit la garnison, le reste rentre au royaume
-      const room = Math.max(0, this.castleInfo(c).garrison - this.garrison[c]);
-      const add = Math.min(room, a.troops);
+      // Pas d'assaut contre le château : on remplit sa garnison, le reste rentre au royaume
+      const add = Math.min(Math.max(0, this.castleInfo(c).garrison - this.garrison[c]), a.troops);
       this.garrison[c] += add;
       p.troops += a.troops - add;
     }
-    if (p.isHuman) UI.log(`🚩 Ton armée de secours a rejoint ton château${siege ? ' : elle se joint à sa défense !' : ' !'}`, 'good');
+    if (p.isHuman) UI.log(`🏰 Ton château isolé est de nouveau relié à ton royaume${siege ? ' : tes soldats rejoignent sa défense !' : ' !'}`, 'good');
     else if (siege && this.players[siege.attacker].isHuman) {
-      UI.log(`🚩 Une armée de secours ${this.deName(p.name)} a rejoint le château que tu attaques !`, 'warn', p);
+      UI.log(`🏰 ${p.name} a rejoint le château que tu attaques : ses soldats renforcent la défense !`, 'warn', p);
     }
     a.troops = 0;
     this.endAttack(a);
@@ -907,6 +954,13 @@ const Game = {
     }
   },
 
+  // La case touche-t-elle une case de cet ensemble, encore à ce royaume ?
+  touchesSet(i, set, pid) {
+    let found = false;
+    this.forNeighbors(i, n => { if (set.has(n) && this.owner[n] === pid) found = true; });
+    return found;
+  },
+
   // L'assaut vise-t-il un château isolé ? Ses défenseurs ne peuvent alors pas le rejoindre.
   cutOff(a) {
     return a.targetCastle >= 0 && this.owner[a.targetCastle] === a.target && this.isIsolatedCastle(a.targetCastle);
@@ -940,10 +994,26 @@ const Game = {
         a.frontTile = path[0];
       }
     }
-    // Armée de secours : son château a été pris avant qu'elle n'arrive, elle rentre
-    if (a.relief >= 0 && this.owner[a.relief] !== a.attacker) {
-      if (this.players[a.attacker].isHuman) UI.log('🚩 Trop tard : ton château isolé est tombé, l\'armée de secours rentre.', 'warn');
-      return this.endAttack(a);
+    if (a.link >= 0) {
+      // Assaut de jonction : son château a été pris avant qu'il n'arrive, les soldats rentrent
+      if (this.owner[a.link] !== a.attacker) {
+        if (this.players[a.attacker].isHuman) UI.log('💥 Trop tard : ton château isolé est tombé, ton assaut rentre.', 'warn');
+        return this.endAttack(a);
+      }
+      // Déjà relié au royaume (par un autre chemin) : les soldats rejoignent sa défense
+      if (!this.isIsolatedCastle(a.link)) return this.linkArrives(a);
+      // Fin de la préparation : on recalcule le chemin, la frontière a pu bouger
+      if (this.tick === a.startTick) {
+        const route = this.linkRoute(a.attacker, a.link, a.target);
+        if (!route) {
+          if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers ton château isolé est bloqué : assaut annulé.', 'warn');
+          return this.endAttack(a);
+        }
+        a.path = route.path;
+        a.piece = route.piece;
+        a.limitZone = this.corridor(a.link, route.path, route.passable);
+        a.frontTile = route.path[0];
+      }
     }
     // Début d'un assaut sur un château : sa garnison sort le défendre
     if (a.prepTicks && this.tick === a.startTick && a.targetCastle >= 0 && !a.done) {
@@ -982,7 +1052,8 @@ const Game = {
       if (a.target >= 0 && this.countNeighborsOwnedBy(t, a.target) >= 2) a.cut = true;
       this.setOwner(t, a.attacker);
       if (zone) this.onCastleTaken(a, zone);
-      if (a.relief >= 0 && this.touchesCastle(t, a.relief)) return this.reliefArrives(a);
+      // Assaut de jonction : il touche le morceau de son château isolé, c'est gagné
+      if (a.link >= 0 && this.touchesSet(t, a.piece, a.attacker)) return this.linkArrives(a);
       this.forNeighbors(t, n => {
         if (this.owner[n] === a.target && this.isLand(n) && !a.set.has(n)) {
           a.set.add(n);
