@@ -17,7 +17,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes et mers
-- 👑 **Ton royaume** : choisis son nom et la couleur de ta bannière
+- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 13 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Trois bâtiments** pour développer ton royaume
 - 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
@@ -26,7 +26,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : clique sur une terre au début de la partie.
+1. **Fonde ta capitale** : choisis ta bannière dans le menu, puis clique sur une terre au début de la partie.
+   Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
+   porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
 2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
    **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** : ton armée se fraie un chemin depuis ta
    frontière en **contournant ses autres fortifications**, capture tout sur son passage, puis prend le château.
@@ -134,6 +136,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.20** : 13 bannières de royaume (une par couleur) à choisir au début ; elles s'affichent à côté des noms, portent les armées et accompagnent les messages
 - **v0.19** : nouveaux combats : 10 s de préparation (on ajoute des soldats), renforts en 5 s, le défenseur envoie ses soldats en cliquant sur la bannière, combats visibles en direct, bonus de terrain pour le défenseur, garnison dans les châteaux · on peut attaquer depuis les terres d'un allié du pacte · production des moulins et casernes selon le terrain · 3 châteaux construits maximum par partie
 - **v0.18** : nouvelle logique d'attaque : on vise un château ennemi, l'armée contourne les autres fortifications et capture tout sur son chemin ; un royaume sans château s'attaque de front · écart obligatoire de 3 cases autour des bâtiments et 4 autour des châteaux · moulins et casernes seulement dans l'enceinte d'un château
 - **v0.17.2** : les routes se rejoignent proprement aux carrefours (elles ne se coupent plus)
@@ -189,4 +192,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-| `img/` | Les images des bâtiments (3 niveaux de château, 3 de caserne, 2 de moulin) |
+| `img/` | Les images des bâtiments (3 niveaux de château, 3 de caserne, 2 de moulin) et des bannières (`img/bannieres/`) |
