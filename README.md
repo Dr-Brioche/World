@@ -186,7 +186,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
      | 2. Grand port | +100 % | 1 | **oui** | 💰 120 |
-     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (comme un fort en bois) | 💰 250 |
+     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 250 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
@@ -273,6 +273,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.39.1** : 🧱 la muraille du port royal donne +1 de défense dans sa zone, comme un fort en bois
 - **v0.39** : 🎯 une flèche rouge en pointillés, légèrement courbée, montre chaque assaut : un cercle au départ (juste à l'intérieur de la frontière) et une cible sur la zone attaquée · 🧱 le port royal (niveau 3) a une petite muraille, comme un fort en bois
 - **v0.38** : ✂️ couper un royaume en deux donne d'un coup le plus petit morceau à celui qui a coupé, **quelle que soit sa taille** (fini la limite de 20 %), avec ses églises et ports · 🚩 seuls les châteaux et les ports de niveau 3 tiennent, isolés
 - **v0.37** : ✂️ un morceau coupé (moins de 20 % du royaume) va entièrement à celui qui l'a coupé, châteaux et bâtiments compris : un royaume reste d'un seul tenant (sauf invasion par la mer) · 🤝 on ne peut plus attaquer depuis les terres d'un allié, seulement depuis son propre territoire

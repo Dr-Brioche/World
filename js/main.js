@@ -152,7 +152,7 @@ const UI = {
       return `or toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
         (info.boatSpeed ? `, expéditions maritimes${info.landingCost < 1 ? ' moins chères et plus rapides' : ''}` : '') +
         (info.slots ? `, ${info.slots} ${info.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} autour de lui` : '') +
-        (info.garrison ? ', petite garnison' : '');
+        (info.garrison ? ', petite garnison' : '') + (info.bonus ? `, petite muraille (défense ${pct(info.bonus)})` : '');
     }
     if (type === B_CASTLE) {
       const road = info.road === 'paved' ? 'routes pavées' : 'chemins de terre';
@@ -176,7 +176,7 @@ const UI = {
       return `or produit ${pct(next.gold / cur.gold - 1)}, ${next.slots} ${next.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} ` +
         'autour de lui, ' + (cur.boatSpeed
         ? `débarquements ${pct(next.landingCost / cur.landingCost - 1)} moins chers, bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)} plus rapides` +
-          (next.garrison ? ', et une petite garnison pour le défendre' : '')
+          (next.garrison ? `, et une petite garnison et une petite muraille (défense ${pct(next.bonus)}) pour le défendre` : '')
         : 'débloque les expéditions maritimes (clic droit sur une côte → ⛵ Débarquer)');
     }
     if (type === B_CASTLE) {
@@ -320,7 +320,8 @@ const UI = {
       if (G.building[i] === B_PORT) {
         if (info.slots) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots}`;
         txt += info.garrison ? ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} %` : '';
-        txt += ' · ⚠️ pas de muraille : on peut l\'attaquer directement';
+        txt += info.bonus ? ` · 🧱 petite muraille : +${info.bonus} de défense dans sa zone (on peut l'attaquer directement)`
+          : ' · ⚠️ pas de muraille : on peut l\'attaquer directement';
       }
       if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
       const road = G.roads().get(a);
@@ -340,7 +341,7 @@ const UI = {
         txt += ' · un château bâti ou pris dans sa zone en fait une vraie terre du royaume';
       }
     }
-    if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
+    if (o >= 0 && (G.castleProtects(o, i) || G.portBonus(o, i) > 0)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
     // Conseils d'attaque contre un royaume ennemi
     if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && G.isProtected(o)) {
       const b = G.building[i];

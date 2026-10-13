@@ -391,7 +391,8 @@ const GameRules = {
 
   // Défense d'une case = celle du terrain, + le bonus du meilleur château qui la protège
   tileDefense(pid, i) {
-    return TERRAIN_INFO[this.terrain[i]].cost + (pid >= 0 ? Math.max(this.castleBonus(pid, i), this.outpostBonus(pid, i)) : 0);
+    return TERRAIN_INFO[this.terrain[i]].cost
+      + (pid >= 0 ? Math.max(this.castleBonus(pid, i), this.portBonus(pid, i), this.outpostBonus(pid, i)) : 0);
   },
 
   // --- Avant-postes ---
@@ -488,6 +489,27 @@ const GameRules = {
   },
 
   castleProtects(pid, i) { return this.castleBonus(pid, i) > 0; },
+
+  // Ports royaux (niveau 3) : ils ont une petite muraille autour de leur zone
+  // (liste recalculée seulement quand la carte a changé)
+  walledPorts() {
+    if (this.walledPortsVersion !== this.version) {
+      this.walledPortsVersion = this.version;
+      this.walledPortsList = this.buildingTiles.filter(a => this.building[a] === B_PORT && this.buildingInfo(a).bonus);
+    }
+    return this.walledPortsList;
+  },
+
+  // Bonus de défense dans la muraille d'un port royal, comme un fort en bois (0 si aucun)
+  portBonus(pid, i) {
+    let best = 0;
+    for (const a of this.walledPorts()) {
+      if (this.owner[a] !== pid) continue;
+      const info = this.buildingInfo(a);
+      if (info.bonus > best && this.inChurchRange(a, i, info.radius)) best = info.bonus;
+    }
+    return best;
+  },
 
   // --- Apparition des royaumes ---
   // Taille du morceau de terre (île ou continent) de chaque case (calculée une fois)
