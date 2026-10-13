@@ -19,6 +19,7 @@ const Game = {
     this.anchor = new Int32Array(this.N).fill(-1);
     this.players = [];
     this.attacks = [];
+    this.expeditions = []; // bateaux en route vers une côte
     this.nextAttackId = 1;
     this.pacts = new Map(); // id du pacte → { name }
     this.nextPactId = 0;
@@ -50,7 +51,7 @@ const Game = {
       color: BANNERS[banner].color,  // la couleur du royaume vient de sa bannière
       alive: true, troops: CONFIG.START_TROOPS, gold: CONFIG.START_GOLD,
       tiles: 0, sumX: 0, sumY: 0, maxTiles: 0, kills: 0,
-      bCount: [0, 0, 0, 0, 0],
+      bCount: [0, 0, 0, 0, 0, 0, 0],
       traitorUntil: 0,
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
       castlesBuilt: 0,  // châteaux construits dans la partie (capitale comprise), limité à MAX_CASTLES
@@ -149,6 +150,7 @@ const Game = {
   canPlace(pid, a, type) {
     const n = this.sizeOf(type);
     if (a < 0 || a % this.W > this.W - n || ((a / this.W) | 0) > this.H - n) return false;
+    if (type === B_PORT && !this.footprint(a, type).some(j => this.isCoastal(j))) return false;
     return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]
       && this.terrain[j] !== TERRAIN.RIVER)
       && this.insideWalls(pid, a, type) && !this.tooCloseToBuilding(a, type)
@@ -160,17 +162,31 @@ const Game = {
   // château trop près d'une de ses églises.
   churchCastleRange() { return CASTLE_LEVELS[CASTLE_LEVELS.length - 1].radius; },
 
+  // Plus grande zone possible d'une église (au niveau maximum)
+  churchMaxRadius() { return CHURCH_LEVELS[CHURCH_LEVELS.length - 1].radius; },
+
+  // Cercles interdits (cercles rouges) pour construire ce type de bâtiment :
+  // une église ou un port reste hors de la zone des châteaux (même améliorés) et des églises du royaume,
+  // et un château ne se construit pas assez près d'une église ou d'un port pour les englober.
+  placementCircles(pid, type) {
+    const castleR = this.churchCastleRange(), churchR = this.churchMaxRadius();
+    const own = t => this.buildingTiles.filter(a => this.building[a] === t && this.owner[a] === pid);
+    if (type === B_CHURCH) return own(B_CASTLE).map(a => ({ a, R: castleR })).concat(own(B_PORT).map(a => ({ a, R: churchR })));
+    if (type === B_PORT) return own(B_CASTLE).map(a => ({ a, R: castleR })).concat(own(B_CHURCH).map(a => ({ a, R: churchR })));
+    if (type === B_CASTLE) return own(B_CHURCH).concat(own(B_PORT)).map(a => ({ a, R: castleR + 2 }));
+    return [];
+  },
+
+  // La case j est-elle à moins de R cases du centre du bâtiment a ?
+  nearBuilding(a, j, R) {
+    const half = this.sizeOf(this.building[a]) / 2;
+    const dx = a % this.W + half - (j % this.W + 0.5), dy = ((a / this.W) | 0) + half - (((j / this.W) | 0) + 0.5);
+    return dx * dx + dy * dy <= R * R;
+  },
+
   churchCastleConflict(pid, a, type) {
-    const R = this.churchCastleRange(), W = this.W;
-    const inRange = (c, cells) => cells.some(j => this.inCastleRange(c, j % W, (j / W) | 0, R));
-    if (type === B_CHURCH) {
-      const cells = this.footprint(a, type);
-      return this.castles.some(c => this.owner[c] === pid && inRange(c, cells));
-    }
-    if (type === B_CASTLE) {
-      return this.churchesOf(pid).some(ch => inRange(a, this.footprint(ch, B_CHURCH)));
-    }
-    return false;
+    const cells = this.footprint(a, type);
+    return this.placementCircles(pid, type).some(c => cells.some(j => this.nearBuilding(c.a, j, c.R)));
   },
 
   // Moulins et casernes se construisent dans l'enceinte d'un de ses châteaux, ou près d'une de ses
@@ -178,7 +194,7 @@ const Game = {
   // Les châteaux et les églises se construisent partout sur son territoire
   // (mais une église reste loin des châteaux : voir churchCastleConflict).
   insideWalls(pid, a, type) {
-    if (type === B_CASTLE || type === B_CHURCH) return true;
+    if (type === B_CASTLE || type === B_CHURCH || type === B_PORT) return true;
     return this.footprint(a, type).every(j => this.castleProtects(pid, j)) || this.churchFor(pid, a, type) >= 0;
   },
 
@@ -238,6 +254,27 @@ const Game = {
       if (this.building[ch] === B_CHURCH && this.owner[ch] === p.id) extra += this.buildingInfo(ch).castles;
     }
     return CONFIG.MAX_CASTLES + extra;
+  },
+
+  // Bâtiments visables par un assaut (château, église, port, avant-poste) d'un royaume
+  targetsOf(pid) {
+    return this.buildingTiles.filter(a => TARGET_TYPES.includes(this.building[a]) && this.owner[a] === pid);
+  },
+
+  // « ce château », « cette église »… pour les messages
+  targetLabel(a) {
+    return ['', '', '', 'ce château', 'cette église', 'ce port', 'cet avant-poste'][this.building[a]] || 'cette cible';
+  },
+
+  // Retire un bâtiment de la carte (un avant-poste détruit)
+  removeBuilding(a) {
+    const type = this.building[a], o = this.owner[a];
+    for (const j of this.footprint(a, type)) { this.building[j] = 0; this.anchor[j] = -1; Render.markDirty(j); }
+    this.level[a] = 0;
+    if (o >= 0) this.players[o].bCount[type]--;
+    this.buildingTiles = this.buildingTiles.filter(b => b !== a);
+    this.castles = this.castles.filter(c => c !== a);
+    this.version++;
   },
 
   churchesOf(pid) { return this.buildingTiles.filter(a => this.building[a] === B_CHURCH && this.owner[a] === pid); },
@@ -429,6 +466,7 @@ const Game = {
   // avec les bonus de route et de terrain
   buildingOutput(a) {
     const t = this.building[a], info = this.buildingInfo(a);
+    if (t === B_PORT) return info.gold; // le port : ni route ni terrain
     const v = t === B_MILL ? info.gold : info.troops;
     const road = this.roads().get(a);
     return v * (1 + (road ? road.bonus : 0)) * this.terrainFactor(a, t);
@@ -440,20 +478,20 @@ const Game = {
     const period = CONFIG.PRODUCTION_INTERVAL * CONFIG.TICKS_PER_SECOND;
     for (const a of this.buildingTiles) {
       const t = this.building[a];
-      if (t !== B_MILL && t !== B_BARRACKS) continue;
+      if (t !== B_MILL && t !== B_BARRACKS && t !== B_PORT) continue;
       if ((this.tick + a * 7) % period !== 0) continue;
       const p = this.players[this.owner[a]];
       if (!p || !p.alive) continue;
       const amount = this.buildingOutput(a);
       let shown = amount;
-      if (t === B_MILL) p.gold += amount;
+      if (t === B_MILL || t === B_PORT) p.gold += amount;
       else {
         // une caserne ne fait pas dépasser l'armée maximum
         shown = Math.max(0, Math.min(amount, this.maxTroops(p) - p.troops));
         p.troops += shown;
       }
       // Le joueur ne voit que la production de ses propres bâtiments
-      if (p.isHuman && shown >= 0.5) Render.floatText(a, t, `+${Math.round(shown)} ${t === B_MILL ? '💰' : '⚔️'}`);
+      if (p.isHuman && shown >= 0.5) Render.floatText(a, t, `+${Math.round(shown)} ${t === B_BARRACKS ? '⚔️' : '💰'}`);
     }
   },
 
@@ -520,6 +558,7 @@ const Game = {
   // Renvoie un message d'erreur, ou null si la construction a réussi.
   // i = case en haut à gauche du bâtiment (2x2 cases)
   tryBuild(p, i, type) {
+    if (BUILDINGS[type].hidden) return 'Ce bâtiment ne se construit pas.';
     if (type === B_CASTLE && p.castlesBuilt >= this.maxCastles(p)) {
       return `Tu as déjà construit ${this.maxCastles(p)} châteaux : c'est le maximum pour l'instant ` +
         '(prends-en à l\'ennemi, ou améliore une église pour en débloquer).';
@@ -531,9 +570,13 @@ const Game = {
           'qui a encore de la place (pas ailleurs dans l\'arrière-pays).';
       }
       if (i >= 0 && this.owner[i] === p.id && this.churchCastleConflict(p.id, i, type)) {
-        return type === B_CHURCH
-          ? 'Trop près d\'un de tes châteaux : une église doit rester hors de portée de sa muraille, même améliorée (cercle rouge).'
-          : 'Trop près d\'une de tes églises : la muraille de ce château pourrait l\'englober (cercle rouge).';
+        return type === B_CASTLE
+          ? 'Trop près d\'une de tes églises ou d\'un de tes ports : la muraille de ce château pourrait les englober (cercle rouge).'
+          : 'Trop près : une église ou un port doit rester hors de la zone de tes châteaux (même améliorés) ' +
+            'et de tes églises (cercles rouges).';
+      }
+      if (type === B_PORT && i >= 0 && !this.footprint(i, type).some(j => this.isCoastal(j))) {
+        return 'Un port se construit au bord de la mer ou d\'un fleuve.';
       }
       if (i >= 0 && this.tooCloseToBuilding(i, type)) {
         return `Trop près d'un autre bâtiment : il faut ${this.tooCloseToBuilding(i, type)} cases d'écart.`;
@@ -555,7 +598,7 @@ const Game = {
   regions() {
     if (this.regionsVersion === this.version) return this.regionsCache;
     const comp = new Int32Array(this.N).fill(-1), order = new Int32Array(this.N);
-    const size = [], start = [], owner = [];
+    const size = [], start = [], owner = [], outpost = [];
     const main = new Array(this.players.length).fill(-1); // royaume → son plus grand morceau
     let n = 0;
     for (let i = 0; i < this.N; i++) {
@@ -571,9 +614,12 @@ const Game = {
         });
       }
       size.push(n - s); start.push(s); owner.push(o);
+      let base = false; // un avant-poste dans ce morceau ?
+      for (let q = s; q < n && !base; q++) if (this.building[order[q]] === B_OUTPOST) base = true;
+      outpost.push(base);
       if (main[o] < 0 || size[k] > size[main[o]]) main[o] = k;
     }
-    this.regionsCache = { comp, order, size, start, owner, main };
+    this.regionsCache = { comp, order, size, start, owner, main, outpost };
     this.regionsVersion = this.version;
     return this.regionsCache;
   },
@@ -587,18 +633,19 @@ const Game = {
   },
 
   // Une armée peut-elle partir de cette case ? Oui si elle est dans le cœur de son royaume
-  // (ou dans un grand morceau), pas si elle est dans un petit morceau coupé du reste.
+  // (ou dans un grand morceau, ou dans un morceau avec un avant-poste),
+  // pas si elle est dans un petit morceau coupé du reste.
   isBase(i) {
     const o = this.owner[i];
     if (o < 0) return false;
     const r = this.regions(), k = r.comp[i];
-    return k === r.main[o] || r.size[k] >= this.players[o].tiles * CONFIG.ENCLAVE_RATIO;
+    return k === r.main[o] || r.outpost[k] || r.size[k] >= this.players[o].tiles * CONFIG.ENCLAVE_RATIO;
   },
 
   // Le royaume a-t-il encore un château ou une église ? Alors on ne peut l'attaquer qu'en visant
   // l'un d'eux. Sinon, on peut attaquer tout son territoire de front.
   isProtected(pid) {
-    return this.castlesOf(pid).length > 0 || this.churchesOf(pid).length > 0;
+    return this.targetsOf(pid).length > 0;
   },
 
   // Encerclement : un assaut de pid a peut-être coupé le royaume target en morceaux.
@@ -611,6 +658,7 @@ const Game = {
     const r = this.regions(), pieces = [];
     for (let k = 0; k < r.size.length; k++) {
       if (r.owner[k] !== target || k === r.main[target] || r.size[k] >= T.tiles * CONFIG.ENCLAVE_RATIO) continue;
+      if (r.outpost[k]) continue; // un avant-poste se défend : il faut le viser pour le détruire
       const tiles = Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k]));
       if (tiles.some(i => this.hasNeighborOwnedBy(i, pid))) pieces.push(tiles);
     }
@@ -668,9 +716,9 @@ const Game = {
     let castle = -1, path = null;
     if (target >= 0 && this.isProtected(target)) {
       const name = this.players[target].name, b = aimTile !== undefined ? this.building[aimTile] : 0;
-      if ((b === B_CASTLE || b === B_CHURCH) && this.owner[aimTile] === target) castle = this.anchor[aimTile];
+      if (TARGET_TYPES.includes(b) && this.owner[aimTile] === target) castle = this.anchor[aimTile];
       if (castle < 0) {
-        return `${name} est protégé : clique sur un de ses châteaux ou une de ses églises pour lancer un assaut.`;
+        return `${name} est protégé : clique sur un de ses châteaux, églises, ports ou avant-postes pour lancer un assaut.`;
       }
     }
     let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined);
@@ -681,7 +729,7 @@ const Game = {
       const name = this.players[target].name;
       path = this.castlePath(pid, castle, waypoints);
       if (!path) {
-        return `Impossible d'atteindre ${this.building[castle] === B_CHURCH ? 'cette église' : 'ce château'} : ` +
+        return `Impossible d'atteindre ${this.targetLabel(castle)} : ` +
           `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`;
       }
     }
@@ -805,7 +853,7 @@ const Game = {
   // Pour les bots : quel château viser, et quelle défense de terrain attendre au premier combat ?
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
   planAssault(pid, target) {
-    const castles = this.castlesOf(target).concat(this.churchesOf(target));
+    const castles = this.targetsOf(target);
     if (!this.isProtected(target)) return { castle: null, D: 1.3 };
     let best = { castle: -1, D: 1 }, bestLen = Infinity;
     for (const c of castles) {
@@ -821,7 +869,7 @@ const Game = {
   // Pour les bots : quel château viser ? null = pas de château (attaque de front),
   // -1 = aucun château atteignable, sinon le château le plus proche.
   pickCastleTarget(pid, target) {
-    const castles = this.castlesOf(target).concat(this.churchesOf(target));
+    const castles = this.targetsOf(target);
     if (!this.isProtected(target)) return null;
     let best = -1, bestLen = Infinity;
     for (const c of castles) {
@@ -973,6 +1021,135 @@ const Game = {
     }
     a.troops = 0;
     this.endAttack(a);
+  },
+
+  // --- Ports et expéditions maritimes ---
+  // Les bateaux naviguent sur la mer, les fleuves et les grands fleuves.
+  navigable(i) {
+    const t = this.terrain[i];
+    return t === TERRAIN.WATER || t === TERRAIN.RIVER || t === TERRAIN.GREAT_RIVER;
+  },
+
+  // Case de terre (pas un fleuve) au bord de l'eau
+  isCoastal(i) {
+    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return false;
+    let found = false;
+    this.forNeighbors(i, n => { if (this.navigable(n)) found = true; });
+    return found;
+  },
+
+  // Trajet en bateau (cases d'eau) du port a jusqu'à la côte i, ou null si on ne peut pas y aller
+  boatPath(a, i) {
+    const prev = new Int32Array(this.N).fill(-2), queue = [], goal = new Set();
+    this.forNeighbors(i, n => { if (this.navigable(n)) goal.add(n); });
+    for (const j of this.footprint(a, B_PORT)) {
+      this.forNeighbors(j, n => { if (this.navigable(n) && prev[n] === -2) { prev[n] = -1; queue.push(n); } });
+    }
+    for (let q = 0; q < queue.length; q++) {
+      const c = queue[q];
+      if (goal.has(c)) {
+        const path = [];
+        for (let j = c; j >= 0; j = prev[j]) path.push(j);
+        return path.reverse();
+      }
+      this.forNeighbors(c, n => { if (prev[n] === -2 && this.navigable(n)) { prev[n] = c; queue.push(n); } });
+    }
+    return null;
+  },
+
+  // Ports de pid qui peuvent lancer des expéditions (niveau 2 ou plus)
+  expeditionPorts(pid) {
+    return this.buildingTiles.filter(a => this.building[a] === B_PORT && this.owner[a] === pid && this.buildingInfo(a).boatSpeed > 0);
+  },
+
+  // Peut-on débarquer sur cette case ? Terre libre ou ennemie (pas à soi ni à un allié), sans bâtiment :
+  // un débarquement ne prend jamais un bâtiment, il se pose à côté.
+  landable(pid, j) {
+    const o = this.owner[j];
+    return this.isLand(j) && !this.building[j] && o !== pid && (o < 0 || !this.areAllied(pid, o));
+  },
+
+  // Terres prises en débarquant sur la côte i : une petite zone autour (un demi-cercle le long de la côte),
+  // et la place de l'avant-poste (anchor = -1 s'il n'y a pas la place).
+  landingZone(pid, i) {
+    const R = CONFIG.LANDING_RADIUS, W = this.W, x0 = i % W, y0 = (i / W) | 0;
+    const ok = j => this.landable(pid, j) && (j % W - x0) ** 2 + (((j / W) | 0) - y0) ** 2 <= R * R;
+    const zone = new Set(ok(i) ? [i] : []);
+    for (const j of zone) this.forNeighbors(j, n => { if (!zone.has(n) && ok(n)) zone.add(n); });
+    // Place de l'avant-poste : 2x2 cases prises (pas sur un fleuve), au plus près du point de débarquement
+    let anchor = -1, best = Infinity;
+    for (const a of zone) {
+      if (a % W >= W - 1) continue;
+      const cells = this.footprint(a, B_OUTPOST);
+      if (!cells.every(j => zone.has(j) && this.terrain[j] !== TERRAIN.RIVER)) continue;
+      const d = (a % W - x0) ** 2 + (((a / W) | 0) - y0) ** 2;
+      if (d < best) { best = d; anchor = a; }
+    }
+    return { tiles: [...zone], anchor };
+  },
+
+  // Prépare un débarquement de pid sur la côte i : { error } ou { port, path, time, cost, zone }
+  planLanding(pid, i) {
+    const p = this.players[pid];
+    const ports = this.expeditionPorts(pid);
+    if (!ports.length) return { error: 'Il te faut un port de niveau 2 pour les expéditions maritimes.' };
+    if (!this.landable(pid, i) || !this.isCoastal(i)) {
+      return { error: 'On débarque sur une côte (au bord de la mer ou d\'un fleuve) qui n\'est ni à toi ni à un allié, à côté des bâtiments.' };
+    }
+    if (this.expeditions.some(e => e.pid === pid && e.landing === i)) return { error: 'Une expédition est déjà en route vers cette côte.' };
+    const zone = this.landingZone(pid, i);
+    if (zone.anchor < 0) return { error: 'Pas assez de place sur cette côte pour un avant-poste.' };
+    // Le port le plus rapide pour y aller
+    let best = null;
+    for (const a of ports) {
+      const path = this.boatPath(a, i);
+      if (!path) continue;
+      const time = path.length / this.buildingInfo(a).boatSpeed; // en secondes
+      if (!best || time < best.time) best = { port: a, path, time };
+    }
+    if (!best) return { error: 'Aucun de tes ports ne peut rejoindre cette côte par l\'eau.' };
+    best.cost = Math.round(this.buildCost(p, B_OUTPOST) * this.buildingInfo(best.port).landingCost);
+    best.zone = zone;
+    return best;
+  },
+
+  // Lance une expédition : le bateau part du port, et débarque en arrivant. Renvoie un message d'erreur, ou null.
+  launchExpedition(pid, i) {
+    const plan = this.planLanding(pid, i), p = this.players[pid];
+    if (plan.error) return plan.error;
+    if (p.gold < plan.cost) return `Pas assez d'or pour l'expédition (💰 ${plan.cost}).`;
+    p.gold -= plan.cost;
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    this.expeditions.push({ pid, landing: i, path: plan.path, cost: plan.cost,
+      start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(plan.time * TPS)) });
+    return null;
+  },
+
+  // Les bateaux arrivés débarquent : ils prennent les terres libres autour et y bâtissent un avant-poste
+  stepExpeditions() {
+    for (const e of this.expeditions) {
+      if (this.tick < e.arrive) continue;
+      e.done = true;
+      const p = this.players[e.pid];
+      if (!p.alive) continue;
+      const zone = this.landingZone(e.pid, e.landing);
+      if (!this.landable(e.pid, e.landing) || zone.anchor < 0) {
+        p.gold += e.cost; // la côte n'est plus possible (prise par soi ou un allié, bâtie…) : l'or est rendu
+        if (p.isHuman) UI.log('⛵ Impossible de débarquer sur la côte visée : l\'expédition rentre (or rendu).', 'warn');
+        continue;
+      }
+      const victims = new Set(zone.tiles.map(j => this.owner[j]).filter(o => o >= 0));
+      for (const j of zone.tiles) this.setOwner(j, e.pid);
+      for (const o of victims) {
+        if (this.players[o].isHuman) UI.log(`⛵ ${p.name} a débarqué sur ta côte et y a planté un avant-poste ! Vise-le pour le détruire.`, 'warn', p);
+      }
+      this.placeBuilding(zone.anchor, B_OUTPOST);
+      if (p.isHuman) {
+        UI.log('⛺ Débarquement réussi ! Depuis ton avant-poste, tu peux attaquer et prendre des terres.', 'good');
+        Render.floatText(zone.anchor, B_OUTPOST, '⛵ Débarquement !');
+      }
+    }
+    this.expeditions = this.expeditions.filter(e => !e.done);
   },
 
   // Flèche de l'attaque : du cœur du royaume attaquant vers la case visée
@@ -1205,9 +1382,11 @@ const Game = {
       if (a.target >= 0 && this.countNeighborsOwnedBy(t, a.target) >= 2) a.cut = true;
       this.setOwner(t, a.attacker);
       if (zone) this.onCastleTaken(a, zone);
-      // Prise de l'église visée : l'assaut s'arrête là
-      if (a.targetCastle >= 0 && this.building[t] === B_CHURCH && this.anchor[t] === a.targetCastle) {
-        this.onChurchTaken(a);
+      // Prise de l'église, du port ou de l'avant-poste visé : l'assaut s'arrête là
+      const b = this.building[t];
+      if (a.targetCastle >= 0 && b && b !== B_CASTLE && this.anchor[t] === a.targetCastle) {
+        this.onTargetTaken(a, b);
+        if (b === B_OUTPOST) this.removeBuilding(a.targetCastle); // un avant-poste pris est détruit
         return this.endAttack(a);
       }
       // Assaut de jonction : il touche le morceau de son château isolé, c'est gagné
@@ -1237,10 +1416,13 @@ const Game = {
     else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn', p);
   },
 
-  onChurchTaken(a) {
+  onTargetTaken(a, type) {
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (p.isHuman) UI.log(`⛪ Tu as pris une église de ${d.name} !`, 'good', d);
-    else if (d.isHuman) UI.log(`⛪ ${p.name} a pris une de tes églises !`, 'warn', p);
+    const what = { [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
+      [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'] }[type];
+    const verb = type === B_OUTPOST ? 'détruit' : 'pris';
+    if (p.isHuman) UI.log(`${what[0]} Tu as ${verb} ${what[1]} de ${d.name} !`, 'good', d);
+    else if (d.isHuman) UI.log(`${what[0]} ${p.name} a ${verb} ${what[2]} !`, 'warn', p);
   },
 
   endAttack(a) {
@@ -1405,6 +1587,7 @@ const Game = {
       if (a.cut) { a.cut = false; this.captureEnclaves(a.attacker, a.target); }
     }
     this.attacks = this.attacks.filter(a => !a.done);
+    this.stepExpeditions();
 
     for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
 

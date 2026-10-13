@@ -222,14 +222,12 @@ const Render = {
     }
   },
 
-  // Pendant la construction d'une église : cercle rouge autour de chacun de ses châteaux (interdit).
-  // Pendant la construction d'un château : cercle rouge autour de chacune de ses églises.
+  // Pendant la construction d'une église, d'un port ou d'un château : cercles rouges là où c'est interdit
+  // (voir Game.placementCircles).
   drawChurchCastleCircles(ox, oy) {
     const G = Game, ctx = this.ctx, s = this.cam.scale, t = UI.selectedBuild;
-    if (G.phase !== 'playing' || (t !== B_CHURCH && t !== B_CASTLE)) return;
-    const around = t === B_CHURCH ? G.castlesOf(G.human.id) : G.churchesOf(G.human.id);
-    const R = G.churchCastleRange();
-    for (const a of around) {
+    if (G.phase !== 'playing' || (t !== B_CHURCH && t !== B_CASTLE && t !== B_PORT)) return;
+    for (const { a, R } of G.placementCircles(G.human.id, t)) {
       const half = G.sizeOf(G.building[a]) / 2;
       const cx = ox + (a % G.W + half) * s, cy = oy + (((a / G.W) | 0) + half) * s;
       ctx.beginPath();
@@ -374,6 +372,30 @@ const Render = {
       // Bannière qui avance le long de la ligne, avec le compte à rebours
       const bx = x1 + (x2 - x1) * progress, by = y1 + (y2 - y1) * progress;
       this.drawArmyBanner(a, bx, by, `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
+    }
+  },
+
+  // Bateaux d'expédition : ils avancent sur l'eau vers la côte visée (visibles par tous)
+  drawExpeditions(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    for (const e of G.expeditions) {
+      const t = Math.min(1, (G.tick - e.start) / Math.max(1, e.arrive - e.start));
+      const k = Math.min(e.path.length - 1, Math.floor(t * e.path.length));
+      const i = e.path[k], x = ox + (i % W + 0.5) * s, y = oy + (((i / W) | 0) + 0.5) * s;
+      // le reste du trajet en pointillés
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      for (let j = k + 1; j < e.path.length; j += 2) ctx.lineTo(ox + (e.path[j] % W + 0.5) * s, oy + (((e.path[j] / W) | 0) + 0.5) * s);
+      ctx.setLineDash([4, 6]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(${G.players[e.pid].color.join(',')},0.9)`;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      this.drawBannerImage(G.players[e.pid], x + 12, y - 2, 30);
+      ctx.font = '20px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⛵', x, y);
     }
   },
 
@@ -617,7 +639,7 @@ const Render = {
     if (UI.plan && G.phase === 'playing') return this.drawAssaultPlan(ox, oy);
     if (G.phase !== 'playing' || h < 0 || UI.selectedBuild || !G.human.alive) return;
     const o = G.owner[h];
-    if ((G.building[h] !== B_CASTLE && G.building[h] !== B_CHURCH) || o < 0 || o === G.human.id || G.areAllied(o, G.human.id)) return;
+    if (!TARGET_TYPES.includes(G.building[h]) || o < 0 || o === G.human.id || G.areAllied(o, G.human.id)) return;
     const c = G.anchor[h], key = c + ':' + G.version;
     if (this.previewKey !== key) {
       this.previewKey = key;
@@ -730,6 +752,7 @@ const Render = {
     this.drawFloaters(ox, oy);
 
     // Par-dessus tout le reste, pour bien les voir
+    this.drawExpeditions(ox, oy);
     this.drawAttackArrows(ox, oy);
   },
 };

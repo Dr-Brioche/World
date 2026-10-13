@@ -7,6 +7,7 @@ const AI = {
     p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Math.random() * 2));
 
     if (Math.random() < 0.4) this.tryBuild(p);
+    if (Math.random() < 0.05) this.tryExpedition(p);
     if (Math.random() < 0.08) this.tryAlliance(p);
 
     this.reactToThreats(p);
@@ -115,6 +116,16 @@ const AI = {
     Game.launchAttack(p.id, victim.id, p.troops * 0.5, aim === null ? undefined : aim);
   },
 
+  // Avec un grand port : parfois, une expédition vers une côte au hasard
+  tryExpedition(p) {
+    if (!Game.expeditionPorts(p.id).length || p.gold < 40) return;
+    for (let k = 0; k < 15; k++) {
+      const i = (Math.random() * Game.N) | 0;
+      if (!Game.isCoastal(i) || !Game.landable(p.id, i)) continue;
+      if (!Game.launchExpedition(p.id, i)) return;
+    }
+  },
+
   tryBuild(p) {
     // Parfois, améliorer un château ou un moulin plutôt que construire
     if (Math.random() < 0.3) {
@@ -127,6 +138,7 @@ const AI = {
     if (c[B_BARRACKS] < c[B_MILL] / 2) type = B_BARRACKS;
     else if (Math.random() < 0.2 && p.castlesBuilt < Game.maxCastles(p)) type = B_CASTLE;
     else if (Math.random() < 0.1 && c[B_CHURCH] < 2) type = B_CHURCH;
+    else if (Math.random() < 0.1 && c[B_PORT] < 2) type = B_PORT;
     if (p.gold < Game.buildCost(p, type)) return;
 
     const tiles = [];

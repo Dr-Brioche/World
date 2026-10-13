@@ -58,6 +58,8 @@ const CONFIG = {
   // Un royaume sans château ni église peut être attaqué de front : toutes ses troupes défendent d'office,
   // mais désorganisées (sans pouvoir en place), chaque soldat ne compte que pour 0.8.
   LEADERLESS_DEFENSE: 0.8,
+  // Expéditions maritimes : en débarquant, on prend les terres libres autour du point de débarquement
+  LANDING_RADIUS: 4,
   // Un château isolé peut être relié à nouveau par un assaut lancé depuis le royaume (en cliquant dessus).
   // S'il arrive, sa route s'élargit de 2 cases de chaque côté.
   LINK_WIDEN_RADIUS: 2,
@@ -91,7 +93,7 @@ const TERRAIN_INFO = [
 // Le terrain le plus long à traverser (une armée doit toujours pouvoir avancer d'une case)
 const MAX_LAND_COST = Math.max(...TERRAIN_INFO.filter(t => t.cost < Infinity).map(t => t.cost));
 
-const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4;
+const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTPOST = 6;
 
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
@@ -138,6 +140,17 @@ const CHURCH_LEVELS = [
   { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 200 },
 ];
 
+// Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu
+// (on peut l'attaquer directement, comme un château) et produit de l'or toutes les PRODUCTION_INTERVAL s.
+// boatSpeed = vitesse des bateaux d'expédition (cases par seconde ; 0 = pas d'expédition),
+// landingCost = prix d'un débarquement (x1 = normal, x0.5 = moitié prix).
+const PORT_LEVELS = [
+  null,
+  { name: 'Port',       gold: 3,  boatSpeed: 0 },
+  { name: 'Grand port', gold: 6,  boatSpeed: 5, landingCost: 1,   upgradeCost: 120 },
+  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, upgradeCost: 250 },
+];
+
 // Production des moulins et casernes selon le terrain où ils sont construits
 // (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve.
 const TERRAIN_PRODUCTION = {
@@ -146,7 +159,7 @@ const TERRAIN_PRODUCTION = {
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
-const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS, CHURCH_LEVELS];
+const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS, CHURCH_LEVELS, PORT_LEVELS, null];
 
 // L'index dans ce tableau correspond au numéro du bâtiment (0 = aucun).
 // tiles = côté du carré occupé sur la carte (2 → 2x2 cases, 4 → 4x4 cases)
@@ -156,7 +169,13 @@ const BUILDINGS = [
   { name: 'Caserne', icon: '⚔️', tiles: 2, baseCost: 20, desc: `produit des soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande (3 niveaux)` },
   { name: 'Château', icon: '🏰', tiles: 4, baseCost: 30, desc: 'muraille qui protège ses terres (3 niveaux)' },
   { name: 'Église',  icon: '⛪', tiles: 2, baseCost: 50, desc: 'hors des murailles, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)' },
+  { name: 'Port',    icon: '⚓', tiles: 2, baseCost: 60, desc: 'au bord de la mer ou d\'un fleuve, sans défense : produit de l\'or, et dès le niveau 2 les expéditions maritimes (3 niveaux)' },
+  // L'avant-poste ne se construit pas : il apparaît quand on débarque (baseCost = prix de l'expédition)
+  { name: 'Avant-poste', icon: '⛺', tiles: 2, baseCost: 20, hidden: true, desc: 'base d\'un débarquement' },
 ];
+
+// Bâtiments que l'on peut viser directement avec un assaut (un royaume qui en a ne s'attaque que comme ça)
+const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST];
 
 // Les bannières des royaumes (une par couleur) : la bannière choisie donne sa couleur au royaume.
 const BANNERS = [

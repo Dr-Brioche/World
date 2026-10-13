@@ -18,6 +18,7 @@ const UI = {
     const builds = $('builds');
     for (let t = 1; t < BUILDINGS.length; t++) {
       const b = BUILDINGS[t];
+      if (b.hidden) continue; // l'avant-poste ne se construit pas
       const btn = document.createElement('button');
       btn.className = 'build';
       btn.dataset.type = t;
@@ -73,10 +74,10 @@ const UI = {
       // donne « & » sans Maj, « 2 » donne « é », « 3 » donne « " ». Le pavé numérique marche aussi.
       const m = /^(Digit|Numpad)(\d)$/.exec(e.code);
       const n = m ? +m[2] : 0;
-      if (n >= 1 && n < BUILDINGS.length) {
+      if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden) {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
-      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); }
+      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.closeActionMenu(); }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
   },
@@ -145,6 +146,10 @@ const UI = {
   // Ce que rapporte un niveau de bâtiment, en quelques mots.
   // On ne montre pas de chiffres précis : seulement des pourcentages.
   levelEffect(type, info) {
+    if (type === B_PORT) {
+      return `or toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
+        (info.boatSpeed ? `, expéditions maritimes${info.landingCost < 1 ? ' moins chères et plus rapides' : ''}` : '');
+    }
     if (type === B_CASTLE) {
       const road = info.road === 'paved' ? 'routes pavées' : 'chemins de terre';
       return `défense des murs ${pct(info.bonus)}` +
@@ -163,6 +168,11 @@ const UI = {
 
   // Ce que change une amélioration, en pourcentages par rapport au niveau actuel
   upgradeEffect(type, cur, next) {
+    if (type === B_PORT) {
+      return `or produit ${pct(next.gold / cur.gold - 1)}, ` + (cur.boatSpeed
+        ? `débarquements ${pct(next.landingCost / cur.landingCost - 1)} moins chers et bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)} plus rapides`
+        : 'débloque les expéditions maritimes (clic droit sur une côte → ⛵ Débarquer)');
+    }
     if (type === B_CASTLE) {
       let txt = `muraille plus grande, défense des murs ${pct(next.bonus - cur.bonus)}, ` +
         `garnison ${pct(next.garrison / cur.garrison - 1)}`;
@@ -300,26 +310,31 @@ const UI = {
           : ' · 🚩 isolé : aucun renfort ne peut le rejoindre';
       }
       if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain : ${prodText(G.terrainFactor(a, G.building[i]))}`;
+      if (G.building[i] === B_PORT) txt += ' · ⚠️ sans défense : on peut l\'attaquer directement';
       if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (o === G.human.id && G.upgradeCost(a) !== null && !(G.building[i] === B_CASTLE && G.isIsolatedCastle(a))) txt += ` · clique pour l'améliorer`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
+      if (G.building[i] === B_OUTPOST) txt += ' (base pour attaquer depuis la côte ; l\'ennemi peut le viser pour le détruire)';
     }
     if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
     // Conseils d'attaque contre un royaume ennemi
     if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && G.isProtected(o)) {
       const b = G.building[i];
-      if (b === B_CASTLE || b === B_CHURCH) {
+      if (TARGET_TYPES.includes(b)) {
         txt += Render.castlePreview && Render.castlePreview.path
-          ? ` · 🎯 clique pour préparer un assaut sur ${b === B_CASTLE ? 'ce château' : 'cette église'}`
+          ? ` · 🎯 clique pour préparer un assaut sur ${G.targetLabel(G.anchor[i])}`
           : ' · 🚫 inaccessible : des châteaux bloquent le passage';
       } else {
-        txt += ' · 🏰 protégé : vise un de ses châteaux ou une de ses églises';
+        txt += ' · 🏰 protégé : vise un de ses châteaux, églises, ports ou avant-postes';
       }
     } else if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id)) {
       txt += ' · ⚔️ sans château ni église : clique pour l\'attaquer de front (ses troupes défendent, désorganisées)';
+    }
+    if (G.isCoastal(i) && G.landable(G.human.id, i) && G.expeditionPorts(G.human.id).length) {
+      txt += ' · ⛵ côte : clic droit → Débarquer';
     }
     return txt;
   },
@@ -465,7 +480,7 @@ const UI = {
   startPlan(target, c) {
     const G = Game, h = G.human;
     if (!G.castlePath(h.id, c)) {
-      return this.log(`Impossible d'atteindre ${G.building[c] === B_CHURCH ? 'cette église' : 'ce château'} : ` +
+      return this.log(`Impossible d'atteindre ${G.targetLabel(c)} : ` +
         'des fortifications bloquent le passage. Prends d\'abord les châteaux de la frontière.', 'warn');
     }
     this.plan = { target, castle: c, waypoints: [], clicks: 0 };
@@ -508,6 +523,57 @@ const UI = {
     p.waypoints = wp;
   },
 
+  // --- Menu d'actions (clic droit sur la carte) : attaquer, construire, débarquer ---
+  openActionMenu(sx, sy) {
+    const G = Game, h = G.human, i = Render.tileAt(sx, sy);
+    this.closeActionMenu();
+    if (G.phase !== 'playing' || !h.alive || i < 0) return;
+    const items = [];
+    const own = G.owner[i] === h.id;
+    if (G.isLand(i) && !own) items.push({ label: '⚔️ Attaquer', run: () => this.onMapClick(sx, sy) });
+    if (own) {
+      for (let t = 1; t < BUILDINGS.length; t++) {
+        const b = BUILDINGS[t];
+        if (b.hidden) continue;
+        items.push({ label: `🏗️ ${b.icon} ${b.name} (💰 ${fmt(G.buildCost(h, t))})`, run: () => {
+          const err = G.tryBuild(h, Render.anchorAt(sx, sy, t), t);
+          if (err) this.log(err, 'warn');
+        } });
+      }
+    }
+    if (G.isCoastal(i) && G.landable(h.id, i)) {
+      const plan = G.planLanding(h.id, i);
+      items.push(plan.error
+        ? { label: '⛵ Débarquer', disabled: plan.error }
+        : { label: `⛵ Débarquer (💰 ${plan.cost}, ${Math.max(1, Math.round(plan.time))} s de mer)`, run: () => {
+          const err = G.launchExpedition(h.id, i);
+          if (err) this.log(err, 'warn');
+          else this.log('⛵ Ton expédition prend la mer ! Elle débarquera à l\'arrivée et bâtira un avant-poste.', 'good');
+        } });
+    }
+    if (!items.length) return;
+    const el = document.createElement('div');
+    el.className = 'panel actionMenu';
+    el.innerHTML = items.map((it, k) =>
+      `<button data-k="${k}"${it.disabled ? ` disabled title="${escapeHtml(it.disabled)}"` : ''}>${it.label}</button>` +
+      (it.disabled ? `<small>${escapeHtml(it.disabled)}</small>` : '')).join('');
+    el.style.left = Math.min(sx, window.innerWidth - 260) + 'px';
+    el.style.top = Math.min(sy, window.innerHeight - 40 * items.length - 20) + 'px';
+    el.addEventListener('pointerdown', e => e.stopPropagation());
+    el.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-k]');
+      if (!btn || btn.disabled) return;
+      this.closeActionMenu();
+      items[+btn.dataset.k].run();
+    });
+    document.body.appendChild(el);
+    this.actionMenu = el;
+  },
+
+  closeActionMenu() {
+    if (this.actionMenu) { this.actionMenu.remove(); this.actionMenu = null; }
+  },
+
   onMapClick(sx, sy) {
     const G = Game, i = Render.tileAt(sx, sy);
     if (i < 0) return;
@@ -545,7 +611,7 @@ const UI = {
     const target = G.owner[i];
     // Château (ou église) ennemi sans assaut en cours : on prépare l'itinéraire avant de lancer
     const b = G.building[i], c = G.anchor[i];
-    const aimed = target >= 0 && (b === B_CASTLE || b === B_CHURCH) && G.isProtected(target);
+    const aimed = target >= 0 && TARGET_TYPES.includes(b) && G.isProtected(target);
     const running = aimed && G.attacks.some(a => !a.done && a.attacker === h.id && a.targetCastle === c);
     const attack = () => {
       if (aimed && !running) return this.startPlan(target, c);
@@ -570,9 +636,15 @@ function setupInput(canvas) {
   const pointers = new Map();
   let drag = null, dragging = false, pinchDist = null;
 
-  canvas.addEventListener('contextmenu', e => { e.preventDefault(); UI.selectBuild(0); UI.cancelPlan(); });
+  // Clic droit : annule une construction ou un assaut en préparation, sinon ouvre le menu d'actions
+  canvas.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    if (UI.selectedBuild || UI.plan) { UI.selectBuild(0); UI.cancelPlan(); return; }
+    UI.openActionMenu(e.clientX, e.clientY);
+  });
 
   canvas.addEventListener('pointerdown', e => {
+    UI.closeActionMenu();
     if (e.button === 2) return;
     canvas.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
