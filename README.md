@@ -99,13 +99,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - ⚔️ **Caserne** : **toutes les 10 secondes**, elle forme quelques soldats (`+3 ⚔️` au-dessus d'elle),
      et elle agrandit ton armée maximum. **Clique dessus pour l'améliorer** (3 niveaux) :
 
-     | Niveau | Soldats produits | Bonus d'armée max | Prix |
-     |---|---|---|---|
-     | 1. Camp d'entraînement | quelques-uns | un peu | prix de la caserne |
-     | 2. Caserne | +100 % | +100 % | 💰 40 |
-     | 3. Grande caserne | +75 % | +60 % | 💰 100 |
+     | Niveau | Soldats produits | Bonus d'armée max | Force de **tous** tes soldats | Prix |
+     |---|---|---|---|---|
+     | 1. Camp d'entraînement | quelques-uns | un peu | normale | prix de la caserne |
+     | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 40 |
+     | 3. Grande caserne | +75 % | +60 % | **+50 %** | 💰 100 |
 
-     Une caserne ne fait pas dépasser l'armée maximum. Les bonus de toutes tes casernes s'additionnent.
+     Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
+     tes casernes s'additionnent.
+     **La force des soldats** vaut pour tout le royaume dès **une seule** caserne de ce niveau
+     (la meilleure compte, ça ne s'additionne pas) : au combat, chacun de tes soldats vaut 1,2 soldat
+     (niveau 2) ou 1,5 soldat (niveau 3), en attaque comme en défense.
      Tu ne vois que les chiffres de **tes** bâtiments, pas ceux des autres royaumes.
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
@@ -152,6 +156,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.26** : une caserne de niveau 2 rend **tous** les soldats du royaume 20 % plus forts au combat, une de niveau 3 50 % plus forts (la meilleure caserne compte)
 - **v0.25** : un château encerclé garde les terres de sa muraille et continue de produire · plus d'« armée de secours » : on clique sur son château isolé pour lancer un assaut classique qui le relie au royaume (la route s'élargit s'il réussit)
 - **v0.24** : ✂️ encerclement : un morceau de royaume coupé par un assaut (moins de 20 % du royaume) est pris d'un coup · ses châteaux restent debout, isolés 🚩 : ils ne reçoivent plus de défenseurs, mais leur royaume peut leur envoyer une armée de secours · un assaut de front ne prend plus de château (il faut le viser)
 - **v0.23** : plus de chiffres précis dans le jeu, seulement des pourcentages · les moulins et casernes produisent **toutes les 10 secondes**, avec un petit chiffre qui s'envole au-dessus d'eux (seulement pour tes bâtiments) · revenu de base selon la taille du territoire · les touches `&`, `é`, `"` du clavier AZERTY marchent comme `1`, `2`, `3` · la muraille du fort en bois est un peu plus grande, pour pouvoir y construire
