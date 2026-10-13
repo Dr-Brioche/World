@@ -45,6 +45,9 @@ function fbm(noise, x, y, octaves) {
   return sum / norm;
 }
 
+// Largeur (en cases) de la bande près des bords où la terre s'enfonce dans l'océan
+const EDGE_MARGIN = 14;
+
 function generateMap(seed) {
   const W = CONFIG.MAP_WIDTH, H = CONFIG.MAP_HEIGHT, N = W * H;
   const rand = mulberry32(seed);
@@ -58,7 +61,10 @@ function generateMap(seed) {
     for (let x = 0; x < W; x++) {
       const nx = (x / W - 0.5) * 2, ny = (y / H - 0.5) * 2;
       const d = nx * nx + ny * ny;
-      elev[y * W + x] = fbm(elevNoise, x / 40, y / 40, 5) - 0.45 * d;
+      // Près des bords, le terrain plonge dans l'océan : la terre n'est jamais coupée net par le bord
+      const edge = Math.min(x, y, W - 1 - x, H - 1 - y);
+      const sink = edge < EDGE_MARGIN ? ((EDGE_MARGIN - edge) / EDGE_MARGIN) ** 2 : 0;
+      elev[y * W + x] = fbm(elevNoise, x / 40, y / 40, 5) - 0.6 * d - sink;
     }
   }
 
@@ -83,44 +89,22 @@ function generateMap(seed) {
   }
 
   // 3. On garde seulement le plus grand continent (pas encore de bateaux !).
-  const comp = new Int32Array(N).fill(-1);
-  let best = -1, bestSize = 0, label = 0;
-  const stack = [];
-  for (let s = 0; s < N; s++) {
-    if (terrain[s] === TERRAIN.WATER || comp[s] >= 0) continue;
-    let size = 0;
-    comp[s] = label;
-    stack.push(s);
-    while (stack.length) {
-      const i = stack.pop();
-      size++;
-      const x = i % W;
-      const nbs = [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W];
-      for (const n of nbs) {
-        if (n >= 0 && n < N && terrain[n] !== TERRAIN.WATER && comp[n] < 0) {
-          comp[n] = label;
-          stack.push(n);
-        }
-      }
-    }
-    if (size > bestSize) { bestSize = size; best = label; }
-    label++;
-  }
-  for (let i = 0; i < N; i++) {
-    if (terrain[i] !== TERRAIN.WATER && comp[i] !== best) terrain[i] = TERRAIN.WATER;
-  }
+  keepMainland(terrain, W, H);
 
   // 4. Les fleuves : chacun part d'une montagne et descend la pente jusqu'à la mer.
   addRivers(terrain, elev, W, H, rand);
 
-  // 5. Petites variations de couleur pour un rendu moins plat.
+  // 5. Un grand fleuve a pu isoler un petit bout de terre : on ne garde que le continent principal.
+  keepMainland(terrain, W, H);
+
+  // 6. Petites variations de couleur pour un rendu moins plat.
   const shade = new Int8Array(N);
   for (let i = 0; i < N; i++) shade[i] = Math.round((rand() - 0.5) * 12);
 
   return { W, H, N, terrain, shade };
 }
 
-// Trace entre CONFIG.RIVERS_MIN et CONFIG.RIVERS_MAX fleuves (au hasard). Un fleuve part du pied d'une montagne et suit la pente jusqu'à la mer
+// Trace entre CONFIG.RIVERS_MIN et CONFIG.RIVERS_MAX fleuves (au hasard). Un fleuve naît dans une montagne et suit la pente jusqu'à la mer
 // (ou jusqu'à un autre fleuve, dont il devient un affluent).
 function addRivers(terrain, elev, W, H, rand) {
   const N = W * H;
@@ -146,31 +130,98 @@ function addRivers(terrain, elev, W, H, rand) {
       heap.push(Math.max(level, elev[n]) + rand() * 0.006, n); // un peu de hasard : des méandres
     }
   }
-  // 2. Sources : une case de montagne qui touche une case sans montagne (le pied de la montagne)
-  const sources = [];
-  for (let i = 0; i < N; i++) {
-    if (terrain[i] === TERRAIN.MOUNTAIN && neighbors(i).some(n => terrain[n] !== TERRAIN.MOUNTAIN && terrain[n] !== TERRAIN.WATER)) {
-      sources.push(i);
+  // 2. Sources : une case de montagne à 2 ou 3 cases dans le massif (pas juste au bord)
+  const depth = new Int32Array(N).fill(-1), queue = [];
+  for (let i = 0; i < N; i++) if (terrain[i] !== TERRAIN.MOUNTAIN) { depth[i] = 0; queue.push(i); }
+  for (let q = 0; q < queue.length; q++) {
+    for (const n of neighbors(queue[q])) {
+      if (depth[n] < 0) { depth[n] = depth[queue[q]] + 1; queue.push(n); }
     }
   }
+  const sources = [];
+  for (let i = 0; i < N; i++) if (depth[i] === 2 || depth[i] === 3) sources.push(i); // 1 = bord du massif
   // 3. On suit l'eau depuis des sources tirées au hasard
   const wanted = CONFIG.RIVERS_MIN + Math.floor(rand() * (CONFIG.RIVERS_MAX - CONFIG.RIVERS_MIN + 1));
-  const starts = [];
+  const flow = new Uint8Array(N); // nombre de fleuves qui passent par chaque case
+  const starts = [], paths = [];
   let made = 0;
   for (let tries = 0; tries < 1000 && made < wanted && sources.length; tries++) {
     const s = sources[(rand() * sources.length) | 0];
     const sx = s % W, sy = (s / W) | 0;
     if (starts.some(t => Math.abs(t % W - sx) + Math.abs(((t / W) | 0) - sy) < 15)) continue; // sources éloignées
     const path = [];
-    let cur = down[s], left = false;
+    let cur = s;
     while (cur >= 0 && terrain[cur] !== TERRAIN.WATER && terrain[cur] !== TERRAIN.RIVER) {
-      if (terrain[cur] !== TERRAIN.MOUNTAIN) left = true; // le fleuve commence au pied de la montagne
-      if (left) path.push(cur);
+      path.push(cur);
       cur = down[cur];
     }
     if (path.length < 12) continue; // trop court : on essaie une autre source
-    for (const i of path) terrain[i] = TERRAIN.RIVER;
+    for (const i of path) { terrain[i] = TERRAIN.RIVER; flow[i]++; }
+    // Il a rejoint un autre fleuve : il continue avec lui jusqu'à la mer, qui grossit d'autant
+    while (cur >= 0 && terrain[cur] !== TERRAIN.WATER) { flow[cur] = Math.min(255, flow[cur] + 1); cur = down[cur]; }
     starts.push(s);
+    paths.push(path);
     made++;
+  }
+  // 4. Les fleuves qui se rejoignent grossissent : 2 fleuves = 2 cases de large,
+  //    3 fleuves ou plus = 3 cases de large, et infranchissable (grand fleuve)
+  for (let i = 0; i < N; i++) {
+    if (flow[i] < 2) continue;
+    const great = flow[i] >= 3;
+    const cells = great ? [i, ...neighbors(i)] : [i, i % W < W - 1 ? i + 1 : i, i < N - W ? i + W : i];
+    for (const c of cells) {
+      if (terrain[c] === TERRAIN.WATER || terrain[c] === TERRAIN.GREAT_RIVER) continue;
+      terrain[c] = great ? TERRAIN.GREAT_RIVER : TERRAIN.RIVER;
+    }
+  }
+  // 5. Parfois, un fleuve s'élargit en lac au milieu de son cours (pas trop souvent)
+  let lakes = 0;
+  for (const path of paths) {
+    if (lakes >= LAKES_MAX || rand() > LAKE_CHANCE || path.length < 20) continue;
+    const c = path[Math.floor(path.length * (0.35 + rand() * 0.35))];
+    const cx = c % W, cy = (c / W) | 0, r = 2 + rand() * 2.5;
+    for (let y = Math.max(1, cy - 5); y <= Math.min(H - 2, cy + 5); y++) {
+      for (let x = Math.max(1, cx - 5); x <= Math.min(W - 2, cx + 5); x++) {
+        // un disque aux bords irréguliers
+        if (Math.hypot(x - cx, y - cy) <= r + (rand() - 0.5) * 1.6) terrain[y * W + x] = TERRAIN.WATER;
+      }
+    }
+    lakes++;
+  }
+}
+
+// Lacs : au plus LAKES_MAX par carte, chaque fleuve a LAKE_CHANCE chances d'en avoir un
+const LAKES_MAX = 3, LAKE_CHANCE = 0.3;
+
+// Garde seulement le plus grand morceau de terre (la mer et les grands fleuves séparent les terres) :
+// les autres morceaux deviennent de la mer.
+function keepMainland(terrain, W, H) {
+  const N = W * H;
+  const isLand = i => terrain[i] !== TERRAIN.WATER && terrain[i] !== TERRAIN.GREAT_RIVER;
+  const comp = new Int32Array(N).fill(-1);
+  let best = -1, bestSize = 0, label = 0;
+  const stack = [];
+  for (let s = 0; s < N; s++) {
+    if (!isLand(s) || comp[s] >= 0) continue;
+    let size = 0;
+    comp[s] = label;
+    stack.push(s);
+    while (stack.length) {
+      const i = stack.pop();
+      size++;
+      const x = i % W;
+      const nbs = [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W];
+      for (const n of nbs) {
+        if (n >= 0 && n < N && isLand(n) && comp[n] < 0) {
+          comp[n] = label;
+          stack.push(n);
+        }
+      }
+    }
+    if (size > bestSize) { bestSize = size; best = label; }
+    label++;
+  }
+  for (let i = 0; i < N; i++) {
+    if (isLand(i) && comp[i] !== best) terrain[i] = TERRAIN.WATER;
   }
 }

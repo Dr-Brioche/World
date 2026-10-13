@@ -6,7 +6,7 @@ const CONFIG = {
   // --- Carte ---
   MAP_WIDTH: 240,          // largeur de la carte (en cases)
   MAP_HEIGHT: 156,         // hauteur de la carte (en cases)
-  WATER_RATIO: 0.40,       // part de mer sur la carte (0.4 = 40 %)
+  WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %)
   RIVERS_MIN: 3,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
   RIVERS_MAX: 12,          // (ils partent des montagnes et vont jusqu'à la mer)
 
@@ -73,7 +73,7 @@ const CONFIG = {
   WIN_RATIO: 0.85,         // posséder 85 % des terres = victoire
 };
 
-const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5 };
+const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6 };
 
 const TERRAIN_INFO = [
   { name: 'Mer',      color: [52, 92, 130],   cost: Infinity },
@@ -83,11 +83,13 @@ const TERRAIN_INFO = [
   { name: 'Montagne', color: [130, 124, 118], cost: 3.5 },
   // Fleuve : une frontière naturelle, longue à traverser, et un gros bonus de défense (+3)
   { name: 'Fleuve',   color: [74, 132, 184],  cost: 4 },
+  // Grand fleuve (là où 3 fleuves se sont rejoints) : infranchissable, comme la mer
+  { name: 'Grand fleuve', color: [58, 108, 160], cost: Infinity },
 ];
 // cost = défense de la case (et temps pour la traverser) : 1 en plaine, plus ailleurs.
 // On ne peut rien construire sur un fleuve.
 // Le terrain le plus long à traverser (une armée doit toujours pouvoir avancer d'une case)
-const MAX_LAND_COST = Math.max(...TERRAIN_INFO.slice(1).map(t => t.cost));
+const MAX_LAND_COST = Math.max(...TERRAIN_INFO.filter(t => t.cost < Infinity).map(t => t.cost));
 
 const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4;
 
@@ -137,10 +139,10 @@ const CHURCH_LEVELS = [
 ];
 
 // Production des moulins et casernes selon le terrain où ils sont construits
-// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve.
+// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve.
 const TERRAIN_PRODUCTION = {
-  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0], // les moulins aiment les plaines
-  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0], // les casernes, les forêts et les collines
+  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0], // les moulins aiment les plaines
+  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0], // les casernes, les forêts et les collines
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)

@@ -63,7 +63,8 @@ const Game = {
   },
 
   // --- Outils sur les cases ---
-  isLand(i) { return this.terrain[i] !== TERRAIN.WATER; },
+  // Terre = tout sauf la mer et les grands fleuves (infranchissables)
+  isLand(i) { return this.terrain[i] !== TERRAIN.WATER && this.terrain[i] !== TERRAIN.GREAT_RIVER; },
 
   forNeighbors(i, cb) {
     const x = i % this.W, y = (i / this.W) | 0;
