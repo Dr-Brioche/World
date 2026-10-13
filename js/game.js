@@ -24,6 +24,7 @@ const Game = {
     this.castles = [];
     this.tick = 0;
     this.version = 0; // augmente à chaque changement de la carte
+    this.roadsVersion = -1;
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.isLand(i)) this.landCount++;
 
@@ -280,12 +281,39 @@ const Game = {
   // --- Économie ---
   // Somme d'une valeur (ex. "gold") sur tous les bâtiments d'un type d'un royaume,
   // selon leur niveau
-  levelSum(p, type, key) {
+  // withRoads = compter le bonus des routes (or des moulins, recrutement des casernes)
+  levelSum(p, type, key, withRoads = false) {
     let sum = 0;
     for (const a of this.buildingTiles) {
-      if (this.building[a] === type && this.owner[a] === p.id) sum += this.buildingInfo(a)[key];
+      if (this.building[a] !== type || this.owner[a] !== p.id) continue;
+      const road = withRoads ? this.roads().get(a) : null;
+      sum += this.buildingInfo(a)[key] * (1 + (road ? road.bonus : 0));
     }
     return sum;
+  },
+
+  // --- Routes ---
+  // Un château de niveau 2 ou 3 relie par une route les moulins et casernes de son royaume
+  // qui sont dans sa muraille. Renvoie une Map : bâtiment → { castle, bonus, road }.
+  // Recalculé seulement quand la carte change.
+  roads() {
+    if (this.roadsVersion === this.version) return this.roadsCache;
+    const links = new Map();
+    for (const c of this.castles) {
+      const o = this.owner[c], info = this.castleInfo(c);
+      if (o < 0 || !info.road) continue;
+      for (const a of this.buildingTiles) {
+        const t = this.building[a];
+        if ((t !== B_MILL && t !== B_BARRACKS) || this.owner[a] !== o) continue;
+        const half = (this.sizeOf(t) - 1) / 2; // centre du bâtiment
+        if (!this.inCastleRange(c, a % this.W + half, ((a / this.W) | 0) + half, info.radius)) continue;
+        const best = links.get(a);
+        if (!best || info.roadBonus > best.bonus) links.set(a, { castle: c, bonus: info.roadBonus, road: info.road });
+      }
+    }
+    this.roadsCache = links;
+    this.roadsVersion = this.version;
+    return links;
   },
 
   maxTroops(p) {
@@ -297,7 +325,7 @@ const Game = {
     const max = this.maxTroops(p);
     if (p.troops >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
-    const bonus = 1 + this.levelSum(p, B_BARRACKS, 'growth');
+    const bonus = 1 + this.levelSum(p, B_BARRACKS, 'growth', true);
     return base * bonus * this.growthFactor(p.troops / max) * this.recoveryFactor(p);
   },
 
@@ -322,7 +350,7 @@ const Game = {
   },
 
   goldRate(p) {
-    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE + this.levelSum(p, B_MILL, 'gold');
+    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE + this.levelSum(p, B_MILL, 'gold', true);
   },
 
   buildCost(p, type) {

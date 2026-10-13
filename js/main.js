@@ -114,7 +114,11 @@ const UI = {
 
   // Ce que rapporte un niveau de bâtiment, en quelques mots
   levelEffect(type, info) {
-    if (type === B_CASTLE) return `+${info.bonus} défense, rayon ${info.radius}`;
+    if (type === B_CASTLE) {
+      const road = info.road === 'paved' ? 'routes pavées' : 'chemins de terre';
+      return `+${info.bonus} défense, rayon ${info.radius}` +
+        (info.road ? `, ${road} : +${Math.round(info.roadBonus * 100)} % moulins et casernes proches` : '');
+    }
     if (type === B_BARRACKS) return `+${fmt(info.maxTroops)} soldats max, +${Math.round(info.growth * 100)} % recrutement`;
     return `+${info.gold} or/s`;
   },
@@ -219,6 +223,8 @@ const UI = {
     if (info) {
       const a = G.anchor[i];
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
+      const road = G.roads().get(a);
+      if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (o === G.human.id && G.upgradeCost(a) !== null) txt += ` · clique pour l'améliorer`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;

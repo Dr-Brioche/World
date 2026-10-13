@@ -365,6 +365,47 @@ const Render = {
     }
   },
 
+  // Routes des châteaux (niveau 2 : chemins de terre, niveau 3 : routes pavées)
+  drawRoads(ox, oy) {
+    const ctx = this.ctx, G = Game, s = this.cam.scale;
+    const w = Math.max(2, s * 0.55);
+    ctx.lineCap = 'round';
+    for (const [a, link] of G.roads()) {
+      const c = link.castle, hc = G.sizeOf(B_CASTLE) / 2, hb = G.sizeOf(G.building[a]) / 2;
+      const x1 = ox + (c % G.W + hc) * s, y1 = oy + (((c / G.W) | 0) + hc) * s;
+      const x2 = ox + (a % G.W + hb) * s, y2 = oy + (((a / G.W) | 0) + hb) * s;
+      // Petite courbe pour un chemin plus naturel (toujours la même pour un bâtiment donné)
+      const side = a % 2 ? 1 : -1;
+      const mx = (x1 + x2) / 2 - (y2 - y1) * 0.15 * side, my = (y1 + y2) / 2 + (x2 - x1) * 0.15 * side;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.quadraticCurveTo(mx, my, x2, y2);
+      if (link.road === 'paved') {
+        ctx.lineWidth = w + 2;
+        ctx.strokeStyle = 'rgba(60,58,54,0.85)';
+        ctx.stroke();
+        ctx.lineWidth = w;
+        ctx.strokeStyle = '#b4b0a6';
+        ctx.stroke();
+        if (s >= 6) { // pavés
+          ctx.setLineDash([w * 0.5, w * 0.35]);
+          ctx.lineWidth = w * 0.6;
+          ctx.strokeStyle = '#8f8b82';
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      } else {
+        ctx.lineWidth = w + 1.5;
+        ctx.strokeStyle = 'rgba(95,68,36,0.7)';
+        ctx.stroke();
+        ctx.lineWidth = w;
+        ctx.strokeStyle = '#b38a55';
+        ctx.stroke();
+      }
+    }
+    ctx.lineCap = 'butt';
+  },
+
   draw() {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -376,6 +417,7 @@ const Render = {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
 
+    this.drawRoads(ox, oy);
     this.drawCastleZones(ox, oy);
 
     ctx.textAlign = 'center';
