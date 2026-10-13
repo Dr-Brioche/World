@@ -378,7 +378,7 @@ const Render = {
   },
 
   // Images de chaque niveau des bâtiments (chargées une seule fois)
-  // (l'église n'a pas encore d'image : on garde son icône)
+  // (un niveau sans image garde son icône)
   buildingImages: BUILDING_LEVELS.map(levels => levels && levels.map(l => {
     if (!l || !l.img) return null;
     const img = new Image();
@@ -386,7 +386,7 @@ const Render = {
     return img;
   })),
 
-  // Bâtiment à niveaux (moulin, château) : icône de loin, image quand on zoome
+  // Bâtiment à niveaux (moulin, caserne, château, église) : icône de loin, image quand on zoome
   drawLeveledBuilding(i, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, G = Game;
     const type = G.building[i], lvl = G.level[i] || 1, info = BUILDING_LEVELS[type][lvl];
