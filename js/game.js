@@ -119,27 +119,33 @@ const Game = {
     const o = this.owner[i];
     if (o >= 0) this.players[o].bCount[type]++;
     this.buildingTiles.push(i);
-    if (type === B_CASTLE) {
-      this.castles.push(i);
-      this.level[i] = 1;
-    }
+    this.level[i] = 1;
+    if (type === B_CASTLE) this.castles.push(i);
+  },
+
+  // Infos du niveau actuel d'un bâtiment (null s'il n'a pas de niveaux)
+  buildingInfo(a) {
+    const levels = BUILDING_LEVELS[this.building[a]];
+    return levels ? levels[this.level[a] || 1] : null;
   },
 
   castleInfo(c) { return CASTLE_LEVELS[this.level[c] || 1]; },
 
-  upgradeCost(c) {
-    const next = CASTLE_LEVELS[this.level[c] + 1];
+  // Prix pour passer au niveau suivant (null si impossible)
+  upgradeCost(a) {
+    const levels = BUILDING_LEVELS[this.building[a]];
+    const next = levels && levels[this.level[a] + 1];
     return next ? next.upgradeCost : null;
   },
 
-  // Améliore un château. Renvoie un message d'erreur, ou null si c'est fait.
-  upgradeCastle(p, c) {
-    if (this.building[c] !== B_CASTLE || this.owner[c] !== p.id) return 'Ce n\'est pas un de tes châteaux.';
-    const cost = this.upgradeCost(c);
-    if (cost === null) return 'Ce château est déjà au niveau maximum.';
+  // Améliore un bâtiment. Renvoie un message d'erreur, ou null si c'est fait.
+  upgradeBuilding(p, a) {
+    if (!this.building[a] || this.owner[a] !== p.id) return 'Ce n\'est pas un de tes bâtiments.';
+    const cost = this.upgradeCost(a);
+    if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
-    this.level[c]++;
+    this.level[a]++;
     this.version++;
     return null;
   },
@@ -253,7 +259,11 @@ const Game = {
   },
 
   goldRate(p) {
-    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE + p.bCount[B_FARM] * CONFIG.GOLD_PER_FARM;
+    let mills = 0;
+    for (const a of this.buildingTiles) {
+      if (this.building[a] === B_MILL && this.owner[a] === p.id) mills += this.buildingInfo(a).gold;
+    }
+    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE + mills;
   },
 
   buildCost(p, type) {

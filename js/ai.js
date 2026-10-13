@@ -79,15 +79,15 @@ const AI = {
   },
 
   tryBuild(p) {
-    // Parfois, améliorer un château plutôt que construire
-    if (Math.random() < 0.25) {
-      const mine = Game.castles.filter(c => Game.owner[c] === p.id && Game.upgradeCost(c) !== null);
-      const c = mine.find(c => p.gold >= Game.upgradeCost(c));
-      if (c !== undefined) { Game.upgradeCastle(p, c); return; }
+    // Parfois, améliorer un château ou un moulin plutôt que construire
+    if (Math.random() < 0.3) {
+      const mine = Game.buildingTiles.filter(a => Game.owner[a] === p.id
+        && Game.upgradeCost(a) !== null && p.gold >= Game.upgradeCost(a));
+      if (mine.length) { Game.upgradeBuilding(p, mine[(Math.random() * mine.length) | 0]); return; }
     }
     const c = p.bCount;
-    let type = B_FARM;
-    if (c[B_BARRACKS] < c[B_FARM] / 2) type = B_BARRACKS;
+    let type = B_MILL;
+    if (c[B_BARRACKS] < c[B_MILL] / 2) type = B_BARRACKS;
     else if (Math.random() < 0.2) type = B_CASTLE;
     if (p.gold < Game.buildCost(p, type)) return;
 

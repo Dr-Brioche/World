@@ -2,7 +2,7 @@
 // La carte est dessinée dans une petite image (1 pixel = 1 case),
 // puis agrandie à l'écran selon le zoom.
 
-// Zoom (en pixels par case) à partir duquel l'image des châteaux apparaît
+// Zoom (en pixels par case) à partir duquel l'image des bâtiments apparaît
 const CASTLE_IMG_ZOOM = 7;
 
 const Render = {
@@ -290,20 +290,22 @@ const Render = {
     }
   },
 
-  // Images des 3 niveaux de château (chargées une seule fois)
-  castleImages: CASTLE_LEVELS.map(l => {
+  // Images de chaque niveau des bâtiments (chargées une seule fois)
+  buildingImages: BUILDING_LEVELS.map(levels => levels && levels.map(l => {
     if (!l) return null;
     const img = new Image();
     img.src = l.img;
     return img;
-  }),
+  })),
 
-  drawCastle(i, px, py, imgAlpha) {
-    const ctx = this.ctx, s = this.cam.scale, lvl = Game.level[i] || 1;
+  // Bâtiment à niveaux (moulin, château) : icône de loin, image quand on zoome
+  drawLeveledBuilding(i, px, py, imgAlpha) {
+    const ctx = this.ctx, s = this.cam.scale, G = Game;
+    const type = G.building[i], lvl = G.level[i] || 1, info = BUILDING_LEVELS[type][lvl];
     // De loin : l'icône et le niveau en chiffres romains
     if (imgAlpha < 1) {
       ctx.globalAlpha = 1 - imgAlpha;
-      ctx.fillText(BUILDINGS[B_CASTLE].icon, px, py);
+      ctx.fillText(BUILDINGS[type].icon, px, py);
       if (lvl > 1 && s >= 5) {
         const f = Math.max(8, Math.min(14, s * 0.8));
         ctx.font = `700 ${f}px Georgia, serif`;
@@ -317,10 +319,10 @@ const Render = {
       }
       ctx.globalAlpha = 1;
     }
-    // De près : la vraie image, posée sur la case
-    const img = this.castleImages[lvl];
+    // De près : la vraie image, posée sur ses 2x2 cases
+    const img = this.buildingImages[type][lvl];
     if (imgAlpha > 0 && img.complete && img.naturalWidth) {
-      const w = CASTLE_LEVELS[lvl].size * s, h = w * img.naturalHeight / img.naturalWidth;
+      const w = info.size * s, h = w * img.naturalHeight / img.naturalWidth;
       ctx.globalAlpha = imgAlpha;
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(img, px - w / 2, py + s * 1.1 - h, w, h);
@@ -345,7 +347,7 @@ const Render = {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Bâtiments : petites icônes de loin, vraie image des châteaux quand on zoome
+    // Bâtiments : petites icônes de loin, vraies images quand on zoome
     const imgAlpha = Math.max(0, Math.min(1, (s - CASTLE_IMG_ZOOM) / 3));
     if (s >= 3) {
       ctx.font = `${Math.max(9, Math.min(40, s * 2))}px serif`;
@@ -354,8 +356,8 @@ const Render = {
         const px = ox + (i % G.W + 1) * s, py = oy + (((i / G.W) | 0) + 1) * s;
         if (px < -150 || py < -150 || px > this.vw + 150 || py > this.vh + 150) continue;
         const type = G.building[i];
-        if (type === B_CASTLE) {
-          this.drawCastle(i, px, py, imgAlpha);
+        if (BUILDING_LEVELS[type]) {
+          this.drawLeveledBuilding(i, px, py, imgAlpha);
           continue;
         }
         ctx.fillText(BUILDINGS[type].icon, px, py);
