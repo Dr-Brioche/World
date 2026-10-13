@@ -52,12 +52,17 @@ const CONFIG = {
   REINFORCE_DELAY: 5,          // une fois l'assaut lancé, les renforts mettent 5 s à arriver
   FIGHT_RATE: 0.03,            // vitesse des combats (part des soldats engagés qui tombent par tour)
   FIGHT_MIN_LOSS: 0.1,         // pertes minimum par tour, pour que chaque combat finisse vite
+  // Supériorité en nombre : quand un camp a plus de 2 fois plus de soldats que l'autre, il a un bonus.
+  // Il tue plus vite ET perd moins de soldats par ennemi tué. Bonus = (rapport de force) / 2, au plus x5.
+  // Ex. : 100 contre 40 → x1.25 · 300 contre 60 → x2.5 · 300 contre 4 → x5 (les 4 sont balayés en un instant)
+  NUMBERS_THRESHOLD: 2,
+  NUMBERS_MAX_BONUS: 5,
   GARRISON_REGEN: 0.05,        // la garnison d'un château se reconstitue de 5 % par seconde
   NEUTRAL_TILE_COST: 0.08,     // soldats perdus pour prendre une case (libre ou ennemie)
-  // Prise d'un château : l'assaut finit de conquérir sa zone de défense (un peu élargie), puis s'arrête.
-  CASTLE_CAPTURE_EXTRA_RADIUS: 2,  // cases conquises en plus autour de la zone du château
+  // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
+  // puis l'assaut s'arrête (les survivants rentrent).
   // Encerclement : un morceau de royaume coupé du reste, plus petit que 20 % de ce royaume,
-  // est pris d'un coup par celui qui l'a coupé (s'il le touche). Ses châteaux restent debout, isolés,
+  // est englobé d'un coup par le royaume qui l'entoure le plus. Ses châteaux restent debout, isolés,
   // avec les terres dans leur muraille.
   ENCLAVE_RATIO: 0.2,
   // Un royaume sans château ni église peut être attaqué de front : toutes ses troupes défendent d'office,

@@ -1610,18 +1610,29 @@ const GameRules = {
     }
   },
 
+  // Bonus du camp le plus nombreux : rien tant qu'il n'a pas 2 fois plus de soldats que l'autre,
+  // puis (rapport de force) / 2, au plus x5 (réglages NUMBERS_... dans config.js)
+  numbersBonus(mine, theirs) {
+    const ratio = mine / Math.max(theirs, 1);
+    return Math.min(CONFIG.NUMBERS_MAX_BONUS, Math.max(1, ratio / CONFIG.NUMBERS_THRESHOLD));
+  },
+
   // Combat entre l'assaut et les défenseurs envoyés : ce n'est pas instantané,
   // chaque tour une petite partie des soldats engagés tombe.
   fight(a) {
     const D = this.combatRatio(a);
     const total = a.defenders + (a.garrison || 0);
-    const base = Math.max(CONFIG.FIGHT_MIN_LOSS, CONFIG.FIGHT_RATE * Math.min(a.troops, total));
+    // Supériorité en nombre : le camp bien plus nombreux frappe plus vite et perd moins de soldats
+    // (un défenseur ne peut pas bloquer 300 soldats en envoyant 2 ou 3 hommes à la fois)
+    const atkBonus = this.numbersBonus(a.troops, total);
+    const defBonus = this.numbersBonus(total, a.troops);
+    const base = Math.max(CONFIG.FIGHT_MIN_LOSS, CONFIG.FIGHT_RATE * Math.min(a.troops, total)) * atkBonus * defBonus;
     const defLoss = Math.min(total, base);
     // La garnison combat en premier, puis les défenseurs envoyés
     const fromGarrison = Math.min(a.garrison || 0, defLoss);
     a.garrison = (a.garrison || 0) - fromGarrison;
     a.defenders -= defLoss - fromGarrison;
-    a.troops = Math.max(0, a.troops - defLoss * D);
+    a.troops = Math.max(0, a.troops - defLoss * D * defBonus / atkBonus);
     if (a.troops < 1) {
       const p = this.players[a.attacker], d = this.players[a.target];
       if (p.isHuman) UI.log(`💥 Ton assaut contre ${d.name} a été repoussé !`, 'warn', d);
@@ -1735,13 +1746,16 @@ const GameRules = {
       if (a.troops < cost) return this.endAttack(a);
       a.troops -= cost;
       a.frontTile = t;
-      // Prise d'un château : on note sa zone de défense (un peu élargie), l'assaut s'y arrêtera
+      // Prise d'un château : on note sa zone de défense (avant qu'elle ne change de mains)
       const castle = a.target >= 0 && this.building[t] === B_CASTLE ? this.anchor[t] : -1;
-      const zone = castle >= 0 ? this.castleZone(castle, a.target, 0, CONFIG.CASTLE_CAPTURE_EXTRA_RADIUS) : null;
+      const zone = castle >= 0 ? this.castleZone(castle, a.target, 0) : null;
       // Prendre une case entre deux cases du défenseur peut couper son royaume (voir captureEnclaves)
       if (a.target >= 0 && this.countNeighborsOwnedBy(t, a.target) >= 2) a.cut = true;
       this.setOwner(t, a.attacker);
-      if (zone) this.onCastleTaken(a, zone);
+      if (zone) {
+        this.onCastleTaken(a, castle, zone);
+        return this.endAttack(a);
+      }
       // Prise de l'église, du port ou de l'avant-poste visé : l'assaut s'arrête là
       const b = this.building[t];
       if (a.targetCastle >= 0 && b && b !== B_CASTLE && this.anchor[t] === a.targetCastle) {
@@ -1767,12 +1781,19 @@ const GameRules = {
     return a;
   },
 
-  onCastleTaken(a, zone) {
-    if (!a.limitZone) a.limitZone = new Set();
-    for (const i of zone) a.limitZone.add(i);
+  // Château pris : toute sa zone de défense passe d'un coup à l'attaquant, avec les moulins et casernes
+  // qui s'y trouvent (une église, un port ou un autre château reste au défenseur : il faut le viser)
+  onCastleTaken(a, castle, zone) {
     a.castleTaken = true;
+    for (const i of zone) {
+      if (this.owner[i] !== a.target) continue; // (déjà pris avec un bâtiment)
+      const b = this.building[i];
+      if (b && this.anchor[i] !== castle && TARGET_TYPES.includes(b)) continue;
+      this.setOwner(i, a.attacker);
+    }
+    a.cut = true; // la zone prise peut couper le royaume du défenseur (voir captureEnclaves)
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (p.isHuman) UI.log(`🏰 Tu as pris un château de ${d.name} ! Ton armée sécurise ses alentours.`, 'good', d);
+    if (p.isHuman) UI.log(`🏰 Tu as pris un château de ${d.name}, avec toute sa zone et ses bâtiments !`, 'good', d);
     else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn', p);
   },
 
