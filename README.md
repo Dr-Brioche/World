@@ -35,9 +35,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Contre un royaume, l'armée se **prépare pendant 5 secondes** avant d'attaquer :
    une ligne pointillée avec une bannière ⚔️ montre à tout le monde où elle va frapper.
    Les royaumes visés ont le temps de réagir… toi aussi !
-3. **Construis** : appuie sur `1`, `2` ou `3` pour poser le bâtiment **directement sous ta souris**
-   (ou clique sur un bouton en bas, puis sur ton territoire). Sur un de tes moulins ou châteaux,
-   la même touche l'**améliore** directement.
+3. **Construis** : appuie sur `1`, `2` ou `3` (ou clique sur un bouton en bas) : le bâtiment apparaît
+   **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    Il faut aussi laisser **2 cases d'écart** autour de chaque bâtiment (l'aperçu devient rouge si c'est trop près).
    Si un ennemi prend une seule de ces cases, il capture tout le bâtiment !
@@ -64,6 +63,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Zoome sur la carte pour voir apparaître l'image de chaque château et de chaque moulin !
 4. **Fais des alliances** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer une alliance.
    Les alliés ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer une alliance : accepte ou refuse.
+   **Qui est allié avec qui ?** Les petits carrés de couleur à côté de chaque royaume, dans le classement,
+   montrent ses alliés. Survole un royaume sur la carte pour voir ses alliances (lignes dorées 🤝),
+   ou appuie sur `A` (ou le bouton 🤝 du classement) pour afficher toutes les alliances.
    Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée.
    Mais attention, un **traître** 🗡️ le paie cher pendant 2 minutes : **sa défense est réduite de moitié**
    (ses terres coûtent 2x moins de soldats à prendre), personne ne veut s'allier avec lui,
@@ -72,10 +74,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 🌲 Chaque terrain a sa défense : plaine x1, forêt x1.6, colline x2.2, montagne x3.5. Plus elle est haute, plus la case coûte de soldats à conquérir.
 
-**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` = construire / améliorer sous la souris · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` = choisir un bâtiment (puis clic pour le poser) · `A` = afficher toutes les alliances · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.10** : alliances visibles pour tout le monde : carrés de couleur dans le classement, lignes dorées 🤝 au survol d'un royaume, touche `A` pour tout afficher · les touches `1`, `2`, `3` mettent le bâtiment sous la souris, un clic le pose
 - **v0.9.2** : les touches `1`, `2`, `3` posent le bâtiment directement sous la souris (ou l'améliorent)
 - **v0.9.1** : 2 cases d'écart obligatoires autour de chaque bâtiment, pour qu'ils ne se chevauchent plus
 - **v0.9** : les châteaux occupent 4x4 cases et paraissent plus grands sur la carte

@@ -54,7 +54,7 @@ html, body {
 #side {
   top: 8px;
   right: 8px;
-  width: 250px;
+  width: 280px;
 }
 #side h3 {
   margin: 0 0 4px;
@@ -68,6 +68,16 @@ html, body {
 #lb li { margin: 2px 0; white-space: nowrap; }
 #lb li.me { font-weight: bold; }
 #lb li.ally .nm { color: var(--good); font-weight: bold; }
+#lb .allies { display: inline-block; width: 30px; }
+#lb .allies i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 2px;
+  border: 1px solid var(--ink);
+}
+#allianceBtn { padding: 0 5px; font-size: 13px; vertical-align: middle; }
+#allianceBtn.active { background: var(--gold); }
 #lb .pct { display: inline-block; width: 42px; text-align: right; }
 #lb button { padding: 0 4px; margin-left: 4px; font-size: 13px; line-height: 18px; }
 #lb li > * { vertical-align: middle; }
