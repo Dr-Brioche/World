@@ -96,7 +96,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
    **Les moulins et casernes se construisent dans l'enceinte d'un de tes châteaux** (dans sa muraille),
-   **ou près d'une de tes églises** qui a encore de la place, pas ailleurs dans l'arrière-pays.
+   **ou près d'une de tes églises** (ou d'un port amélioré) qui a encore de la place, pas ailleurs dans l'arrière-pays.
    Les châteaux et les églises, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
    (l'aperçu devient rouge si c'est trop près).
@@ -165,11 +165,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      on peut l'attaquer directement, comme un château. **Toutes les 10 secondes**, il rapporte de l'or.
      **Clique dessus pour l'améliorer** (3 niveaux) :
 
-     | Niveau | Or produit | Expéditions maritimes | Prix |
-     |---|---|---|---|
-     | 1. Port | un peu | non | 💰 60 (puis plus cher à chaque port) |
-     | 2. Grand port | +100 % | **oui** | 💰 120 |
-     | 3. Port royal | +67 % | moitié prix, bateaux 80 % plus rapides | 💰 250 |
+     | Niveau | Or produit | Moulins ou casernes autour | Expéditions maritimes | Prix |
+     |---|---|---|---|---|
+     | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
+     | 2. Grand port | +100 % | 1 | **oui** | 💰 120 |
+     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** (comme un fort en bois) | 💰 250 |
+
+     Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 
@@ -177,7 +179,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    (au bord de la mer ou d'un fleuve) et choisis **⛵ Débarquer**. Un bateau part de ton port le plus rapide,
    navigue sur la mer et les fleuves (tout le monde le voit passer), puis débarque : tu prends une **petite
    zone en demi-cercle le long de la côte** et tu y bâtis un **avant-poste ⛺**. L'expédition coûte un peu d'or
-   (un peu plus à chaque avant-poste).
+   (un peu plus à chaque avant-poste) et emmène **le % de soldats choisi** avec le curseur « Envoyer » :
+   choisis bien avant de partir ! Une petite partie se perd en mer (1 % par seconde de traversée, 25 % au plus),
+   et **tous les soldats débarqués défendent l'avant-poste** : au-delà des mers, ton royaume ne peut pas lui
+   envoyer d'autres défenseurs.
    - On peut débarquer **partout** (terre libre ou ennemie), mais un débarquement **ne prend jamais
      un bâtiment** : il se pose juste à côté.
    - **Depuis l'avant-poste**, tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
@@ -201,7 +206,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    et la **production de tes moulins et casernes**, versée toutes les 10 secondes.
    Le jeu ne montre **pas de chiffres précis** (pas de « +X par seconde ») : seulement des pourcentages.
    À toi de voir ce qui marche le mieux !
-   La jauge en bas de l'écran montre tes soldats, et au-dessus si ton recrutement va bien. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
+   La jauge en bas de l'écran montre tes soldats, et au-dessus si ton recrutement va bien.
+   **Les soldats en garnison** (châteaux, port royal, avant-postes) **comptent aussi dans ton armée** :
+   ensemble, ils ne peuvent pas dépasser le maximum. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
    puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée est pleine.
    Envoie donc tes troupes au combat plutôt que de les garder !
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
@@ -220,6 +227,7 @@ Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une g
 
 ## 🆕 Nouveautés
 
+- **v0.32.1** : une expédition emmène le % de soldats choisi (petite perte en mer), qui défendent seuls l'avant-poste · le port royal (niveau 3) a une petite garnison · on peut construire 1 bâtiment autour d'un grand port, 3 autour d'un port royal · les soldats en garnison comptent dans l'armée maximum
 - **v0.32** : ⚓ nouveau bâtiment **port** (3 niveaux, au bord de l'eau, produit de l'or, attaquable) · ⛵ **expéditions maritimes** dès le niveau 2 : clic droit sur une côte → Débarquer, un bateau traverse la mer et plante un **avant-poste** ⛺ d'où l'on peut attaquer · menu d'actions au clic droit
 - **v0.31.1** : zone de jeu 50 % plus grande (carte de 294 x 192 cases, vue plus dézoomée au départ)
 - **v0.31** : les fleuves qui se rejoignent grossissent (2 fleuves = double largeur, 3 = grand fleuve infranchissable) · quelques lacs sur les fleuves · les fleuves naissent dans les montagnes · toujours de l'océan au bord de la carte (plus de terre coupée net)

@@ -248,9 +248,10 @@ const Render = {
     const G = Game, ctx = this.ctx, s = this.cam.scale;
     if (G.phase !== 'playing') return;
     let churches = [];
-    if (this.hover >= 0 && G.building[this.hover] === B_CHURCH && G.owner[this.hover] >= 0) churches = [G.anchor[this.hover]];
-    else if (UI.selectedBuild === B_MILL || UI.selectedBuild === B_BARRACKS) {
-      churches = G.buildingTiles.filter(a => G.building[a] === B_CHURCH && G.owner[a] === G.human.id);
+    if (this.hover >= 0 && G.owner[this.hover] >= 0 && G.building[this.hover] && G.hasSlots(G.anchor[this.hover])) {
+      churches = [G.anchor[this.hover]];
+    } else if (UI.selectedBuild === B_MILL || UI.selectedBuild === B_BARRACKS) {
+      churches = G.buildingTiles.filter(a => G.hasSlots(a) && G.owner[a] === G.human.id);
     }
     for (const ch of churches) {
       const zone = G.churchZone(ch), set = new Set(zone);
@@ -396,6 +397,14 @@ const Render = {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('⛵', x, y);
+      // soldats à bord (ils diminuent un peu pendant la traversée)
+      const aboard = e.sent - (e.sent - e.troops) * t;
+      ctx.font = '700 12px Georgia, serif';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+      ctx.fillStyle = '#fff';
+      ctx.strokeText('⚔ ' + fmt(aboard), x, y - 18);
+      ctx.fillText('⚔ ' + fmt(aboard), x, y - 18);
     }
   },
 
