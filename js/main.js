@@ -25,8 +25,12 @@ const UI = {
 
     $('startBtn').addEventListener('click', () => this.start());
     $('replayBtn').addEventListener('click', () => location.reload());
+    $('continueBtn').addEventListener('click', () => {
+      $('endscreen').classList.add('hidden');
+      Game.continueAfterVictory();
+      this.log('⚔️ La conquête continue ! Élimine les derniers royaumes si tu le souhaites.', 'good');
+    });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
-    $('allianceBtn').addEventListener('click', () => this.toggleAlliances());
     $('attacks').addEventListener('click', e => {
       const id = e.target.dataset.cancel;
       if (!id) return;
@@ -49,7 +53,6 @@ const UI = {
       }
       if (e.key === 'Escape') this.selectBuild(0);
       if (e.key === 'p' || e.key === 'P') this.togglePause();
-      if (e.key === 'a' || e.key === 'A') this.toggleAlliances();
     });
   },
 
@@ -75,13 +78,7 @@ const UI = {
   // Infobulle des petits carrés d'alliés dans le classement
   alliesTitle(p) {
     const names = Game.allies(p.id).map(o => o.name);
-    return escapeHtml(names.length ? 'Alliés : ' + names.join(', ') : 'Aucun allié');
-  },
-
-  // Afficher / cacher toutes les lignes d'alliance sur la carte
-  toggleAlliances() {
-    this.showAlliances = !this.showAlliances;
-    $('allianceBtn').classList.toggle('active', this.showAlliances);
+    return escapeHtml(names.length ? `${Game.pactName(p)} : avec ${names.join(', ')}` : 'Aucun pacte');
   },
 
   togglePause() {
@@ -181,13 +178,19 @@ const UI = {
     this.pending.add(from.id);
     const el = document.createElement('div');
     el.className = 'msg request';
-    el.innerHTML = `🤝 <b>${escapeHtml(from.name)}</b> te propose une alliance.` +
+    const h = Game.human;
+    const text = from.pact >= 0 ? `t'invite dans le <b>${escapeHtml(Game.pactName(from))}</b>.`
+      : h.pact >= 0 ? `veut rejoindre ton <b>${escapeHtml(Game.pactName(h))}</b>.`
+      : 'te propose de former un pacte.';
+    el.innerHTML = `🤝 <b>${escapeHtml(from.name)}</b> ${text}` +
       `<div class="choices"><button data-yes>Accepter</button><button data-no>Refuser</button></div>`;
     const answer = yes => {
       if (!this.pending.has(from.id)) return;
       this.pending.delete(from.id);
       el.remove();
-      if (yes && from.alive && Game.human.alive) Game.makeAlliance(from.id, Game.human.id);
+      const block = Game.pactBlock(from.id, Game.human.id);
+      if (yes && block) this.log(block, 'warn'); // la situation a changé entre-temps
+      if (yes && !block && from.alive && Game.human.alive) Game.makeAlliance(from.id, Game.human.id);
       else Game.refuseAlliance(from.id, Game.human.id);
     };
     el.querySelector('[data-yes]').addEventListener('click', () => answer(true));
@@ -197,16 +200,19 @@ const UI = {
     return true;
   },
 
-  showEnd(win) {
+  // canContinue = il reste des royaumes rivaux : bouton « Continuer » pour finir la conquête
+  showEnd(win, canContinue = false) {
     const h = Game.human, secs = Math.floor(Game.tick / CONFIG.TICKS_PER_SECOND);
     $('endTitle').textContent = win ? '🏆 Victoire !' : '💀 Défaite...';
     $('endText').textContent = win
-      ? `Longue vie au royaume de ${h.name} ! Tu domines le continent.`
+      ? (canContinue ? `Longue vie au royaume de ${h.name} ! Tu domines le continent.`
+        : `${h.name} a conquis le monde entier ! Plus aucun royaume ne te résiste.`)
       : `Le royaume de ${h.name} est tombé. Les chroniques s'en souviendront...`;
     $('endStats').innerHTML =
       `⏱️ Durée : ${Math.floor(secs / 60)} min ${secs % 60} s<br>` +
       `🗺️ Plus grand territoire : ${(h.maxTiles / Game.landCount * 100).toFixed(1)} %<br>` +
       `☠️ Royaumes anéantis : ${h.kills}`;
+    $('continueBtn').classList.toggle('hidden', !canContinue);
     $('endscreen').classList.remove('hidden');
   },
 

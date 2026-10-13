@@ -59,9 +59,8 @@ const AI = {
 
   // Propose une alliance à un voisin
   tryAlliance(p) {
-    if (Game.allies(p.id).length >= 2) return;
     const candidates = [...Game.neighborStats(p.id).keys()]
-      .filter(o => o >= 0 && !Game.areAllied(p.id, o)
+      .filter(o => o >= 0 && !Game.areAllied(p.id, o) && !Game.pactBlock(p.id, o) && !Game.isTraitor(Game.players[o])
         && !Game.attacks.some(a => !a.done && a.attacker === p.id && a.target === o));
     if (candidates.length) Game.proposeAlliance(p.id, candidates[(Math.random() * candidates.length) | 0]);
   },

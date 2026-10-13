@@ -48,14 +48,15 @@ const CONFIG = {
   RECOVER_GROWTH_FACTOR: 0.5,      // pendant ce repos, l'attaquant recrute 2x moins vite...
   RALLY_GROWTH_FACTOR: 1.5,        // ...et le défenseur 1.5x plus vite, pour se réorganiser
 
-  // --- Alliances ---
+  // --- Alliances (pactes) ---
+  MAX_PACT_SIZE: 3,              // nombre maximum de royaumes dans un même pacte
   ALLIANCE_REFUSAL_COOLDOWN: 30, // secondes avant de redemander au même royaume
   TRAITOR_DURATION: 120,         // secondes pendant lesquelles un traître est mal vu
   TRAITOR_DEFENSE_MALUS: 0.5,    // les terres d'un traître coûtent 2x moins cher à prendre
   ALLIANCE_REQUEST_TIMEOUT: 15,  // secondes pour répondre à une demande d'alliance
 
   // --- Victoire ---
-  WIN_RATIO: 0.6,          // posséder 60 % des terres = victoire
+  WIN_RATIO: 0.85,         // posséder 85 % des terres = victoire
 };
 
 const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4 };
