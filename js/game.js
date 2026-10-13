@@ -95,19 +95,16 @@ const GameRules = {
   // Un royaume « ami » : soi-même ou un allié du même pacte
   isFriend(pid, o) { return o === pid || (o >= 0 && this.areAllied(pid, o)); },
 
-  // La case touche-t-elle notre territoire ou celui d'un allié du pacte ?
-  // (on peut attaquer depuis les terres de ses alliés, même sans être voisin soi-même)
-  // Un petit morceau coupé du royaume (un château isolé) ne compte pas : aucune armée ne peut partir de là.
+  // La case touche-t-elle notre propre territoire ? (on n'attaque que depuis ses terres, jamais depuis
+  // celles d'un allié). Un petit morceau coupé du royaume (un château isolé) ne compte pas : aucune armée
+  // ne peut partir de là.
   // source (facultatif) : seulement les terres d'où part cette armée (-1 = le royaume, sinon un avant-poste)
-  // ownOnly : seulement ses propres terres (pour prendre des terres libres, pas depuis celles des alliés)
-  touchesFriend(i, pid, source, ownOnly) {
+  touchesOwn(i, pid, source) {
     let found = false;
     this.forNeighbors(i, n => {
-      if (found || !this.isFriend(pid, this.owner[n])) return;
-      if (ownOnly && this.owner[n] !== pid) return;
+      if (found || this.owner[n] !== pid) return;
       if (source === undefined) { if (this.isBase(n)) found = true; return; }
-      const s = this.owner[n] === pid ? this.sourceOf(n) : (this.isBase(n) ? -1 : null);
-      if (s === source) found = true;
+      if (this.sourceOf(n) === source) found = true;
     });
     return found;
   },
@@ -851,10 +848,11 @@ const GameRules = {
   },
 
   // Encerclement : un petit morceau du royaume target (moins de ENCLAVE_RATIO de son territoire),
-  // coupé de son cœur, est englobé d'un coup par le royaume qui l'entoure le plus (celui qui a le plus
-  // de frontière avec lui). Les châteaux qui s'y trouvent restent au royaume target, avec les terres
-  // dans leur muraille (et leurs moulins et casernes, qui continuent de produire) : ils tiennent seuls, isolés.
-  captureEnclaves(target) {
+  // coupé de son cœur, est englobé d'un coup, avec tout ce qu'il contient (châteaux, églises, bâtiments…),
+  // par le royaume qui l'a coupé (cutter). Ainsi un royaume reste d'un seul tenant.
+  // Sans coupeur connu (ou s'il ne touche pas le morceau), c'est le royaume qui l'entoure le plus qui le prend.
+  // Seule exception : un morceau avec un avant-poste ou une colonie (invasion par la mer) se défend.
+  captureEnclaves(target, cutter = -1) {
     const T = this.players[target];
     if (!T.alive) return;
     const r = this.regions(), pieces = [];
@@ -864,10 +862,7 @@ const GameRules = {
       pieces.push(Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k])));
     }
     for (const tiles of pieces) {
-      // Les châteaux de ce morceau, et ce qui est dans leur muraille, restent au royaume
-      const keep = tiles.filter(i => this.building[i] === B_CASTLE && this.anchor[i] === i);
-      const walled = i => keep.some(c => this.inCastleRange(c, i % this.W, (i / this.W) | 0, this.castleInfo(c).radius));
-      // Le royaume qui entoure le plus ce morceau (pas un allié de target)
+      // Les royaumes qui touchent ce morceau (pas les alliés de target), avec la longueur de leur frontière
       const around = new Map();
       for (const i of tiles) {
         this.forNeighbors(i, n => {
@@ -876,34 +871,30 @@ const GameRules = {
         });
       }
       let winner = -1, best = 0;
-      for (const [o, c] of around) if (c > best && this.players[o].alive) { best = c; winner = o; }
+      if (around.has(cutter) && this.players[cutter].alive) winner = cutter;
+      else for (const [o, c] of around) if (c > best && this.players[o].alive) { best = c; winner = o; }
       if (winner < 0) continue;
-      let took = 0;
+      // Les garnisons du morceau se rendent : le vainqueur prend les bâtiments vides
+      let castles = 0;
       for (const i of tiles) {
-        if (this.owner[i] !== target || this.building[i] === B_CASTLE || walled(i)) continue;
-        // un bâtiment à cheval sur la muraille reste au royaume
-        if (this.building[i] && this.footprint(this.anchor[i], this.building[i]).some(walled)) continue;
-        this.setOwner(i, winner);
-        took++;
+        if (!this.building[i] || this.anchor[i] !== i) continue;
+        this.garrison[i] = 0;
+        if (this.building[i] === B_CASTLE) castles++;
       }
-      if (!took) continue;
+      for (const i of tiles) if (this.owner[i] === target) this.setOwner(i, winner);
       const A = this.players[winner];
-      const castleTxt = keep.length ? (keep.length > 1 ? ' Ses châteaux, eux, tiennent encore, isolés.' : ' Son château, lui, tient encore, isolé.') : '';
-      if (A.isHuman) UI.log(`✂️ Des terres ${this.deName(T.name)}, coupées de leur royaume, sont englobées par le tien !${castleTxt}`, 'good', T);
-      else if (T.isHuman) {
-        UI.log(`✂️ Une partie de ton royaume, coupée du reste, est englobée par ${A.name} !` +
-          (keep.length ? ' Ton château isolé tient encore : clique dessus pour lancer un assaut qui le relie à ton royaume.' : ''), 'warn', A);
-      }
+      const castleTxt = castles ? (castles > 1 ? ` avec ${castles} châteaux` : ' avec un château') : '';
+      if (A.isHuman) UI.log(`✂️ Des terres ${this.deName(T.name)}, coupées de leur royaume, sont englobées par le tien${castleTxt} !`, 'good', T);
+      else if (T.isHuman) UI.log(`✂️ Une partie de ton royaume${castleTxt}, coupée du reste, est englobée par ${A.name} !`, 'warn', A);
     }
   },
 
   // --- Attaques ---
-  // (les terres libres ne se prennent que depuis son propre territoire ; les assauts contre un royaume
-  //  peuvent partir des terres de ses alliés)
+  // (on n'attaque que depuis son propre territoire, ou depuis un avant-poste)
   buildFrontier(pid, target, source) {
     const list = [];
     for (let i = 0; i < this.N; i++) {
-      if (this.owner[i] === target && this.isLand(i) && this.touchesFriend(i, pid, source, target < 0)) list.push(i);
+      if (this.owner[i] === target && this.isLand(i) && this.touchesOwn(i, pid, source)) list.push(i);
     }
     return list;
   },
@@ -1047,7 +1038,7 @@ const GameRules = {
     const heap = new MinHeap();
     const start = i => { dist[i] = this.tileDefense(target, i); prev[i] = -1; heap.push(dist[i], i); };
     if (from >= 0) start(from);
-    else for (let i = 0; i < this.N; i++) if (passable(i) && this.touchesFriend(i, pid, source)) start(i);
+    else for (let i = 0; i < this.N; i++) if (passable(i) && this.touchesOwn(i, pid, source)) start(i);
     while (heap.size) {
       const [d, i] = heap.pop();
       if (done[i]) continue;
@@ -1137,7 +1128,7 @@ const GameRules = {
     const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
     const done = new Uint8Array(this.N), heap = new MinHeap();
     for (let i = 0; i < this.N; i++) {
-      if (passable(i) && this.touchesFriend(i, pid)) {
+      if (passable(i) && this.touchesOwn(i, pid)) {
         dist[i] = this.tileDefense(o, i);
         prev[i] = -1;
         heap.push(dist[i], i);
@@ -1987,7 +1978,7 @@ const GameRules = {
     for (const a of this.attacks.slice()) if (!a.done) this.stepAttack(a);
     // Un assaut a pu couper un royaume en morceaux : les petits morceaux encerclés sont pris
     for (const a of this.attacks) {
-      if (a.cut) { a.cut = false; this.captureEnclaves(a.target); }
+      if (a.cut) { a.cut = false; this.captureEnclaves(a.target, a.attacker); }
     }
     this.attacks = this.attacks.filter(a => !a.done);
     this.stepExpeditions();
