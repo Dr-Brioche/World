@@ -33,12 +33,18 @@ const CONFIG = {
 
   // --- Combat ---
   ATTACK_SPEED: 0.15,          // vitesse de conquête
+  ATTACK_PREP_TIME: 5,         // secondes de préparation avant d'attaquer un royaume
   NEUTRAL_TILE_COST: 2,        // soldats perdus pour prendre une case libre
   ENEMY_TILE_BASE_COST: 8,     // soldats perdus pour prendre une case ennemie
   DENSITY_FACTOR: 1.0,         // plus l'ennemi a de soldats par case, plus c'est dur
   DEFENDER_LOSS: 0.5,          // part des pertes infligées au défenseur
   CASTLE_RADIUS: 8,            // rayon de protection d'un château
   CASTLE_DEFENSE: 2,           // les cases protégées coûtent x2 à prendre
+
+  // --- Alliances ---
+  ALLIANCE_REFUSAL_COOLDOWN: 30, // secondes avant de redemander au même royaume
+  TRAITOR_DURATION: 120,         // secondes pendant lesquelles un traître est mal vu
+  ALLIANCE_REQUEST_TIMEOUT: 15,  // secondes pour répondre à une demande d'alliance
 
   // --- Victoire ---
   WIN_RATIO: 0.6,          // posséder 60 % des terres = victoire
