@@ -136,6 +136,7 @@ const BANNERS = [
   { name: "Arbre de vie", img: 'img/bannieres/b16.webp', color: [11, 137, 122] }, // turquoise
   { name: "Hache", img: 'img/bannieres/b21.webp', color: [237, 234, 228] }, // blanc
   { name: "Bouclier", img: 'img/bannieres/b22.webp', color: [35, 34, 34] }, // noir
+  { name: "Poissons", img: 'img/bannieres/b25.webp', color: [185, 192, 199] }, // gris clair
 ];
 
 // Les noms des royaumes contrôlés par l'ordinateur (ils reçoivent une bannière au hasard).

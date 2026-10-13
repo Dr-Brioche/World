@@ -83,6 +83,7 @@ html, body {
 .lbb { height: 22px; vertical-align: middle; margin-right: 4px; }
 .msg .bn, .attack .bn { height: 22px; vertical-align: middle; margin-right: 4px; }
 #kBanner { height: 26px; vertical-align: middle; }
+#kName { text-shadow: 0 0 2px #000, 0 0 1px #000; } /* lisible même avec une bannière claire */
 .pickTitle { text-align: left; margin: 10px 0 4px; }
 #bannerPick { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
 #bannerPick button { padding: 2px; background: transparent; border: 2px solid transparent; }
