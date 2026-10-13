@@ -53,7 +53,9 @@ const AI = {
       if (aim === -1) continue;
       const garrison = aim === null ? 0 : Game.garrison[aim];
       // Un château isolé ne reçoit pas de défenseurs : seule sa garnison le défend (proie facile !)
-      const helpers = aim !== null && Game.isIsolatedCastle(aim) ? 0 : e.troops * 0.5;
+      // (sans château ni église, toutes ses troupes défendent d'office, mais à 0.8)
+      const helpers = aim === null ? e.troops * CONFIG.LEADERLESS_DEFENSE
+        : Game.isIsolatedCastle(aim) ? 0 : e.troops * 0.5;
       const power = Game.troopPower(o) / Game.troopPower(p.id); // force des soldats des deux camps
       let score = p.troops * 0.7 / ((helpers + garrison) * plan.D * power + 1) + Math.random() * 0.3;
       if (e.isHuman) score += Game.difficulty.hateHuman;

@@ -53,6 +53,9 @@ const CONFIG = {
   // est pris d'un coup par celui qui l'a coupé (s'il le touche). Ses châteaux restent debout, isolés,
   // avec les terres dans leur muraille.
   ENCLAVE_RATIO: 0.2,
+  // Un royaume sans château ni église peut être attaqué de front : toutes ses troupes défendent d'office,
+  // mais désorganisées (sans pouvoir en place), chaque soldat ne compte que pour 0.8.
+  LEADERLESS_DEFENSE: 0.8,
   // Un château isolé peut être relié à nouveau par un assaut lancé depuis le royaume (en cliquant dessus).
   // S'il arrive, sa route s'élargit de 2 cases de chaque côté.
   LINK_WIDEN_RADIUS: 2,
