@@ -36,8 +36,10 @@ const AI = {
       if (score > bestScore) { bestScore = score; best = o; }
     }
     const full = p.troops >= max * 0.95;
-    if (best !== null && (bestScore > 1 || (full && bestScore > 0.5))) {
-      Game.launchAttack(p.id, best, p.troops * 0.5);
+    // Un royaume avec des châteaux s'attaque en visant l'un d'eux (le plus proche atteignable)
+    const aim = best !== null ? Game.pickCastleTarget(p.id, best) : -1;
+    if (best !== null && aim !== -1 && (bestScore > 1 || (full && bestScore > 0.5))) {
+      Game.launchAttack(p.id, best, p.troops * 0.5, aim === null ? undefined : aim);
     } else if (nb.has(-1)) {
       Game.launchAttack(p.id, -1, p.troops * 0.3);
     } else if (best === null && full && Math.random() < 0.15) {
@@ -73,8 +75,10 @@ const AI = {
       if (!victim || Game.players[o].troops < victim.troops) victim = Game.players[o];
     }
     if (!victim) return;
+    const aim = Game.pickCastleTarget(p.id, victim.id);
+    if (aim === -1) return; // aucun château atteignable : on ne trahit pas pour rien
     Game.breakAlliance(p.id, victim.id);
-    Game.launchAttack(p.id, victim.id, p.troops * 0.5);
+    Game.launchAttack(p.id, victim.id, p.troops * 0.5, aim === null ? undefined : aim);
   },
 
   tryBuild(p) {

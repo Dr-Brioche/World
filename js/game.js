@@ -124,20 +124,37 @@ const Game = {
     const n = this.sizeOf(type);
     if (a < 0 || a % this.W > this.W - n || ((a / this.W) | 0) > this.H - n) return false;
     return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j])
-      && !this.tooCloseToBuilding(a, type);
+      && this.insideWalls(pid, a, type) && !this.tooCloseToBuilding(a, type);
   },
 
-  // Y a-t-il un bâtiment à moins de BUILDING_SPACING cases autour de cet emplacement ?
-  // (une zone invisible autour de chaque bâtiment, pour éviter qu'ils se chevauchent)
+  // Moulins et casernes se construisent seulement dans l'enceinte d'un de ses châteaux
+  // (pas dans l'arrière-pays). Les châteaux, eux, se construisent partout sur son territoire.
+  insideWalls(pid, a, type) {
+    if (type === B_CASTLE) return true;
+    return this.footprint(a, type).every(j => this.castleProtects(pid, j));
+  },
+
+  // Écart obligatoire entre deux bâtiments : CASTLE_SPACING si l'un des deux est un château,
+  // sinon BUILDING_SPACING (une zone invisible autour de chaque bâtiment)
+  spacingBetween(t1, t2) {
+    return t1 === B_CASTLE || t2 === B_CASTLE ? CONFIG.CASTLE_SPACING : CONFIG.BUILDING_SPACING;
+  },
+
+  // Renvoie l'écart manquant (en cases) si un bâtiment est trop près de cet emplacement, sinon 0
   tooCloseToBuilding(a, type) {
-    const n = this.sizeOf(type), m = CONFIG.BUILDING_SPACING;
+    const n = this.sizeOf(type), m = Math.max(CONFIG.BUILDING_SPACING, CONFIG.CASTLE_SPACING);
     const x0 = a % this.W, y0 = (a / this.W) | 0;
     for (let y = Math.max(0, y0 - m); y <= Math.min(this.H - 1, y0 + n - 1 + m); y++) {
       for (let x = Math.max(0, x0 - m); x <= Math.min(this.W - 1, x0 + n - 1 + m); x++) {
-        if (this.building[y * this.W + x]) return true;
+        const t = this.building[y * this.W + x];
+        if (!t) continue;
+        // nombre de cases vides entre cette case de bâtiment et l'emplacement
+        const gap = Math.max(x0 - x - 1, x - (x0 + n), y0 - y - 1, y - (y0 + n));
+        const need = this.spacingBetween(type, t);
+        if (gap < need) return need;
       }
     }
-    return false;
+    return 0;
   },
 
   placeBuilding(i, type) {
@@ -365,8 +382,11 @@ const Game = {
   tryBuild(p, i, type) {
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
+      if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
+        return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux (pas dans l'arrière-pays).`;
+      }
       if (i >= 0 && this.tooCloseToBuilding(i, type)) {
-        return `Trop près d'un autre bâtiment : il faut ${CONFIG.BUILDING_SPACING} cases d'écart.`;
+        return `Trop près d'un autre bâtiment : il faut ${this.tooCloseToBuilding(i, type)} cases d'écart.`;
       }
       return `Il faut ${n}x${n} cases libres sur ton territoire (pas de mer).`;
     }
@@ -404,9 +424,25 @@ const Game = {
     if (frontier.length === 0) {
       return target < 0 ? 'Aucune terre libre à ta frontière.' : `Tu n'as pas de frontière avec ${this.players[target].name}.`;
     }
+    // Un royaume qui a encore des châteaux ne s'attaque qu'en visant un de ses châteaux.
+    // Sans château, on peut attaquer tout son territoire de front.
+    let castle = -1, path = null;
+    if (target >= 0 && this.castlesOf(target).length) {
+      const name = this.players[target].name;
+      if (aimTile !== undefined && this.building[aimTile] === B_CASTLE && this.owner[aimTile] === target) {
+        castle = this.anchor[aimTile];
+      }
+      if (castle < 0) return `${name} est protégé par ses châteaux : clique sur l'un d'eux pour lancer un assaut.`;
+      path = this.castlePath(pid, castle);
+      if (!path) {
+        return `Impossible d'atteindre ce château : d'autres fortifications ${this.deName(name)} bloquent le passage. ` +
+          'Prends d\'abord les châteaux de la frontière.';
+      }
+    }
     let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target);
+    if (a && a.targetCastle !== castle) return `Un assaut contre ${this.players[target].name} est déjà en cours.`;
     if (!a) {
-      a = { id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false, startTick: this.tick };
+      a = { id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false, startTick: this.tick, targetCastle: castle };
       if (target >= 0) {
         // Contre un royaume, l'armée se prépare d'abord : tout le monde la voit venir
         a.startTick = this.tick + CONFIG.ATTACK_PREP_TIME * CONFIG.TICKS_PER_SECOND;
@@ -420,9 +456,73 @@ const Game = {
     }
     a.list = frontier;
     a.set = new Set(frontier);
+    if (castle >= 0 && !a.castleTaken) a.limitZone = this.corridor(castle, path);
     p.troops -= troops;
     a.troops += troops;
     return null;
+  },
+
+  // « de Bourgogne » mais « d'Aragon »
+  deName(name) { return (/^[AEIOUÉÈÊÂÎÔY]/i.test(name) ? "d'" : 'de ') + name; },
+
+  castlesOf(pid) { return this.castles.filter(c => this.owner[c] === pid); },
+
+  // Pour un assaut sur le château c : peut-on passer par cette case ? Oui si elle est au défenseur
+  // et n'est pas protégée par un de ses AUTRES châteaux (la zone du château visé, elle, se traverse).
+  castlePassable(c) {
+    const target = this.owner[c], R = this.castleInfo(c).radius;
+    const others = this.castles.filter(o => o !== c && this.owner[o] === target);
+    return i => {
+      if (this.owner[i] !== target) return false;
+      const x = i % this.W, y = (i / this.W) | 0;
+      if (this.inCastleRange(c, x, y, R)) return true;
+      return !others.some(o => this.inCastleRange(o, x, y, this.castleInfo(o).radius));
+    };
+  },
+
+  // Chemin le plus court de la frontière de pid jusqu'au château c, en contournant les
+  // autres fortifications du défenseur. Renvoie la liste des cases, ou null s'il n'y en a pas.
+  castlePath(pid, c) {
+    const passable = this.castlePassable(c), foot = new Set(this.footprint(c, B_CASTLE));
+    const prev = new Int32Array(this.N).fill(-2), queue = [];
+    for (let i = 0; i < this.N; i++) {
+      if (passable(i) && this.hasNeighborOwnedBy(i, pid)) { prev[i] = -1; queue.push(i); }
+    }
+    for (let h = 0; h < queue.length; h++) {
+      const i = queue[h];
+      if (foot.has(i)) {
+        const path = [];
+        for (let j = i; j >= 0; j = prev[j]) path.push(j);
+        return path.reverse();
+      }
+      this.forNeighbors(i, n => {
+        if (prev[n] === -2 && passable(n)) { prev[n] = i; queue.push(n); }
+      });
+    }
+    return null;
+  },
+
+  // Couloir de l'assaut : le chemin, une case de chaque côté, et le château lui-même
+  corridor(c, path) {
+    const passable = this.castlePassable(c), zone = new Set(this.footprint(c, B_CASTLE));
+    for (const i of path) {
+      zone.add(i);
+      this.forNeighbors(i, n => { if (passable(n)) zone.add(n); });
+    }
+    return zone;
+  },
+
+  // Pour les bots : quel château viser ? null = pas de château (attaque de front),
+  // -1 = aucun château atteignable, sinon le château le plus proche.
+  pickCastleTarget(pid, target) {
+    const castles = this.castlesOf(target);
+    if (!castles.length) return null;
+    let best = -1, bestLen = Infinity;
+    for (const c of castles) {
+      const path = this.castlePath(pid, c);
+      if (path && path.length < bestLen) { bestLen = path.length; best = c; }
+    }
+    return best;
   },
 
   // Flèche de l'attaque : du cœur du royaume attaquant vers la case visée
@@ -490,6 +590,15 @@ const Game = {
       // Fin de la préparation : la frontière a pu bouger entre-temps
       a.list = this.buildFrontier(a.attacker, a.target);
       a.set = new Set(a.list);
+      // Assaut sur un château : le chemin est-il toujours libre ?
+      if (a.targetCastle >= 0 && !a.castleTaken) {
+        const path = this.owner[a.targetCastle] === a.target ? this.castlePath(a.attacker, a.targetCastle) : null;
+        if (!path) {
+          if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers le château est bloqué : assaut annulé.', 'warn');
+          return this.endAttack(a);
+        }
+        a.limitZone = this.corridor(a.targetCastle, path);
+      }
     }
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
     // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5). On avance donc vite en plaine
@@ -661,8 +770,7 @@ const Game = {
     if (this.areAllied(a, b) || this.pactBlock(a, b)) return;
     if (pa.pact < 0 && pb.pact < 0) {
       const id = this.nextPactId++;
-      const de = /^[AEIOUÉÈÊÂÎÔY]/i.test(pa.name) ? "d'" : 'de ';
-      this.pacts.set(id, { name: `Pacte ${de}${pa.name}` });
+      this.pacts.set(id, { name: `Pacte ${this.deName(pa.name)}` });
       pa.pact = pb.pact = id;
       UI.log(`🤝 ${pa.name} et ${pb.name} forment le ${this.pacts.get(id).name} !`, 'good');
     } else {
