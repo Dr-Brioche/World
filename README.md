@@ -57,8 +57,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
    le bouton **✖ Annuler** fait rentrer les survivants au royaume.
    Les attaques ennemies contre toi y apparaissent aussi, en rouge.
-   **Si tu es dans un pacte**, tu peux aussi attaquer les terres qui touchent celles de tes alliés,
-   même si tu n'es pas toi-même voisin.
+   **Si tu es dans un pacte**, tu peux aussi lancer des assauts contre les royaumes qui touchent tes alliés,
+   même si tu n'es pas toi-même voisin. Mais les **terres libres**, elles, ne se prennent que depuis ton propre territoire.
 
    **⚔️ Le déroulement d'un assaut**
    - **Préparation (10 s)** : une ligne pointillée et une bannière ⚔️ à ta couleur montrent à tout le monde
@@ -260,6 +260,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.34.4** : depuis les terres d'un allié, on peut lancer des assauts, mais plus prendre des terres libres
 - **v0.34.3** : clic droit sur un royaume : « 🤝 Proposer une alliance » (ou « 💔 Rompre l'alliance » avec un allié)
 - **v0.34.2** : un bouclier 🛡️ au-dessus des châteaux, ports royaux et avant-postes montre les soldats de leur garnison (et ⚔ les soldats stationnés d'un avant-poste)
 - **v0.34.1** : menu de départ : bannières plus grandes, règles repliées (on clique pour les dérouler)
