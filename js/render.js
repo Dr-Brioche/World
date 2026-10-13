@@ -365,44 +365,45 @@ const Render = {
   },
 
   // Routes des châteaux (niveau 2 : chemins de terre, niveau 3 : routes pavées)
+  // Tracé en lignes droites avec un coin à 90°, comme des rails.
+  // On dessine d'abord TOUS les contours, puis TOUS les intérieurs : ainsi les routes
+  // se fondent aux carrefours au lieu de se couper les unes les autres.
   drawRoads(ox, oy) {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     const w = Math.max(2, s * 0.55);
-    ctx.lineCap = 'square';
-    ctx.lineJoin = 'miter';
+    const dirt = new Path2D(), paved = new Path2D();
     for (const [a, link] of G.roads()) {
       const c = link.castle, hc = G.sizeOf(B_CASTLE) / 2, hb = G.sizeOf(G.building[a]) / 2;
       const x1 = ox + (c % G.W + hc) * s, y1 = oy + (((c / G.W) | 0) + hc) * s;
       const x2 = ox + (a % G.W + hb) * s, y2 = oy + (((a / G.W) | 0) + hb) * s;
-      // Tracé en lignes droites avec un coin à 90°, comme des rails :
       // d'abord à l'horizontale puis à la verticale (ou l'inverse, selon le bâtiment)
       const [cx, cy] = a % 2 ? [x2, y1] : [x1, y2];
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(cx, cy);
-      ctx.lineTo(x2, y2);
-      if (link.road === 'paved') {
-        ctx.lineWidth = w + 2;
-        ctx.strokeStyle = 'rgba(60,58,54,0.85)';
-        ctx.stroke();
-        ctx.lineWidth = w;
-        ctx.strokeStyle = '#b4b0a6';
-        ctx.stroke();
-        if (s >= 6) { // pavés
-          ctx.setLineDash([w * 0.5, w * 0.35]);
-          ctx.lineWidth = w * 0.6;
-          ctx.strokeStyle = '#8f8b82';
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-      } else {
-        ctx.lineWidth = w + 1.5;
-        ctx.strokeStyle = 'rgba(95,68,36,0.7)';
-        ctx.stroke();
-        ctx.lineWidth = w;
-        ctx.strokeStyle = '#b38a55';
-        ctx.stroke();
-      }
+      const path = link.road === 'paved' ? paved : dirt;
+      path.moveTo(x1, y1);
+      path.lineTo(cx, cy);
+      path.lineTo(x2, y2);
+    }
+    ctx.lineCap = 'square';
+    ctx.lineJoin = 'miter';
+    // 1. Contours sombres de toutes les routes
+    ctx.lineWidth = w + 2;
+    ctx.strokeStyle = 'rgba(95,68,36,0.7)';
+    ctx.stroke(dirt);
+    ctx.strokeStyle = 'rgba(60,58,54,0.85)';
+    ctx.stroke(paved);
+    // 2. Intérieurs
+    ctx.lineWidth = w;
+    ctx.strokeStyle = '#b38a55';
+    ctx.stroke(dirt);
+    ctx.strokeStyle = '#b4b0a6';
+    ctx.stroke(paved);
+    // 3. Pavés, visibles en zoomant
+    if (s >= 6) {
+      ctx.setLineDash([w * 0.5, w * 0.35]);
+      ctx.lineWidth = w * 0.6;
+      ctx.strokeStyle = '#8f8b82';
+      ctx.stroke(paved);
+      ctx.setLineDash([]);
     }
     ctx.lineCap = 'butt';
     ctx.lineJoin = 'round';
