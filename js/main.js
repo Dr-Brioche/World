@@ -64,8 +64,12 @@ const UI = {
     window.addEventListener('keydown', e => {
       if (Game.phase !== 'playing' || e.target.tagName === 'INPUT') return;
       // Touche 1, 2 ou 3 : le bâtiment suit la souris, un clic le pose (même touche = annuler)
-      if (e.key >= '1' && e.key <= String(BUILDINGS.length - 1)) {
-        this.selectBuild(this.selectedBuild === +e.key ? 0 : +e.key);
+      // On regarde la touche physique (e.code) : sur un clavier AZERTY, la touche « 1 » du haut
+      // donne « & » sans Maj, « 2 » donne « é », « 3 » donne « " ». Le pavé numérique marche aussi.
+      const m = /^(Digit|Numpad)(\d)$/.exec(e.code);
+      const n = m ? +m[2] : 0;
+      if (n >= 1 && n < BUILDINGS.length) {
+        this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
       if (e.key === 'Escape') this.selectBuild(0);
       if (e.key === 'p' || e.key === 'P') this.togglePause();
@@ -132,15 +136,33 @@ const UI = {
     else if (res !== 'accepted') this.log(res, 'warn');
   },
 
-  // Ce que rapporte un niveau de bâtiment, en quelques mots
+  // Ce que rapporte un niveau de bâtiment, en quelques mots.
+  // On ne montre pas de chiffres précis : seulement des pourcentages.
   levelEffect(type, info) {
     if (type === B_CASTLE) {
       const road = info.road === 'paved' ? 'routes pavées' : 'chemins de terre';
-      return `+${info.bonus} défense, rayon ${info.radius}, garnison ${fmt(info.garrison)}` +
-        (info.road ? `, ${road} : +${Math.round(info.roadBonus * 100)} % moulins et casernes proches` : '');
+      return `défense des murs ${pct(info.bonus)}` +
+        (info.road ? `, ${road} : production des bâtiments reliés ${pct(info.roadBonus)}` : '');
     }
-    if (type === B_BARRACKS) return `+${fmt(info.maxTroops)} soldats max, +${Math.round(info.growth * 100)} % recrutement`;
-    return `+${info.gold} or/s`;
+    if (type === B_BARRACKS) return `soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande`;
+    return `or toutes les ${CONFIG.PRODUCTION_INTERVAL} s`;
+  },
+
+  // Ce que change une amélioration, en pourcentages par rapport au niveau actuel
+  upgradeEffect(type, cur, next) {
+    if (type === B_CASTLE) {
+      let txt = `muraille plus grande, défense des murs ${pct(next.bonus - cur.bonus)}, ` +
+        `garnison ${pct(next.garrison / cur.garrison - 1)}`;
+      if (next.road) {
+        const road = next.road === 'paved' ? 'routes pavées' : 'chemins de terre';
+        txt += `, ${road} vers les moulins et casernes de la muraille : leur production ${pct(next.roadBonus)}`;
+      }
+      return txt;
+    }
+    if (type === B_BARRACKS) {
+      return `soldats produits ${pct(next.troops / cur.troops - 1)}, bonus d'armée max ${pct(next.maxTroops / cur.maxTroops - 1)}`;
+    }
+    return `or produit ${pct(next.gold / cur.gold - 1)}`;
   },
 
   // Petite fenêtre pour améliorer un bâtiment (château, moulin)
@@ -159,7 +181,7 @@ const UI = {
       const next = BUILDING_LEVELS[type][G.level[a] + 1];
       el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
         `<img src="${next.img}" alt="">` +
-        `${this.levelEffect(type, cur)} → <b>${this.levelEffect(type, next)}</b>` +
+        `<b>${this.upgradeEffect(type, cur, next)}</b>` +
         `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button><button data-no>Fermer</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
         const err = G.upgradeBuilding(G.human, a);
@@ -244,7 +266,7 @@ const UI = {
     const G = Game, t = TERRAIN_INFO[G.terrain[i]];
     if (!G.isLand(i)) return '🌊 Mer';
     const o = G.owner[i];
-    let txt = `${t.name} (défense x${t.cost})`;
+    let txt = t.cost > 1 ? `${t.name} (défense ${pct(t.cost - 1)})` : t.name;
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
@@ -252,15 +274,15 @@ const UI = {
     if (info) {
       const a = G.anchor[i];
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
-      if (G.building[i] === B_CASTLE) txt += ` · 🛡️ garnison ${fmt(G.garrison[a])}/${fmt(info.garrison)}`;
-      if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain x${G.terrainFactor(a, G.building[i]).toFixed(2)}`;
+      if (G.building[i] === B_CASTLE) txt += ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} %`;
+      if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain : ${prodText(G.terrainFactor(a, G.building[i]))}`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (o === G.human.id && G.upgradeCost(a) !== null) txt += ` · clique pour l'améliorer`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
     }
-    if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense x${+G.tileDefense(o, i).toFixed(1)}`;
+    if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
     // Conseils d'attaque contre un royaume ennemi
     if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && G.castlesOf(o).length) {
       if (G.building[i] === B_CASTLE) {
@@ -278,7 +300,7 @@ const UI = {
     if (!h) return;
     $('kName').textContent = h.name;
     $('kName').style.color = `rgb(${h.color})`;
-    $('gold').textContent = `${fmt(h.gold)} (+${fmtRate(G.goldRate(h))}/s)`;
+    $('gold').textContent = fmt(h.gold);
     this.refreshTroopGauge();
     $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + ' %';
     const traitorSecs = Math.ceil((h.traitorUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
@@ -325,12 +347,13 @@ const UI = {
     $('troopFill').style.width = (r * 100).toFixed(1) + '%';
     $('troopFill').style.background = color;
     $('troopPeak').style.left = CONFIG.TROOP_PEAK_RATIO * 100 + '%';
-    $('troopText').textContent = `⚔️ ${fmt(h.troops)} / ${fmt(max)}`;
-    let tip = '';
-    if (r >= 0.98) tip += ' · armée pleine !';
-    else if (eff < 0.45) tip += ' · trop de soldats, le recrutement ralentit';
-    else if (eff > 0.85) tip += ' · recrutement au top';
-    $('troopRate').innerHTML = `<b style="color:${color}">+${fmtRate(G.troopRate(h))}/s</b>${tip}`;
+    $('troopText').textContent = `⚔️ ${fmt(h.troops)}`;
+    // Pas de chiffre précis : juste l'état du recrutement
+    let tip = 'recrutement normal';
+    if (r >= 0.98) tip = 'armée pleine !';
+    else if (eff < 0.45) tip = 'trop de soldats, le recrutement ralentit';
+    else if (eff > 0.85) tip = 'recrutement au top';
+    $('troopRate').innerHTML = `<b style="color:${color}">${tip}</b>`;
   },
 
   // Attaques en cours, en bas de l'écran. On ne reconstruit la liste que si elle change,
@@ -371,7 +394,7 @@ const UI = {
     const t = this.selectedBuild;
     if (!TERRAIN_PRODUCTION[t] || !Render.mouse) return '';
     const a = Render.anchorAt(Render.mouse.x, Render.mouse.y, t);
-    return a < 0 ? '' : ` · production ici x${Game.terrainFactor(a, t).toFixed(2)}`;
+    return a < 0 ? '' : ` · production ici : ${prodText(Game.terrainFactor(a, t))}`;
   },
 
   // Envoyer des soldats (selon le curseur « Envoyer ») contre un assaut ennemi
@@ -516,3 +539,14 @@ function main() {
 }
 
 main();
+
+// Un bonus en pourcentage : 0.3 → "+30 %", -0.1 → "-10 %"
+function pct(x) {
+  const n = Math.round(x * 100);
+  return (n >= 0 ? '+' : '') + n + ' %';
+}
+
+// Multiplicateur de production du terrain, en mots : 1.3 → "+30 %", 1 → "normale"
+function prodText(f) {
+  return Math.abs(f - 1) < 0.005 ? 'normale' : pct(f - 1);
+}
