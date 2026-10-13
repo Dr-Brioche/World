@@ -93,7 +93,7 @@ const AI = {
 
     const tiles = [];
     for (let i = 0; i < Game.N; i++) {
-      if (Game.owner[i] === p.id && Game.canPlace(p.id, i)) tiles.push(i);
+      if (Game.owner[i] === p.id && Game.canPlace(p.id, i, type)) tiles.push(i);
     }
     if (tiles.length) Game.tryBuild(p, tiles[(Math.random() * tiles.length) | 0], type);
   },

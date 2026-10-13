@@ -294,7 +294,7 @@ const UI = {
       return;
     }
     if (this.selectedBuild) {
-      const err = G.tryBuild(h, Render.anchorAt(sx, sy), this.selectedBuild);
+      const err = G.tryBuild(h, Render.anchorAt(sx, sy, this.selectedBuild), this.selectedBuild);
       if (err) this.log(err, 'warn');
       else this.selectBuild(0);
       return;
