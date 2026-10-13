@@ -1560,6 +1560,7 @@ const GameRules = {
         if (this.owner[n] === a.attacker && dist2(n, ax, ay) < best) { best = dist2(n, ax, ay); start = n; }
       });
     }
+    a.startTile = start; // case de la frontière d'où partira l'assaut (sa bannière s'y plante pendant la préparation)
     if (start < 0) { a.fromX = cx + 0.5; a.fromY = cy + 0.5; return; }
     // ...puis on recule de quelques cases vers l'intérieur (si ces cases sont encore à nous)
     const sx = start % W, sy = (start / W) | 0, len = Math.hypot(sx - ax, sy - ay) || 1;

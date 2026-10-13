@@ -61,10 +61,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    impossible de lancer un assaut depuis les terres d'un allié.
 
    **⚔️ Le déroulement d'un assaut**
-   - **Préparation (10 s)** : une **flèche rouge en pointillés**, légèrement courbée, montre à tout le monde
-     où tu vas frapper : elle part d'un **cercle rouge** un peu à l'intérieur de ta frontière et vise la zone
-     attaquée, marquée d'une **cible** (un cercle et un point rouge). Ta bannière ⚔️ avance le long de la flèche.
-     La flèche reste visible (plus discrète) pendant tout l'assaut. Pendant ce temps, reclique sur la cible pour **ajouter des soldats tout de suite** :
+   - **Préparation (10 s)** : tout le monde voit venir l'assaut. Ta **bannière** ⚔️ est plantée sur la frontière,
+     là d'où il partira, avec le compte à rebours et tes soldats ; en face, les terres menacées **scintillent
+     à ta couleur**, et le bâtiment visé est entouré d'un **halo** qui pulse.
+     Une fois l'assaut lancé, une **flèche rouge en pointillés** le montre jusqu'à sa cible. Pendant ce temps, reclique sur la cible pour **ajouter des soldats tout de suite** :
      c'est ce qui fixe l'ampleur de l'assaut.
    - **L'assaut commence** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
      mais ils mettent **5 secondes** à arriver.
@@ -273,6 +273,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.39.2** : plus de flèche pendant la préparation d'un assaut : la bannière de l'attaquant est plantée sur la frontière, les terres menacées scintillent à sa couleur et le bâtiment visé a un halo qui pulse
 - **v0.39.1** : 🧱 la muraille du port royal donne +1 de défense dans sa zone, comme un fort en bois
 - **v0.39** : 🎯 une flèche rouge en pointillés, légèrement courbée, montre chaque assaut : un cercle au départ (juste à l'intérieur de la frontière) et une cible sur la zone attaquée · 🧱 le port royal (niveau 3) a une petite muraille, comme un fort en bois
 - **v0.38** : ✂️ couper un royaume en deux donne d'un coup le plus petit morceau à celui qui a coupé, **quelle que soit sa taille** (fini la limite de 20 %), avec ses églises et ports · 🚩 seuls les châteaux et les ports de niveau 3 tiennent, isolés
