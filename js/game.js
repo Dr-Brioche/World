@@ -819,7 +819,10 @@ const GameRules = {
     if (troops < 1) return 'Pas assez de soldats !';
     const frontier = this.buildFrontier(pid, target);
     if (frontier.length === 0) {
-      return target < 0 ? 'Aucune terre libre à ta frontière.' : `Tu n'as pas de frontière avec ${this.players[target].name}.`;
+      // (un avant-poste en construction ne sert pas encore de base : ses soldats bâtissent)
+      const building = [...this.outposts.keys()].some(a => this.owner[a] === pid && !this.outpostReady(a));
+      return (target < 0 ? 'Aucune terre libre à ta frontière.' : `Tu n'as pas de frontière avec ${this.players[target].name}.`) +
+        (building ? ' Ton avant-poste est encore en construction : ses soldats ne pourront attaquer qu\'une fois les travaux finis.' : '');
     }
     // Un royaume qui a encore un château ou une église ne s'attaque qu'en visant l'un d'eux.
     // Sans château ni église, on peut attaquer tout son territoire de front (comme une terre libre).
