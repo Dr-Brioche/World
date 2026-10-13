@@ -1,7 +1,11 @@
 // 🎲 LOGIQUE DU JEU
 // Les royaumes, l'économie, les attaques et la victoire.
 
-const Game = {
+// Toutes les règles du jeu (les fonctions) sont rangées dans GameRules ; l'objet Game, plus bas,
+// les « hérite » et ne garde que les données de la partie (carte, royaumes, attaques…).
+// Pourquoi deux objets ? Un objet avec plus de ~128 éléments devient beaucoup plus lent dans
+// le navigateur : séparer les règles et les données garde le jeu rapide.
+const GameRules = {
   phase: 'menu', // 'menu' → 'spawn' → 'playing' → 'over'
   paused: false,
 
@@ -878,10 +882,18 @@ const Game = {
     return zone;
   },
 
+  // Pour les bots : les 3 cibles du royaume target les plus proches du cœur de pid
+  // (calculer un chemin coûte cher : on ne le fait pas pour toutes)
+  nearestTargets(pid, target) {
+    const p = this.players[pid], cx = p.sumX / p.tiles, cy = p.sumY / p.tiles;
+    const d = a => (a % this.W - cx) ** 2 + (((a / this.W) | 0) - cy) ** 2;
+    return this.targetsOf(target).sort((a, b) => d(a) - d(b)).slice(0, 3);
+  },
+
   // Pour les bots : quel château viser, et quelle défense de terrain attendre au premier combat ?
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
   planAssault(pid, target) {
-    const castles = this.targetsOf(target);
+    const castles = this.nearestTargets(pid, target);
     if (!this.isProtected(target)) return { castle: null, D: 1.3 };
     let best = { castle: -1, D: 1 }, bestLen = Infinity;
     for (const c of castles) {
@@ -897,7 +909,7 @@ const Game = {
   // Pour les bots : quel château viser ? null = pas de château (attaque de front),
   // -1 = aucun château atteignable, sinon le château le plus proche.
   pickCastleTarget(pid, target) {
-    const castles = this.targetsOf(target);
+    const castles = this.nearestTargets(pid, target);
     if (!this.isProtected(target)) return null;
     let best = -1, bestLen = Infinity;
     for (const c of castles) {
@@ -1747,6 +1759,9 @@ const Game = {
     return stats;
   },
 };
+
+// La partie en cours : elle utilise toutes les règles de GameRules (Game.update(), Game.launchAttack()…)
+const Game = Object.create(GameRules);
 
 function fmt(n) {
   n = Math.floor(n);
