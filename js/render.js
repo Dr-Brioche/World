@@ -547,9 +547,71 @@ const Render = {
 
   // Survol d'un château ennemi : on montre le chemin de l'assaut (pointillés dorés),
   // ou une croix rouge si d'autres fortifications bloquent le passage.
+  // Trace un chemin d'assaut (pointillés), case par case
+  strokePath(ox, oy, path, color, width) {
+    const ctx = this.ctx, s = this.cam.scale, W = Game.W;
+    ctx.beginPath();
+    path.forEach((i, k) => {
+      const x = ox + (i % W + 0.5) * s, y = oy + (((i / W) | 0) + 0.5) * s;
+      if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = width + 2.5;
+    ctx.strokeStyle = 'rgba(20,12,4,0.6)';
+    ctx.stroke();
+    ctx.setLineDash([8, 6]);
+    ctx.lineWidth = width;
+    ctx.strokeStyle = color;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  },
+
+  // Assaut en préparation par le joueur : l'itinéraire avec ses points de passage numérotés,
+  // et en plus clair l'itinéraire si on ajoutait un point sous la souris
+  drawAssaultPlan(ox, oy) {
+    const G = Game, p = UI.plan, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    const key = p.castle + ':' + G.version + ':' + p.waypoints.join(',');
+    if (this.planKey !== key) { this.planKey = key; this.planPath = G.castlePath(G.human.id, p.castle, p.waypoints); }
+    // Itinéraire possible en passant par la case survolée
+    const h = this.hover;
+    const tryIt = h >= 0 && G.anchor[h] !== p.castle && !p.waypoints.includes(h) && G.castlePassable(p.castle)(h);
+    const tKey = key + ':' + h;
+    if (this.tryKey !== tKey) {
+      this.tryKey = tKey;
+      this.tryPath = tryIt ? G.castlePath(G.human.id, p.castle, p.waypoints.concat([h])) : null;
+    }
+    if (this.tryPath) this.strokePath(ox, oy, this.tryPath, 'rgba(255,255,255,0.75)', 1.8);
+    if (this.planPath) this.strokePath(ox, oy, this.planPath, '#ffd34d', 3);
+    // Cible entourée
+    const n = G.sizeOf(G.building[p.castle]);
+    const cx = ox + (p.castle % W + n / 2) * s, cy = oy + (((p.castle / W) | 0) + n / 2) * s;
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.max(12, s * n * 0.75), 0, Math.PI * 2);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = p.clicks ? '#ff5b3a' : '#ffd34d';
+    ctx.stroke();
+    // Points de passage numérotés
+    ctx.font = '700 12px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    p.waypoints.forEach((w, k) => {
+      const x = ox + (w % W + 0.5) * s, y = oy + (((w / W) | 0) + 0.5) * s;
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd34d';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(20,12,4,0.9)';
+      ctx.stroke();
+      ctx.fillStyle = '#2a1a08';
+      ctx.fillText(String(k + 1), x, y + 0.5);
+    });
+  },
+
   drawCastleAssaultPreview(ox, oy) {
     const G = Game, h = this.hover;
     this.castlePreview = null;
+    if (UI.plan && G.phase === 'playing') return this.drawAssaultPlan(ox, oy);
     if (G.phase !== 'playing' || h < 0 || UI.selectedBuild || !G.human.alive) return;
     const o = G.owner[h];
     if ((G.building[h] !== B_CASTLE && G.building[h] !== B_CHURCH) || o < 0 || o === G.human.id || G.areAllied(o, G.human.id)) return;
@@ -562,20 +624,7 @@ const Render = {
     this.castlePreview = { castle: c, path: this.previewPath };
     const ctx = this.ctx, s = this.cam.scale, W = G.W;
     if (this.previewPath) {
-      ctx.beginPath();
-      this.previewPath.forEach((i, k) => {
-        const x = ox + (i % W + 0.5) * s, y = oy + (((i / W) | 0) + 0.5) * s;
-        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = 'rgba(20,12,4,0.6)';
-      ctx.stroke();
-      ctx.setLineDash([8, 6]);
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = '#ffd34d';
-      ctx.stroke();
-      ctx.setLineDash([]);
+      this.strokePath(ox, oy, this.previewPath, '#ffd34d', 2.5);
     } else {
       const n = G.sizeOf(B_CASTLE), cx = ox + (c % W + n / 2) * s, cy = oy + (((c / W) | 0) + n / 2) * s;
       const r = Math.max(10, s * n * 0.5);

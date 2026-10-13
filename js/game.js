@@ -645,8 +645,9 @@ const Game = {
   },
 
   // target = -1 pour les terres libres. aimTile = case visée (pour la flèche sur la carte).
+  // waypoints = points de passage de l'armée (assaut sur un château ou une église).
   // Renvoie un message d'erreur, ou null.
-  launchAttack(pid, target, troops, aimTile) {
+  launchAttack(pid, target, troops, aimTile, waypoints) {
     const p = this.players[pid];
     troops = Math.floor(Math.min(troops, p.troops));
     if (target === pid) return null;
@@ -672,16 +673,18 @@ const Game = {
         return `${name} est protégé par ses châteaux : clique sur l'un d'eux (ou sur une de ses églises) pour lancer un assaut.`;
       }
     }
+    let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined);
+    if (a && a.targetCastle !== castle) return `Un assaut contre ${this.players[target].name} est déjà en cours.`;
+    // Assaut déjà en préparation : il garde ses points de passage
+    if (!waypoints) waypoints = a && a.waypoints ? a.waypoints : [];
     if (castle >= 0) {
       const name = this.players[target].name;
-      path = this.castlePath(pid, castle);
+      path = this.castlePath(pid, castle, waypoints);
       if (!path) {
         return `Impossible d'atteindre ${this.building[castle] === B_CHURCH ? 'cette église' : 'ce château'} : ` +
           `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`;
       }
     }
-    let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined);
-    if (a && a.targetCastle !== castle) return `Un assaut contre ${this.players[target].name} est déjà en cours.`;
     // Assaut déjà lancé : les renforts partent et arrivent dans REINFORCE_DELAY secondes
     if (a && target >= 0 && !this.isPreparing(a)) {
       p.troops -= troops;
@@ -692,6 +695,7 @@ const Game = {
       a = {
         id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false, startTick: this.tick,
         targetCastle: castle,
+        waypoints,     // points de passage choisis
         defenders: 0,  // soldats envoyés par le défenseur pour contrer cet assaut
         pending: [],   // renforts en route : { troops, tick d'arrivée }
         frontTile: -1, // case où se trouve l'assaut (pour la défense du terrain)
@@ -742,24 +746,38 @@ const Game = {
   // Chemin le plus court de la frontière de pid jusqu'au château c, en contournant les
   // autres fortifications du défenseur. Renvoie la liste des cases, ou null s'il n'y en a pas.
   // Le chemin préfère les terrains faciles (plaines) : chaque case « coûte » sa défense.
-  castlePath(pid, c) {
+  // waypoints = points de passage choisis par le joueur : l'armée passe par chacun d'eux, dans l'ordre,
+  // en prenant à chaque fois le chemin le plus facile.
+  castlePath(pid, c, waypoints = []) {
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
     const target = this.owner[c];
+    // (un point de passage devenu impossible, par exemple pris entre-temps, est oublié)
+    const goals = waypoints.filter(w => passable(w) && !foot.has(w)).map(w => new Set([w]));
+    goals.push(foot);
+    let path = [], from = -1; // -1 = on part de la frontière
+    for (const goal of goals) {
+      const seg = this.searchPath(pid, from, goal, passable, target);
+      if (!seg) return null;
+      path = path.concat(from < 0 ? seg : seg.slice(1));
+      from = seg[seg.length - 1];
+    }
+    return path;
+  },
+
+  // Recherche du chemin le plus facile (algorithme de Dijkstra) depuis la case from
+  // (ou depuis toute la frontière de pid si from = -1) jusqu'à une case de goal.
+  searchPath(pid, from, goal, passable, target) {
     const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
     const done = new Uint8Array(this.N); // cases déjà traitées (chacune une seule fois)
     const heap = new MinHeap();
-    for (let i = 0; i < this.N; i++) {
-      if (passable(i) && this.touchesFriend(i, pid)) {
-        dist[i] = this.tileDefense(target, i);
-        prev[i] = -1;
-        heap.push(dist[i], i);
-      }
-    }
+    const start = i => { dist[i] = this.tileDefense(target, i); prev[i] = -1; heap.push(dist[i], i); };
+    if (from >= 0) start(from);
+    else for (let i = 0; i < this.N; i++) if (passable(i) && this.touchesFriend(i, pid)) start(i);
     while (heap.size) {
       const [d, i] = heap.pop();
       if (done[i]) continue;
       done[i] = 1;
-      if (foot.has(i)) {
+      if (goal.has(i)) {
         const path = [];
         for (let j = i; j >= 0; j = prev[j]) path.push(j);
         return path.reverse();
@@ -1092,7 +1110,7 @@ const Game = {
       a.set = new Set(a.list);
       // Assaut sur un château : le chemin est-il toujours libre ?
       if (a.targetCastle >= 0 && !a.castleTaken) {
-        const path = this.owner[a.targetCastle] === a.target ? this.castlePath(a.attacker, a.targetCastle) : null;
+        const path = this.owner[a.targetCastle] === a.target ? this.castlePath(a.attacker, a.targetCastle, a.waypoints) : null;
         if (!path) {
           if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers le château est bloqué : assaut annulé.', 'warn');
           return this.endAttack(a);
