@@ -3,7 +3,7 @@
 
 const $ = id => document.getElementById(id);
 
-const MAX_WAYPOINTS = 6; // points de passage au maximum pour un assaut
+const MAX_WAYPOINTS = 3; // points de passage au maximum pour un assaut
 
 const UI = {
   selectedBuild: 0,
