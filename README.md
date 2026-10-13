@@ -56,6 +56,7 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 
 ## 🆕 Nouveautés
 
+- **v0.5.1** : ton royaume est vert par défaut (le bleu se confondait avec la mer)
 - **v0.5** : la zone des châteaux devient une muraille crénelée qui suit les frontières · le bonus du château s'ajoute à la défense du terrain, seulement dans sa muraille
 - **v0.4** : attaquer un allié = le trahir, et un traître 🗡️ a sa défense réduite de moitié pendant 2 minutes
 - **v0.3** : alliances (proposer, accepter, refuser, trahir) · les attaques contre un royaume se préparent 5 s avec une flèche et une bannière ⚔️ visibles par tous
