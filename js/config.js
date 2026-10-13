@@ -4,8 +4,8 @@
 
 const CONFIG = {
   // --- Carte ---
-  MAP_WIDTH: 240,          // largeur de la carte (en cases)
-  MAP_HEIGHT: 156,         // hauteur de la carte (en cases)
+  MAP_WIDTH: 294,          // largeur de la carte (en cases)
+  MAP_HEIGHT: 192,         // hauteur de la carte (en cases)
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %)
   RIVERS_MIN: 3,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
   RIVERS_MAX: 12,          // (ils partent des montagnes et vont jusqu'à la mer)
@@ -17,7 +17,7 @@ const CONFIG = {
   START_TROOPS: 10,       // soldats au départ (on commence petit !)
   START_GOLD: 10,
   START_RADIUS: 3,         // taille du territoire de départ
-  MIN_SPAWN_DISTANCE: 16,  // distance minimale entre deux capitales
+  MIN_SPAWN_DISTANCE: 18,  // distance minimale entre deux capitales
 
   // --- Soldats ---
   BASE_MAX_TROOPS: 20,
