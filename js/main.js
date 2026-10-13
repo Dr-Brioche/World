@@ -144,7 +144,10 @@ const UI = {
       return `défense des murs ${pct(info.bonus)}` +
         (info.road ? `, ${road} : production des bâtiments reliés ${pct(info.roadBonus)}` : '');
     }
-    if (type === B_BARRACKS) return `soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande`;
+    if (type === B_BARRACKS) {
+      return `soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande` +
+        (info.power > 1 ? `, tous tes soldats ${pct(info.power - 1)} plus forts` : '');
+    }
     return `or toutes les ${CONFIG.PRODUCTION_INTERVAL} s`;
   },
 
@@ -160,7 +163,8 @@ const UI = {
       return txt;
     }
     if (type === B_BARRACKS) {
-      return `soldats produits ${pct(next.troops / cur.troops - 1)}, bonus d'armée max ${pct(next.maxTroops / cur.maxTroops - 1)}`;
+      return `soldats produits ${pct(next.troops / cur.troops - 1)}, bonus d'armée max ${pct(next.maxTroops / cur.maxTroops - 1)}, ` +
+        `et tous les soldats du royaume ${pct(next.power - 1)} plus forts au combat (la meilleure caserne compte, ça ne s'additionne pas)`;
     }
     return `or produit ${pct(next.gold / cur.gold - 1)}`;
   },

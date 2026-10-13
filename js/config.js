@@ -88,12 +88,14 @@ const MILL_LEVELS = [
 ];
 
 // Les 3 niveaux de la caserne : troops = soldats produits toutes les PRODUCTION_INTERVAL secondes,
-// maxTroops = soldats en plus dans l'armée maximum.
+// maxTroops = soldats en plus dans l'armée maximum,
+// power = force de TOUS les soldats du royaume au combat (1.2 = chaque soldat vaut 1,2 soldat).
+// Ce bonus ne s'additionne pas : c'est la meilleure caserne du royaume qui compte.
 const BARRACKS_LEVELS = [
   null,
-  { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, img: 'img/caserne1.webp', size: 2.5 },
-  { name: 'Caserne',              troops: 4, maxTroops: 50, img: 'img/caserne2.webp', size: 2.8, upgradeCost: 40 },
-  { name: 'Grande caserne',       troops: 7, maxTroops: 80, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 100 },
+  { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1,   img: 'img/caserne1.webp', size: 2.5 },
+  { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.2, img: 'img/caserne2.webp', size: 2.8, upgradeCost: 40 },
+  { name: 'Grande caserne',       troops: 7, maxTroops: 80, power: 1.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 100 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain

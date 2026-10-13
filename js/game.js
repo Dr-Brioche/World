@@ -931,10 +931,25 @@ const Game = {
     return Math.max(1, def);
   },
 
+  // Force des soldats d'un royaume : celle de sa meilleure caserne (1 sans caserne améliorée)
+  troopPower(pid) {
+    let best = 1;
+    for (const a of this.buildingTiles) {
+      if (this.building[a] === B_BARRACKS && this.owner[a] === pid) best = Math.max(best, this.buildingInfo(a).power);
+    }
+    return best;
+  },
+
+  // Combien d'attaquants tombent pour chaque défenseur tué : la défense de l'endroit,
+  // corrigée par la force des soldats des deux camps (casernes de niveau 2 et 3)
+  combatRatio(a) {
+    return this.frontDefense(a) * this.troopPower(a.target) / this.troopPower(a.attacker);
+  },
+
   // Combat entre l'assaut et les défenseurs envoyés : ce n'est pas instantané,
   // chaque tour une petite partie des soldats engagés tombe.
   fight(a) {
-    const D = this.frontDefense(a);
+    const D = this.combatRatio(a);
     const total = a.defenders + (a.garrison || 0);
     const base = Math.max(CONFIG.FIGHT_MIN_LOSS, CONFIG.FIGHT_RATE * Math.min(a.troops, total));
     const defLoss = Math.min(total, base);
