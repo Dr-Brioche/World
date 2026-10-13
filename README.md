@@ -73,6 +73,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.8.1** : nouveaux visuels pour les deux niveaux du moulin
 - **v0.8** : la ferme devient un **moulin** à 2 niveaux (moulin, grand moulin) avec ses images quand on zoome
 - **v0.7** : les bâtiments occupent 2x2 cases sur la carte, avec un aperçu de l'emplacement avant de construire
 - **v0.6** : châteaux à 3 niveaux (fort en bois, château, citadelle) avec leurs images quand on zoome ; chaque niveau agrandit la muraille et augmente la défense (+1, +2, +4)
