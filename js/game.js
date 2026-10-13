@@ -403,6 +403,14 @@ const GameRules = {
     return 0;
   },
 
+  // La case est-elle près d'un avant-poste du royaume encore en construction ?
+  outpostBuilding(pid, i) {
+    for (const [a] of this.outposts) {
+      if (this.owner[a] === pid && !this.outpostReady(a) && this.nearBuilding(a, i, CONFIG.LANDING_RADIUS + 1)) return true;
+    }
+    return false;
+  },
+
   // Chaque tour : les avant-postes qui finissent d'être bâtis, et ceux dont la zone devient une vraie terre
   // du royaume (un château y a été bâti ou pris) : l'avant-poste disparaît et ses soldats rejoignent l'armée.
   stepOutposts() {
@@ -1429,7 +1437,10 @@ const GameRules = {
     }
     let def = this.tileDefense(a.target, t);
     if (this.isTraitor(this.players[a.target])) def *= CONFIG.TRAITOR_DEFENSE_MALUS;
-    return Math.max(1, def);
+    def = Math.max(1, def);
+    // Avant-poste en construction : ses défenseurs, occupés à bâtir, se défendent moins bien
+    if (this.outpostBuilding(a.target, t)) def -= CONFIG.OUTPOST_BUILDING_MALUS;
+    return def;
   },
 
   // Force des soldats d'un royaume : celle de sa meilleure caserne (1 sans caserne améliorée)

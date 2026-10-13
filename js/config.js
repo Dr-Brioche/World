@@ -66,6 +66,7 @@ const CONFIG = {
   INTERCEPT_SPEED: 6,        // vitesse (cases/s) des bateaux d'un port qui part intercepter un débarquement
   OUTPOST_BUILD_TIME: 20,    // secondes pour bâtir un avant-poste après le débarquement (sans bonus avant)
   OUTPOST_DEFENSE: 1,        // une fois bâti, bonus de défense autour de lui (comme un fort en bois)
+  OUTPOST_BUILDING_MALUS: 0.2, // pendant sa construction, ses défenseurs sont occupés à bâtir : défense -0.2
   // Un château isolé peut être relié à nouveau par un assaut lancé depuis le royaume (en cliquant dessus).
   // S'il arrive, sa route s'élargit de 2 cases de chaque côté.
   LINK_WIDEN_RADIUS: 2,

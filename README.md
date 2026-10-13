@@ -185,8 +185,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    envoyer d'autres défenseurs.
    - On peut débarquer **partout** (terre libre ou ennemie), mais un débarquement **ne prend jamais
      un bâtiment** : il se pose juste à côté.
-   - L'avant-poste met **20 secondes à être bâti** après le débarquement (compte à rebours sur la carte) :
-     pas de bonus de défense avant. Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
+   - L'avant-poste met **20 secondes à être bâti** après le débarquement (compte à rebours sur la carte).
+     Pendant ce temps, on peut déjà l'attaquer, et ses défenseurs, occupés à bâtir, ont **-0,2 de défense**. Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
      tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
    - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** : clique sur
      ton avant-poste pour lui **envoyer des renforts par la mer** (depuis un port de niveau 2 ou plus).
@@ -238,6 +238,7 @@ Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une g
 
 ## 🆕 Nouveautés
 
+- **v0.33.2** : un avant-poste en construction peut être attaqué, et ses défenseurs ont -0,2 de défense
 - **v0.33.1** : un avant-poste met 20 s à être bâti, puis donne +1 de défense ; clique dessus pour lui envoyer des renforts par la mer ; un château bâti ou pris dans sa zone en fait une vraie terre du royaume · le jeu est de nouveau plus rapide (correction d'un ralentissement)
 - **v0.33** : ⚓ avec un port, clique sur le bateau d'une expédition ennemie pour envoyer des soldats l'intercepter : bataille en mer s'ils arrivent avant elle
 - **v0.32.1** : une expédition emmène le % de soldats choisi (petite perte en mer), qui défendent seuls l'avant-poste · le port royal (niveau 3) a une petite garnison · on peut construire 1 bâtiment autour d'un grand port, 3 autour d'un port royal · les soldats en garnison comptent dans l'armée maximum
