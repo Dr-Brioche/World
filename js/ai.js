@@ -82,12 +82,25 @@ const AI = {
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
       const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0);
       if (needed <= 0) continue;
-      // Château isolé : impossible d'y envoyer des défenseurs, on tente de le rejoindre par un assaut
+      // Château isolé (ou avant-poste) : impossible d'y envoyer des défenseurs. Pour un château, on tente
+      // de le rejoindre par un assaut ; pour un avant-poste, on envoie des renforts par la mer.
+      if (Game.cutOff(a) && Game.building[a.targetCastle] === B_OUTPOST) {
+        if (!Game.expeditions.some(e => e.reinforce === a.targetCastle)) {
+          Game.reinforceOutpost(p.id, a.targetCastle, Math.min(needed, p.troops * 0.4));
+        }
+        continue;
+      }
       if (Game.cutOff(a)) {
         if (Game.building[a.targetCastle] === B_CASTLE && !Game.linkFor(a.targetCastle)) Game.launchLink(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
         continue;
       }
       Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));
+    }
+    // Une expédition ennemie vise notre côte : si on a un port, on envoie des bateaux l'intercepter
+    for (const e of Game.expeditions) {
+      if (e.done || Game.owner[e.landing] !== p.id || e.interceptors.some(it => it.pid === p.id)) continue;
+      if (Game.planInterception(p.id, e).error) continue;
+      Game.launchInterception(p.id, e.id, Math.min(e.troops * 1.3, p.troops * 0.5));
     }
     // Une armée se prépare contre nous : parfois, on tente de faire la paix (un pacte)
     const threats = Game.attacks.filter(a => !a.done && a.target === p.id && Game.isPreparing(a));

@@ -185,9 +185,20 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    envoyer d'autres défenseurs.
    - On peut débarquer **partout** (terre libre ou ennemie), mais un débarquement **ne prend jamais
      un bâtiment** : il se pose juste à côté.
-   - **Depuis l'avant-poste**, tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
+   - L'avant-poste met **20 secondes à être bâti** après le débarquement (compte à rebours sur la carte) :
+     pas de bonus de défense avant. Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
+     tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
+   - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** : clique sur
+     ton avant-poste pour lui **envoyer des renforts par la mer** (depuis un port de niveau 2 ou plus).
+   - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
+     ton armée : l'avant-poste disparaît et ses soldats rejoignent tes troupes.
    - Les ennemis peuvent **viser l'avant-poste** pour le détruire ; sans lui, ses terres sont à nouveau
      un petit morceau isolé, facile à encercler.
+   - **⚓ Intercepter** : si un royaume a un **port** (n'importe quel niveau), il peut **cliquer sur le bateau**
+     d'une expédition ennemie pour envoyer le % de soldats choisi à sa rencontre. Ses bateaux foncent vers la côte
+     visée : s'ils y arrivent **avant** l'expédition, il y a **bataille en mer** à son arrivée (1 soldat contre 1,
+     selon la force de chaque camp). Si l'escadre gagne, l'expédition est **coulée** et ses survivants rentrent ;
+     sinon, l'expédition débarque quand même, avec moins de soldats. Tu es prévenu quand une expédition vise ta côte.
 
    **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🏗️ Construire · ⛵ Débarquer).
 4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer de t'allier.
@@ -227,6 +238,8 @@ Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une g
 
 ## 🆕 Nouveautés
 
+- **v0.33.1** : un avant-poste met 20 s à être bâti, puis donne +1 de défense ; clique dessus pour lui envoyer des renforts par la mer ; un château bâti ou pris dans sa zone en fait une vraie terre du royaume · le jeu est de nouveau plus rapide (correction d'un ralentissement)
+- **v0.33** : ⚓ avec un port, clique sur le bateau d'une expédition ennemie pour envoyer des soldats l'intercepter : bataille en mer s'ils arrivent avant elle
 - **v0.32.1** : une expédition emmène le % de soldats choisi (petite perte en mer), qui défendent seuls l'avant-poste · le port royal (niveau 3) a une petite garnison · on peut construire 1 bâtiment autour d'un grand port, 3 autour d'un port royal · les soldats en garnison comptent dans l'armée maximum
 - **v0.32** : ⚓ nouveau bâtiment **port** (3 niveaux, au bord de l'eau, produit de l'or, attaquable) · ⛵ **expéditions maritimes** dès le niveau 2 : clic droit sur une côte → Débarquer, un bateau traverse la mer et plante un **avant-poste** ⛺ d'où l'on peut attaquer · menu d'actions au clic droit
 - **v0.31.1** : zone de jeu 50 % plus grande (carte de 294 x 192 cases, vue plus dézoomée au départ)

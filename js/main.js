@@ -326,8 +326,12 @@ const UI = {
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
       if (G.building[i] === B_OUTPOST) {
-        txt += ` · 🛡️ ${fmt(G.garrison[G.anchor[i]])} soldats en défense (base pour attaquer depuis la côte ; ` +
-          'l\'ennemi peut le viser pour le détruire)';
+        const a = G.anchor[i], o = G.outposts.get(a);
+        txt += ` · 🛡️ ${fmt(G.garrison[a])} soldats en défense`;
+        txt += G.outpostReady(a) ? ' · défense +100 % autour · base pour attaquer depuis la côte'
+          : ` · 🏗️ en construction (${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s, pas encore de défense)`;
+        if (o && G.owner[a] === G.human.id) txt += ' · clique dessus pour envoyer des renforts par la mer';
+        txt += ' · un château bâti ou pris dans sa zone en fait une vraie terre du royaume';
       }
     }
     if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
@@ -429,7 +433,9 @@ const UI = {
         }
         if (G.cutOff(a) && a.target === h.id) {
           // Pas de bouton « Défendre » : le château est coupé du royaume
-          return `<div class="attack panel incoming" title="Ton château est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie">` +
+          return `<div class="attack panel incoming" title="${G.building[a.targetCastle] === B_OUTPOST
+            ? 'Ton avant-poste ne compte que sur sa garnison : clique dessus pour envoyer des renforts par la mer'
+            : 'Ton château est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie'}">` +
             `<span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque ` +
             `${G.building[a.targetCastle] === B_OUTPOST ? 'ton avant-poste ⛺' : 'ton château isolé 🚩'}</span>` +
             `<b data-troops="${a.id}"></b></div>`;
@@ -472,7 +478,8 @@ const UI = {
     const target = G.attacks.find(x => x.id === attackId && !x.done);
     if (target && G.cutOff(target)) {
       if (G.building[target.targetCastle] === B_OUTPOST) {
-        return this.log('🚫 Ton avant-poste est au-delà des mers : seuls les soldats débarqués le défendent.', 'warn');
+        return this.log('🚫 Ton avant-poste est au-delà des mers : seule sa garnison le défend. ' +
+          'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.', 'warn');
       }
       return this.log('🚫 Ton château est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
         'Clique sur le château pour lancer un assaut qui le relie à ton royaume.', 'warn');
@@ -606,9 +613,23 @@ const UI = {
     const banner = Render.bannerAt(sx, sy);
     const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;
     if (assault && assault.target === h.id) return this.defend(banner);
+    // Clic sur le bateau d'une expédition ennemie : on envoie des soldats l'intercepter
+    const boat = Render.boatAt(sx, sy);
+    const exp = boat >= 0 ? G.expeditions.find(e => e.id === boat && !e.done) : null;
+    if (exp && exp.pid !== h.id) {
+      const err = G.launchInterception(h.id, boat, h.troops * this.ratio);
+      if (err) return this.log(err, 'warn');
+      return this.log('⚓ Tes bateaux partent intercepter l\'expédition ! S\'ils arrivent avant elle, la bataille aura lieu en mer.', 'good');
+    }
     if (this.plan) return this.planClick(i);
     // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
     const t = G.building[i];
+    // Clic sur un de ses avant-postes : renforts par la mer
+    if (t === B_OUTPOST && G.owner[i] === h.id && !this.selectedBuild) {
+      const err = G.reinforceOutpost(h.id, G.anchor[i], h.troops * this.ratio);
+      if (err) return this.log(err, 'warn');
+      return this.log('⛵ Des renforts partent par la mer vers ton avant-poste !', 'good');
+    }
     // Clic sur un de ses châteaux isolés : assaut pour le relier au royaume
     if (t === B_CASTLE && G.owner[i] === h.id && !this.selectedBuild && G.isIsolatedCastle(G.anchor[i])) {
       return this.link(G.anchor[i]);
