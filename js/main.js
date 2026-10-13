@@ -278,7 +278,7 @@ const UI = {
     if (!h) return;
     $('kName').textContent = h.name;
     $('kName').style.color = `rgb(${h.color})`;
-    $('gold').textContent = `${fmt(h.gold)} (+${G.goldRate(h).toFixed(1)}/s)`;
+    $('gold').textContent = `${fmt(h.gold)} (+${fmtRate(G.goldRate(h))}/s)`;
     this.refreshTroopGauge();
     $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + ' %';
     const traitorSecs = Math.ceil((h.traitorUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
@@ -330,7 +330,7 @@ const UI = {
     if (r >= 0.98) tip += ' · armée pleine !';
     else if (eff < 0.45) tip += ' · trop de soldats, le recrutement ralentit';
     else if (eff > 0.85) tip += ' · recrutement au top';
-    $('troopRate').innerHTML = `<b style="color:${color}">+${fmt(G.troopRate(h))}/s</b>${tip}`;
+    $('troopRate').innerHTML = `<b style="color:${color}">+${fmtRate(G.troopRate(h))}/s</b>${tip}`;
   },
 
   // Attaques en cours, en bas de l'écran. On ne reconstruit la liste que si elle change,

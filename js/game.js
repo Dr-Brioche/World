@@ -968,6 +968,12 @@ const Game = {
   },
 };
 
+// Petits revenus (par seconde) : avec des décimales, sinon on verrait « +0/s »
+function fmtRate(n) {
+  if (n >= 10) return fmt(n);
+  return n >= 1 ? n.toFixed(1) : n.toFixed(2);
+}
+
 function fmt(n) {
   n = Math.floor(n);
   if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';

@@ -14,7 +14,7 @@ const AI = {
     // Une seule campagne à la fois ; si l'assaut en cours se heurte à des défenseurs, renforts !
     const mine = Game.attacks.find(a => !a.done && a.attacker === p.id);
     if (mine) {
-      if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) > mine.troops && p.troops > 100) {
+      if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) > mine.troops && p.troops > 2) {
         Game.launchAttack(p.id, mine.target, p.troops * 0.4, mine.targetCastle >= 0 ? mine.targetCastle : undefined);
       }
       return;
@@ -41,7 +41,7 @@ const AI = {
       const plan = Game.planAssault(p.id, o), aim = plan.castle;
       if (aim === -1) continue;
       const garrison = aim === null ? 0 : Game.garrison[aim];
-      let score = p.troops * 0.7 / ((e.troops * 0.5 + garrison) * plan.D + 50) + Math.random() * 0.3;
+      let score = p.troops * 0.7 / ((e.troops * 0.5 + garrison) * plan.D + 1) + Math.random() * 0.3;
       if (e.isHuman) score += Game.difficulty.hateHuman;
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
       if (score > bestScore) { bestScore = score; best = o; bestAim = aim; }
