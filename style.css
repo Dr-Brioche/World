@@ -158,6 +158,8 @@ button:hover { background: #e8d6a8; }
   top: 60px;
   left: 8px;
   width: 340px;
+  max-height: calc(100vh - 140px);
+  overflow: hidden;
   pointer-events: none;
 }
 .msg {
@@ -185,6 +187,7 @@ button:hover { background: #e8d6a8; }
 .msg.betray button:first-child { background: #e9b5a8; }
 .msg.betray button:last-child { background: var(--parchment-dark); }
 #traitor { color: var(--danger); font-weight: bold; }
+.msg.upgrade img { display: block; width: 120px; margin: 4px auto; }
 
 .overlay {
   position: fixed;

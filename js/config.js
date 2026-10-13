@@ -38,9 +38,6 @@ const CONFIG = {
   ENEMY_TILE_BASE_COST: 8,     // soldats perdus pour prendre une case ennemie
   DENSITY_FACTOR: 1.0,         // plus l'ennemi a de soldats par case, plus c'est dur
   DEFENDER_LOSS: 0.5,          // part des pertes infligées au défenseur
-  CASTLE_RADIUS: 8,            // rayon de protection d'un château
-  CASTLE_DEFENSE_BONUS: 1,     // +1 à la défense du terrain dans la zone d'un château
-                               // (plaine x1 → x2, forêt x1.6 → x2.6, montagne x3.5 → x4.5)
 
   // --- Alliances ---
   ALLIANCE_REFUSAL_COOLDOWN: 30, // secondes avant de redemander au même royaume
@@ -64,12 +61,22 @@ const TERRAIN_INFO = [
 
 const B_FARM = 1, B_BARRACKS = 2, B_CASTLE = 3;
 
+// Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
+// dans sa muraille (ex. forêt x1.6 + niveau 3 → x5.6).
+const CASTLE_LEVELS = [
+  null,
+  { name: 'Fort en bois', radius: 7,  bonus: 1, img: 'img/chateau1.webp', size: 2.6 },
+  { name: 'Château',      radius: 10, bonus: 2, img: 'img/chateau2.webp', size: 3.1, upgradeCost: 600 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, img: 'img/chateau3.webp', size: 3.8, upgradeCost: 1500 },
+];
+// size = largeur de l'image en cases, quand on zoome assez pour la voir
+
 // L'index dans ce tableau correspond au numéro du bâtiment (0 = aucun).
 const BUILDINGS = [
   null,
   { name: 'Ferme',   icon: '🌾', baseCost: 100, desc: `+${CONFIG.GOLD_PER_FARM} or/s` },
   { name: 'Caserne', icon: '⚔️', baseCost: 200, desc: '+recrutement, +soldats max' },
-  { name: 'Château', icon: '🏰', baseCost: 300, desc: `+${CONFIG.CASTLE_DEFENSE_BONUS} défense dans sa muraille` },
+  { name: 'Château', icon: '🏰', baseCost: 300, desc: 'Muraille : +1 à +4 défense (3 niveaux)' },
 ];
 
 // Les royaumes contrôlés par l'ordinateur.

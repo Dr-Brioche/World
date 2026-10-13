@@ -94,6 +94,36 @@ const UI = {
     else if (res !== 'accepted') this.log(res, 'warn');
   },
 
+  // Petite fenêtre pour améliorer un château
+  showUpgrade(c) {
+    const G = Game;
+    if (this.upgradeBox) this.upgradeBox.remove();
+    const el = document.createElement('div');
+    this.upgradeBox = el;
+    el.className = 'msg request upgrade';
+    const cur = G.castleInfo(c), cost = G.upgradeCost(c);
+    const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
+    if (cost === null) {
+      el.innerHTML = `🏰 <b>${cur.name}</b> (niveau 3) : ton château est déjà au maximum ! ` +
+        `+${cur.bonus} défense, rayon ${cur.radius}.<div class="choices"><button data-no>OK</button></div>`;
+    } else {
+      const next = CASTLE_LEVELS[G.level[c] + 1];
+      el.innerHTML = `🏰 <b>${cur.name}</b> (niveau ${G.level[c]}) → <b>${next.name}</b> (niveau ${G.level[c] + 1})<br>` +
+        `<img src="${next.img}" alt="">` +
+        `Défense +${cur.bonus} → <b>+${next.bonus}</b> · Rayon ${cur.radius} → <b>${next.radius}</b>` +
+        `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button><button data-no>Fermer</button></div>`;
+      el.querySelector('[data-yes]').addEventListener('click', () => {
+        const err = G.upgradeCastle(G.human, c);
+        if (err) return this.log(err, 'warn');
+        close();
+        this.log(`🏰 Ton château devient : ${G.castleInfo(c).name} !`, 'good');
+      });
+    }
+    el.querySelector('[data-no]').addEventListener('click', close);
+    $('log').prepend(el);
+    setTimeout(close, 15000);
+  },
+
   // Demande confirmation avant de trahir un allié.
   confirmBetrayal(other, onConfirm) {
     if (this.betrayalBox) this.betrayalBox.remove();
@@ -117,7 +147,8 @@ const UI = {
   // Un royaume propose une alliance au joueur. Renvoie false si une demande est déjà en cours.
   askAlliance(from) {
     this.pending = this.pending || new Set();
-    if (this.pending.has(from.id)) return false;
+    // Pas plus de 2 demandes affichées à la fois, pour ne pas cacher la carte
+    if (this.pending.has(from.id) || this.pending.size >= 2) return false;
     this.pending.add(from.id);
     const el = document.createElement('div');
     el.className = 'msg request';
@@ -159,8 +190,14 @@ const UI = {
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
-    if (G.building[i]) txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
-    if (o >= 0 && G.castleProtects(o, i)) txt += ` · 🏰 dans la muraille : défense x${+G.tileDefense(o, i).toFixed(1)}`;
+    if (G.building[i] === B_CASTLE) {
+      const info = G.castleInfo(i);
+      txt += ` · 🏰 ${info.name} (niv. ${G.level[i]}, +${info.bonus} défense)`;
+      if (o === G.human.id && G.upgradeCost(i) !== null) txt += ` · clique pour l'améliorer`;
+    } else if (G.building[i]) {
+      txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
+    }
+    if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense x${+G.tileDefense(o, i).toFixed(1)}`;
     return txt;
   },
 
@@ -243,6 +280,12 @@ const UI = {
     }
     if (G.phase !== 'playing' || !G.human.alive) return;
     const h = G.human;
+    // Clic sur un de ses châteaux : proposer l'amélioration
+    if (G.building[i] === B_CASTLE && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === B_CASTLE)) {
+      this.selectBuild(0);
+      this.showUpgrade(i);
+      return;
+    }
     if (this.selectedBuild) {
       const err = G.tryBuild(h, i, this.selectedBuild);
       if (err) this.log(err, 'warn');

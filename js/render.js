@@ -2,6 +2,9 @@
 // La carte est dessinée dans une petite image (1 pixel = 1 case),
 // puis agrandie à l'écran selon le zoom.
 
+// Zoom (en pixels par case) à partir duquel l'image des châteaux apparaît
+const CASTLE_IMG_ZOOM = 7;
+
 const Render = {
   cam: { x: 0, y: 0, scale: 4 },
   hover: -1,
@@ -96,7 +99,7 @@ const Render = {
   },
 
   // --- Murailles des châteaux ---
-  // La zone d'un château = les cases de son royaume à moins de CASTLE_RADIUS.
+  // La zone d'un château = les cases de son royaume dans le rayon de son niveau (voir CASTLE_LEVELS).
   // On dessine une muraille sur chaque bord de case qui sépare la zone de l'extérieur :
   // elle suit donc la frontière sans jamais déborder chez le voisin.
 
@@ -187,10 +190,12 @@ const Render = {
     if (this.hover >= 0 && G.building[this.hover] === B_CASTLE && G.owner[this.hover] >= 0) {
       this.fillTiles(ox, oy, G.castleZone(this.hover, G.owner[this.hover]), 'rgba(255,255,255,0.22)');
     }
-    // Aperçu de la muraille avant de construire un château
+    // Aperçu de la muraille avant de construire (ou d'améliorer) un château
     if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0) {
-      const ok = G.owner[this.hover] === G.human.id && !G.building[this.hover];
-      const zone = G.castleZone(this.hover, G.human.id);
+      const h = this.hover, mine = G.owner[h] === G.human.id;
+      const upgrading = mine && G.building[h] === B_CASTLE;
+      const ok = mine && (!G.building[h] || (upgrading && G.upgradeCost(h) !== null));
+      const zone = G.castleZone(h, G.human.id, upgrading ? Math.min(3, G.level[h] + 1) : 1);
       if (!zone.length) return;
       const set = new Set(zone);
       this.fillTiles(ox, oy, zone, ok ? 'rgba(255,230,120,0.3)' : 'rgba(220,60,50,0.3)');
@@ -274,6 +279,45 @@ const Render = {
     }
   },
 
+  // Images des 3 niveaux de château (chargées une seule fois)
+  castleImages: CASTLE_LEVELS.map(l => {
+    if (!l) return null;
+    const img = new Image();
+    img.src = l.img;
+    return img;
+  }),
+
+  drawCastle(i, px, py, imgAlpha) {
+    const ctx = this.ctx, s = this.cam.scale, lvl = Game.level[i] || 1;
+    // De loin : l'icône et le niveau en chiffres romains
+    if (imgAlpha < 1) {
+      ctx.globalAlpha = 1 - imgAlpha;
+      ctx.fillText(BUILDINGS[B_CASTLE].icon, px, py);
+      if (lvl > 1 && s >= 5) {
+        const f = Math.max(8, Math.min(14, s * 0.8));
+        ctx.font = `700 ${f}px Georgia, serif`;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+        ctx.fillStyle = '#ffe9a8';
+        const roman = ['', 'I', 'II', 'III'][lvl];
+        ctx.strokeText(roman, px + s * 0.9, py - s * 0.6);
+        ctx.fillText(roman, px + s * 0.9, py - s * 0.6);
+        ctx.font = `${Math.max(9, Math.min(30, s * 1.6))}px serif`;
+      }
+      ctx.globalAlpha = 1;
+    }
+    // De près : la vraie image, posée sur la case
+    const img = this.castleImages[lvl];
+    if (imgAlpha > 0 && img.complete && img.naturalWidth) {
+      const w = CASTLE_LEVELS[lvl].size * s, h = w * img.naturalHeight / img.naturalWidth;
+      ctx.globalAlpha = imgAlpha;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(img, px - w / 2, py + s * 0.6 - h, w, h);
+      ctx.imageSmoothingEnabled = false;
+      ctx.globalAlpha = 1;
+    }
+  },
+
   draw() {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -290,13 +334,19 @@ const Render = {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Bâtiments
+    // Bâtiments : petites icônes de loin, vraie image des châteaux quand on zoome
+    const imgAlpha = Math.max(0, Math.min(1, (s - CASTLE_IMG_ZOOM) / 3));
     if (s >= 3) {
       ctx.font = `${Math.max(9, Math.min(30, s * 1.6))}px serif`;
       for (const i of G.buildingTiles) {
         const px = ox + (i % G.W + 0.5) * s, py = oy + (((i / G.W) | 0) + 0.5) * s;
-        if (px < -30 || py < -30 || px > this.vw + 30 || py > this.vh + 30) continue;
-        ctx.fillText(BUILDINGS[G.building[i]].icon, px, py);
+        if (px < -150 || py < -150 || px > this.vw + 150 || py > this.vh + 150) continue;
+        const type = G.building[i];
+        if (type === B_CASTLE) {
+          this.drawCastle(i, px, py, imgAlpha);
+          continue;
+        }
+        ctx.fillText(BUILDINGS[type].icon, px, py);
       }
     }
 
