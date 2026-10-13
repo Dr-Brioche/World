@@ -10,11 +10,12 @@ const Render = {
   hover: -1,
   mouse: null, // position de la souris à l'écran
 
-  // Case en haut à gauche d'un bâtiment 2x2 centré sous la souris
-  anchorAt(sx, sy) {
-    const x = Math.floor(this.cam.x + sx / this.cam.scale - 0.5);
-    const y = Math.floor(this.cam.y + sy / this.cam.scale - 0.5);
-    if (x < 0 || y < 0 || x >= Game.W - 1 || y >= Game.H - 1) return -1;
+  // Case en haut à gauche d'un bâtiment de ce type, centré sous la souris
+  anchorAt(sx, sy, type) {
+    const n = Game.sizeOf(type);
+    const x = Math.floor(this.cam.x + sx / this.cam.scale - n / 2 + 0.5);
+    const y = Math.floor(this.cam.y + sy / this.cam.scale - n / 2 + 0.5);
+    if (x < 0 || y < 0 || x > Game.W - n || y > Game.H - n) return -1;
     return y * Game.W + x;
   },
 
@@ -203,9 +204,9 @@ const Render = {
     // Aperçu de la muraille avant de construire (ou d'améliorer) un château
     if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0 && this.mouse) {
       const upgrading = G.owner[this.hover] === G.human.id && G.building[this.hover] === B_CASTLE;
-      const h = upgrading ? G.anchor[this.hover] : this.anchorAt(this.mouse.x, this.mouse.y);
+      const h = upgrading ? G.anchor[this.hover] : this.anchorAt(this.mouse.x, this.mouse.y, B_CASTLE);
       if (h < 0) return;
-      const ok = upgrading ? G.upgradeCost(h) !== null : G.canPlace(G.human.id, h);
+      const ok = upgrading ? G.upgradeCost(h) !== null : G.canPlace(G.human.id, h, B_CASTLE);
       const zone = G.castleZone(h, G.human.id, upgrading ? Math.min(3, G.level[h] + 1) : 1);
       if (!zone.length) return;
       const set = new Set(zone);
@@ -302,6 +303,7 @@ const Render = {
   drawLeveledBuilding(i, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, G = Game;
     const type = G.building[i], lvl = G.level[i] || 1, info = BUILDING_LEVELS[type][lvl];
+    const half = G.sizeOf(type) / 2; // demi-côté du bâtiment, en cases
     // De loin : l'icône et le niveau en chiffres romains
     if (imgAlpha < 1) {
       ctx.globalAlpha = 1 - imgAlpha;
@@ -313,19 +315,18 @@ const Render = {
         ctx.strokeStyle = 'rgba(20,12,4,0.85)';
         ctx.fillStyle = '#ffe9a8';
         const roman = ['', 'I', 'II', 'III'][lvl];
-        ctx.strokeText(roman, px + s * 1.2, py - s * 0.8);
-        ctx.fillText(roman, px + s * 1.2, py - s * 0.8);
-        ctx.font = `${Math.max(9, Math.min(40, s * 2))}px serif`;
+        ctx.strokeText(roman, px + s * half * 1.2, py - s * half * 0.8);
+        ctx.fillText(roman, px + s * half * 1.2, py - s * half * 0.8);
       }
       ctx.globalAlpha = 1;
     }
-    // De près : la vraie image, posée sur ses 2x2 cases
+    // De près : la vraie image, posée sur son carré de cases
     const img = this.buildingImages[type][lvl];
     if (imgAlpha > 0 && img.complete && img.naturalWidth) {
       const w = info.size * s, h = w * img.naturalHeight / img.naturalWidth;
       ctx.globalAlpha = imgAlpha;
       ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(img, px - w / 2, py + s * 1.1 - h, w, h);
+      ctx.drawImage(img, px - w / 2, py + s * (half + 0.1) - h, w, h);
       ctx.imageSmoothingEnabled = false;
       ctx.globalAlpha = 1;
     }
@@ -350,12 +351,12 @@ const Render = {
     // Bâtiments : petites icônes de loin, vraies images quand on zoome
     const imgAlpha = Math.max(0, Math.min(1, (s - CASTLE_IMG_ZOOM) / 3));
     if (s >= 3) {
-      ctx.font = `${Math.max(9, Math.min(40, s * 2))}px serif`;
       for (const i of G.buildingTiles) {
-        // Centre du bâtiment = milieu de ses 2x2 cases
-        const px = ox + (i % G.W + 1) * s, py = oy + (((i / G.W) | 0) + 1) * s;
-        if (px < -150 || py < -150 || px > this.vw + 150 || py > this.vh + 150) continue;
-        const type = G.building[i];
+        // Centre du bâtiment = milieu de son carré ; icône à sa taille
+        const type = G.building[i], half = G.sizeOf(type) / 2;
+        const px = ox + (i % G.W + half) * s, py = oy + (((i / G.W) | 0) + half) * s;
+        if (px < -300 || py < -300 || px > this.vw + 300 || py > this.vh + 300) continue;
+        ctx.font = `${Math.max(9, Math.min(20 * half, s * half * 2))}px serif`;
         if (BUILDING_LEVELS[type]) {
           this.drawLeveledBuilding(i, px, py, imgAlpha);
           continue;
@@ -374,16 +375,17 @@ const Render = {
         ctx.arc(ox + (hx + 0.5) * s, oy + (hy + 0.5) * s, (CONFIG.START_RADIUS + 0.5) * s, 0, Math.PI * 2);
         ctx.stroke();
       } else if (UI.selectedBuild && this.mouse) {
-        // Aperçu de l'emplacement 2x2 du bâtiment
-        const a = this.anchorAt(this.mouse.x, this.mouse.y);
+        // Aperçu de l'emplacement du bâtiment (2x2 ou 4x4 cases)
+        const t = UI.selectedBuild, n = G.sizeOf(t);
+        const a = this.anchorAt(this.mouse.x, this.mouse.y, t);
         if (a >= 0) {
-          const ok = G.canPlace(G.human.id, a) || (UI.selectedBuild === B_CASTLE && G.building[this.hover] === B_CASTLE);
+          const ok = G.canPlace(G.human.id, a, t) || (t === B_CASTLE && G.building[this.hover] === B_CASTLE);
           const rx = ox + (a % G.W) * s, ry = oy + ((a / G.W) | 0) * s;
           ctx.fillStyle = ok ? 'rgba(255,255,255,0.35)' : 'rgba(230,80,70,0.45)';
-          ctx.fillRect(rx, ry, 2 * s, 2 * s);
+          ctx.fillRect(rx, ry, n * s, n * s);
           ctx.lineWidth = 3;
           ctx.strokeStyle = ok ? '#1f6b1a' : '#a3261f';
-          ctx.strokeRect(rx, ry, 2 * s, 2 * s);
+          ctx.strokeRect(rx, ry, n * s, n * s);
         }
       } else {
         ctx.strokeRect(ox + hx * s, oy + hy * s, s, s);

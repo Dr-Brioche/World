@@ -71,9 +71,9 @@ const MILL_LEVELS = [
 // dans sa muraille (ex. forêt x1.6 + niveau 3 → x5.6).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 7,  bonus: 1, img: 'img/chateau1.webp', size: 2.6 },
-  { name: 'Château',      radius: 10, bonus: 2, img: 'img/chateau2.webp', size: 3.1, upgradeCost: 600 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, img: 'img/chateau3.webp', size: 3.8, upgradeCost: 1500 },
+  { name: 'Fort en bois', radius: 7,  bonus: 1, img: 'img/chateau1.webp', size: 4.4 },
+  { name: 'Château',      radius: 10, bonus: 2, img: 'img/chateau2.webp', size: 5,   upgradeCost: 600 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, img: 'img/chateau3.webp', size: 5.6, upgradeCost: 1500 },
 ];
 // size = largeur de l'image en cases, quand on zoome assez pour la voir
 
@@ -81,11 +81,12 @@ const CASTLE_LEVELS = [
 const BUILDING_LEVELS = [null, MILL_LEVELS, null, CASTLE_LEVELS];
 
 // L'index dans ce tableau correspond au numéro du bâtiment (0 = aucun).
+// tiles = côté du carré occupé sur la carte (2 → 2x2 cases, 4 → 4x4 cases)
 const BUILDINGS = [
   null,
-  { name: 'Moulin',  icon: '🌾', baseCost: 100, desc: `+${MILL_LEVELS[1].gold} or/s (2 niveaux)` },
-  { name: 'Caserne', icon: '⚔️', baseCost: 200, desc: '+recrutement, +soldats max' },
-  { name: 'Château', icon: '🏰', baseCost: 300, desc: 'Muraille : +1 à +4 défense (3 niveaux)' },
+  { name: 'Moulin',  icon: '🌾', tiles: 2, baseCost: 100, desc: `+${MILL_LEVELS[1].gold} or/s (2 niveaux)` },
+  { name: 'Caserne', icon: '⚔️', tiles: 2, baseCost: 200, desc: '+recrutement, +soldats max' },
+  { name: 'Château', icon: '🏰', tiles: 4, baseCost: 300, desc: 'Muraille : +1 à +4 défense (3 niveaux)' },
 ];
 
 // Les royaumes contrôlés par l'ordinateur.

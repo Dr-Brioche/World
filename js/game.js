@@ -13,7 +13,8 @@ const Game = {
     this.owner = new Int16Array(this.N).fill(-1);
     this.building = new Uint8Array(this.N);
     this.level = new Uint8Array(this.N); // niveau des châteaux (1 à 3), sur la case d'ancrage
-    // Un bâtiment occupe 2x2 cases. anchor[i] = case en haut à gauche du bâtiment (-1 si aucun)
+    // Un bâtiment occupe un carré de cases (2x2, ou 4x4 pour le château).
+    // anchor[i] = case en haut à gauche du bâtiment (-1 si aucun)
     this.anchor = new Int32Array(this.N).fill(-1);
     this.players = [];
     this.attacks = [];
@@ -96,23 +97,32 @@ const Game = {
     Render.markDirty(i);
     // Prendre une case d'un bâtiment, c'est prendre tout le bâtiment
     if (this.building[i]) {
-      for (const j of this.footprint(this.anchor[i])) if (this.owner[j] !== pid) this.setOwner(j, pid);
+      const a = this.anchor[i];
+      for (const j of this.footprint(a, this.building[a])) if (this.owner[j] !== pid) this.setOwner(j, pid);
     }
     if (old >= 0 && this.players[old].tiles === 0) this.eliminate(old, pid);
   },
 
-  // Les 4 cases d'un bâtiment dont "a" est la case en haut à gauche
-  footprint(a) { return [a, a + 1, a + this.W, a + this.W + 1]; },
+  // Côté du carré occupé par un type de bâtiment
+  sizeOf(type) { return BUILDINGS[type].tiles; },
 
-  // Peut-on poser un bâtiment 2x2 avec "a" en haut à gauche ?
-  canPlace(pid, a) {
-    if (a < 0 || a % this.W === this.W - 1 || a >= this.N - this.W) return false;
-    return this.footprint(a).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]);
+  // Les cases d'un bâtiment de ce type dont "a" est la case en haut à gauche
+  footprint(a, type) {
+    const n = this.sizeOf(type), cells = [];
+    for (let dy = 0; dy < n; dy++) for (let dx = 0; dx < n; dx++) cells.push(a + dy * this.W + dx);
+    return cells;
+  },
+
+  // Peut-on poser ce bâtiment avec "a" en haut à gauche ?
+  canPlace(pid, a, type) {
+    const n = this.sizeOf(type);
+    if (a < 0 || a % this.W > this.W - n || ((a / this.W) | 0) > this.H - n) return false;
+    return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]);
   },
 
   placeBuilding(i, type) {
     this.version++;
-    for (const j of this.footprint(i)) {
+    for (const j of this.footprint(i, type)) {
       this.building[j] = type;
       this.anchor[j] = i;
     }
@@ -155,8 +165,9 @@ const Game = {
   castleZone(c, pid, level) {
     const R = CASTLE_LEVELS[level || this.level[c] || 1].radius;
     const cx = c % this.W, cy = (c / this.W) | 0, zone = [];
-    for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R + 1); y++) {
-      for (let x = Math.max(0, cx - R); x <= Math.min(this.W - 1, cx + R + 1); x++) {
+    const n = this.sizeOf(B_CASTLE);
+    for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R + n); y++) {
+      for (let x = Math.max(0, cx - R); x <= Math.min(this.W - 1, cx + R + n); x++) {
         const i = y * this.W + x;
         if (this.inCastleRange(c, x, y, R) && this.owner[i] === pid) zone.push(i);
       }
@@ -164,9 +175,10 @@ const Game = {
     return zone;
   },
 
-  // La case (x, y) est-elle à moins de R du centre du château (milieu de ses 2x2 cases) ?
+  // La case (x, y) est-elle à moins de R du centre du château (milieu de son carré) ?
   inCastleRange(c, x, y, R) {
-    const dx = (c % this.W) + 0.5 - x, dy = ((c / this.W) | 0) + 0.5 - y;
+    const half = (this.sizeOf(B_CASTLE) - 1) / 2;
+    const dx = (c % this.W) + half - x, dy = ((c / this.W) | 0) + half - y;
     return dx * dx + dy * dy <= R * R;
   },
 
@@ -214,16 +226,21 @@ const Game = {
       }
     }
     p.capital = center;
-    // La capitale est un château gratuit : on cherche 2x2 cases libres, au plus près du centre
+    // La capitale est un château gratuit : on cherche la place de son carré au plus près
+    // du centre (sur la terre, libre ou à soi ; les cases libres sont alors prises)
+    const n = this.sizeOf(B_CASTLE), half = (n - 1) / 2;
+    const fits = a => this.footprint(a, B_CASTLE).every(j =>
+      this.isLand(j) && !this.building[j] && (this.owner[j] === p.id || this.owner[j] === -1));
     let best = -1, bestDist = Infinity;
-    for (let dy = -r - 1; dy <= r; dy++) {
-      for (let dx = -r - 1; dx <= r; dx++) {
-        const x = cx + dx, y = cy + dy, d = (dx + 0.5) ** 2 + (dy + 0.5) ** 2;
-        if (x < 0 || y < 0 || x >= this.W - 1 || y >= this.H - 1 || d >= bestDist) continue;
-        if (this.canPlace(p.id, y * this.W + x)) { best = y * this.W + x; bestDist = d; }
+    for (let dy = -r - n; dy <= r; dy++) {
+      for (let dx = -r - n; dx <= r; dx++) {
+        const x = cx + dx, y = cy + dy, d = (dx + half) ** 2 + (dy + half) ** 2;
+        if (x < 0 || y < 0 || x > this.W - n || y > this.H - n || d >= bestDist) continue;
+        if (fits(y * this.W + x)) { best = y * this.W + x; bestDist = d; }
       }
     }
     if (best >= 0) {
+      for (const j of this.footprint(best, B_CASTLE)) if (this.owner[j] === -1) this.setOwner(j, p.id);
       this.placeBuilding(best, B_CASTLE);
       p.capital = best;
     }
@@ -273,7 +290,10 @@ const Game = {
   // Renvoie un message d'erreur, ou null si la construction a réussi.
   // i = case en haut à gauche du bâtiment (2x2 cases)
   tryBuild(p, i, type) {
-    if (!this.canPlace(p.id, i)) return 'Il faut 2x2 cases libres sur ton territoire (pas de mer).';
+    if (!this.canPlace(p.id, i, type)) {
+      const n = this.sizeOf(type);
+      return `Il faut ${n}x${n} cases libres sur ton territoire (pas de mer).`;
+    }
     const cost = this.buildCost(p, type);
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
