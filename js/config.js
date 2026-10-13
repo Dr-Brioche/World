@@ -20,10 +20,8 @@ const CONFIG = {
   // --- Soldats ---
   BASE_MAX_TROOPS: 1000,
   MAX_TROOPS_PER_TILE: 30,
-  MAX_TROOPS_PER_BARRACKS: 1500,
   BASE_TROOP_GROWTH: 15,       // soldats gagnés par seconde au minimum
   TROOP_GROWTH_PER_TILE: 0.3,  // soldats/seconde en plus par case possédée
-  BARRACKS_GROWTH_BONUS: 0.3,  // +30 % de recrutement par caserne
   // Le recrutement dépend du remplissage de l'armée : il monte jusqu'à TROOP_PEAK_RATIO
   // du maximum, puis baisse jusqu'à 0 quand on s'approche du maximum.
   TROOP_PEAK_RATIO: 0.4,       // remplissage idéal (40 % du maximum)
@@ -73,6 +71,15 @@ const MILL_LEVELS = [
   { name: 'Grand moulin', gold: 6,   img: 'img/moulin2.webp', size: 2.8, upgradeCost: 400 },
 ];
 
+// Les 3 niveaux de la caserne : soldats max en plus, et bonus de recrutement
+// (0.3 = +30 %, les bonus de toutes les casernes s'additionnent).
+const BARRACKS_LEVELS = [
+  null,
+  { name: 'Camp d\'entraînement', maxTroops: 1500, growth: 0.3, img: 'img/caserne1.webp', size: 2.5 },
+  { name: 'Caserne',              maxTroops: 3000, growth: 0.5, img: 'img/caserne2.webp', size: 2.8, upgradeCost: 400 },
+  { name: 'Grande caserne',       maxTroops: 5000, growth: 0.8, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 1000 },
+];
+
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
 // dans sa muraille (ex. forêt x1.6 + niveau 3 → x5.6).
 const CASTLE_LEVELS = [
@@ -84,14 +91,14 @@ const CASTLE_LEVELS = [
 // size = largeur de l'image en cases, quand on zoome assez pour la voir
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
-const BUILDING_LEVELS = [null, MILL_LEVELS, null, CASTLE_LEVELS];
+const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS];
 
 // L'index dans ce tableau correspond au numéro du bâtiment (0 = aucun).
 // tiles = côté du carré occupé sur la carte (2 → 2x2 cases, 4 → 4x4 cases)
 const BUILDINGS = [
   null,
   { name: 'Moulin',  icon: '🌾', tiles: 2, baseCost: 100, desc: `+${MILL_LEVELS[1].gold} or/s (2 niveaux)` },
-  { name: 'Caserne', icon: '⚔️', tiles: 2, baseCost: 200, desc: '+recrutement, +soldats max' },
+  { name: 'Caserne', icon: '⚔️', tiles: 2, baseCost: 200, desc: '+soldats max, +recrutement (3 niveaux)' },
   { name: 'Château', icon: '🏰', tiles: 4, baseCost: 300, desc: 'Muraille : +1 à +4 défense (3 niveaux)' },
 ];
 
