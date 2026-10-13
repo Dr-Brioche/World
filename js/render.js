@@ -9,6 +9,7 @@ const Render = {
   cam: { x: 0, y: 0, scale: 4 },
   hover: -1,
   mouse: null, // position de la souris à l'écran
+  floaters: [], // petits chiffres qui s'envolent au-dessus des bâtiments (+3 💰, +2 ⚔️)
 
   // Case en haut à gauche d'un bâtiment de ce type, centré sous la souris
   anchorAt(sx, sy, type) {
@@ -376,6 +377,31 @@ const Render = {
     }
   },
 
+  // Fait apparaître un petit chiffre qui monte au-dessus d'un bâtiment (production)
+  floatText(a, type, text) {
+    const half = Game.sizeOf(type) / 2;
+    this.floaters.push({ x: a % Game.W + half, y: ((a / Game.W) | 0), text, color: type === B_MILL ? '#ffd75e' : '#ffffff', start: performance.now() });
+  },
+
+  drawFloaters(ox, oy) {
+    const ctx = this.ctx, s = this.cam.scale, now = performance.now(), LIFE = 1800;
+    this.floaters = this.floaters.filter(f => now - f.start < LIFE);
+    const size = Math.max(11, Math.min(18, s * 1.2));
+    ctx.font = `700 ${size}px Georgia, serif`;
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 3;
+    for (const f of this.floaters) {
+      const t = (now - f.start) / LIFE; // 0 → 1
+      const x = ox + f.x * s, y = oy + f.y * s - 6 - t * 28; // il monte...
+      ctx.globalAlpha = t < 0.7 ? 1 : (1 - t) / 0.3;        // ...puis s'efface
+      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+      ctx.fillStyle = f.color;
+      ctx.strokeText(f.text, x, y);
+      ctx.fillText(f.text, x, y);
+    }
+    ctx.globalAlpha = 1;
+  },
+
   // Frontière dorée autour de chaque pacte : on trace les bords des cases d'un royaume
   // membre d'un pacte qui touchent une case hors du pacte (autre royaume, terre libre, mer).
   // Les frontières entre alliés ne sont donc pas dorées : le pacte forme un seul bloc.
@@ -583,6 +609,7 @@ const Render = {
     }
 
     this.drawCastleAssaultPreview(ox, oy);
+    this.drawFloaters(ox, oy);
 
     // Par-dessus tout le reste, pour bien les voir
     this.drawAttackArrows(ox, oy);

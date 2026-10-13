@@ -52,60 +52,63 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ce sont les **défenseurs** ennemis.
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Le défenseur peut en envoyer autant qu'il veut, **sans délai**.
-   - **La garnison** : chaque château a ses propres défenseurs (5 / 15 / 35 selon son niveau),
+   - **La garnison** : chaque château a ses propres défenseurs (plus nombreux selon son niveau),
      qui sortent le défendre seuls le temps que le royaume réagisse. Ils se reconstituent ensuite peu à peu.
    - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
      **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
-     où se bat l'assaut (forêt x1.6, colline x2.2, montagne x3.5, + bonus du château dans sa muraille).
+     où se bat l'assaut (forêt +60 %, colline +120 %, montagne +250 %, + bonus du château dans sa muraille).
      L'assaut choisit donc un chemin qui passe le plus possible par les plaines.
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
    - **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
      (un peu élargie), puis les survivants rentrent. Tu peux relancer un nouvel assaut aussitôt.
-3. **Construis** : appuie sur `1`, `2` ou `3` (ou clique sur un bouton en bas) : le bâtiment apparaît
+3. **Construis** : appuie sur `1`, `2` ou `3` (ou `&`, `é`, `"` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise) ; les châteaux pris à l'ennemi
    ne comptent pas dans cette limite.
-   **Le terrain compte** : un moulin produit plus en plaine (x1.3) qu'en forêt (x1), colline (x0.9) ou montagne (x0.7) ;
-   une caserne recrute plus en forêt ou colline (x1.3) qu'en plaine (x1) ou montagne (x0.9).
+   **Le terrain compte** : un moulin produit plus en plaine (+30 %) qu'en forêt (normal), colline (-10 %) ou montagne (-30 %) ;
+   une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
    **Les moulins et casernes se construisent uniquement dans l'enceinte d'un de tes châteaux** (dans sa muraille),
    pas dans l'arrière-pays. Les châteaux, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
    (l'aperçu devient rouge si c'est trop près).
    Si un ennemi prend une seule de ces cases, il capture tout le bâtiment !
-   - 🌾 **Moulin** : rapporte de l'or. **Clique dessus pour l'améliorer** (2 niveaux) :
+   - 🌾 **Moulin** : **toutes les 10 secondes**, il verse un peu d'or d'un coup
+     (un petit chiffre `+2 💰` s'envole au-dessus de lui). **Clique dessus pour l'améliorer** (2 niveaux) :
 
-     | Niveau | Or rapporté | Prix |
+     | Niveau | Or produit | Prix |
      |---|---|---|
-     | 1. Moulin | +0.15 or/s | prix du moulin |
-     | 2. Grand moulin | +0.36 or/s | 💰 40 |
+     | 1. Moulin | un peu | prix du moulin |
+     | 2. Grand moulin | +133 % | 💰 40 |
 
-   - ⚔️ **Caserne** : plus de soldats, recrutés plus vite. **Clique dessus pour l'améliorer** (3 niveaux) :
+   - ⚔️ **Caserne** : **toutes les 10 secondes**, elle forme quelques soldats (`+3 ⚔️` au-dessus d'elle),
+     et elle agrandit ton armée maximum. **Clique dessus pour l'améliorer** (3 niveaux) :
 
-     | Niveau | Soldats max en plus | Recrutement en plus | Prix |
+     | Niveau | Soldats produits | Bonus d'armée max | Prix |
      |---|---|---|---|
-     | 1. Camp d'entraînement | +25 | +30 % | prix de la caserne |
-     | 2. Caserne | +50 | +50 % | 💰 40 |
-     | 3. Grande caserne | +80 | +80 % | 💰 100 |
+     | 1. Camp d'entraînement | quelques-uns | un peu | prix de la caserne |
+     | 2. Caserne | +100 % | +100 % | 💰 40 |
+     | 3. Grande caserne | +75 % | +60 % | 💰 100 |
 
-     Les bonus de toutes tes casernes s'additionnent.
+     Une caserne ne fait pas dépasser l'armée maximum. Les bonus de toutes tes casernes s'additionnent.
+     Tu ne vois que les chiffres de **tes** bâtiments, pas ceux des autres royaumes.
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
      Seules les cases à l'intérieur de la muraille sont renforcées : le bonus s'ajoute à la défense du terrain.
      **Clique sur un de tes châteaux pour l'améliorer** (3 niveaux) :
 
-     | Niveau | Bonus de défense | Rayon de la muraille | Garnison | Prix |
+     | Niveau | Défense des murs | Muraille | Garnison | Prix |
      |---|---|---|---|---|
-     | 1. Fort en bois | +1 | 7 cases | 5 | prix du château |
-     | 2. Château | +2 | 10 cases | 15 | 💰 60 |
-     | 3. Citadelle | +4 | 13 cases | 35 | 💰 150 |
+     | 1. Fort en bois | +100 % | petite | quelques soldats | prix du château |
+     | 2. Château | +200 % | moyenne | +200 % | 💰 60 |
+     | 3. Citadelle | +400 % | grande | +133 % | 💰 150 |
 
      **Routes** : un château de niveau 2 trace des **chemins de terre** 🛤️ vers tes moulins et casernes
-     qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, recrutement des casernes).
+     qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, soldats des casernes).
      Au niveau 3, ce sont des **routes pavées** 🛣️ grises : **+50 %**.
 
-     Exemple : une forêt (x1.6) protégée par une citadelle passe à x5.6.
+     Exemple : une forêt (+60 %) protégée par une citadelle passe à +460 %.
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
@@ -118,20 +121,24 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Mais attention, un **traître** 🗡️ le paie cher pendant 2 minutes : **sa défense est réduite de moitié**
    (ses terres coûtent 2x moins de soldats à prendre), personne ne veut s'allier avec lui,
    et les autres royaumes en profitent pour l'attaquer !
-5. **Gère ton armée** : tu commences petit, avec **10 soldats** et **10 pièces d'or**, puis ton royaume grandit peu à peu.
-   La jauge en bas de l'écran montre tes soldats, et au-dessus combien tu en
-   recrutes par seconde. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
+5. **Gère ton armée et ton or** : tu commences petit, puis ton royaume grandit peu à peu.
+   Tu as deux sortes de revenus : un **revenu de base**, continu, qui grandit avec ton territoire,
+   et la **production de tes moulins et casernes**, versée toutes les 10 secondes.
+   Le jeu ne montre **pas de chiffres précis** (pas de « +X par seconde ») : seulement des pourcentages.
+   À toi de voir ce qui marche le mieux !
+   La jauge en bas de l'écran montre tes soldats, et au-dessus si ton recrutement va bien. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
    puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée est pleine.
    Envoie donc tes troupes au combat plutôt que de les garder !
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
-🌲 Chaque terrain a sa défense : plaine x1, forêt x1.6, colline x2.2, montagne x3.5. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
+🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +250 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 
-**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` (ou `&` `é` `"`) = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.23** : plus de chiffres précis dans le jeu, seulement des pourcentages · les moulins et casernes produisent **toutes les 10 secondes**, avec un petit chiffre qui s'envole au-dessus d'eux (seulement pour tes bâtiments) · revenu de base selon la taille du territoire · les touches `&`, `é`, `"` du clavier AZERTY marchent comme `1`, `2`, `3` · la muraille du fort en bois est un peu plus grande, pour pouvoir y construire
 - **v0.22.1** : nouvelle bannière aux poissons (gris clair)
 - **v0.22** : nouvelle échelle plus progressive : on commence avec 10 soldats et 10 pièces d'or, le recrutement et les revenus grandissent lentement (prix des bâtiments 10 / 20 / 30)
 - **v0.21** : suppression de la trêve après la prise d'un château (plus de délai avant de réattaquer, plus de bonus ou malus de recrutement)

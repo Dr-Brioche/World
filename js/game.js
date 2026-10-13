@@ -324,22 +324,50 @@ const Game = {
   },
 
   // --- Économie ---
-  // Somme d'une valeur (ex. "gold") sur tous les bâtiments d'un type d'un royaume,
+  // Il y a deux sortes de revenus :
+  //  - le revenu de base, continu, qui dépend de la taille du territoire ;
+  //  - la production des moulins et casernes, versée d'un coup toutes les PRODUCTION_INTERVAL secondes.
+
+  // Somme d'une valeur (ex. "maxTroops") sur tous les bâtiments d'un type d'un royaume,
   // selon leur niveau
-  // production = compter les bonus de production : routes et terrain
-  // (or des moulins, recrutement des casernes)
-  levelSum(p, type, key, production = false) {
+  levelSum(p, type, key) {
     let sum = 0;
     for (const a of this.buildingTiles) {
-      if (this.building[a] !== type || this.owner[a] !== p.id) continue;
-      let v = this.buildingInfo(a)[key];
-      if (production) {
-        const road = this.roads().get(a);
-        v *= (1 + (road ? road.bonus : 0)) * this.terrainFactor(a, type);
-      }
-      sum += v;
+      if (this.building[a] === type && this.owner[a] === p.id) sum += this.buildingInfo(a)[key];
     }
     return sum;
+  },
+
+  // Ce que produit un moulin (or) ou une caserne (soldats) à chaque versement,
+  // avec les bonus de route et de terrain
+  buildingOutput(a) {
+    const t = this.building[a], info = this.buildingInfo(a);
+    const v = t === B_MILL ? info.gold : info.troops;
+    const road = this.roads().get(a);
+    return v * (1 + (road ? road.bonus : 0)) * this.terrainFactor(a, t);
+  },
+
+  // Versement de la production des moulins et casernes. Chaque bâtiment a son propre moment
+  // (selon sa place sur la carte), pour que tout n'arrive pas en même temps.
+  produce() {
+    const period = CONFIG.PRODUCTION_INTERVAL * CONFIG.TICKS_PER_SECOND;
+    for (const a of this.buildingTiles) {
+      const t = this.building[a];
+      if (t !== B_MILL && t !== B_BARRACKS) continue;
+      if ((this.tick + a * 7) % period !== 0) continue;
+      const p = this.players[this.owner[a]];
+      if (!p || !p.alive) continue;
+      const amount = this.buildingOutput(a);
+      let shown = amount;
+      if (t === B_MILL) p.gold += amount;
+      else {
+        // une caserne ne fait pas dépasser l'armée maximum
+        shown = Math.max(0, Math.min(amount, this.maxTroops(p) - p.troops));
+        p.troops += shown;
+      }
+      // Le joueur ne voit que la production de ses propres bâtiments
+      if (p.isHuman && shown >= 0.5) Render.floatText(a, t, `+${Math.round(shown)} ${t === B_MILL ? '💰' : '⚔️'}`);
+    }
   },
 
   // Multiplicateur de production selon le terrain sous le bâtiment (moyenne de ses cases)
@@ -383,8 +411,7 @@ const Game = {
     const max = this.maxTroops(p);
     if (p.troops >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
-    const bonus = 1 + this.levelSum(p, B_BARRACKS, 'growth', true);
-    return base * bonus * this.growthFactor(p.troops / max);
+    return base * this.growthFactor(p.troops / max);
   },
 
   // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
@@ -396,7 +423,7 @@ const Game = {
   },
 
   goldRate(p) {
-    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE + this.levelSum(p, B_MILL, 'gold', true);
+    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE;
   },
 
   buildCost(p, type) {
@@ -915,6 +942,7 @@ const Game = {
       p.troops += this.troopRate(p) / TPS;
       p.gold += this.goldRate(p) / TPS;
     }
+    this.produce();
 
     // Les garnisons des châteaux se reconstituent (sauf celle qui est en train de combattre)
     const besieged = new Set(this.attacks.filter(a => !a.done && !this.isPreparing(a)).map(a => a.targetCastle));
@@ -967,12 +995,6 @@ const Game = {
     return stats;
   },
 };
-
-// Petits revenus (par seconde) : avec des décimales, sinon on verrait « +0/s »
-function fmtRate(n) {
-  if (n >= 10) return fmt(n);
-  return n >= 1 ? n.toFixed(1) : n.toFixed(2);
-}
 
 function fmt(n) {
   n = Math.floor(n);
