@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Royaumes en Guerre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="map"></canvas>
+
+  <!-- Interface en jeu -->
+  <div id="hud" class="hidden">
+    <div id="topbar" class="panel">
+      <span>👑 <b id="kName"></b></span>
+      <span title="Or">💰 <span id="gold"></span></span>
+      <span title="Soldats">⚔️ <span id="troops"></span></span>
+      <span title="Part des terres">🗺️ <span id="land"></span></span>
+      <button id="pauseBtn">⏸ Pause</button>
+    </div>
+
+    <div id="side" class="panel">
+      <h3>Royaumes</h3>
+      <ol id="lb"></ol>
+      <div id="campaigns"></div>
+    </div>
+
+    <div id="bottombar" class="panel">
+      <label class="slider">
+        Envoyer
+        <input type="range" id="ratio" min="5" max="100" value="30">
+        <span id="ratioVal"></span>
+      </label>
+      <div id="builds"></div>
+    </div>
+  </div>
+
+  <div id="hint" class="panel"></div>
+  <div id="log"></div>
+
+  <!-- Menu de départ -->
+  <div id="menu" class="overlay">
+    <div class="card">
+      <h1>⚔️ Royaumes en Guerre ⚔️</h1>
+      <p class="sub">Étends ton royaume, bâtis des châteaux, écrase tes rivaux.</p>
+      <label>Nom de ton royaume <input id="name" maxlength="20" value="Mon Royaume"></label>
+      <label>Couleur de ta bannière <input id="color" type="color" value="#2a5bd7"></label>
+      <label>Difficulté
+        <select id="difficulty">
+          <option value="facile">Facile (5 royaumes)</option>
+          <option value="normal" selected>Normal (7 royaumes)</option>
+          <option value="difficile">Difficile (10 royaumes)</option>
+        </select>
+      </label>
+      <button id="startBtn" class="big">Commencer la conquête</button>
+      <ul class="rules">
+        <li>🖱️ <b>Clique</b> sur une terre voisine pour l'attaquer avec le % de soldats choisi.</li>
+        <li>🌲 Forêts, collines et montagnes coûtent plus de soldats à conquérir.</li>
+        <li>🌾 Fermes = or · ⚔️ Casernes = soldats · 🏰 Châteaux = défense.</li>
+        <li>🏆 Possède 60 % des terres (ou élimine tout le monde) pour gagner.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Écran de fin -->
+  <div id="endscreen" class="overlay hidden">
+    <div class="card">
+      <h1 id="endTitle"></h1>
+      <p id="endText"></p>
+      <p id="endStats"></p>
+      <button id="replayBtn" class="big">Rejouer</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
