@@ -1,30 +1,61 @@
 # ⚔️ World
 
-Un petit jeu de conquête médiévale dans le navigateur, inspiré d'OpenFront.
-Étends ton royaume, bâtis des fermes, des casernes et des châteaux, et écrase les royaumes rivaux !
+**Un petit jeu de conquête médiévale, jouable directement dans le navigateur.**
 
-## ▶️ Jouer
+Inspiré d'OpenFront, mais à la sauce médiévale : fonde ta capitale, étends ton royaume case par case,
+bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour dominer le continent !
 
-Ouvre simplement `index.html` dans ton navigateur (double-clic). Rien à installer.
+## 🎮 [▶️ JOUER MAINTENANT](https://dr-brioche.github.io/World/)
 
-## 🎮 Comment jouer
+> Si le lien ci-dessus ne marche pas encore, essaie celui-ci : [lien de secours](https://raw.githack.com/Dr-Brioche/World/main/index.html)
+>
+> Tu peux aussi télécharger le projet et ouvrir `index.html` d'un double-clic. Rien à installer.
 
-- **Début** : clique sur une terre pour fonder ta capitale.
-- **Attaquer / s'étendre** : clique sur une terre voisine (libre ou ennemie). Le curseur « Envoyer » choisit le % de tes soldats envoyés.
-- **Terrain** : les forêts, collines et montagnes coûtent plus cher à conquérir.
-- **Bâtiments** (touches `1`, `2`, `3`, puis clic sur ton territoire) :
-  - 🌾 **Ferme** : rapporte de l'or
-  - ⚔️ **Caserne** : plus de soldats et un recrutement plus rapide
-  - 🏰 **Château** : les cases autour coûtent 2x plus cher à prendre
-- **Victoire** : posséder 60 % des terres ou éliminer tous les autres royaumes.
-- **Contrôles** : molette = zoom, glisser = déplacer la carte, `P` = pause, `Échap` = annuler une construction.
+---
 
-## 🛠️ Le mettre à ta sauce
+## 📜 Le jeu en bref
+
+- 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes et mers
+- 👑 **Ton royaume** : choisis son nom et la couleur de ta bannière
+- ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
+- 🏰 **Trois bâtiments** pour développer ton royaume
+- 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent et attaquent tout seuls
+- 🎚️ **3 niveaux de difficulté** : Facile, Normal, Difficile
+
+## 🕹️ Comment jouer
+
+1. **Fonde ta capitale** : clique sur une terre au début de la partie.
+2. **Étends-toi** : clique sur une terre voisine (libre ou ennemie) pour l'attaquer.
+   Le curseur « Envoyer » choisit le % de tes soldats qui partent en campagne.
+3. **Construis** (touches `1`, `2`, `3`, puis clic sur ton territoire) :
+   - 🌾 **Ferme** : rapporte de l'or
+   - ⚔️ **Caserne** : plus de soldats, recrutés plus vite
+   - 🏰 **Château** : les cases autour coûtent 2x plus cher à prendre
+4. **Gagne** en possédant 60 % des terres, ou en éliminant tous les autres royaumes.
+
+🌲 Les forêts, collines et montagnes coûtent plus de soldats à conquérir que les plaines.
+
+**Contrôles** : molette = zoom · glisser = déplacer la carte · `P` = pause · `Échap` / clic droit = annuler une construction
+
+## 🆕 Nouveautés
+
+- **v0.1** : première version jouable (carte aléatoire, conquête, or, 3 bâtiments, royaumes rivaux, victoire/défaite)
+
+## 💡 Idées pour la suite
+
+- ⛵ Bateaux pour traverser la mer
+- 🤝 Diplomatie : alliances, trêves, trahisons
+- 🗼 Nouveaux bâtiments : tours de guet, ports, cathédrales
+- 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
+- 👑 Héros ou rois avec des pouvoirs spéciaux
+- 🌐 Multijoueur en ligne
+
+---
+
+## 🛠️ Pour les curieux : modifier le jeu
 
 Tous les réglages sont dans **`js/config.js`** : taille de la carte, vitesse, coûts,
 noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la page, et teste !
-
-## 📁 Organisation du code
 
 | Fichier | Rôle |
 |---|---|
@@ -36,12 +67,3 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-
-## 💡 Idées pour la suite
-
-- ⛵ Bateaux pour traverser la mer
-- 🤝 Diplomatie : alliances, trêves, trahisons
-- 🗼 Nouveaux bâtiments : tours de guet, ports, cathédrales
-- 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
-- 👑 Héros ou rois avec des pouvoirs spéciaux
-- 🌐 Multijoueur en ligne (le plus gros chantier !)
