@@ -216,8 +216,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      selon la force de chaque camp). Si l'escadre gagne, l'expédition est **coulée** et ses survivants rentrent ;
      sinon, l'expédition débarque quand même, avec moins de soldats. Tu es prévenu quand une expédition vise ta côte.
 
-   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🏗️ Construire · ⛵ Débarquer).
-4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer de t'allier.
+   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Débarquer).
+4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
+   pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
    **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
    Les membres d'un pacte ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer un pacte : accepte ou refuse.
@@ -259,6 +260,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.34.3** : clic droit sur un royaume : « 🤝 Proposer une alliance » (ou « 💔 Rompre l'alliance » avec un allié)
 - **v0.34.2** : un bouclier 🛡️ au-dessus des châteaux, ports royaux et avant-postes montre les soldats de leur garnison (et ⚔ les soldats stationnés d'un avant-poste)
 - **v0.34.1** : menu de départ : bannières plus grandes, règles repliées (on clique pour les dérouler)
 - **v0.34** : 🗺️ 3 types de cartes au choix (Normale avec quelques îlots, Continentale sans mer bordée de montagnes et de grands lacs, Base navale avec plusieurs grandes îles) · 🏔️ sommets enneigés infranchissables au cœur des montagnes · les royaumes coincés sur leur île bâtissent un port et partent en expédition

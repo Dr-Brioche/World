@@ -572,6 +572,14 @@ const UI = {
     const items = [];
     const own = G.owner[i] === h.id;
     if (G.isLand(i) && !own) items.push({ label: '⚔️ Attaquer', run: () => this.onMapClick(sx, sy) });
+    // Sur un royaume ennemi : lui proposer une alliance (ou, s'il est allié, rompre le pacte)
+    const o = G.owner[i];
+    if (o >= 0 && !own && G.players[o].alive) {
+      const name = escapeHtml(G.players[o].name);
+      items.push(G.areAllied(h.id, o)
+        ? { label: `💔 Rompre l'alliance avec ${name}`, run: () => this.onAllyButton(o) }
+        : { label: `🤝 Proposer une alliance à ${name}`, run: () => this.onAllyButton(o) });
+    }
     if (own) {
       for (let t = 1; t < BUILDINGS.length; t++) {
         const b = BUILDINGS[t];
