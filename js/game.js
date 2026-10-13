@@ -54,9 +54,6 @@ const Game = {
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
       castlesBuilt: 0,  // châteaux construits dans la partie (capitale comprise), limité à MAX_CASTLES
       refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
-      recoverUntil: {}, // royaume id → fin de la trêve avec lui (château pris) : pas d'attaque avant
-      restUntil: 0,     // tick jusqu'auquel l'armée se repose (recrute moins vite) après avoir pris un château
-      rallyUntil: 0,    // tick jusqu'auquel ce royaume recrute plus vite (il vient de perdre un château)
       aiTimer: Math.floor(Math.random() * 20),
       aggression: lo + Math.random() * (hi - lo),
     };
@@ -387,19 +384,7 @@ const Game = {
     if (p.troops >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
     const bonus = 1 + this.levelSum(p, B_BARRACKS, 'growth', true);
-    return base * bonus * this.growthFactor(p.troops / max) * this.recoveryFactor(p);
-  },
-
-  // Après la prise d'un château : l'armée de l'attaquant se repose (recrutement réduit)
-  // et le défenseur se réorganise (recrutement accéléré).
-  isRecovering(p) { return p.restUntil > this.tick; },
-  isRallying(p) { return p.rallyUntil > this.tick; },
-
-  recoveryFactor(p) {
-    let f = 1;
-    if (this.isRecovering(p)) f *= CONFIG.RECOVER_GROWTH_FACTOR;
-    if (this.isRallying(p)) f *= CONFIG.RALLY_GROWTH_FACTOR;
-    return f;
+    return base * bonus * this.growthFactor(p.troops / max);
   },
 
   // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
@@ -459,10 +444,6 @@ const Game = {
     if (target === pid) return null;
     if (target >= 0 && this.areAllied(pid, target)) {
       return `${this.players[target].name} est ton allié ! Romps l'alliance d'abord.`;
-    }
-    const recover = this.recoverTime(p, target);
-    if (recover > 0) {
-      return `Trêve après la prise d'un château : encore ${recover} s avant de pouvoir attaquer ${this.players[target].name}.`;
     }
     if (troops < 1) return 'Pas assez de soldats !';
     const frontier = this.buildFrontier(pid, target);
@@ -634,12 +615,6 @@ const Game = {
 
   isPreparing(a) { return this.tick < a.startTick; },
 
-  // Secondes avant de pouvoir réattaquer ce royaume après lui avoir pris un château (0 = c'est bon)
-  recoverTime(p, target) {
-    if (target < 0) return 0;
-    return Math.max(0, Math.ceil(((p.recoverUntil[target] || 0) - this.tick) / CONFIG.TICKS_PER_SECOND));
-  },
-
   // Choisit une case du front, en préférant celles bien entourées (front plus régulier).
   // Le relief compte : une plaine est plus attirante qu'une montagne.
   pickFrontier(a) {
@@ -806,25 +781,6 @@ const Game = {
     const c = a.targetCastle;
     if (c >= 0 && a.garrison > 0 && this.owner[c] === a.target) {
       this.garrison[c] = Math.min(this.castleInfo(c).garrison, this.garrison[c] + a.garrison);
-    }
-    // Après la prise d'un château : trêve dans les deux sens. L'attaquant se repose
-    // (recrute moins vite) et le défenseur se réorganise (recrute plus vite),
-    // mais aucun des deux ne peut attaquer l'autre avant la fin de la trêve.
-    if (a.castleTaken && p.alive) {
-      const until = this.tick + CONFIG.CASTLE_CAPTURE_COOLDOWN * CONFIG.TICKS_PER_SECOND;
-      const d = this.players[a.target];
-      p.recoverUntil[a.target] = until;
-      d.recoverUntil[a.attacker] = Math.max(d.recoverUntil[a.attacker] || 0, until);
-      p.restUntil = Math.max(p.restUntil, until);
-      d.rallyUntil = Math.max(d.rallyUntil, until);
-      const secs = CONFIG.CASTLE_CAPTURE_COOLDOWN;
-      if (p.isHuman) {
-        UI.log(`⏳ Assaut terminé : trêve de ${secs} s avec ${d.name}. Ton armée se repose ` +
-          `(recrutement x${CONFIG.RECOVER_GROWTH_FACTOR}), et ${d.name} ne peut pas contre-attaquer non plus.`, '', d);
-      } else if (d.isHuman && d.alive) {
-        UI.log(`🛡️ ${p.name} a fini son assaut : trêve de ${secs} s. Ton royaume se réorganise ` +
-          `(recrutement x${CONFIG.RALLY_GROWTH_FACTOR}), mais tu ne peux pas contre-attaquer tout de suite.`, 'good', p);
-      }
     }
   },
 

@@ -59,13 +59,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      où se bat l'assaut (forêt x1.6, colline x2.2, montagne x3.5, + bonus du château dans sa muraille).
      L'assaut choisit donc un chemin qui passe le plus possible par les plaines.
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
-   **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
-   (un peu élargie), puis rentre. Elle doit ensuite **récupérer 30 secondes** avant de pouvoir
-   réattaquer ce royaume : une **trêve**, dont le temps restant s'affiche entre parenthèses sous le nom
-   de ce royaume sur la carte, et en bas de l'écran. Pendant ces 30 secondes,
-   ton **recrutement est divisé par 2**, et celui du royaume attaqué est **multiplié par 1.5**
-   pour qu'il ait le temps de se défendre. La trêve vaut **dans les deux sens** : le royaume qui a perdu
-   son château ne peut pas non plus contre-attaquer avant la fin. Les bots suivent la même règle.
+   - **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
+     (un peu élargie), puis les survivants rentrent. Tu peux relancer un nouvel assaut aussitôt.
 3. **Construis** : appuie sur `1`, `2` ou `3` (ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
@@ -136,6 +131,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.21** : suppression de la trêve après la prise d'un château (plus de délai avant de réattaquer, plus de bonus ou malus de recrutement)
 - **v0.20** : 13 bannières de royaume (une par couleur) à choisir au début ; elles s'affichent à côté des noms, portent les armées et accompagnent les messages
 - **v0.19** : nouveaux combats : 10 s de préparation (on ajoute des soldats), renforts en 5 s, le défenseur envoie ses soldats en cliquant sur la bannière, combats visibles en direct, bonus de terrain pour le défenseur, garnison dans les châteaux · on peut attaquer depuis les terres d'un allié du pacte · production des moulins et casernes selon le terrain · 3 châteaux construits maximum par partie
 - **v0.18** : nouvelle logique d'attaque : on vise un château ennemi, l'armée contourne les autres fortifications et capture tout sur son chemin ; un royaume sans château s'attaque de front · écart obligatoire de 3 cases autour des bâtiments et 4 autour des châteaux · moulins et casernes seulement dans l'enceinte d'un château

@@ -46,12 +46,8 @@ const CONFIG = {
   FIGHT_MIN_LOSS: 5,           // pertes minimum par tour, pour que chaque combat finisse vite
   GARRISON_REGEN: 0.05,        // la garnison d'un château se reconstitue de 5 % par seconde
   NEUTRAL_TILE_COST: 2,        // soldats perdus pour prendre une case (libre ou ennemie)
-  // Prise d'un château : l'assaut finit de conquérir sa zone de défense (un peu élargie),
-  // puis s'arrête, et l'armée doit récupérer avant de pouvoir réattaquer ce royaume.
+  // Prise d'un château : l'assaut finit de conquérir sa zone de défense (un peu élargie), puis s'arrête.
   CASTLE_CAPTURE_EXTRA_RADIUS: 2,  // cases conquises en plus autour de la zone du château
-  CASTLE_CAPTURE_COOLDOWN: 30,     // secondes avant de pouvoir réattaquer ce royaume
-  RECOVER_GROWTH_FACTOR: 0.5,      // pendant ce repos, l'attaquant recrute 2x moins vite...
-  RALLY_GROWTH_FACTOR: 1.5,        // ...et le défenseur 1.5x plus vite, pour se réorganiser
 
   // --- Alliances (pactes) ---
   MAX_PACT_SIZE: 3,              // nombre maximum de royaumes dans un même pacte

@@ -35,7 +35,7 @@ const AI = {
     // à ce qu'il pourra nous opposer (la moitié de ses soldats + la garnison du château visé).
     let best = null, bestScore = 0, bestAim = -1;
     for (const [o] of nb) {
-      if (o < 0 || Game.areAllied(p.id, o) || Game.recoverTime(p, o) > 0) continue;
+      if (o < 0 || Game.areAllied(p.id, o)) continue;
       const e = Game.players[o];
       // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
       const plan = Game.planAssault(p.id, o), aim = plan.castle;

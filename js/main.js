@@ -327,10 +327,6 @@ const UI = {
     $('troopPeak').style.left = CONFIG.TROOP_PEAK_RATIO * 100 + '%';
     $('troopText').textContent = `⚔️ ${fmt(h.troops)} / ${fmt(max)}`;
     let tip = '';
-    const f = G.recoveryFactor(h);
-    if (G.isRecovering(h) && G.isRallying(h)) tip += ` · repos et réorganisation (x${+f.toFixed(2)})`;
-    else if (G.isRecovering(h)) tip += ` · armée au repos (x${CONFIG.RECOVER_GROWTH_FACTOR})`;
-    else if (G.isRallying(h)) tip += ` · réorganisation (x${CONFIG.RALLY_GROWTH_FACTOR})`;
     if (r >= 0.98) tip += ' · armée pleine !';
     else if (eff < 0.45) tip += ' · trop de soldats, le recrutement ralentit';
     else if (eff > 0.85) tip += ' · recrutement au top';
@@ -342,9 +338,7 @@ const UI = {
   refreshAttacks() {
     const G = Game, h = G.human;
     const list = G.attacks.filter(a => !a.done && (a.attacker === h.id || a.target === h.id));
-    // Royaumes qu'on ne peut pas réattaquer tout de suite (château pris, armée qui récupère)
-    const resting = G.players.filter(p => p.alive && G.recoverTime(h, p.id) > 0);
-    const key = list.map(a => a.id).join(',') + '|' + resting.map(p => p.id).join(',');
+    const key = list.map(a => a.id).join(',');
     const box = $('attacks');
     if (key !== this.attacksKey) {
       this.attacksKey = key;
@@ -359,14 +353,7 @@ const UI = {
         return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
           `<b data-troops="${a.id}"></b>` +
           `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cet assaut">🛡️ Défendre</button></div>`;
-      }).join('') + resting.map(p =>
-        `<div class="attack panel resting" title="Trêve après la prise d'un château : pas d'attaque dans les deux sens">` +
-        `<span>⏳ Trêve avec ${escapeHtml(p.name)}</span><b data-rest="${p.id}"></b></div>`
-      ).join('');
-    }
-    for (const p of resting) {
-      const el = box.querySelector(`[data-rest="${p.id}"]`);
-      if (el) el.textContent = `${G.recoverTime(h, p.id)} s`;
+      }).join('');
     }
     for (const a of list) {
       const el = box.querySelector(`[data-troops="${a.id}"]`);

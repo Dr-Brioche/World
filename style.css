@@ -169,7 +169,6 @@ html, body {
 .attack button { padding: 2px 8px; font-size: 13px; }
 .attack button:hover { background: #e9b5a8; }
 .attack.incoming { border-color: var(--danger); color: var(--danger); padding-right: 10px; }
-.attack.resting { color: #6b5a3a; padding-right: 10px; font-style: italic; }
 
 #bottombar {
   display: flex;

@@ -561,11 +561,9 @@ const Render = {
     // Noms des royaumes
     for (const p of G.players) {
       if (!p.alive || p.tiles === 0) continue;
-      // Trêve : secondes avant de pouvoir réattaquer ce royaume (après lui avoir pris un château)
-      const truce = p.isHuman ? 0 : G.recoverTime(G.human, p.id);
       let size = Math.sqrt(p.tiles) * s * 0.2;
-      if (size < 8 && !truce) continue;
-      size = Math.max(Math.min(size, 42), truce ? 11 : 0); // la trêve reste lisible même de loin
+      if (size < 8) continue;
+      size = Math.min(size, 42);
       const cx = ox + (p.sumX / p.tiles + 0.5) * s, cy = oy + (p.sumY / p.tiles + 0.5) * s;
       ctx.lineJoin = 'round';
       ctx.font = `700 ${size}px Cinzel, Georgia, serif`;
@@ -582,14 +580,6 @@ const Render = {
       ctx.font = `600 ${size * 0.75}px Georgia, serif`;
       ctx.strokeText('⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
       ctx.fillText('⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
-      if (truce) {
-        const f = Math.max(11, size * 0.6);
-        ctx.font = `italic 600 ${f}px Georgia, serif`;
-        ctx.lineWidth = Math.max(2, f / 4);
-        ctx.fillStyle = '#ffd88a';
-        ctx.strokeText(`(trêve ⏳ ${truce} s)`, cx, cy + size * 0.55 + f * 1.2);
-        ctx.fillText(`(trêve ⏳ ${truce} s)`, cx, cy + size * 0.55 + f * 1.2);
-      }
     }
 
     this.drawCastleAssaultPreview(ox, oy);
