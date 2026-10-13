@@ -27,7 +27,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 🕹️ Comment jouer
 
 1. **Fonde ta capitale** : clique sur une terre au début de la partie.
-2. **Étends-toi** : clique sur une terre voisine (libre ou ennemie) pour l'attaquer.
+2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
+   **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** : ton armée se fraie un chemin depuis ta
+   frontière en **contournant ses autres fortifications**, capture tout sur son passage, puis prend le château.
+   En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
+   derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
+   de la frontière. Quand un royaume n'a **plus aucun château**, tu peux attaquer tout son territoire de front.
    Le curseur « Envoyer » choisit le % de tes soldats qui partent en campagne.
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
    le bouton **✖ Annuler** fait rentrer les survivants au royaume.
@@ -45,7 +50,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 3. **Construis** : appuie sur `1`, `2` ou `3` (ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
-   Il faut aussi laisser **2 cases d'écart** autour de chaque bâtiment (l'aperçu devient rouge si c'est trop près).
+   **Les moulins et casernes se construisent uniquement dans l'enceinte d'un de tes châteaux** (dans sa muraille),
+   pas dans l'arrière-pays. Les châteaux, eux, se construisent partout sur ton territoire.
+   Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
+   (l'aperçu devient rouge si c'est trop près).
    Si un ennemi prend une seule de ces cases, il capture tout le bâtiment !
    - 🌾 **Moulin** : rapporte de l'or. **Clique dessus pour l'améliorer** (2 niveaux) :
 
@@ -104,6 +112,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.18** : nouvelle logique d'attaque : on vise un château ennemi, l'armée contourne les autres fortifications et capture tout sur son chemin ; un royaume sans château s'attaque de front · écart obligatoire de 3 cases autour des bâtiments et 4 autour des châteaux · moulins et casernes seulement dans l'enceinte d'un château
 - **v0.17.2** : les routes se rejoignent proprement aux carrefours (elles ne se coupent plus)
 - **v0.17.1** : les routes des châteaux sont tracées en lignes droites avec des coins à 90°
 - **v0.17** : les alliances deviennent des **pactes** (jusqu'à 3 royaumes, un seul pacte par royaume), entourés d'une frontière dorée visible par tous · il faut maintenant **85 %** des terres pour gagner, avec un bouton « Continuer » pour finir la conquête après la victoire

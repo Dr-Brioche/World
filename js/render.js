@@ -409,6 +409,48 @@ const Render = {
     ctx.lineJoin = 'round';
   },
 
+  // Survol d'un château ennemi : on montre le chemin de l'assaut (pointillés dorés),
+  // ou une croix rouge si d'autres fortifications bloquent le passage.
+  drawCastleAssaultPreview(ox, oy) {
+    const G = Game, h = this.hover;
+    this.castlePreview = null;
+    if (G.phase !== 'playing' || h < 0 || UI.selectedBuild || !G.human.alive) return;
+    const o = G.owner[h];
+    if (G.building[h] !== B_CASTLE || o < 0 || o === G.human.id || G.areAllied(o, G.human.id)) return;
+    const c = G.anchor[h], key = c + ':' + G.version;
+    if (this.previewKey !== key) {
+      this.previewKey = key;
+      this.previewPath = G.castlePath(G.human.id, c);
+    }
+    this.castlePreview = { castle: c, path: this.previewPath };
+    const ctx = this.ctx, s = this.cam.scale, W = G.W;
+    if (this.previewPath) {
+      ctx.beginPath();
+      this.previewPath.forEach((i, k) => {
+        const x = ox + (i % W + 0.5) * s, y = oy + (((i / W) | 0) + 0.5) * s;
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(20,12,4,0.6)';
+      ctx.stroke();
+      ctx.setLineDash([8, 6]);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#ffd34d';
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      const n = G.sizeOf(B_CASTLE), cx = ox + (c % W + n / 2) * s, cy = oy + (((c / W) | 0) + n / 2) * s;
+      const r = Math.max(10, s * n * 0.5);
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#c0281e';
+      ctx.beginPath();
+      ctx.moveTo(cx - r, cy - r); ctx.lineTo(cx + r, cy + r);
+      ctx.moveTo(cx + r, cy - r); ctx.lineTo(cx - r, cy + r);
+      ctx.stroke();
+    }
+  },
+
   draw() {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -502,6 +544,8 @@ const Render = {
         ctx.fillText(`(trêve ⏳ ${truce} s)`, cx, cy + size * 0.55 + f * 1.2);
       }
     }
+
+    this.drawCastleAssaultPreview(ox, oy);
 
     // Par-dessus tout le reste, pour bien les voir
     this.drawAttackArrows(ox, oy);

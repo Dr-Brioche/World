@@ -236,6 +236,15 @@ const UI = {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
     }
     if (o >= 0 && G.castleProtects(o, i)) txt += ` · dans la muraille : défense x${+G.tileDefense(o, i).toFixed(1)}`;
+    // Conseils d'attaque contre un royaume ennemi
+    if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && G.castlesOf(o).length) {
+      if (G.building[i] === B_CASTLE) {
+        txt += Render.castlePreview && Render.castlePreview.path ? ' · 🎯 clique pour lancer un assaut sur ce château'
+          : ' · 🚫 inaccessible : d\'autres châteaux bloquent le passage';
+      } else {
+        txt += ' · 🏰 protégé : vise un de ses châteaux';
+      }
+    }
     return txt;
   },
 
@@ -316,7 +325,8 @@ const UI = {
       this.attacksKey = key;
       box.innerHTML = list.map(a => {
         if (a.attacker === h.id) {
-          const target = a.target < 0 ? 'Terres libres' : escapeHtml(G.players[a.target].name);
+          const target = a.target < 0 ? 'Terres libres'
+            : (a.targetCastle >= 0 ? '🏰 ' : '') + escapeHtml(G.players[a.target].name);
           return `<div class="attack panel"><span>⚔️ → ${target}</span><b data-troops="${a.id}"></b>` +
             `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
         }
