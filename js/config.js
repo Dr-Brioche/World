@@ -45,6 +45,8 @@ const CONFIG = {
   // puis s'arrête, et l'armée doit récupérer avant de pouvoir réattaquer ce royaume.
   CASTLE_CAPTURE_EXTRA_RADIUS: 2,  // cases conquises en plus autour de la zone du château
   CASTLE_CAPTURE_COOLDOWN: 30,     // secondes avant de pouvoir réattaquer ce royaume
+  RECOVER_GROWTH_FACTOR: 0.5,      // pendant ce repos, l'attaquant recrute 2x moins vite...
+  RALLY_GROWTH_FACTOR: 1.5,        // ...et le défenseur 1.5x plus vite, pour se réorganiser
 
   // --- Alliances ---
   ALLIANCE_REFUSAL_COOLDOWN: 30, // secondes avant de redemander au même royaume

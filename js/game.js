@@ -46,6 +46,7 @@ const Game = {
       traitorUntil: 0,
       refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
       recoverUntil: {}, // royaume id → tick avant lequel on ne peut pas le réattaquer (château pris)
+      rallyUntil: 0,    // tick jusqu'auquel ce royaume recrute plus vite (il vient de perdre un château)
       aiTimer: Math.floor(Math.random() * 20),
       aggression: lo + Math.random() * (hi - lo),
     };
@@ -297,7 +298,19 @@ const Game = {
     if (p.troops >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
     const bonus = 1 + this.levelSum(p, B_BARRACKS, 'growth');
-    return base * bonus * this.growthFactor(p.troops / max);
+    return base * bonus * this.growthFactor(p.troops / max) * this.recoveryFactor(p);
+  },
+
+  // Après la prise d'un château : l'armée de l'attaquant se repose (recrutement réduit)
+  // et le défenseur se réorganise (recrutement accéléré).
+  isRecovering(p) { return Object.values(p.recoverUntil).some(t => t > this.tick); },
+  isRallying(p) { return p.rallyUntil > this.tick; },
+
+  recoveryFactor(p) {
+    let f = 1;
+    if (this.isRecovering(p)) f *= CONFIG.RECOVER_GROWTH_FACTOR;
+    if (this.isRallying(p)) f *= CONFIG.RALLY_GROWTH_FACTOR;
+    return f;
   },
 
   // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
@@ -505,9 +518,16 @@ const Game = {
     if (p.alive) p.troops += a.troops; // les survivants rentrent à la maison
     // Après la prise d'un château, l'armée doit récupérer avant de réattaquer ce royaume
     if (a.castleTaken && p.alive) {
-      p.recoverUntil[a.target] = this.tick + CONFIG.CASTLE_CAPTURE_COOLDOWN * CONFIG.TICKS_PER_SECOND;
+      const until = this.tick + CONFIG.CASTLE_CAPTURE_COOLDOWN * CONFIG.TICKS_PER_SECOND;
+      const d = this.players[a.target];
+      p.recoverUntil[a.target] = until;
+      d.rallyUntil = Math.max(d.rallyUntil, until);
+      const secs = CONFIG.CASTLE_CAPTURE_COOLDOWN;
       if (p.isHuman) {
-        UI.log(`⏳ Assaut terminé : ton armée récupère ${CONFIG.CASTLE_CAPTURE_COOLDOWN} s avant de pouvoir réattaquer ${this.players[a.target].name}.`);
+        UI.log(`⏳ Assaut terminé : ton armée récupère ${secs} s avant de pouvoir réattaquer ${d.name} ` +
+          `(recrutement x${CONFIG.RECOVER_GROWTH_FACTOR} pendant ce temps).`);
+      } else if (d.isHuman && d.alive) {
+        UI.log(`🛡️ ${p.name} a fini son assaut : ton royaume se réorganise, recrutement x${CONFIG.RALLY_GROWTH_FACTOR} pendant ${secs} s !`, 'good');
       }
     }
   },
