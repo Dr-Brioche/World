@@ -98,10 +98,12 @@ const GameRules = {
   // (on peut attaquer depuis les terres de ses alliés, même sans être voisin soi-même)
   // Un petit morceau coupé du royaume (un château isolé) ne compte pas : aucune armée ne peut partir de là.
   // source (facultatif) : seulement les terres d'où part cette armée (-1 = le royaume, sinon un avant-poste)
-  touchesFriend(i, pid, source) {
+  // ownOnly : seulement ses propres terres (pour prendre des terres libres, pas depuis celles des alliés)
+  touchesFriend(i, pid, source, ownOnly) {
     let found = false;
     this.forNeighbors(i, n => {
       if (found || !this.isFriend(pid, this.owner[n])) return;
+      if (ownOnly && this.owner[n] !== pid) return;
       if (source === undefined) { if (this.isBase(n)) found = true; return; }
       const s = this.owner[n] === pid ? this.sourceOf(n) : (this.isBase(n) ? -1 : null);
       if (s === source) found = true;
@@ -886,10 +888,12 @@ const GameRules = {
   },
 
   // --- Attaques ---
+  // (les terres libres ne se prennent que depuis son propre territoire ; les assauts contre un royaume
+  //  peuvent partir des terres de ses alliés)
   buildFrontier(pid, target, source) {
     const list = [];
     for (let i = 0; i < this.N; i++) {
-      if (this.owner[i] === target && this.isLand(i) && this.touchesFriend(i, pid, source)) list.push(i);
+      if (this.owner[i] === target && this.isLand(i) && this.touchesFriend(i, pid, source, target < 0)) list.push(i);
     }
     return list;
   },
