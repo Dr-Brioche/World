@@ -250,6 +250,7 @@ Certains fleuves forment aussi un **lac** en chemin. La carte est toujours une g
 
 ## 🆕 Nouveautés
 
+- **v0.33.5** : image de l'avant-poste (camp fortifié avec sa palissade et sa tour de guet), visible en zoomant
 - **v0.33.4** : images des 3 niveaux du port (port de pêche, grand port, port royal), visibles en zoomant
 - **v0.33.3** : avant-postes : il faut emmener de quoi remplir leur garnison ; une fois bâtis, 5 soldats restent en garnison (fixe) et les autres stationnent, prêts à attaquer depuis l'avant-poste ou à le défendre
 - **v0.33.2** : un avant-poste en construction peut être attaqué, et ses défenseurs ont -0,2 de défense ; ses soldats ne peuvent rien faire avant la fin des travaux (message clair si on essaie d'attaquer depuis lui)
@@ -330,4 +331,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-| `img/` | Les images des bâtiments (3 niveaux de château, de caserne, d'église et de port, 2 de moulin ; l'avant-poste a pour l'instant une icône) et des bannières (`img/bannieres/`) |
+| `img/` | Les images des bâtiments (3 niveaux de château, de caserne, d'église et de port, 2 de moulin, et l'avant-poste) et des bannières (`img/bannieres/`) |

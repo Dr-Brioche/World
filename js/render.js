@@ -465,6 +465,34 @@ const Render = {
     return img;
   })),
 
+  // Image des bâtiments sans niveaux (l'avant-poste)
+  simpleImages: BUILDINGS.map(b => {
+    if (!b || !b.img) return null;
+    const img = new Image();
+    img.src = b.img;
+    return img;
+  }),
+
+  // Bâtiment sans niveaux : icône de loin, image quand on zoome (s'il en a une)
+  drawSimpleBuilding(type, px, py, imgAlpha) {
+    const ctx = this.ctx, s = this.cam.scale, img = this.simpleImages[type];
+    const ready = img && img.complete && img.naturalWidth;
+    const a = ready ? imgAlpha : 0;
+    if (a < 1) {
+      ctx.globalAlpha = 1 - a;
+      ctx.fillText(BUILDINGS[type].icon, px, py);
+      ctx.globalAlpha = 1;
+    }
+    if (a > 0) {
+      const half = Game.sizeOf(type) / 2, w = BUILDINGS[type].size * s, h = w * img.naturalHeight / img.naturalWidth;
+      ctx.globalAlpha = a;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(img, px - w / 2, py + s * (half + 0.1) - h, w, h);
+      ctx.imageSmoothingEnabled = false;
+      ctx.globalAlpha = 1;
+    }
+  },
+
   // Bâtiment à niveaux (moulin, caserne, château, église) : icône de loin, image quand on zoome
   drawLeveledBuilding(i, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, G = Game;
@@ -723,7 +751,7 @@ const Render = {
           this.drawLeveledBuilding(i, px, py, imgAlpha);
           continue;
         }
-        ctx.fillText(BUILDINGS[type].icon, px, py);
+        this.drawSimpleBuilding(type, px, py, imgAlpha);
         // Avant-poste bâti : ses soldats stationnés
         if (type === B_OUTPOST && G.outpostReady(i) && G.outposts.get(i).stationed >= 1) {
           const f = ctx.font;
