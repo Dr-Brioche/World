@@ -144,6 +144,10 @@ const UI = {
       return `défense des murs ${pct(info.bonus)}` +
         (info.road ? `, ${road} : production des bâtiments reliés ${pct(info.roadBonus)}` : '');
     }
+    if (type === B_CHURCH) {
+      return `${info.slots} ${info.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} autour d'elle` +
+        (info.castles ? `, ${info.castles} château${info.castles > 1 ? 'x' : ''} de plus dans le royaume` : '');
+    }
     if (type === B_BARRACKS) {
       return `soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande` +
         (info.power > 1 ? `, tous tes soldats ${pct(info.power - 1)} plus forts` : '');
@@ -161,6 +165,11 @@ const UI = {
         txt += `, ${road} vers les moulins et casernes de la muraille : leur production ${pct(next.roadBonus)}`;
       }
       return txt;
+    }
+    if (type === B_CHURCH) {
+      return `zone plus grande, ${next.slots} moulins ou casernes autour d'elle (au lieu de ${cur.slots}), ` +
+        `${next.castles} château${next.castles > 1 ? 'x' : ''} de plus à construire dans le royaume ` +
+        '(la meilleure église compte)';
     }
     if (type === B_BARRACKS) {
       return `soldats produits ${pct(next.troops / cur.troops - 1)}, bonus d'armée max ${pct(next.maxTroops / cur.maxTroops - 1)}, ` +
@@ -184,7 +193,7 @@ const UI = {
     } else {
       const next = BUILDING_LEVELS[type][G.level[a] + 1];
       el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
-        `<img src="${next.img}" alt="">` +
+        (next.img ? `<img src="${next.img}" alt="">` : '') +
         `<b>${this.upgradeEffect(type, cur, next)}</b>` +
         `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button><button data-no>Fermer</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
@@ -284,6 +293,7 @@ const UI = {
           : ' · 🚩 isolé : aucun renfort ne peut le rejoindre';
       }
       if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain : ${prodText(G.terrainFactor(a, G.building[i]))}`;
+      if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (o === G.human.id && G.upgradeCost(a) !== null && !(G.building[i] === B_CASTLE && G.isIsolatedCastle(a))) txt += ` · clique pour l'améliorer`;

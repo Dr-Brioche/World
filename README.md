@@ -19,7 +19,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes et mers
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
-- 🏰 **Trois bâtiments** pour développer ton royaume
+- 🏰 **Quatre bâtiments** pour développer ton royaume : moulin, caserne, château et église
 - 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normal, Difficile
@@ -75,16 +75,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **S'il y arrive**, sa route s'élargit un peu : tu récupères des terres entre le château et ton royaume,
      ils sont **réunis** et tu peux le défendre comme avant. Si le château était attaqué, les soldats
      de ton assaut rejoignent sa défense.
-3. **Construis** : appuie sur `1`, `2` ou `3` (ou `&`, `é`, `"` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
+3. **Construis** : appuie sur `1`, `2`, `3` ou `4` (ou `&`, `é`, `"`, `'` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise) ; les châteaux pris à l'ennemi
-   ne comptent pas dans cette limite.
+   ne comptent pas dans cette limite, et une **église** améliorée en débloque d'autres.
    **Le terrain compte** : un moulin produit plus en plaine (+30 %) qu'en forêt (normal), colline (-10 %) ou montagne (-30 %) ;
    une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
-   **Les moulins et casernes se construisent uniquement dans l'enceinte d'un de tes châteaux** (dans sa muraille),
-   pas dans l'arrière-pays. Les châteaux, eux, se construisent partout sur ton territoire.
+   **Les moulins et casernes se construisent dans l'enceinte d'un de tes châteaux** (dans sa muraille),
+   **ou près d'une de tes églises** qui a encore de la place, pas ailleurs dans l'arrière-pays.
+   Les châteaux et les églises, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
    (l'aperçu devient rouge si c'est trop près).
    Si un ennemi prend une seule de ces cases, il capture tout le bâtiment !
@@ -101,15 +102,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Soldats produits | Bonus d'armée max | Force de **tous** tes soldats | Prix |
      |---|---|---|---|---|
-     | 1. Camp d'entraînement | quelques-uns | un peu | normale | prix de la caserne |
+     | 1. Camp d'entraînement | quelques-uns | un peu | **+10 %** | prix de la caserne |
      | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 40 |
      | 3. Grande caserne | +75 % | +60 % | **+50 %** | 💰 100 |
 
      Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
      tes casernes s'additionnent.
      **La force des soldats** vaut pour tout le royaume dès **une seule** caserne de ce niveau
-     (la meilleure compte, ça ne s'additionne pas) : au combat, chacun de tes soldats vaut 1,2 soldat
-     (niveau 2) ou 1,5 soldat (niveau 3), en attaque comme en défense.
+     (la meilleure compte, ça ne s'additionne pas) : au combat, chacun de tes soldats vaut 1,1 soldat
+     (niveau 1), 1,2 soldat (niveau 2) ou 1,5 soldat (niveau 3), en attaque comme en défense.
      Tu ne vois que les chiffres de **tes** bâtiments, pas ceux des autres royaumes.
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
@@ -127,6 +128,20 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Au niveau 3, ce sont des **routes pavées** 🛣️ grises : **+50 %**.
 
      Exemple : une forêt (+60 %) protégée par une citadelle passe à +460 %.
+   - ⛪ **Église** : elle coûte cher, mais **se construit n'importe où** sur ton territoire.
+     Elle permet de construire des **moulins ou casernes autour d'elle**, même hors de la muraille d'un château
+     (quand tu choisis un moulin ou une caserne, sa zone s'affiche en pointillés clairs).
+     Attention : elle **n'est pas défendue** (pas de muraille, pas de garnison).
+     **Clique dessus pour l'améliorer** (3 niveaux) :
+
+     | Niveau | Moulins ou casernes autour d'elle | Châteaux en plus dans le royaume | Prix |
+     |---|---|---|---|
+     | 1. Église | 1 | aucun | 💰 50 (puis plus cher à chaque église) |
+     | 2. Grande église | 2 | +1 | 💰 100 |
+     | 3. Cathédrale | 5 | +2 | 💰 200 |
+
+     Les châteaux en plus viennent de ta meilleure église (ça ne s'additionne pas entre églises).
+
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
@@ -152,10 +167,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +250 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 
-**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` (ou `&` `é` `"`) = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` `4` (ou `&` `é` `"` `'`) = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.27** : nouveau bâtiment ⛪ **église** (3 niveaux jusqu'à la cathédrale) : se construit partout, permet des moulins et casernes autour d'elle et débloque des châteaux en plus, mais n'est pas défendue · la caserne de niveau 1 rend aussi les soldats 10 % plus forts
 - **v0.26** : une caserne de niveau 2 rend **tous** les soldats du royaume 20 % plus forts au combat, une de niveau 3 50 % plus forts (la meilleure caserne compte)
 - **v0.25** : un château encerclé garde les terres de sa muraille et continue de produire · plus d'« armée de secours » : on clique sur son château isolé pour lancer un assaut classique qui le relie au royaume (la route s'élargit s'il réussit)
 - **v0.24** : ✂️ encerclement : un morceau de royaume coupé par un assaut (moins de 20 % du royaume) est pris d'un coup · ses châteaux restent debout, isolés 🚩 : ils ne reçoivent plus de défenseurs, mais leur royaume peut leur envoyer une armée de secours · un assaut de front ne prend plus de château (il faut le viser)
@@ -197,7 +213,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 - ⛵ Bateaux pour traverser la mer
 - 🤝 Plus de diplomatie : tributs en or, demandes d'aide aux membres du pacte
-- 🗼 Nouveaux bâtiments : tours de guet, ports, cathédrales
+- 🗼 Nouveaux bâtiments : tours de guet, ports
 - 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
 - 👑 Héros ou rois avec des pouvoirs spéciaux
 - 🌐 Multijoueur en ligne

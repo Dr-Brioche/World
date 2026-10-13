@@ -36,7 +36,7 @@ const CONFIG = {
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   MAX_CASTLES: 3,            // châteaux qu'un royaume peut construire dans la partie (capitale comprise ;
-                             // les châteaux pris à l'ennemi ne comptent pas)
+                             // les châteaux pris à l'ennemi ne comptent pas). Une église en débloque d'autres.
 
   // --- Combat ---
   ATTACK_SPEED: 1,             // vitesse de conquête
@@ -78,7 +78,7 @@ const TERRAIN_INFO = [
   { name: 'Montagne', color: [130, 124, 118], cost: 3.5 },
 ];
 
-const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3;
+const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4;
 
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
@@ -93,7 +93,7 @@ const MILL_LEVELS = [
 // Ce bonus ne s'additionne pas : c'est la meilleure caserne du royaume qui compte.
 const BARRACKS_LEVELS = [
   null,
-  { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1,   img: 'img/caserne1.webp', size: 2.5 },
+  { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.1, img: 'img/caserne1.webp', size: 2.5 },
   { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.2, img: 'img/caserne2.webp', size: 2.8, upgradeCost: 40 },
   { name: 'Grande caserne',       troops: 7, maxTroops: 80, power: 1.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 100 },
 ];
@@ -112,6 +112,18 @@ const CASTLE_LEVELS = [
 // road = chemins vers les moulins et casernes dans la muraille ('dirt' = terre, 'paved' = pavés)
 // roadBonus = bonus de ces bâtiments reliés (0.2 = +20 % d'or ou de soldats produits)
 
+// Les 3 niveaux de l'église. Elle se construit n'importe où sur son territoire, mais elle n'est pas
+// défendue (pas de muraille, pas de garnison).
+// slots = moulins ou casernes qu'on peut construire autour d'elle (à moins de radius cases),
+//         même hors de la muraille d'un château ;
+// castles = châteaux en plus que le royaume peut construire (la meilleure église du royaume compte).
+const CHURCH_LEVELS = [
+  null,
+  { name: 'Église',        slots: 1, castles: 0, radius: 7 },
+  { name: 'Grande église', slots: 2, castles: 1, radius: 8,  upgradeCost: 100 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, upgradeCost: 200 },
+];
+
 // Production des moulins et casernes selon le terrain où ils sont construits
 // (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne.
 const TERRAIN_PRODUCTION = {
@@ -120,7 +132,7 @@ const TERRAIN_PRODUCTION = {
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
-const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS];
+const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS, CHURCH_LEVELS];
 
 // L'index dans ce tableau correspond au numéro du bâtiment (0 = aucun).
 // tiles = côté du carré occupé sur la carte (2 → 2x2 cases, 4 → 4x4 cases)
@@ -129,6 +141,7 @@ const BUILDINGS = [
   { name: 'Moulin',  icon: '🌾', tiles: 2, baseCost: 10, desc: `produit de l'or toutes les ${CONFIG.PRODUCTION_INTERVAL} s (2 niveaux)` },
   { name: 'Caserne', icon: '⚔️', tiles: 2, baseCost: 20, desc: `produit des soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande (3 niveaux)` },
   { name: 'Château', icon: '🏰', tiles: 4, baseCost: 30, desc: 'muraille qui protège ses terres (3 niveaux)' },
+  { name: 'Église',  icon: '⛪', tiles: 2, baseCost: 50, desc: 'se construit partout, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)' },
 ];
 
 // Les bannières des royaumes (une par couleur) : la bannière choisie donne sa couleur au royaume.

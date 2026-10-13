@@ -202,6 +202,7 @@ const Render = {
       const c = G.anchor[this.hover];
       this.fillTiles(ox, oy, G.castleZone(c, G.owner[c]), 'rgba(255,255,255,0.22)');
     }
+    this.drawChurchZones(ox, oy);
     // Aperçu de la muraille avant de construire (ou d'améliorer) un château
     if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0 && this.mouse) {
       const upgrading = G.owner[this.hover] === G.human.id && G.building[this.hover] === B_CASTLE;
@@ -214,6 +215,33 @@ const Render = {
       this.fillTiles(ox, oy, zone, ok ? 'rgba(255,230,120,0.3)' : 'rgba(220,60,50,0.3)');
       this.drawWall(ox, oy, this.zoneEdges(zone, (i, n) => set.has(n)),
         ok ? 'rgba(255,230,140,0.95)' : 'rgba(230,90,80,0.95)', 'rgba(30,22,12,0.8)');
+    }
+  },
+
+  // Zones des églises (là où elles permettent de construire) : on les montre quand on survole une église,
+  // ou quand on s'apprête à poser un moulin ou une caserne
+  drawChurchZones(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    if (G.phase !== 'playing') return;
+    let churches = [];
+    if (this.hover >= 0 && G.building[this.hover] === B_CHURCH && G.owner[this.hover] >= 0) churches = [G.anchor[this.hover]];
+    else if (UI.selectedBuild === B_MILL || UI.selectedBuild === B_BARRACKS) {
+      churches = G.buildingTiles.filter(a => G.building[a] === B_CHURCH && G.owner[a] === G.human.id);
+    }
+    for (const ch of churches) {
+      const zone = G.churchZone(ch), set = new Set(zone);
+      const full = G.churchUsed(ch) >= G.buildingInfo(ch).slots;
+      this.fillTiles(ox, oy, zone, full ? 'rgba(200,190,170,0.18)' : 'rgba(255,245,200,0.28)');
+      ctx.beginPath();
+      for (const [x1, y1, x2, y2] of this.zoneEdges(zone, (i, n) => set.has(n))) {
+        ctx.moveTo(ox + x1 * s, oy + y1 * s);
+        ctx.lineTo(ox + x2 * s, oy + y2 * s);
+      }
+      ctx.setLineDash([5, 4]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = full ? 'rgba(120,110,95,0.9)' : 'rgba(255,240,190,0.95)';
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
   },
 
@@ -350,8 +378,9 @@ const Render = {
   },
 
   // Images de chaque niveau des bâtiments (chargées une seule fois)
+  // (l'église n'a pas encore d'image : on garde son icône)
   buildingImages: BUILDING_LEVELS.map(levels => levels && levels.map(l => {
-    if (!l) return null;
+    if (!l || !l.img) return null;
     const img = new Image();
     img.src = l.img;
     return img;
@@ -361,6 +390,8 @@ const Render = {
   drawLeveledBuilding(i, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, G = Game;
     const type = G.building[i], lvl = G.level[i] || 1, info = BUILDING_LEVELS[type][lvl];
+    const img = this.buildingImages[type][lvl];
+    if (!img) imgAlpha = 0; // pas d'image : toujours l'icône
     const half = G.sizeOf(type) / 2; // demi-côté du bâtiment, en cases
     // De loin : l'icône et le niveau en chiffres romains
     if (imgAlpha < 1) {
@@ -379,7 +410,6 @@ const Render = {
       ctx.globalAlpha = 1;
     }
     // De près : la vraie image, posée sur son carré de cases
-    const img = this.buildingImages[type][lvl];
     if (imgAlpha > 0 && img.complete && img.naturalWidth) {
       const w = info.size * s, h = w * img.naturalHeight / img.naturalWidth;
       ctx.globalAlpha = imgAlpha;
