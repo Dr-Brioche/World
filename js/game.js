@@ -24,6 +24,8 @@ const GameRules = {
     this.players = [];
     this.attacks = [];
     this.expeditions = []; // bateaux en route vers une côte
+    this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
+    this.colonies = new Map(); // château bâti ou pris dans la zone d'un avant-poste → son royaume
     this.nextAttackId = 1;
     this.pacts = new Map(); // id du pacte → { name }
     this.nextPactId = 0;
@@ -282,6 +284,7 @@ const GameRules = {
     for (const j of this.footprint(a, type)) { this.building[j] = 0; this.anchor[j] = -1; Render.markDirty(j); }
     this.level[a] = 0;
     this.garrison[a] = 0;
+    this.outposts.delete(a);
     if (o >= 0) this.players[o].bCount[type]--;
     this.buildingTiles = this.buildingTiles.filter(b => b !== a);
     this.castles = this.castles.filter(c => c !== a);
@@ -380,7 +383,71 @@ const GameRules = {
 
   // Défense d'une case = celle du terrain, + le bonus du meilleur château qui la protège
   tileDefense(pid, i) {
-    return TERRAIN_INFO[this.terrain[i]].cost + (pid >= 0 ? this.castleBonus(pid, i) : 0);
+    return TERRAIN_INFO[this.terrain[i]].cost + (pid >= 0 ? Math.max(this.castleBonus(pid, i), this.outpostBonus(pid, i)) : 0);
+  },
+
+  // --- Avant-postes ---
+  // L'avant-poste est-il bâti ? (il faut OUTPOST_BUILD_TIME secondes après le débarquement)
+  outpostReady(a) {
+    const o = this.outposts.get(a);
+    return !!o && this.tick >= o.ready;
+  },
+
+  // Bonus de défense autour des avant-postes bâtis du royaume (0 si aucun)
+  outpostBonus(pid, i) {
+    for (const [a] of this.outposts) {
+      if (this.owner[a] === pid && this.outpostReady(a) && this.nearBuilding(a, i, CONFIG.LANDING_RADIUS + 1)) {
+        return CONFIG.OUTPOST_DEFENSE;
+      }
+    }
+    return 0;
+  },
+
+  // Chaque tour : les avant-postes qui finissent d'être bâtis, et ceux dont la zone devient une vraie terre
+  // du royaume (un château y a été bâti ou pris) : l'avant-poste disparaît et ses soldats rejoignent l'armée.
+  stepOutposts() {
+    for (const [a, o] of this.outposts) {
+      const p = this.players[this.owner[a]];
+      if (this.tick === o.ready) {
+        this.version++; // l'avant-poste devient une base d'attaque
+        if (p && p.isHuman) UI.log('⛺ Ton avant-poste est bâti : il défend ses alentours (+1) et tu peux attaquer depuis lui.', 'good');
+      }
+    }
+    if (this.tick % CONFIG.TICKS_PER_SECOND) return;
+    const r = this.regions();
+    for (const [a] of this.outposts) {
+      const pid = this.owner[a], k = r.comp[a];
+      const castle = this.castles.find(c => this.owner[c] === pid && r.comp[c] === k);
+      if (castle === undefined) continue;
+      const p = this.players[pid];
+      p.troops += this.garrison[a];
+      this.colonies.set(castle, pid);
+      this.removeBuilding(a);
+      if (p.isHuman) UI.log('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', 'good');
+      return; // la carte a changé : on regardera les autres au prochain tour
+    }
+  },
+
+  // Envoie des renforts par la mer à son avant-poste a (depuis un port d'expédition). Message d'erreur, ou null.
+  reinforceOutpost(pid, a, troops) {
+    const p = this.players[pid], o = this.outposts.get(a);
+    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
+    let best = null;
+    for (const port of this.expeditionPorts(pid)) {
+      const path = this.boatPath(port, o.landing);
+      if (!path) continue;
+      const time = path.length / this.buildingInfo(port).boatSpeed;
+      if (!best || time < best.time) best = { path, time };
+    }
+    if (!best) return 'Aucun de tes ports d\'expédition (niveau 2 ou plus) ne peut rejoindre cet avant-poste.';
+    troops = Math.floor(Math.min(troops, p.troops));
+    if (troops < 1) return 'Pas assez de soldats !';
+    p.troops -= troops;
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, path: best.path, cost: 0, sent: troops,
+      reinforce: a, interceptors: [], troops: troops * (1 - this.seaLoss(best.time)),
+      start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
+    return null;
   },
 
   // Bonus de défense des châteaux du royaume sur cette case (0 si aucun ne la protège)
@@ -644,8 +711,13 @@ const GameRules = {
         });
       }
       size.push(n - s); start.push(s); owner.push(o);
-      let base = false; // un avant-poste dans ce morceau ?
-      for (let q = s; q < n && !base; q++) if (this.building[order[q]] === B_OUTPOST) base = true;
+      // Morceau qui sert de base : avec un avant-poste bâti, ou le château d'une ancienne zone d'avant-poste
+      let base = false;
+      for (let q = s; q < n && !base; q++) {
+        const t = order[q], b = this.building[t];
+        if (b === B_OUTPOST && this.outpostReady(this.anchor[t])) base = true;
+        if (b === B_CASTLE && this.colonies.get(this.anchor[t]) === o) base = true;
+      }
       outpost.push(base);
       if (main[o] < 0 || size[k] > size[main[o]]) main[o] = k;
     }
@@ -658,6 +730,7 @@ const GameRules = {
   isIsolatedCastle(c) {
     const o = this.owner[c];
     if (o < 0) return false;
+    if (this.colonies.get(c) === o) return false; // château d'une ancienne zone d'avant-poste : terre du royaume
     const r = this.regions();
     return r.comp[c] !== r.main[o];
   },
@@ -1250,6 +1323,19 @@ const GameRules = {
       e.done = true;
       const p = this.players[e.pid];
       if (!p.alive) { this.returnInterceptors(e); continue; }
+      // Renforts pour un avant-poste : ils rejoignent sa garnison (ou rentrent s'il n'existe plus)
+      if (e.reinforce !== undefined) {
+        if (e.interceptors.length) e.troops = this.seaBattle(e);
+        if (e.troops < 1) continue;
+        if (this.building[e.reinforce] === B_OUTPOST && this.owner[e.reinforce] === e.pid) {
+          this.garrison[e.reinforce] += e.troops;
+          if (p.isHuman) UI.log(`⛺ ${fmt(e.troops)} soldats renforcent ton avant-poste.`, 'good');
+        } else {
+          p.troops += e.troops;
+          if (p.isHuman) UI.log('⛵ Ton avant-poste n\'existe plus : les renforts rentrent.', 'warn');
+        }
+        continue;
+      }
       const zone = this.landingZone(e.pid, e.landing);
       if (!this.landable(e.pid, e.landing) || zone.anchor < 0) {
         this.returnInterceptors(e);
@@ -1270,9 +1356,10 @@ const GameRules = {
       }
       this.placeBuilding(zone.anchor, B_OUTPOST);
       this.garrison[zone.anchor] = e.troops; // tous les soldats débarqués défendent l'avant-poste
+      this.outposts.set(zone.anchor, { ready: this.tick + CONFIG.OUTPOST_BUILD_TIME * CONFIG.TICKS_PER_SECOND, landing: e.landing });
       if (p.isHuman) {
         UI.log(`⛺ Débarquement réussi ! ${fmt(e.troops)} soldats défendent ton avant-poste ` +
-          `(${fmt(e.sent - e.troops)} perdus en mer). Depuis lui, tu peux attaquer et prendre des terres.`, 'good');
+          `(${fmt(e.sent - e.troops)} perdus en mer). Il sera bâti dans ${CONFIG.OUTPOST_BUILD_TIME} s.`, 'good');
         Render.floatText(zone.anchor, B_OUTPOST, '⛵ Débarquement !');
       }
     }
@@ -1718,6 +1805,7 @@ const GameRules = {
     }
     this.attacks = this.attacks.filter(a => !a.done);
     this.stepExpeditions();
+    this.stepOutposts();
 
     for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
 

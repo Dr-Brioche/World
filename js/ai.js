@@ -82,7 +82,14 @@ const AI = {
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
       const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0);
       if (needed <= 0) continue;
-      // Château isolé : impossible d'y envoyer des défenseurs, on tente de le rejoindre par un assaut
+      // Château isolé (ou avant-poste) : impossible d'y envoyer des défenseurs. Pour un château, on tente
+      // de le rejoindre par un assaut ; pour un avant-poste, on envoie des renforts par la mer.
+      if (Game.cutOff(a) && Game.building[a.targetCastle] === B_OUTPOST) {
+        if (!Game.expeditions.some(e => e.reinforce === a.targetCastle)) {
+          Game.reinforceOutpost(p.id, a.targetCastle, Math.min(needed, p.troops * 0.4));
+        }
+        continue;
+      }
       if (Game.cutOff(a)) {
         if (Game.building[a.targetCastle] === B_CASTLE && !Game.linkFor(a.targetCastle)) Game.launchLink(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
         continue;

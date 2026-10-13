@@ -64,6 +64,8 @@ const CONFIG = {
   SEA_LOSS_PER_SECOND: 0.01, // 1 % des soldats par seconde de mer...
   SEA_LOSS_MAX: 0.25,        // ...au plus 25 %
   INTERCEPT_SPEED: 6,        // vitesse (cases/s) des bateaux d'un port qui part intercepter un débarquement
+  OUTPOST_BUILD_TIME: 20,    // secondes pour bâtir un avant-poste après le débarquement (sans bonus avant)
+  OUTPOST_DEFENSE: 1,        // une fois bâti, bonus de défense autour de lui (comme un fort en bois)
   // Un château isolé peut être relié à nouveau par un assaut lancé depuis le royaume (en cliquant dessus).
   // S'il arrive, sa route s'élargit de 2 cases de chaque côté.
   LINK_WIDEN_RADIUS: 2,

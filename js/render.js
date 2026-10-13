@@ -724,6 +724,18 @@ const Render = {
           continue;
         }
         ctx.fillText(BUILDINGS[type].icon, px, py);
+        // Avant-poste en construction : le temps restant
+        if (type === B_OUTPOST && !G.outpostReady(i) && G.outposts.has(i)) {
+          const left = Math.ceil((G.outposts.get(i).ready - G.tick) / CONFIG.TICKS_PER_SECOND);
+          const f = ctx.font;
+          ctx.font = '700 12px Georgia, serif';
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+          ctx.fillStyle = '#ffe9a8';
+          ctx.strokeText(`🏗️ ${left} s`, px, py - s * half - 8);
+          ctx.fillText(`🏗️ ${left} s`, px, py - s * half - 8);
+          ctx.font = f;
+        }
       }
     }
 
