@@ -40,8 +40,17 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
    - ⚔️ **Caserne** : plus de soldats, recrutés plus vite
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
-     Seules les cases à l'intérieur de la muraille sont renforcées : **+1 à la défense du terrain**
-     (plaine x1 → x2, forêt x1.6 → x2.6, colline x2.2 → x3.2, montagne x3.5 → x4.5)
+     Seules les cases à l'intérieur de la muraille sont renforcées : le bonus s'ajoute à la défense du terrain.
+     **Clique sur un de tes châteaux pour l'améliorer** (3 niveaux) :
+
+     | Niveau | Bonus de défense | Rayon de la muraille | Prix |
+     |---|---|---|---|
+     | 1. Fort en bois | +1 | 7 cases | prix du château |
+     | 2. Château | +2 | 10 cases | 💰 600 |
+     | 3. Citadelle | +4 | 13 cases | 💰 1500 |
+
+     Exemple : une forêt (x1.6) protégée par une citadelle passe à x5.6.
+     Zoome sur la carte pour voir apparaître l'image de chaque château !
 4. **Fais des alliances** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer une alliance.
    Les alliés ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer une alliance : accepte ou refuse.
    Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée.
@@ -56,6 +65,7 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 
 ## 🆕 Nouveautés
 
+- **v0.6** : châteaux à 3 niveaux (fort en bois, château, citadelle) avec leurs images quand on zoome ; chaque niveau agrandit la muraille et augmente la défense (+1, +2, +4)
 - **v0.5.1** : ton royaume est vert par défaut (le bleu se confondait avec la mer)
 - **v0.5** : la zone des châteaux devient une muraille crénelée qui suit les frontières · le bonus du château s'ajoute à la défense du terrain, seulement dans sa muraille
 - **v0.4** : attaquer un allié = le trahir, et un traître 🗡️ a sa défense réduite de moitié pendant 2 minutes
@@ -89,3 +99,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
+| `img/` | Les images des 3 niveaux de château |

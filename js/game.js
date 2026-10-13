@@ -12,6 +12,7 @@ const Game = {
     this.terrain = map.terrain;
     this.owner = new Int16Array(this.N).fill(-1);
     this.building = new Uint8Array(this.N);
+    this.level = new Uint8Array(this.N); // niveau des châteaux (1 à 3)
     this.players = [];
     this.attacks = [];
     this.nextAttackId = 1;
@@ -99,12 +100,36 @@ const Game = {
     const o = this.owner[i];
     if (o >= 0) this.players[o].bCount[type]++;
     this.buildingTiles.push(i);
-    if (type === B_CASTLE) this.castles.push(i);
+    if (type === B_CASTLE) {
+      this.castles.push(i);
+      this.level[i] = 1;
+    }
   },
 
-  // Cases protégées par un château : celles de son royaume, à moins de CASTLE_RADIUS
-  castleZone(c, pid) {
-    const R = CONFIG.CASTLE_RADIUS, cx = c % this.W, cy = (c / this.W) | 0, zone = [];
+  castleInfo(c) { return CASTLE_LEVELS[this.level[c] || 1]; },
+
+  upgradeCost(c) {
+    const next = CASTLE_LEVELS[this.level[c] + 1];
+    return next ? next.upgradeCost : null;
+  },
+
+  // Améliore un château. Renvoie un message d'erreur, ou null si c'est fait.
+  upgradeCastle(p, c) {
+    if (this.building[c] !== B_CASTLE || this.owner[c] !== p.id) return 'Ce n\'est pas un de tes châteaux.';
+    const cost = this.upgradeCost(c);
+    if (cost === null) return 'Ce château est déjà au niveau maximum.';
+    if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
+    p.gold -= cost;
+    this.level[c]++;
+    this.version++;
+    return null;
+  },
+
+  // Cases protégées par un château : celles de son royaume, dans son rayon.
+  // "level" permet de prévisualiser un autre niveau.
+  castleZone(c, pid, level) {
+    const R = CASTLE_LEVELS[level || this.level[c] || 1].radius;
+    const cx = c % this.W, cy = (c / this.W) | 0, zone = [];
     for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R); y++) {
       for (let x = Math.max(0, cx - R); x <= Math.min(this.W - 1, cx + R); x++) {
         const i = y * this.W + x;
@@ -114,22 +139,25 @@ const Game = {
     return zone;
   },
 
-  // Défense d'une case = celle du terrain, + le bonus si un château du royaume la protège
+  // Défense d'une case = celle du terrain, + le bonus du meilleur château qui la protège
   tileDefense(pid, i) {
-    let def = TERRAIN_INFO[this.terrain[i]].cost;
-    if (pid >= 0 && this.castleProtects(pid, i)) def += CONFIG.CASTLE_DEFENSE_BONUS;
-    return def;
+    return TERRAIN_INFO[this.terrain[i]].cost + (pid >= 0 ? this.castleBonus(pid, i) : 0);
   },
 
-  castleProtects(pid, i) {
-    const x = i % this.W, y = (i / this.W) | 0, r2 = CONFIG.CASTLE_RADIUS ** 2;
+  // Bonus de défense des châteaux du royaume sur cette case (0 si aucun ne la protège)
+  castleBonus(pid, i) {
+    const x = i % this.W, y = (i / this.W) | 0;
+    let best = 0;
     for (const c of this.castles) {
       if (this.owner[c] !== pid) continue;
+      const info = this.castleInfo(c);
       const dx = (c % this.W) - x, dy = ((c / this.W) | 0) - y;
-      if (dx * dx + dy * dy <= r2) return true;
+      if (dx * dx + dy * dy <= info.radius ** 2 && info.bonus > best) best = info.bonus;
     }
-    return false;
+    return best;
   },
+
+  castleProtects(pid, i) { return this.castleBonus(pid, i) > 0; },
 
   // --- Apparition des royaumes ---
   canSpawnAt(i, minDist) {
