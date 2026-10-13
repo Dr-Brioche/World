@@ -219,7 +219,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Débarquer).
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
    **75 %**, le reste se perd en route, et sans dépasser son armée maximum.
-4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
+4. **Forme des pactes** (si tu les as autorisés dans le menu : on peut aussi les **interdire**, chacun pour soi) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
    pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
    **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
@@ -262,6 +262,8 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.34.7** : dans le menu de départ, on peut **interdire les pactes** (chacun pour soi)
+- **v0.34.6** : en survolant un royaume, tout son territoire s'illumine et ses bâtiments sont entourés d'un cercle doré
 - **v0.34.5** : clic droit chez un allié : 🎁 lui envoyer des soldats (il en reçoit 75 %)
 - **v0.34.4** : depuis les terres d'un allié, on peut lancer des assauts, mais plus prendre des terres libres
 - **v0.34.3** : clic droit sur un royaume : « 🤝 Proposer une alliance » (ou « 💔 Rompre l'alliance » avec un allié)

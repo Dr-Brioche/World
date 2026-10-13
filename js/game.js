@@ -40,6 +40,7 @@ const GameRules = {
     for (let i = 0; i < this.N; i++) if (this.isLand(i)) this.landCount++;
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
+    this.pactsAllowed = opts.pacts !== false; // choisi dans le menu : pactes autorisés ou interdits
     this.human = this.addPlayer(opts.name, opts.banner, true);
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
     // Les bots reçoivent au hasard les bannières que le joueur n'a pas prises
@@ -1859,6 +1860,7 @@ const GameRules = {
   // Renvoie 'accepted', 'refused', 'pending' (en attente de la réponse du joueur) ou un message d'erreur.
   proposeAlliance(fromId, toId) {
     const from = this.players[fromId], to = this.players[toId];
+    if (!this.pactsAllowed) return 'Les pactes sont interdits dans cette partie : chacun pour soi !';
     if (!from.alive || !to.alive || fromId === toId) return 'Ce royaume n\'existe plus.';
     if (this.areAllied(fromId, toId)) return `Tu es déjà allié avec ${to.name}.`;
     const block = this.pactBlock(fromId, toId);
