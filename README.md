@@ -72,6 +72,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | 2. Château | +2 | 10 cases | 💰 600 |
      | 3. Citadelle | +4 | 13 cases | 💰 1500 |
 
+     **Routes** : un château de niveau 2 trace des **chemins de terre** 🛤️ vers tes moulins et casernes
+     qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, recrutement des casernes).
+     Au niveau 3, ce sont des **routes pavées** 🛣️ grises : **+50 %**.
+
      Exemple : une forêt (x1.6) protégée par une citadelle passe à x5.6.
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 4. **Fais des alliances** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer une alliance.
@@ -95,6 +99,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.16** : les châteaux de niveau 2 et 3 tracent des chemins de terre puis des routes pavées vers les moulins et casernes de leur muraille, qui produisent +20 % puis +50 %
 - **v0.15** : pendant les 30 s de repos après la prise d'un château, l'attaquant recrute 2x moins vite et le défenseur 1.5x plus vite
 - **v0.14** : prendre un château arrête l'assaut après la conquête de sa zone, puis 30 s de repos avant de réattaquer le même royaume
 - **v0.13** : la caserne a 3 niveaux (camp d'entraînement, caserne, grande caserne) avec leurs images ; chaque niveau donne plus de soldats max et un meilleur recrutement

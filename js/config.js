@@ -90,11 +90,13 @@ const BARRACKS_LEVELS = [
 // dans sa muraille (ex. forêt x1.6 + niveau 3 → x5.6).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 7,  bonus: 1, img: 'img/chateau1.webp', size: 4.4 },
-  { name: 'Château',      radius: 10, bonus: 2, img: 'img/chateau2.webp', size: 5,   upgradeCost: 600 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, img: 'img/chateau3.webp', size: 5.6, upgradeCost: 1500 },
+  { name: 'Fort en bois', radius: 7,  bonus: 1, img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 600 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 1500 },
 ];
 // size = largeur de l'image en cases, quand on zoome assez pour la voir
+// road = chemins vers les moulins et casernes dans la muraille ('dirt' = terre, 'paved' = pavés)
+// roadBonus = bonus de ces bâtiments reliés (0.2 = +20 % d'or ou de recrutement)
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
 const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS];
