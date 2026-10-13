@@ -850,41 +850,50 @@ const GameRules = {
     return this.targetsOf(pid).length > 0;
   },
 
-  // Encerclement : un assaut de pid a peut-être coupé le royaume target en morceaux.
-  // Chaque petit morceau (moins de ENCLAVE_RATIO de son territoire) qui touche pid est pris d'un coup.
-  // Les châteaux qui s'y trouvent restent au défenseur, avec les terres dans leur muraille
-  // (et leurs moulins et casernes, qui continuent de produire) : ils tiennent seuls, isolés.
-  captureEnclaves(pid, target) {
-    const T = this.players[target], A = this.players[pid];
-    if (!T.alive || !A.alive) return;
+  // Encerclement : un petit morceau du royaume target (moins de ENCLAVE_RATIO de son territoire),
+  // coupé de son cœur, est englobé d'un coup par le royaume qui l'entoure le plus (celui qui a le plus
+  // de frontière avec lui). Les châteaux qui s'y trouvent restent au royaume target, avec les terres
+  // dans leur muraille (et leurs moulins et casernes, qui continuent de produire) : ils tiennent seuls, isolés.
+  captureEnclaves(target) {
+    const T = this.players[target];
+    if (!T.alive) return;
     const r = this.regions(), pieces = [];
     for (let k = 0; k < r.size.length; k++) {
       if (r.owner[k] !== target || k === r.main[target] || r.size[k] >= T.tiles * CONFIG.ENCLAVE_RATIO) continue;
       if (r.anyOutpost[k] || r.colony[k]) continue; // un avant-poste se défend : il faut le viser pour le détruire
-      const tiles = Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k]));
-      if (tiles.some(i => this.hasNeighborOwnedBy(i, pid))) pieces.push(tiles);
+      pieces.push(Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k])));
     }
-    let taken = 0, castles = 0;
     for (const tiles of pieces) {
-      // Les châteaux de ce morceau, et ce qui est dans leur muraille, restent au défenseur
+      // Les châteaux de ce morceau, et ce qui est dans leur muraille, restent au royaume
       const keep = tiles.filter(i => this.building[i] === B_CASTLE && this.anchor[i] === i);
       const walled = i => keep.some(c => this.inCastleRange(c, i % this.W, (i / this.W) | 0, this.castleInfo(c).radius));
+      // Le royaume qui entoure le plus ce morceau (pas un allié de target)
+      const around = new Map();
+      for (const i of tiles) {
+        this.forNeighbors(i, n => {
+          const o = this.owner[n];
+          if (o >= 0 && o !== target && !this.areAllied(o, target)) around.set(o, (around.get(o) || 0) + 1);
+        });
+      }
+      let winner = -1, best = 0;
+      for (const [o, c] of around) if (c > best && this.players[o].alive) { best = c; winner = o; }
+      if (winner < 0) continue;
       let took = 0;
       for (const i of tiles) {
         if (this.owner[i] !== target || this.building[i] === B_CASTLE || walled(i)) continue;
-        // un bâtiment à cheval sur la muraille reste au défenseur
+        // un bâtiment à cheval sur la muraille reste au royaume
         if (this.building[i] && this.footprint(this.anchor[i], this.building[i]).some(walled)) continue;
-        this.setOwner(i, pid);
+        this.setOwner(i, winner);
         took++;
       }
-      if (took) { taken += took; castles += keep.length; }
-    }
-    if (!taken) return;
-    const castleTxt = castles ? (castles > 1 ? ' Ses châteaux, eux, tiennent encore, isolés.' : ' Son château, lui, tient encore, isolé.') : '';
-    if (A.isHuman) UI.log(`✂️ Tu as encerclé des terres de ${T.name} : elles sont à toi !${castleTxt}`, 'good', T);
-    else if (T.isHuman) {
-      UI.log(`✂️ ${A.name} a coupé une partie de ton royaume : elle est perdue !` +
-        (castles ? ' Ton château isolé tient encore : clique dessus pour lancer un assaut qui le relie à ton royaume.' : ''), 'warn', A);
+      if (!took) continue;
+      const A = this.players[winner];
+      const castleTxt = keep.length ? (keep.length > 1 ? ' Ses châteaux, eux, tiennent encore, isolés.' : ' Son château, lui, tient encore, isolé.') : '';
+      if (A.isHuman) UI.log(`✂️ Des terres ${this.deName(T.name)}, coupées de leur royaume, sont englobées par le tien !${castleTxt}`, 'good', T);
+      else if (T.isHuman) {
+        UI.log(`✂️ Une partie de ton royaume, coupée du reste, est englobée par ${A.name} !` +
+          (keep.length ? ' Ton château isolé tient encore : clique dessus pour lancer un assaut qui le relie à ton royaume.' : ''), 'warn', A);
+      }
     }
   },
 
@@ -1709,7 +1718,7 @@ const GameRules = {
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
     // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5). On avance donc vite en plaine
     // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
-    const speed = Math.max(1, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
+    const speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
     while (!a.done) {
@@ -1957,11 +1966,13 @@ const GameRules = {
     for (const a of this.attacks.slice()) if (!a.done) this.stepAttack(a);
     // Un assaut a pu couper un royaume en morceaux : les petits morceaux encerclés sont pris
     for (const a of this.attacks) {
-      if (a.cut) { a.cut = false; this.captureEnclaves(a.attacker, a.target); }
+      if (a.cut) { a.cut = false; this.captureEnclaves(a.target); }
     }
     this.attacks = this.attacks.filter(a => !a.done);
     this.stepExpeditions();
     this.stepOutposts();
+    // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
+    if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive) this.captureEnclaves(p.id);
 
     for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
 
