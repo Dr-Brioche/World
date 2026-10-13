@@ -7,9 +7,10 @@ bâtis fermes, casernes et châteaux, et écrase les royaumes rivaux pour domine
 
 ## 🎮 [▶️ JOUER MAINTENANT](https://dr-brioche.github.io/World/)
 
-> Si le lien ci-dessus ne marche pas encore, essaie celui-ci : [lien de secours](https://raw.githack.com/Dr-Brioche/World/main/index.html)
->
-> Tu peux aussi télécharger le projet et ouvrir `index.html` d'un double-clic. Rien à installer.
+👉 **https://dr-brioche.github.io/World/** : rien à installer, ça marche sur ordinateur, tablette et téléphone.
+
+> Le jeu en ligne est mis à jour automatiquement à chaque nouveauté.
+> Tu peux aussi télécharger le projet et ouvrir `index.html` d'un double-clic.
 
 ---
 
