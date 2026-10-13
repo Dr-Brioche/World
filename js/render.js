@@ -203,6 +203,7 @@ const Render = {
       this.fillTiles(ox, oy, G.castleZone(c, G.owner[c]), 'rgba(255,255,255,0.22)');
     }
     this.drawChurchZones(ox, oy);
+    this.drawChurchCastleCircles(ox, oy);
     // Aperçu de la muraille avant de construire (ou d'améliorer) un château
     if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0 && this.mouse) {
       const upgrading = G.owner[this.hover] === G.human.id && G.building[this.hover] === B_CASTLE;
@@ -215,6 +216,28 @@ const Render = {
       this.fillTiles(ox, oy, zone, ok ? 'rgba(255,230,120,0.3)' : 'rgba(220,60,50,0.3)');
       this.drawWall(ox, oy, this.zoneEdges(zone, (i, n) => set.has(n)),
         ok ? 'rgba(255,230,140,0.95)' : 'rgba(230,90,80,0.95)', 'rgba(30,22,12,0.8)');
+    }
+  },
+
+  // Pendant la construction d'une église : cercle rouge autour de chacun de ses châteaux (interdit).
+  // Pendant la construction d'un château : cercle rouge autour de chacune de ses églises.
+  drawChurchCastleCircles(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, t = UI.selectedBuild;
+    if (G.phase !== 'playing' || (t !== B_CHURCH && t !== B_CASTLE)) return;
+    const around = t === B_CHURCH ? G.castlesOf(G.human.id) : G.churchesOf(G.human.id);
+    const R = G.churchCastleRange();
+    for (const a of around) {
+      const half = G.sizeOf(G.building[a]) / 2;
+      const cx = ox + (a % G.W + half) * s, cy = oy + (((a / G.W) | 0) + half) * s;
+      ctx.beginPath();
+      ctx.arc(cx, cy, (R + 0.5) * s, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(220,50,40,0.12)';
+      ctx.fill();
+      ctx.setLineDash([8, 6]);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = 'rgba(230,60,50,0.95)';
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
   },
 
