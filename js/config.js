@@ -63,6 +63,7 @@ const CONFIG = {
   // Les soldats embarqués défendent l'avant-poste ; pendant la traversée, une petite partie se perd :
   SEA_LOSS_PER_SECOND: 0.01, // 1 % des soldats par seconde de mer...
   SEA_LOSS_MAX: 0.25,        // ...au plus 25 %
+  INTERCEPT_SPEED: 6,        // vitesse (cases/s) des bateaux d'un port qui part intercepter un débarquement
   // Un château isolé peut être relié à nouveau par un assaut lancé depuis le royaume (en cliquant dessus).
   // S'il arrive, sa route s'élargit de 2 cases de chaque côté.
   LINK_WIDEN_RADIUS: 2,

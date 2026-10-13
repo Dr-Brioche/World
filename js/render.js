@@ -378,34 +378,56 @@ const Render = {
 
   // Bateaux d'expédition : ils avancent sur l'eau vers la côte visée (visibles par tous)
   drawExpeditions(ox, oy) {
-    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    const G = Game;
+    this.boatHits = [];
     for (const e of G.expeditions) {
-      const t = Math.min(1, (G.tick - e.start) / Math.max(1, e.arrive - e.start));
-      const k = Math.min(e.path.length - 1, Math.floor(t * e.path.length));
-      const i = e.path[k], x = ox + (i % W + 0.5) * s, y = oy + (((i / W) | 0) + 0.5) * s;
-      // le reste du trajet en pointillés
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      for (let j = k + 1; j < e.path.length; j += 2) ctx.lineTo(ox + (e.path[j] % W + 0.5) * s, oy + (((e.path[j] / W) | 0) + 0.5) * s);
-      ctx.setLineDash([4, 6]);
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = `rgba(${G.players[e.pid].color.join(',')},0.9)`;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      this.drawBannerImage(G.players[e.pid], x + 12, y - 2, 30);
-      ctx.font = '20px serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('⛵', x, y);
       // soldats à bord (ils diminuent un peu pendant la traversée)
-      const aboard = e.sent - (e.sent - e.troops) * t;
-      ctx.font = '700 12px Georgia, serif';
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
-      ctx.fillStyle = '#fff';
-      ctx.strokeText('⚔ ' + fmt(aboard), x, y - 18);
-      ctx.fillText('⚔ ' + fmt(aboard), x, y - 18);
+      const t = Math.min(1, (G.tick - e.start) / Math.max(1, e.arrive - e.start));
+      const pos = this.drawBoat(ox, oy, e.path, t, e.pid, e.sent - (e.sent - e.troops) * t);
+      this.boatHits.push({ id: e.id, x: pos.x, y: pos.y });
+      // les escadres parties l'intercepter
+      for (const it of e.interceptors) {
+        const u = Math.min(1, (G.tick - it.start) / Math.max(1, it.arrive - it.start));
+        this.drawBoat(ox, oy, it.path, u, it.pid, it.troops);
+      }
     }
+  },
+
+  // Bateau qui avance le long de son trajet (t = 0 au départ, 1 à l'arrivée), avec ses soldats à bord
+  drawBoat(ox, oy, path, t, pid, troops) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    const px = i => ox + (i % W + 0.5) * s, py = i => oy + (((i / W) | 0) + 0.5) * s;
+    const k = Math.min(path.length - 1, Math.floor(t * path.length));
+    const x = px(path[k]), y = py(path[k]);
+    // le reste du trajet en pointillés
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let j = k + 1; j < path.length; j += 2) ctx.lineTo(px(path[j]), py(path[j]));
+    ctx.setLineDash([4, 6]);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = `rgba(${G.players[pid].color.join(',')},0.9)`;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    this.drawBannerImage(G.players[pid], x + 12, y - 2, 30);
+    ctx.font = '20px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⛵', x, y);
+    ctx.font = '700 12px Georgia, serif';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+    ctx.fillStyle = '#fff';
+    ctx.strokeText('⚔ ' + fmt(troops), x, y - 18);
+    ctx.fillText('⚔ ' + fmt(troops), x, y - 18);
+    return { x, y };
+  },
+
+  // Bateau d'expédition cliqué (à l'écran) : renvoie l'id de l'expédition, ou -1
+  boatAt(sx, sy) {
+    for (const b of this.boatHits || []) {
+      if (Math.abs(sx - b.x) < 22 && Math.abs(sy - b.y) < 22) return b.id;
+    }
+    return -1;
   },
 
   // Bannière cliquée (à l'écran) : renvoie l'id de l'assaut, ou -1

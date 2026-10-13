@@ -1155,10 +1155,80 @@ const Game = {
     p.gold -= plan.cost;
     p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
-    this.expeditions.push({ pid, landing: i, path: plan.path, cost: plan.cost, sent: troops,
+    this.expeditions.push({ id: this.nextAttackId++, pid, landing: i, path: plan.path, cost: plan.cost, sent: troops,
+      interceptors: [], // bateaux ennemis partis l'intercepter
       troops: troops * (1 - this.seaLoss(plan.time)), // ceux qui arriveront
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(plan.time * TPS)) });
+    // Prévenir les royaumes dont la côte est visée
+    const o = this.owner[i];
+    if (o >= 0 && this.players[o].isHuman) {
+      UI.log(`⛵ ${p.name} envoie une expédition vers ta côte ! Avec un port, clique sur son bateau pour l'intercepter.`, 'warn', p);
+    }
     return null;
+  },
+
+  // --- Intercepter un débarquement ---
+  // Avec un port (de n'importe quel niveau), on peut envoyer des soldats en bateau jusqu'à la côte visée
+  // par une expédition ennemie. S'ils y arrivent avant elle, il y a bataille en mer à son arrivée.
+  // Renvoie { error } ou { port, path, arrive } (le plus rapide de ses ports).
+  planInterception(pid, e) {
+    if (e.pid === pid || this.areAllied(pid, e.pid)) return { error: 'Ce bateau n\'est pas ennemi.' };
+    const ports = this.buildingTiles.filter(a => this.building[a] === B_PORT && this.owner[a] === pid);
+    if (!ports.length) return { error: 'Il te faut un port pour intercepter un débarquement.' };
+    let best = null;
+    for (const a of ports) {
+      const path = this.boatPath(a, e.landing);
+      if (!path) continue;
+      const speed = Math.max(this.buildingInfo(a).boatSpeed, CONFIG.INTERCEPT_SPEED);
+      const arrive = this.tick + Math.max(1, Math.round(path.length / speed * CONFIG.TICKS_PER_SECOND));
+      if (!best || arrive < best.arrive) best = { port: a, path, arrive };
+    }
+    if (!best) return { error: 'Aucun de tes ports ne peut rejoindre ces eaux.' };
+    if (best.arrive > e.arrive) return { error: 'Trop loin : tes bateaux arriveraient après le débarquement.' };
+    return best;
+  },
+
+  launchInterception(pid, expeditionId, troops) {
+    const e = this.expeditions.find(x => x.id === expeditionId && !x.done), p = this.players[pid];
+    if (!e) return 'Cette expédition est déjà arrivée.';
+    const plan = this.planInterception(pid, e);
+    if (plan.error) return plan.error;
+    troops = Math.floor(Math.min(troops, p.troops));
+    if (troops < 1) return 'Pas assez de soldats !';
+    p.troops -= troops;
+    e.interceptors.push({ pid, troops, path: plan.path, start: this.tick, arrive: plan.arrive });
+    if (this.players[e.pid].isHuman) UI.log(`⚓ ${p.name} envoie des bateaux intercepter ton expédition !`, 'warn', p);
+    return null;
+  },
+
+  // Bataille en mer à l'arrivée de l'expédition e : chaque escadre qui l'attend la combat (1 contre 1,
+  // corrigé par la force des soldats). Renvoie les soldats de l'expédition qui restent.
+  seaBattle(e) {
+    let troops = e.troops;
+    const p = this.players[e.pid];
+    for (const it of e.interceptors) {
+      const q = this.players[it.pid];
+      if (!q.alive) continue;
+      if (troops < 1) { q.troops += it.troops; continue; } // plus personne à combattre : retour au port
+      const pe = this.troopPower(e.pid), pi = this.troopPower(it.pid);
+      const se = troops * pe, si = it.troops * pi;
+      if (si >= se) {
+        q.troops += (si - se) / pi; // les survivants rentrent
+        troops = 0;
+        if (q.isHuman) UI.log(`⚓ Ton escadre a coulé l'expédition ${this.deName(p.name)} !`, 'good', p);
+        if (p.isHuman) UI.log(`⚓ ${q.name} a intercepté et coulé ton expédition !`, 'warn', q);
+      } else {
+        troops = (se - si) / pe;
+        if (q.isHuman) UI.log(`⚓ Ton escadre n'a pas suffi : l'expédition ${this.deName(p.name)} débarque quand même.`, 'warn', p);
+        if (p.isHuman) UI.log(`⚓ Ton expédition a repoussé les bateaux ${this.deName(q.name)}, mais avec des pertes.`, 'warn', q);
+      }
+    }
+    return troops;
+  },
+
+  // Les soldats d'escadres qui n'ont pas eu à combattre rentrent
+  returnInterceptors(e) {
+    for (const it of e.interceptors) if (this.players[it.pid].alive) this.players[it.pid].troops += it.troops;
   },
 
   // Les bateaux arrivés débarquent : ils prennent les terres libres autour et y bâtissent un avant-poste
@@ -1167,13 +1237,19 @@ const Game = {
       if (this.tick < e.arrive) continue;
       e.done = true;
       const p = this.players[e.pid];
-      if (!p.alive) continue;
+      if (!p.alive) { this.returnInterceptors(e); continue; }
       const zone = this.landingZone(e.pid, e.landing);
       if (!this.landable(e.pid, e.landing) || zone.anchor < 0) {
+        this.returnInterceptors(e);
         p.gold += e.cost; // la côte n'est plus possible (prise par soi ou un allié, bâtie…) : l'or est rendu
         p.troops += e.troops; // et les soldats rentrent
         if (p.isHuman) UI.log('⛵ Impossible de débarquer sur la côte visée : l\'expédition rentre (or et soldats rendus).', 'warn');
         continue;
+      }
+      // Bataille en mer contre ceux qui attendent l'expédition
+      if (e.interceptors.length) {
+        e.troops = this.seaBattle(e);
+        if (e.troops < 1) continue; // expédition coulée : l'or est perdu
       }
       const victims = new Set(zone.tiles.map(j => this.owner[j]).filter(o => o >= 0));
       for (const j of zone.tiles) this.setOwner(j, e.pid);
