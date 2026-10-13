@@ -312,7 +312,7 @@ const UI = {
       const a = G.anchor[i];
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
       if (G.building[i] === B_CASTLE) txt += ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} %`;
-      if (G.building[i] === B_CASTLE && G.isIsolatedCastle(a)) {
+      if (G.holdsAlone(a) && G.isIsolated(a)) {
         txt += o === G.human.id ? ' · 🚩 coupé de ton royaume (il produit toujours) : clique pour lancer un assaut qui le relie à ton royaume'
           : ' · 🚩 isolé : aucun renfort ne peut le rejoindre';
       }
@@ -325,7 +325,7 @@ const UI = {
       if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
-      if (o === G.human.id && G.upgradeCost(a) !== null && !(G.building[i] === B_CASTLE && G.isIsolatedCastle(a))) txt += ` · clique pour l'améliorer`;
+      if (o === G.human.id && G.upgradeCost(a) !== null && !(G.holdsAlone(a) && G.isIsolated(a))) txt += ` · clique pour l'améliorer`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
       if (G.building[i] === B_OUTPOST) {
@@ -436,16 +436,16 @@ const UI = {
       this.attacksKey = key;
       box.innerHTML = list.map(a => {
         if (a.link !== undefined && a.attacker === h.id) {
-          return `<div class="attack panel"><span>⚔️ → 🏰 ton château isolé</span><b data-troops="${a.id}"></b>` +
+          return `<div class="attack panel"><span>⚔️ → ${G.building[a.link] === B_PORT ? '⚓ ton port isolé' : '🏰 ton château isolé'}</span><b data-troops="${a.id}"></b>` +
             `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
         }
         if (G.cutOff(a) && a.target === h.id) {
           // Pas de bouton « Défendre » : le château est coupé du royaume
           return `<div class="attack panel incoming" title="${G.building[a.targetCastle] === B_OUTPOST
             ? 'Ton avant-poste ne compte que sur sa garnison : clique dessus pour envoyer des renforts par la mer'
-            : 'Ton château est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie'}">` +
+            : 'Il est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie'}">` +
             `<span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque ` +
-            `${G.building[a.targetCastle] === B_OUTPOST ? 'ton avant-poste ⛺' : 'ton château isolé 🚩'}</span>` +
+            `${G.building[a.targetCastle] === B_OUTPOST ? 'ton avant-poste ⛺' : G.building[a.targetCastle] === B_PORT ? 'ton port isolé 🚩' : 'ton château isolé 🚩'}</span>` +
             `<b data-troops="${a.id}"></b></div>`;
         }
         if (a.attacker === h.id) {
@@ -494,8 +494,8 @@ const UI = {
         return this.log('🚫 Ton avant-poste est au-delà des mers : seuls ses soldats le défendent, et il n\'en a plus de libres. ' +
           'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.', 'warn');
       }
-      return this.log('🚫 Ton château est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
-        'Clique sur le château pour lancer un assaut qui le relie à ton royaume.', 'warn');
+      return this.log('🚫 Il est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
+        'Clique dessus pour lancer un assaut qui le relie à ton royaume.', 'warn');
     }
     const a = G.sendDefenders(h.id, attackId, h.troops * this.ratio);
     if (a) this.log(`🛡️ Tes défenseurs partent contrer l'assaut de ${G.players[a.attacker].name} !`, 'good');
@@ -670,8 +670,8 @@ const UI = {
       if (err) return this.log(err, 'warn');
       return this.log('⛵ Des renforts partent par la mer vers ton avant-poste !', 'good');
     }
-    // Clic sur un de ses châteaux isolés : assaut pour le relier au royaume
-    if (t === B_CASTLE && G.owner[i] === h.id && !this.selectedBuild && G.isIsolatedCastle(G.anchor[i])) {
+    // Clic sur un de ses châteaux (ou ports de niveau 3) isolés : assaut pour le relier au royaume
+    if (t && G.owner[i] === h.id && !this.selectedBuild && G.holdsAlone(G.anchor[i]) && G.isIsolated(G.anchor[i])) {
       return this.link(G.anchor[i]);
     }
     if (BUILDING_LEVELS[t] && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === t)) {

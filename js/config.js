@@ -61,10 +61,6 @@ const CONFIG = {
   NEUTRAL_TILE_COST: 0.08,     // soldats perdus pour prendre une case (libre ou ennemie)
   // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
   // puis l'assaut s'arrête (les survivants rentrent).
-  // Encerclement : un morceau de royaume coupé du reste, plus petit que 20 % de ce royaume,
-  // est englobé d'un coup par celui qui l'a coupé, avec tout ce qu'il contient (châteaux compris).
-  // (sauf un morceau avec un avant-poste ou une colonie : une invasion par la mer se défend)
-  ENCLAVE_RATIO: 0.2,
   // Un royaume sans château ni église peut être attaqué de front : toutes ses troupes défendent d'office,
   // mais désorganisées (sans pouvoir en place), chaque soldat ne compte que pour 0.8.
   LEADERLESS_DEFENSE: 0.8,
@@ -78,6 +74,8 @@ const CONFIG = {
   OUTPOST_DEFENSE: 1,        // une fois bâti, bonus de défense autour de lui (comme un fort en bois)
   OUTPOST_BUILDING_MALUS: 0.2, // pendant sa construction, ses défenseurs sont occupés à bâtir : défense -0.2
   OUTPOST_GARRISON: 5,       // une fois bâti : soldats en garnison (fixe) ; les autres stationnent et peuvent attaquer
+  // Encerclement : un royaume coupé en morceaux ne garde que le plus grand ; les autres vont à celui qui l'a coupé.
+  // Seuls ses châteaux et ports de niveau 3 tiennent, isolés (et les morceaux avec un avant-poste).
   // Un château isolé peut être relié à nouveau par un assaut lancé depuis le royaume (en cliquant dessus).
   // S'il arrive, sa route s'élargit de 2 cases de chaque côté.
   LINK_WIDEN_RADIUS: 2,
