@@ -29,6 +29,12 @@ const AI = {
     const max = Game.maxTroops(p);
     const nb = Game.neighborStats(p.id);
 
+    // Nos avant-postes bâtis : leurs soldats stationnés prennent des terres libres autour
+    for (const [op, o] of Game.outposts) {
+      if (Game.owner[op] !== p.id || !Game.outpostReady(op) || o.stationed < 10 || Math.random() > 0.3) continue;
+      Game.launchAttack(p.id, -1, o.stationed * 0.7, undefined, undefined, op);
+    }
+
     // Un de nos châteaux est isolé : de temps en temps, on tente de le relier au royaume
     if (p.troops > max * 0.4 && Math.random() < 0.2) {
       const lost = Game.castlesOf(p.id).find(c => Game.isIsolatedCastle(c));
@@ -85,6 +91,9 @@ const AI = {
       // Château isolé (ou avant-poste) : impossible d'y envoyer des défenseurs. Pour un château, on tente
       // de le rejoindre par un assaut ; pour un avant-poste, on envoie des renforts par la mer.
       if (Game.cutOff(a) && Game.building[a.targetCastle] === B_OUTPOST) {
+        // d'abord ses soldats stationnés, puis des renforts par la mer
+        const sent = Game.sendDefenders(p.id, a.id, needed);
+        if (sent) continue;
         if (!Game.expeditions.some(e => e.reinforce === a.targetCastle)) {
           Game.reinforceOutpost(p.id, a.targetCastle, Math.min(needed, p.troops * 0.4));
         }
@@ -135,7 +144,7 @@ const AI = {
     for (let k = 0; k < 15; k++) {
       const i = (Math.random() * Game.N) | 0;
       if (!Game.isCoastal(i) || !Game.landable(p.id, i)) continue;
-      if (!Game.launchExpedition(p.id, i, p.troops * 0.3)) return;
+      if (!Game.launchExpedition(p.id, i, Math.max(p.troops * 0.3, 12))) return;
     }
   },
 

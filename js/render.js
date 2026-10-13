@@ -627,14 +627,14 @@ const Render = {
   drawAssaultPlan(ox, oy) {
     const G = Game, p = UI.plan, ctx = this.ctx, s = this.cam.scale, W = G.W;
     const key = p.castle + ':' + G.version + ':' + p.waypoints.join(',');
-    if (this.planKey !== key) { this.planKey = key; this.planPath = G.castlePath(G.human.id, p.castle, p.waypoints); }
+    if (this.planKey !== key) { this.planKey = key; this.planPath = G.castlePath(G.human.id, p.castle, p.waypoints, p.source); }
     // Itinéraire possible en passant par la case survolée
     const h = this.hover;
     const tryIt = h >= 0 && G.anchor[h] !== p.castle && !p.waypoints.includes(h) && G.castlePassable(p.castle)(h);
     const tKey = key + ':' + h;
     if (this.tryKey !== tKey) {
       this.tryKey = tKey;
-      this.tryPath = tryIt ? G.castlePath(G.human.id, p.castle, p.waypoints.concat([h])) : null;
+      this.tryPath = tryIt ? G.castlePath(G.human.id, p.castle, p.waypoints.concat([h]), p.source) : null;
     }
     if (this.tryPath) this.strokePath(ox, oy, this.tryPath, 'rgba(255,255,255,0.75)', 1.8);
     if (this.planPath) this.strokePath(ox, oy, this.planPath, '#ffd34d', 3);
@@ -724,6 +724,18 @@ const Render = {
           continue;
         }
         ctx.fillText(BUILDINGS[type].icon, px, py);
+        // Avant-poste bâti : ses soldats stationnés
+        if (type === B_OUTPOST && G.outpostReady(i) && G.outposts.get(i).stationed >= 1) {
+          const f = ctx.font;
+          ctx.font = '700 12px Georgia, serif';
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+          ctx.fillStyle = '#fff';
+          const txt = '⚔ ' + fmt(G.outposts.get(i).stationed);
+          ctx.strokeText(txt, px, py - s * half - 8);
+          ctx.fillText(txt, px, py - s * half - 8);
+          ctx.font = f;
+        }
         // Avant-poste en construction : le temps restant
         if (type === B_OUTPOST && !G.outpostReady(i) && G.outposts.has(i)) {
           const left = Math.ceil((G.outposts.get(i).ready - G.tick) / CONFIG.TICKS_PER_SECOND);
