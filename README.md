@@ -61,8 +61,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    impossible de lancer un assaut depuis les terres d'un allié.
 
    **⚔️ Le déroulement d'un assaut**
-   - **Préparation (10 s)** : une ligne pointillée et une bannière ⚔️ à ta couleur montrent à tout le monde
-     où tu vas frapper. Pendant ce temps, reclique sur la cible pour **ajouter des soldats tout de suite** :
+   - **Préparation (10 s)** : une **flèche rouge en pointillés**, légèrement courbée, montre à tout le monde
+     où tu vas frapper : elle part d'un **cercle rouge** un peu à l'intérieur de ta frontière et vise la zone
+     attaquée, marquée d'une **cible** (un cercle et un point rouge). Ta bannière ⚔️ avance le long de la flèche.
+     La flèche reste visible (plus discrète) pendant tout l'assaut. Pendant ce temps, reclique sur la cible pour **ajouter des soldats tout de suite** :
      c'est ce qui fixe l'ampleur de l'assaut.
    - **L'assaut commence** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
      mais ils mettent **5 secondes** à arriver.
@@ -184,7 +186,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
      | 2. Grand port | +100 % | 1 | **oui** | 💰 120 |
-     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** (comme un fort en bois) | 💰 250 |
+     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (comme un fort en bois) | 💰 250 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
@@ -271,6 +273,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.39** : 🎯 une flèche rouge en pointillés, légèrement courbée, montre chaque assaut : un cercle au départ (juste à l'intérieur de la frontière) et une cible sur la zone attaquée · 🧱 le port royal (niveau 3) a une petite muraille, comme un fort en bois
 - **v0.38** : ✂️ couper un royaume en deux donne d'un coup le plus petit morceau à celui qui a coupé, **quelle que soit sa taille** (fini la limite de 20 %), avec ses églises et ports · 🚩 seuls les châteaux et les ports de niveau 3 tiennent, isolés
 - **v0.37** : ✂️ un morceau coupé (moins de 20 % du royaume) va entièrement à celui qui l'a coupé, châteaux et bâtiments compris : un royaume reste d'un seul tenant (sauf invasion par la mer) · 🤝 on ne peut plus attaquer depuis les terres d'un allié, seulement depuis son propre territoire
 - **v0.36** : ⚔️ supériorité en nombre : le camp le plus nombreux (plus de 2 fois plus de soldats) tue plus vite et perd moins de soldats, jusqu'à x5 · une petite poignée de défenseurs ne bloque plus une grosse armée · 🏰 prendre un château donne d'un coup toute sa zone de défense et les bâtiments qui s'y trouvent

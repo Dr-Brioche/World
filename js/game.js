@@ -876,7 +876,7 @@ const GameRules = {
       const keep = tiles.filter(i => this.anchor[i] === i && this.building[i] && this.holdsAlone(i));
       const kept = i => keep.some(c => this.building[c] === B_CASTLE
         ? this.inCastleRange(c, i % this.W, (i / this.W) | 0, this.castleInfo(c).radius)
-        : this.nearBuilding(c, i, this.buildingInfo(c).radius));
+        : this.inChurchRange(c, i, this.buildingInfo(c).radius)); // (zone du port, celle de sa muraille)
       // Les royaumes qui touchent ce morceau (pas les alliés de target), avec la longueur de leur frontière
       const around = new Map();
       for (const i of tiles) {
@@ -1511,22 +1511,44 @@ const GameRules = {
     this.expeditions = this.expeditions.filter(e => !e.done);
   },
 
-  // Flèche de l'attaque : du cœur du royaume attaquant vers la case visée
-  // (ou, à défaut, vers la case du front la plus proche).
+  // Flèche de l'attaque : de la frontière du royaume attaquant (un peu à l'intérieur de ses terres)
+  // vers la case visée (ou, à défaut, vers la case du front la plus proche de son cœur).
   aimArrow(a, frontier, aimTile) {
-    const p = this.players[a.attacker];
-    a.fromX = p.sumX / p.tiles + 0.5;
-    a.fromY = p.sumY / p.tiles + 0.5;
+    const p = this.players[a.attacker], W = this.W;
+    const cx = p.sumX / p.tiles, cy = p.sumY / p.tiles; // cœur du royaume
+    const dist2 = (t, x, y) => (t % W - x) ** 2 + (((t / W) | 0) - y) ** 2;
     let aim = aimTile;
     if (aim === undefined || this.owner[aim] !== a.target) {
       let best = Infinity;
-      for (const t of frontier) {
-        const d = (t % this.W - a.fromX) ** 2 + (((t / this.W) | 0) - a.fromY) ** 2;
-        if (d < best) { best = d; aim = t; }
+      for (const t of frontier) if (dist2(t, cx, cy) < best) { best = dist2(t, cx, cy); aim = t; }
+    }
+    const ax = aim % W, ay = (aim / W) | 0;
+    a.toX = ax + 0.5;
+    a.toY = ay + 0.5;
+    // Cible sur un bâtiment (château, église…) : on vise son centre
+    if (this.building[aim]) {
+      const b = this.anchor[aim], half = this.sizeOf(this.building[b]) / 2;
+      a.toX = b % W + half;
+      a.toY = ((b / W) | 0) + half;
+    }
+    // Départ : la case de nos terres, au bord du front, la plus proche de la cible...
+    let start = -1, best = Infinity;
+    for (const t of frontier) {
+      this.forNeighbors(t, n => {
+        if (this.owner[n] === a.attacker && dist2(n, ax, ay) < best) { best = dist2(n, ax, ay); start = n; }
+      });
+    }
+    if (start < 0) { a.fromX = cx + 0.5; a.fromY = cy + 0.5; return; }
+    // ...puis on recule de quelques cases vers l'intérieur (si ces cases sont encore à nous)
+    const sx = start % W, sy = (start / W) | 0, len = Math.hypot(sx - ax, sy - ay) || 1;
+    for (let back = CONFIG.ARROW_INSIDE; back >= 0; back--) {
+      const x = Math.round(sx + (sx - ax) / len * back), y = Math.round(sy + (sy - ay) / len * back);
+      if (x >= 0 && y >= 0 && x < W && y < this.H && this.owner[y * W + x] === a.attacker) {
+        a.fromX = x + 0.5;
+        a.fromY = y + 0.5;
+        return;
       }
     }
-    a.toX = aim % this.W + 0.5;
-    a.toY = ((aim / this.W) | 0) + 0.5;
   },
 
   isPreparing(a) { return this.tick < a.startTick; },
