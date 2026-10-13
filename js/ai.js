@@ -14,6 +14,11 @@ const AI = {
     // Une seule campagne à la fois ; si l'assaut en cours se heurte à des défenseurs, renforts !
     const mine = Game.attacks.find(a => !a.done && a.attacker === p.id);
     if (mine) {
+      // Armée de secours bloquée par des défenseurs : renforts
+      if (mine.relief !== undefined) {
+        if (mine.defenders > mine.troops && p.troops > 2) Game.launchRelief(p.id, mine.relief, p.troops * 0.4);
+        return;
+      }
       if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) > mine.troops && p.troops > 2) {
         Game.launchAttack(p.id, mine.target, p.troops * 0.4, mine.targetCastle >= 0 ? mine.targetCastle : undefined);
       }
@@ -41,7 +46,9 @@ const AI = {
       const plan = Game.planAssault(p.id, o), aim = plan.castle;
       if (aim === -1) continue;
       const garrison = aim === null ? 0 : Game.garrison[aim];
-      let score = p.troops * 0.7 / ((e.troops * 0.5 + garrison) * plan.D + 1) + Math.random() * 0.3;
+      // Un château isolé ne reçoit pas de défenseurs : seule sa garnison le défend (proie facile !)
+      const helpers = aim !== null && Game.isIsolatedCastle(aim) ? 0 : e.troops * 0.5;
+      let score = p.troops * 0.7 / ((helpers + garrison) * plan.D + 1) + Math.random() * 0.3;
       if (e.isHuman) score += Game.difficulty.hateHuman;
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
       if (score > bestScore) { bestScore = score; best = o; bestAim = aim; }
@@ -64,7 +71,13 @@ const AI = {
       const D = Game.frontDefense(a);
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
       const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0);
-      if (needed > 0) Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));
+      if (needed <= 0) continue;
+      // Château isolé : impossible d'y envoyer des défenseurs, on tente une armée de secours
+      if (Game.cutOff(a)) {
+        if (!Game.reliefFor(a.targetCastle)) Game.launchRelief(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
+        continue;
+      }
+      Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));
     }
     // Une armée se prépare contre nous : parfois, on tente de faire la paix (un pacte)
     const threats = Game.attacks.filter(a => !a.done && a.target === p.id && Game.isPreparing(a));

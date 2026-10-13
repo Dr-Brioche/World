@@ -264,7 +264,20 @@ const Render = {
         const t = a.frontTile >= 0 ? a.frontTile : -1;
         const bx = t >= 0 ? ox + (t % G.W + 0.5) * s : ox + a.toX * s;
         const by = t >= 0 ? oy + (((t / G.W) | 0) + 0.5) * s : oy + a.toY * s;
-        this.drawArmyBanner(a, bx, by, `⚔ ${fmt(a.troops)}${extra}`);
+        // Armée de secours : une ligne pointillée montre le château isolé qu'elle veut rejoindre
+        if (a.relief !== undefined) {
+          ctx.beginPath();
+          ctx.moveTo(bx, by);
+          ctx.lineTo(ox + a.toX * s, oy + a.toY * s);
+          ctx.setLineDash([6, 6]);
+          ctx.lineDashOffset = -now / 40;
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = `rgb(${G.players[a.attacker].color.join(',')})`;
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.lineDashOffset = 0;
+        }
+        this.drawArmyBanner(a, bx, by, `${a.relief !== undefined ? '🚩' : '⚔'} ${fmt(a.troops)}${extra}`);
         continue;
       }
       const col = G.players[a.attacker].color.join(',');

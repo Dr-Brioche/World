@@ -49,6 +49,9 @@ const CONFIG = {
   NEUTRAL_TILE_COST: 0.08,     // soldats perdus pour prendre une case (libre ou ennemie)
   // Prise d'un château : l'assaut finit de conquérir sa zone de défense (un peu élargie), puis s'arrête.
   CASTLE_CAPTURE_EXTRA_RADIUS: 2,  // cases conquises en plus autour de la zone du château
+  // Encerclement : un morceau de royaume coupé du reste, plus petit que 20 % de ce royaume,
+  // est pris d'un coup par celui qui l'a coupé (s'il le touche). Ses châteaux restent debout, isolés.
+  ENCLAVE_RATIO: 0.2,
 
   // --- Alliances (pactes) ---
   MAX_PACT_SIZE: 3,              // nombre maximum de royaumes dans un même pacte
