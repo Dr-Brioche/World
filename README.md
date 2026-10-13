@@ -191,6 +191,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
    - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** : clique sur
      ton avant-poste pour lui **envoyer des renforts par la mer** (depuis un port de niveau 2 ou plus).
+     Les renforts qui arrivent sur un avant-poste **déjà bâti** sont tout de suite opérationnels
+     (pas de nouvelle construction à attendre).
    - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
      ton armée : l'avant-poste disparaît et ses soldats rejoignent tes troupes.
    - Les ennemis peuvent **viser l'avant-poste** pour le détruire ; sans lui, ses terres sont à nouveau
