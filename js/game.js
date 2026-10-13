@@ -50,7 +50,7 @@ const Game = {
       color: BANNERS[banner].color,  // la couleur du royaume vient de sa bannière
       alive: true, troops: CONFIG.START_TROOPS, gold: CONFIG.START_GOLD,
       tiles: 0, sumX: 0, sumY: 0, maxTiles: 0, kills: 0,
-      bCount: [0, 0, 0, 0],
+      bCount: [0, 0, 0, 0, 0],
       traitorUntil: 0,
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
       castlesBuilt: 0,  // châteaux construits dans la partie (capitale comprise), limité à MAX_CASTLES
@@ -152,11 +152,69 @@ const Game = {
       && this.insideWalls(pid, a, type) && !this.tooCloseToBuilding(a, type);
   },
 
-  // Moulins et casernes se construisent seulement dans l'enceinte d'un de ses châteaux
-  // (pas dans l'arrière-pays). Les châteaux, eux, se construisent partout sur son territoire.
+  // Moulins et casernes se construisent dans l'enceinte d'un de ses châteaux, ou près d'une de ses
+  // églises qui a encore de la place (pas ailleurs dans l'arrière-pays).
+  // Les châteaux et les églises, eux, se construisent partout sur son territoire.
   insideWalls(pid, a, type) {
-    if (type === B_CASTLE) return true;
-    return this.footprint(a, type).every(j => this.castleProtects(pid, j));
+    if (type === B_CASTLE || type === B_CHURCH) return true;
+    return this.footprint(a, type).every(j => this.castleProtects(pid, j)) || this.churchFor(pid, a, type) >= 0;
+  },
+
+  // --- Églises ---
+  // La case i est-elle à moins de R cases du centre de l'église ch ?
+  inChurchRange(ch, i, R) {
+    const half = (this.sizeOf(B_CHURCH) - 1) / 2;
+    const dx = ch % this.W + half - i % this.W, dy = ((ch / this.W) | 0) + half - ((i / this.W) | 0);
+    return dx * dx + dy * dy <= R * R;
+  },
+
+  // Terres du royaume autour de l'église ch, où elle permet de construire
+  churchZone(ch) {
+    const o = this.owner[ch], R = this.buildingInfo(ch).radius, zone = [];
+    const cx = ch % this.W, cy = (ch / this.W) | 0;
+    for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R + 1); y++) {
+      for (let x = Math.max(0, cx - R); x <= Math.min(this.W - 1, cx + R + 1); x++) {
+        const i = y * this.W + x;
+        if (this.owner[i] === o && this.inChurchRange(ch, i, R)) zone.push(i);
+      }
+    }
+    return zone;
+  },
+
+  // Nombre de moulins et casernes déjà construits grâce à l'église ch
+  // (ceux de son royaume dans sa zone, hors de la muraille d'un château)
+  churchUsed(ch) {
+    const o = this.owner[ch], R = this.buildingInfo(ch).radius;
+    let n = 0;
+    for (const b of this.buildingTiles) {
+      const t = this.building[b];
+      if ((t !== B_MILL && t !== B_BARRACKS) || this.owner[b] !== o) continue;
+      const cells = this.footprint(b, t);
+      if (!cells.every(j => this.inChurchRange(ch, j, R))) continue;
+      if (cells.every(j => this.castleProtects(o, j))) continue;
+      n++;
+    }
+    return n;
+  },
+
+  // Une église du royaume qui accepte ce bâtiment (il est dans sa zone et elle a de la place), ou -1
+  churchFor(pid, a, type) {
+    const cells = this.footprint(a, type);
+    for (const ch of this.buildingTiles) {
+      if (this.building[ch] !== B_CHURCH || this.owner[ch] !== pid) continue;
+      const info = this.buildingInfo(ch);
+      if (cells.every(j => this.inChurchRange(ch, j, info.radius)) && this.churchUsed(ch) < info.slots) return ch;
+    }
+    return -1;
+  },
+
+  // Châteaux qu'un royaume peut construire dans la partie : MAX_CASTLES, plus ceux de sa meilleure église
+  maxCastles(p) {
+    let extra = 0;
+    for (const ch of this.buildingTiles) {
+      if (this.building[ch] === B_CHURCH && this.owner[ch] === p.id) extra = Math.max(extra, this.buildingInfo(ch).castles);
+    }
+    return CONFIG.MAX_CASTLES + extra;
   },
 
   // Écart obligatoire entre deux bâtiments : CASTLE_SPACING si l'un des deux est un château,
@@ -437,13 +495,15 @@ const Game = {
   // Renvoie un message d'erreur, ou null si la construction a réussi.
   // i = case en haut à gauche du bâtiment (2x2 cases)
   tryBuild(p, i, type) {
-    if (type === B_CASTLE && p.castlesBuilt >= CONFIG.MAX_CASTLES) {
-      return `Tu as déjà construit ${CONFIG.MAX_CASTLES} châteaux : c'est le maximum par partie (prends-en à l'ennemi !).`;
+    if (type === B_CASTLE && p.castlesBuilt >= this.maxCastles(p)) {
+      return `Tu as déjà construit ${this.maxCastles(p)} châteaux : c'est le maximum pour l'instant ` +
+        '(prends-en à l\'ennemi, ou améliore une église pour en débloquer).';
     }
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
-        return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux (pas dans l'arrière-pays).`;
+        return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux, ou près d'une de tes églises ` +
+          'qui a encore de la place (pas ailleurs dans l\'arrière-pays).';
       }
       if (i >= 0 && this.tooCloseToBuilding(i, type)) {
         return `Trop près d'un autre bâtiment : il faut ${this.tooCloseToBuilding(i, type)} cases d'écart.`;

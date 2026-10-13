@@ -123,7 +123,8 @@ const AI = {
     const c = p.bCount;
     let type = B_MILL;
     if (c[B_BARRACKS] < c[B_MILL] / 2) type = B_BARRACKS;
-    else if (Math.random() < 0.2 && p.castlesBuilt < CONFIG.MAX_CASTLES) type = B_CASTLE;
+    else if (Math.random() < 0.2 && p.castlesBuilt < Game.maxCastles(p)) type = B_CASTLE;
+    else if (Math.random() < 0.1 && c[B_CHURCH] < 2) type = B_CHURCH;
     if (p.gold < Game.buildCost(p, type)) return;
 
     const tiles = [];
