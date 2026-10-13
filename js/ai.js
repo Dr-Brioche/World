@@ -11,8 +11,14 @@ const AI = {
 
     this.reactToThreats(p);
 
-    // Une seule campagne à la fois
-    if (Game.attacks.some(a => !a.done && a.attacker === p.id)) return;
+    // Une seule campagne à la fois ; si l'assaut en cours se heurte à des défenseurs, renforts !
+    const mine = Game.attacks.find(a => !a.done && a.attacker === p.id);
+    if (mine) {
+      if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) > mine.troops && p.troops > 100) {
+        Game.launchAttack(p.id, mine.target, p.troops * 0.4, mine.targetCastle >= 0 ? mine.targetCastle : undefined);
+      }
+      return;
+    }
 
     const max = Game.maxTroops(p);
     const nb = Game.neighborStats(p.id);
@@ -25,21 +31,24 @@ const AI = {
 
     if (p.troops < max * p.aggression) return;
 
-    // Sinon on cherche le voisin le plus faible
-    let best = null, bestScore = 0;
+    // Sinon on cherche le voisin le plus faible : on compare notre assaut (70 % de nos soldats)
+    // à ce qu'il pourra nous opposer (la moitié de ses soldats + la garnison du château visé).
+    let best = null, bestScore = 0, bestAim = -1;
     for (const [o] of nb) {
       if (o < 0 || Game.areAllied(p.id, o) || Game.recoverTime(p, o) > 0) continue;
       const e = Game.players[o];
-      let score = p.troops / (e.troops + 50) + Math.random() * 0.3;
+      // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
+      const plan = Game.planAssault(p.id, o), aim = plan.castle;
+      if (aim === -1) continue;
+      const garrison = aim === null ? 0 : Game.garrison[aim];
+      let score = p.troops * 0.7 / ((e.troops * 0.5 + garrison) * plan.D + 50) + Math.random() * 0.3;
       if (e.isHuman) score += Game.difficulty.hateHuman;
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
-      if (score > bestScore) { bestScore = score; best = o; }
+      if (score > bestScore) { bestScore = score; best = o; bestAim = aim; }
     }
     const full = p.troops >= max * 0.95;
-    // Un royaume avec des châteaux s'attaque en visant l'un d'eux (le plus proche atteignable)
-    const aim = best !== null ? Game.pickCastleTarget(p.id, best) : -1;
-    if (best !== null && aim !== -1 && (bestScore > 1 || (full && bestScore > 0.5))) {
-      Game.launchAttack(p.id, best, p.troops * 0.5, aim === null ? undefined : aim);
+    if (best !== null && (bestScore > 1.2 || (full && bestScore > 0.7))) {
+      Game.launchAttack(p.id, best, p.troops * 0.7, bestAim === null ? undefined : bestAim);
     } else if (nb.has(-1)) {
       Game.launchAttack(p.id, -1, p.troops * 0.3);
     } else if (best === null && full && Math.random() < 0.15) {
@@ -47,16 +56,19 @@ const AI = {
     }
   },
 
-  // Une armée se prépare contre nous : on rappelle nos soldats pour défendre,
-  // et parfois on cherche un allié... ou même la paix avec l'agresseur.
+  // Des assauts nous visent : on envoie des défenseurs contre chacun.
   reactToThreats(p) {
-    const threats = Game.attacks.filter(a => !a.done && a.target === p.id && Game.isPreparing(a));
-    if (!threats.length) return;
-    const incoming = threats.reduce((s, a) => s + a.troops, 0);
-    if (incoming > p.troops * 0.5) {
-      for (const a of Game.attacks) if (!a.done && a.attacker === p.id) Game.endAttack(a);
+    // Envoyer des défenseurs contre chaque assaut : assez pour l'arrêter, vu la défense du terrain
+    for (const a of Game.attacks) {
+      if (a.done || a.target !== p.id) continue;
+      const D = Game.frontDefense(a);
+      // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
+      const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0);
+      if (needed > 0) Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));
     }
-    if (Math.random() < 0.3) Game.proposeAlliance(p.id, threats[0].attacker);
+    // Une armée se prépare contre nous : parfois, on tente de faire la paix (un pacte)
+    const threats = Game.attacks.filter(a => !a.done && a.target === p.id && Game.isPreparing(a));
+    if (threats.length && Math.random() < 0.3) Game.proposeAlliance(p.id, threats[0].attacker);
   },
 
   // Propose une alliance à un voisin
@@ -91,7 +103,7 @@ const AI = {
     const c = p.bCount;
     let type = B_MILL;
     if (c[B_BARRACKS] < c[B_MILL] / 2) type = B_BARRACKS;
-    else if (Math.random() < 0.2) type = B_CASTLE;
+    else if (Math.random() < 0.2 && p.castlesBuilt < CONFIG.MAX_CASTLES) type = B_CASTLE;
     if (p.gold < Game.buildCost(p, type)) return;
 
     const tiles = [];

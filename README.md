@@ -37,9 +37,26 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
    le bouton **✖ Annuler** fait rentrer les survivants au royaume.
    Les attaques ennemies contre toi y apparaissent aussi, en rouge.
-   Contre un royaume, l'armée se **prépare pendant 5 secondes** avant d'attaquer :
-   une ligne pointillée avec une bannière ⚔️ montre à tout le monde où elle va frapper.
-   Les royaumes visés ont le temps de réagir… toi aussi !
+   **Si tu es dans un pacte**, tu peux aussi attaquer les terres qui touchent celles de tes alliés,
+   même si tu n'es pas toi-même voisin.
+
+   **⚔️ Le déroulement d'un assaut**
+   - **Préparation (10 s)** : une ligne pointillée et une bannière ⚔️ à ta couleur montrent à tout le monde
+     où tu vas frapper. Pendant ce temps, reclique sur la cible pour **ajouter des soldats tout de suite** :
+     c'est ce qui fixe l'ampleur de l'assaut.
+   - **L'assaut commence** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
+     mais ils mettent **5 secondes** à arriver.
+   - **Prendre des terres** coûte peu (comme une terre libre, selon le terrain). Ce qui coûte cher,
+     ce sont les **défenseurs** ennemis.
+   - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
+     pour envoyer le % de soldats choisi. Le défenseur peut en envoyer autant qu'il veut, **sans délai**.
+   - **La garnison** : chaque château a ses propres défenseurs (300 / 800 / 2 000 selon son niveau),
+     qui sortent le défendre seuls le temps que le royaume réagisse. Ils se reconstituent ensuite peu à peu.
+   - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
+     **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
+     où se bat l'assaut (forêt x1.6, colline x2.2, montagne x3.5, + bonus du château dans sa muraille).
+     L'assaut choisit donc un chemin qui passe le plus possible par les plaines.
+   - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
    **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
    (un peu élargie), puis rentre. Elle doit ensuite **récupérer 30 secondes** avant de pouvoir
    réattaquer ce royaume : une **trêve**, dont le temps restant s'affiche entre parenthèses sous le nom
@@ -50,6 +67,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 3. **Construis** : appuie sur `1`, `2` ou `3` (ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
+   **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise) ; les châteaux pris à l'ennemi
+   ne comptent pas dans cette limite.
+   **Le terrain compte** : un moulin produit plus en plaine (x1.3) qu'en forêt (x1), colline (x0.9) ou montagne (x0.7) ;
+   une caserne recrute plus en forêt ou colline (x1.3) qu'en plaine (x1) ou montagne (x0.9).
+   Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
    **Les moulins et casernes se construisent uniquement dans l'enceinte d'un de tes châteaux** (dans sa muraille),
    pas dans l'arrière-pays. Les châteaux, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
@@ -76,11 +98,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Seules les cases à l'intérieur de la muraille sont renforcées : le bonus s'ajoute à la défense du terrain.
      **Clique sur un de tes châteaux pour l'améliorer** (3 niveaux) :
 
-     | Niveau | Bonus de défense | Rayon de la muraille | Prix |
-     |---|---|---|---|
-     | 1. Fort en bois | +1 | 7 cases | prix du château |
-     | 2. Château | +2 | 10 cases | 💰 600 |
-     | 3. Citadelle | +4 | 13 cases | 💰 1500 |
+     | Niveau | Bonus de défense | Rayon de la muraille | Garnison | Prix |
+     |---|---|---|---|---|
+     | 1. Fort en bois | +1 | 7 cases | 300 | prix du château |
+     | 2. Château | +2 | 10 cases | 800 | 💰 600 |
+     | 3. Citadelle | +4 | 13 cases | 2 000 | 💰 1500 |
 
      **Routes** : un château de niveau 2 trace des **chemins de terre** 🛤️ vers tes moulins et casernes
      qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, recrutement des casernes).
@@ -112,6 +134,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.19** : nouveaux combats : 10 s de préparation (on ajoute des soldats), renforts en 5 s, le défenseur envoie ses soldats en cliquant sur la bannière, combats visibles en direct, bonus de terrain pour le défenseur, garnison dans les châteaux · on peut attaquer depuis les terres d'un allié du pacte · production des moulins et casernes selon le terrain · 3 châteaux construits maximum par partie
 - **v0.18** : nouvelle logique d'attaque : on vise un château ennemi, l'armée contourne les autres fortifications et capture tout sur son chemin ; un royaume sans château s'attaque de front · écart obligatoire de 3 cases autour des bâtiments et 4 autour des châteaux · moulins et casernes seulement dans l'enceinte d'un château
 - **v0.17.2** : les routes se rejoignent proprement aux carrefours (elles ne se coupent plus)
 - **v0.17.1** : les routes des châteaux sont tracées en lignes droites avec des coins à 90°
