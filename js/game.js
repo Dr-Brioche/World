@@ -13,6 +13,7 @@ const Game = {
     this.owner = new Int16Array(this.N).fill(-1);
     this.building = new Uint8Array(this.N);
     this.level = new Uint8Array(this.N); // niveau des châteaux (1 à 3), sur la case d'ancrage
+    this.garrison = new Float32Array(this.N); // garnison actuelle des châteaux (case d'ancrage)
     // Un bâtiment occupe un carré de cases (2x2, ou 4x4 pour le château).
     // anchor[i] = case en haut à gauche du bâtiment (-1 si aucun)
     this.anchor = new Int32Array(this.N).fill(-1);
@@ -47,6 +48,7 @@ const Game = {
       bCount: [0, 0, 0, 0],
       traitorUntil: 0,
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
+      castlesBuilt: 0,  // châteaux construits dans la partie (capitale comprise), limité à MAX_CASTLES
       refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
       recoverUntil: {}, // royaume id → fin de la trêve avec lui (château pris) : pas d'attaque avant
       restUntil: 0,     // tick jusqu'auquel l'armée se repose (recrute moins vite) après avoir pris un château
@@ -75,6 +77,23 @@ const Game = {
     return found;
   },
 
+  // Un royaume « ami » : soi-même ou un allié du même pacte
+  isFriend(pid, o) { return o === pid || (o >= 0 && this.areAllied(pid, o)); },
+
+  // La case touche-t-elle notre territoire ou celui d'un allié du pacte ?
+  // (on peut attaquer depuis les terres de ses alliés, même sans être voisin soi-même)
+  touchesFriend(i, pid) {
+    let found = false;
+    this.forNeighbors(i, n => { if (this.isFriend(pid, this.owner[n])) found = true; });
+    return found;
+  },
+
+  countFriendNeighbors(i, pid) {
+    let c = 0;
+    this.forNeighbors(i, n => { if (this.isFriend(pid, this.owner[n])) c++; });
+    return c;
+  },
+
   countNeighborsOwnedBy(i, pid) {
     let c = 0;
     this.forNeighbors(i, n => { if (this.owner[n] === pid) c++; });
@@ -87,6 +106,7 @@ const Game = {
     const x = i % this.W, y = (i / this.W) | 0;
     // Un bâtiment n'est compté qu'une fois : sur sa case d'ancrage
     const b = this.anchor[i] === i ? this.building[i] : 0;
+    if (b === B_CASTLE) this.garrison[i] = 0; // château pris : sa garnison est perdue
     if (old >= 0) {
       const o = this.players[old];
       o.tiles--; o.sumX -= x; o.sumY -= y;
@@ -167,7 +187,10 @@ const Game = {
     if (o >= 0) this.players[o].bCount[type]++;
     this.buildingTiles.push(i);
     this.level[i] = 1;
-    if (type === B_CASTLE) this.castles.push(i);
+    if (type === B_CASTLE) {
+      this.castles.push(i);
+      this.garrison[i] = CASTLE_LEVELS[1].garrison; // un château neuf a sa garnison complète
+    }
   },
 
   // Infos du niveau actuel d'un bâtiment (null s'il n'a pas de niveaux)
@@ -278,6 +301,7 @@ const Game = {
     }
     if (best >= 0) {
       for (const j of this.footprint(best, B_CASTLE)) if (this.owner[j] === -1) this.setOwner(j, p.id);
+      p.castlesBuilt++;
       this.placeBuilding(best, B_CASTLE);
       p.capital = best;
     }
@@ -301,15 +325,28 @@ const Game = {
   // --- Économie ---
   // Somme d'une valeur (ex. "gold") sur tous les bâtiments d'un type d'un royaume,
   // selon leur niveau
-  // withRoads = compter le bonus des routes (or des moulins, recrutement des casernes)
-  levelSum(p, type, key, withRoads = false) {
+  // production = compter les bonus de production : routes et terrain
+  // (or des moulins, recrutement des casernes)
+  levelSum(p, type, key, production = false) {
     let sum = 0;
     for (const a of this.buildingTiles) {
       if (this.building[a] !== type || this.owner[a] !== p.id) continue;
-      const road = withRoads ? this.roads().get(a) : null;
-      sum += this.buildingInfo(a)[key] * (1 + (road ? road.bonus : 0));
+      let v = this.buildingInfo(a)[key];
+      if (production) {
+        const road = this.roads().get(a);
+        v *= (1 + (road ? road.bonus : 0)) * this.terrainFactor(a, type);
+      }
+      sum += v;
     }
     return sum;
+  },
+
+  // Multiplicateur de production selon le terrain sous le bâtiment (moyenne de ses cases)
+  terrainFactor(a, type) {
+    const table = TERRAIN_PRODUCTION[type];
+    if (!table) return 1;
+    const cells = this.footprint(a, type);
+    return cells.reduce((s, j) => s + table[this.terrain[j]], 0) / cells.length;
   },
 
   // --- Routes ---
@@ -380,6 +417,9 @@ const Game = {
   // Renvoie un message d'erreur, ou null si la construction a réussi.
   // i = case en haut à gauche du bâtiment (2x2 cases)
   tryBuild(p, i, type) {
+    if (type === B_CASTLE && p.castlesBuilt >= CONFIG.MAX_CASTLES) {
+      return `Tu as déjà construit ${CONFIG.MAX_CASTLES} châteaux : c'est le maximum par partie (prends-en à l'ennemi !).`;
+    }
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
@@ -393,6 +433,7 @@ const Game = {
     const cost = this.buildCost(p, type);
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
+    if (type === B_CASTLE) p.castlesBuilt++;
     this.placeBuilding(i, type);
     return null;
   },
@@ -401,7 +442,7 @@ const Game = {
   buildFrontier(pid, target) {
     const list = [];
     for (let i = 0; i < this.N; i++) {
-      if (this.owner[i] === target && this.isLand(i) && this.hasNeighborOwnedBy(i, pid)) list.push(i);
+      if (this.owner[i] === target && this.isLand(i) && this.touchesFriend(i, pid)) list.push(i);
     }
     return list;
   },
@@ -441,22 +482,38 @@ const Game = {
     }
     let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target);
     if (a && a.targetCastle !== castle) return `Un assaut contre ${this.players[target].name} est déjà en cours.`;
+    // Assaut déjà lancé : les renforts partent et arrivent dans REINFORCE_DELAY secondes
+    if (a && target >= 0 && !this.isPreparing(a)) {
+      p.troops -= troops;
+      a.pending.push({ troops, tick: this.tick + CONFIG.REINFORCE_DELAY * CONFIG.TICKS_PER_SECOND });
+      return null;
+    }
     if (!a) {
-      a = { id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false, startTick: this.tick, targetCastle: castle };
+      a = {
+        id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false, startTick: this.tick,
+        targetCastle: castle,
+        defenders: 0,  // soldats envoyés par le défenseur pour contrer cet assaut
+        pending: [],   // renforts en route : { troops, tick d'arrivée }
+        frontTile: -1, // case où se trouve l'assaut (pour la défense du terrain)
+      };
       if (target >= 0) {
         // Contre un royaume, l'armée se prépare d'abord : tout le monde la voit venir
         a.startTick = this.tick + CONFIG.ATTACK_PREP_TIME * CONFIG.TICKS_PER_SECOND;
         a.prepTicks = a.startTick - this.tick;
         this.aimArrow(a, frontier, aimTile);
         if (this.players[target].isHuman) {
-          UI.log(`⚠️ ${p.name} prépare une attaque contre toi (${fmt(troops)} soldats) !`, 'warn');
+          UI.log(`⚠️ ${p.name} prépare un assaut contre toi (${fmt(troops)} soldats) ! ` +
+            'Clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.', 'warn');
         }
       }
       this.attacks.push(a);
     }
     a.list = frontier;
     a.set = new Set(frontier);
-    if (castle >= 0 && !a.castleTaken) a.limitZone = this.corridor(castle, path);
+    if (castle >= 0 && !a.castleTaken) {
+      a.limitZone = this.corridor(castle, path);
+      if (a.frontTile < 0 || this.owner[a.frontTile] !== target) a.frontTile = path[0]; // on se bat au début du chemin
+    }
     p.troops -= troops;
     a.troops += troops;
     return null;
@@ -482,21 +539,33 @@ const Game = {
 
   // Chemin le plus court de la frontière de pid jusqu'au château c, en contournant les
   // autres fortifications du défenseur. Renvoie la liste des cases, ou null s'il n'y en a pas.
+  // Le chemin préfère les terrains faciles (plaines) : chaque case « coûte » sa défense.
   castlePath(pid, c) {
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, B_CASTLE));
-    const prev = new Int32Array(this.N).fill(-2), queue = [];
+    const target = this.owner[c];
+    const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
+    const done = new Uint8Array(this.N); // cases déjà traitées (chacune une seule fois)
+    const heap = new MinHeap();
     for (let i = 0; i < this.N; i++) {
-      if (passable(i) && this.hasNeighborOwnedBy(i, pid)) { prev[i] = -1; queue.push(i); }
+      if (passable(i) && this.touchesFriend(i, pid)) {
+        dist[i] = this.tileDefense(target, i);
+        prev[i] = -1;
+        heap.push(dist[i], i);
+      }
     }
-    for (let h = 0; h < queue.length; h++) {
-      const i = queue[h];
+    while (heap.size) {
+      const [d, i] = heap.pop();
+      if (done[i]) continue;
+      done[i] = 1;
       if (foot.has(i)) {
         const path = [];
         for (let j = i; j >= 0; j = prev[j]) path.push(j);
         return path.reverse();
       }
       this.forNeighbors(i, n => {
-        if (prev[n] === -2 && passable(n)) { prev[n] = i; queue.push(n); }
+        if (done[n] || !passable(n)) return;
+        const nd = d + this.tileDefense(target, n);
+        if (nd < dist[n]) { dist[n] = nd; prev[n] = i; heap.push(nd, n); }
       });
     }
     return null;
@@ -510,6 +579,22 @@ const Game = {
       this.forNeighbors(i, n => { if (passable(n)) zone.add(n); });
     }
     return zone;
+  },
+
+  // Pour les bots : quel château viser, et quelle défense de terrain attendre au premier combat ?
+  // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
+  planAssault(pid, target) {
+    const castles = this.castlesOf(target);
+    if (!castles.length) return { castle: null, D: 1.3 };
+    let best = { castle: -1, D: 1 }, bestLen = Infinity;
+    for (const c of castles) {
+      const path = this.castlePath(pid, c);
+      if (path && path.length < bestLen) {
+        bestLen = path.length;
+        best = { castle: c, D: this.tileDefense(target, path[0]) };
+      }
+    }
+    return best;
   },
 
   // Pour les bots : quel château viser ? null = pas de château (attaque de front),
@@ -558,7 +643,7 @@ const Game = {
     for (let k = 0; k < 4 && a.list.length > 0; k++) {
       const idx = (Math.random() * a.list.length) | 0;
       const t = a.list[idx];
-      const around = this.countNeighborsOwnedBy(t, a.attacker);
+      const around = this.countFriendNeighbors(t, a.attacker);
       const score = around / TERRAIN_INFO[this.terrain[t]].cost;
       // Après la prise d'un château, l'assaut ne sort plus de la zone du château
       const outside = a.limitZone && !a.limitZone.has(t);
@@ -575,13 +660,58 @@ const Game = {
     return best;
   },
 
+  // Prendre une case coûte comme une terre libre (selon le terrain), même chez l'ennemi :
+  // ce sont les soldats du défenseur qui rendent un assaut coûteux (voir fight).
   tileCost(a, t) {
-    if (a.target < 0) return CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost;
-    const d = this.players[a.target];
-    const density = d.troops / Math.max(1, d.tiles);
-    let cost = (CONFIG.ENEMY_TILE_BASE_COST + density * CONFIG.DENSITY_FACTOR) * this.tileDefense(a.target, t);
-    if (this.isTraitor(d)) cost *= CONFIG.TRAITOR_DEFENSE_MALUS;
-    return cost;
+    return CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost;
+  },
+
+  // Défense de l'endroit où se trouve l'assaut : terrain + château (x0.5 si le défenseur est traître).
+  // Chaque défenseur tué coûte autant de soldats à l'attaquant : x1 en plaine, plus ailleurs.
+  frontDefense(a) {
+    let t = a.frontTile;
+    if (t < 0 || this.owner[t] !== a.target) {
+      t = a.list.find(i => this.owner[i] === a.target && (!a.limitZone || a.limitZone.has(i)));
+      if (t === undefined) return 1;
+      a.frontTile = t;
+    }
+    let def = this.tileDefense(a.target, t);
+    if (this.isTraitor(this.players[a.target])) def *= CONFIG.TRAITOR_DEFENSE_MALUS;
+    return Math.max(1, def);
+  },
+
+  // Combat entre l'assaut et les défenseurs envoyés : ce n'est pas instantané,
+  // chaque tour une petite partie des soldats engagés tombe.
+  fight(a) {
+    const D = this.frontDefense(a);
+    const total = a.defenders + (a.garrison || 0);
+    const base = Math.max(CONFIG.FIGHT_MIN_LOSS, CONFIG.FIGHT_RATE * Math.min(a.troops, total));
+    const defLoss = Math.min(total, base);
+    // La garnison combat en premier, puis les défenseurs envoyés
+    const fromGarrison = Math.min(a.garrison || 0, defLoss);
+    a.garrison = (a.garrison || 0) - fromGarrison;
+    a.defenders -= defLoss - fromGarrison;
+    a.troops = Math.max(0, a.troops - defLoss * D);
+    if (a.troops < 1) {
+      const p = this.players[a.attacker], d = this.players[a.target];
+      if (p.isHuman) UI.log(`💥 Ton assaut contre ${d.name} a été repoussé !`, 'warn');
+      else if (d.isHuman) UI.log(`🛡️ Tu as repoussé l'assaut de ${p.name} !`, 'good');
+      this.endAttack(a);
+    } else if (a.defenders + a.garrison < 1) {
+      a.defenders = 0;
+      a.garrison = 0;
+    }
+  },
+
+  // Le défenseur envoie des soldats contre un assaut (sans délai, autant qu'il veut)
+  sendDefenders(pid, attackId, troops) {
+    const p = this.players[pid];
+    const a = this.attacks.find(a => a.id === attackId && a.target === pid && !a.done);
+    troops = Math.floor(Math.min(troops, p.troops));
+    if (!a || troops < 1) return null;
+    p.troops -= troops;
+    a.defenders += troops;
+    return a;
   },
 
   stepAttack(a) {
@@ -598,16 +728,29 @@ const Game = {
           return this.endAttack(a);
         }
         a.limitZone = this.corridor(a.targetCastle, path);
+        a.frontTile = path[0];
       }
     }
+    // Début d'un assaut sur un château : sa garnison sort le défendre
+    if (a.prepTicks && this.tick === a.startTick && a.targetCastle >= 0 && !a.done) {
+      a.garrison = this.garrison[a.targetCastle];
+      this.garrison[a.targetCastle] = 0;
+    }
+    // Arrivée des renforts
+    for (const r of a.pending) if (r.tick <= this.tick) a.troops += r.troops;
+    a.pending = a.pending.filter(r => r.tick > this.tick);
+    // Tant que des défenseurs (garnison ou renforts) tiennent la position, l'assaut se bat au lieu d'avancer
+    if (a.defenders + (a.garrison || 0) >= 1) return this.fight(a);
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
     // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5). On avance donc vite en plaine
     // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
     const speed = Math.max(1, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
-    a.move = Math.min((a.move || 0) + speed, speed * 2);
+    // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
+    a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, TERRAIN_INFO[TERRAIN.MOUNTAIN].cost));
     while (!a.done) {
       const t = this.pickFrontier(a);
       if (t < 0) return this.endAttack(a);
+      if (a.troops < this.tileCost(a, t)) return this.endAttack(a); // plus assez de soldats
       const steps = TERRAIN_INFO[this.terrain[t]].cost;
       if (a.move < steps) {
         a.set.add(t); // pas assez de points ce tour-ci : on réessaiera
@@ -617,10 +760,7 @@ const Game = {
       const cost = this.tileCost(a, t);
       if (a.troops < cost) return this.endAttack(a);
       a.troops -= cost;
-      if (a.target >= 0) {
-        const d = this.players[a.target];
-        d.troops = Math.max(0, d.troops - cost * CONFIG.DEFENDER_LOSS);
-      }
+      a.frontTile = t;
       // Prise d'un château : on note sa zone de défense (un peu élargie), l'assaut s'y arrêtera
       const castle = a.target >= 0 && this.building[t] === B_CASTLE ? this.anchor[t] : -1;
       const zone = castle >= 0 ? this.castleZone(castle, a.target, 0, CONFIG.CASTLE_CAPTURE_EXTRA_RADIUS) : null;
@@ -655,7 +795,14 @@ const Game = {
     if (a.done) return;
     a.done = true;
     const p = this.players[a.attacker];
-    if (p.alive) p.troops += a.troops; // les survivants rentrent à la maison
+    // Les survivants (et les renforts encore en route) rentrent à la maison
+    if (p.alive) p.troops += a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
+    // Les défenseurs survivants rentrent aussi, et la garnison regagne son château
+    if (a.target >= 0 && this.players[a.target].alive) this.players[a.target].troops += a.defenders;
+    const c = a.targetCastle;
+    if (c >= 0 && a.garrison > 0 && this.owner[c] === a.target) {
+      this.garrison[c] = Math.min(this.castleInfo(c).garrison, this.garrison[c] + a.garrison);
+    }
     // Après la prise d'un château : trêve dans les deux sens. L'attaquant se repose
     // (recrute moins vite) et le défenseur se réorganise (recrute plus vite),
     // mais aucun des deux ne peut attaquer l'autre avant la fin de la trêve.
@@ -809,6 +956,14 @@ const Game = {
       p.gold += this.goldRate(p) / TPS;
     }
 
+    // Les garnisons des châteaux se reconstituent (sauf celle qui est en train de combattre)
+    const besieged = new Set(this.attacks.filter(a => !a.done && !this.isPreparing(a)).map(a => a.targetCastle));
+    for (const c of this.castles) {
+      if (this.owner[c] < 0 || besieged.has(c)) continue;
+      const max = this.castleInfo(c).garrison;
+      this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);
+    }
+
     for (const a of this.attacks.slice()) if (!a.done) this.stepAttack(a);
     this.attacks = this.attacks.filter(a => !a.done);
 
@@ -859,4 +1014,37 @@ function fmt(n) {
   if (n >= 1e4) return Math.round(n / 1000) + 'k';
   if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
   return String(n);
+}
+
+// Petite file de priorité (tas binaire) pour chercher le chemin le plus court
+class MinHeap {
+  constructor() { this.keys = []; this.vals = []; }
+  get size() { return this.keys.length; }
+  push(k, v) {
+    const K = this.keys, V = this.vals;
+    let i = K.length;
+    K.push(k); V.push(v);
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (K[p] <= k) break;
+      K[i] = K[p]; V[i] = V[p]; i = p;
+    }
+    K[i] = k; V[i] = v;
+  }
+  pop() {
+    const K = this.keys, V = this.vals, top = [K[0], V[0]];
+    const k = K.pop(), v = V.pop();
+    if (K.length) {
+      let i = 0;
+      for (;;) {
+        let c = 2 * i + 1;
+        if (c >= K.length) break;
+        if (c + 1 < K.length && K[c + 1] < K[c]) c++;
+        if (K[c] >= k) break;
+        K[i] = K[c]; V[i] = V[c]; i = c;
+      }
+      K[i] = k; V[i] = v;
+    }
+    return top;
+  }
 }

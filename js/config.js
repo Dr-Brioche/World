@@ -34,14 +34,18 @@ const CONFIG = {
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type coûte x1.5 plus cher
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
+  MAX_CASTLES: 3,            // châteaux qu'un royaume peut construire dans la partie (capitale comprise ;
+                             // les châteaux pris à l'ennemi ne comptent pas)
 
   // --- Combat ---
   ATTACK_SPEED: 0.15,          // vitesse de conquête
-  ATTACK_PREP_TIME: 5,         // secondes de préparation avant d'attaquer un royaume
-  NEUTRAL_TILE_COST: 2,        // soldats perdus pour prendre une case libre
-  ENEMY_TILE_BASE_COST: 8,     // soldats perdus pour prendre une case ennemie
-  DENSITY_FACTOR: 1.0,         // plus l'ennemi a de soldats par case, plus c'est dur
-  DEFENDER_LOSS: 0.5,          // part des pertes infligées au défenseur
+  ATTACK_PREP_TIME: 10,        // secondes de préparation avant un assaut contre un royaume
+                               // (on peut y ajouter des soldats tout de suite)
+  REINFORCE_DELAY: 5,          // une fois l'assaut lancé, les renforts mettent 5 s à arriver
+  FIGHT_RATE: 0.03,            // vitesse des combats (part des soldats engagés qui tombent par tour)
+  FIGHT_MIN_LOSS: 5,           // pertes minimum par tour, pour que chaque combat finisse vite
+  GARRISON_REGEN: 0.05,        // la garnison d'un château se reconstitue de 5 % par seconde
+  NEUTRAL_TILE_COST: 2,        // soldats perdus pour prendre une case (libre ou ennemie)
   // Prise d'un château : l'assaut finit de conquérir sa zone de défense (un peu élargie),
   // puis s'arrête, et l'armée doit récupérer avant de pouvoir réattaquer ce royaume.
   CASTLE_CAPTURE_EXTRA_RADIUS: 2,  // cases conquises en plus autour de la zone du château
@@ -92,13 +96,22 @@ const BARRACKS_LEVELS = [
 // dans sa muraille (ex. forêt x1.6 + niveau 3 → x5.6).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 7,  bonus: 1, img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 600 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 1500 },
+  { name: 'Fort en bois', radius: 7,  bonus: 1, garrison: 300,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, garrison: 800,  img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 600 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 2000, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 1500 },
 ];
+// garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
+// le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.
 // size = largeur de l'image en cases, quand on zoome assez pour la voir
 // road = chemins vers les moulins et casernes dans la muraille ('dirt' = terre, 'paved' = pavés)
 // roadBonus = bonus de ces bâtiments reliés (0.2 = +20 % d'or ou de recrutement)
+
+// Production des moulins et casernes selon le terrain où ils sont construits
+// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne.
+const TERRAIN_PRODUCTION = {
+  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7], // les moulins aiment les plaines
+  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9], // les casernes, les forêts et les collines
+};
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
 const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS];

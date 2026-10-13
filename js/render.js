@@ -217,12 +217,78 @@ const Render = {
   },
 
   // Armées en préparation : ligne pointillée + bannière ⚔ qui avance vers la cible.
+  // Bannière d'une armée : drapeau à la couleur de l'attaquant avec deux épées croisées,
+  // ses soldats au-dessus et, s'il y en a, les défenseurs (bouclier à la couleur du défenseur).
+  drawArmyBanner(a, bx, by, label) {
+    const ctx = this.ctx, G = Game, col = G.players[a.attacker].color.join(',');
+    ctx.fillStyle = '#3b2610';
+    ctx.fillRect(bx - 1.5, by - 34, 3, 34); // mât
+    ctx.beginPath();                        // drapeau à queue d'aronde
+    ctx.moveTo(bx + 1.5, by - 34);
+    ctx.lineTo(bx + 34, by - 34);
+    ctx.lineTo(bx + 27, by - 24);
+    ctx.lineTo(bx + 34, by - 14);
+    ctx.lineTo(bx + 1.5, by - 14);
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${col})`;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(20,12,4,0.9)';
+    ctx.stroke();
+    ctx.font = '13px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚔️', bx + 15, by - 24);
+    ctx.font = '700 12px Georgia, serif';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+    ctx.fillStyle = '#fff';
+    ctx.strokeText(label, bx + 16, by - 42);
+    ctx.fillText(label, bx + 16, by - 42);
+    // Défenseurs engagés contre cet assaut
+    const defenders = a.defenders + (a.garrison || 0);
+    if (a.target >= 0 && defenders >= 1) {
+      const dcol = G.players[a.target].color.join(','), sx = bx + 50, sy = by - 24;
+      ctx.beginPath(); // petit bouclier
+      ctx.moveTo(sx - 9, sy - 10);
+      ctx.lineTo(sx + 9, sy - 10);
+      ctx.lineTo(sx + 9, sy + 1);
+      ctx.quadraticCurveTo(sx + 9, sy + 9, sx, sy + 12);
+      ctx.quadraticCurveTo(sx - 9, sy + 9, sx - 9, sy + 1);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${dcol})`;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(20,12,4,0.9)';
+      ctx.stroke();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+      ctx.fillStyle = '#ffe2a8';
+      ctx.strokeText('🛡 ' + fmt(defenders), sx, sy - 18);
+      ctx.fillText('🛡 ' + fmt(defenders), sx, sy - 18);
+    }
+    // Zone cliquable (le défenseur clique dessus pour envoyer ses soldats)
+    this.bannerHits.push({ id: a.id, x: bx + 20, y: by - 24 });
+  },
+
+  // Armées contre les royaumes : pendant la préparation, ligne pointillée + bannière qui avance
+  // vers la cible ; ensuite, la bannière se tient là où se bat l'assaut.
   drawAttackArrows(ox, oy) {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     const now = performance.now();
+    this.bannerHits = [];
     for (const a of G.attacks) {
-      if (a.done || !G.isPreparing(a) || a.fromX === undefined) continue;
-      const p = G.players[a.attacker], col = p.color.join(',');
+      if (a.done || a.target < 0 || a.fromX === undefined) continue;
+      const pending = a.pending.reduce((sum, r) => sum + r.troops, 0);
+      const extra = pending ? ` (+${fmt(pending)})` : '';
+      if (!G.isPreparing(a)) {
+        const t = a.frontTile >= 0 ? a.frontTile : -1;
+        const bx = t >= 0 ? ox + (t % G.W + 0.5) * s : ox + a.toX * s;
+        const by = t >= 0 ? oy + (((t / G.W) | 0) + 0.5) * s : oy + a.toY * s;
+        this.drawArmyBanner(a, bx, by, `⚔ ${fmt(a.troops)}${extra}`);
+        continue;
+      }
+      const col = G.players[a.attacker].color.join(',');
       const x1 = ox + a.fromX * s, y1 = oy + a.fromY * s;
       const x2 = ox + a.toX * s, y2 = oy + a.toY * s;
       const ang = Math.atan2(y2 - y1, x2 - x1);
@@ -259,36 +325,18 @@ const Render = {
       ctx.strokeStyle = 'rgba(20,12,4,0.8)';
       ctx.stroke();
 
-      // Bannière qui avance le long de la ligne
+      // Bannière qui avance le long de la ligne, avec le compte à rebours
       const bx = x1 + (x2 - x1) * progress, by = y1 + (y2 - y1) * progress;
-      ctx.fillStyle = '#3b2610';
-      ctx.fillRect(bx - 1.5, by - 34, 3, 34); // mât
-      ctx.beginPath();                        // drapeau à queue d'aronde
-      ctx.moveTo(bx + 1.5, by - 34);
-      ctx.lineTo(bx + 34, by - 34);
-      ctx.lineTo(bx + 27, by - 24);
-      ctx.lineTo(bx + 34, by - 14);
-      ctx.lineTo(bx + 1.5, by - 14);
-      ctx.closePath();
-      ctx.fillStyle = `rgb(${col})`;
-      ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = 'rgba(20,12,4,0.9)';
-      ctx.stroke();
-      ctx.font = '13px serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('⚔️', bx + 15, by - 24);
-
-      // Compte à rebours et soldats
-      ctx.font = '700 12px Georgia, serif';
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
-      ctx.fillStyle = '#fff';
-      const label = `${Math.ceil(remaining)} s · ${fmt(a.troops)}`;
-      ctx.strokeText(label, bx + 16, by - 42);
-      ctx.fillText(label, bx + 16, by - 42);
+      this.drawArmyBanner(a, bx, by, `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
     }
+  },
+
+  // Bannière cliquée (à l'écran) : renvoie l'id de l'assaut, ou -1
+  bannerAt(sx, sy) {
+    for (const b of this.bannerHits || []) {
+      if (Math.abs(sx - b.x) < 30 && Math.abs(sy - b.y) < 24) return b.id;
+    }
+    return -1;
   },
 
   // Images de chaque niveau des bâtiments (chargées une seule fois)

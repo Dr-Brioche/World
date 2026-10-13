@@ -32,6 +32,7 @@ const UI = {
     });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
     $('attacks').addEventListener('click', e => {
+      if (e.target.dataset.defend) return this.defend(+e.target.dataset.defend);
       const id = e.target.dataset.cancel;
       if (!id) return;
       const a = Game.cancelAttack(Game.human.id, +id);
@@ -113,7 +114,7 @@ const UI = {
   levelEffect(type, info) {
     if (type === B_CASTLE) {
       const road = info.road === 'paved' ? 'routes pavées' : 'chemins de terre';
-      return `+${info.bonus} défense, rayon ${info.radius}` +
+      return `+${info.bonus} défense, rayon ${info.radius}, garnison ${fmt(info.garrison)}` +
         (info.road ? `, ${road} : +${Math.round(info.roadBonus * 100)} % moulins et casernes proches` : '');
     }
     if (type === B_BARRACKS) return `+${fmt(info.maxTroops)} soldats max, +${Math.round(info.growth * 100)} % recrutement`;
@@ -229,6 +230,8 @@ const UI = {
     if (info) {
       const a = G.anchor[i];
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
+      if (G.building[i] === B_CASTLE) txt += ` · 🛡️ garnison ${fmt(G.garrison[a])}/${fmt(info.garrison)}`;
+      if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain x${G.terrainFactor(a, G.building[i]).toFixed(2)}`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (o === G.human.id && G.upgradeCost(a) !== null) txt += ` · clique pour l'améliorer`;
@@ -285,7 +288,7 @@ const UI = {
 
     if (G.phase === 'playing') {
       $('hint').textContent = this.selectedBuild
-        ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name} (Échap pour annuler)`
+        ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`
         : UI.describeTile(Render.hover) || 'Clique sur une terre voisine pour attaquer · molette = zoom · glisser = déplacer';
     } else if (G.phase === 'over') {
       $('hint').textContent = '';
@@ -331,7 +334,8 @@ const UI = {
             `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
         }
         return `<div class="attack panel incoming"><span>🛡️ ${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
-          `<b data-troops="${a.id}"></b></div>`;
+          `<b data-troops="${a.id}"></b>` +
+          `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cet assaut">🛡️ Défendre</button></div>`;
       }).join('') + resting.map(p =>
         `<div class="attack panel resting" title="Trêve après la prise d'un château : pas d'attaque dans les deux sens">` +
         `<span>⏳ Trêve avec ${escapeHtml(p.name)}</span><b data-rest="${p.id}"></b></div>`
@@ -345,8 +349,27 @@ const UI = {
       const el = box.querySelector(`[data-troops="${a.id}"]`);
       if (!el) continue;
       const wait = Math.ceil((a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND);
-      el.textContent = `${fmt(a.troops)} soldats` + (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '');
+      const pending = a.pending ? a.pending.reduce((s, r) => s + r.troops, 0) : 0;
+      const defenders = (a.defenders || 0) + (a.garrison || 0);
+      el.textContent = `⚔ ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
+        (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '');
     }
+  },
+
+  // Pendant la construction d'un moulin ou d'une caserne : production prévue selon le terrain
+  terrainHint() {
+    const t = this.selectedBuild;
+    if (!TERRAIN_PRODUCTION[t] || !Render.mouse) return '';
+    const a = Render.anchorAt(Render.mouse.x, Render.mouse.y, t);
+    return a < 0 ? '' : ` · production ici x${Game.terrainFactor(a, t).toFixed(2)}`;
+  },
+
+  // Envoyer des soldats (selon le curseur « Envoyer ») contre un assaut ennemi
+  defend(attackId) {
+    const G = Game, h = G.human;
+    const a = G.sendDefenders(h.id, attackId, h.troops * this.ratio);
+    if (a) this.log(`🛡️ Tes défenseurs partent contrer l'assaut de ${G.players[a.attacker].name} !`, 'good');
+    else this.log('Pas assez de soldats pour défendre !', 'warn');
   },
 
   onMapClick(sx, sy) {
@@ -360,6 +383,10 @@ const UI = {
     }
     if (G.phase !== 'playing' || !G.human.alive) return;
     const h = G.human;
+    // Clic sur la bannière d'un assaut contre soi : on envoie des défenseurs
+    const banner = Render.bannerAt(sx, sy);
+    const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;
+    if (assault && assault.target === h.id) return this.defend(banner);
     // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
     const t = G.building[i];
     if (BUILDING_LEVELS[t] && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === t)) {
