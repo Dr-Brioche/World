@@ -17,7 +17,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes et mers
-- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 13 (elle donne sa couleur à ton royaume)
+- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Trois bâtiments** pour développer ton royaume
 - 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
@@ -132,6 +132,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.22.1** : nouvelle bannière aux poissons (gris clair)
 - **v0.22** : nouvelle échelle plus progressive : on commence avec 10 soldats et 10 pièces d'or, le recrutement et les revenus grandissent lentement (prix des bâtiments 10 / 20 / 30)
 - **v0.21** : suppression de la trêve après la prise d'un château (plus de délai avant de réattaquer, plus de bonus ou malus de recrutement)
 - **v0.20** : 13 bannières de royaume (une par couleur) à choisir au début ; elles s'affichent à côté des noms, portent les armées et accompagnent les messages
