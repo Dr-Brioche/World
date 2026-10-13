@@ -780,8 +780,15 @@ const GameRules = {
     return this.regionsCache;
   },
 
-  // Château coupé du cœur de son royaume : ses renforts ne peuvent plus le rejoindre
-  isIsolatedCastle(c) {
+  // Bâtiment qui sait se défendre seul (avec sa garnison) : un château, ou un port de niveau 3.
+  // Coupé de son royaume, il ne tombe pas : il reste au royaume, isolé, avec les terres de sa zone.
+  holdsAlone(a) {
+    const b = this.building[a];
+    return b === B_CASTLE || (b === B_PORT && this.level[a] >= 3);
+  },
+
+  // Château (ou port de niveau 3) coupé du cœur de son royaume : ses renforts ne peuvent plus le rejoindre
+  isIsolated(c) {
     const o = this.owner[c];
     if (o < 0) return false;
     if (this.colonies.get(c) === o) return false; // château d'une ancienne zone d'avant-poste : terre du royaume
@@ -790,13 +797,13 @@ const GameRules = {
   },
 
   // Une armée peut-elle partir de cette case ? Oui si elle est dans le cœur de son royaume
-  // (ou dans un grand morceau, ou dans un morceau avec un avant-poste),
-  // pas si elle est dans un petit morceau coupé du reste.
+  // (ou dans un morceau avec un avant-poste ou une colonie),
+  // pas si elle est dans un morceau coupé du reste (un château isolé).
   isBase(i) {
     const o = this.owner[i];
     if (o < 0) return false;
     const r = this.regions(), k = r.comp[i];
-    return k === r.main[o] || r.outpost[k] >= 0 || r.colony[k] || r.size[k] >= this.players[o].tiles * CONFIG.ENCLAVE_RATIO;
+    return k === r.main[o] || r.outpost[k] >= 0 || r.colony[k];
   },
 
   // D'où part une armée qui passe par cette case du royaume ? -1 = du royaume (ses soldats disponibles),
@@ -847,21 +854,29 @@ const GameRules = {
     return this.targetsOf(pid).length > 0;
   },
 
-  // Encerclement : un petit morceau du royaume target (moins de ENCLAVE_RATIO de son territoire),
-  // coupé de son cœur, est englobé d'un coup, avec tout ce qu'il contient (châteaux, églises, bâtiments…),
-  // par le royaume qui l'a coupé (cutter). Ainsi un royaume reste d'un seul tenant.
-  // Sans coupeur connu (ou s'il ne touche pas le morceau), c'est le royaume qui l'entoure le plus qui le prend.
-  // Seule exception : un morceau avec un avant-poste ou une colonie (invasion par la mer) se défend.
+  // Encerclement : un royaume reste d'un seul tenant. Quand il est coupé en morceaux, il ne garde que
+  // le plus grand ; tous les autres, quelle que soit leur taille, sont englobés d'un coup par le royaume qui
+  // l'a coupé (cutter), avec leurs églises, ports, moulins et casernes. Sans coupeur connu (ou s'il ne touche
+  // pas le morceau), c'est le royaume qui l'entoure le plus qui le prend.
+  // Exceptions :
+  // - les châteaux et les ports de niveau 3 savent se défendre (holdsAlone) : ils restent au royaume, isolés,
+  //   avec les terres de leur zone (et les bâtiments qui s'y trouvent) ;
+  // - un morceau avec un avant-poste ou une colonie (invasion par la mer) se défend : il faut viser l'avant-poste.
   captureEnclaves(target, cutter = -1) {
     const T = this.players[target];
     if (!T.alive) return;
     const r = this.regions(), pieces = [];
     for (let k = 0; k < r.size.length; k++) {
-      if (r.owner[k] !== target || k === r.main[target] || r.size[k] >= T.tiles * CONFIG.ENCLAVE_RATIO) continue;
-      if (r.anyOutpost[k] || r.colony[k]) continue; // un avant-poste se défend : il faut le viser pour le détruire
+      if (r.owner[k] !== target || k === r.main[target]) continue;
+      if (r.anyOutpost[k] || r.colony[k]) continue;
       pieces.push(Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k])));
     }
     for (const tiles of pieces) {
+      // Les châteaux et ports de niveau 3 du morceau, et les terres de leur zone, restent au royaume
+      const keep = tiles.filter(i => this.anchor[i] === i && this.building[i] && this.holdsAlone(i));
+      const kept = i => keep.some(c => this.building[c] === B_CASTLE
+        ? this.inCastleRange(c, i % this.W, (i / this.W) | 0, this.castleInfo(c).radius)
+        : this.nearBuilding(c, i, this.buildingInfo(c).radius));
       // Les royaumes qui touchent ce morceau (pas les alliés de target), avec la longueur de leur frontière
       const around = new Map();
       for (const i of tiles) {
@@ -874,18 +889,24 @@ const GameRules = {
       if (around.has(cutter) && this.players[cutter].alive) winner = cutter;
       else for (const [o, c] of around) if (c > best && this.players[o].alive) { best = c; winner = o; }
       if (winner < 0) continue;
-      // Les garnisons du morceau se rendent : le vainqueur prend les bâtiments vides
-      let castles = 0;
+      let took = 0;
       for (const i of tiles) {
-        if (!this.building[i] || this.anchor[i] !== i) continue;
-        this.garrison[i] = 0;
-        if (this.building[i] === B_CASTLE) castles++;
+        if (this.owner[i] !== target || kept(i)) continue;
+        // un bâtiment à cheval sur une zone gardée reste au royaume
+        if (this.building[i] && this.footprint(this.anchor[i], this.building[i]).some(kept)) continue;
+        // les garnisons des bâtiments pris se rendent
+        if (this.building[i] && this.anchor[i] === i) this.garrison[i] = 0;
+        this.setOwner(i, winner);
+        took++;
       }
-      for (const i of tiles) if (this.owner[i] === target) this.setOwner(i, winner);
+      if (!took) continue;
       const A = this.players[winner];
-      const castleTxt = castles ? (castles > 1 ? ` avec ${castles} châteaux` : ' avec un château') : '';
-      if (A.isHuman) UI.log(`✂️ Des terres ${this.deName(T.name)}, coupées de leur royaume, sont englobées par le tien${castleTxt} !`, 'good', T);
-      else if (T.isHuman) UI.log(`✂️ Une partie de ton royaume${castleTxt}, coupée du reste, est englobée par ${A.name} !`, 'warn', A);
+      const keepTxt = keep.length ? ` ${keep.length > 1 ? 'Ses châteaux (ou ports) tiennent' : (this.building[keep[0]] === B_CASTLE ? 'Son château tient' : 'Son port tient')} encore, isolé${keep.length > 1 ? 's' : ''}.` : '';
+      if (A.isHuman) UI.log(`✂️ Des terres ${this.deName(T.name)}, coupées de leur royaume, sont englobées par le tien !${keepTxt}`, 'good', T);
+      else if (T.isHuman) {
+        UI.log(`✂️ Une partie de ton royaume, coupée du reste, est englobée par ${A.name} !` +
+          (keep.length ? ' Ce qui est isolé tient encore : clique dessus pour lancer un assaut qui le relie à ton royaume.' : ''), 'warn', A);
+      }
     }
   },
 
@@ -1178,7 +1199,7 @@ const GameRules = {
   launchLink(pid, c, troops) {
     const p = this.players[pid];
     troops = Math.floor(Math.min(troops, p.troops));
-    if (this.owner[c] !== pid || !this.isIsolatedCastle(c)) return 'Ce château n\'est pas coupé de ton royaume.';
+    if (this.owner[c] !== pid || !this.holdsAlone(c) || !this.isIsolated(c)) return 'Ce bâtiment n\'est pas coupé de ton royaume.';
     if (troops < 1) return 'Pas assez de soldats !';
     let a = this.linkFor(c);
     if (a) {
@@ -1189,8 +1210,8 @@ const GameRules = {
       return null;
     }
     const route = this.linkRoute(pid, c);
-    if (!route) return 'Impossible de rejoindre ce château : des murailles ennemies bloquent le passage.';
-    const half = this.sizeOf(B_CASTLE) / 2;
+    if (!route) return 'Impossible de le rejoindre : des murailles ennemies bloquent le passage.';
+    const half = this.sizeOf(this.building[c]) / 2;
     a = {
       id: this.nextAttackId++, attacker: pid, target: route.target, troops, done: false,
       targetCastle: -1, link: c, // link = château isolé à rejoindre
@@ -1207,7 +1228,7 @@ const GameRules = {
     p.troops -= troops;
     this.attacks.push(a);
     if (this.players[route.target].isHuman) {
-      UI.log(`⚠️ ${p.name} prépare un assaut à travers tes terres pour rejoindre son château isolé (${fmt(troops)} soldats) !`, 'warn', p);
+      UI.log(`⚠️ ${p.name} prépare un assaut à travers tes terres pour rejoindre son ${this.building[c] === B_PORT ? 'port' : 'château'} isolé (${fmt(troops)} soldats) !`, 'warn', p);
     }
     return null;
   },
@@ -1236,7 +1257,7 @@ const GameRules = {
       siege.defenders += a.troops;
     } else {
       // Pas d'assaut contre le château : on remplit sa garnison, le reste rentre au royaume
-      const add = Math.min(Math.max(0, this.castleInfo(c).garrison - this.garrison[c]), a.troops);
+      const add = Math.min(Math.max(0, this.garrisonMax(c) - this.garrison[c]), a.troops);
       this.garrison[c] += add;
       p.troops += a.troops - add;
     }
@@ -1646,7 +1667,7 @@ const GameRules = {
   // (un avant-poste, au-delà des mers, ne peut compter que sur sa garnison)
   cutOff(a) {
     const c = a.targetCastle, b = this.building[c];
-    return c >= 0 && (b === B_CASTLE || b === B_OUTPOST) && this.owner[c] === a.target && this.isIsolatedCastle(c);
+    return c >= 0 && (b === B_CASTLE || b === B_PORT || b === B_OUTPOST) && this.owner[c] === a.target && this.isIsolated(c);
   },
 
   // Le défenseur envoie des soldats contre un assaut (sans délai, autant qu'il veut)
@@ -1689,16 +1710,16 @@ const GameRules = {
     if (a.link >= 0) {
       // Assaut de jonction : son château a été pris avant qu'il n'arrive, les soldats rentrent
       if (this.owner[a.link] !== a.attacker) {
-        if (this.players[a.attacker].isHuman) UI.log('💥 Trop tard : ton château isolé est tombé, ton assaut rentre.', 'warn');
+        if (this.players[a.attacker].isHuman) UI.log('💥 Trop tard : ton bâtiment isolé est tombé, ton assaut rentre.', 'warn');
         return this.endAttack(a);
       }
       // Déjà relié au royaume (par un autre chemin) : les soldats rejoignent sa défense
-      if (!this.isIsolatedCastle(a.link)) return this.linkArrives(a);
+      if (!this.isIsolated(a.link)) return this.linkArrives(a);
       // Fin de la préparation : on recalcule le chemin, la frontière a pu bouger
       if (this.tick === a.startTick) {
         const route = this.linkRoute(a.attacker, a.link, a.target);
         if (!route) {
-          if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers ton château isolé est bloqué : assaut annulé.', 'warn');
+          if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers ton bâtiment isolé est bloqué : assaut annulé.', 'warn');
           return this.endAttack(a);
         }
         a.path = route.path;

@@ -84,19 +84,20 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **les moulins et casernes** qui s'y trouvent. L'assaut s'arrête alors et les survivants rentrent.
      Tu peux relancer un nouvel assaut aussitôt.
 
-   **✂️ Encercler** : un royaume doit rester **d'un seul tenant**. Quand un morceau d'un royaume est **coupé**
-   du reste et qu'il fait **moins de 20 %** de son territoire, **celui qui l'a coupé le prend d'un coup**,
-   avec **tout ce qu'il contient** : châteaux, églises, ports, moulins, casernes (leurs garnisons se rendent).
-   Si personne ne l'a coupé (par exemple après la perte d'un avant-poste), c'est le royaume qui l'entoure
-   le plus qui le prend. Seule exception : un morceau avec un **avant-poste** (une invasion par la mer) se défend.
+   **✂️ Couper** : un royaume reste **d'un seul tenant**. Quand un assaut le coupe en morceaux, il ne garde
+   que le plus grand : **celui qui a coupé prend d'un coup tous les autres**, **quelle que soit leur taille**,
+   avec leurs **églises, ports, moulins et casernes**. Si personne ne l'a coupé (par exemple après la perte
+   d'un avant-poste), c'est le royaume qui entoure le plus le morceau qui le prend.
+   Un morceau avec un **avant-poste** (une invasion par la mer) se défend : il faut viser l'avant-poste.
 
-   **🚩 Château isolé** : si un royaume est coupé en **gros** morceaux (20 % ou plus), un château peut se
-   retrouver isolé au milieu des terres ennemies.
-   - Un château isolé **continue de produire** pour son royaume (avec les moulins et casernes de sa muraille) :
+   **🚩 Château isolé** : les **châteaux** et les **ports de niveau 3** savent se défendre seuls (avec leur
+   garnison) : quand leur morceau est pris, ils **restent à leur royaume**, avec les terres de leur zone,
+   **isolés** au milieu des terres ennemies.
+   - Un château (ou port) isolé **continue de produire** pour son royaume (avec les moulins et casernes de sa zone) :
      il est juste plus difficile à défendre.
    - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend.
      Aucune armée ne peut partir de lui.
-   - Pour le sauver, **clique sur ton château isolé** : tu lances un **assaut classique** (préparation de 10 s,
+   - Pour le sauver, **clique sur ton château (ou port) isolé** : tu lances un **assaut classique** (préparation de 10 s,
      renforts…) depuis ton royaume, qui traverse les terres ennemies (en évitant leurs murailles) pour le rejoindre.
      **S'il y arrive**, sa route s'élargit un peu : tu récupères des terres entre le château et ton royaume,
      ils sont **réunis** et tu peux le défendre comme avant. Si le château était attaqué, les soldats
@@ -270,6 +271,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.38** : ✂️ couper un royaume en deux donne d'un coup le plus petit morceau à celui qui a coupé, **quelle que soit sa taille** (fini la limite de 20 %), avec ses églises et ports · 🚩 seuls les châteaux et les ports de niveau 3 tiennent, isolés
 - **v0.37** : ✂️ un morceau coupé (moins de 20 % du royaume) va entièrement à celui qui l'a coupé, châteaux et bâtiments compris : un royaume reste d'un seul tenant (sauf invasion par la mer) · 🤝 on ne peut plus attaquer depuis les terres d'un allié, seulement depuis son propre territoire
 - **v0.36** : ⚔️ supériorité en nombre : le camp le plus nombreux (plus de 2 fois plus de soldats) tue plus vite et perd moins de soldats, jusqu'à x5 · une petite poignée de défenseurs ne bloque plus une grosse armée · 🏰 prendre un château donne d'un coup toute sa zone de défense et les bâtiments qui s'y trouvent
 - **v0.35** : les armées avancent 4 fois moins vite sur la carte (on voit mieux ce qui se passe) · un petit morceau de royaume coupé du reste est englobé par le royaume qui l'entoure le plus

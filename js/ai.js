@@ -36,9 +36,9 @@ const AI = {
       Game.launchAttack(p.id, -1, o.stationed * 0.7, undefined, undefined, op);
     }
 
-    // Un de nos châteaux est isolé : de temps en temps, on tente de le relier au royaume
+    // Un de nos châteaux (ou ports de niveau 3) est isolé : de temps en temps, on tente de le relier au royaume
     if (p.troops > max * 0.4 && Math.random() < 0.2) {
-      const lost = Game.castlesOf(p.id).find(c => Game.isIsolatedCastle(c));
+      const lost = Game.buildingTiles.find(c => Game.owner[c] === p.id && Game.holdsAlone(c) && Game.isIsolated(c));
       if (lost !== undefined && !Game.launchLink(p.id, lost, p.troops * 0.5)) return;
     }
 
@@ -63,7 +63,7 @@ const AI = {
       // Un château isolé ne reçoit pas de défenseurs : seule sa garnison le défend (proie facile !)
       // (sans château ni église, toutes ses troupes défendent d'office, mais à 0.8)
       const helpers = aim === null ? e.troops * CONFIG.LEADERLESS_DEFENSE
-        : Game.isIsolatedCastle(aim) ? 0 : e.troops * 0.5;
+        : Game.isIsolated(aim) ? 0 : e.troops * 0.5;
       const power = Game.troopPower(o) / Game.troopPower(p.id); // force des soldats des deux camps
       let score = p.troops * 0.7 / ((helpers + garrison) * plan.D * power + 1) + Math.random() * 0.3;
       if (e.isHuman) score += Game.difficulty.hateHuman;
@@ -101,7 +101,7 @@ const AI = {
         continue;
       }
       if (Game.cutOff(a)) {
-        if (Game.building[a.targetCastle] === B_CASTLE && !Game.linkFor(a.targetCastle)) Game.launchLink(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
+        if (Game.holdsAlone(a.targetCastle) && !Game.linkFor(a.targetCastle)) Game.launchLink(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
         continue;
       }
       Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));
