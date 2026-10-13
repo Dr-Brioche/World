@@ -16,7 +16,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 📜 Le jeu en bref
 
-- 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes et mers
+- 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes, fleuves et mers
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Quatre bâtiments** pour développer ton royaume : moulin, caserne, château et église
@@ -184,10 +184,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +250 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 
+🌊 **Les fleuves** naissent au pied des montagnes et descendent jusqu'à la mer : ce sont des **frontières naturelles**.
+Ils sont très longs à traverser, et un défenseur qui intercepte un ennemi sur un fleuve de son royaume
+a un **énorme bonus de défense (+5, soit +500 %)**. On ne peut rien construire dessus.
+
 **Contrôles** : molette = zoom · glisser = déplacer la carte · `1` `2` `3` `4` (ou `&` `é` `"` `'`) = choisir un bâtiment (puis clic pour le poser) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.30** : 🌊 des fleuves sur la carte, du pied des montagnes jusqu'à la mer : longs à traverser, et +5 de défense pour celui qui y intercepte un ennemi
 - **v0.29.2** : 3 points de passage au maximum par assaut
 - **v0.29.1** : on ne peut viser que les châteaux et églises d'un royaume tant qu'il en a ; sans eux, l'assaut se fait de front sur tout son territoire, et toutes ses troupes défendent d'office (à 0,8, désorganisées)
 - **v0.29** : choisis l'itinéraire de tes assauts : après avoir cliqué sur la cible, place des points de passage, puis 2 clics sur la cible pour lancer (3 clics = tout droit)
