@@ -292,7 +292,9 @@ const UI = {
   refreshAttacks() {
     const G = Game, h = G.human;
     const list = G.attacks.filter(a => !a.done && (a.attacker === h.id || a.target === h.id));
-    const key = list.map(a => a.id).join(',');
+    // Royaumes qu'on ne peut pas réattaquer tout de suite (château pris, armée qui récupère)
+    const resting = G.players.filter(p => p.alive && G.recoverTime(h, p.id) > 0);
+    const key = list.map(a => a.id).join(',') + '|' + resting.map(p => p.id).join(',');
     const box = $('attacks');
     if (key !== this.attacksKey) {
       this.attacksKey = key;
@@ -304,7 +306,14 @@ const UI = {
         }
         return `<div class="attack panel incoming"><span>🛡️ ${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
           `<b data-troops="${a.id}"></b></div>`;
-      }).join('');
+      }).join('') + resting.map(p =>
+        `<div class="attack panel resting" title="Ton armée récupère après la prise d'un château">` +
+        `<span>⏳ Repos avant d'attaquer ${escapeHtml(p.name)}</span><b data-rest="${p.id}"></b></div>`
+      ).join('');
+    }
+    for (const p of resting) {
+      const el = box.querySelector(`[data-rest="${p.id}"]`);
+      if (el) el.textContent = `${G.recoverTime(h, p.id)} s`;
     }
     for (const a of list) {
       const el = box.querySelector(`[data-troops="${a.id}"]`);

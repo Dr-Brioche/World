@@ -35,6 +35,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Contre un royaume, l'armée se **prépare pendant 5 secondes** avant d'attaquer :
    une ligne pointillée avec une bannière ⚔️ montre à tout le monde où elle va frapper.
    Les royaumes visés ont le temps de réagir… toi aussi !
+   **Prendre un château** arrête l'assaut : ton armée finit de conquérir sa zone de défense
+   (un peu élargie), puis rentre. Elle doit ensuite **récupérer 30 secondes** avant de pouvoir
+   réattaquer ce royaume (le temps restant s'affiche en bas de l'écran). Les bots suivent la même règle.
 3. **Construis** : appuie sur `1`, `2` ou `3` (ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
@@ -90,6 +93,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.14** : prendre un château arrête l'assaut après la conquête de sa zone, puis 30 s de repos avant de réattaquer le même royaume
 - **v0.13** : la caserne a 3 niveaux (camp d'entraînement, caserne, grande caserne) avec leurs images ; chaque niveau donne plus de soldats max et un meilleur recrutement
 - **v0.12** : le relief ralentit la conquête : on avance vite en plaine, lentement en forêt, colline et montagne, et le territoire épouse le relief
 - **v0.11** : jauge des soldats en bas de l'écran, avec le recrutement par seconde ; le recrutement est maximal vers 40 % de l'armée puis ralentit si on garde trop de soldats

@@ -28,7 +28,7 @@ const AI = {
     // Sinon on cherche le voisin le plus faible
     let best = null, bestScore = 0;
     for (const [o] of nb) {
-      if (o < 0 || Game.areAllied(p.id, o)) continue;
+      if (o < 0 || Game.areAllied(p.id, o) || Game.recoverTime(p, o) > 0) continue;
       const e = Game.players[o];
       let score = p.troops / (e.troops + 50) + Math.random() * 0.3;
       if (e.isHuman) score += Game.difficulty.hateHuman;
