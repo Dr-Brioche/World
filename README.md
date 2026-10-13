@@ -217,6 +217,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      sinon, l'expédition débarque quand même, avec moins de soldats. Tu es prévenu quand une expédition vise ta côte.
 
    **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Débarquer).
+   Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
+   **75 %**, le reste se perd en route, et sans dépasser son armée maximum.
 4. **Forme des pactes** : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
    pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
@@ -260,6 +262,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.34.5** : clic droit chez un allié : 🎁 lui envoyer des soldats (il en reçoit 75 %)
 - **v0.34.4** : depuis les terres d'un allié, on peut lancer des assauts, mais plus prendre des terres libres
 - **v0.34.3** : clic droit sur un royaume : « 🤝 Proposer une alliance » (ou « 💔 Rompre l'alliance » avec un allié)
 - **v0.34.2** : un bouclier 🛡️ au-dessus des châteaux, ports royaux et avant-postes montre les soldats de leur garnison (et ⚔ les soldats stationnés d'un avant-poste)

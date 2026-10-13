@@ -576,9 +576,17 @@ const UI = {
     const o = G.owner[i];
     if (o >= 0 && !own && G.players[o].alive) {
       const name = escapeHtml(G.players[o].name);
-      items.push(G.areAllied(h.id, o)
-        ? { label: `💔 Rompre l'alliance avec ${name}`, run: () => this.onAllyButton(o) }
-        : { label: `🤝 Proposer une alliance à ${name}`, run: () => this.onAllyButton(o) });
+      if (G.areAllied(h.id, o)) {
+        const n = Math.floor(h.troops * this.ratio);
+        items.push({ label: `🎁 Envoyer ${fmt(n)} soldats à ${name} (il en recevra ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`, run: () => {
+          const got = G.sendTroopsToAlly(h.id, o, n);
+          if (typeof got === 'string') this.log(got, 'warn');
+          else this.log(`🎁 ${fmt(got)} soldats arrivent chez ${G.players[o].name} (un quart s'est perdu en route).`, 'good', G.players[o]);
+        } });
+        items.push({ label: `💔 Rompre l'alliance avec ${name}`, run: () => this.onAllyButton(o) });
+      } else {
+        items.push({ label: `🤝 Proposer une alliance à ${name}`, run: () => this.onAllyButton(o) });
+      }
     }
     if (own) {
       for (let t = 1; t < BUILDINGS.length; t++) {
