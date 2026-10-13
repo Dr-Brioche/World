@@ -47,7 +47,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | 1. Moulin | +2.5 or/s | prix du moulin |
      | 2. Grand moulin | +6 or/s | 💰 400 |
 
-   - ⚔️ **Caserne** : plus de soldats, recrutés plus vite
+   - ⚔️ **Caserne** : plus de soldats, recrutés plus vite. **Clique dessus pour l'améliorer** (3 niveaux) :
+
+     | Niveau | Soldats max en plus | Recrutement en plus | Prix |
+     |---|---|---|---|
+     | 1. Camp d'entraînement | +1 500 | +30 % | prix de la caserne |
+     | 2. Caserne | +3 000 | +50 % | 💰 400 |
+     | 3. Grande caserne | +5 000 | +80 % | 💰 1000 |
+
+     Les bonus de toutes tes casernes s'additionnent.
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
      Seules les cases à l'intérieur de la muraille sont renforcées : le bonus s'ajoute à la défense du terrain.
@@ -60,7 +68,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | 3. Citadelle | +4 | 13 cases | 💰 1500 |
 
      Exemple : une forêt (x1.6) protégée par une citadelle passe à x5.6.
-     Zoome sur la carte pour voir apparaître l'image de chaque château et de chaque moulin !
+     Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 4. **Fais des alliances** : clique sur 🤝 à côté d'un royaume dans le classement pour lui proposer une alliance.
    Les alliés ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer une alliance : accepte ou refuse.
    **Qui est allié avec qui ?** Les petits carrés de couleur à côté de chaque royaume, dans le classement,
@@ -82,6 +90,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.13** : la caserne a 3 niveaux (camp d'entraînement, caserne, grande caserne) avec leurs images ; chaque niveau donne plus de soldats max et un meilleur recrutement
 - **v0.12** : le relief ralentit la conquête : on avance vite en plaine, lentement en forêt, colline et montagne, et le territoire épouse le relief
 - **v0.11** : jauge des soldats en bas de l'écran, avec le recrutement par seconde ; le recrutement est maximal vers 40 % de l'armée puis ralentit si on garde trop de soldats
 - **v0.10** : alliances visibles pour tout le monde : carrés de couleur dans le classement, lignes dorées 🤝 au survol d'un royaume, touche `A` pour tout afficher · les touches `1`, `2`, `3` mettent le bâtiment sous la souris, un clic le pose
@@ -126,4 +135,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-| `img/` | Les images des bâtiments (3 niveaux de château, 2 niveaux de moulin) |
+| `img/` | Les images des bâtiments (3 niveaux de château, 3 de caserne, 2 de moulin) |

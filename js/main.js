@@ -114,7 +114,9 @@ const UI = {
 
   // Ce que rapporte un niveau de bâtiment, en quelques mots
   levelEffect(type, info) {
-    return type === B_CASTLE ? `+${info.bonus} défense, rayon ${info.radius}` : `+${info.gold} or/s`;
+    if (type === B_CASTLE) return `+${info.bonus} défense, rayon ${info.radius}`;
+    if (type === B_BARRACKS) return `+${fmt(info.maxTroops)} soldats max, +${Math.round(info.growth * 100)} % recrutement`;
+    return `+${info.gold} or/s`;
   },
 
   // Petite fenêtre pour améliorer un bâtiment (château, moulin)

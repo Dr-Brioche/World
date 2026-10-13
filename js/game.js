@@ -276,16 +276,26 @@ const Game = {
   },
 
   // --- Économie ---
+  // Somme d'une valeur (ex. "gold") sur tous les bâtiments d'un type d'un royaume,
+  // selon leur niveau
+  levelSum(p, type, key) {
+    let sum = 0;
+    for (const a of this.buildingTiles) {
+      if (this.building[a] === type && this.owner[a] === p.id) sum += this.buildingInfo(a)[key];
+    }
+    return sum;
+  },
+
   maxTroops(p) {
     return CONFIG.BASE_MAX_TROOPS + p.tiles * CONFIG.MAX_TROOPS_PER_TILE
-      + p.bCount[B_BARRACKS] * CONFIG.MAX_TROOPS_PER_BARRACKS;
+      + this.levelSum(p, B_BARRACKS, 'maxTroops');
   },
 
   troopRate(p) {
     const max = this.maxTroops(p);
     if (p.troops >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
-    const bonus = 1 + p.bCount[B_BARRACKS] * CONFIG.BARRACKS_GROWTH_BONUS;
+    const bonus = 1 + this.levelSum(p, B_BARRACKS, 'growth');
     return base * bonus * this.growthFactor(p.troops / max);
   },
 
@@ -298,11 +308,7 @@ const Game = {
   },
 
   goldRate(p) {
-    let mills = 0;
-    for (const a of this.buildingTiles) {
-      if (this.building[a] === B_MILL && this.owner[a] === p.id) mills += this.buildingInfo(a).gold;
-    }
-    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE + mills;
+    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE + this.levelSum(p, B_MILL, 'gold');
   },
 
   buildCost(p, type) {
