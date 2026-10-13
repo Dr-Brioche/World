@@ -3,9 +3,14 @@
 
 const $ = id => document.getElementById(id);
 
+const MAX_WAYPOINTS = 6; // points de passage au maximum pour un assaut
+
 const UI = {
   selectedBuild: 0,
   ratio: 0.3,
+  // Assaut en cours de préparation par le joueur : { target, castle, waypoints, clicks }
+  // (on clique sur la cible, puis on ajoute des points de passage, puis 2 clics sur la cible pour lancer)
+  plan: null,
 
   init() {
     $('ratio').addEventListener('input', e => { this.ratio = e.target.value / 100; this.refresh(); });
@@ -71,7 +76,7 @@ const UI = {
       if (n >= 1 && n < BUILDINGS.length) {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
-      if (e.key === 'Escape') this.selectBuild(0);
+      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
   },
@@ -90,6 +95,7 @@ const UI = {
   },
 
   selectBuild(t) {
+    if (t) this.cancelPlan();
     this.selectedBuild = t;
     document.querySelectorAll('.build').forEach(b => b.classList.toggle('active', +b.dataset.type === t));
     document.body.style.cursor = t ? 'cell' : '';
@@ -306,7 +312,7 @@ const UI = {
       const b = G.building[i];
       if (b === B_CASTLE || b === B_CHURCH) {
         txt += Render.castlePreview && Render.castlePreview.path
-          ? ` · 🎯 clique pour lancer un assaut sur ${b === B_CASTLE ? 'ce château' : 'cette église'}`
+          ? ` · 🎯 clique pour préparer un assaut sur ${b === B_CASTLE ? 'ce château' : 'cette église'}`
           : ' · 🚫 inaccessible : des châteaux bloquent le passage';
       } else {
         txt += ' · 🏰 protégé : vise un de ses châteaux ou une de ses églises';
@@ -351,7 +357,8 @@ const UI = {
     this.refreshAttacks();
 
     if (G.phase === 'playing') {
-      $('hint').textContent = this.selectedBuild
+      $('hint').textContent = this.plan ? this.planHint()
+        : this.selectedBuild
         ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`
         : UI.describeTile(Render.hover) || 'Clique sur une terre voisine pour attaquer · molette = zoom · glisser = déplacer';
     } else if (G.phase === 'over') {
@@ -448,6 +455,56 @@ const UI = {
     if (err) this.log(err, 'warn');
   },
 
+  // --- Préparer un assaut avec des points de passage ---
+  // 1er clic sur un château (ou une église) ennemi : on choisit la cible.
+  // Clics sur ses terres : points de passage (l'armée passe par chacun, dans l'ordre ; recliquer dessus l'enlève).
+  // 2 clics d'affilée sur la cible : l'assaut part. (3 clics sur la cible = tout droit)
+  startPlan(target, c) {
+    const G = Game, h = G.human;
+    if (!G.castlePath(h.id, c)) {
+      return this.log(`Impossible d'atteindre ${G.building[c] === B_CHURCH ? 'cette église' : 'ce château'} : ` +
+        'des fortifications bloquent le passage. Prends d\'abord les châteaux de la frontière.', 'warn');
+    }
+    this.plan = { target, castle: c, waypoints: [], clicks: 0 };
+  },
+
+  cancelPlan() { this.plan = null; },
+
+  planHint() {
+    const G = Game, p = this.plan, b = BUILDINGS[G.building[p.castle]];
+    if (p.clicks >= 1) return `🎯 Clique encore une fois sur la cible pour lancer l'assaut ! (Échap pour annuler)`;
+    return `🎯 Assaut sur ${b.icon} ${G.players[p.target].name} : clique sur ses terres pour ajouter des points de passage` +
+      ` (${p.waypoints.length}), puis 2 fois sur la cible pour lancer · Échap pour annuler`;
+  },
+
+  planClick(i) {
+    const G = Game, h = G.human, p = this.plan;
+    if (G.owner[p.castle] !== p.target || !G.building[p.castle]) {
+      this.cancelPlan();
+      return this.log('La cible a changé de mains : assaut annulé.', 'warn');
+    }
+    // Clic sur la cible : au 2e clic d'affilée, l'assaut part
+    if (G.anchor[i] === p.castle) {
+      if (++p.clicks < 2) return;
+      this.cancelPlan();
+      const err = G.launchAttack(h.id, p.target, h.troops * this.ratio, p.castle, p.waypoints);
+      if (err) this.log(err, 'warn');
+      return;
+    }
+    p.clicks = 0;
+    // Recliquer sur un point de passage l'enlève
+    const k = p.waypoints.indexOf(i);
+    if (k >= 0) { p.waypoints.splice(k, 1); return; }
+    if (!G.castlePassable(p.castle)(i)) {
+      return this.log(`Point de passage impossible : choisis une terre ${G.deName(G.players[p.target].name)}, ` +
+        'hors de la muraille de ses autres châteaux.', 'warn');
+    }
+    if (p.waypoints.length >= MAX_WAYPOINTS) return this.log(`${MAX_WAYPOINTS} points de passage au maximum.`, 'warn');
+    const wp = p.waypoints.concat([i]);
+    if (!G.castlePath(h.id, p.castle, wp)) return this.log('L\'armée ne peut pas passer par là.', 'warn');
+    p.waypoints = wp;
+  },
+
   onMapClick(sx, sy) {
     const G = Game, i = Render.tileAt(sx, sy);
     if (i < 0) return;
@@ -463,6 +520,7 @@ const UI = {
     const banner = Render.bannerAt(sx, sy);
     const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;
     if (assault && assault.target === h.id) return this.defend(banner);
+    if (this.plan) return this.planClick(i);
     // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
     const t = G.building[i];
     // Clic sur un de ses châteaux isolés : assaut pour le relier au royaume
@@ -482,7 +540,12 @@ const UI = {
     }
     if (!G.isLand(i) || G.owner[i] === h.id) return;
     const target = G.owner[i];
+    // Château (ou église) ennemi sans assaut en cours : on prépare l'itinéraire avant de lancer
+    const b = G.building[i], c = G.anchor[i];
+    const aimed = target >= 0 && (b === B_CASTLE || (b === B_CHURCH && G.hasHomeCastle(target)));
+    const running = aimed && G.attacks.some(a => !a.done && a.attacker === h.id && a.targetCastle === c);
     const attack = () => {
+      if (aimed && !running) return this.startPlan(target, c);
       const err = G.launchAttack(h.id, target, h.troops * this.ratio, i);
       if (err) this.log(err, 'warn');
     };
@@ -504,7 +567,7 @@ function setupInput(canvas) {
   const pointers = new Map();
   let drag = null, dragging = false, pinchDist = null;
 
-  canvas.addEventListener('contextmenu', e => { e.preventDefault(); UI.selectBuild(0); });
+  canvas.addEventListener('contextmenu', e => { e.preventDefault(); UI.selectBuild(0); UI.cancelPlan(); });
 
   canvas.addEventListener('pointerdown', e => {
     if (e.button === 2) return;

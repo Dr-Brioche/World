@@ -35,6 +35,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
    de la frontière. Quand un royaume n'a **plus aucun château** (relié à son royaume), tu peux attaquer tout son territoire de front.
+
+   **🗺️ Choisir l'itinéraire** : le premier clic sur un château (ou une église) ennemi **choisit la cible**.
+   Ensuite, clique sur ses terres pour placer des **points de passage** (numérotés 1, 2, 3…) :
+   l'armée passera par chacun d'eux, dans l'ordre, en prenant toujours le chemin le plus facile (les plaines)
+   entre deux points. En survolant la carte, tu vois en blanc le chemin si tu ajoutais un point à cet endroit.
+   Reclique sur un point pour l'enlever. Puis **clique 2 fois sur la cible pour lancer l'assaut**.
+   Pour aller tout droit : **3 clics d'affilée** sur le château. `Échap` ou clic droit pour annuler.
    Le curseur « Envoyer » choisit le % de tes soldats qui partent en campagne.
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
    le bouton **✖ Annuler** fait rentrer les survivants au royaume.
@@ -177,6 +184,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🆕 Nouveautés
 
+- **v0.29** : choisis l'itinéraire de tes assauts : après avoir cliqué sur la cible, place des points de passage, puis 2 clics sur la cible pour lancer (3 clics = tout droit)
 - **v0.28.1** : une église se construit assez loin de tes châteaux pour ne jamais finir dans leur muraille (cercles rouges pendant la construction), et inversement pour un nouveau château
 - **v0.28** : on peut attaquer une église ⛪ directement, comme un château (elle n'a ni défense ni garnison) · chaque église améliorée ajoute ses châteaux (elles s'additionnent) · une église ne se construit plus dans la muraille d'un château
 - **v0.27.1** : images des 3 niveaux de l'église (église en bois, grande église, cathédrale), visibles en zoomant
