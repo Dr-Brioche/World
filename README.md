@@ -251,6 +251,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      mers, ton royaume ne peut pas lui envoyer de défenseurs ; une fois relié, ses soldats stationnés rejoignent
      ton armée) : clique sur
      ton avant-poste pour lui **envoyer des renforts par la mer** (depuis un port de niveau 2 ou plus).
+     Un **clic droit** sur ton avant-poste propose aussi **🚢 Rapatrier** : les soldats qui y attendent rembarquent
+     vers ton port le plus proche et rejoignent ton armée (la garnison, elle, reste).
      Les renforts qui arrivent sur un avant-poste **déjà bâti** complètent sa garnison, et les autres
      stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
    - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
@@ -328,6 +330,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.59** : 🚢 clic droit sur un de ses avant-postes → « Rapatrier » : les soldats qui y attendent rentrent en bateau au port le plus proche
 - **v0.58.1** : ⛵ l'option s'appelle « Attaque navale » et se trouve plus facilement : plus besoin de cliquer pile sur la côte, un clic droit tout près (même dans l'eau) suffit · une expédition au plus toutes les 5 s
 - **v0.58** : 🐢 recrutement freiné pour les grands royaumes (il suit la racine carrée du territoire) et rendement décroissant des casernes · 💰 améliorations plus chères : grand moulin 100, grande caserne 800, port royal 600, cathédrale 1000 · ✂️ plus de message pour les petits morceaux englobés (seulement à partir de 50 cases, ou s'il reste un château isolé)
 - **v0.57.1** : ⚰️🔥 l'après-guerre et la galvanisation s'additionnent : −25 % par victoire récente (jusqu'à −75 %), +25 % par défaite récente (jusqu'à +100 %)
