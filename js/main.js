@@ -757,7 +757,8 @@ const UI = {
     if (c >= 0) {
       // D'où part l'armée : du royaume ou d'un avant-poste bâti (le chemin le plus court)
       let best = Infinity;
-      for (const src of [-1, ...[...G.outposts.keys()].filter(a => G.owner[a] === h.id && G.outpostReady(a))]) {
+      // (le point de départ le plus proche de la cible : une ville, ou un avant-poste qui a encore des soldats)
+      for (const src of G.attackSources(h.id)) {
         const path = G.castlePath(h.id, c, src);
         if (path && path.length < best) { best = path.length; source = src; }
       }
@@ -785,7 +786,9 @@ const UI = {
     if (!G.players[p.target].alive) return false;
     const same = p.castle >= 0 ? G.anchor[i] === p.castle && G.owner[p.castle] === p.target : G.owner[i] === p.target;
     if (!same) return false;
-    const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, p.source) * this.ratio, p.castle >= 0 ? p.castle : i, p.source);
+    // (l'avant-poste choisi s'est vidé entre les deux clics : l'assaut part de la ville)
+    const src = p.source >= 0 && G.troopsAt(h.id, p.source) < 1 ? -1 : p.source;
+    const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, src) * this.ratio, p.castle >= 0 ? p.castle : i, src);
     if (err) this.log(err, 'warn');
     return true;
   },

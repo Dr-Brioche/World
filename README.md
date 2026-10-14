@@ -83,6 +83,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    pour un bateau, il fait demi-tour vers le port, et **15 %** des soldats à bord se perdent (l'or de l'expédition
    n'est pas rendu). Les soldats en mer comptent dans ton armée (la jauge en bas indique « ⛵ en mer »).
    Les attaques ennemies contre toi y apparaissent aussi, en rouge.
+   **Point de départ** : le jeu choisit tout seul celui qui est **le plus proche de la cible** : une de tes villes, ou un
+   de tes **avant-postes** en territoire ennemi (avec ses soldats qui y attendent). Si l'avant-poste est **vide** (il ne
+   lui reste que sa garnison, qui ne le quitte pas), l'assaut part de la ville.
    On n'attaque **que depuis son propre territoire** (ou depuis un avant-poste) : même dans un pacte,
    impossible de lancer un assaut depuis les terres d'un allié.
 
@@ -396,6 +399,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.72.1** : 🎯 l'assaut part du point le plus proche de la cible (une ville ou un avant-poste) ; un avant-poste vide (garnison seule) n'est plus choisi : l'assaut part alors de la ville
 - **v0.72** : ⛵ tes bateaux en mer ont leur barre en bas de l'écran, comme les assauts · ❌ une petite croix dans le coin d'une barre (assaut ou bateau) ordonne la retraite (15 % de pertes ; un bateau fait demi-tour vers le port) · les soldats en mer comptent dans la jauge de ton armée
 - **v0.71.1** : 🎨 menus plus médiévaux, sans emojis : une simple flèche dessinée pour améliorer un bâtiment, une nef pour débarquer ou envoyer des renforts par la mer, une ancre pour rapatrier
 - **v0.71** : 🔍 en survolant un autre royaume, une barre au-dessus de la souris le résume : ses soldats, le nombre de bâtiments de chaque type et sa part des terres

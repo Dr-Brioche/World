@@ -1245,13 +1245,20 @@ const GameRules = {
   bestSource(pid, target, tile) {
     let best = -1, bestD = Infinity;
     const tx = tile % this.W, ty = (tile / this.W) | 0;
-    for (const src of [-1, ...[...this.outposts.keys()].filter(a => this.owner[a] === pid && this.outpostReady(a))]) {
+    for (const src of this.attackSources(pid)) {
       for (const i of this.buildFrontier(pid, target, src)) {
         const d = (i % this.W - tx) ** 2 + (((i / this.W) | 0) - ty) ** 2;
         if (d < bestD) { bestD = d; best = src; }
       }
     }
     return best;
+  },
+
+  // D'où peut partir un assaut de pid : de ses villes (-1, ses soldats disponibles), ou d'un de ses avant-postes
+  // bâtis qui a encore des soldats prêts à partir. Un avant-poste « vide » (il ne lui reste que sa garnison,
+  // qui ne le quitte pas) ne compte pas : l'assaut part alors de la ville.
+  attackSources(pid) {
+    return [-1, ...[...this.outposts.keys()].filter(a => this.owner[a] === pid && this.outpostReady(a) && this.troopsAt(pid, a) >= 1)];
   },
 
   // Le royaume a-t-il encore un château ou une église ? Alors on ne peut l'attaquer qu'en visant
