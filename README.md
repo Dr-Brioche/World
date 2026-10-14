@@ -103,6 +103,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Pertes en route** : une armée qui avance (sur une terre libre ou chez l'ennemi) perd des hommes à chaque case,
      un **pourcentage de son effectif** (0,1 % par case de plaine, plus dans le relief) : une grosse armée en perd
      plus qu'une petite.
+   - **Échec = la route revient au défenseur** : les terres qu'un assaut a prises en traçant sa route vers son
+     objectif (château, église, port, avant-poste, ou château isolé à rejoindre) **ne restent à l'attaquant que s'il
+     prend l'objectif**. S'il est repoussé, bat en retraite ou est bloqué, le défenseur **reprend toute la route**.
    - **Prendre des terres** coûte peu (comme une terre libre, selon le terrain). Ce qui coûte cher,
      ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi, et **plus l'armée est grande,
      plus elle est lente** (100 soldats : environ 4 cases de plaine par seconde, 500 : 2,5, 1000 : 1,7, 3000 : 0,7) :
@@ -400,6 +403,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.73** : 🛡️ un assaut qui échoue (repoussé, retraite…) rend au défenseur la route qu'il avait tracée à travers ses terres : elle ne reste à l'attaquant que s'il prend son objectif
 - **v0.72.2** : 🚩 un petit fanion rouge marque tes châteaux isolés sur la carte · 🐛 correction : la ligne d'un assaut de jonction part de l'endroit où l'armée entre chez l'ennemi (et plus du milieu de ton royaume, ce qui faisait croire qu'un autre château était visé) · 🔎 clic sur « ton château isolé » dans la barre de l'assaut : la caméra va le voir
 - **v0.72.1** : 🎯 l'assaut part du point le plus proche de la cible (une ville ou un avant-poste) ; un avant-poste vide (garnison seule) n'est plus choisi : l'assaut part alors de la ville
 - **v0.72** : ⛵ tes bateaux en mer ont leur barre en bas de l'écran, comme les assauts · ❌ une petite croix dans le coin d'une barre (assaut ou bateau) ordonne la retraite (15 % de pertes ; un bateau fait demi-tour vers le port) · les soldats en mer comptent dans la jauge de ton armée
