@@ -416,6 +416,10 @@ const UI = {
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
+    if (o >= 0 && !G.building[i] && G.isUnlinked(i)) {
+      txt += o === G.human.id ? ' · 🚩 coupé de tous tes châteaux : l\'ennemi peut l\'attaquer directement (relie-le à un château ou bâtis-en un)'
+        : ' · ⚠️ coupé de tous ses châteaux : clique pour l\'attaquer de front (personne ne le défend)';
+    }
     const info = G.building[i] ? G.buildingInfo(G.anchor[i]) : null;
     if (info) {
       const a = G.anchor[i];
@@ -467,7 +471,7 @@ const UI = {
         txt += Render.castlePreview && Render.castlePreview.path
           ? ` · 🎯 clique pour viser ${G.targetLabel(G.anchor[i])} (puis une 2e fois pour lancer l'assaut)`
           : ' · 🚫 inaccessible : des châteaux bloquent le passage';
-      } else {
+      } else if (!G.isUnlinked(i)) { // (un morceau coupé de ses châteaux s'attaque de front : voir plus haut)
         txt += ' · 🏰 protégé : vise un de ses châteaux, églises, ports ou avant-postes';
       }
     } else if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id)) {
@@ -889,7 +893,8 @@ const UI = {
     const running = target >= 0 && G.attacks.find(a => !a.done && a.attacker === h.id && a.target === target
       && a.link === undefined && a.retreatEnd === undefined && (!aimed || a.targetCastle === c));
     const attack = confirmed => {
-      if (target >= 0 && !running && !confirmed && (aimed || !G.isProtected(target))) return this.startPlan(target, aimed ? c : -1, i);
+      // (de front : un royaume sans château ni église, ou un morceau de royaume coupé de tous ses châteaux)
+      if (target >= 0 && !running && !confirmed && (aimed || !G.isProtected(target) || G.isUnlinked(i))) return this.startPlan(target, aimed ? c : -1, i);
       // L'armée part du royaume ou d'un avant-poste bâti (avec ses soldats stationnés)
       const src = running ? G.sourceOfAttack(running) : G.bestSource(h.id, target, i);
       const err = G.launchAttack(h.id, target, G.troopsAt(h.id, src) * this.ratio, i, src);
