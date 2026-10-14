@@ -426,7 +426,10 @@ const UI = {
     if (r >= 0.98) tip = 'armée pleine !';
     else if (eff < 0.45) tip = 'trop de soldats, le recrutement ralentit';
     else if (eff > 0.85) tip = 'recrutement au top';
-    $('troopRate').innerHTML = `<b style="color:${color}">${tip}</b>`;
+    // Effets d'un assaut réussi (voir warFactor)
+    const war = (G.postWar(h) ? ` · <span style="color:#b8322a">⚰️ après-guerre −${Math.round(CONFIG.POST_WAR_MALUS * 100)} %</span>` : '') +
+      (G.rallied(h) ? ` · <span style="color:#2f6b2a">🔥 galvanisé +${Math.round(CONFIG.RALLY_BONUS * 100)} %</span>` : '');
+    $('troopRate').innerHTML = `<b style="color:${color}">${tip}</b>${war}`;
   },
 
   // Attaques en cours, en bas de l'écran. On ne reconstruit la liste que si elle change,
@@ -567,6 +570,10 @@ const UI = {
     if (!G.castlePassable(p.castle)(i)) {
       return this.log(`Point de passage impossible : choisis une terre ${G.deName(G.players[p.target].name)}, ` +
         'hors de la muraille de ses autres châteaux.', 'warn');
+    }
+    if (G.nearTerritoryEdge(p.target, i)) {
+      return this.log(`Point de passage trop près du bord de son royaume : place-le à au moins ${CONFIG.WAYPOINT_EDGE_DISTANCE} cases ` +
+        'de ses frontières et de ses côtes (on ne peut pas faire longer le bord à l\'armée pour découper le royaume).', 'warn');
     }
     if (p.waypoints.length >= MAX_WAYPOINTS) return this.log(`${MAX_WAYPOINTS} points de passage au maximum.`, 'warn');
     const wp = p.waypoints.concat([i]);

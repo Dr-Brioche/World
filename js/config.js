@@ -55,6 +55,12 @@ const CONFIG = {
   ATTACK_PREP_TIME: 10,        // secondes de préparation avant un assaut contre un royaume
                                // (on peut y ajouter des soldats tout de suite)
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière
+  // Après un assaut réussi (château, église, port ou avant-poste pris), pendant WAR_EFFECT_TIME secondes :
+  // le vainqueur subit un malus d'après-guerre (-25 % de soldats produits), le perdant est galvanisé (+25 %).
+  WAR_EFFECT_TIME: 60,
+  POST_WAR_MALUS: 0.25,
+  RALLY_BONUS: 0.25,
+  WAYPOINT_EDGE_DISTANCE: 4,   // un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé
   CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
   REINFORCE_DELAY: 5,          // une fois l'assaut lancé, les renforts mettent 5 s à arriver

@@ -51,7 +51,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Ensuite, clique sur ses terres pour placer jusqu'à **3 points de passage** (numérotés 1, 2, 3) :
    l'armée passera par chacun d'eux, dans l'ordre, en prenant toujours le chemin le plus facile (les plaines)
    entre deux points. En survolant la carte, tu vois en blanc le chemin si tu ajoutais un point à cet endroit.
-   Reclique sur un point pour l'enlever. Puis **clique 2 fois sur la cible pour lancer l'assaut**.
+   Reclique sur un point pour l'enlever. Un point de passage doit être à **au moins 4 cases du bord** de son royaume
+   (de ses frontières et de ses côtes) : impossible de faire longer le bord à ton armée pour le découper à ta guise.
+   Puis **clique 2 fois sur la cible pour lancer l'assaut**.
    Pour aller tout droit : **3 clics d'affilée** sur le château. `Échap` ou clic droit pour annuler.
    Le curseur « Envoyer » choisit le % de tes soldats qui partent en campagne.
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
@@ -94,6 +96,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Tu peux relancer un nouvel assaut aussitôt.
    - **Prendre une église ou un port** (qui permet de construire autour de lui) te donne aussi **sa zone**
      et **les moulins et casernes construits grâce à lui**. Ce qui est dans la muraille d'un château reste au défenseur.
+   - **⚰️ Après-guerre et 🔥 galvanisation** : après un assaut réussi (château, église, port ou avant-poste pris),
+     pendant **60 s**, le vainqueur panse ses blessures (**−25 %** de soldats produits), et le perdant est galvanisé
+     par la défaite (**+25 %**). La jauge des soldats l'indique.
 
    **✂️ Couper** : un royaume reste **d'un seul tenant**. Quand un assaut le coupe en morceaux, il ne garde
    que le plus grand : **celui qui a coupé prend d'un coup tous les autres**, **quelle que soit leur taille**,
@@ -296,6 +301,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.48** : 🗺️ un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé · ⚰️ après un assaut réussi, 60 s d'après-guerre pour le vainqueur (−25 % de soldats produits) et 🔥 de galvanisation pour le perdant (+25 %)
 - **v0.47** : 🏰 une citadelle (château niveau 3) permet 2 assauts en même temps contre un même royaume, et coûte 1000 · garnisons des châteaux bien plus grandes (petite, x5, puis x3) et chaque soldat de garnison vaut 3 au combat · le port royal a la même petite garnison qu'un fort en bois
 - **v0.46** : ⏳ 5 s d'attente entre deux envois de défenseurs contre un même assaut (fini les renforts envoyés en continu, soldat par soldat)
 - **v0.45** : ⛪ prendre une église ou un port donne aussi sa zone et les bâtiments construits grâce à lui · 🚩 pendant un assaut de front, la bannière reste à peu près fixe sur le front et glisse doucement (elle ne saute plus d'un bout à l'autre)

@@ -845,7 +845,8 @@ const Render = {
     if (this.planKey !== key) { this.planKey = key; this.planPath = G.castlePath(G.human.id, p.castle, p.waypoints, p.source); }
     // Itinéraire possible en passant par la case survolée
     const h = this.hover;
-    const tryIt = h >= 0 && G.anchor[h] !== p.castle && !p.waypoints.includes(h) && G.castlePassable(p.castle)(h);
+    const tryIt = h >= 0 && G.anchor[h] !== p.castle && !p.waypoints.includes(h) && G.castlePassable(p.castle)(h)
+      && !G.nearTerritoryEdge(p.target, h); // (pas trop près du bord de son royaume)
     const tKey = key + ':' + h;
     if (this.tryKey !== tKey) {
       this.tryKey = tKey;
