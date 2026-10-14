@@ -138,12 +138,13 @@ const AI = {
       if (needed <= 0) continue;
       // Château isolé (ou avant-poste) : impossible d'y envoyer des défenseurs. Pour un château, on tente
       // de le rejoindre par un assaut ; pour un avant-poste, on envoie des renforts par la mer.
-      if (Game.cutOff(a) && Game.building[a.targetCastle] === B_OUTPOST) {
-        // d'abord ses soldats stationnés, puis des renforts par la mer
+      const op = Game.outpostZoneOf(a);
+      if (op >= 0) {
+        // zone d'un avant-poste : d'abord ses soldats stationnés, puis des renforts par la mer
         const sent = Game.sendDefenders(p.id, a.id, needed);
         if (sent) continue;
-        if (!Game.expeditions.some(e => e.reinforce === a.targetCastle)) {
-          Game.reinforceOutpost(p.id, a.targetCastle, Math.min(needed, p.troops * 0.4));
+        if (!Game.expeditions.some(e => e.reinforce === op)) {
+          Game.reinforceOutpost(p.id, op, Math.min(needed, p.troops * 0.4));
         }
         continue;
       }
