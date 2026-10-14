@@ -72,7 +72,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi : **3 fois moins vite**
      que sur les terres libres, et encore moins dans le relief (forêt, colline, montagne, fleuve).
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
-     pour envoyer le % de soldats choisi. Le défenseur peut en envoyer autant qu'il veut, **sans délai**.
+     pour envoyer le % de soldats choisi. Ils arrivent **tout de suite**, mais il faut attendre **5 s** entre deux envois
+     contre un même assaut (le temps de regrouper les soldats).
    - **La garnison** : chaque château a ses propres défenseurs (plus nombreux selon son niveau),
      qui sortent le défendre seuls le temps que le royaume réagisse. Ils se reconstituent ensuite peu à peu.
    - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
@@ -291,6 +292,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.46** : ⏳ 5 s d'attente entre deux envois de défenseurs contre un même assaut (fini les renforts envoyés en continu, soldat par soldat)
 - **v0.45** : ⛪ prendre une église ou un port donne aussi sa zone et les bâtiments construits grâce à lui · 🚩 pendant un assaut de front, la bannière reste à peu près fixe sur le front et glisse doucement (elle ne saute plus d'un bout à l'autre)
 - **v0.44** : 💰 rendement décroissant des moulins et des ports : plus un royaume en a, moins chacun rapporte (l'économie ne s'emballe plus en fin de partie)
 - **v0.43** : 💰 un château coûte 100 (au lieu de 30), ses améliorations 90 et 225 · toutes les améliorations au niveau 3 coûtent 50 % de plus (grande caserne 150, cathédrale 300, port royal 375)

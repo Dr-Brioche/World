@@ -473,7 +473,8 @@ const UI = {
       const defenders = (a.defenders || 0) + (a.garrison || 0);
       el.textContent = `⚔ ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
         (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
-        (a.siege ? ` · 🏰 siège ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s` : '');
+        (a.siege ? ` · 🏰 siège ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s` : '') +
+        (a.target === G.human.id && G.defendWait(a) > 0 ? ` · ⏳ renforts dans ${Math.ceil(G.defendWait(a))} s` : '');
     }
   },
 
@@ -490,6 +491,9 @@ const UI = {
     const G = Game, h = G.human;
     // Château isolé ou avant-poste : les défenseurs ne peuvent pas le rejoindre
     const target = G.attacks.find(x => x.id === attackId && !x.done);
+    if (target && G.defendWait(target) > 0) {
+      return this.log(`⏳ Tes défenseurs se regroupent : prochains renforts dans ${Math.ceil(G.defendWait(target))} s.`, 'warn');
+    }
     if (target && G.cutOff(target)) {
       const op = target.targetCastle;
       if (G.building[op] === B_OUTPOST) {

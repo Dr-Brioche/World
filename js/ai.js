@@ -123,7 +123,7 @@ const AI = {
   reactToThreats(p) {
     // Envoyer des défenseurs contre chaque assaut : assez pour l'arrêter, vu la défense du terrain
     for (const a of Game.attacks) {
-      if (a.done || a.target !== p.id) continue;
+      if (a.done || a.target !== p.id || Game.defendWait(a) > 0) continue; // (5 s entre deux envois)
       const D = Game.combatRatio(a);
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
       const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0);

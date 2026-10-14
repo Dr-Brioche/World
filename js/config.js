@@ -55,6 +55,7 @@ const CONFIG = {
   ATTACK_PREP_TIME: 10,        // secondes de préparation avant un assaut contre un royaume
                                // (on peut y ajouter des soldats tout de suite)
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière
+  DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
   REINFORCE_DELAY: 5,          // une fois l'assaut lancé, les renforts mettent 5 s à arriver
   FIGHT_RATE: 0.03,            // vitesse des combats (part des soldats engagés qui tombent par tour)
   FIGHT_MIN_LOSS: 0.1,         // pertes minimum par tour, pour que chaque combat finisse vite
