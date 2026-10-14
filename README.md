@@ -312,10 +312,11 @@ Les royaumes rivaux savent aussi traverser les fleuves quand une rive libre les 
 🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
 il faut les contourner.
 
-**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), la souris devient une **main** et il s'illumine (doré chez toi, rouge chez l'ennemi) · molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.54.3** : 👆 en survolant un bâtiment sélectionnable, la souris devient une main et le bâtiment s'illumine (doré chez soi, rouge chez l'ennemi)
 - **v0.54.2** : en construisant, l'image du bâtiment apparaît sous la souris (sur un carré vert ou rouge) au lieu d'un simple carré
 - **v0.54.1** : les pactes sont interdits par défaut dans le menu de départ (chacun pour soi) ; on peut toujours les autoriser
 - **v0.54** : 🚀 élan de départ : les 4 premières minutes, recrutement et prise des terres libres plus rapides (+50 %, qui diminue peu à peu) · 💰 solde des troupes : au-delà de la moitié de l'armée maximum, les soldats disponibles font baisser l'or gagné (jusqu'à −25 %)

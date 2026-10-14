@@ -709,6 +709,37 @@ const Render = {
     ctx.globalAlpha = 1;
   },
 
+  // Bâtiment survolé qu'on peut sélectionner d'un clic (un des siens à améliorer, son avant-poste à renforcer,
+  // ou une cible ennemie à attaquer) : la souris devient une main et le bâtiment s'illumine
+  selectableAt(i) {
+    const G = Game, h = G.human, t = G.building[i];
+    if (i < 0 || !t || G.phase !== 'playing' || !h.alive || UI.selectedBuild || UI.plan) return -1;
+    const o = G.owner[i];
+    if (o === h.id && (BUILDING_LEVELS[t] || t === B_OUTPOST)) return G.anchor[i];
+    if (o >= 0 && o !== h.id && !G.areAllied(o, h.id) && TARGET_TYPES.includes(t) && G.isProtected(o)) return G.anchor[i];
+    return -1;
+  },
+
+  drawSelectable(ox, oy) {
+    const G = Game, a = this.selectableAt(this.hover);
+    const cursor = a >= 0 ? 'pointer' : '';
+    if (this.canvas.style.cursor !== cursor) this.canvas.style.cursor = cursor;
+    if (a < 0) return;
+    const ctx = this.ctx, s = this.cam.scale, n = G.sizeOf(G.building[a]);
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 250);
+    const pad = Math.max(2, s * 0.3), x = ox + (a % G.W) * s - pad, y = oy + ((a / G.W) | 0) * s - pad, w = n * s + pad * 2;
+    const mine = G.owner[a] === G.human.id;
+    ctx.save();
+    ctx.shadowColor = mine ? 'rgba(255,215,90,0.9)' : 'rgba(255,90,60,0.9)';
+    ctx.shadowBlur = 10 + 6 * pulse;
+    ctx.fillStyle = mine ? `rgba(255,230,140,${0.15 + 0.15 * pulse})` : `rgba(255,120,90,${0.12 + 0.12 * pulse})`;
+    ctx.fillRect(x, y, w, w);
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = mine ? '#ffd34d' : '#ff6a4d';
+    ctx.strokeRect(x, y, w, w);
+    ctx.restore();
+  },
+
   // Bâtiment à niveaux (moulin, caserne, château, église) : icône de loin, image quand on zoome
   drawLeveledBuilding(i, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, G = Game;
@@ -1037,6 +1068,7 @@ const Render = {
 
     this.drawCastleAssaultPreview(ox, oy);
     this.drawHoveredBuildings(ox, oy);
+    this.drawSelectable(ox, oy);
     this.drawFloaters(ox, oy);
 
     // Par-dessus tout le reste, pour bien les voir
