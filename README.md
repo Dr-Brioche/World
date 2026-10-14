@@ -167,6 +167,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
      Seules les cases à l'intérieur de la muraille sont renforcées : le bonus s'ajoute à la défense du terrain.
+     Pendant que tu le poses (ou l'améliores), une **petite bulle** près de la souris montre la **défense totale**
+     de sa muraille à cet endroit (terrain + murs, en moyenne) : en forêt ou en colline, elle est bien plus forte.
      **Clique sur un de tes châteaux pour l'améliorer** (3 niveaux) :
 
      | Niveau | Défense des murs | Muraille | Garnison | Prix |
@@ -309,6 +311,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.53** : 🛡️ en posant ou en améliorant un château, une bulle près de la souris montre la défense totale de sa muraille (terrain + murs)
 - **v0.52** : 👀 au début de la partie, les royaumes rivaux sont déjà installés sur la carte (nom et bannière) : on voit où ils sont avant de choisir où fonder sa capitale
 - **v0.51** : 🐢 les armées avancent encore 2 fois moins vite quand elles traversent un royaume ennemi (6 fois moins vite que sur les terres libres)
 - **v0.50** : 💰 seuls les bâtiments que tu construis toi-même font monter le prix des suivants (ceux pris à l'ennemi ne comptent plus) · ⚰️🔥 l'après-guerre et la galvanisation durent 30 s
