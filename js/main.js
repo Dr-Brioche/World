@@ -600,6 +600,16 @@ const UI = {
           if (typeof got === 'string') this.log(got, 'warn');
           else this.log(`🎁 ${fmt(got)} soldats arrivent chez ${G.players[o].name} (un quart s'est perdu en route).`, 'good', G.players[o]);
         } });
+        // L'allié se fait attaquer : on peut envoyer une armée l'aider à se défendre
+        const n2 = Math.floor(h.troops * this.ratio);
+        for (const a of G.attacks) {
+          if (a.done || a.target !== o || a.attacker === h.id || G.cutOff(a)) continue;
+          items.push({ label: `🛡️ Aider ${name} contre ${escapeHtml(G.players[a.attacker].name)} avec ${fmt(n2)} soldats (arrivée en ${CONFIG.REINFORCE_DELAY} s)`, run: () => {
+            const err = G.helpAlly(h.id, a.id, n2);
+            if (err) this.log(err, 'warn');
+            else this.log(`🛡️ ${fmt(n2)} soldats partent aider ${G.players[o].name} !`, 'good', G.players[o]);
+          } });
+        }
         items.push({ label: `💔 Rompre l'alliance avec ${name}`, run: () => this.onAllyButton(o) });
       } else {
         items.push({ label: `🤝 Proposer une alliance à ${name}`, run: () => this.onAllyButton(o) });

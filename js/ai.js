@@ -153,6 +153,13 @@ const AI = {
       }
       Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));
     }
+    // Un allié du pacte se fait attaquer : on envoie parfois une armée l'aider
+    for (const a of Game.attacks) {
+      if (a.done || a.target < 0 || a.attacker === p.id || !Game.areAllied(p.id, a.target) || Game.isPreparing(a) || Game.cutOff(a)) continue;
+      const need = a.troops / Game.combatRatio(a) - a.defenders - (a.garrison || 0) * Game.garrisonPower(a);
+      if (need <= 0 || p.troops < Game.maxTroops(p) * 0.3 || Math.random() > 0.3) continue;
+      Game.helpAlly(p.id, a.id, Math.min(need, p.troops * 0.25));
+    }
     // Une expédition ennemie vise notre côte : si on a un port, on envoie des bateaux l'intercepter
     for (const e of Game.expeditions) {
       if (e.done || Game.owner[e.landing] !== p.id || e.interceptors.some(it => it.pid === p.id)) continue;
