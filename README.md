@@ -163,7 +163,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Soldats produits | Bonus d'armée max | Force de **tous** tes soldats | Prix |
      |---|---|---|---|---|
      | 1. Camp d'entraînement | quelques-uns | un peu | **+10 %** | prix de la caserne |
-     | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 40 |
+     | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 80 |
      | 3. Grande caserne | +75 % | +60 % | **+50 %** | 💰 800 |
 
      Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
@@ -331,6 +331,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.60.3** : 💰 l'amélioration de la caserne au niveau 2 coûte 80 (au lieu de 40)
 - **v0.60.2** : cliquer à côté (ou `Échap`) ferme ensemble le menu rapide et la fenêtre d'info d'un bâtiment
 - **v0.60.1** : une confirmation est demandée avant de détruire un bâtiment
 - **v0.60** : 🏗️ un bâtiment posé est en chantier pendant 3 s (petite jauge verte, il ne produit rien avant) · passer au niveau 3 prend 10 s de travaux
