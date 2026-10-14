@@ -26,6 +26,7 @@ const GameRules = {
     this.players = [];
     this.attacks = [];
     this.expeditions = []; // bateaux en route vers une côte
+    this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up' ou 'down', start, end, pid, paid }
     this.crossings = [];   // armées qui traversent un fleuve à gué
     this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
     this.colonies = new Map(); // château bâti ou pris dans la zone d'un avant-poste → son royaume
@@ -297,6 +298,7 @@ const GameRules = {
     this.garrison[a] = 0;
     this.builtBy[a] = -1;
     this.outposts.delete(a);
+    this.works.delete(a);
     if (o >= 0) this.players[o].bCount[type]--;
     this.buildingTiles = this.buildingTiles.filter(b => b !== a);
     this.castles = this.castles.filter(c => c !== a);
@@ -360,16 +362,63 @@ const GameRules = {
     return next ? next.upgradeCost : null;
   },
 
-  // Améliore un bâtiment. Renvoie un message d'erreur, ou null si c'est fait.
+  // Lance l'amélioration d'un bâtiment : on paie tout de suite, les travaux durent UPGRADE_TIME secondes.
+  // Renvoie un message d'erreur, ou null si les travaux commencent.
   upgradeBuilding(p, a) {
     if (!this.building[a] || this.owner[a] !== p.id) return 'Ce n\'est pas un de tes bâtiments.';
+    if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
     const cost = this.upgradeCost(a);
     if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
-    this.level[a]++;
-    this.version++;
+    this.startWorks(p, a, 'up', CONFIG.UPGRADE_TIME, cost);
     return null;
+  },
+
+  // Lance la démolition d'un de ses bâtiments (DEMOLISH_TIME secondes). Renvoie un message d'erreur, ou null.
+  demolishBuilding(p, a) {
+    if (!this.building[a] || this.owner[a] !== p.id || this.building[a] === B_OUTPOST) return 'Ce n\'est pas un de tes bâtiments.';
+    if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
+    this.startWorks(p, a, 'down', CONFIG.DEMOLISH_TIME, 0);
+    return null;
+  },
+
+  startWorks(p, a, kind, secs, paid) {
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    this.works.set(a, { kind, start: this.tick, end: this.tick + secs * TPS, pid: p.id, paid });
+  },
+
+  // Annule les travaux d'un de ses bâtiments (l'or d'une amélioration est rendu)
+  cancelWorks(p, a) {
+    const w = this.works.get(a);
+    if (!w || w.pid !== p.id) return;
+    p.gold += w.paid;
+    this.works.delete(a);
+  },
+
+  // Fin des travaux : le bâtiment monte d'un niveau, ou disparaît. S'il a été pris entre-temps, ils sont perdus.
+  stepWorks() {
+    for (const [a, w] of this.works) {
+      const p = this.players[w.pid];
+      if (this.owner[a] !== w.pid || !this.building[a]) {
+        this.works.delete(a);
+        if (p.isHuman) UI.log('🏚️ Ton bâtiment a été pris pendant les travaux : ils sont perdus.', 'warn');
+        continue;
+      }
+      if (this.tick < w.end) continue;
+      this.works.delete(a);
+      const type = this.building[a], icon = BUILDINGS[type].icon;
+      if (w.kind === 'up') {
+        this.level[a]++;
+        this.version++;
+        if (p.isHuman) UI.log(`${icon} Amélioration terminée : ${this.buildingInfo(a).name} !`, 'good');
+      } else {
+        // Les soldats de la garnison rejoignent l'armée
+        p.troops += this.garrison[a] || 0;
+        if (p.isHuman) UI.log(`🧨 ${BUILDINGS[type].name} détruit.`, 'good');
+        this.removeBuilding(a);
+      }
+    }
   },
 
   // Cases protégées par un château : celles de son royaume, dans son rayon.
@@ -2405,6 +2454,7 @@ const GameRules = {
     this.attacks = this.attacks.filter(a => !a.done);
     this.stepExpeditions();
     this.stepCrossings();
+    this.stepWorks();
     this.stepOutposts();
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive) this.captureEnclaves(p.id);

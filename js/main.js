@@ -201,33 +201,48 @@ const UI = {
   },
 
   // Petite fenêtre pour améliorer un bâtiment (château, moulin)
-  showUpgrade(a) {
-    const G = Game, type = G.building[a], icon = BUILDINGS[type].icon;
-    if (this.upgradeBox) this.upgradeBox.remove();
-    const el = document.createElement('div');
-    this.upgradeBox = el;
-    el.className = 'msg request upgrade';
-    const cur = G.buildingInfo(a), cost = G.upgradeCost(a);
-    const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
-    if (cost === null) {
-      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : déjà au maximum ! ` +
-        `${this.levelEffect(type, cur)}.<div class="choices"><button data-no>OK</button></div>`;
+  // Menu rapide d'un de ses bâtiments (clic dessus) : l'améliorer ou le détruire, juste à côté de lui.
+  // Les travaux prennent du temps (UPGRADE_TIME / DEMOLISH_TIME) : une petite jauge s'affiche sur le bâtiment.
+  openBuildingMenu(a, sx, sy) {
+    const G = Game, h = G.human, type = G.building[a], icon = BUILDINGS[type].icon;
+    this.closeActionMenu();
+    const cur = G.buildingInfo(a), cost = G.upgradeCost(a), work = G.works.get(a), items = [];
+    const head = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]})`;
+    if (work) {
+      items.push({ label: work.kind === 'up' ? '✖ Annuler l\'amélioration (or rendu)' : '✖ Annuler la démolition',
+        run: () => G.cancelWorks(h, a) });
     } else {
-      const next = BUILDING_LEVELS[type][G.level[a] + 1];
-      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
-        (next.img ? `<img src="${next.img}" alt="">` : '') +
-        `<b>${this.upgradeEffect(type, cur, next)}</b>` +
-        `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button><button data-no>Fermer</button></div>`;
-      el.querySelector('[data-yes]').addEventListener('click', () => {
-        const err = G.upgradeBuilding(G.human, a);
-        if (err) return this.log(err, 'warn');
-        close();
-        this.log(`${icon} Amélioration terminée : ${G.buildingInfo(a).name} !`, 'good');
-      });
+      if (cost === null) items.push({ label: '⬆️ Améliorer', disabled: 'Déjà au niveau maximum.' });
+      else {
+        const next = BUILDING_LEVELS[type][G.level[a] + 1];
+        const label = `⬆️ Améliorer en ${next.name} (💰 ${fmt(cost)}, ${CONFIG.UPGRADE_TIME} s)`;
+        items.push(h.gold < cost ? { label, disabled: `Pas assez d'or (${fmt(cost)} nécessaires).` }
+          : { label, title: this.upgradeEffect(type, cur, next), run: () => {
+            const err = G.upgradeBuilding(h, a);
+            if (err) this.log(err, 'warn');
+          } });
+      }
+      items.push({ label: `🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)`, run: () => {
+        const err = G.demolishBuilding(h, a);
+        if (err) this.log(err, 'warn');
+      } });
     }
-    el.querySelector('[data-no]').addEventListener('click', close);
-    $('log').prepend(el);
-    setTimeout(close, 15000);
+    const el = document.createElement('div');
+    el.className = 'panel actionMenu';
+    el.innerHTML = `<div class="menuHead">${head}</div>` + items.map((it, k) =>
+      `<button data-k="${k}"${it.disabled ? ' disabled' : ''}${it.title ? ` title="${escapeHtml(it.title)}"` : ''}>${it.label}</button>` +
+      (it.disabled ? `<small>${escapeHtml(it.disabled)}</small>` : '')).join('');
+    el.style.left = Math.min(sx + 16, window.innerWidth - 260) + 'px';
+    el.style.top = Math.min(sy - 10, window.innerHeight - 50 * items.length - 40) + 'px';
+    el.addEventListener('pointerdown', e => e.stopPropagation());
+    el.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-k]');
+      if (!btn || btn.disabled) return;
+      this.closeActionMenu();
+      items[+btn.dataset.k].run();
+    });
+    document.body.appendChild(el);
+    this.actionMenu = el;
   },
 
   // Demande confirmation avant de trahir un allié.
@@ -330,7 +345,8 @@ const UI = {
       if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
-      if (o === G.human.id && G.upgradeCost(a) !== null && !(G.holdsAlone(a) && G.isIsolated(a))) txt += ` · clique pour l'améliorer`;
+      if (G.works.has(a)) txt += G.works.get(a).kind === 'up' ? ' · ⬆️ amélioration en cours' : ' · 🧨 démolition en cours';
+      else if (o === G.human.id && BUILDING_LEVELS[G.building[i]] && !(G.holdsAlone(a) && G.isIsolated(a))) txt += ` · clique pour l'améliorer ou le détruire`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
       if (G.building[i] === B_OUTPOST) {
@@ -714,7 +730,7 @@ const UI = {
     }
     if (BUILDING_LEVELS[t] && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === t)) {
       this.selectBuild(0);
-      this.showUpgrade(G.anchor[i]);
+      this.openBuildingMenu(G.anchor[i], sx, sy);
       return;
     }
     if (this.selectedBuild) {

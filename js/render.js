@@ -720,6 +720,20 @@ const Render = {
     return -1;
   },
 
+  // Travaux en cours (amélioration ou démolition) : une petite jauge sous le bâtiment, qui se remplit
+  drawWorks(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    for (const [a, w] of G.works) {
+      const n = G.sizeOf(G.building[a]), k = Math.min(1, (G.tick - w.start) / Math.max(1, w.end - w.start));
+      const bw = Math.max(26, n * s), bh = Math.max(5, s * 0.4);
+      const x = ox + (a % G.W + n / 2) * s - bw / 2, y = oy + (((a / G.W) | 0) + n) * s + 3;
+      ctx.fillStyle = 'rgba(20,12,4,0.75)';
+      ctx.fillRect(x - 1, y - 1, bw + 2, bh + 2);
+      ctx.fillStyle = w.kind === 'up' ? '#e6b422' : '#c0392b';
+      ctx.fillRect(x, y, bw * k, bh);
+    }
+  },
+
   drawSelectable(ox, oy) {
     const G = Game, a = this.selectableAt(this.hover);
     const cursor = a >= 0 ? 'pointer' : '';
@@ -1069,6 +1083,7 @@ const Render = {
     this.drawCastleAssaultPreview(ox, oy);
     this.drawHoveredBuildings(ox, oy);
     this.drawSelectable(ox, oy);
+    this.drawWorks(ox, oy);
     this.drawFloaters(ox, oy);
 
     // Par-dessus tout le reste, pour bien les voir
