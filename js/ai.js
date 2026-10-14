@@ -51,7 +51,8 @@ const AI = {
     }
 
     // De temps en temps, des terres libres de l'autre côté d'un fleuve : on le traverse à gué
-    if (nb.has(-1) && p.troops > max * 0.3 && Math.random() < 0.1 && this.tryCrossing(p)) return;
+    // (souvent s'il n'y a plus de terre libre à notre frontière : c'est le seul moyen de passer)
+    if (p.troops > max * 0.3 && Math.random() < (nb.has(-1) ? 0.1 : 0.3) && this.tryCrossing(p)) return;
 
     // S'il reste des terres libres, on s'étend en priorité
     if (nb.has(-1) && p.troops > max * 0.2 && Math.random() < 0.85) {
@@ -98,8 +99,7 @@ const AI = {
     if (G.crossings.some(c => c.pid === p.id)) return false; // une traversée à la fois
     // Les cases de fleuve libres qui touchent nos terres
     const fords = [];
-    for (let i = 0; i < G.N; i++) {
-      if (G.terrain[i] !== TERRAIN.RIVER || G.owner[i] !== -1) continue;
+    for (const i of G.riverTiles()) {
       let mine = false;
       G.forNeighbors(i, n => { if (G.owner[n] === p.id) mine = true; });
       if (mine) fords.push(i);

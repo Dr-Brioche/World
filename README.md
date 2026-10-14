@@ -302,16 +302,18 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +250 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 
-🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont des **frontières naturelles**.
-Ils sont très longs à traverser, et un défenseur qui intercepte un ennemi sur un fleuve de son royaume
-a un **gros bonus de défense (+3, soit +300 %)**. Il y a entre **3 et 12 fleuves** par partie, au hasard. On ne peut rien construire dessus.
+🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont de vraies **frontières naturelles**.
+**Personne ne peut les prendre** : ils restent bleus et neutres pour toujours, et ni l'expansion ni les assauts ne les franchissent.
+**Le seul moyen de passer, c'est la traversée à gué** (ci-dessous). Un royaume présent des deux côtés d'un fleuve
+reste un seul royaume (il n'est pas « coupé »). Il y a entre **3 et 12 fleuves** par partie, au hasard.
 Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer.
 Certains fleuves forment aussi un **lac** en chemin.
 **🛶 Traverser un fleuve** : pour prendre des terres libres de l'autre côté, fais un **clic droit** sur la rive d'en face
 et choisis **🛶 Traverser le fleuve**. Le % de soldats choisi passe à gué depuis tes terres : c'est **long**
-(**3 s par case de fleuve**), et tout le monde voit le radeau. À l'arrivée, tu prends le gué et une **tête de pont**
-sur l'autre rive, reliée à ton royaume ; les survivants rejoignent ton armée. (Le grand fleuve, lui, ne se traverse pas.)
+(**10 s** pour la première case de fleuve, **6 s** pour la seconde d'un fleuve double), et tout le monde voit le radeau.
+À l'arrivée, tu prends une **tête de pont** sur l'autre rive (le fleuve, lui, reste neutre) ; les survivants rejoignent
+ton armée. (Le grand fleuve, lui, ne se traverse pas.)
 Les royaumes rivaux savent aussi traverser les fleuves quand une rive libre les attend en face.
 
 🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
@@ -321,6 +323,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.57** : 🌊 les fleuves ne se prennent plus jamais : ils restent neutres et bloquent l'expansion et les assauts ; on ne passe qu'en traversant à gué (10 s pour la 1re case, 6 s pour la 2e) · un royaume des deux côtés d'un fleuve reste un seul royaume
 - **v0.56** : 🏳️ annuler une attaque = retraite : 3 s pour décrocher, puis 15 % de pertes · bouton « Détruire » aussi dans la fenêtre d'un bâtiment, en haut à gauche
 - **v0.55.1** : le menu rapide des bâtiments n'a plus que deux icônes (⬆️ améliorer, ✖ détruire) ; la fenêtre explicative revient en haut à gauche
 - **v0.55** : 🛠️ clic sur un de ses bâtiments → menu rapide juste à côté : l'améliorer (5 s de travaux) ou le détruire (10 s), avec une petite jauge qui se remplit

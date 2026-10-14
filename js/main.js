@@ -340,6 +340,7 @@ const UI = {
     if (i < 0) return '';
     const G = Game, t = TERRAIN_INFO[G.terrain[i]];
     if (G.terrain[i] === TERRAIN.GREAT_RIVER) return '🌊 Grand fleuve (infranchissable)';
+    if (G.terrain[i] === TERRAIN.RIVER) return '🌊 Fleuve : neutre, personne ne peut le prendre · pour passer, clic droit sur une terre libre en face → 🛶 Traverser le fleuve';
     if (G.terrain[i] === TERRAIN.PEAK) return '🏔️ Sommet (infranchissable)';
     if (!G.isLand(i)) return '🌊 Mer';
     const o = G.owner[i];
