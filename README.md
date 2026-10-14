@@ -261,7 +261,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Si cet allié **se fait attaquer**, le menu propose aussi **🛡️ Aider [allié] contre [attaquant]** : tes soldats
    arrivent en **5 s** et se battent avec ses défenseurs ; à la fin de l'assaut, les survivants rentrent chez toi.
    Les royaumes rivaux aident aussi leurs alliés.
-4. **Forme des pactes** (si tu les as autorisés dans le menu : on peut aussi les **interdire**, chacun pour soi) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
+4. **Forme des pactes** (ils sont **interdits par défaut** : chacun pour soi ; autorise-les dans le menu de départ pour jouer avec) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
    pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
    **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
@@ -316,6 +316,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.54.1** : les pactes sont interdits par défaut dans le menu de départ (chacun pour soi) ; on peut toujours les autoriser
 - **v0.54** : 🚀 élan de départ : les 4 premières minutes, recrutement et prise des terres libres plus rapides (+50 %, qui diminue peu à peu) · 💰 solde des troupes : au-delà de la moitié de l'armée maximum, les soldats disponibles font baisser l'or gagné (jusqu'à −25 %)
 - **v0.53** : 🛡️ en posant ou en améliorant un château, une bulle près de la souris montre la défense totale de sa muraille (terrain + murs)
 - **v0.52** : 👀 au début de la partie, les royaumes rivaux sont déjà installés sur la carte (nom et bannière) : on voit où ils sont avant de choisir où fonder sa capitale
