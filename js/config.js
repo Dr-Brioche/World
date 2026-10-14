@@ -76,6 +76,8 @@ const CONFIG = {
   WAYPOINT_EDGE_DISTANCE: 4,   // un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé
   CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
+  RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
+  RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite
   REINFORCE_DELAY: 5,          // une fois l'assaut lancé, les renforts mettent 5 s à arriver
   FIGHT_RATE: 0.03,            // vitesse des combats (part des soldats engagés qui tombent par tour)
   FIGHT_MIN_LOSS: 0.1,         // pertes minimum par tour, pour que chaque combat finisse vite

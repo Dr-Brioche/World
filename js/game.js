@@ -1105,7 +1105,7 @@ const GameRules = {
     // Assauts déjà en cours contre ce royaume : on renforce celui qui vise la même cible ; sinon on en lance
     // un nouveau, s'il en reste (1 à la fois, 2 avec une citadelle)
     const running = this.attacks.filter(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined
-      && this.sourceOfAttack(a) === source);
+      && this.sourceOfAttack(a) === source && a.retreatEnd === undefined); // (une armée en retraite ne reçoit plus de renforts)
     let a = running.find(a => a.targetCastle === castle);
     if (!a && running.length >= this.maxAssaults(pid)) {
       return `Un assaut contre ${this.players[target].name} est déjà en cours.` +
@@ -1998,6 +1998,7 @@ const GameRules = {
   },
 
   stepAttack(a) {
+    if (this.stepRetreat(a)) return;
     if (this.isPreparing(a)) return;
     if (a.prepTicks && this.tick === a.startTick) {
       // Fin de la préparation : la frontière a pu bouger entre-temps
@@ -2114,10 +2115,28 @@ const GameRules = {
   },
 
   // Rappelle les soldats d'une attaque (seulement les siennes).
+  // Annuler une attaque : c'est une retraite. Les soldats mettent RETREAT_TIME secondes à décrocher
+  // (les défenseurs peuvent encore les attaquer), puis rentrent en perdant RETREAT_LOSS de leurs effectifs.
   cancelAttack(pid, attackId) {
     const a = this.attacks.find(a => a.id === attackId && a.attacker === pid && !a.done);
-    if (a) this.endAttack(a);
+    if (a && a.retreatEnd === undefined) a.retreatEnd = this.tick + CONFIG.RETREAT_TIME * CONFIG.TICKS_PER_SECOND;
     return a;
+  },
+
+  // Retraite en cours : on ne fait que se défendre, puis on rentre avec les pertes. Renvoie true si c'est le cas.
+  stepRetreat(a) {
+    if (a.retreatEnd === undefined) return false;
+    if (this.tick < a.retreatEnd) {
+      if (!this.isPreparing(a) && a.defenders + (a.garrison || 0) >= 1) this.fight(a);
+      return true;
+    }
+    const keep = 1 - CONFIG.RETREAT_LOSS;
+    a.troops *= keep;
+    for (const r of a.pending) r.troops *= keep;
+    const p = this.players[a.attacker];
+    if (p.isHuman) UI.log(`↩️ Retraite terminée : ${fmt(a.troops + a.pending.reduce((s, r) => s + r.troops, 0))} soldats rentrent.`, 'good');
+    this.endAttack(a);
+    return true;
   },
 
   // Château pris : toute sa zone de défense passe d'un coup à l'attaquant, avec les moulins et casernes
