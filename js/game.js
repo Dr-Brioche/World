@@ -192,7 +192,15 @@ const GameRules = {
     return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]
       && this.terrain[j] !== TERRAIN.RIVER)
       && this.insideWalls(pid, a, type) && !this.tooCloseToBuilding(a, type)
-      && !this.churchCastleConflict(pid, a, type);
+      && !this.churchCastleConflict(pid, a, type) && this.commanded(a, type);
+  },
+
+  // Un territoire désorganisé (son morceau n'a aucun château pour le diriger, ni avant-poste) ne peut rien
+  // construire d'autre qu'un château : il lui faut d'abord un château pour diriger le royaume.
+  commanded(a, type) {
+    if (type === B_CASTLE) return true;
+    const r = this.regionsAt(a), k = r.comp[a];
+    return k >= 0 && (r.hasCastle[k] || r.anyOutpost[k]);
   },
 
   // Les grands bâtiments d'un royaume (châteaux, églises, ports) gardent leurs distances entre eux, dans tous
@@ -985,6 +993,10 @@ const GameRules = {
     }
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
+      if (i >= 0 && this.owner[i] === p.id && !this.commanded(i, type)) {
+        return 'Ce territoire n\'a plus aucun château pour le diriger : il ne peut rien construire d\'autre. ' +
+          'Bâtis d\'abord un château ici (ou relie ce territoire à un de tes châteaux).';
+      }
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
         return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux, ou près d'une de tes églises (ou d'un port amélioré) ` +
           'qui a encore de la place (pas ailleurs dans l\'arrière-pays).';

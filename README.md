@@ -167,6 +167,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      - **le seul moyen d'en sortir** : relier ton territoire à un château (clique sur ton château isolé pour un
        assaut de jonction) ou **bâtir un nouveau château** sur ton territoire, pour avoir de nouveau une zone de
        départ pour tes armées. Un message 🚩 te prévient quand ça arrive.
+     - un territoire **désorganisé** (sans château pour le diriger, ni avant-poste) **ne peut rien construire
+       d'autre qu'un château** : il lui faut d'abord un château pour diriger le royaume.
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
@@ -391,6 +393,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.70.2** : 🏗️ un territoire désorganisé (sans château pour le diriger) ne peut plus rien construire d'autre qu'un château
 - **v0.70.1** : ↩ des défenseurs encore en route quand l'assaut se termine (ville prise…) font demi-tour et rentrent à pied jusqu'à la ville la plus proche : on ne les récupère qu'à leur arrivée
 - **v0.70** : 🚩 si tous tes châteaux sont isolés, ton armée est bloquée dedans : ton territoire coupé n'est plus défendu et aucune armée ne peut en partir (relie-le ou bâtis un château) ; tes soldats défendent ton dernier château moins bien (x0,8), mais tous d'office quand il est attaqué
 - **v0.69.2** : 🐢 plus une armée d'assaut est grande, plus elle avance lentement chez l'ennemi (sur les terres libres, rien ne change)
