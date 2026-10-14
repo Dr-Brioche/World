@@ -17,7 +17,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec **4 types de cartes** au choix : Normale, Continentale, Base navale ou **Monde** (la vraie carte du monde)
+  avec **5 cartes** au choix : 3 cartes **aléatoires** (Normale, Continentale, Base navale) et 2 cartes **prédéfinies**
+  (**Monde** et **Europe**, les vraies cartes)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
@@ -31,15 +32,27 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 1. **Fonde ta capitale** : choisis ta bannière et le **type de carte** dans le menu. Sur la carte, **les royaumes rivaux
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
+   🎲 **Cartes aléatoires** (différentes à chaque partie) :
    - **Normale** : un grand continent entouré d'océan, et parfois quelques îlots au large.
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
    - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
-   - **Monde** 🌍 : la **vraie carte du monde**, bien plus grande (on dézoome beaucoup) : les continents, les grandes
+   🗺️ **Cartes prédéfinies** (les vraies cartes, avec un peu de hasard dans les forêts et les côtes) :
+   - **Monde** 🌍 (1080 x 408 cases) : la **vraie carte du monde**, bien plus grande (on dézoome beaucoup) : les continents, les grandes
      îles, les mers intérieures (mer Noire, Caspienne, Grands Lacs), les **chaînes de montagnes** (Rocheuses, Andes,
      Alpes, Himalaya…) et les **grands fleuves** (Mississippi, Amazone, Nil, Danube, Volga, Yangzi…) sont à leur place.
      Le cours inférieur des plus grands fleuves est un **grand fleuve** infranchissable ; le Groenland est un glacier
      (seules ses côtes sont habitables). 3 royaumes rivaux de plus que d'habitude.
+   - **Europe** 🏰 (1000 x 1000 cases, immense) : l'Europe en détail, de l'Islande à la Volga et du cap Nord au Sahara,
+     avec l'Afrique du Nord, l'Anatolie et le Caucase. Les îles (Grande-Bretagne, Irlande, Sicile, Sardaigne, Corse,
+     Crète, Chypre, les îles danoises…), la mer Noire, les grands lacs (Ladoga, Onega, Vänern, Léman…), les montagnes
+     (Alpes, Pyrénées, Carpates, Alpes scandinaves, Apennins, Balkans, Caucase, Atlas, Taurus…) et une cinquantaine
+     de fleuves avec leurs méandres (Rhin, Danube, Loire, Seine, Rhône, Pô, Elbe, Vistule, Dniepr, Don, Tamise…).
+     Le Danube (après Belgrade), le Dniepr (après Kiev) et le Don inférieur sont de grands fleuves infranchissables ;
+     le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie. 3 royaumes rivaux de plus.
+     ⚠️ C'est une très grande carte : la partie est longue, et le jeu peut ralentir un peu sur un ordinateur modeste.
+   Sur les cartes prédéfinies, plus grandes, les **terres libres se prennent plus vite et coûtent moins de soldats**
+   (x2 environ sur la carte Monde, x4 en Europe) : sinon la conquête n'en finirait pas. Les combats ne changent pas.
    Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
    porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
 2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
@@ -275,11 +288,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - Les ennemis peuvent **viser l'avant-poste** pour le détruire (après un **siège de 10 s**, pendant lequel
      ses soldats stationnés et des renforts peuvent encore le défendre) ; sans lui, ses terres sont à nouveau
      un petit morceau isolé, facile à encercler.
-   - **⚓ Intercepter** : si un royaume a un **port** (n'importe quel niveau), il peut **cliquer sur le bateau**
-     d'une expédition ennemie pour envoyer le % de soldats choisi à sa rencontre. Ses bateaux foncent vers la côte
-     visée : s'ils y arrivent **avant** l'expédition, il y a **bataille en mer** à son arrivée (1 soldat contre 1,
-     selon la force de chaque camp). Si l'escadre gagne, l'expédition est **coulée** et ses survivants rentrent ;
-     sinon, l'expédition débarque quand même, avec moins de soldats. Tu es prévenu quand une expédition vise ta côte.
+   - Une expédition en mer **ne peut pas être interceptée** : tu es prévenu quand elle vise ta côte
+     (une petite zone rouge marque l'endroit du débarquement), et tu l'attaques quand elle accoste.
 
    **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Attaque navale · 🛶 Traverser le fleuve).
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
@@ -351,6 +361,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.66** : 🏰 nouvelle carte **Europe** (1000 x 1000 cases) · 🌍 la carte **Monde** passe à 1080 x 408 cases · 🗺️ menu des cartes en deux groupes : aléatoires et prédéfinies · 🌊 fleuves avec des méandres sur les cartes prédéfinies · ⚓ fini l'interception des expéditions en mer : on attaque l'avant-poste quand elle accoste · 🐎 sur les grandes cartes, les terres libres se prennent plus vite et coûtent moins de soldats (jusqu'à x4 en Europe) · ⚡ jeu bien plus rapide sur les grandes cartes (calculs optimisés)
 - **v0.65** : 🏜️ nouveau terrain : le **désert** (défense comme une plaine, production des bâtiments −20 %), sur toutes les cartes, et aux vrais endroits sur la carte Monde · 📜 règles du menu réécrites avec toutes les mécaniques actuelles · 🏗️ de loin, le bâtiment qu'on pose apparaît sous la souris en version simplifiée (son icône), comme les bâtiments sur la carte
 - **v0.64** : 🎯 un clic sur la cible pour la choisir, un 2e pour lancer l'assaut · fini les points de passage · ⚔️ plus de préparation de 10 s : l'armée part de ta cité la plus proche et marche sur tes terres jusqu'à la frontière (tu peux lui ajouter des soldats tout de suite pendant la marche, ensuite ce sont des renforts avec délai)
 - **v0.63.1** : ⚔️ la grande caserne (niveau 3) agrandit beaucoup plus l'armée maximum (+200 au lieu de +80) et forme un peu plus de soldats (9 au lieu de 7) · 🤖 les royaumes rivaux s'acharnent moins sur toi (préférence pour le joueur divisée par 2 en Normal et Difficile)

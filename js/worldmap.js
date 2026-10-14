@@ -344,17 +344,30 @@ const WORLD_DESERTS = [
    [-110.5, 29.5], [-113, 31.2], [-115.5, 32.5], [-117.5, 35.5], [-119.5, 38.5]],
 ];
 
-// Projection : longitude / latitude → coordonnées sur la carte (en cases, nombres à virgule)
-function worldX(lon, W) { return ((lon - WORLD_LON0) % 360 + 360) % 360 / 360 * W; }
-function worldY(lat, H) { return (WORLD_LAT_TOP - lat) / (WORLD_LAT_TOP - WORLD_LAT_BOTTOM) * H; }
+// --- Outils communs aux cartes « prédéfinies » (Monde, Europe) ---
+// Une projection dit comment passer des longitudes / latitudes aux cases de la carte :
+// lon0 = longitude du bord gauche, lonSpan = largeur de la carte en degrés,
+// latTop / latBottom = latitudes des bords haut et bas, wrap = la carte fait le tour du monde.
+const WORLD_PROJ = { lon0: WORLD_LON0, lonSpan: 360, latTop: WORLD_LAT_TOP, latBottom: WORLD_LAT_BOTTOM, wrap: true };
+
+// longitude / latitude → coordonnées sur la carte (en cases, nombres à virgule)
+function geoX(proj, lon, W) {
+  let d = lon - proj.lon0;
+  if (proj.wrap) d = (d % 360 + 360) % 360;
+  return d / proj.lonSpan * W;
+}
+function geoY(proj, lat, H) { return (proj.latTop - lat) / (proj.latTop - proj.latBottom) * H; }
+function geoPoints(proj, line, W, H) { return line.map(([lon, lat]) => [geoX(proj, lon, W), geoY(proj, lat, H)]); }
 
 // Remplit un contour sur le masque (val = 1 pour une terre, 0 pour un lac), ligne par ligne
-function fillWorldPolygon(mask, W, H, poly, val) {
-  const pts = poly.map(([lon, lat]) => [worldX(lon, W), worldY(lat, H)]);
-  // (l'Eurasie déborde à droite au-delà de 180° : on garde ses x continus)
-  for (let k = 1; k < pts.length; k++) {
-    if (pts[k][0] - pts[k - 1][0] < -W / 2) pts[k][0] += W;
-    else if (pts[k][0] - pts[k - 1][0] > W / 2) pts[k][0] -= W;
+function fillGeoPolygon(mask, W, H, poly, val, proj) {
+  const pts = geoPoints(proj, poly, W, H);
+  // (carte du monde : l'Eurasie déborde à droite au-delà de 180° : on garde ses x continus)
+  if (proj.wrap) {
+    for (let k = 1; k < pts.length; k++) {
+      if (pts[k][0] - pts[k - 1][0] < -W / 2) pts[k][0] += W;
+      else if (pts[k][0] - pts[k - 1][0] > W / 2) pts[k][0] -= W;
+    }
   }
   for (let y = 0; y < H; y++) {
     const cy = y + 0.5, xs = [];
@@ -364,17 +377,15 @@ function fillWorldPolygon(mask, W, H, poly, val) {
     }
     xs.sort((a, b) => a - b);
     for (let k = 0; k + 1 < xs.length; k += 2) {
-      for (let x = Math.ceil(xs[k] - 0.5); x < xs[k + 1] - 0.5; x++) {
-        const xx = ((x % W) + W) % W;
-        mask[y * W + xx] = val;
-      }
+      let from = Math.ceil(xs[k] - 0.5), to = xs[k + 1] - 0.5;
+      if (!proj.wrap) { from = Math.max(0, from); to = Math.min(W, to); } // (ce qui sort de la carte est ignoré)
+      for (let x = from; x < to; x++) mask[y * W + (((x % W) + W) % W)] = val;
     }
   }
 }
 
 // Distance (en cases) de chaque case à une ligne brisée, dans un rectangle autour d'elle : appelle fn(i, d)
-function nearPolyline(W, H, line, reach, fn) {
-  const pts = line.map(([lon, lat]) => [worldX(lon, W), worldY(lat, H)]);
+function nearPolyline(W, H, pts, reach, fn) {
   const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
   const x0 = Math.max(0, Math.floor(Math.min(...xs) - reach)), x1 = Math.min(W - 1, Math.ceil(Math.max(...xs) + reach));
   const y0 = Math.max(0, Math.floor(Math.min(...ys) - reach)), y1 = Math.min(H - 1, Math.ceil(Math.max(...ys) + reach));
@@ -394,8 +405,7 @@ function nearPolyline(W, H, line, reach, fn) {
 }
 
 // Trace un fleuve case par case, sans « trou » en diagonale (sinon les terres passeraient au travers)
-function drawWorldRiver(terrain, W, H, line, greatFrom) {
-  const pts = line.map(([lon, lat]) => [worldX(lon, W), worldY(lat, H)]);
+function drawGeoRiver(terrain, W, H, pts, greatFrom) {
   const paint = (x, y, great) => {
     if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return;
     const i = y * W + x;
@@ -415,89 +425,140 @@ function drawWorldRiver(terrain, W, H, line, greatFrom) {
       if (great) paint(x + 1, y, great), paint(x, y + 1, great); // un grand fleuve est plus large
     }
   }
+  // L'embouchure doit toucher l'eau (les côtes ont été un peu déplacées) : on prolonge le fleuve tout droit
+  const n = pts.length, [ax, ay] = pts[n - 2], [bx, by] = pts[n - 1], len = Math.hypot(bx - ax, by - ay) || 1;
+  for (let step = 1; step < 30; step++) {
+    const x = Math.floor(bx + (bx - ax) / len * step), y = Math.floor(by + (by - ay) / len * step);
+    if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1 || terrain[y * W + x] === TERRAIN.WATER) break;
+    if (terrain[y * W + x] === TERRAIN.RIVER || terrain[y * W + x] === TERRAIN.GREAT_RIVER) continue;
+    let near = false; // (on suit le fleuve case par case : pas de trou en diagonale)
+    for (const j of [y * W + x - 1, y * W + x + 1, (y - 1) * W + x, (y + 1) * W + x]) if (terrain[j] === TERRAIN.WATER) near = true;
+    terrain[y * W + x] = greatFrom >= 0 ? TERRAIN.GREAT_RIVER : TERRAIN.RIVER;
+    const px = Math.floor(bx + (bx - ax) / len * (step - 1)), py = Math.floor(by + (by - ay) / len * (step - 1));
+    if (px !== x && py !== y && terrain[py * W + x] !== TERRAIN.WATER) terrain[py * W + x] = terrain[y * W + x];
+    if (near) break;
+  }
 }
 
-function generateWorldMap(seed) {
-  const W = CONFIG.WORLD_MAP_WIDTH, H = CONFIG.WORLD_MAP_HEIGHT, N = W * H;
+// Méandres : on ajoute des points tous les 1,5 cases le long du cours, et on les déplace un peu selon un « champ »
+// de bruit. Le même endroit est déplacé de la même façon pour tous les fleuves : un affluent rejoint toujours
+// son fleuve.
+function meanderPoints(pts, noise, amp, scale) {
+  const out = [];
+  for (let k = 0; k + 1 < pts.length; k++) {
+    const [ax, ay] = pts[k], [bx, by] = pts[k + 1], steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 1.5));
+    for (let t = 0; t < steps; t++) out.push([ax + (bx - ax) * t / steps, ay + (by - ay) * t / steps, k]);
+  }
+  out.push([...pts[pts.length - 1], pts.length - 2]);
+  return out.map(([x, y, k]) => [x + (fbm(noise, x / scale, y / scale, 3) - 0.5) * 2 * amp,
+    y + (fbm(noise, x / scale + 77, y / scale + 33, 3) - 0.5) * 2 * amp, k]);
+}
+
+// Fabrique une carte prédéfinie de W x H cases à partir de ses données géographiques (geo) :
+//   proj : la projection · lands / lakes / deserts / glaciers : des contours · mountains : [largeur, sommets ?, crête]
+//   rivers : [cours, n° du point où il devient un grand fleuve (-1 = jamais)]
+//   detail : taille du bruit (plus grand = des taches plus grandes) · coastAmp : décalage des côtes (en cases)
+//   widthScale : multiplie la largeur des montagnes · forestLevel(lat, lon) : seuil de forêt (plus bas = plus de forêt)
+//   iceCaps : [ouest, est, latitude min] : au cœur de ces terres (loin de la côte), un glacier infranchissable
+function buildGeoMap(seed, W, H, geo) {
+  const N = W * H, P = geo.proj, k = geo.detail;
   const rand = mulberry32(seed);
   const coastNoise = makeValueNoise(rand), forestNoise = makeValueNoise(rand), reliefNoise = makeValueNoise(rand);
 
   // 1. Les terres (et les lacs), d'après les contours ; les déserts sur un masque à part
   const mask = new Uint8Array(N), dryMask = new Uint8Array(N);
-  for (const poly of WORLD_LANDS) fillWorldPolygon(mask, W, H, poly, 1);
-  for (const poly of WORLD_LAKES) fillWorldPolygon(mask, W, H, poly, 0);
-  for (const poly of WORLD_DESERTS) fillWorldPolygon(dryMask, W, H, poly, 1);
+  for (const poly of geo.lands) fillGeoPolygon(mask, W, H, poly, 1, P);
+  for (const poly of geo.lakes) fillGeoPolygon(mask, W, H, poly, 0, P);
+  for (const poly of geo.deserts) fillGeoPolygon(dryMask, W, H, poly, 1, P);
 
   // 2. Côtes plus naturelles : chaque case regarde le masque un peu à côté d'elle (décalage par le bruit)
-  const terrain = new Uint8Array(N);
+  const terrain = new Uint8Array(N), A = geo.coastAmp, clampX = v => Math.min(W - 1, Math.max(0, Math.round(v)));
+  const clampY = v => Math.min(H - 1, Math.max(0, Math.round(v)));
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      const dx = (fbm(coastNoise, x / 6, y / 6, 3) - 0.5) * 3.2, dy = (fbm(coastNoise, x / 6 + 40, y / 6 + 40, 3) - 0.5) * 3.2;
-      const sx = Math.min(W - 1, Math.max(0, Math.round(x + dx))), sy = Math.min(H - 1, Math.max(0, Math.round(y + dy)));
+      const nx = (fbm(coastNoise, x / (6 * k), y / (6 * k), 3) - 0.5), ny = (fbm(coastNoise, x / (6 * k) + 40, y / (6 * k) + 40, 3) - 0.5);
+      const sx = clampX(x + nx * A), sy = clampY(y + ny * A);
       const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
       // (le bord des déserts est plus irrégulier : un décalage plus grand)
-      const qx = Math.min(W - 1, Math.max(0, Math.round(x + dx * 2.2))), qy = Math.min(H - 1, Math.max(0, Math.round(y + dy * 2.2)));
+      const qx = clampX(x + nx * A * 2.2), qy = clampY(y + ny * A * 2.2);
       terrain[y * W + x] = edge || !mask[sy * W + sx] ? TERRAIN.WATER : dryMask[qy * W + qx] ? TERRAIN.DESERT : TERRAIN.PLAINS;
     }
   }
 
-  // 3. Forêts : nombreuses sous les tropiques et dans la taïga (jamais dans les déserts)
+  // 3. Forêts (selon la latitude, voir forestLevel ; jamais dans les déserts) et quelques collines
   for (let i = 0; i < N; i++) {
     const x = i % W, y = (i / W) | 0;
     if (terrain[i] === TERRAIN.DESERT) {
-      if (fbm(forestNoise, x / 10, y / 10, 3) < 0.28) terrain[i] = TERRAIN.HILLS; // quelques massifs rocheux
+      if (fbm(forestNoise, x / (10 * k), y / (10 * k), 3) < 0.28) terrain[i] = TERRAIN.HILLS; // quelques massifs rocheux
       continue;
     }
     if (terrain[i] !== TERRAIN.PLAINS) continue;
-    const lat = WORLD_LAT_TOP - (y + 0.5) / H * (WORLD_LAT_TOP - WORLD_LAT_BOTTOM);
-    const a = Math.abs(lat);
-    const lvl = a < 12 ? 0.47 : a > 48 && a < 66 ? 0.48 : 0.57;
-    const f = fbm(forestNoise, x / 10, y / 10, 3);
-    if (f > lvl) terrain[i] = TERRAIN.FOREST;
+    const lat = P.latTop - (y + 0.5) / H * (P.latTop - P.latBottom), lon = P.lon0 + (x + 0.5) / W * P.lonSpan;
+    const f = fbm(forestNoise, x / (10 * k), y / (10 * k), 3);
+    if (f > geo.forestLevel(lat, lon > 180 ? lon - 360 : lon)) terrain[i] = TERRAIN.FOREST;
     else if (f < 0.3) terrain[i] = TERRAIN.HILLS; // quelques collines éparses
   }
 
   // 4. Les montagnes : collines au pied, montagnes, et des sommets infranchissables au cœur (pas partout :
   //    il reste des cols pour passer)
-  for (const [width, peaks, line] of WORLD_MOUNTAINS) {
-    nearPolyline(W, H, line, width, (i, d) => {
+  for (const [w, peaks, line] of geo.mountains) {
+    const width = w * geo.widthScale;
+    nearPolyline(W, H, geoPoints(P, line, W, H), width, (i, d) => {
       if (terrain[i] === TERRAIN.WATER) return;
       const x = i % W, y = (i / W) | 0;
-      const r = d / width + (fbm(reliefNoise, x / 3, y / 3, 3) - 0.5) * 1.1; // bords irréguliers
-      const spot = fbm(reliefNoise, x / 2.5 + 30, y / 2.5 + 70, 2); // des massifs, pas une bande toute lisse
-      if (peaks && r < 0.3 && fbm(reliefNoise, x / 7 + 90, y / 7, 2) > 0.42) terrain[i] = TERRAIN.PEAK;
+      const r = d / width + (fbm(reliefNoise, x / (3 * k), y / (3 * k), 3) - 0.5) * 1.1; // bords irréguliers
+      const spot = fbm(reliefNoise, x / (2.5 * k) + 30, y / (2.5 * k) + 70, 2); // des massifs, pas une bande toute lisse
+      if (peaks && r < 0.3 && fbm(reliefNoise, x / (7 * k) + 90, y / (7 * k), 2) > 0.42) terrain[i] = TERRAIN.PEAK;
       else if (r < 0.55 && spot > 0.32) terrain[i] = TERRAIN.MOUNTAIN;
       else if (r < 0.95 && terrain[i] !== TERRAIN.MOUNTAIN && terrain[i] !== TERRAIN.PEAK) terrain[i] = TERRAIN.HILLS;
     });
   }
 
-  // 5. Le Groenland : un immense glacier au centre (infranchissable), des terres habitables sur ses côtes
-  const dist = new Int32Array(N).fill(-1), queue = [];
-  for (let i = 0; i < N; i++) if (terrain[i] === TERRAIN.WATER) { dist[i] = 0; queue.push(i); }
-  for (let q = 0; q < queue.length; q++) {
-    const i = queue[q], x = i % W;
-    for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
-      if (n >= 0 && n < N && dist[n] < 0) { dist[n] = dist[i] + 1; queue.push(n); }
+  // 5. Les glaciers : infranchissables (le Groenland, loin de ses côtes ; le Vatnajökull…)
+  if (geo.glaciers) {
+    const ice = new Uint8Array(N);
+    for (const poly of geo.glaciers) fillGeoPolygon(ice, W, H, poly, 1, P);
+    for (let i = 0; i < N; i++) if (ice[i] && terrain[i] !== TERRAIN.WATER) terrain[i] = TERRAIN.PEAK;
+  }
+  if (geo.iceCaps) {
+    const dist = new Int32Array(N).fill(-1), queue = [];
+    for (let i = 0; i < N; i++) if (terrain[i] === TERRAIN.WATER) { dist[i] = 0; queue.push(i); }
+    for (let q = 0; q < queue.length; q++) {
+      const i = queue[q], x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
+        if (n >= 0 && n < N && dist[n] < 0) { dist[n] = dist[i] + 1; queue.push(n); }
+      }
+    }
+    for (const [w, e, latMin] of geo.iceCaps) {
+      const gx0 = Math.floor(geoX(P, w, W)), gx1 = Math.ceil(geoX(P, e, W)), gy1 = Math.ceil(geoY(P, latMin, H));
+      for (let y = 0; y <= gy1; y++) {
+        for (let x = gx0; x <= gx1; x++) if (dist[y * W + x] > 4 * k) terrain[y * W + x] = TERRAIN.PEAK;
+      }
     }
   }
-  const gx0 = Math.floor(worldX(-74, W)), gx1 = Math.ceil(worldX(-12, W)), gy1 = Math.ceil(worldY(59, H));
-  for (let y = 0; y <= gy1; y++) {
-    for (let x = gx0; x <= gx1; x++) if (dist[y * W + x] > 4) terrain[y * W + x] = TERRAIN.PEAK;
-  }
 
-  // 6. Les fleuves (les grands fleuves, infranchissables, seulement dans leur cours inférieur)
-  for (const [line, greatFrom] of WORLD_RIVERS) drawWorldRiver(terrain, W, H, line, greatFrom);
+  // 6. Les fleuves (les grands fleuves, infranchissables, seulement dans leur cours inférieur), avec des méandres
+  const riverNoise = makeValueNoise(rand);
+  for (const [line, greatFrom] of geo.rivers) {
+    const pts = meanderPoints(geoPoints(P, line, W, H), riverNoise, geo.meander || 0, 8 * k);
+    // (greatFrom compte les points d'origine : on retrouve le premier point « grand » parmi les nouveaux)
+    const from = greatFrom < 0 ? -1 : pts.findIndex(p => p[2] >= greatFrom);
+    drawGeoRiver(terrain, W, H, pts, from);
+  }
 
   // 6 bis. Oasis : le long des fleuves qui traversent un désert (le Nil…), une bande de terres fertiles
-  const fertile = [];
-  for (let i = 0; i < N; i++) {
-    if (terrain[i] !== TERRAIN.DESERT) continue;
-    const x = i % W;
-    for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
-      if (n >= 0 && n < N && (terrain[n] === TERRAIN.RIVER || terrain[n] === TERRAIN.GREAT_RIVER)) { fertile.push(i); break; }
+  const fert = new Uint8Array(N), isRiver = t => t === TERRAIN.RIVER || t === TERRAIN.GREAT_RIVER;
+  for (let pass = 0; pass < Math.max(1, Math.round(k)); pass++) {
+    const add = [];
+    for (let i = 0; i < N; i++) {
+      if (terrain[i] !== TERRAIN.DESERT) continue;
+      const x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
+        if (n >= 0 && n < N && (isRiver(terrain[n]) || fert[n])) { add.push(i); break; }
+      }
     }
+    for (const i of add) { terrain[i] = TERRAIN.PLAINS; fert[i] = 1; }
   }
-  for (const i of fertile) terrain[i] = TERRAIN.PLAINS;
 
   // 7. On retire les miettes de terre, et les creux enfermés par les sommets
   keepMainland(terrain, W, H, 12);
@@ -506,4 +567,17 @@ function generateWorldMap(seed) {
   const shade = new Int8Array(N);
   for (let i = 0; i < N; i++) shade[i] = Math.round((rand() - 0.5) * 12);
   return { W, H, N, terrain, shade };
+}
+
+// La carte « Monde » : 1080 x 408 cases (les données ci-dessus ont été dessinées pour 540 de large :
+// les montagnes et le bruit sont agrandis d'autant)
+function generateWorldMap(seed) {
+  const W = CONFIG.WORLD_MAP_WIDTH, H = CONFIG.WORLD_MAP_HEIGHT, k = W / 540;
+  return buildGeoMap(seed, W, H, {
+    proj: WORLD_PROJ, lands: WORLD_LANDS, lakes: WORLD_LAKES, deserts: WORLD_DESERTS,
+    mountains: WORLD_MOUNTAINS, rivers: WORLD_RIVERS, detail: k, coastAmp: 3.2 * k, widthScale: k, meander: k,
+    // beaucoup de forêts sous les tropiques et dans la taïga
+    forestLevel: lat => { const a = Math.abs(lat); return a < 12 ? 0.47 : a > 48 && a < 66 ? 0.48 : 0.57; },
+    iceCaps: [[-74, -12, 59]], // le Groenland
+  });
 }

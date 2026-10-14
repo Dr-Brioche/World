@@ -808,14 +808,6 @@ const UI = {
     const banner = Render.bannerAt(sx, sy);
     const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;
     if (assault && assault.target === h.id) return this.defend(banner);
-    // Clic sur le bateau d'une expédition ennemie : on envoie des soldats l'intercepter
-    const boat = Render.boatAt(sx, sy);
-    const exp = boat >= 0 ? G.expeditions.find(e => e.id === boat && !e.done) : null;
-    if (exp && exp.pid !== h.id) {
-      const err = G.launchInterception(h.id, boat, h.troops * this.ratio);
-      if (err) return this.log(err, 'warn');
-      return this.log('⚓ Tes bateaux partent intercepter l\'expédition ! S\'ils arrivent avant elle, la bataille aura lieu en mer.', 'good');
-    }
     if (this.plan && this.planClick(i)) return;
     // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
     const t = G.building[i];

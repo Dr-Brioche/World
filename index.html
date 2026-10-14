@@ -59,10 +59,15 @@
       <div id="bannerPick"></div>
       <label>Carte
         <select id="mapType">
-          <option value="normal" selected>Normale (un continent et quelques îlots)</option>
-          <option value="continental">Continentale (un seul grand continent)</option>
-          <option value="naval">Base navale (plusieurs grandes îles)</option>
-          <option value="world">Monde (la vraie carte du monde, très grande)</option>
+          <optgroup label="🎲 Cartes aléatoires">
+            <option value="normal" selected>Normale (un continent et quelques îlots)</option>
+            <option value="continental">Continentale (un seul grand continent)</option>
+            <option value="naval">Base navale (plusieurs grandes îles)</option>
+          </optgroup>
+          <optgroup label="🗺️ Cartes prédéfinies">
+            <option value="world">Monde (la vraie carte du monde, très grande)</option>
+            <option value="europe">Europe (l'Europe en détail, immense)</option>
+          </optgroup>
         </select>
       </label>
       <label>Pactes (alliances)
@@ -116,6 +121,7 @@
   <script src="js/config.js"></script>
   <script src="js/map.js"></script>
   <script src="js/worldmap.js"></script>
+  <script src="js/europemap.js"></script>
   <script src="js/game.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/render.js"></script>

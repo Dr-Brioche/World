@@ -7,9 +7,11 @@ const CONFIG = {
   MAP_WIDTH: 294,          // largeur de la carte (en cases)
   MAP_HEIGHT: 192,         // hauteur de la carte (en cases)
   DESERT_RATIO: 0.15,      // part des plaines et forêts en désert sur les cartes aléatoires (production -20 %)
-  WORLD_MAP_WIDTH: 540,    // taille de la carte « Monde » (bien plus grande : on dézoome beaucoup)
-  WORLD_MAP_HEIGHT: 204,
-  WORLD_EXTRA_BOTS: 3,     // royaumes en plus sur la carte « Monde » (elle est grande)
+  WORLD_MAP_WIDTH: 1080,   // taille de la carte « Monde » (bien plus grande : on dézoome beaucoup)
+  WORLD_MAP_HEIGHT: 408,
+  EUROPE_MAP_WIDTH: 1000,  // taille de la carte « Europe »
+  EUROPE_MAP_HEIGHT: 1000,
+  WORLD_EXTRA_BOTS: 3,     // royaumes en plus sur les cartes « Monde » et « Europe » (elles sont grandes)
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
@@ -110,6 +112,9 @@ const CONFIG = {
   GARRISON_POWER: 3,           // au combat, chaque soldat de garnison (château, port, avant-poste bâti) en vaut 3
   GARRISON_REGEN: 0.05,        // la garnison d'un château se reconstitue de 5 % par seconde
   NEUTRAL_TILE_COST: 0.08,     // soldats perdus pour prendre une case (libre ou ennemie)
+  REGIONS_REUSE: 5,            // (technique) tours de jeu pendant lesquels le découpage en morceaux peut servir tel quel
+  BIG_MAP_LAND: 27000,         // terres d'une carte « normale » : au-delà (cartes Monde, Europe), les terres libres
+  BIG_MAP_BOOST_MAX: 4,        // se prennent plus vite et moins cher (racine du rapport de taille, au plus x4)
   // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
   // puis l'assaut s'arrête (les survivants rentrent).
   // Un royaume sans château ni église peut être attaqué de front : toutes ses troupes défendent d'office,
@@ -127,7 +132,6 @@ const CONFIG = {
   CROSSING_BANK_RADIUS: 4,   // terres libres prises sur l'autre rive, autour de la case visée
   EXPEDITION_COOLDOWN: 5,    // une expédition maritime au plus toutes les 5 secondes
   REPATRIATE_SPEED: 5,       // vitesse minimum (cases/s) des bateaux qui rapatrient les soldats d'un avant-poste
-  INTERCEPT_SPEED: 6,        // vitesse (cases/s) des bateaux d'un port qui part intercepter un débarquement
   OUTPOST_BUILD_TIME: 20,    // secondes pour bâtir un avant-poste après le débarquement (sans bonus avant)
   OUTPOST_DEFENSE: 1,        // une fois bâti, bonus de défense autour de lui (comme un fort en bois)
   OUTPOST_BUILDING_MALUS: 0.2, // pendant sa construction, ses défenseurs sont occupés à bâtir : défense -0.2

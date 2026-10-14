@@ -161,12 +161,6 @@ const AI = {
       if (need <= 0 || p.troops < Game.maxTroops(p) * 0.3 || Math.random() > 0.3) continue;
       Game.helpAlly(p.id, a.id, Math.min(need, p.troops * 0.25));
     }
-    // Une expédition ennemie vise notre côte : si on a un port, on envoie des bateaux l'intercepter
-    for (const e of Game.expeditions) {
-      if (e.done || Game.owner[e.landing] !== p.id || e.interceptors.some(it => it.pid === p.id)) continue;
-      if (Game.planInterception(p.id, e).error) continue;
-      Game.launchInterception(p.id, e.id, Math.min(e.troops * 1.3, p.troops * 0.5));
-    }
     // Une armée se prépare contre nous : parfois, on tente de faire la paix (un pacte)
     const threats = Game.attacks.filter(a => !a.done && a.target === p.id && Game.isPreparing(a));
     if (threats.length && Math.random() < 0.3) Game.proposeAlliance(p.id, threats[0].attacker);
