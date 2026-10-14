@@ -345,6 +345,11 @@ button:hover { background: #e8d6a8; }
 .actionMenu.quickMenu { flex-direction: row; min-width: 0; padding: 4px; }
 .quickMenu button { width: 34px; height: 34px; padding: 0; font-size: 17px; text-align: center; font-weight: bold; }
 .quickMenu button.danger { color: #c0392b; }
+.quickMenu button.up { color: var(--wood); }
+.quickMenu button svg { display: block; margin: auto; width: 20px; height: 20px; }
+/* icônes dessinées dans les menus et les boutons (voir ICONS dans main.js) */
+.ico { width: 16px; height: 16px; vertical-align: -3px; color: var(--wood); }
+button:disabled .ico { opacity: 0.6; }
 .actionMenu button:disabled { opacity: 0.5; cursor: not-allowed; }
 .actionMenu small { color: var(--danger); font-size: 11px; margin: -2px 4px 2px; }
 
