@@ -94,7 +94,7 @@ const UI = {
     Render.setupMap();
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
-    $('hint').textContent = '👑 Clique sur une terre pour fonder ta capitale';
+    $('hint').textContent = '👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale';
   },
 
   selectBuild(t) {
@@ -678,8 +678,8 @@ const UI = {
     const G = Game, i = Render.tileAt(sx, sy);
     if (i < 0) return;
     if (G.phase === 'spawn') {
-      if (!G.isLand(i)) return this.log('Choisis une terre, pas la mer !', 'warn');
-      if (G.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return this.log('Cette île est trop petite pour y fonder ta capitale.', 'warn');
+      const err = G.spawnError(i);
+      if (err) return this.log(err, 'warn');
       G.startGame(i);
       this.log('👑 Ta capitale est fondée ! Clique sur les terres voisines pour t\'étendre.', 'good');
       return;

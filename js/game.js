@@ -51,6 +51,7 @@ const GameRules = {
       this.addPlayer(names[k], banners[k], false);
     }
     this.phase = 'spawn';
+    this.spawnBots();
   },
 
   addPlayer(name, banner, isHuman) {
@@ -581,8 +582,9 @@ const GameRules = {
     }
   },
 
-  startGame(humanTile) {
-    this.spawnPlayer(this.human, humanTile);
+  // Les royaumes rivaux s'installent dès l'ouverture de la carte : le joueur voit où ils sont
+  // avant de choisir où fonder sa capitale (comme au début d'une partie d'OpenFront)
+  spawnBots() {
     for (const p of this.players) {
       if (p.isHuman) continue;
       let placed = false;
@@ -593,6 +595,20 @@ const GameRules = {
       }
       if (!placed) p.alive = false;
     }
+  },
+
+  // Pourquoi le joueur ne peut pas fonder sa capitale ici (null s'il le peut)
+  spawnError(i) {
+    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return 'Choisis une terre, pas l\'eau !';
+    if (this.owner[i] >= 0) return `Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`;
+    if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return 'Cette île est trop petite pour y fonder ta capitale.';
+    if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE)) return 'Trop près d\'un royaume rival : éloigne-toi un peu.';
+    return null;
+  },
+
+  // Le joueur fonde sa capitale : la partie commence
+  startGame(humanTile) {
+    this.spawnPlayer(this.human, humanTile);
     this.phase = 'playing';
   },
 
