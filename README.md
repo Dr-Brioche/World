@@ -138,7 +138,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Camp d'entraînement | quelques-uns | un peu | **+10 %** | prix de la caserne |
      | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 40 |
-     | 3. Grande caserne | +75 % | +60 % | **+50 %** | 💰 100 |
+     | 3. Grande caserne | +75 % | +60 % | **+50 %** | 💰 150 |
 
      Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
      tes casernes s'additionnent.
@@ -153,9 +153,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Défense des murs | Muraille | Garnison | Prix |
      |---|---|---|---|---|
-     | 1. Fort en bois | +100 % | petite | quelques soldats | prix du château |
-     | 2. Château | +200 % | moyenne | +200 % | 💰 60 |
-     | 3. Citadelle | +400 % | grande | +133 % | 💰 150 |
+     | 1. Fort en bois | +100 % | petite | quelques soldats | 💰 100 (puis plus cher à chaque château) |
+     | 2. Château | +200 % | moyenne | +200 % | 💰 90 |
+     | 3. Citadelle | +400 % | grande | +133 % | 💰 225 |
 
      **Routes** : un château de niveau 2 trace des **chemins de terre** 🛤️ vers tes moulins et casernes
      qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, soldats des casernes).
@@ -177,7 +177,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|
      | 1. Église | 1 | aucun | 💰 50 (puis plus cher à chaque église) |
      | 2. Grande église | 2 | +1 | 💰 100 |
-     | 3. Cathédrale | 5 | +2 | 💰 200 |
+     | 3. Cathédrale | 5 | +2 | 💰 300 |
 
      **Chaque église améliorée** ajoute ses châteaux : elles s'additionnent, tu peux en construire autant
      que ton or le permet.
@@ -191,7 +191,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
      | 2. Grand port | +100 % | 1 | **oui** | 💰 120 |
-     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 250 |
+     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 375 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
@@ -285,6 +285,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.43** : 💰 un château coûte 100 (au lieu de 30), ses améliorations 90 et 225 · toutes les améliorations au niveau 3 coûtent 50 % de plus (grande caserne 150, cathédrale 300, port royal 375)
 - **v0.42.1** : 🤖 les royaumes rivaux traversent aussi les fleuves à gué pour prendre les terres libres d'en face
 - **v0.42** : 🛶 clic droit sur une terre libre de l'autre côté d'un fleuve → « Traverser le fleuve » : l'armée passe à gué (3 s par case de fleuve) et prend une tête de pont sur l'autre rive
 - **v0.41** : 🏰 siège : un château ne tombe plus tout de suite, l'armée doit l'assiéger 5 s (niveau 1), 10 s (niveau 2) ou 15 s (niveau 3), le temps pour le défenseur d'envoyer des soldats

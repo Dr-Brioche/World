@@ -135,7 +135,7 @@ const BARRACKS_LEVELS = [
   null,
   { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.1, img: 'img/caserne1.webp', size: 2.5 },
   { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.2, img: 'img/caserne2.webp', size: 2.8, upgradeCost: 40 },
-  { name: 'Grande caserne',       troops: 7, maxTroops: 80, power: 1.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 100 },
+  { name: 'Grande caserne',       troops: 7, maxTroops: 80, power: 1.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 150 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
@@ -145,8 +145,8 @@ const BARRACKS_LEVELS = [
 const CASTLE_LEVELS = [
   null,
   { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 5,  siege: 5,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, garrison: 15, siege: 10, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 60 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 35, siege: 15, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 150 },
+  { name: 'Château',      radius: 10, bonus: 2, garrison: 15, siege: 10, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 90 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 35, siege: 15, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 225 },
 ];
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
 // le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.
@@ -164,7 +164,7 @@ const CHURCH_LEVELS = [
   null,
   { name: 'Église',        slots: 1, castles: 0, radius: 7,  img: 'img/eglise1.webp', size: 2.6 },
   { name: 'Grande église', slots: 2, castles: 1, radius: 8,  img: 'img/eglise2.webp', size: 3,   upgradeCost: 100 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 200 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 300 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu
@@ -175,7 +175,7 @@ const PORT_LEVELS = [
   null,
   { name: 'Port',       gold: 3,  boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
   { name: 'Grand port', gold: 6,  boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.4, upgradeCost: 120 },
-  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 250, garrison: 5, bonus: 1 },
+  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 375, garrison: 5, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
@@ -197,7 +197,7 @@ const BUILDINGS = [
   null,
   { name: 'Moulin',  icon: '🌾', tiles: 2, baseCost: 10, desc: `produit de l'or toutes les ${CONFIG.PRODUCTION_INTERVAL} s (2 niveaux)` },
   { name: 'Caserne', icon: '⚔️', tiles: 2, baseCost: 20, desc: `produit des soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande (3 niveaux)` },
-  { name: 'Château', icon: '🏰', tiles: 4, baseCost: 30, desc: 'muraille qui protège ses terres (3 niveaux)' },
+  { name: 'Château', icon: '🏰', tiles: 4, baseCost: 100, desc: 'muraille qui protège ses terres (3 niveaux)' },
   { name: 'Église',  icon: '⛪', tiles: 2, baseCost: 50, desc: 'hors des murailles, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)' },
   { name: 'Port',    icon: '⚓', tiles: 2, baseCost: 60, desc: 'au bord de la mer ou d\'un fleuve, sans défense : produit de l\'or, et dès le niveau 2 les expéditions maritimes (3 niveaux)' },
   // L'avant-poste ne se construit pas : il apparaît quand on débarque (baseCost = prix de l'expédition)
