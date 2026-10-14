@@ -184,7 +184,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Défense des murs | Muraille | Garnison | Prix |
      |---|---|---|---|---|
      | 1. Fort en bois | +100 % | petite | quelques soldats | 💰 100 (puis plus cher à chaque château) |
-     | 2. Château | +200 % | moyenne | x5 | 💰 90 |
+     | 2. Château | +200 % | moyenne | x5 | 💰 300 |
      | 3. Citadelle | +400 % | grande | x3 | 💰 1000 |
 
      Chaque soldat de garnison **vaut 3 soldats** au combat. **Une citadelle** permet aussi de mener
@@ -333,6 +333,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.61.1** : 💰 l'amélioration du château au niveau 2 coûte 300 (au lieu de 90)
 - **v0.61** : 🛡️ les défenseurs n'arrivent plus instantanément : ils partent du château le plus proche et marchent à la rencontre de l'armée ennemie (bannière visible, « en route » dans le panneau)
 - **v0.60.5** : ⛺ un avant-poste ne tombe plus tout de suite : il faut l'assiéger 10 s, le temps pour son propriétaire de le défendre
 - **v0.60.4** : ⛺ cliquer sur un de ses avant-postes n'envoie plus directement de renforts : ça ouvre sa fenêtre d'info et un menu rapide ⛵ Renforts / 🚢 Rapatrier
