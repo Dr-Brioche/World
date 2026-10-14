@@ -22,6 +22,7 @@ const GameRules = {
     // Un bâtiment occupe un carré de cases (2x2, ou 4x4 pour le château).
     // anchor[i] = case en haut à gauche du bâtiment (-1 si aucun)
     this.anchor = new Int32Array(this.N).fill(-1);
+    this.builtBy = new Int8Array(this.N).fill(-1); // royaume qui a construit le bâtiment (case d'ancrage)
     this.players = [];
     this.attacks = [];
     this.expeditions = []; // bateaux en route vers une côte
@@ -293,6 +294,7 @@ const GameRules = {
     for (const j of this.footprint(a, type)) { this.building[j] = 0; this.anchor[j] = -1; Render.markDirty(j); }
     this.level[a] = 0;
     this.garrison[a] = 0;
+    this.builtBy[a] = -1;
     this.outposts.delete(a);
     if (o >= 0) this.players[o].bCount[type]--;
     this.buildingTiles = this.buildingTiles.filter(b => b !== a);
@@ -333,6 +335,7 @@ const GameRules = {
     }
     const o = this.owner[i];
     if (o >= 0) this.players[o].bCount[type]++;
+    this.builtBy[i] = o; // (un bâtiment pris à l'ennemi garde son bâtisseur d'origine)
     this.buildingTiles.push(i);
     this.level[i] = 1;
     if (type === B_CASTLE) {
@@ -750,7 +753,15 @@ const GameRules = {
   },
 
   buildCost(p, type) {
-    return Math.round(BUILDINGS[type].baseCost * Math.pow(CONFIG.BUILDING_COST_GROWTH, p.bCount[type]));
+    return Math.round(BUILDINGS[type].baseCost * Math.pow(CONFIG.BUILDING_COST_GROWTH, this.builtCount(p, type)));
+  },
+
+  // Bâtiments de ce type que le royaume a construits lui-même et possède encore : ce sont eux (et eux seuls)
+  // qui font monter le prix des suivants. Ceux pris à l'ennemi ne comptent pas.
+  builtCount(p, type) {
+    let n = 0;
+    for (const a of this.buildingTiles) if (this.building[a] === type && this.owner[a] === p.id && this.builtBy[a] === p.id) n++;
+    return n;
   },
 
   // Renvoie un message d'erreur, ou null si la construction a réussi.
