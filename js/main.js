@@ -3,6 +3,23 @@
 
 const $ = id => document.getElementById(id);
 
+// Petites icônes dessinées (SVG, de la couleur du texte) pour les menus : un style médiéval, pas des emojis
+const ICONS = {
+  // flèche vers le haut : améliorer
+  up: '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17 11 H12.5 V17 H7.5 V11 H3 Z" fill="currentColor"/></svg>',
+  // nef médiévale (coque, mât, voile carrée, fanion) : débarquer, envoyer des renforts par la mer
+  ship: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M12 2.5V15" stroke="currentColor" stroke-width="1.6"/>' +
+    '<path d="M12 2.5l4.5 1.4L12 5.3z" fill="currentColor"/>' +
+    '<path d="M6 6.5q6 1.8 12 0v6.3q-6 1.8-12 0z" fill="currentColor" opacity=".35" stroke="currentColor" stroke-width="1"/>' +
+    '<path d="M12 7.2v6.6M7.5 10.2h9" stroke="currentColor" stroke-width="1"/>' +
+    '<path d="M2.5 15h19l-3 5h-13z" fill="currentColor"/></svg>',
+  // ancre : rapatrier (rentrer au port)
+  anchor: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">' +
+    '<circle cx="12" cy="4.5" r="2.2"/><path d="M12 6.7V21M8 10h8"/><path d="M4.5 14.5q1 6.5 7.5 6.5t7.5-6.5"/>' +
+    '<path d="M3 16.5l1.5-2.5 2.5 1.5M21 16.5l-1.5-2.5-2.5 1.5"/></svg>',
+};
+
 const UI = {
   selectedBuild: 0,
   ratio: 0.3,
@@ -265,7 +282,7 @@ const UI = {
   },
 
   // Menu rapide d'un de ses bâtiments (clic dessus) : deux icônes juste à côté de lui,
-  // ⬆️ pour l'améliorer et ✖ (rouge) pour le détruire ; l'explication s'affiche en haut à gauche.
+  // une flèche vers le haut pour l'améliorer et ✖ (rouge) pour le détruire ; l'explication s'affiche en haut à gauche.
   // Les travaux prennent du temps (UPGRADE_TIME / DEMOLISH_TIME) : une petite jauge s'affiche sur le bâtiment.
   openBuildingMenu(a, sx, sy) {
     const G = Game, h = G.human, cost = G.upgradeCost(a), work = G.works.get(a);
@@ -275,7 +292,8 @@ const UI = {
     const el = document.createElement('div');
     el.className = 'panel actionMenu quickMenu';
     el.buildingAnchor = a; // (pour le garder à jour : voir refreshBuildingMenu)
-    el.innerHTML = `<button data-up${canUp ? '' : ' disabled'} title="Améliorer">⬆️</button>` +
+    // (la flèche est dessinée en SVG, de la couleur du texte : pas d'emoji)
+    el.innerHTML = `<button data-up class="up"${canUp ? '' : ' disabled'} title="Améliorer">${ICONS.up}</button>` +
       `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>`;
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
@@ -297,7 +315,8 @@ const UI = {
   },
 
   // Avant-poste : fenêtre d'info en haut à gauche + menu rapide à côté de lui, avec deux icônes :
-  // ⛵ envoyer des renforts par la mer (le % du curseur « Envoyer ») et 🚢 rapatrier les soldats qui y attendent
+  // une nef pour envoyer des renforts par la mer (le % du curseur « Envoyer ») et une ancre pour rapatrier
+  // les soldats qui y attendent
   openOutpostMenu(a, sx, sy) {
     const G = Game, h = G.human, o = G.outposts.get(a);
     this.closeBuildingMenus();
@@ -318,8 +337,8 @@ const UI = {
     box.className = 'msg request upgrade';
     box.innerHTML = `⛺ <b>Avant-poste</b> ${G.outpostReady(a) ? '' : '(en construction)'} · 🛡️ garnison ${fmt(G.garrison[a])}` +
       ` · ⚔ ${fmt(stationed)} soldats qui attendent` +
-      `<div class="choices"><button data-re>⛵ Renforts (${fmt(send)} soldats)</button>` +
-      `<button data-rp${stationed < 1 ? ' disabled' : ''}>🚢 Rapatrier</button><button data-no>Fermer</button></div>`;
+      `<div class="choices"><button data-re>${ICONS.ship} Renforts (${fmt(send)} soldats)</button>` +
+      `<button data-rp${stationed < 1 ? ' disabled' : ''}>${ICONS.anchor} Rapatrier</button><button data-no>Fermer</button></div>`;
     const closeBox = () => { box.remove(); if (this.upgradeBox === box) this.upgradeBox = null; };
     box.querySelector('[data-re]').addEventListener('click', () => { this.closeBuildingMenus(); reinforce(); });
     box.querySelector('[data-rp]').addEventListener('click', () => { this.closeBuildingMenus(); repatriate(); });
@@ -329,8 +348,8 @@ const UI = {
     // Menu rapide (à côté de l'avant-poste)
     const el = document.createElement('div');
     el.className = 'panel actionMenu quickMenu';
-    el.innerHTML = `<button data-re title="Renforts par la mer">⛵</button>` +
-      `<button data-rp title="Rapatrier"${stationed < 1 ? ' disabled' : ''}>🚢</button>`;
+    el.innerHTML = `<button data-re class="up" title="Renforts par la mer">${ICONS.ship}</button>` +
+      `<button data-rp class="up" title="Rapatrier"${stationed < 1 ? ' disabled' : ''}>${ICONS.anchor}</button>`;
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
     el.addEventListener('pointerdown', e => e.stopPropagation());
@@ -781,8 +800,8 @@ const UI = {
     // Son avant-poste : rapatrier les soldats qui y attendent vers le port le plus proche
     if (own && G.building[i] === B_OUTPOST) {
       const op = G.anchor[i], o = G.outposts.get(op), n = o ? Math.floor(o.stationed) : 0;
-      if (n < 1) items.push({ label: '🚢 Rapatrier', disabled: 'Aucun soldat n\'attend ici (la garnison, elle, reste sur place).' });
-      else items.push({ label: `🚢 Rapatrier ${fmt(n)} soldats (vers ton port le plus proche)`, run: () => {
+      if (n < 1) items.push({ label: `${ICONS.anchor} Rapatrier`, disabled: 'Aucun soldat n\'attend ici (la garnison, elle, reste sur place).' });
+      else items.push({ label: `${ICONS.anchor} Rapatrier ${fmt(n)} soldats (vers ton port le plus proche)`, run: () => {
         const err = G.repatriate(h.id, op);
         if (err) this.log(err, 'warn');
         else this.log(`🚢 ${fmt(n)} soldats rembarquent vers ton port.`, 'good');
@@ -818,8 +837,8 @@ const UI = {
         plan.error = `Il faut au moins ${plan.minTroops} soldats (pour remplir la garnison de l'avant-poste) : augmente le curseur « Envoyer ».`;
       }
       items.push(plan.error
-        ? { label: '⛵ Attaque navale', disabled: plan.error }
-        : { label: `⛵ Attaque navale : débarquer ${fmt(h.troops * this.ratio)} soldats (💰 ${plan.cost}, ` +
+        ? { label: `${ICONS.ship} Attaque navale`, disabled: plan.error }
+        : { label: `${ICONS.ship} Attaque navale : débarquer ${fmt(h.troops * this.ratio)} soldats (💰 ${plan.cost}, ` +
             `${Math.max(1, Math.round(plan.time))} s de mer, environ ${Math.round(G.seaLoss(plan.time) * 100)} % de pertes)`, run: () => {
           const err = G.launchExpedition(h.id, coast, h.troops * this.ratio);
           if (err) this.log(err, 'warn');

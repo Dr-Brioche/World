@@ -172,7 +172,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
-   **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : **⬆️** pour l'améliorer
+   **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : une **flèche ▲** pour l'améliorer
    (travaux de **5 s**, ou **10 s** pour passer au niveau 3) et **✖** rouge pour le détruire (travaux de **10 s**, après une confirmation). La fenêtre en haut à gauche explique
    ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
@@ -305,8 +305,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** (au-delà des
      mers, ton royaume ne peut pas lui envoyer de défenseurs ; une fois relié, ses soldats stationnés rejoignent
      ton armée). **Clique sur ton avant-poste** : sa fenêtre d'info s'ouvre en haut à gauche, et un **menu rapide**
-     à côté de lui propose **⛵ Renforts** (le % choisi part par la mer, depuis un port de niveau 2 ou plus) et
-     **🚢 Rapatrier** (les soldats qui y attendent rembarquent vers ton port le plus proche et rejoignent ton armée ;
+     à côté de lui propose une **nef** pour les **Renforts** (le % choisi part par la mer, depuis un port de niveau 2
+     ou plus) et une **ancre** pour **Rapatrier** (les soldats qui y attendent rembarquent vers ton port le plus proche et rejoignent ton armée ;
      la garnison, elle, reste).
      Si l'avant-poste tombe pendant que des renforts sont en mer, leur bateau **fait demi-tour** jusqu'au port.
      Les renforts qui arrivent sur un avant-poste **déjà bâti** complètent sa garnison, et les autres
@@ -393,6 +393,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.71.1** : 🎨 menus plus médiévaux, sans emojis : une simple flèche dessinée pour améliorer un bâtiment, une nef pour débarquer ou envoyer des renforts par la mer, une ancre pour rapatrier
 - **v0.71** : 🔍 en survolant un autre royaume, une barre au-dessus de la souris le résume : ses soldats, le nombre de bâtiments de chaque type et sa part des terres
 - **v0.70.2** : 🏗️ un territoire désorganisé (sans château pour le diriger) ne peut plus rien construire d'autre qu'un château
 - **v0.70.1** : ↩ des défenseurs encore en route quand l'assaut se termine (ville prise…) font demi-tour et rentrent à pied jusqu'à la ville la plus proche : on ne les récupère qu'à leur arrivée
