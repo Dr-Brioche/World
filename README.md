@@ -49,18 +49,14 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
    de la frontière. **Tant qu'un royaume a un château, une église, un port ou un avant-poste, tu ne peux viser que ceux-ci.**
    Quand il n'en a **plus aucun**, clique n'importe où sur ses terres : l'assaut se fait
-   **de front, sur tout son territoire** (comme sur une terre libre, sans points de passage).
+   **de front, sur tout son territoire** (comme sur une terre libre).
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
    sans pouvoir en place : chaque soldat ne compte que pour **0,8**.
 
-   **🗺️ Choisir l'itinéraire** : le premier clic sur un château (ou une église) ennemi **choisit la cible**.
-   Ensuite, clique sur ses terres pour placer jusqu'à **3 points de passage** (numérotés 1, 2, 3) :
-   l'armée passera par chacun d'eux, dans l'ordre, en prenant toujours le chemin le plus facile (les plaines)
-   entre deux points. En survolant la carte, tu vois en blanc le chemin si tu ajoutais un point à cet endroit.
-   Reclique sur un point pour l'enlever. Un point de passage doit être à **au moins 4 cases du bord** de son royaume
-   (de ses frontières et de ses côtes) : impossible de faire longer le bord à ton armée pour le découper à ta guise.
-   Puis **clique 2 fois sur la cible pour lancer l'assaut**.
-   Pour aller tout droit : **3 clics d'affilée** sur le château. `Échap` ou clic droit pour annuler.
+   **🎯 Viser puis valider** : le premier clic sur un château (ou une église, un port, un avant-poste) ennemi
+   **choisit la cible** : elle est entourée d'un cercle rouge et le chemin de ton armée s'affiche en doré.
+   **Clique une 2e fois sur la cible pour lancer l'assaut**. Un clic ailleurs, `Échap` ou clic droit l'annule.
+   (Les terres libres, elles, s'attaquent d'un seul clic.)
    Le curseur « Envoyer » choisit le % de tes soldats qui partent en campagne.
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats :
    le bouton **✖ Annuler** ordonne la **retraite** 🏳️ : tes soldats mettent **3 s** à décrocher (ils peuvent encore
@@ -70,12 +66,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    impossible de lancer un assaut depuis les terres d'un allié.
 
    **⚔️ Le déroulement d'un assaut**
-   - **Préparation (10 s)** : tout le monde voit venir l'assaut. Ta **bannière** ⚔️ est plantée sur la frontière,
-     là d'où il partira, avec le compte à rebours et tes soldats ; en face, les terres menacées **scintillent
-     à ta couleur**, et le bâtiment visé est entouré d'un **halo** qui pulse.
-     Une fois l'assaut lancé, une **flèche rouge en pointillés** le montre jusqu'à sa cible. Pendant ce temps, reclique sur la cible pour **ajouter des soldats tout de suite** :
-     c'est ce qui fixe l'ampleur de l'assaut.
-   - **L'assaut commence** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
+   - **La marche (sur tes terres)** : ton armée part de **ta cité (château) la plus proche** de la cible
+     (ou de ton avant-poste) et **marche jusqu'à ta frontière** (5 cases par seconde, 2 s au minimum).
+     Tout le monde la voit venir : ta **bannière** ⚔️ avance sur la carte avec le temps restant et tes soldats ;
+     en face, les terres menacées **scintillent à ta couleur**, et le bâtiment visé est entouré d'un **halo** qui pulse.
+     Pendant la marche, reclique sur la cible pour **ajouter des soldats tout de suite** : c'est ce qui fixe l'ampleur de l'assaut.
+     Une fois chez l'ennemi, une **flèche rouge en pointillés** le montre jusqu'à sa cible.
+   - **L'assaut entre chez l'ennemi** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
      mais ils mettent **5 secondes** à arriver.
    - **Prendre des terres** coûte peu (comme une terre libre, selon le terrain). Ce qui coûte cher,
      ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi : **6 fois moins vite**
@@ -126,7 +123,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      il est juste plus difficile à défendre.
    - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend.
      Aucune armée ne peut partir de lui.
-   - Pour le sauver, **clique sur ton château (ou port) isolé** : tu lances un **assaut classique** (préparation de 10 s,
+   - Pour le sauver, **clique sur ton château (ou port) isolé** : tu lances un **assaut classique** (marche depuis ta cité la plus proche,
      renforts…) depuis ton royaume, qui traverse les terres ennemies (en évitant leurs murailles) pour le rejoindre.
      **S'il y arrive**, sa route s'élargit un peu : tu récupères des terres entre le château et ton royaume,
      ils sont **réunis** et tu peux le défendre comme avant. Si le château était attaqué, les soldats
@@ -348,6 +345,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.64** : 🎯 un clic sur la cible pour la choisir, un 2e pour lancer l'assaut · fini les points de passage · ⚔️ plus de préparation de 10 s : l'armée part de ta cité la plus proche et marche sur tes terres jusqu'à la frontière (tu peux lui ajouter des soldats tout de suite pendant la marche, ensuite ce sont des renforts avec délai)
 - **v0.63.1** : ⚔️ la grande caserne (niveau 3) agrandit beaucoup plus l'armée maximum (+200 au lieu de +80) et forme un peu plus de soldats (9 au lieu de 7) · 🤖 les royaumes rivaux s'acharnent moins sur toi (préférence pour le joueur divisée par 2 en Normal et Difficile)
 - **v0.63** : 🌍 nouvelle carte **Monde** (dans le menu) : la vraie carte du monde, très grande, avec ses montagnes et ses grands fleuves au bon endroit
 - **v0.62.2** : 📏 les châteaux, églises et ports se bloquent tous entre eux (cercles rouges, dans les deux sens) : 13 cases entre deux châteaux, 15 entre un château et une église ou un port, 11 entre deux églises ou ports

@@ -41,7 +41,7 @@ const AI = {
     // Nos avant-postes bâtis : leurs soldats stationnés prennent des terres libres autour
     for (const [op, o] of Game.outposts) {
       if (Game.owner[op] !== p.id || !Game.outpostReady(op) || o.stationed < 10 || Math.random() > 0.3) continue;
-      Game.launchAttack(p.id, -1, o.stationed * 0.7, undefined, undefined, op);
+      Game.launchAttack(p.id, -1, o.stationed * 0.7, undefined, op);
     }
 
     // Un de nos châteaux (ou ports de niveau 3) est isolé : de temps en temps, on tente de le relier au royaume
