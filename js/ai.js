@@ -243,6 +243,13 @@ const AI = {
     for (let i = 0; i < Game.N; i++) {
       if (Game.owner[i] === p.id && Game.canPlace(p.id, i, type)) tiles.push(i);
     }
-    if (tiles.length) Game.tryBuild(p, tiles[(Math.random() * tiles.length) | 0], type);
+    if (!tiles.length) return;
+    // parmi quelques emplacements tirés au hasard, le meilleur terrain pour produire (pas le désert, si possible)
+    let best = -1, bestF = -1;
+    for (let k = 0; k < 6; k++) {
+      const i = tiles[(Math.random() * tiles.length) | 0], f = Game.terrainFactor(i, type);
+      if (f > bestF) { bestF = f; best = i; }
+    }
+    Game.tryBuild(p, best, type);
   },
 };

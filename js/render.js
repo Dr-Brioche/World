@@ -767,24 +767,29 @@ const Render = {
     }
   },
 
-  // Aperçu du bâtiment qu'on s'apprête à poser, sous la souris : son image (niveau 1), à moitié transparente
-  // (ou son icône si l'image n'est pas encore chargée)
+  // Aperçu du bâtiment qu'on s'apprête à poser, sous la souris, à moitié transparent. Comme les vrais bâtiments :
+  // de loin, sa version simplifiée (son icône) ; de près, son image (niveau 1).
   drawBuildingGhost(type, px, py, ok) {
-    const ctx = this.ctx, s = this.cam.scale;
+    const ctx = this.ctx, s = this.cam.scale, half = Game.sizeOf(type) / 2;
     const levels = BUILDING_LEVELS[type];
     const img = levels ? this.buildingImages[type][1] : this.simpleImages[type];
     const size = levels ? levels[1].size : BUILDINGS[type].size;
-    ctx.globalAlpha = ok ? 0.8 : 0.55;
-    if (img && img.complete && img.naturalWidth && size) {
-      const half = Game.sizeOf(type) / 2, w = Math.max(size * s, 28), h = w * img.naturalHeight / img.naturalWidth;
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(img, px - w / 2, py + Math.max(s * (half + 0.1), 14) - h, w, h);
-      ctx.imageSmoothingEnabled = false;
-    } else {
-      ctx.font = `${Math.max(18, Game.sizeOf(type) * s * 0.8)}px serif`;
+    const ready = img && img.complete && img.naturalWidth && size;
+    const imgAlpha = ready ? Math.max(0, Math.min(1, (s - CASTLE_IMG_ZOOM) / 3)) : 0; // (même fondu que sur la carte)
+    const alpha = ok ? 0.8 : 0.55;
+    if (imgAlpha < 1) {
+      ctx.globalAlpha = alpha * (1 - imgAlpha);
+      ctx.font = `${Math.max(16, Math.min(20 * half, s * half * 2))}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(BUILDINGS[type].icon, px, py);
+    }
+    if (imgAlpha > 0) {
+      const w = size * s, h = w * img.naturalHeight / img.naturalWidth;
+      ctx.globalAlpha = alpha * imgAlpha;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(img, px - w / 2, py + s * (half + 0.1) - h, w, h);
+      ctx.imageSmoothingEnabled = false;
     }
     ctx.globalAlpha = 1;
   },

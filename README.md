@@ -16,7 +16,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 📜 Le jeu en bref
 
-- 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
+- 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
   avec **4 types de cartes** au choix : Normale, Continentale, Base navale ou **Monde** (la vraie carte du monde)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
@@ -140,6 +140,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    ne comptent pas dans cette limite, et une **église** améliorée en débloque d'autres.
    **Le terrain compte** : un moulin produit plus en plaine (+30 %) qu'en forêt (normal), colline (-10 %) ou montagne (-30 %) ;
    une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
+   Dans le **désert** 🏜️, tout bâtiment (moulin, caserne, port) produit **20 % de moins**.
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
    **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher**.
    Les bâtiments que tu **prends à l'ennemi** ne comptent pas (et un bâtiment perdu ne compte plus).
@@ -341,10 +342,16 @@ Les royaumes rivaux savent aussi traverser les fleuves quand une rive libre les 
 🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
 il faut les contourner.
 
+🏜️ **Les déserts** (couleur sable) se prennent et se défendent **comme des plaines** (aucun bonus de défense),
+mais **tout bâtiment posé dessus produit 20 % de moins** (moulins, casernes, ports). Sur les cartes aléatoires,
+ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte **Monde**, ils sont à leur vraie place
+(Sahara, Arabie, Gobi, Kalahari, désert australien…), avec une bande fertile le long des fleuves qui les traversent (le Nil).
+
 **Contrôles** : en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), la souris devient une **main** et il s'illumine (doré chez toi, rouge chez l'ennemi) · molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.65** : 🏜️ nouveau terrain : le **désert** (défense comme une plaine, production des bâtiments −20 %), sur toutes les cartes, et aux vrais endroits sur la carte Monde · 📜 règles du menu réécrites avec toutes les mécaniques actuelles · 🏗️ de loin, le bâtiment qu'on pose apparaît sous la souris en version simplifiée (son icône), comme les bâtiments sur la carte
 - **v0.64** : 🎯 un clic sur la cible pour la choisir, un 2e pour lancer l'assaut · fini les points de passage · ⚔️ plus de préparation de 10 s : l'armée part de ta cité la plus proche et marche sur tes terres jusqu'à la frontière (tu peux lui ajouter des soldats tout de suite pendant la marche, ensuite ce sont des renforts avec délai)
 - **v0.63.1** : ⚔️ la grande caserne (niveau 3) agrandit beaucoup plus l'armée maximum (+200 au lieu de +80) et forme un peu plus de soldats (9 au lieu de 7) · 🤖 les royaumes rivaux s'acharnent moins sur toi (préférence pour le joueur divisée par 2 en Normal et Difficile)
 - **v0.63** : 🌍 nouvelle carte **Monde** (dans le menu) : la vraie carte du monde, très grande, avec ses montagnes et ses grands fleuves au bon endroit

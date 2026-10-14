@@ -310,9 +310,39 @@ const WORLD_RIVERS = [
   [[[149.5, -29], [146, -29.5], [143, -31.5], [142, -34]], -1],                                         // Darling
 ];
 
-// Déserts : on n'y trouve pas de forêt (rectangles [ouest, sud, est, nord] en degrés)
-const WORLD_DESERTS = [[-17, 15, 35, 33], [34, 12, 60, 33], [55, 25, 70, 45], [90, 37, 115, 46], [115, 37, 120, 43],
-  [118, -32, 140, -20], [-118, 27, -105, 38], [-72, -28, -68, -16], [12, -28, 22, -18], [70, 23, 74, 30]];
+// --- Déserts (contours, comme les terres) : production des bâtiments -20 %, pas de forêt ---
+const WORLD_DESERTS = [
+  // Sahara
+  [[-16.5, 21], [-15.5, 26.5], [-9, 29.5], [-3, 31.5], [5, 32], [10, 32.3], [15, 30.5], [20, 30.3], [25, 30.8], [30, 30.5],
+   [33, 28], [35, 23.5], [37, 19.5], [36, 16.5], [30, 15.5], [22, 16], [14, 16.5], [5, 16.5], [-3, 16.5], [-10, 17], [-16, 18]],
+  // Arabie et désert de Syrie
+  [[35.5, 28.5], [37.5, 32.5], [41, 34.5], [44.5, 32.5], [47.5, 29.8], [49.5, 26.5], [51.5, 24], [55, 22.5], [57.5, 20],
+   [53, 17], [48, 16.5], [44, 17], [41.5, 19.5], [39.5, 22.5], [37, 26]],
+  // plateau d'Iran (Dasht-e Kavir, Lout)
+  [[51.5, 35], [55, 35.8], [59, 34.5], [61, 31], [59.5, 27.5], [56, 28.5], [53, 31]],
+  // Karakoum et Kyzylkoum
+  [[53, 40.5], [55.5, 43.5], [59, 45], [63, 45], [66.5, 43], [66, 40], [62, 37.5], [57, 38.2]],
+  // Taklamakan
+  [[76.5, 38], [78.5, 40.8], [83, 41.6], [88.5, 40.5], [89, 38], [84, 37], [79, 36.8]],
+  // Gobi
+  [[95, 41.5], [99, 44], [104, 45], [110, 44.8], [114, 43], [112, 41.5], [107, 40], [102, 39.2], [97, 39.8]],
+  // Thar
+  [[69.5, 24.5], [69.8, 28], [72.5, 29.8], [74.5, 28], [74, 25.5], [71.5, 24]],
+  // désert de Somalie
+  [[43, 9.5], [47, 11], [50.5, 11.5], [49, 7], [45, 4], [42, 3.5], [41, 6]],
+  // Kalahari et Namib
+  [[12.3, -17], [13.5, -21], [15, -26.5], [18, -28.5], [21, -27.5], [24.5, -25], [25, -20.5], [21.5, -18], [16, -17]],
+  // déserts d'Australie
+  [[114.5, -24.5], [118, -21], [123.5, -19.5], [130, -18.8], [135.5, -20], [139.5, -23], [141, -27.5], [139, -31],
+   [134, -30.5], [127, -29.5], [121, -28.5], [116.5, -27]],
+  // Atacama
+  [[-70.6, -17], [-70.8, -26.5], [-69.5, -28], [-68.6, -24], [-69, -18]],
+  // Patagonie
+  [[-70, -39.5], [-64.5, -41], [-66, -46.5], [-68.5, -50.5], [-71, -47]],
+  // déserts d'Amérique du Nord (Mojave, Sonora, Chihuahua, Grand Bassin)
+  [[-120, 41.5], [-116, 42.5], [-112.5, 41], [-110.5, 37], [-106.5, 33.5], [-103.5, 30], [-104.5, 27], [-107.5, 27.5],
+   [-110.5, 29.5], [-113, 31.2], [-115.5, 32.5], [-117.5, 35.5], [-119.5, 38.5]],
+];
 
 // Projection : longitude / latitude → coordonnées sur la carte (en cases, nombres à virgule)
 function worldX(lon, W) { return ((lon - WORLD_LON0) % 360 + 360) % 360 / 360 * W; }
@@ -392,10 +422,11 @@ function generateWorldMap(seed) {
   const rand = mulberry32(seed);
   const coastNoise = makeValueNoise(rand), forestNoise = makeValueNoise(rand), reliefNoise = makeValueNoise(rand);
 
-  // 1. Les terres (et les lacs), d'après les contours
-  const mask = new Uint8Array(N);
+  // 1. Les terres (et les lacs), d'après les contours ; les déserts sur un masque à part
+  const mask = new Uint8Array(N), dryMask = new Uint8Array(N);
   for (const poly of WORLD_LANDS) fillWorldPolygon(mask, W, H, poly, 1);
   for (const poly of WORLD_LAKES) fillWorldPolygon(mask, W, H, poly, 0);
+  for (const poly of WORLD_DESERTS) fillWorldPolygon(dryMask, W, H, poly, 1);
 
   // 2. Côtes plus naturelles : chaque case regarde le masque un peu à côté d'elle (décalage par le bruit)
   const terrain = new Uint8Array(N);
@@ -404,17 +435,21 @@ function generateWorldMap(seed) {
       const dx = (fbm(coastNoise, x / 6, y / 6, 3) - 0.5) * 3.2, dy = (fbm(coastNoise, x / 6 + 40, y / 6 + 40, 3) - 0.5) * 3.2;
       const sx = Math.min(W - 1, Math.max(0, Math.round(x + dx))), sy = Math.min(H - 1, Math.max(0, Math.round(y + dy)));
       const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
-      terrain[y * W + x] = !edge && mask[sy * W + sx] ? TERRAIN.PLAINS : TERRAIN.WATER;
+      // (le bord des déserts est plus irrégulier : un décalage plus grand)
+      const qx = Math.min(W - 1, Math.max(0, Math.round(x + dx * 2.2))), qy = Math.min(H - 1, Math.max(0, Math.round(y + dy * 2.2)));
+      terrain[y * W + x] = edge || !mask[sy * W + sx] ? TERRAIN.WATER : dryMask[qy * W + qx] ? TERRAIN.DESERT : TERRAIN.PLAINS;
     }
   }
 
-  // 3. Forêts : nombreuses sous les tropiques et dans la taïga, absentes des déserts
+  // 3. Forêts : nombreuses sous les tropiques et dans la taïga (jamais dans les déserts)
   for (let i = 0; i < N; i++) {
-    if (terrain[i] !== TERRAIN.PLAINS) continue;
     const x = i % W, y = (i / W) | 0;
+    if (terrain[i] === TERRAIN.DESERT) {
+      if (fbm(forestNoise, x / 10, y / 10, 3) < 0.28) terrain[i] = TERRAIN.HILLS; // quelques massifs rocheux
+      continue;
+    }
+    if (terrain[i] !== TERRAIN.PLAINS) continue;
     const lat = WORLD_LAT_TOP - (y + 0.5) / H * (WORLD_LAT_TOP - WORLD_LAT_BOTTOM);
-    const lon = WORLD_LON0 + (x + 0.5) / W * 360, lonW = lon > 180 ? lon - 360 : lon;
-    if (WORLD_DESERTS.some(([w, s, e, n]) => lonW >= w && lonW <= e && lat >= s && lat <= n)) continue;
     const a = Math.abs(lat);
     const lvl = a < 12 ? 0.47 : a > 48 && a < 66 ? 0.48 : 0.57;
     const f = fbm(forestNoise, x / 10, y / 10, 3);
@@ -452,6 +487,17 @@ function generateWorldMap(seed) {
 
   // 6. Les fleuves (les grands fleuves, infranchissables, seulement dans leur cours inférieur)
   for (const [line, greatFrom] of WORLD_RIVERS) drawWorldRiver(terrain, W, H, line, greatFrom);
+
+  // 6 bis. Oasis : le long des fleuves qui traversent un désert (le Nil…), une bande de terres fertiles
+  const fertile = [];
+  for (let i = 0; i < N; i++) {
+    if (terrain[i] !== TERRAIN.DESERT) continue;
+    const x = i % W;
+    for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
+      if (n >= 0 && n < N && (terrain[n] === TERRAIN.RIVER || terrain[n] === TERRAIN.GREAT_RIVER)) { fertile.push(i); break; }
+    }
+  }
+  for (const i of fertile) terrain[i] = TERRAIN.PLAINS;
 
   // 7. On retire les miettes de terre, et les creux enfermés par les sommets
   keepMainland(terrain, W, H, 12);

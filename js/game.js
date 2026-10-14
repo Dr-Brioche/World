@@ -720,7 +720,7 @@ const GameRules = {
     const t = this.building[a], info = this.buildingInfo(a);
     const owner = this.players[this.owner[a]];
     const eff = !owner ? 1 : t === B_BARRACKS ? this.barracksEfficiency(owner) : this.goldEfficiency(owner);
-    if (t === B_PORT) return info.gold * eff; // le port : ni route ni terrain
+    if (t === B_PORT) return info.gold * eff * this.terrainFactor(a, t); // le port : pas de route (mais le désert compte)
     const v = (t === B_MILL ? info.gold : info.troops) * eff;
     const road = this.roads().get(a);
     return v * (1 + (road ? road.bonus : 0)) * this.terrainFactor(a, t);

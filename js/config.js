@@ -6,6 +6,7 @@ const CONFIG = {
   // --- Carte ---
   MAP_WIDTH: 294,          // largeur de la carte (en cases)
   MAP_HEIGHT: 192,         // hauteur de la carte (en cases)
+  DESERT_RATIO: 0.15,      // part des plaines et forêts en désert sur les cartes aléatoires (production -20 %)
   WORLD_MAP_WIDTH: 540,    // taille de la carte « Monde » (bien plus grande : on dézoome beaucoup)
   WORLD_MAP_HEIGHT: 204,
   WORLD_EXTRA_BOTS: 3,     // royaumes en plus sur la carte « Monde » (elle est grande)
@@ -151,7 +152,7 @@ const CONFIG = {
   WIN_RATIO: 0.85,         // posséder 85 % des terres = victoire
 };
 
-const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6, PEAK: 7 };
+const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6, PEAK: 7, DESERT: 8 };
 
 const TERRAIN_INFO = [
   { name: 'Mer',      color: [52, 92, 130],   cost: Infinity },
@@ -165,6 +166,8 @@ const TERRAIN_INFO = [
   { name: 'Grand fleuve', color: [58, 108, 160], cost: Infinity },
   // Sommet (le cœur des montagnes) : infranchissable
   { name: 'Sommet', color: [226, 228, 232], cost: Infinity },
+  // Désert : aucune défense en plus (comme une plaine), mais les bâtiments posés dessus produisent moins
+  { name: 'Désert', color: [222, 198, 134], cost: 1 },
 ];
 // cost = défense de la case (et temps pour la traverser) : 1 en plaine, plus ailleurs.
 // On ne peut rien construire sur un fleuve.
@@ -234,11 +237,14 @@ const PORT_LEVELS = [
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
 // bonus = défense en plus dans sa petite muraille (sa zone), comme un fort en bois
 
-// Production des moulins et casernes selon le terrain où ils sont construits
-// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve, sommet.
+// Production des moulins, casernes et ports selon le terrain où ils sont construits
+// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve, sommet, désert.
+// Dans le désert, tout bâtiment produit DESERT_PRODUCTION (0.8 = -20 %).
+const DESERT_PRODUCTION = 0.8;
 const TERRAIN_PRODUCTION = {
-  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0, 0], // les moulins aiment les plaines
-  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0, 0], // les casernes, les forêts et les collines
+  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0, 0, DESERT_PRODUCTION], // les moulins aiment les plaines
+  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0, 0, DESERT_PRODUCTION], // les casernes, les forêts et les collines
+  [B_PORT]:     [0, 1.0, 1.0, 1.0, 1.0, 0, 0, 0, DESERT_PRODUCTION], // le port : seul le désert compte
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
