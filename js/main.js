@@ -69,6 +69,12 @@ const UI = {
     $('pauseBtn').addEventListener('click', () => this.togglePause());
     $('attacks').addEventListener('click', e => {
       if (e.target.dataset.defend) return this.defend(+e.target.dataset.defend);
+      // Croix d'un transport en mer : il fait demi-tour vers le port
+      if (e.target.dataset.recall) {
+        const boat = Game.recallExpedition(Game.human.id, +e.target.dataset.recall);
+        if (boat) this.log(`Ton bateau fait demi-tour vers le port : environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % des soldats à bord se perdront.`, 'warn');
+        return this.refreshAttacks();
+      }
       const id = e.target.dataset.cancel;
       if (!id) return;
       const a = Game.cancelAttack(Game.human.id, +id);
@@ -579,15 +585,15 @@ const UI = {
 
   // Jauge des soldats en bas de l'écran, avec le recrutement par seconde au-dessus
   refreshTroopGauge() {
-    // (les soldats en garnison dans les châteaux et avant-postes comptent aussi pour le maximum)
+    // (les soldats en garnison dans les châteaux et avant-postes, et ceux en mer, comptent aussi pour le maximum)
     const G = Game, h = G.human, max = G.maxTroops(h), gar = G.garrisonOf(h), r = Math.min(1, G.armySize(h) / max);
     const eff = G.growthFactor(r) / CONFIG.TROOP_GROWTH_AT_PEAK; // 1 = recrutement au top
     const color = eff > 0.85 ? '#3f9a3a' : eff > 0.45 ? '#d99a1e' : '#b8322a';
     $('troopFill').style.width = (r * 100).toFixed(1) + '%';
     $('troopFill').style.background = color;
-    const st = G.stationedOf(h);
+    const st = G.stationedOf(h), sea = G.atSeaOf(h);
     $('troopText').textContent = `⚔️ ${fmt(h.troops)}` + (gar >= 1 ? ` · 🛡️ ${fmt(gar)} en garnison` : '') +
-      (st >= 1 ? ` · ⛺ ${fmt(st)} aux avant-postes` : '');
+      (st >= 1 ? ` · ⛺ ${fmt(st)} aux avant-postes` : '') + (sea >= 1 ? ` · ⛵ ${fmt(sea)} en mer` : '');
     // Pas de chiffre précis : juste l'état du recrutement
     let tip = 'recrutement normal';
     if (r >= 0.98) tip = 'armée pleine !';
@@ -605,7 +611,9 @@ const UI = {
   refreshAttacks() {
     const G = Game, h = G.human;
     const list = G.attacks.filter(a => !a.done && (a.attacker === h.id || a.target === h.id));
-    const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '')).join(',');
+    const boats = G.expeditions.filter(e => !e.done && e.pid === h.id); // nos transports en mer
+    const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '')).join(',') +
+      '|' + boats.map(e => e.id + (e.home !== undefined ? 'h' : '')).join(',');
     const box = $('attacks');
     if (key !== this.attacksKey) {
       this.attacksKey = key;
@@ -613,7 +621,7 @@ const UI = {
         if (a.link !== undefined && a.attacker === h.id) {
           return `<div class="attack panel"><span>⚔️ → ${G.building[a.link] === B_PORT ? '⚓ ton port isolé' : '🏰 ton château isolé'}</span><b data-troops="${a.id}"></b>` +
             (a.retreatEnd !== undefined ? '<span class="retreat">🏳️ retraite…</span></div>'
-              : `<button data-cancel="${a.id}" title="Rappeler les soldats (retraite de ${CONFIG.RETREAT_TIME} s, ${Math.round(CONFIG.RETREAT_LOSS * 100)} % de pertes)">✖ Annuler</button></div>`);
+              : `${this.retreatCross('data-cancel', a.id)}</div>`);
         }
         if (G.cutOff(a) && a.target === h.id) {
           // Pas de bouton « Défendre » : le château est coupé du royaume
@@ -631,12 +639,26 @@ const UI = {
           const from = G.sourceOfAttack(a) >= 0 ? '⛺ ' : '';
           return `<div class="attack panel"><span>${from}⚔️ → ${flag}${target}</span><b data-troops="${a.id}"></b>` +
             (a.retreatEnd !== undefined ? '<span class="retreat">🏳️ retraite…</span></div>'
-              : `<button data-cancel="${a.id}" title="Rappeler les soldats (retraite de ${CONFIG.RETREAT_TIME} s, ${Math.round(CONFIG.RETREAT_LOSS * 100)} % de pertes)">✖ Annuler</button></div>`);
+              : `${this.retreatCross('data-cancel', a.id)}</div>`);
         }
         return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
           `<b data-troops="${a.id}"></b>` +
           `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cet assaut">🛡️ Défendre</button></div>`;
+      }).join('') + boats.map(e => {
+        // Transport en mer : débarquement, renforts vers un avant-poste, ou retour au port
+        const what = e.home !== undefined ? `${ICONS.anchor} retour au port`
+          : e.reinforce !== undefined ? `${ICONS.ship} → renforts pour ton avant-poste`
+          : `${ICONS.ship} → débarquement` + (G.owner[e.landing] >= 0 && G.owner[e.landing] !== h.id
+            ? ` chez ${this.bannerImg(G.players[G.owner[e.landing]])}${escapeHtml(G.players[G.owner[e.landing]].name)}` : '');
+        return `<div class="attack panel"><span>${what}</span><b data-boat="${e.id}"></b>` +
+          (e.home !== undefined ? '' : this.retreatCross('data-recall', e.id)) + '</div>';
       }).join('');
+    }
+    for (const e of boats) {
+      const el = box.querySelector(`[data-boat="${e.id}"]`);
+      if (!el) continue;
+      const k = Math.min(1, (G.tick - e.start) / Math.max(1, e.arrive - e.start));
+      el.textContent = `⚔ ${fmt(e.sent - (e.sent - e.troops) * k)} · ⏳ ${Math.max(0, Math.ceil((e.arrive - G.tick) / CONFIG.TICKS_PER_SECOND))} s`;
     }
     for (const a of list) {
       const el = box.querySelector(`[data-troops="${a.id}"]`);
@@ -650,6 +672,11 @@ const UI = {
         (a.siege ? ` · 🏰 siège ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s` : '') +
         (a.target === G.human.id && G.defendWait(a) > 0 ? ` · ⏳ renforts dans ${Math.ceil(G.defendWait(a))} s` : '');
     }
+  },
+
+  // Petite croix dans le coin d'une barre (assaut ou transport en mer) : retraite, avec des pertes
+  retreatCross(attr, id) {
+    return `<button class="x" ${attr}="${id}" title="Retraite : les soldats rentrent, ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdent">×</button>`;
   },
 
   // Pendant la construction d'un moulin, d'une caserne ou d'un port : production prévue selon le terrain
