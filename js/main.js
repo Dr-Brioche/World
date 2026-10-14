@@ -268,6 +268,50 @@ const UI = {
     this.actionMenu = el;
   },
 
+  // Avant-poste : fenêtre d'info en haut à gauche + menu rapide à côté de lui, avec deux icônes :
+  // ⛵ envoyer des renforts par la mer (le % du curseur « Envoyer ») et 🚢 rapatrier les soldats qui y attendent
+  openOutpostMenu(a, sx, sy) {
+    const G = Game, h = G.human, o = G.outposts.get(a);
+    this.closeBuildingMenus();
+    const stationed = o ? Math.floor(o.stationed) : 0, send = Math.floor(h.troops * this.ratio);
+    const reinforce = () => {
+      const err = G.reinforceOutpost(h.id, a, h.troops * this.ratio);
+      if (err) this.log(err, 'warn');
+      else this.log('⛵ Des renforts partent par la mer vers ton avant-poste !', 'good');
+    };
+    const repatriate = () => {
+      const err = G.repatriate(h.id, a);
+      if (err) this.log(err, 'warn');
+      else this.log(`🚢 ${fmt(stationed)} soldats rembarquent vers ton port.`, 'good');
+    };
+    // Fenêtre d'info (en haut à gauche)
+    const box = document.createElement('div');
+    this.upgradeBox = box;
+    box.className = 'msg request upgrade';
+    box.innerHTML = `⛺ <b>Avant-poste</b> ${G.outpostReady(a) ? '' : '(en construction)'} · 🛡️ garnison ${fmt(G.garrison[a])}` +
+      ` · ⚔ ${fmt(stationed)} soldats qui attendent` +
+      `<div class="choices"><button data-re>⛵ Renforts (${fmt(send)} soldats)</button>` +
+      `<button data-rp${stationed < 1 ? ' disabled' : ''}>🚢 Rapatrier</button><button data-no>Fermer</button></div>`;
+    const closeBox = () => { box.remove(); if (this.upgradeBox === box) this.upgradeBox = null; };
+    box.querySelector('[data-re]').addEventListener('click', () => { this.closeBuildingMenus(); reinforce(); });
+    box.querySelector('[data-rp]').addEventListener('click', () => { this.closeBuildingMenus(); repatriate(); });
+    box.querySelector('[data-no]').addEventListener('click', closeBox);
+    $('log').prepend(box);
+    setTimeout(closeBox, 15000);
+    // Menu rapide (à côté de l'avant-poste)
+    const el = document.createElement('div');
+    el.className = 'panel actionMenu quickMenu';
+    el.innerHTML = `<button data-re title="Renforts par la mer">⛵</button>` +
+      `<button data-rp title="Rapatrier"${stationed < 1 ? ' disabled' : ''}>🚢</button>`;
+    el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
+    el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
+    el.addEventListener('pointerdown', e => e.stopPropagation());
+    el.querySelector('[data-re]').addEventListener('click', () => { this.closeBuildingMenus(); reinforce(); });
+    el.querySelector('[data-rp]').addEventListener('click', () => { this.closeBuildingMenus(); repatriate(); });
+    document.body.appendChild(el);
+    this.actionMenu = el;
+  },
+
   // Demande confirmation avant de détruire un de ses bâtiments (en haut à gauche)
   confirmDemolish(a) {
     const G = Game, type = G.building[a];
@@ -787,11 +831,9 @@ const UI = {
     if (this.plan) return this.planClick(i);
     // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
     const t = G.building[i];
-    // Clic sur un de ses avant-postes : renforts par la mer
+    // Clic sur un de ses avant-postes : sa fenêtre d'info et son menu rapide (renforts / rapatrier)
     if (t === B_OUTPOST && G.owner[i] === h.id && !this.selectedBuild) {
-      const err = G.reinforceOutpost(h.id, G.anchor[i], h.troops * this.ratio);
-      if (err) return this.log(err, 'warn');
-      return this.log('⛵ Des renforts partent par la mer vers ton avant-poste !', 'good');
+      return this.openOutpostMenu(G.anchor[i], sx, sy);
     }
     // Clic sur un de ses châteaux (ou ports de niveau 3) isolés : assaut pour le relier au royaume
     if (t && G.owner[i] === h.id && !this.selectedBuild && G.holdsAlone(G.anchor[i]) && G.isIsolated(G.anchor[i])) {

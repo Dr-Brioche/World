@@ -250,10 +250,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
    - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** (au-delà des
      mers, ton royaume ne peut pas lui envoyer de défenseurs ; une fois relié, ses soldats stationnés rejoignent
-     ton armée) : clique sur
-     ton avant-poste pour lui **envoyer des renforts par la mer** (depuis un port de niveau 2 ou plus).
-     Un **clic droit** sur ton avant-poste propose aussi **🚢 Rapatrier** : les soldats qui y attendent rembarquent
-     vers ton port le plus proche et rejoignent ton armée (la garnison, elle, reste).
+     ton armée). **Clique sur ton avant-poste** : sa fenêtre d'info s'ouvre en haut à gauche, et un **menu rapide**
+     à côté de lui propose **⛵ Renforts** (le % choisi part par la mer, depuis un port de niveau 2 ou plus) et
+     **🚢 Rapatrier** (les soldats qui y attendent rembarquent vers ton port le plus proche et rejoignent ton armée ;
+     la garnison, elle, reste).
      Les renforts qui arrivent sur un avant-poste **déjà bâti** complètent sa garnison, et les autres
      stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
    - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
@@ -331,6 +331,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.60.4** : ⛺ cliquer sur un de ses avant-postes n'envoie plus directement de renforts : ça ouvre sa fenêtre d'info et un menu rapide ⛵ Renforts / 🚢 Rapatrier
 - **v0.60.3** : 💰 l'amélioration de la caserne au niveau 2 coûte 80 (au lieu de 40)
 - **v0.60.2** : cliquer à côté (ou `Échap`) ferme ensemble le menu rapide et la fenêtre d'info d'un bâtiment
 - **v0.60.1** : une confirmation est demandée avant de détruire un bâtiment
