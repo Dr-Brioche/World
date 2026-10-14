@@ -123,8 +123,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      de ton assaut rejoignent sa défense.
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
-   **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, pour **⬆️ l'améliorer** (travaux de **5 s**)
-   ou **🧨 le détruire** (travaux de **10 s**). Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
+   **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : **⬆️** pour l'améliorer
+   (travaux de **5 s**) et **✖** rouge pour le détruire (travaux de **10 s**). La fenêtre en haut à gauche explique
+   ce qu'apporte l'amélioration. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise) ; les châteaux pris à l'ennemi
@@ -319,6 +320,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.55.1** : le menu rapide des bâtiments n'a plus que deux icônes (⬆️ améliorer, ✖ détruire) ; la fenêtre explicative revient en haut à gauche
 - **v0.55** : 🛠️ clic sur un de ses bâtiments → menu rapide juste à côté : l'améliorer (5 s de travaux) ou le détruire (10 s), avec une petite jauge qui se remplit
 - **v0.54.3** : 👆 en survolant un bâtiment sélectionnable, la souris devient une main et le bâtiment s'illumine (doré chez soi, rouge chez l'ennemi)
 - **v0.54.2** : en construisant, l'image du bâtiment apparaît sous la souris (sur un carré vert ou rouge) au lieu d'un simple carré
