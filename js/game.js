@@ -1542,6 +1542,22 @@ const GameRules = {
     return { tiles: [...zone], anchor };
   },
 
+  // La côte où débarquer la plus proche de la case i (à moins de R cases), ou -1 : on n'a pas besoin de cliquer
+  // pile sur la côte (au zoom normal, elle ne fait que quelques pixels), même un clic dans l'eau tout près suffit
+  nearestCoast(pid, i, R = 3) {
+    const W = this.W, x0 = i % W, y0 = (i / W) | 0;
+    let best = -1, bestD = Infinity;
+    for (let dy = -R; dy <= R; dy++) {
+      for (let dx = -R; dx <= R; dx++) {
+        const x = x0 + dx, y = y0 + dy, d = dx * dx + dy * dy;
+        if (x < 0 || y < 0 || x >= W || y >= this.H || d > R * R || d >= bestD) continue;
+        const j = y * W + x;
+        if (this.isCoastal(j) && this.landable(pid, j)) { best = j; bestD = d; }
+      }
+    }
+    return best;
+  },
+
   // Prépare un débarquement de pid sur la côte i : { error } ou { port, path, time, cost, zone }
   planLanding(pid, i) {
     const p = this.players[pid];
@@ -1577,6 +1593,10 @@ const GameRules = {
   launchExpedition(pid, i, troops) {
     const plan = this.planLanding(pid, i), p = this.players[pid];
     if (plan.error) return plan.error;
+    // Une expédition au plus toutes les EXPEDITION_COOLDOWN secondes
+    if (p.lastExpedition !== undefined && this.tick - p.lastExpedition < CONFIG.EXPEDITION_COOLDOWN * CONFIG.TICKS_PER_SECOND) {
+      return '⛵ Tes bateaux ne sont pas encore prêts.';
+    }
     if (p.gold < plan.cost) return `Pas assez d'or pour l'expédition (💰 ${plan.cost}).`;
     troops = Math.floor(Math.min(troops, p.troops));
     if (troops < plan.minTroops) {
@@ -1585,6 +1605,7 @@ const GameRules = {
     }
     p.gold -= plan.cost;
     p.troops -= troops;
+    p.lastExpedition = this.tick;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: i, path: plan.path, cost: plan.cost, sent: troops,
       interceptors: [], // bateaux ennemis partis l'intercepter

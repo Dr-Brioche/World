@@ -229,7 +229,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 
    **⛵ Expéditions maritimes** (avec un port de niveau 2 ou 3) : fais un **clic droit** sur une côte
-   (au bord de la mer ou d'un fleuve) et choisis **⛵ Débarquer**. Un bateau part de ton port le plus rapide,
+   (au bord de la mer ou d'un fleuve, ou juste dans l'eau à côté) et choisis **⛵ Attaque navale**. Un bateau part de ton port le plus rapide,
    navigue sur la mer et les fleuves (tout le monde le voit passer), puis débarque : tu prends une **petite
    zone en demi-cercle le long de la côte** et tu y bâtis un **avant-poste ⛺**. L'expédition coûte un peu d'or
    (un peu plus à chaque avant-poste) et emmène **le % de soldats choisi** avec le curseur « Envoyer » :
@@ -263,7 +263,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      selon la force de chaque camp). Si l'escadre gagne, l'expédition est **coulée** et ses survivants rentrent ;
      sinon, l'expédition débarque quand même, avec moins de soldats. Tu es prévenu quand une expédition vise ta côte.
 
-   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Débarquer · 🛶 Traverser le fleuve).
+   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Attaque navale · 🛶 Traverser le fleuve).
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
    **75 %**, le reste se perd en route, et sans dépasser son armée maximum.
    Si cet allié **se fait attaquer**, le menu propose aussi **🛡️ Aider [allié] contre [attaquant]** : tes soldats
@@ -328,6 +328,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.58.1** : ⛵ l'option s'appelle « Attaque navale » et se trouve plus facilement : plus besoin de cliquer pile sur la côte, un clic droit tout près (même dans l'eau) suffit · une expédition au plus toutes les 5 s
 - **v0.58** : 🐢 recrutement freiné pour les grands royaumes (il suit la racine carrée du territoire) et rendement décroissant des casernes · 💰 améliorations plus chères : grand moulin 100, grande caserne 800, port royal 600, cathédrale 1000 · ✂️ plus de message pour les petits morceaux englobés (seulement à partir de 50 cases, ou s'il reste un château isolé)
 - **v0.57.1** : ⚰️🔥 l'après-guerre et la galvanisation s'additionnent : −25 % par victoire récente (jusqu'à −75 %), +25 % par défaite récente (jusqu'à +100 %)
 - **v0.57** : 🌊 les fleuves ne se prennent plus jamais : ils restent neutres et bloquent l'expansion et les assauts ; on ne passe qu'en traversant à gué (10 s pour la 1re case, 6 s pour la 2e) · un royaume des deux côtés d'un fleuve reste un seul royaume

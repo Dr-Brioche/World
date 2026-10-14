@@ -113,6 +113,7 @@ const CONFIG = {
   CROSSING_TIME_NEXT: 6,     // ...et chacune des suivantes (fleuve double)
   CROSSING_MAX_DISTANCE: 14, // on ne traverse que si le fleuve est à moins de 14 cases de la terre visée
   CROSSING_BANK_RADIUS: 4,   // terres libres prises sur l'autre rive, autour de la case visée
+  EXPEDITION_COOLDOWN: 5,    // une expédition maritime au plus toutes les 5 secondes
   INTERCEPT_SPEED: 6,        // vitesse (cases/s) des bateaux d'un port qui part intercepter un débarquement
   OUTPOST_BUILD_TIME: 20,    // secondes pour bâtir un avant-poste après le débarquement (sans bonus avant)
   OUTPOST_DEFENSE: 1,        // une fois bâti, bonus de défense autour de lui (comme un fort en bois)
