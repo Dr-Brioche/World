@@ -205,6 +205,7 @@ const UI = {
     if (this.upgradeBox) this.upgradeBox.remove();
     const el = document.createElement('div');
     this.upgradeBox = el;
+    el.buildingAnchor = a;
     el.className = 'msg request upgrade';
     const cur = G.buildingInfo(a), cost = G.upgradeCost(a);
     const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
@@ -216,7 +217,7 @@ const UI = {
       el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
         (next.img ? `<img src="${next.img}" alt="">` : '') +
         `<b>${this.upgradeEffect(type, cur, next)}</b>` +
-        `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button>` +
+        `<div class="choices"><button data-yes${G.human.gold >= cost ? '' : ' disabled'}>Améliorer (💰 ${fmt(cost)})</button>` +
         `<button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>Fermer</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
         const err = G.upgradeBuilding(G.human, a);
@@ -245,6 +246,7 @@ const UI = {
     const canUp = !work && cost !== null && h.gold >= cost;
     const el = document.createElement('div');
     el.className = 'panel actionMenu quickMenu';
+    el.buildingAnchor = a; // (pour le garder à jour : voir refreshBuildingMenu)
     el.innerHTML = `<button data-up${canUp ? '' : ' disabled'} title="Améliorer">⬆️</button>` +
       `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>`;
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
@@ -489,6 +491,7 @@ const UI = {
       btn.querySelector('.cost').textContent = `💰 ${fmt(cost)}`;
       btn.classList.toggle('poor', h.gold < cost);
     });
+    this.refreshBuildingMenu();
 
     const ranking = G.players.filter(p => p.alive && p.tiles > 0).sort((a, b) => b.tiles - a.tiles);
     $('lb').innerHTML = ranking.slice(0, 10).map(p => {
@@ -780,6 +783,21 @@ const UI = {
     });
     document.body.appendChild(el);
     this.actionMenu = el;
+  },
+
+  // Le menu rapide et la fenêtre d'un bâtiment restent à jour pendant qu'ils sont ouverts :
+  // le bouton « Améliorer » se débloque tout seul dès qu'on a assez d'or (et se bloque pendant des travaux)
+  refreshBuildingMenu() {
+    const G = Game, h = G.human;
+    for (const [box, sel] of [[this.actionMenu, '[data-up]'], [this.upgradeBox, '[data-yes]']]) {
+      if (!box || box.buildingAnchor === undefined) continue;
+      const a = box.buildingAnchor, btn = box.querySelector(sel);
+      if (!btn) continue;
+      const cost = G.upgradeCost(a);
+      btn.disabled = !(G.owner[a] === h.id && !G.works.get(a) && cost !== null && h.gold >= cost);
+      btn.title = cost === null ? 'Déjà au niveau maximum'
+        : h.gold >= cost ? `Améliorer (💰 ${fmt(cost)})` : `Pas assez d'or : il faut 💰 ${fmt(cost)}`;
+    }
   },
 
   closeActionMenu() {
