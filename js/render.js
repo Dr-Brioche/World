@@ -453,9 +453,16 @@ const Render = {
       if (!G.isPreparing(a)) {
         // (pas de flèche pour un assaut de jonction : sa ligne mène au château isolé)
         if (a.link === undefined) this.drawAttackArrow(x1, y1, x2, y2, 0.6, side);
+        // (la bannière se tient à sa position lissée sur le front, voir moveBanner ; au début, sur la case du front)
         const t = a.frontTile >= 0 ? a.frontTile : -1;
-        const bx = t >= 0 ? ox + (t % G.W + 0.5) * s : ox + a.toX * s;
-        const by = t >= 0 ? oy + (((t / G.W) | 0) + 0.5) * s : oy + a.toY * s;
+        if (a.bannerX !== undefined) {
+          // à l'écran, la bannière rejoint sa position en glissant (pas de saut d'une image à l'autre)
+          if (a.drawX === undefined) { a.drawX = a.bannerX; a.drawY = a.bannerY; }
+          a.drawX += (a.bannerX - a.drawX) * 0.08;
+          a.drawY += (a.bannerY - a.drawY) * 0.08;
+        }
+        const bx = a.drawX !== undefined ? ox + a.drawX * s : t >= 0 ? ox + (t % G.W + 0.5) * s : ox + a.toX * s;
+        const by = a.drawY !== undefined ? oy + a.drawY * s : t >= 0 ? oy + (((t / G.W) | 0) + 0.5) * s : oy + a.toY * s;
         // Assaut de jonction : une ligne pointillée montre le château isolé qu'il veut rejoindre
         if (a.link !== undefined) {
           ctx.beginPath();

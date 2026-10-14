@@ -1909,13 +1909,18 @@ const GameRules = {
       if (a.troops < cost) return this.endAttack(a);
       a.troops -= cost;
       a.frontTile = t;
+      this.moveBanner(a, t);
       // Prendre une case entre deux cases du défenseur peut couper son royaume (voir captureEnclaves)
       if (a.target >= 0 && this.countNeighborsOwnedBy(t, a.target) >= 2) a.cut = true;
+      // Église ou port visé : on note sa zone (avant qu'il ne change de mains), avec les bâtiments qui en dépendent
+      const linked = a.targetCastle >= 0 && this.anchor[t] === a.targetCastle && this.hasSlots(a.targetCastle)
+        ? this.churchZone(a.targetCastle) : null;
       this.setOwner(t, a.attacker);
       // Prise de l'église, du port ou de l'avant-poste visé : l'assaut s'arrête là
       const b = this.building[t];
       if (a.targetCastle >= 0 && b && b !== B_CASTLE && this.anchor[t] === a.targetCastle) {
-        this.onTargetTaken(a, b);
+        if (linked) this.takeLinked(a, linked);
+        this.onTargetTaken(a, b, !!linked);
         if (b === B_OUTPOST) this.removeBuilding(a.targetCastle); // un avant-poste pris est détruit
         return this.endAttack(a);
       }
@@ -1939,6 +1944,22 @@ const GameRules = {
 
   // Château pris : toute sa zone de défense passe d'un coup à l'attaquant, avec les moulins et casernes
   // qui s'y trouvent (une église, un port ou un autre château reste au défenseur : il faut le viser)
+  // Position de la bannière d'un assaut : elle glisse doucement vers les cases prises (moyenne des dernières),
+  // pour rester à peu près fixe sur le front au lieu de sauter d'une case à l'autre.
+  // Un assaut ciblé (dans un couloir) la fait avancer plus vite qu'un assaut de front, très large.
+  moveBanner(a, t) {
+    const x = t % this.W + 0.5, y = ((t / this.W) | 0) + 0.5;
+    if (a.bannerX === undefined) {
+      // départ : là où la bannière était plantée pendant la préparation (sinon sur la première case prise)
+      const s = a.startTile >= 0 ? a.startTile : t;
+      a.bannerX = s % this.W + 0.5;
+      a.bannerY = ((s / this.W) | 0) + 0.5;
+    }
+    const k = a.limitZone ? 0.15 : 0.03;
+    a.bannerX += (x - a.bannerX) * k;
+    a.bannerY += (y - a.bannerY) * k;
+  },
+
   // L'armée arrive au pied du château (case t) : le siège dure quelques secondes selon son niveau
   startSiege(a, t) {
     const secs = this.castleInfo(this.anchor[t]).siege;
@@ -1972,13 +1993,28 @@ const GameRules = {
     else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn', p);
   },
 
-  onTargetTaken(a, type) {
+  // Église (ou port) pris : sa zone passe à l'attaquant, avec les moulins et casernes construits grâce à elle.
+  // Ce qui est dans la muraille d'un château reste au défenseur (ça dépend du château), comme les autres
+  // châteaux, églises et ports.
+  takeLinked(a, zone) {
+    for (const i of zone) {
+      if (this.owner[i] !== a.target || this.castleProtects(a.target, i)) continue;
+      const b = this.building[i];
+      if (b && TARGET_TYPES.includes(b)) continue;
+      if (b && this.footprint(this.anchor[i], b).some(j => this.castleProtects(a.target, j))) continue;
+      this.setOwner(i, a.attacker);
+    }
+    a.cut = true; // la zone prise peut couper le royaume du défenseur (voir captureEnclaves)
+  },
+
+  onTargetTaken(a, type, withZone) {
     const p = this.players[a.attacker], d = this.players[a.target];
     const what = { [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
       [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'] }[type];
     const verb = type === B_OUTPOST ? 'détruit' : 'pris';
-    if (p.isHuman) UI.log(`${what[0]} Tu as ${verb} ${what[1]} de ${d.name} !`, 'good', d);
-    else if (d.isHuman) UI.log(`${what[0]} ${p.name} a ${verb} ${what[2]} !`, 'warn', p);
+    const zone = withZone ? `, avec sa zone et les bâtiments construits grâce à ${type === B_CHURCH ? 'elle' : 'lui'}` : '';
+    if (p.isHuman) UI.log(`${what[0]} Tu as ${verb} ${what[1]} ${this.deName(d.name)}${zone} !`, 'good', d);
+    else if (d.isHuman) UI.log(`${what[0]} ${p.name} a ${verb} ${what[2]}${zone} !`, 'warn', p);
   },
 
   endAttack(a) {
