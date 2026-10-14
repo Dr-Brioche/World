@@ -660,6 +660,16 @@ const UI = {
         items.push({ label: `🤝 Proposer une alliance à ${name}`, run: () => this.onAllyButton(o) });
       }
     }
+    // Son avant-poste : rapatrier les soldats qui y attendent vers le port le plus proche
+    if (own && G.building[i] === B_OUTPOST) {
+      const op = G.anchor[i], o = G.outposts.get(op), n = o ? Math.floor(o.stationed) : 0;
+      if (n < 1) items.push({ label: '🚢 Rapatrier', disabled: 'Aucun soldat n\'attend ici (la garnison, elle, reste sur place).' });
+      else items.push({ label: `🚢 Rapatrier ${fmt(n)} soldats (vers ton port le plus proche)`, run: () => {
+        const err = G.repatriate(h.id, op);
+        if (err) this.log(err, 'warn');
+        else this.log(`🚢 ${fmt(n)} soldats rembarquent vers ton port.`, 'good');
+      } });
+    }
     if (own) {
       for (let t = 1; t < BUILDINGS.length; t++) {
         const b = BUILDINGS[t];

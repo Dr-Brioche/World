@@ -1566,7 +1566,7 @@ const GameRules = {
     if (!this.landable(pid, i) || !this.isCoastal(i)) {
       return { error: 'On débarque sur une côte (au bord de la mer ou d\'un fleuve) qui n\'est ni à toi ni à un allié, à côté des bâtiments.' };
     }
-    if (this.expeditions.some(e => e.pid === pid && e.landing === i)) return { error: 'Une expédition est déjà en route vers cette côte.' };
+    if (this.expeditions.some(e => e.pid === pid && e.landing === i && e.home === undefined)) return { error: 'Une expédition est déjà en route vers cette côte.' };
     const zone = this.landingZone(pid, i);
     if (zone.anchor < 0) return { error: 'Pas assez de place sur cette côte pour un avant-poste.' };
     // Le port le plus rapide pour y aller
@@ -1583,6 +1583,33 @@ const GameRules = {
     best.minTroops = Math.ceil(CONFIG.OUTPOST_GARRISON / (1 - this.seaLoss(best.time)));
     best.zone = zone;
     return best;
+  },
+
+  // Rapatrier les soldats stationnés d'un avant-poste : ils rembarquent vers le port le plus proche (n'importe
+  // quel niveau) et rejoignent l'armée en arrivant (pertes en mer comprises). La garnison, elle, reste.
+  // Renvoie un message d'erreur, ou null.
+  repatriate(pid, a) {
+    const p = this.players[pid], o = this.outposts.get(a);
+    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
+    if (!this.outpostReady(a)) return 'L\'avant-poste est encore en construction : ses soldats bâtissent.';
+    const troops = Math.floor(o.stationed);
+    if (troops < 1) return 'Aucun soldat n\'attend à cet avant-poste (sa garnison, elle, reste sur place).';
+    let best = null;
+    for (const b of this.buildingTiles) {
+      if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
+      const path = this.boatPath(b, o.landing);
+      if (!path) continue;
+      const time = path.length / Math.max(this.buildingInfo(b).boatSpeed, CONFIG.REPATRIATE_SPEED);
+      if (!best || time < best.time) best = { port: b, path, time };
+    }
+    if (!best) return 'Aucun de tes ports n\'est relié par l\'eau à cet avant-poste.';
+    o.stationed -= troops;
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, home: best.port,
+      path: best.path.slice().reverse(), sent: troops, interceptors: [],
+      troops: troops * (1 - this.seaLoss(best.time)),
+      start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
+    return null;
   },
 
   // Part des soldats perdus pendant une traversée de `time` secondes
@@ -1625,6 +1652,7 @@ const GameRules = {
   // Renvoie { error } ou { port, path, arrive } (le plus rapide de ses ports).
   planInterception(pid, e) {
     if (e.pid === pid || this.areAllied(pid, e.pid)) return { error: 'Ce bateau n\'est pas ennemi.' };
+    if (e.home !== undefined) return { error: 'Ce bateau rentre au port : il ne débarque nulle part.' };
     const ports = this.buildingTiles.filter(a => this.building[a] === B_PORT && this.owner[a] === pid);
     if (!ports.length) return { error: 'Il te faut un port pour intercepter un débarquement.' };
     let best = null;
@@ -1776,6 +1804,12 @@ const GameRules = {
       e.done = true;
       const p = this.players[e.pid];
       if (!p.alive) { this.returnInterceptors(e); continue; }
+      // Soldats rapatriés d'un avant-poste : ils rejoignent l'armée
+      if (e.home !== undefined) {
+        p.troops += e.troops;
+        if (p.isHuman) UI.log(`🚢 ${fmt(e.troops)} soldats rapatriés sont rentrés au port.`, 'good');
+        continue;
+      }
       // Renforts pour un avant-poste : ils rejoignent sa garnison (ou rentrent s'il n'existe plus)
       if (e.reinforce !== undefined) {
         if (e.interceptors.length) e.troops = this.seaBattle(e);
