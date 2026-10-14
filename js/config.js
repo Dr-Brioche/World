@@ -69,6 +69,10 @@ const CONFIG = {
   UPGRADE_TIME: 5,           // secondes de travaux pour améliorer un bâtiment...
   UPGRADE_TIME_LEVEL3: 10,   // ...et 10 s pour passer au niveau 3
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
+  PORT_ROAD_DISTANCE: 30,    // un port à moins de 30 cases d'un de ses châteaux (sur la même terre) y est relié
+  PORT_ROAD_BONUS: 0.3,      // par un chemin de terre : +30 % d'or produit par le port
+  CHURCH_ROAD_RANGE: 3,      // une église à moins de 3 cases de ce chemin est « sur la route »...
+  CHURCH_ROAD_GOLD: 2,       // ...et produit 2 pièces d'or toutes les PRODUCTION_INTERVAL secondes
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   // Distances minimum (de centre à centre, en cases) entre ses grands bâtiments : cercles rouges à la construction

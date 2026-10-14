@@ -239,6 +239,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Il **n'est pas défendu** :
      on peut l'attaquer directement, comme un château. **Toutes les 10 secondes**, il rapporte de l'or.
+     🛤️ **Route du port** : si une de tes **villes** (un château, de n'importe quel niveau) est à **moins de 30 cases**
+     du port, sur la même terre, un **chemin de terre** les relie : le port produit **+30 % d'or**.
+     Une **église** construite **sur ce chemin** (à moins de 3 cases) produit aussi **un peu d'or** (+2 💰 toutes les 10 s).
+     En posant un port ou une église, la barre d'aide en bas indique s'il sera relié à une ville (ou sur la route).
      **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
 
      | Niveau | Or produit | Moulins ou casernes autour | Expéditions maritimes | Prix |
@@ -361,6 +365,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.67** : 🛤️ un port à moins de 30 cases d'une ville (château) est relié à elle par un chemin de terre : +30 % d'or · ⛪ une église construite sur ce chemin produit un peu d'or (+2 💰 toutes les 10 s)
 - **v0.66.3** : 🛶 traverser un fleuve ne coûte plus aucun soldat : seulement le temps de la traversée (10 s, +6 s pour un fleuve double)
 - **v0.66.2** : 🐛 correction : le bouton « Améliorer » d'un bâtiment (menu rapide ⬆️ et fenêtre en haut à gauche) se débloque tout seul dès que tu as assez d'or, sans devoir refermer et rouvrir le menu (en survolant le bouton, tu vois l'or qu'il manque)
 - **v0.66.1** : 👑 le jeu s'appelle désormais **Medieval Emperor**
