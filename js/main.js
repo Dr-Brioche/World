@@ -3,13 +3,11 @@
 
 const $ = id => document.getElementById(id);
 
-const MAX_WAYPOINTS = 3; // points de passage au maximum pour un assaut
-
 const UI = {
   selectedBuild: 0,
   ratio: 0.3,
-  // Assaut en cours de préparation par le joueur : { target, castle, waypoints, clicks }
-  // (on clique sur la cible, puis on ajoute des points de passage, puis 2 clics sur la cible pour lancer)
+  // Assaut choisi par le joueur, en attente de validation : { target, castle, tile, source }
+  // (1er clic sur la cible : on la choisit ; 2e clic sur la même cible : l'assaut part)
   plan: null,
 
   init() {
@@ -457,7 +455,7 @@ const UI = {
       const b = G.building[i];
       if (TARGET_TYPES.includes(b)) {
         txt += Render.castlePreview && Render.castlePreview.path
-          ? ` · 🎯 clique pour préparer un assaut sur ${G.targetLabel(G.anchor[i])}`
+          ? ` · 🎯 clique pour viser ${G.targetLabel(G.anchor[i])} (puis une 2e fois pour lancer l'assaut)`
           : ' · 🚫 inaccessible : des châteaux bloquent le passage';
       } else {
         txt += ' · 🏰 protégé : vise un de ses châteaux, églises, ports ou avant-postes';
@@ -639,64 +637,47 @@ const UI = {
     if (err) this.log(err, 'warn');
   },
 
-  // --- Préparer un assaut avec des points de passage ---
-  // 1er clic sur un château (ou une église) ennemi : on choisit la cible.
-  // Clics sur ses terres : points de passage (l'armée passe par chacun, dans l'ordre ; recliquer dessus l'enlève).
-  // 2 clics d'affilée sur la cible : l'assaut part. (3 clics sur la cible = tout droit)
-  startPlan(target, c) {
+  // --- Choisir la cible d'un assaut, puis valider ---
+  // 1er clic sur un château, une église, un port ou un avant-poste ennemi (ou sur les terres d'un royaume sans
+  // château ni église) : on choisit la cible, son chemin s'affiche. 2e clic sur la même cible : l'assaut part.
+  // c = bâtiment visé (-1 = attaque de front), tile = case cliquée
+  startPlan(target, c, tile) {
     const G = Game, h = G.human;
-    // D'où part l'armée : du royaume ou d'un avant-poste bâti (le chemin le plus court)
-    let source = null, best = Infinity;
-    for (const src of [-1, ...[...G.outposts.keys()].filter(a => G.owner[a] === h.id && G.outpostReady(a))]) {
-      const path = G.castlePath(h.id, c, [], src);
-      if (path && path.length < best) { best = path.length; source = src; }
-    }
-    if (source === null) {
-      return this.log(`Impossible d'atteindre ${G.targetLabel(c)} : ` +
-        'des fortifications bloquent le passage. Prends d\'abord les châteaux de la frontière.', 'warn');
-    }
-    this.plan = { target, castle: c, waypoints: [], clicks: 0, source };
+    let source = null;
+    if (c >= 0) {
+      // D'où part l'armée : du royaume ou d'un avant-poste bâti (le chemin le plus court)
+      let best = Infinity;
+      for (const src of [-1, ...[...G.outposts.keys()].filter(a => G.owner[a] === h.id && G.outpostReady(a))]) {
+        const path = G.castlePath(h.id, c, src);
+        if (path && path.length < best) { best = path.length; source = src; }
+      }
+      if (source === null) {
+        return this.log(`Impossible d'atteindre ${G.targetLabel(c)} : ` +
+          'des fortifications bloquent le passage. Prends d\'abord les châteaux de la frontière.', 'warn');
+      }
+    } else source = G.bestSource(h.id, target, tile);
+    this.plan = { target, castle: c, tile, source };
   },
 
   cancelPlan() { this.plan = null; },
 
   planHint() {
-    const G = Game, p = this.plan, b = BUILDINGS[G.building[p.castle]];
-    if (p.clicks >= 1) return `🎯 Clique encore une fois sur la cible pour lancer l'assaut ! (Échap pour annuler)`;
-    return `🎯 Assaut sur ${b.icon} ${G.players[p.target].name} : clique sur ses terres pour ajouter des points de passage` +
-      ` (${p.waypoints.length}), puis 2 fois sur la cible pour lancer · Échap pour annuler`;
+    const G = Game, p = this.plan, b = p.castle >= 0 ? BUILDINGS[G.building[p.castle]] : null;
+    return `🎯 Assaut sur ${b ? b.icon + ' ' : ''}${G.players[p.target].name} avec ${fmt(G.troopsAt(G.human.id, p.source) * this.ratio)} soldats : ` +
+      'clique encore une fois sur la cible pour lancer · Échap pour annuler';
   },
 
+  // Clic pendant qu'une cible est choisie. Renvoie true si le clic a servi (assaut lancé) ;
+  // sinon la cible est oubliée et le clic fait son effet habituel (choisir une autre cible…).
   planClick(i) {
     const G = Game, h = G.human, p = this.plan;
-    if (G.owner[p.castle] !== p.target || !G.building[p.castle]) {
-      this.cancelPlan();
-      return this.log('La cible a changé de mains : assaut annulé.', 'warn');
-    }
-    // Clic sur la cible : au 2e clic d'affilée, l'assaut part
-    if (G.anchor[i] === p.castle) {
-      if (++p.clicks < 2) return;
-      this.cancelPlan();
-      const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, p.source) * this.ratio, p.castle, p.waypoints, p.source);
-      if (err) this.log(err, 'warn');
-      return;
-    }
-    p.clicks = 0;
-    // Recliquer sur un point de passage l'enlève
-    const k = p.waypoints.indexOf(i);
-    if (k >= 0) { p.waypoints.splice(k, 1); return; }
-    if (!G.castlePassable(p.castle)(i)) {
-      return this.log(`Point de passage impossible : choisis une terre ${G.deName(G.players[p.target].name)}, ` +
-        'hors de la muraille de ses autres châteaux.', 'warn');
-    }
-    if (G.nearTerritoryEdge(p.target, i)) {
-      return this.log(`Point de passage trop près du bord de son royaume : place-le à au moins ${CONFIG.WAYPOINT_EDGE_DISTANCE} cases ` +
-        'de ses frontières et de ses côtes (on ne peut pas faire longer le bord à l\'armée pour découper le royaume).', 'warn');
-    }
-    if (p.waypoints.length >= MAX_WAYPOINTS) return this.log(`${MAX_WAYPOINTS} points de passage au maximum.`, 'warn');
-    const wp = p.waypoints.concat([i]);
-    if (!G.castlePath(h.id, p.castle, wp, p.source)) return this.log('L\'armée ne peut pas passer par là.', 'warn');
-    p.waypoints = wp;
+    this.cancelPlan();
+    if (!G.players[p.target].alive) return false;
+    const same = p.castle >= 0 ? G.anchor[i] === p.castle && G.owner[p.castle] === p.target : G.owner[i] === p.target;
+    if (!same) return false;
+    const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, p.source) * this.ratio, p.castle >= 0 ? p.castle : i, p.source);
+    if (err) this.log(err, 'warn');
+    return true;
   },
 
   // --- Menu d'actions (clic droit sur la carte) : attaquer, construire, débarquer ---
@@ -834,7 +815,7 @@ const UI = {
       if (err) return this.log(err, 'warn');
       return this.log('⚓ Tes bateaux partent intercepter l\'expédition ! S\'ils arrivent avant elle, la bataille aura lieu en mer.', 'good');
     }
-    if (this.plan) return this.planClick(i);
+    if (this.plan && this.planClick(i)) return;
     // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
     const t = G.building[i];
     // Clic sur un de ses avant-postes : sa fenêtre d'info et son menu rapide (renforts / rapatrier)
@@ -858,23 +839,26 @@ const UI = {
     }
     if (!G.isLand(i) || G.owner[i] === h.id) return;
     const target = G.owner[i];
-    // Château (ou église) ennemi sans assaut en cours : on prépare l'itinéraire avant de lancer
+    // Royaume ennemi : un 1er clic choisit la cible (château, église… ou ses terres s'il n'en a plus),
+    // un 2e clic lance l'assaut. Assaut déjà en cours sur cette cible : on envoie tout de suite des soldats en plus.
+    // Terres libres : on attaque tout de suite.
     const b = G.building[i], c = G.anchor[i];
     const aimed = target >= 0 && TARGET_TYPES.includes(b) && G.isProtected(target);
-    const running = aimed && G.attacks.find(a => !a.done && a.attacker === h.id && a.targetCastle === c);
-    const attack = () => {
-      if (aimed && !running) return this.startPlan(target, c);
+    const running = target >= 0 && G.attacks.find(a => !a.done && a.attacker === h.id && a.target === target
+      && a.link === undefined && a.retreatEnd === undefined && (!aimed || a.targetCastle === c));
+    const attack = confirmed => {
+      if (target >= 0 && !running && !confirmed && (aimed || !G.isProtected(target))) return this.startPlan(target, aimed ? c : -1, i);
       // L'armée part du royaume ou d'un avant-poste bâti (avec ses soldats stationnés)
       const src = running ? G.sourceOfAttack(running) : G.bestSource(h.id, target, i);
-      const err = G.launchAttack(h.id, target, G.troopsAt(h.id, src) * this.ratio, i, undefined, src);
+      const err = G.launchAttack(h.id, target, G.troopsAt(h.id, src) * this.ratio, i, src);
       if (err) this.log(err, 'warn');
     };
-    // Attaquer un allié = le trahir (après confirmation)
+    // Attaquer un allié = le trahir (après confirmation, qui vaut validation de l'assaut)
     if (target >= 0 && G.areAllied(h.id, target)) {
-      this.confirmBetrayal(G.players[target], () => { G.breakAlliance(h.id, target); attack(); });
+      this.confirmBetrayal(G.players[target], () => { G.breakAlliance(h.id, target); attack(true); });
       return;
     }
-    attack();
+    attack(false);
   },
 };
 

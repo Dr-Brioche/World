@@ -1164,10 +1164,9 @@ const GameRules = {
   },
 
   // target = -1 pour les terres libres. aimTile = case visée (pour la flèche sur la carte).
-  // waypoints = points de passage de l'armée (assaut sur un château ou une église).
   // source = d'où part l'armée : -1 = le royaume (par défaut), sinon un avant-poste et ses soldats stationnés.
   // Renvoie un message d'erreur, ou null.
-  launchAttack(pid, target, troops, aimTile, waypoints, source = -1) {
+  launchAttack(pid, target, troops, aimTile, source = -1) {
     const p = this.players[pid];
     if (source >= 0 && !(this.owner[source] === pid && this.outpostReady(source))) {
       return 'Cet avant-poste ne peut pas (ou plus) lancer d\'attaque.';
@@ -1205,17 +1204,16 @@ const GameRules = {
       return `Un assaut contre ${this.players[target].name} est déjà en cours.` +
         (this.maxAssaults(pid) < CONFIG.CITADEL_ASSAULTS ? ' (Avec une citadelle, un château de niveau 3, tu pourrais en lancer 2 à la fois.)' : '');
     }
-    // Assaut déjà en préparation : il garde ses points de passage
-    if (!waypoints) waypoints = a && a.waypoints ? a.waypoints : [];
     if (castle >= 0) {
       const name = this.players[target].name;
-      path = this.castlePath(pid, castle, waypoints, source);
+      path = this.castlePath(pid, castle, source);
       if (!path) {
         return `Impossible d'atteindre ${this.targetLabel(castle)} : ` +
           `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`;
       }
     }
-    // Assaut déjà lancé : les renforts partent et arrivent dans REINFORCE_DELAY secondes
+    // Assaut déjà sur les terres ennemies : les renforts partent et arrivent dans REINFORCE_DELAY secondes
+    // (pendant sa marche sur nos terres, les soldats en plus le rejoignent tout de suite, plus bas)
     if (a && target >= 0 && !this.isPreparing(a)) {
       this.takeTroops(pid, source, troops);
       a.pending.push({ troops, tick: this.tick + CONFIG.REINFORCE_DELAY * CONFIG.TICKS_PER_SECOND });
@@ -1226,19 +1224,18 @@ const GameRules = {
         id: this.nextAttackId++, attacker: pid, target, troops: 0, done: false, startTick: this.tick,
         targetCastle: castle,
         source,        // d'où part l'armée (-1 = royaume, sinon avant-poste)
-        waypoints,     // points de passage choisis
         defenders: 0,  // soldats envoyés par le défenseur pour contrer cet assaut
         pending: [],   // renforts en route : { troops, tick d'arrivée }
         frontTile: -1, // case où se trouve l'assaut (pour la défense du terrain)
       };
       if (target >= 0) {
-        // Contre un royaume, l'armée se prépare d'abord : tout le monde la voit venir
-        a.startTick = this.tick + CONFIG.ATTACK_PREP_TIME * CONFIG.TICKS_PER_SECOND;
-        a.prepTicks = a.startTick - this.tick;
+        // Contre un royaume, l'armée part de sa cité la plus proche (ou de son avant-poste) et marche
+        // sur ses propres terres jusqu'à la frontière : tout le monde la voit venir
         this.aimArrow(a, frontier, aimTile);
+        const secs = this.startMarch(a, a.startTile);
         if (this.players[target].isHuman) {
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
-          UI.log(`⚠️ ${p.name} prépare un assaut contre toi (${fmt(troops)} soldats) ! ` +
+          UI.log(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! ` +
             (castle < 0 ? 'Sans château ni église, toutes tes troupes défendront d\'office, désorganisées.'
               : alone ? 'Il vise ton avant-poste : seuls les soldats débarqués le défendront.'
               : 'Clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.'), 'warn', p);
@@ -1282,22 +1279,9 @@ const GameRules = {
   // Chemin le plus court de la frontière de pid jusqu'au château c, en contournant les
   // autres fortifications du défenseur. Renvoie la liste des cases, ou null s'il n'y en a pas.
   // Le chemin préfère les terrains faciles (plaines) : chaque case « coûte » sa défense.
-  // waypoints = points de passage choisis par le joueur : l'armée passe par chacun d'eux, dans l'ordre,
-  // en prenant à chaque fois le chemin le plus facile.
-  castlePath(pid, c, waypoints = [], source) {
+  castlePath(pid, c, source) {
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
-    const target = this.owner[c];
-    // (un point de passage devenu impossible, par exemple pris entre-temps, est oublié)
-    const goals = waypoints.filter(w => passable(w) && !foot.has(w)).map(w => new Set([w]));
-    goals.push(foot);
-    let path = [], from = -1; // -1 = on part de la frontière
-    for (const goal of goals) {
-      const seg = this.searchPath(pid, from, goal, passable, target, source);
-      if (!seg) return null;
-      path = path.concat(from < 0 ? seg : seg.slice(1));
-      from = seg[seg.length - 1];
-    }
-    return path;
+    return this.searchPath(pid, -1, foot, passable, this.owner[c], source); // (-1 = on part de la frontière)
   },
 
   // Recherche du chemin le plus facile (algorithme de Dijkstra) depuis la case from
@@ -1468,9 +1452,10 @@ const GameRules = {
       fromX: p.sumX / p.tiles + 0.5, fromY: p.sumY / p.tiles + 0.5,
       toX: c % this.W + half, toY: ((c / this.W) | 0) + half,
     };
-    // Comme tout assaut contre un royaume : une préparation que tout le monde voit
-    a.startTick = this.tick + CONFIG.ATTACK_PREP_TIME * CONFIG.TICKS_PER_SECOND;
-    a.prepTicks = a.startTick - this.tick;
+    // Comme tout assaut contre un royaume : l'armée marche d'abord jusqu'à la frontière, et tout le monde la voit
+    let edge = -1;
+    this.forNeighbors(route.path[0], n => { if (edge < 0 && this.owner[n] === pid) edge = n; });
+    this.startMarch(a, edge);
     a.list = this.buildFrontier(pid, route.target);
     a.set = new Set(a.list);
     a.limitZone = this.corridor(c, route.path, route.passable);
@@ -1959,7 +1944,40 @@ const GameRules = {
     }
   },
 
+  // L'armée est-elle encore en marche sur ses propres terres (pas encore entrée chez l'ennemi) ?
   isPreparing(a) { return this.tick < a.startTick; },
+
+  // Départ d'un assaut contre un royaume : l'armée part de la cité (château) de son royaume la plus proche
+  // de la frontière visée (ou de son avant-poste) et marche sur ses terres jusqu'à la case edge, à
+  // MARCH_SPEED cases par seconde. Pendant cette marche, les soldats en plus la rejoignent tout de suite ;
+  // une fois chez l'ennemi, ce sont des renforts (avec délai). Renvoie la durée de la marche (en secondes).
+  startMarch(a, edge) {
+    const W = this.W, TPS = CONFIG.TICKS_PER_SECOND, p = this.players[a.attacker];
+    const to = edge >= 0 ? { x: edge % W + 0.5, y: ((edge / W) | 0) + 0.5 } : { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 };
+    const src = this.sourceOfAttack(a), mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
+    let from = src >= 0 && this.building[src] === B_OUTPOST ? mid(src) : null;
+    if (!from) {
+      let bestD = Infinity;
+      for (const c of this.castles) {
+        if (this.owner[c] !== a.attacker || !this.isBase(c)) continue;
+        const m = mid(c), d = (m.x - to.x) ** 2 + (m.y - to.y) ** 2;
+        if (d < bestD) { bestD = d; from = m; }
+      }
+    }
+    if (!from) from = { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 }; // (pas de château : du cœur du royaume)
+    const secs = Math.max(CONFIG.MARCH_MIN_TIME, Math.hypot(to.x - from.x, to.y - from.y) / CONFIG.MARCH_SPEED);
+    a.marchFrom = from;
+    a.marchTo = to;
+    a.startTick = this.tick + Math.round(secs * TPS);
+    a.prepTicks = a.startTick - this.tick;
+    return Math.ceil(secs);
+  },
+
+  // Où en est la marche de l'armée (coordonnées en cases) : de sa cité vers la frontière
+  marchPosition(a) {
+    const f = a.marchFrom, t = a.marchTo, k = 1 - Math.max(0, a.startTick - this.tick) / Math.max(1, a.prepTicks);
+    return { x: f.x + (t.x - f.x) * k, y: f.y + (t.y - f.y) * k };
+  },
 
   // Choisit une case du front, en préférant celles bien entourées (front plus régulier).
   // Le relief compte : une plaine est plus attirante qu'une montagne.
@@ -2223,7 +2241,7 @@ const GameRules = {
       // Assaut sur un château : le chemin est-il toujours libre ?
       if (a.targetCastle >= 0 && !a.castleTaken) {
         const path = this.owner[a.targetCastle] === a.target
-          ? this.castlePath(a.attacker, a.targetCastle, a.waypoints, this.sourceOfAttack(a)) : null;
+          ? this.castlePath(a.attacker, a.targetCastle, this.sourceOfAttack(a)) : null;
         if (!path) {
           if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers le château est bloqué : assaut annulé.', 'warn');
           return this.endAttack(a);
@@ -2361,20 +2379,6 @@ const GameRules = {
 
   // Château pris : toute sa zone de défense passe d'un coup à l'attaquant, avec les moulins et casernes
   // qui s'y trouvent (une église, un port ou un autre château reste au défenseur : il faut le viser)
-  // Un point de passage d'assaut est-il trop près du bord du royaume visé (sa frontière, ou la côte) ?
-  // Interdit, pour qu'on ne puisse pas faire longer le bord à l'armée et découper le royaume à sa guise.
-  nearTerritoryEdge(target, i) {
-    const R = CONFIG.WAYPOINT_EDGE_DISTANCE, W = this.W, x0 = i % W, y0 = (i / W) | 0;
-    for (let dy = -R; dy <= R; dy++) {
-      for (let dx = -R; dx <= R; dx++) {
-        if (dx * dx + dy * dy > R * R) continue;
-        const x = x0 + dx, y = y0 + dy;
-        if (x < 0 || y < 0 || x >= W || y >= this.H || this.owner[y * W + x] !== target) return true;
-      }
-    }
-    return false;
-  },
-
   // Nombre d'assauts qu'un royaume peut mener en même temps contre un même royaume :
   // 1, ou CITADEL_ASSAULTS s'il possède une citadelle (château de niveau 3)
   maxAssaults(pid) {

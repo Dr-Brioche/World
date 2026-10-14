@@ -509,12 +509,13 @@ const Render = {
         this.drawArmyBanner(a, bx + shift, by, `${siege}⚔ ${fmt(a.troops)}${extra}`);
         continue;
       }
-      // Préparation : pas de flèche. Le front menacé scintille à la couleur de l'attaquant,
-      // et sa bannière est plantée sur la frontière, là d'où partira l'assaut, avec le compte à rebours.
+      // Marche sur ses propres terres : pas de flèche. Le front menacé scintille à la couleur de l'attaquant,
+      // et sa bannière avance de sa cité vers la frontière, avec le temps restant avant l'attaque.
       this.drawThreat(ox, oy, a);
       const remaining = (a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND;
-      const st = a.startTile >= 0 ? a.startTile : -1;
-      const bx = st >= 0 ? ox + (st % G.W + 0.5) * s : x1, by = st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
+      const m = a.marchFrom ? G.marchPosition(a) : null, st = a.startTile >= 0 ? a.startTile : -1;
+      const bx = m ? ox + m.x * s : st >= 0 ? ox + (st % G.W + 0.5) * s : x1;
+      const by = m ? oy + m.y * s : st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
       this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
     }
   },
@@ -990,47 +991,33 @@ const Render = {
     ctx.setLineDash([]);
   },
 
-  // Assaut en préparation par le joueur : l'itinéraire avec ses points de passage numérotés,
-  // et en plus clair l'itinéraire si on ajoutait un point sous la souris
+  // Cible d'assaut choisie par le joueur (en attente du 2e clic) : le chemin de l'armée, et la cible entourée
+  // d'un cercle rouge qui tourne
   drawAssaultPlan(ox, oy) {
     const G = Game, p = UI.plan, ctx = this.ctx, s = this.cam.scale, W = G.W;
-    const key = p.castle + ':' + G.version + ':' + p.waypoints.join(',');
-    if (this.planKey !== key) { this.planKey = key; this.planPath = G.castlePath(G.human.id, p.castle, p.waypoints, p.source); }
-    // Itinéraire possible en passant par la case survolée
-    const h = this.hover;
-    const tryIt = h >= 0 && G.anchor[h] !== p.castle && !p.waypoints.includes(h) && G.castlePassable(p.castle)(h)
-      && !G.nearTerritoryEdge(p.target, h); // (pas trop près du bord de son royaume)
-    const tKey = key + ':' + h;
-    if (this.tryKey !== tKey) {
-      this.tryKey = tKey;
-      this.tryPath = tryIt ? G.castlePath(G.human.id, p.castle, p.waypoints.concat([h]), p.source) : null;
+    let cx, cy, r;
+    if (p.castle >= 0) {
+      const key = p.castle + ':' + G.version + ':' + p.source;
+      if (this.planKey !== key) { this.planKey = key; this.planPath = G.castlePath(G.human.id, p.castle, p.source); }
+      if (this.planPath) this.strokePath(ox, oy, this.planPath, '#ffd34d', 3);
+      const n = G.sizeOf(G.building[p.castle]);
+      cx = ox + (p.castle % W + n / 2) * s;
+      cy = oy + (((p.castle / W) | 0) + n / 2) * s;
+      r = Math.max(12, s * n * 0.75);
+    } else {
+      cx = ox + (p.tile % W + 0.5) * s;
+      cy = oy + (((p.tile / W) | 0) + 0.5) * s;
+      r = Math.max(10, s * 1.5);
     }
-    if (this.tryPath) this.strokePath(ox, oy, this.tryPath, 'rgba(255,255,255,0.75)', 1.8);
-    if (this.planPath) this.strokePath(ox, oy, this.planPath, '#ffd34d', 3);
-    // Cible entourée
-    const n = G.sizeOf(G.building[p.castle]);
-    const cx = ox + (p.castle % W + n / 2) * s, cy = oy + (((p.castle / W) | 0) + n / 2) * s;
     ctx.beginPath();
-    ctx.arc(cx, cy, Math.max(12, s * n * 0.75), 0, Math.PI * 2);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.setLineDash([8, 5]);
+    ctx.lineDashOffset = -performance.now() / 30;
     ctx.lineWidth = 3;
-    ctx.strokeStyle = p.clicks ? '#ff5b3a' : '#ffd34d';
+    ctx.strokeStyle = '#ff5b3a';
     ctx.stroke();
-    // Points de passage numérotés
-    ctx.font = '700 12px Georgia, serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    p.waypoints.forEach((w, k) => {
-      const x = ox + (w % W + 0.5) * s, y = oy + (((w / W) | 0) + 0.5) * s;
-      ctx.beginPath();
-      ctx.arc(x, y, 9, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffd34d';
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(20,12,4,0.9)';
-      ctx.stroke();
-      ctx.fillStyle = '#2a1a08';
-      ctx.fillText(String(k + 1), x, y + 0.5);
-    });
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
   },
 
   drawCastleAssaultPreview(ox, oy) {

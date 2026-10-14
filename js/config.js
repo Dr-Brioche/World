@@ -79,7 +79,9 @@ const CONFIG = {
   ATTACK_SPEED: 0.25,          // vitesse de conquête (plus petit = les armées avancent plus lentement sur la carte)
   MIN_ATTACK_SPEED: 0.25,      // vitesse minimum d'une petite armée (cases de plaine par tour)
   ASSAULT_SLOWDOWN: 6,         // un assaut contre un royaume avance 6 fois moins vite que sur les terres libres
-  ATTACK_PREP_TIME: 10,        // secondes de préparation avant un assaut contre un royaume
+  MARCH_SPEED: 5,              // un assaut contre un royaume part de la cité la plus proche et marche sur ses terres
+                               // jusqu'à la frontière (cases par seconde) : pendant ce temps, tout le monde le voit venir
+  MARCH_MIN_TIME: 2,           // ...en au moins 2 secondes
                                // (on peut y ajouter des soldats tout de suite)
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière
   // Après un assaut réussi (château, église, port ou avant-poste pris), pendant WAR_EFFECT_TIME secondes :
@@ -91,7 +93,6 @@ const CONFIG = {
   POST_WAR_MAX: 0.75,  // au pire -75 % de soldats produits
   RALLY_MAX: 1,        // au mieux +100 %
   ENCLAVE_LOG_MIN: 50,         // un message n'annonce un morceau englobé que s'il fait au moins 50 cases
-  WAYPOINT_EDGE_DISTANCE: 4,   // un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé
   CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
   DEFENDER_SPEED: 6,           // les défenseurs partent du château le plus proche et marchent vers l'ennemi (cases/s)
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
