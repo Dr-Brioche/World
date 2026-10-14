@@ -28,8 +28,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis ta bannière et le **type de carte** dans le menu, puis clique sur une terre au début de la partie
-   (pas sur un îlot : il faut une terre assez grande).
+1. **Fonde ta capitale** : choisis ta bannière et le **type de carte** dans le menu. Sur la carte, **les royaumes rivaux
+   sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
+   pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
    - **Normale** : un grand continent entouré d'océan, et parfois quelques îlots au large.
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
@@ -308,6 +309,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.52** : 👀 au début de la partie, les royaumes rivaux sont déjà installés sur la carte (nom et bannière) : on voit où ils sont avant de choisir où fonder sa capitale
 - **v0.51** : 🐢 les armées avancent encore 2 fois moins vite quand elles traversent un royaume ennemi (6 fois moins vite que sur les terres libres)
 - **v0.50** : 💰 seuls les bâtiments que tu construis toi-même font monter le prix des suivants (ceux pris à l'ennemi ne comptent plus) · ⚰️🔥 l'après-guerre et la galvanisation durent 30 s
 - **v0.49** : ⚔️ deux armées ennemies qui assiègent le même château s'affrontent d'abord entre elles, la gagnante reprend le siège · 🛡️ clic droit chez un allié attaqué → l'aider à se défendre (ses survivants rentrent ensuite)

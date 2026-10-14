@@ -957,8 +957,12 @@ const Render = {
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
       ctx.lineWidth = 1.5;
       if (G.phase === 'spawn') {
+        // Aperçu de la capitale : blanc si on peut la fonder ici, rouge sinon (trop près d'un rival…)
+        const ok = !G.spawnError(this.hover);
         ctx.beginPath();
         ctx.arc(ox + (hx + 0.5) * s, oy + (hy + 0.5) * s, (CONFIG.START_RADIUS + 0.5) * s, 0, Math.PI * 2);
+        ctx.strokeStyle = ok ? 'rgba(255,255,255,0.9)' : 'rgba(230,70,60,0.95)';
+        ctx.lineWidth = ok ? 1.5 : 2.5;
         ctx.stroke();
       } else if (UI.selectedBuild && this.mouse) {
         // Aperçu de l'emplacement du bâtiment (2x2 ou 4x4 cases)
@@ -983,6 +987,7 @@ const Render = {
     for (const p of G.players) {
       if (!p.alive || p.tiles === 0) continue;
       let size = Math.sqrt(p.tiles) * s * 0.2;
+      if (G.phase === 'spawn') size = Math.max(size, 13); // avant de fonder sa capitale : on voit bien qui est où
       if (size < 8) continue;
       size = Math.min(size, 42);
       const cx = ox + (p.sumX / p.tiles + 0.5) * s, cy = oy + (p.sumY / p.tiles + 0.5) * s;
