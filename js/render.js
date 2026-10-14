@@ -209,6 +209,7 @@ const Render = {
       this.fillTiles(ox, oy, G.castleZone(c, G.owner[c]), 'rgba(255,255,255,0.22)');
     }
     this.drawChurchZones(ox, oy);
+    this.drawBuildableTiles(ox, oy);
     this.drawChurchCastleCircles(ox, oy);
     // Aperçu de la muraille avant de construire (ou d'améliorer) un château
     if (G.phase === 'playing' && UI.selectedBuild === B_CASTLE && this.hover >= 0 && this.mouse) {
@@ -251,6 +252,26 @@ const Render = {
 
   // Zones des églises (là où elles permettent de construire) : on les montre quand on survole une église,
   // ou quand on s'apprête à poser un moulin ou une caserne
+  // Pendant la pose d'un moulin ou d'une caserne : dans les zones où l'on peut construire (muraille de ses châteaux,
+  // zone de ses églises et ports), chaque case est verte si le bâtiment peut s'y poser, rouge sinon
+  // (trop près d'un autre bâtiment, fleuve, plus de place dans l'église…). Recalculé au plus 3 fois par seconde.
+  drawBuildableTiles(ox, oy) {
+    const G = Game, h = G.human, type = UI.selectedBuild;
+    if (G.phase !== 'playing' || (type !== B_MILL && type !== B_BARRACKS)) { this.buildable = null; return; }
+    const key = type + ':' + G.buildingTiles.length + ':' + G.works.size + ':' + h.tiles;
+    const now = performance.now();
+    if (!this.buildable || (this.buildable.key !== key && now - this.buildable.time > 300)) {
+      const zone = new Set();
+      for (const c of G.castles) if (G.owner[c] === h.id) for (const i of G.castleZone(c, h.id)) zone.add(i);
+      for (const a of G.buildingTiles) if (G.owner[a] === h.id && G.hasSlots(a)) for (const i of G.churchZone(a)) zone.add(i);
+      const ok = [], bad = [];
+      for (const i of zone) (G.canPlace(h.id, i, type) ? ok : bad).push(i);
+      this.buildable = { key, time: now, ok, bad };
+    }
+    this.fillTiles(ox, oy, this.buildable.ok, 'rgba(140,240,110,0.3)');
+    this.fillTiles(ox, oy, this.buildable.bad, 'rgba(235,45,35,0.42)');
+  },
+
   drawChurchZones(ox, oy) {
     const G = Game, ctx = this.ctx, s = this.cam.scale;
     if (G.phase !== 'playing') return;

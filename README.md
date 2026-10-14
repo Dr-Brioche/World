@@ -144,7 +144,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **ou près d'une de tes églises** (ou d'un port amélioré) qui a encore de la place, pas ailleurs dans l'arrière-pays.
    Les châteaux et les églises, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
-   (l'aperçu devient rouge si c'est trop près).
+   (l'aperçu devient rouge si c'est trop près). Quand tu choisis un **moulin** ou une **caserne**, les zones où l'on peut
+   construire (muraille de tes châteaux, zone de tes églises et ports) se colorent : **vert** là où il peut se poser,
+   **rouge** là où c'est impossible, pour bien organiser tes constructions.
    Si un ennemi prend une seule de ces cases, il capture tout le bâtiment !
    - 🌾 **Moulin** : **toutes les 10 secondes**, il verse un peu d'or d'un coup
      (un petit chiffre `+2 💰` s'envole au-dessus de lui). **Clique dessus pour l'améliorer** (menu rapide) (2 niveaux) :
@@ -333,6 +335,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.61.2** : 🟩🟥 en posant un moulin ou une caserne, les zones constructibles (châteaux, églises, ports) montrent en vert où il peut se poser et en rouge où c'est impossible
 - **v0.61.1** : 💰 l'amélioration du château au niveau 2 coûte 300 (au lieu de 90)
 - **v0.61** : 🛡️ les défenseurs n'arrivent plus instantanément : ils partent du château le plus proche et marchent à la rencontre de l'armée ennemie (bannière visible, « en route » dans le panneau)
 - **v0.60.5** : ⛺ un avant-poste ne tombe plus tout de suite : il faut l'assiéger 10 s, le temps pour son propriétaire de le défendre
