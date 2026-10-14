@@ -1,4 +1,4 @@
-# World : notes pour Claude
+# Medieval Emperor : notes pour Claude
 
 - Jeu de conquête médiéval en HTML/CSS/JS pur (sans build, sans dépendances), inspiré d'OpenFront.
 - Le projet est en français : textes du jeu, commentaires et messages de commit en français.

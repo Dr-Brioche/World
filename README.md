@@ -1,4 +1,4 @@
-# ⚔️ World
+# ⚔️ Medieval Emperor
 
 **Un petit jeu de conquête médiévale, jouable directement dans le navigateur.**
 
@@ -361,6 +361,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.66.1** : 👑 le jeu s'appelle désormais **Medieval Emperor**
 - **v0.66** : 🏰 nouvelle carte **Europe** (1000 x 1000 cases) · 🌍 la carte **Monde** passe à 1080 x 408 cases · 🗺️ menu des cartes en deux groupes : aléatoires et prédéfinies · 🌊 fleuves avec des méandres sur les cartes prédéfinies · ⚓ fini l'interception des expéditions en mer : on attaque l'avant-poste quand elle accoste · 🐎 sur les grandes cartes, les terres libres se prennent plus vite et coûtent moins de soldats (jusqu'à x4 en Europe) · ⚡ jeu bien plus rapide sur les grandes cartes (calculs optimisés)
 - **v0.65** : 🏜️ nouveau terrain : le **désert** (défense comme une plaine, production des bâtiments −20 %), sur toutes les cartes, et aux vrais endroits sur la carte Monde · 📜 règles du menu réécrites avec toutes les mécaniques actuelles · 🏗️ de loin, le bâtiment qu'on pose apparaît sous la souris en version simplifiée (son icône), comme les bâtiments sur la carte
 - **v0.64** : 🎯 un clic sur la cible pour la choisir, un 2e pour lancer l'assaut · fini les points de passage · ⚔️ plus de préparation de 10 s : l'armée part de ta cité la plus proche et marche sur tes terres jusqu'à la frontière (tu peux lui ajouter des soldats tout de suite pendant la marche, ensuite ce sont des renforts avec délai)
