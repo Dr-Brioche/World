@@ -57,7 +57,7 @@ const UI = {
       const id = e.target.dataset.cancel;
       if (!id) return;
       const a = Game.cancelAttack(Game.human.id, +id);
-      if (a) this.log(`↩️ Retraite ! ${fmt(a.troops)} soldats rentrent au royaume.`, 'good');
+      if (a) this.log(`🏳️ Retraite ordonnée : tes soldats décrochent en ${CONFIG.RETREAT_TIME} s, et environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdront.`, 'warn');
       this.refreshAttacks();
     });
 
@@ -212,19 +212,27 @@ const UI = {
     const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
     if (cost === null) {
       el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : déjà au maximum ! ` +
-        `${this.levelEffect(type, cur)}.<div class="choices"><button data-no>OK</button></div>`;
+        `${this.levelEffect(type, cur)}.<div class="choices"><button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>OK</button></div>`;
     } else {
       const next = BUILDING_LEVELS[type][G.level[a] + 1];
       el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
         (next.img ? `<img src="${next.img}" alt="">` : '') +
         `<b>${this.upgradeEffect(type, cur, next)}</b>` +
-        `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button><button data-no>Fermer</button></div>`;
+        `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button>` +
+        `<button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>Fermer</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
         const err = G.upgradeBuilding(G.human, a);
         if (err) return this.log(err, 'warn');
         close();
       });
     }
+    // Détruire le bâtiment (DEMOLISH_TIME secondes de travaux)
+    el.querySelector('[data-del]').addEventListener('click', () => {
+      const err = G.demolishBuilding(G.human, a);
+      if (err) return this.log(err, 'warn');
+      close();
+      this.closeActionMenu();
+    });
     el.querySelector('[data-no]').addEventListener('click', close);
     $('log').prepend(el);
     setTimeout(close, 15000);
@@ -471,14 +479,15 @@ const UI = {
   refreshAttacks() {
     const G = Game, h = G.human;
     const list = G.attacks.filter(a => !a.done && (a.attacker === h.id || a.target === h.id));
-    const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '')).join(',');
+    const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '')).join(',');
     const box = $('attacks');
     if (key !== this.attacksKey) {
       this.attacksKey = key;
       box.innerHTML = list.map(a => {
         if (a.link !== undefined && a.attacker === h.id) {
           return `<div class="attack panel"><span>⚔️ → ${G.building[a.link] === B_PORT ? '⚓ ton port isolé' : '🏰 ton château isolé'}</span><b data-troops="${a.id}"></b>` +
-            `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
+            (a.retreatEnd !== undefined ? '<span class="retreat">🏳️ retraite…</span></div>'
+              : `<button data-cancel="${a.id}" title="Rappeler les soldats (retraite de ${CONFIG.RETREAT_TIME} s, ${Math.round(CONFIG.RETREAT_LOSS * 100)} % de pertes)">✖ Annuler</button></div>`);
         }
         if (G.cutOff(a) && a.target === h.id) {
           // Pas de bouton « Défendre » : le château est coupé du royaume
@@ -495,7 +504,8 @@ const UI = {
           const flag = a.target >= 0 ? this.bannerImg(G.players[a.target]) : '';
           const from = G.sourceOfAttack(a) >= 0 ? '⛺ ' : '';
           return `<div class="attack panel"><span>${from}⚔️ → ${flag}${target}</span><b data-troops="${a.id}"></b>` +
-            `<button data-cancel="${a.id}" title="Rappeler les soldats survivants">✖ Annuler</button></div>`;
+            (a.retreatEnd !== undefined ? '<span class="retreat">🏳️ retraite…</span></div>'
+              : `<button data-cancel="${a.id}" title="Rappeler les soldats (retraite de ${CONFIG.RETREAT_TIME} s, ${Math.round(CONFIG.RETREAT_LOSS * 100)} % de pertes)">✖ Annuler</button></div>`);
         }
         return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
           `<b data-troops="${a.id}"></b>` +

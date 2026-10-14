@@ -246,6 +246,8 @@ button:hover { background: #e8d6a8; }
 .msg.betray button:last-child { background: var(--parchment-dark); }
 #traitor { color: var(--danger); font-weight: bold; }
 .msg.upgrade img { display: block; width: 120px; margin: 4px auto; }
+.msg.request.upgrade button[data-del] { background: #e9b5a8; }
+.msg.request.upgrade button[data-no] { background: var(--parchment-dark); }
 
 .overlay {
   position: fixed;
