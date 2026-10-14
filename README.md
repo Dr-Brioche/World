@@ -286,7 +286,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    ni vide ni trop pleine**, puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée
    est pleine. Pas de repère précis : c'est la **couleur de la jauge** qui te guide (vert = au top, orange = normal,
    rouge = ralenti).
+   **💰 Solde des troupes** : garder trop de soldats coûte cher ! Au-delà de la moitié de ton armée maximum,
+   tes soldats disponibles (pas les garnisons) réduisent **tout l'or que tu gagnes**, jusqu'à **−25 %** avec
+   une armée pleine (c'est affiché sous la jauge).
    Envoie donc tes troupes au combat plutôt que de les garder !
+   **🚀 Élan de départ** : au début de la partie, tout le monde recrute et prend les terres libres **50 % plus vite** ;
+   cet élan diminue peu à peu et disparaît au bout de **4 minutes**.
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
@@ -311,6 +316,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.54** : 🚀 élan de départ : les 4 premières minutes, recrutement et prise des terres libres plus rapides (+50 %, qui diminue peu à peu) · 💰 solde des troupes : au-delà de la moitié de l'armée maximum, les soldats disponibles font baisser l'or gagné (jusqu'à −25 %)
 - **v0.53** : 🛡️ en posant ou en améliorant un château, une bulle près de la souris montre la défense totale de sa muraille (terrain + murs)
 - **v0.52** : 👀 au début de la partie, les royaumes rivaux sont déjà installés sur la carte (nom et bannière) : on voit où ils sont avant de choisir où fonder sa capitale
 - **v0.51** : 🐢 les armées avancent encore 2 fois moins vite quand elles traversent un royaume ennemi (6 fois moins vite que sur les terres libres)

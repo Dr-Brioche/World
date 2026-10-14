@@ -28,6 +28,11 @@ const CONFIG = {
   MAX_TROOPS_PER_TILE: 0.12,
   BASE_TROOP_GROWTH: 0.15,     // soldats gagnés par seconde au minimum
   TROOP_GROWTH_PER_TILE: 0.0008, // soldats/seconde en plus par case possédée
+  // Élan de départ : au début de la partie, le recrutement ET la conquête des terres libres vont plus vite
+  // (+50 %), puis ce bonus diminue peu à peu jusqu'à disparaître au bout de EARLY_GROWTH_TIME secondes
+  // (la fin de partie ne change pas)
+  EARLY_GROWTH_BONUS: 0.5,
+  EARLY_GROWTH_TIME: 240,
   // Le recrutement dépend du remplissage de l'armée : il monte jusqu'à TROOP_PEAK_RATIO
   // du maximum, puis baisse jusqu'à 0 quand on s'approche du maximum.
   TROOP_PEAK_RATIO: 0.4,       // remplissage idéal (40 % du maximum)
@@ -41,6 +46,11 @@ const CONFIG = {
   // (rendement = 1 / (1 + 0.1 × (nombre - 1)) : 1 → 100 %, 3 → 83 %, 6 → 67 %, 12 → 48 %).
   // Le début de partie ne change pas, mais l'économie ne s'emballe plus.
   GOLD_DIMINISHING: 0.1,
+  // Solde des troupes : garder trop de soldats coûte de l'or. Au-delà de UPKEEP_FROM de l'armée maximum
+  // (50 %), tout l'or gagné baisse peu à peu, jusqu'à -UPKEEP_MAX (-25 %) avec une armée pleine.
+  // (les garnisons ne comptent pas : seulement les soldats disponibles)
+  UPKEEP_FROM: 0.5,
+  UPKEEP_MAX: 0.25,
   PRODUCTION_INTERVAL: 10,   // moulins et casernes produisent toutes les 10 secondes
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type construit soi-même rend le suivant x1.5 plus cher
                              // (ceux pris à l'ennemi ne comptent pas)
