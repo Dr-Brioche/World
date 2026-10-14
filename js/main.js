@@ -228,10 +228,9 @@ const UI = {
     }
     // Détruire le bâtiment (DEMOLISH_TIME secondes de travaux)
     el.querySelector('[data-del]').addEventListener('click', () => {
-      const err = G.demolishBuilding(G.human, a);
-      if (err) return this.log(err, 'warn');
       close();
       this.closeActionMenu();
+      this.confirmDemolish(a);
     });
     el.querySelector('[data-no]').addEventListener('click', close);
     $('log').prepend(el);
@@ -263,11 +262,32 @@ const UI = {
       this.closeActionMenu();
       if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
       if (work) return G.cancelWorks(h, a);
-      const err = G.demolishBuilding(h, a);
-      if (err) this.log(err, 'warn');
+      this.confirmDemolish(a);
     });
     document.body.appendChild(el);
     this.actionMenu = el;
+  },
+
+  // Demande confirmation avant de détruire un de ses bâtiments (en haut à gauche)
+  confirmDemolish(a) {
+    const G = Game, type = G.building[a];
+    if (!type) return;
+    if (this.demolishBox) this.demolishBox.remove();
+    const el = document.createElement('div');
+    this.demolishBox = el;
+    el.className = 'msg request betray';
+    el.innerHTML = `🧨 Détruire ${BUILDINGS[type].icon} <b>${G.buildingInfo(a) ? G.buildingInfo(a).name : BUILDINGS[type].name}</b> ? ` +
+      `Les travaux prennent ${CONFIG.DEMOLISH_TIME} s, et il est perdu pour de bon.` +
+      `<div class="choices"><button data-yes>Détruire</button><button data-no>Annuler</button></div>`;
+    const close = () => { el.remove(); if (this.demolishBox === el) this.demolishBox = null; };
+    el.querySelector('[data-yes]').addEventListener('click', () => {
+      close();
+      const err = G.demolishBuilding(G.human, a);
+      if (err) this.log(err, 'warn');
+    });
+    el.querySelector('[data-no]').addEventListener('click', close);
+    $('log').prepend(el);
+    setTimeout(close, 15000);
   },
 
   // Demande confirmation avant de trahir un allié.
