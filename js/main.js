@@ -317,6 +317,10 @@ const UI = {
           : ' · 🚩 isolé : aucun renfort ne peut le rejoindre';
       }
       if (TERRAIN_PRODUCTION[G.building[i]]) txt += ` · terrain : ${prodText(G.terrainFactor(a, G.building[i]))}`;
+      if ((G.building[i] === B_MILL || G.building[i] === B_PORT) && o >= 0) {
+        const p = G.players[o], n = p.bCount[B_MILL] + p.bCount[B_PORT];
+        if (n > 1) txt += ` · rendement ${Math.round(G.goldEfficiency(p) * 100)} % (${n} moulins et ports dans le royaume)`;
+      }
       if (G.building[i] === B_PORT) {
         if (info.slots) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots}`;
         txt += info.garrison ? ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} %` : '';

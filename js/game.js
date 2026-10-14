@@ -612,10 +612,18 @@ const GameRules = {
   // avec les bonus de route et de terrain
   buildingOutput(a) {
     const t = this.building[a], info = this.buildingInfo(a);
-    if (t === B_PORT) return info.gold; // le port : ni route ni terrain
-    const v = t === B_MILL ? info.gold : info.troops;
+    const owner = this.players[this.owner[a]], eff = owner && t !== B_BARRACKS ? this.goldEfficiency(owner) : 1;
+    if (t === B_PORT) return info.gold * eff; // le port : ni route ni terrain
+    const v = t === B_MILL ? info.gold * eff : info.troops;
     const road = this.roads().get(a);
     return v * (1 + (road ? road.bonus : 0)) * this.terrainFactor(a, t);
+  },
+
+  // Rendement des moulins et des ports d'un royaume : plus il en a, moins chacun rapporte
+  // (voir GOLD_DIMINISHING dans config.js). 1 = 100 %.
+  goldEfficiency(p) {
+    const n = p.bCount[B_MILL] + p.bCount[B_PORT];
+    return 1 / (1 + CONFIG.GOLD_DIMINISHING * Math.max(0, n - 1));
   },
 
   // Versement de la production des moulins et casernes. Chaque bâtiment a son propre moment

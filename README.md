@@ -131,6 +131,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | 1. Moulin | un peu | prix du moulin |
      | 2. Grand moulin | +133 % | 💰 40 |
 
+     **Rendement décroissant** : plus ton royaume a de moulins et de ports, moins chacun rapporte
+     (3 → 83 % chacun, 6 → 67 %, 12 → environ la moitié). Les premiers rapportent bien, mais on ne devient pas
+     riche trop vite en en accumulant (le survol d'un moulin montre son rendement).
+
    - ⚔️ **Caserne** : **toutes les 10 secondes**, elle forme quelques soldats (`+3 ⚔️` au-dessus d'elle),
      et elle agrandit ton armée maximum. **Clique dessus pour l'améliorer** (3 niveaux) :
 
@@ -285,6 +289,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.44** : 💰 rendement décroissant des moulins et des ports : plus un royaume en a, moins chacun rapporte (l'économie ne s'emballe plus en fin de partie)
 - **v0.43** : 💰 un château coûte 100 (au lieu de 30), ses améliorations 90 et 225 · toutes les améliorations au niveau 3 coûtent 50 % de plus (grande caserne 150, cathédrale 300, port royal 375)
 - **v0.42.1** : 🤖 les royaumes rivaux traversent aussi les fleuves à gué pour prendre les terres libres d'en face
 - **v0.42** : 🛶 clic droit sur une terre libre de l'autre côté d'un fleuve → « Traverser le fleuve » : l'armée passe à gué (3 s par case de fleuve) et prend une tête de pont sur l'autre rive

@@ -37,6 +37,10 @@ const CONFIG = {
   // --- Or ---
   BASE_GOLD: 0.06,         // or par seconde au minimum (revenu de base, selon le territoire)
   GOLD_PER_TILE: 0.0002,
+  // Rendement décroissant : plus un royaume a de moulins et de ports, moins chacun rapporte
+  // (rendement = 1 / (1 + 0.1 × (nombre - 1)) : 1 → 100 %, 3 → 83 %, 6 → 67 %, 12 → 48 %).
+  // Le début de partie ne change pas, mais l'économie ne s'emballe plus.
+  GOLD_DIMINISHING: 0.1,
   PRODUCTION_INTERVAL: 10,   // moulins et casernes produisent toutes les 10 secondes
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type coûte x1.5 plus cher
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
