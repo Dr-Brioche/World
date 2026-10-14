@@ -681,17 +681,19 @@ const UI = {
         } });
       }
     }
-    if (G.isCoastal(i) && G.landable(h.id, i)) {
-      const plan = G.planLanding(h.id, i);
+    // Attaque navale : sur la côte cliquée, ou la plus proche (on peut cliquer dans l'eau tout près)
+    const coast = G.nearestCoast(h.id, i);
+    if (coast >= 0) {
+      const plan = G.planLanding(h.id, coast);
       const sending = Math.floor(h.troops * this.ratio);
       if (!plan.error && sending < plan.minTroops) {
         plan.error = `Il faut au moins ${plan.minTroops} soldats (pour remplir la garnison de l'avant-poste) : augmente le curseur « Envoyer ».`;
       }
       items.push(plan.error
-        ? { label: '⛵ Débarquer', disabled: plan.error }
-        : { label: `⛵ Débarquer avec ${fmt(h.troops * this.ratio)} soldats (💰 ${plan.cost}, ` +
+        ? { label: '⛵ Attaque navale', disabled: plan.error }
+        : { label: `⛵ Attaque navale : débarquer ${fmt(h.troops * this.ratio)} soldats (💰 ${plan.cost}, ` +
             `${Math.max(1, Math.round(plan.time))} s de mer, environ ${Math.round(G.seaLoss(plan.time) * 100)} % de pertes)`, run: () => {
-          const err = G.launchExpedition(h.id, i, h.troops * this.ratio);
+          const err = G.launchExpedition(h.id, coast, h.troops * this.ratio);
           if (err) this.log(err, 'warn');
           else this.log('⛵ Ton expédition prend la mer ! Ses soldats défendront l\'avant-poste qu\'elle bâtira à l\'arrivée.', 'good');
         } });
