@@ -559,6 +559,34 @@ const Render = {
     }
   },
 
+  // Défenseurs qui rentrent à pied vers leur ville (l'assaut qu'ils allaient contrer est fini)
+  drawReturning(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    for (const r of G.returning) {
+      const p = G.players[r.pid], k = Math.min(1, (G.tick - r.start) / Math.max(1, r.arrive - r.start));
+      const x = ox + (r.from.x + (r.to.x - r.from.x) * k) * s, y = oy + (r.from.y + (r.to.y - r.from.y) * k) * s;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(ox + r.to.x * s, oy + r.to.y * s);
+      ctx.setLineDash([2, 6]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(${p.color.join(',')},0.6)`;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 0.75;
+      this.drawBannerImage(p, x, y, 26);
+      ctx.globalAlpha = 1;
+      ctx.font = '700 12px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+      ctx.fillStyle = '#fff';
+      ctx.strokeText('↩ ' + fmt(r.troops), x, y - 20);
+      ctx.fillText('↩ ' + fmt(r.troops), x, y - 20);
+    }
+  },
+
   // Expédition ennemie qui vise notre côte : la zone où elle va débarquer est marquée en rouge (elle clignote)
   drawLandingWarnings(ox, oy) {
     const G = Game, h = G.human, ctx = this.ctx, s = this.cam.scale;
@@ -1153,6 +1181,7 @@ const Render = {
     this.drawLandingWarnings(ox, oy);
     this.drawExpeditions(ox, oy);
     this.drawDefendersOnTheWay(ox, oy);
+    this.drawReturning(ox, oy);
     this.drawAttackArrows(ox, oy);
     this.drawCastleTip();
   },
