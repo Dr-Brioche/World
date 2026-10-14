@@ -1814,7 +1814,7 @@ const GameRules = {
   sendDefenders(pid, attackId, troops) {
     const p = this.players[pid];
     const a = this.attacks.find(a => a.id === attackId && a.target === pid && !a.done);
-    if (!a) return null;
+    if (!a || this.defendWait(a) > 0) return null; // (les défenseurs se regroupent entre deux envois)
     // Château isolé : personne ne peut le rejoindre. Avant-poste bâti : ses soldats stationnés le défendent.
     let src = -1;
     if (this.cutOff(a)) {
@@ -1825,8 +1825,17 @@ const GameRules = {
     if (troops < 1) return null;
     this.takeTroops(pid, src, troops);
     a.defenders += troops;
+    a.lastDefend = this.tick;
     if (src >= 0) a.defSource = src;
     return a;
+  },
+
+  // Secondes à attendre avant de pouvoir renvoyer des défenseurs contre cet assaut (0 = tout de suite).
+  // Ce petit délai (DEFEND_COOLDOWN) évite d'envoyer les soldats un par un en continu.
+  defendWait(a) {
+    if (a.lastDefend === undefined) return 0;
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    return Math.max(0, (a.lastDefend + CONFIG.DEFEND_COOLDOWN * TPS - this.tick) / TPS);
   },
 
   stepAttack(a) {
