@@ -258,7 +258,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
    - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
      ton armée : l'avant-poste disparaît et ses soldats rejoignent tes troupes.
-   - Les ennemis peuvent **viser l'avant-poste** pour le détruire ; sans lui, ses terres sont à nouveau
+   - Les ennemis peuvent **viser l'avant-poste** pour le détruire (après un **siège de 10 s**, pendant lequel
+     ses soldats stationnés et des renforts peuvent encore le défendre) ; sans lui, ses terres sont à nouveau
      un petit morceau isolé, facile à encercler.
    - **⚓ Intercepter** : si un royaume a un **port** (n'importe quel niveau), il peut **cliquer sur le bateau**
      d'une expédition ennemie pour envoyer le % de soldats choisi à sa rencontre. Ses bateaux foncent vers la côte
@@ -331,6 +332,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.60.5** : ⛺ un avant-poste ne tombe plus tout de suite : il faut l'assiéger 10 s, le temps pour son propriétaire de le défendre
 - **v0.60.4** : ⛺ cliquer sur un de ses avant-postes n'envoie plus directement de renforts : ça ouvre sa fenêtre d'info et un menu rapide ⛵ Renforts / 🚢 Rapatrier
 - **v0.60.3** : 💰 l'amélioration de la caserne au niveau 2 coûte 80 (au lieu de 40)
 - **v0.60.2** : cliquer à côté (ou `Échap`) ferme ensemble le menu rapide et la fenêtre d'info d'un bâtiment

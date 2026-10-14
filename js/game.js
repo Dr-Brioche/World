@@ -2184,8 +2184,10 @@ const GameRules = {
     // d'ici là, le défenseur peut encore envoyer des soldats (on se bat alors, juste au-dessus).
     if (a.siege) {
       if (this.owner[a.siege.tile] !== a.target) return this.endAttack(a); // le château a changé de mains
+      const sb = this.building[a.siege.tile];
+      if (sb !== B_CASTLE && sb !== B_OUTPOST) return this.endAttack(a); // (il n'existe plus)
       if (this.tick < a.siege.end) return;
-      return this.takeCastle(a, a.siege.tile);
+      return this.building[a.siege.tile] === B_OUTPOST ? this.takeOutpost(a, a.siege.tile) : this.takeCastle(a, a.siege.tile);
     }
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
     // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5, fleuve 4). On avance donc vite en plaine
@@ -2202,6 +2204,8 @@ const GameRules = {
       if (a.troops < this.tileCost(a, t)) return this.endAttack(a); // plus assez de soldats
       // Arrivée au pied d'un château : le siège commence (il ne tombe pas tout de suite)
       if (a.target >= 0 && this.building[t] === B_CASTLE) return this.startSiege(a, t);
+      // (un avant-poste visé s'assiège aussi : il ne tombe pas tout de suite)
+      if (this.building[t] === B_OUTPOST && this.anchor[t] === a.targetCastle) return this.startSiege(a, t);
       const steps = TERRAIN_INFO[this.terrain[t]].cost;
       if (a.move < steps) {
         a.set.add(t); // pas assez de points ce tour-ci : on réessaiera
@@ -2303,12 +2307,24 @@ const GameRules = {
 
   // L'armée arrive au pied du château (case t) : le siège dure quelques secondes selon son niveau
   startSiege(a, t) {
-    const secs = this.castleInfo(this.anchor[t]).siege;
+    const outpost = this.building[t] === B_OUTPOST;
+    const secs = outpost ? CONFIG.OUTPOST_SIEGE : this.castleInfo(this.anchor[t]).siege;
     a.siege = { tile: t, end: this.tick + secs * CONFIG.TICKS_PER_SECOND };
     a.frontTile = t; // on se bat au pied des murs (avec leur bonus de défense)
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (p.isHuman) UI.log(`🏰 Ton armée assiège un château ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`, 'good', d);
-    else if (d.isHuman) UI.log(`🏰 ${p.name} assiège ton château ! Il tombe dans ${secs} s : envoie vite des défenseurs !`, 'warn', p);
+    const what = outpost ? ['un avant-poste', 'ton avant-poste', '⛺'] : ['un château', 'ton château', '🏰'];
+    if (p.isHuman) UI.log(`${what[2]} Ton armée assiège ${what[0]} ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`, 'good', d);
+    else if (d.isHuman) UI.log(`${what[2]} ${p.name} assiège ${what[1]} ! Il tombe dans ${secs} s : envoie vite des défenseurs !`, 'warn', p);
+  },
+
+  // Fin du siège d'un avant-poste : il est détruit (ses terres passent à l'attaquant), et l'assaut s'arrête
+  takeOutpost(a, t) {
+    const c = this.anchor[t];
+    a.troops = Math.max(0, a.troops - this.tileCost(a, t));
+    this.setOwner(t, a.attacker);
+    this.onTargetTaken(a, B_OUTPOST, false);
+    this.removeBuilding(c);
+    return this.endAttack(a);
   },
 
   // Deux armées de royaumes ennemis assiègent le même château (d'un troisième royaume) : elles s'affrontent
