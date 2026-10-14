@@ -17,12 +17,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec **3 types de cartes** au choix : Normale, Continentale ou Base navale
+  avec **4 types de cartes** au choix : Normale, Continentale, Base navale ou **Monde** (la vraie carte du monde)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
 - ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
-- 🤖 **5 à 10 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
+- 🤖 **5 à 11 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normal, Difficile
 
@@ -35,6 +35,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
    - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
+   - **Monde** 🌍 : la **vraie carte du monde**, bien plus grande (on dézoome beaucoup) : les continents, les grandes
+     îles, les mers intérieures (mer Noire, Caspienne, Grands Lacs), les **chaînes de montagnes** (Rocheuses, Andes,
+     Alpes, Himalaya…) et les **grands fleuves** (Mississippi, Amazone, Nil, Danube, Volga, Yangzi…) sont à leur place.
+     Le cours inférieur des plus grands fleuves est un **grand fleuve** infranchissable ; le Groenland est un glacier
+     (seules ses côtes sont habitables). 3 royaumes rivaux de plus que d'habitude.
    Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
    porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
 2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
@@ -343,6 +348,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.63** : 🌍 nouvelle carte **Monde** (dans le menu) : la vraie carte du monde, très grande, avec ses montagnes et ses grands fleuves au bon endroit
 - **v0.62.2** : 📏 les châteaux, églises et ports se bloquent tous entre eux (cercles rouges, dans les deux sens) : 13 cases entre deux châteaux, 15 entre un château et une église ou un port, 11 entre deux églises ou ports
 - **v0.62.1** : 🐛 correction : une grande zone d'avant-poste (ou des terres sur un autre continent) ne fait plus passer toute l'île de ton royaume pour « coupée » — tes châteaux ne sont plus isolés d'un coup et tes terres ne sont plus données à l'ennemi · les soldats stationnés restent à l'avant-poste
 - **v0.62** : ⛺ toute la zone d'un avant-poste est défendue par ses soldats stationnés (pas par ceux du royaume, au-delà des mers) · pas de château à moins de 12 cases d'un avant-poste : il faut conquérir des terres autour avant

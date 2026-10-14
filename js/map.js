@@ -49,8 +49,9 @@ function fbm(noise, x, y, octaves) {
 const EDGE_MARGIN = 14;
 
 // type : 'normal' (un continent et quelques îlots), 'continental' (que de la terre, bordée de montagnes
-// infranchissables, avec de grands lacs), 'naval' (plusieurs grandes îles)
+// infranchissables, avec de grands lacs), 'naval' (plusieurs grandes îles), 'world' (la carte du monde)
 function generateMap(seed, type = 'normal') {
+  if (type === 'world') return generateWorldMap(seed); // la carte du monde (voir worldmap.js)
   const W = CONFIG.MAP_WIDTH, H = CONFIG.MAP_HEIGHT, N = W * H;
   const rand = mulberry32(seed);
   const elevNoise = makeValueNoise(rand);
