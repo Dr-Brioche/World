@@ -71,7 +71,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **L'assaut commence** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
      mais ils mettent **5 secondes** à arriver.
    - **Prendre des terres** coûte peu (comme une terre libre, selon le terrain). Ce qui coûte cher,
-     ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi : **3 fois moins vite**
+     ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi : **6 fois moins vite**
      que sur les terres libres, et encore moins dans le relief (forêt, colline, montagne, fleuve).
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Ils arrivent **tout de suite**, mais il faut attendre **5 s** entre deux envois
@@ -308,6 +308,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.51** : 🐢 les armées avancent encore 2 fois moins vite quand elles traversent un royaume ennemi (6 fois moins vite que sur les terres libres)
 - **v0.50** : 💰 seuls les bâtiments que tu construis toi-même font monter le prix des suivants (ceux pris à l'ennemi ne comptent plus) · ⚰️🔥 l'après-guerre et la galvanisation durent 30 s
 - **v0.49** : ⚔️ deux armées ennemies qui assiègent le même château s'affrontent d'abord entre elles, la gagnante reprend le siège · 🛡️ clic droit chez un allié attaqué → l'aider à se défendre (ses survivants rentrent ensuite)
 - **v0.48** : 🗺️ un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé · ⚰️ après un assaut réussi, 60 s d'après-guerre pour le vainqueur (−25 % de soldats produits) et 🔥 de galvanisation pour le perdant (+25 %)
