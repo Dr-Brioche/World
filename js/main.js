@@ -77,7 +77,7 @@ const UI = {
       if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden) {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
-      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.closeActionMenu(); }
+      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.closeBuildingMenus(); }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
   },
@@ -754,6 +754,12 @@ const UI = {
     if (this.actionMenu) { this.actionMenu.remove(); this.actionMenu = null; }
   },
 
+  // Ferme le menu rapide ET la fenêtre d'info du bâtiment (en haut à gauche), ouverts ensemble
+  closeBuildingMenus() {
+    this.closeActionMenu();
+    if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
+  },
+
   onMapClick(sx, sy) {
     const G = Game, i = Render.tileAt(sx, sy);
     if (i < 0) return;
@@ -841,7 +847,7 @@ function setupInput(canvas) {
   });
 
   canvas.addEventListener('pointerdown', e => {
-    UI.closeActionMenu();
+    UI.closeBuildingMenus(); // un clic à côté ferme le menu rapide et la fenêtre d'info du bâtiment
     if (e.button === 2) return;
     canvas.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });

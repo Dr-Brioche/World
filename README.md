@@ -331,6 +331,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.60.2** : cliquer à côté (ou `Échap`) ferme ensemble le menu rapide et la fenêtre d'info d'un bâtiment
 - **v0.60.1** : une confirmation est demandée avant de détruire un bâtiment
 - **v0.60** : 🏗️ un bâtiment posé est en chantier pendant 3 s (petite jauge verte, il ne produit rien avant) · passer au niveau 3 prend 10 s de travaux
 - **v0.59.1** : 🛡️ en défendant, le message indique combien de soldats partent (et, pour un avant-poste, que seuls ses soldats stationnés peuvent le défendre)
