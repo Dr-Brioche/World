@@ -1706,6 +1706,7 @@ const GameRules = {
   // L'assaut de jonction a rejoint son château : la route s'élargit un peu,
   // et ses soldats rejoignent la défense du château
   linkArrives(a) {
+    a.won = true; // (objectif atteint : la route reste à l'attaquant)
     const c = a.link, p = this.players[a.attacker], R = CONFIG.LINK_WIDEN_RADIUS;
     // La route s'élargit : on prend les terres ennemies proches du chemin (hors murailles)
     for (const t of a.path) {
@@ -2607,6 +2608,8 @@ const GameRules = {
       const linked = a.targetCastle >= 0 && this.anchor[t] === a.targetCastle && this.hasSlots(a.targetCastle)
         ? this.churchZone(a.targetCastle) : null;
       this.setOwner(t, a.attacker);
+      // (route tracée vers un objectif : elle ne reste à l'attaquant que s'il le prend, voir revertRoute)
+      if (a.target >= 0 && (a.targetCastle >= 0 || a.link !== undefined)) (a.route = a.route || []).push(t);
       // Prise de l'église, du port ou de l'avant-poste visé : l'assaut s'arrête là
       const b = this.building[t];
       if (a.targetCastle >= 0 && b && b !== B_CASTLE && this.anchor[t] === a.targetCastle) {
@@ -2777,6 +2780,7 @@ const GameRules = {
   },
 
   onTargetTaken(a, type, withZone) {
+    a.won = true; // (objectif pris : la route reste à l'attaquant)
     const p = this.players[a.attacker], d = this.players[a.target];
     this.warEffects(a);
     const what = { [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
@@ -2790,6 +2794,7 @@ const GameRules = {
   endAttack(a) {
     if (a.done) return;
     a.done = true;
+    this.revertRoute(a);
     const p = this.players[a.attacker];
     // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste)
     this.giveTroops(a.attacker, this.sourceOfAttack(a), a.troops + a.pending.reduce((s, r) => s + r.troops, 0));
@@ -2821,6 +2826,24 @@ const GameRules = {
         else this.players[a.target].troops += extra;
       }
     }
+  },
+
+  // Assaut vers un objectif (château, église, port, avant-poste, ou château isolé à rejoindre) qui échoue :
+  // la route qu'il a tracée à travers le royaume visé lui revient (il la reconquiert). Elle ne reste à
+  // l'attaquant que s'il a pris son objectif.
+  revertRoute(a) {
+    if (!a.route || a.won || a.castleTaken || a.target < 0 || !this.players[a.target].alive) return;
+    let back = 0;
+    for (const t of a.route) {
+      if (this.owner[t] !== a.attacker) continue; // (déjà repris, ou passé à un autre)
+      this.setOwner(t, a.target);
+      back++;
+    }
+    a.route = null;
+    if (!back) return;
+    const p = this.players[a.attacker], d = this.players[a.target];
+    if (d.isHuman) UI.log(`🛡️ L'assaut ${this.deName(p.name)} a échoué : tu reprends les terres de son passage (${fmt(back)} cases).`, 'good', p);
+    else if (p.isHuman) UI.log(`🏳️ Ton assaut a échoué : ${d.name} reprend les terres de ton passage (${fmt(back)} cases).`, 'warn', d);
   },
 
   eliminate(id, by) {
