@@ -47,6 +47,7 @@ const CONFIG = {
   // --- Combat ---
   ATTACK_SPEED: 0.25,          // vitesse de conquête (plus petit = les armées avancent plus lentement sur la carte)
   MIN_ATTACK_SPEED: 0.25,      // vitesse minimum d'une petite armée (cases de plaine par tour)
+  ASSAULT_SLOWDOWN: 3,         // un assaut contre un royaume avance 3 fois moins vite que sur les terres libres
   ATTACK_PREP_TIME: 10,        // secondes de préparation avant un assaut contre un royaume
                                // (on peut y ajouter des soldats tout de suite)
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière

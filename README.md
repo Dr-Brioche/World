@@ -69,7 +69,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **L'assaut commence** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
      mais ils mettent **5 secondes** à arriver.
    - **Prendre des terres** coûte peu (comme une terre libre, selon le terrain). Ce qui coûte cher,
-     ce sont les **défenseurs** ennemis.
+     ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi : **3 fois moins vite**
+     que sur les terres libres, et encore moins dans le relief (forêt, colline, montagne, fleuve).
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Le défenseur peut en envoyer autant qu'il veut, **sans délai**.
    - **La garnison** : chaque château a ses propres défenseurs (plus nombreux selon son niveau),
@@ -275,6 +276,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.40** : 🐢 les assauts contre un royaume avancent 3 fois moins vite (toujours plus lentement dans les forêts, collines, montagnes et fleuves) : on a le temps de voir venir l'ennemi et de réagir
 - **v0.39.3** : plus de trait doré sur la jauge des soldats : seule sa couleur indique, à peu près, quand le recrutement va bien
 - **v0.39.2** : plus de flèche pendant la préparation d'un assaut : la bannière de l'attaquant est plantée sur la frontière, les terres menacées scintillent à sa couleur et le bâtiment visé a un halo qui pulse
 - **v0.39.1** : 🧱 la muraille du port royal donne +1 de défense dans sa zone, comme un fort en bois

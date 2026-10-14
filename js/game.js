@@ -1784,9 +1784,11 @@ const GameRules = {
     // Tant que des défenseurs (garnison ou renforts) tiennent la position, l'assaut se bat au lieu d'avancer
     if (a.defenders + (a.garrison || 0) >= 1) return this.fight(a);
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
-    // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5). On avance donc vite en plaine
+    // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5, fleuve 4). On avance donc vite en plaine
     // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
-    const speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
+    // Contre un royaume, l'armée avance ASSAULT_SLOWDOWN fois moins vite (elle traverse des terres défendues).
+    let speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
+    if (a.target >= 0) speed /= CONFIG.ASSAULT_SLOWDOWN;
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
     while (!a.done) {
