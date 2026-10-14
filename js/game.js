@@ -636,7 +636,7 @@ const GameRules = {
       if ((this.tick + a * 7) % period !== 0) continue;
       const p = this.players[this.owner[a]];
       if (!p || !p.alive) continue;
-      const amount = this.buildingOutput(a);
+      const amount = this.buildingOutput(a) * (t === B_BARRACKS ? this.warFactor(p) : 1);
       let shown = amount;
       if (t === B_MILL || t === B_PORT) p.gold += amount;
       else {
@@ -717,7 +717,24 @@ const GameRules = {
     const max = this.maxTroops(p), army = this.armySize(p);
     if (army >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
-    return base * this.growthFactor(army / max);
+    return base * this.growthFactor(army / max) * this.warFactor(p);
+  },
+
+  // Effets d'un assaut réussi sur la production de soldats (recrutement et casernes), pendant WAR_EFFECT_TIME s :
+  // le vainqueur subit un malus d'après-guerre, le perdant est galvanisé
+  postWar(p) { return p.postWarUntil !== undefined && this.tick < p.postWarUntil; },
+  rallied(p) { return p.rallyUntil !== undefined && this.tick < p.rallyUntil; },
+  warFactor(p) {
+    return (this.postWar(p) ? 1 - CONFIG.POST_WAR_MALUS : 1) * (this.rallied(p) ? 1 + CONFIG.RALLY_BONUS : 1);
+  },
+  warEffects(a) {
+    const end = this.tick + CONFIG.WAR_EFFECT_TIME * CONFIG.TICKS_PER_SECOND;
+    const p = this.players[a.attacker], d = a.target >= 0 ? this.players[a.target] : null;
+    p.postWarUntil = end;
+    if (d) d.rallyUntil = end;
+    const secs = CONFIG.WAR_EFFECT_TIME;
+    if (p.isHuman) UI.log(`⚰️ Après-guerre : ton royaume panse ses blessures, −${Math.round(CONFIG.POST_WAR_MALUS * 100)} % de soldats produits pendant ${secs} s.`, 'warn');
+    if (d && d.isHuman) UI.log(`🔥 Ton peuple est galvanisé par la défaite : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s !`, 'good');
   },
 
   // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
@@ -1969,6 +1986,20 @@ const GameRules = {
 
   // Château pris : toute sa zone de défense passe d'un coup à l'attaquant, avec les moulins et casernes
   // qui s'y trouvent (une église, un port ou un autre château reste au défenseur : il faut le viser)
+  // Un point de passage d'assaut est-il trop près du bord du royaume visé (sa frontière, ou la côte) ?
+  // Interdit, pour qu'on ne puisse pas faire longer le bord à l'armée et découper le royaume à sa guise.
+  nearTerritoryEdge(target, i) {
+    const R = CONFIG.WAYPOINT_EDGE_DISTANCE, W = this.W, x0 = i % W, y0 = (i / W) | 0;
+    for (let dy = -R; dy <= R; dy++) {
+      for (let dx = -R; dx <= R; dx++) {
+        if (dx * dx + dy * dy > R * R) continue;
+        const x = x0 + dx, y = y0 + dy;
+        if (x < 0 || y < 0 || x >= W || y >= this.H || this.owner[y * W + x] !== target) return true;
+      }
+    }
+    return false;
+  },
+
   // Nombre d'assauts qu'un royaume peut mener en même temps contre un même royaume :
   // 1, ou CITADEL_ASSAULTS s'il possède une citadelle (château de niveau 3)
   maxAssaults(pid) {
@@ -2012,6 +2043,7 @@ const GameRules = {
 
   onCastleTaken(a, castle, zone) {
     a.castleTaken = true;
+    this.warEffects(a);
     for (const i of zone) {
       if (this.owner[i] !== a.target) continue; // (déjà pris avec un bâtiment)
       const b = this.building[i];
@@ -2040,6 +2072,7 @@ const GameRules = {
 
   onTargetTaken(a, type, withZone) {
     const p = this.players[a.attacker], d = this.players[a.target];
+    this.warEffects(a);
     const what = { [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
       [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'] }[type];
     const verb = type === B_OUTPOST ? 'détruit' : 'pris';
