@@ -62,10 +62,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
    de la frontière. **Tant qu'un royaume a un château, une église, un port ou un avant-poste, tu ne peux viser que ceux-ci.**
    **Exception — morceau coupé de ses châteaux** : si un morceau de son royaume n'a plus **aucun château** (il s'est fait
-   isoler du reste), personne ne le commande : tu peux **l'attaquer de front**, comme une terre désorganisée et
-   **vide** (aucun défenseur ne peut venir). En le survolant, tu vois « ⚠️ coupé de tous ses châteaux ». Mais si
-   son royaume arrive à le **relier à un château** (en reprenant des terres, ou en y bâtissant un château),
-   **l'assaut s'arrête**. Attention, ça marche aussi contre toi !
+   isoler du reste, alors que son royaume a encore un château ailleurs), personne ne le commande : tu peux
+   **l'attaquer de front**, comme une terre **vide** (aucun défenseur ne peut venir). En le survolant, tu vois
+   « ⚠️ coupé de tous ses châteaux ». Mais si son royaume arrive à le **relier à un château** (en reprenant des
+   terres, ou en y bâtissant un château), **l'assaut s'arrête**. Attention, ça marche aussi contre toi !
    Quand il n'en a **plus aucun**, clique n'importe où sur ses terres : l'assaut se fait
    **de front, sur tout son territoire** (comme sur une terre libre).
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
@@ -156,6 +156,14 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **S'il y arrive**, sa route s'élargit un peu : tu récupères des terres entre le château et ton royaume,
      ils sont **réunis** et tu peux le défendre comme avant. Si le château était attaqué, les soldats
      de ton assaut rejoignent sa défense.
+   - **Ton dernier château isolé** : si **tous** tes châteaux sont isolés, ton armée est **bloquée dedans** :
+     - ton grand territoire, coupé de tous tes châteaux, **n'est plus défendu** (tout le monde peut l'attaquer de front)
+       et **aucune armée ne peut en partir** (ni attaque, ni expansion) ;
+     - tes soldats peuvent défendre ce château, mais **moins bien** (chacun compte pour 0,8) ; et quand il est
+       attaqué, **toutes tes troupes restantes le défendent d'office** ;
+     - **le seul moyen d'en sortir** : relier ton territoire à un château (clique sur ton château isolé pour un
+       assaut de jonction) ou **bâtir un nouveau château** sur ton territoire, pour avoir de nouveau une zone de
+       départ pour tes armées. Un message 🚩 te prévient quand ça arrive.
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
@@ -380,6 +388,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.70** : 🚩 si tous tes châteaux sont isolés, ton armée est bloquée dedans : ton territoire coupé n'est plus défendu et aucune armée ne peut en partir (relie-le ou bâtis un château) ; tes soldats défendent ton dernier château moins bien (x0,8), mais tous d'office quand il est attaqué
 - **v0.69.2** : 🐢 plus une armée d'assaut est grande, plus elle avance lentement chez l'ennemi (sur les terres libres, rien ne change)
 - **v0.69.1** : ⚔️ améliorer une caserne coûte plus cher : 400 pour le niveau 2, 1600 pour le niveau 3
 - **v0.69** : ⚠️ un morceau de royaume coupé de tous ses châteaux s'attaque de front, sans défenseurs, jusqu'à ce que son royaume le relie à un château (l'assaut s'arrête alors) · 🏰 la citadelle (château niveau 3) coûte 3000
