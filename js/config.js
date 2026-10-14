@@ -55,6 +55,7 @@ const CONFIG = {
   ATTACK_PREP_TIME: 10,        // secondes de préparation avant un assaut contre un royaume
                                // (on peut y ajouter des soldats tout de suite)
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière
+  CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
   REINFORCE_DELAY: 5,          // une fois l'assaut lancé, les renforts mettent 5 s à arriver
   FIGHT_RATE: 0.03,            // vitesse des combats (part des soldats engagés qui tombent par tour)
@@ -64,6 +65,7 @@ const CONFIG = {
   // Ex. : 100 contre 40 → x1.25 · 300 contre 60 → x2.5 · 300 contre 4 → x5 (les 4 sont balayés en un instant)
   NUMBERS_THRESHOLD: 2,
   NUMBERS_MAX_BONUS: 5,
+  GARRISON_POWER: 3,           // au combat, chaque soldat de garnison (château, port, avant-poste bâti) en vaut 3
   GARRISON_REGEN: 0.05,        // la garnison d'un château se reconstitue de 5 % par seconde
   NEUTRAL_TILE_COST: 0.08,     // soldats perdus pour prendre une case (libre ou ennemie)
   // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
@@ -149,9 +151,9 @@ const BARRACKS_LEVELS = [
 // (le défenseur peut encore envoyer des soldats pendant ce temps).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 5,  siege: 5,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, garrison: 15, siege: 10, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 90 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 35, siege: 15, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 225 },
+  { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 10,  siege: 5,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, garrison: 50,  siege: 10, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 90 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 150, siege: 15, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 1000 },
 ];
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
 // le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.
@@ -180,7 +182,7 @@ const PORT_LEVELS = [
   null,
   { name: 'Port',       gold: 3,  boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
   { name: 'Grand port', gold: 6,  boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.4, upgradeCost: 120 },
-  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 375, garrison: 5, bonus: 1 },
+  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 375, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue

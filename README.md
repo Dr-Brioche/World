@@ -74,8 +74,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Ils arrivent **tout de suite**, mais il faut attendre **5 s** entre deux envois
      contre un même assaut (le temps de regrouper les soldats).
-   - **La garnison** : chaque château a ses propres défenseurs (plus nombreux selon son niveau),
-     qui sortent le défendre seuls le temps que le royaume réagisse. Ils se reconstituent ensuite peu à peu.
+   - **La garnison** : chaque château a ses propres défenseurs (beaucoup plus nombreux selon son niveau),
+     qui sortent le défendre seuls le temps que le royaume réagisse. **Au combat, chaque soldat de garnison
+     en vaut 3.** Ils se reconstituent ensuite peu à peu.
    - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
      **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
      où se bat l'assaut (forêt +60 %, colline +120 %, montagne +250 %, + bonus du château dans sa muraille).
@@ -161,8 +162,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Défense des murs | Muraille | Garnison | Prix |
      |---|---|---|---|---|
      | 1. Fort en bois | +100 % | petite | quelques soldats | 💰 100 (puis plus cher à chaque château) |
-     | 2. Château | +200 % | moyenne | +200 % | 💰 90 |
-     | 3. Citadelle | +400 % | grande | +133 % | 💰 225 |
+     | 2. Château | +200 % | moyenne | x5 | 💰 90 |
+     | 3. Citadelle | +400 % | grande | x3 | 💰 1000 |
+
+     Chaque soldat de garnison **vaut 3 soldats** au combat. **Une citadelle** permet aussi de mener
+     **2 assauts en même temps** contre un même royaume (sur deux de ses cibles différentes).
 
      **Routes** : un château de niveau 2 trace des **chemins de terre** 🛤️ vers tes moulins et casernes
      qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, soldats des casernes).
@@ -292,6 +296,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.47** : 🏰 une citadelle (château niveau 3) permet 2 assauts en même temps contre un même royaume, et coûte 1000 · garnisons des châteaux bien plus grandes (petite, x5, puis x3) et chaque soldat de garnison vaut 3 au combat · le port royal a la même petite garnison qu'un fort en bois
 - **v0.46** : ⏳ 5 s d'attente entre deux envois de défenseurs contre un même assaut (fini les renforts envoyés en continu, soldat par soldat)
 - **v0.45** : ⛪ prendre une église ou un port donne aussi sa zone et les bâtiments construits grâce à lui · 🚩 pendant un assaut de front, la bannière reste à peu près fixe sur le front et glisse doucement (elle ne saute plus d'un bout à l'autre)
 - **v0.44** : 💰 rendement décroissant des moulins et des ports : plus un royaume en a, moins chacun rapporte (l'économie ne s'emballe plus en fin de partie)

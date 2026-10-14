@@ -21,8 +21,16 @@ const AI = {
         if (mine.defenders > mine.troops && p.troops > 2) Game.launchLink(p.id, mine.link, p.troops * 0.4);
         return;
       }
-      if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) > mine.troops && p.troops > 2) {
+      if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) * Game.garrisonPower(mine) > mine.troops && p.troops > 2) {
         Game.launchAttack(p.id, mine.target, p.troops * 0.4, mine.targetCastle >= 0 ? mine.targetCastle : undefined);
+        return;
+      }
+      // Avec une citadelle : un deuxième assaut contre le même royaume, sur une autre de ses cibles
+      const all = Game.attacks.filter(a => !a.done && a.attacker === p.id && a.target === mine.target && a.link === undefined);
+      if (mine.target >= 0 && Game.isProtected(mine.target) && all.length < Game.maxAssaults(p.id)
+        && p.troops > Game.maxTroops(p) * 0.4 && Math.random() < 0.3) {
+        const other = Game.nearestTargets(p.id, mine.target).find(c => !all.some(a => a.targetCastle === c));
+        if (other !== undefined) Game.launchAttack(p.id, mine.target, p.troops * 0.5, other);
       }
       return;
     }
@@ -62,7 +70,7 @@ const AI = {
       // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
       const plan = Game.planAssault(p.id, o), aim = plan.castle;
       if (aim === -1) continue;
-      const garrison = aim === null ? 0 : Game.garrison[aim];
+      const garrison = aim === null ? 0 : Game.garrison[aim] * CONFIG.GARRISON_POWER; // (une garnison vaut 3 au combat)
       // Un château isolé ne reçoit pas de défenseurs : seule sa garnison le défend (proie facile !)
       // (sans château ni église, toutes ses troupes défendent d'office, mais à 0.8)
       const helpers = aim === null ? e.troops * CONFIG.LEADERLESS_DEFENSE
@@ -126,7 +134,7 @@ const AI = {
       if (a.done || a.target !== p.id || Game.defendWait(a) > 0) continue; // (5 s entre deux envois)
       const D = Game.combatRatio(a);
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
-      const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0);
+      const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0) * Game.garrisonPower(a);
       if (needed <= 0) continue;
       // Château isolé (ou avant-poste) : impossible d'y envoyer des défenseurs. Pour un château, on tente
       // de le rejoindre par un assaut ; pour un avant-poste, on envoie des renforts par la mer.

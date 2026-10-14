@@ -984,9 +984,15 @@ const GameRules = {
         return `${name} est protégé : clique sur un de ses châteaux, églises, ports ou avant-postes pour lancer un assaut.`;
       }
     }
-    let a = this.attacks.find(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined
+    // Assauts déjà en cours contre ce royaume : on renforce celui qui vise la même cible ; sinon on en lance
+    // un nouveau, s'il en reste (1 à la fois, 2 avec une citadelle)
+    const running = this.attacks.filter(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined
       && this.sourceOfAttack(a) === source);
-    if (a && a.targetCastle !== castle) return `Un assaut contre ${this.players[target].name} est déjà en cours.`;
+    let a = running.find(a => a.targetCastle === castle);
+    if (!a && running.length >= this.maxAssaults(pid)) {
+      return `Un assaut contre ${this.players[target].name} est déjà en cours.` +
+        (this.maxAssaults(pid) < CONFIG.CITADEL_ASSAULTS ? ' (Avec une citadelle, un château de niveau 3, tu pourrais en lancer 2 à la fois.)' : '');
+    }
     // Assaut déjà en préparation : il garde ses points de passage
     if (!waypoints) waypoints = a && a.waypoints ? a.waypoints : [];
     if (castle >= 0) {
@@ -1773,7 +1779,9 @@ const GameRules = {
   // chaque tour une petite partie des soldats engagés tombe.
   fight(a) {
     const D = this.combatRatio(a);
-    const total = a.defenders + (a.garrison || 0);
+    // Chaque soldat de garnison vaut GARRISON_POWER soldats au combat : on compte en « forces »
+    const gp = this.garrisonPower(a), gar = (a.garrison || 0) * gp;
+    const total = a.defenders + gar;
     // Supériorité en nombre : le camp bien plus nombreux frappe plus vite et perd moins de soldats
     // (un défenseur ne peut pas bloquer 300 soldats en envoyant 2 ou 3 hommes à la fois)
     const atkBonus = this.numbersBonus(a.troops, total);
@@ -1781,8 +1789,8 @@ const GameRules = {
     const base = Math.max(CONFIG.FIGHT_MIN_LOSS, CONFIG.FIGHT_RATE * Math.min(a.troops, total)) * atkBonus * defBonus;
     const defLoss = Math.min(total, base);
     // La garnison combat en premier, puis les défenseurs envoyés
-    const fromGarrison = Math.min(a.garrison || 0, defLoss);
-    a.garrison = (a.garrison || 0) - fromGarrison;
+    const fromGarrison = Math.min(gar, defLoss);
+    a.garrison = (a.garrison || 0) - fromGarrison / gp;
     a.defenders -= defLoss - fromGarrison;
     a.troops = Math.max(0, a.troops - defLoss * D * defBonus / atkBonus);
     if (a.troops < 1) {
@@ -1794,6 +1802,14 @@ const GameRules = {
       a.defenders = 0;
       a.garrison = 0;
     }
+  },
+
+  // Combien vaut un soldat de garnison au combat : GARRISON_POWER (3), sauf pour un avant-poste en construction
+  // (sa « garnison », ce sont tous les soldats débarqués, occupés à bâtir)
+  garrisonPower(a) {
+    const c = a.targetCastle;
+    if (c >= 0 && this.building[c] === B_OUTPOST && !this.outpostReady(c)) return 1;
+    return CONFIG.GARRISON_POWER;
   },
 
   // La case touche-t-elle une case de cet ensemble, encore à ce royaume ?
@@ -1953,6 +1969,12 @@ const GameRules = {
 
   // Château pris : toute sa zone de défense passe d'un coup à l'attaquant, avec les moulins et casernes
   // qui s'y trouvent (une église, un port ou un autre château reste au défenseur : il faut le viser)
+  // Nombre d'assauts qu'un royaume peut mener en même temps contre un même royaume :
+  // 1, ou CITADEL_ASSAULTS s'il possède une citadelle (château de niveau 3)
+  maxAssaults(pid) {
+    return this.castles.some(c => this.owner[c] === pid && this.level[c] >= 3) ? CONFIG.CITADEL_ASSAULTS : 1;
+  },
+
   // Position de la bannière d'un assaut : elle glisse doucement vers les cases prises (moyenne des dernières),
   // pour rester à peu près fixe sur le front au lieu de sauter d'une case à l'autre.
   // Un assaut ciblé (dans un couloir) la fait avancer plus vite qu'un assaut de front, très large.
