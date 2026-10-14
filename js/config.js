@@ -27,7 +27,12 @@ const CONFIG = {
   BASE_MAX_TROOPS: 20,
   MAX_TROOPS_PER_TILE: 0.12,
   BASE_TROOP_GROWTH: 0.15,     // soldats gagnés par seconde au minimum
-  TROOP_GROWTH_PER_TILE: 0.0008, // soldats/seconde en plus par case possédée
+  // Soldats/seconde en plus selon la taille du territoire : TROOP_GROWTH_SQRT × racine carrée du nombre de cases.
+  // (la racine : un territoire 4 fois plus grand ne recrute que 2 fois plus vite, l'armée ne s'emballe pas)
+  // Ex. : 400 cases → +0.32/s · 1600 cases → +0.64/s · 6400 cases → +1.28/s
+  TROOP_GROWTH_SQRT: 0.016,
+  // Rendement décroissant des casernes, comme les moulins : rendement = 1 / (1 + 0.1 × (casernes - 1))
+  BARRACKS_DIMINISHING: 0.1,
   // Élan de départ : au début de la partie, le recrutement ET la conquête des terres libres vont plus vite
   // (+50 %), puis ce bonus diminue peu à peu jusqu'à disparaître au bout de EARLY_GROWTH_TIME secondes
   // (la fin de partie ne change pas)
@@ -76,6 +81,7 @@ const CONFIG = {
   // Ces effets s'additionnent (chaque victoire ou défaite compte 30 s), jusqu'à ces limites :
   POST_WAR_MAX: 0.75,  // au pire -75 % de soldats produits
   RALLY_MAX: 1,        // au mieux +100 %
+  ENCLAVE_LOG_MIN: 50,         // un message n'annonce un morceau englobé que s'il fait au moins 50 cases
   WAYPOINT_EDGE_DISTANCE: 4,   // un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé
   CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
@@ -156,7 +162,7 @@ const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTP
 const MILL_LEVELS = [
   null,
   { name: 'Moulin',       gold: 1.5, img: 'img/moulin1.webp', size: 2.3 },
-  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 2.8, upgradeCost: 40 },
+  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 2.8, upgradeCost: 100 },
 ];
 
 // Les 3 niveaux de la caserne : troops = soldats produits toutes les PRODUCTION_INTERVAL secondes,
@@ -167,7 +173,7 @@ const BARRACKS_LEVELS = [
   null,
   { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.1, img: 'img/caserne1.webp', size: 2.5 },
   { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.2, img: 'img/caserne2.webp', size: 2.8, upgradeCost: 40 },
-  { name: 'Grande caserne',       troops: 7, maxTroops: 80, power: 1.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 150 },
+  { name: 'Grande caserne',       troops: 7, maxTroops: 80, power: 1.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 800 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
@@ -196,7 +202,7 @@ const CHURCH_LEVELS = [
   null,
   { name: 'Église',        slots: 1, castles: 0, radius: 7,  img: 'img/eglise1.webp', size: 2.6 },
   { name: 'Grande église', slots: 2, castles: 1, radius: 8,  img: 'img/eglise2.webp', size: 3,   upgradeCost: 100 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 300 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 1000 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu
@@ -207,7 +213,7 @@ const PORT_LEVELS = [
   null,
   { name: 'Port',       gold: 3,  boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
   { name: 'Grand port', gold: 6,  boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.4, upgradeCost: 120 },
-  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 375, garrison: 10, bonus: 1 },
+  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 600, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue

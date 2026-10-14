@@ -150,7 +150,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Or produit | Prix |
      |---|---|---|
      | 1. Moulin | un peu | prix du moulin |
-     | 2. Grand moulin | +133 % | 💰 40 |
+     | 2. Grand moulin | +133 % | 💰 100 |
 
      **Rendement décroissant** : plus ton royaume a de moulins et de ports, moins chacun rapporte
      (3 → 83 % chacun, 6 → 67 %, 12 → environ la moitié). Les premiers rapportent bien, mais on ne devient pas
@@ -163,10 +163,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Camp d'entraînement | quelques-uns | un peu | **+10 %** | prix de la caserne |
      | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 40 |
-     | 3. Grande caserne | +75 % | +60 % | **+50 %** | 💰 150 |
+     | 3. Grande caserne | +75 % | +60 % | **+50 %** | 💰 800 |
 
      Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
-     tes casernes s'additionnent.
+     tes casernes s'additionnent, mais avec un **rendement décroissant** (comme les moulins) : plus tu as de casernes,
+     moins chacune produit de soldats (3 → 83 % chacune, 6 → 67 %).
      **La force des soldats** vaut pour tout le royaume dès **une seule** caserne de ce niveau
      (la meilleure compte, ça ne s'additionne pas) : au combat, chacun de tes soldats vaut 1,1 soldat
      (niveau 1), 1,2 soldat (niveau 2) ou 1,5 soldat (niveau 3), en attaque comme en défense.
@@ -207,7 +208,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|
      | 1. Église | 1 | aucun | 💰 50 (puis plus cher à chaque église) |
      | 2. Grande église | 2 | +1 | 💰 100 |
-     | 3. Cathédrale | 5 | +2 | 💰 300 |
+     | 3. Cathédrale | 5 | +2 | 💰 1000 |
 
      **Chaque église améliorée** ajoute ses châteaux : elles s'additionnent, tu peux en construire autant
      que ton or le permet.
@@ -221,7 +222,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
      | 2. Grand port | +100 % | 1 | **oui** | 💰 120 |
-     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 375 |
+     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 600 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
@@ -293,6 +294,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    ni vide ni trop pleine**, puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée
    est pleine. Pas de repère précis : c'est la **couleur de la jauge** qui te guide (vert = au top, orange = normal,
    rouge = ralenti).
+   **🐢 Fatigue de guerre** : un grand territoire recrute plus vite, mais **de moins en moins** : un royaume 4 fois plus grand
+   ne recrute que 2 fois plus de soldats. Les grandes armées se font attendre !
    **💰 Solde des troupes** : garder trop de soldats coûte cher ! Au-delà de la moitié de ton armée maximum,
    tes soldats disponibles (pas les garnisons) réduisent **tout l'or que tu gagnes**, jusqu'à **−25 %** avec
    une armée pleine (c'est affiché sous la jauge).
@@ -325,6 +328,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.58** : 🐢 recrutement freiné pour les grands royaumes (il suit la racine carrée du territoire) et rendement décroissant des casernes · 💰 améliorations plus chères : grand moulin 100, grande caserne 800, port royal 600, cathédrale 1000 · ✂️ plus de message pour les petits morceaux englobés (seulement à partir de 50 cases, ou s'il reste un château isolé)
 - **v0.57.1** : ⚰️🔥 l'après-guerre et la galvanisation s'additionnent : −25 % par victoire récente (jusqu'à −75 %), +25 % par défaite récente (jusqu'à +100 %)
 - **v0.57** : 🌊 les fleuves ne se prennent plus jamais : ils restent neutres et bloquent l'expansion et les assauts ; on ne passe qu'en traversant à gué (10 s pour la 1re case, 6 s pour la 2e) · un royaume des deux côtés d'un fleuve reste un seul royaume
 - **v0.56** : 🏳️ annuler une attaque = retraite : 3 s pour décrocher, puis 15 % de pertes · bouton « Détruire » aussi dans la fenêtre d'un bâtiment, en haut à gauche
