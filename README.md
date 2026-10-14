@@ -173,7 +173,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Camp d'entraînement | quelques-uns | un peu | **+10 %** | prix de la caserne |
      | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 80 |
-     | 3. Grande caserne | +75 % | +60 % | **+50 %** | 💰 800 |
+     | 3. Grande caserne | +125 % | **x4** (+200 soldats) | **+50 %** | 💰 800 |
 
      Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
      tes casernes s'additionnent, mais avec un **rendement décroissant** (comme les moulins) : plus tu as de casernes,
@@ -348,6 +348,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.63.1** : ⚔️ la grande caserne (niveau 3) agrandit beaucoup plus l'armée maximum (+200 au lieu de +80) et forme un peu plus de soldats (9 au lieu de 7) · 🤖 les royaumes rivaux s'acharnent moins sur toi (préférence pour le joueur divisée par 2 en Normal et Difficile)
 - **v0.63** : 🌍 nouvelle carte **Monde** (dans le menu) : la vraie carte du monde, très grande, avec ses montagnes et ses grands fleuves au bon endroit
 - **v0.62.2** : 📏 les châteaux, églises et ports se bloquent tous entre eux (cercles rouges, dans les deux sens) : 13 cases entre deux châteaux, 15 entre un château et une église ou un port, 11 entre deux églises ou ports
 - **v0.62.1** : 🐛 correction : une grande zone d'avant-poste (ou des terres sur un autre continent) ne fait plus passer toute l'île de ton royaume pour « coupée » — tes châteaux ne sont plus isolés d'un coup et tes terres ne sont plus données à l'ennemi · les soldats stationnés restent à l'avant-poste
