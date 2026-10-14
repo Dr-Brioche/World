@@ -1775,14 +1775,12 @@ const GameRules = {
   },
 
   // Lance une traversée de fleuve vers la terre libre i. Renvoie un message d'erreur, ou null.
-  launchCrossing(pid, i, troops) {
-    const p = this.players[pid], plan = this.planCrossing(pid, i);
+  // Traverser ne coûte aucun soldat : seulement du temps (CROSSING_TIME_FIRST / CROSSING_TIME_NEXT).
+  launchCrossing(pid, i) {
+    const plan = this.planCrossing(pid, i);
     if (plan.error) return plan.error;
-    troops = Math.floor(Math.min(troops, p.troops));
-    if (troops < 1) return 'Pas assez de soldats !';
-    p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
-    this.crossings.push({ pid, target: i, path: plan.path, troops, start: this.tick,
+    this.crossings.push({ pid, target: i, path: plan.path, start: this.tick,
       arrive: this.tick + Math.max(1, Math.round(plan.time * TPS)) });
     return null;
   },
@@ -1797,8 +1795,7 @@ const GameRules = {
       if (!p.alive) continue;
       const blocked = c.path.slice(1).some(t => this.terrain[t] !== TERRAIN.RIVER && this.owner[t] !== -1 && this.owner[t] !== c.pid);
       if (blocked || this.owner[c.path[0]] !== c.pid) {
-        p.troops += c.troops;
-        if (p.isHuman) UI.log('🚫 Le passage du fleuve a été pris par un autre : tes soldats rentrent.', 'warn');
+        if (p.isHuman) UI.log('🚫 Le passage du fleuve a été pris par un autre : la traversée échoue.', 'warn');
         continue;
       }
       // Les terres libres de la rive autour de la case visée (sans repasser par le fleuve) ; le fleuve reste neutre
@@ -1810,15 +1807,11 @@ const GameRules = {
           if ((n % W - x0) ** 2 + (((n / W) | 0) - y0) ** 2 <= R * R) bank.add(n);
         });
       }
-      let troops = c.troops;
+      // (la tête de pont ne coûte aucun soldat : seulement le temps de la traversée)
       for (const t of [...c.path.slice(1), ...bank]) {
         if (this.owner[t] === c.pid || !this.claimable(t)) continue; // (le gué, lui, reste neutre)
-        const cost = CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost;
-        if (troops < cost) break;
-        troops -= cost;
         this.setOwner(t, c.pid);
       }
-      p.troops += troops; // les survivants rejoignent l'armée
       if (p.isHuman) UI.log('🛶 Tes soldats ont traversé le fleuve : la terre de l\'autre rive est à toi !', 'good');
     }
     this.crossings = this.crossings.filter(c => !c.done);

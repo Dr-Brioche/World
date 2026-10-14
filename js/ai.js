@@ -122,7 +122,7 @@ const AI = {
         if (G.terrain[n] === TERRAIN.RIVER) seen.add(n);
         else if (bank < 0 && !near(n)) bank = n;
       });
-      if (bank >= 0) return !G.launchCrossing(p.id, bank, p.troops * 0.35);
+      if (bank >= 0) return !G.launchCrossing(p.id, bank);
     }
     return false;
   },
