@@ -90,6 +90,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Prendre un château** te donne d'un coup **toute sa zone de défense** (dans sa muraille) et
      **les moulins et casernes** qui s'y trouvent. L'assaut s'arrête alors et les survivants rentrent.
      Tu peux relancer un nouvel assaut aussitôt.
+   - **Prendre une église ou un port** (qui permet de construire autour de lui) te donne aussi **sa zone**
+     et **les moulins et casernes construits grâce à lui**. Ce qui est dans la muraille d'un château reste au défenseur.
 
    **✂️ Couper** : un royaume reste **d'un seul tenant**. Quand un assaut le coupe en morceaux, il ne garde
    que le plus grand : **celui qui a coupé prend d'un coup tous les autres**, **quelle que soit leur taille**,
@@ -289,6 +291,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.45** : ⛪ prendre une église ou un port donne aussi sa zone et les bâtiments construits grâce à lui · 🚩 pendant un assaut de front, la bannière reste à peu près fixe sur le front et glisse doucement (elle ne saute plus d'un bout à l'autre)
 - **v0.44** : 💰 rendement décroissant des moulins et des ports : plus un royaume en a, moins chacun rapporte (l'économie ne s'emballe plus en fin de partie)
 - **v0.43** : 💰 un château coûte 100 (au lieu de 30), ses améliorations 90 et 225 · toutes les améliorations au niveau 3 coûtent 50 % de plus (grande caserne 150, cathédrale 300, port royal 375)
 - **v0.42.1** : 🤖 les royaumes rivaux traversent aussi les fleuves à gué pour prendre les terres libres d'en face
