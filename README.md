@@ -343,10 +343,10 @@ Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un tro
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer.
 Certains fleuves forment aussi un **lac** en chemin.
 **🛶 Traverser un fleuve** : pour prendre des terres libres de l'autre côté, fais un **clic droit** sur la rive d'en face
-et choisis **🛶 Traverser le fleuve**. Le % de soldats choisi passe à gué depuis tes terres : c'est **long**
+et choisis **🛶 Traverser le fleuve**. La traversée **ne coûte aucun soldat**, seulement du **temps**
 (**10 s** pour la première case de fleuve, **6 s** pour la seconde d'un fleuve double), et tout le monde voit le radeau.
-À l'arrivée, tu prends une **tête de pont** sur l'autre rive (le fleuve, lui, reste neutre) ; les survivants rejoignent
-ton armée. (Le grand fleuve, lui, ne se traverse pas.)
+À l'arrivée, tu prends une **tête de pont** sur l'autre rive (le fleuve, lui, reste neutre).
+(Le grand fleuve, lui, ne se traverse pas.)
 Les royaumes rivaux savent aussi traverser les fleuves quand une rive libre les attend en face.
 
 🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
@@ -361,6 +361,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.66.3** : 🛶 traverser un fleuve ne coûte plus aucun soldat : seulement le temps de la traversée (10 s, +6 s pour un fleuve double)
 - **v0.66.2** : 🐛 correction : le bouton « Améliorer » d'un bâtiment (menu rapide ⬆️ et fenêtre en haut à gauche) se débloque tout seul dès que tu as assez d'or, sans devoir refermer et rouvrir le menu (en survolant le bouton, tu vois l'or qu'il manque)
 - **v0.66.1** : 👑 le jeu s'appelle désormais **Medieval Emperor**
 - **v0.66** : 🏰 nouvelle carte **Europe** (1000 x 1000 cases) · 🌍 la carte **Monde** passe à 1080 x 408 cases · 🗺️ menu des cartes en deux groupes : aléatoires et prédéfinies · 🌊 fleuves avec des méandres sur les cartes prédéfinies · ⚓ fini l'interception des expéditions en mer : on attaque l'avant-poste quand elle accoste · 🐎 sur les grandes cartes, les terres libres se prennent plus vite et coûtent moins de soldats (jusqu'à x4 en Europe) · ⚡ jeu bien plus rapide sur les grandes cartes (calculs optimisés)

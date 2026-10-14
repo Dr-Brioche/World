@@ -584,7 +584,7 @@ const Render = {
     // Traversées de fleuve : un radeau avance le long du gué
     for (const c of G.crossings) {
       const t = Math.min(1, (G.tick - c.start) / Math.max(1, c.arrive - c.start));
-      this.drawBoat(ox, oy, c.path, t, c.pid, c.troops, '🛶');
+      this.drawBoat(ox, oy, c.path, t, c.pid, null, '🛶');
     }
     for (const e of G.expeditions) {
       // soldats à bord (ils diminuent un peu pendant la traversée)
@@ -593,7 +593,7 @@ const Render = {
     }
   },
 
-  // Bateau qui avance le long de son trajet (t = 0 au départ, 1 à l'arrivée), avec ses soldats à bord
+  // Bateau qui avance le long de son trajet (t = 0 au départ, 1 à l'arrivée), avec ses soldats à bord (null = aucun)
   drawBoat(ox, oy, path, t, pid, troops, icon = '⛵') {
     const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
     const px = i => ox + (i % W + 0.5) * s, py = i => oy + (((i / W) | 0) + 0.5) * s;
@@ -617,8 +617,10 @@ const Render = {
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(20,12,4,0.85)';
     ctx.fillStyle = '#fff';
-    ctx.strokeText('⚔ ' + fmt(troops), x, y - 18);
-    ctx.fillText('⚔ ' + fmt(troops), x, y - 18);
+    if (troops !== null) { // (un radeau de traversée n'emporte pas de soldats de l'armée)
+      ctx.strokeText('⚔ ' + fmt(troops), x, y - 18);
+      ctx.fillText('⚔ ' + fmt(troops), x, y - 18);
+    }
     return { x, y };
   },
 
