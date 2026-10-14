@@ -389,10 +389,11 @@ mais **tout bâtiment posé dessus produit 20 % de moins** (moulins, casernes, p
 ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte **Monde**, ils sont à leur vraie place
 (Sahara, Arabie, Gobi, Kalahari, désert australien…), avec une bande fertile le long des fleuves qui les traversent (le Nil).
 
-**Contrôles** : en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), la souris devient une **main** et il s'illumine (doré chez toi, rouge chez l'ennemi) · molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : en survolant un **autre royaume**, une barre au-dessus de la souris le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), la souris devient une **main** et il s'illumine (doré chez toi, rouge chez l'ennemi) · molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.71** : 🔍 en survolant un autre royaume, une barre au-dessus de la souris le résume : ses soldats, le nombre de bâtiments de chaque type et sa part des terres
 - **v0.70.2** : 🏗️ un territoire désorganisé (sans château pour le diriger) ne peut plus rien construire d'autre qu'un château
 - **v0.70.1** : ↩ des défenseurs encore en route quand l'assaut se termine (ville prise…) font demi-tour et rentrent à pied jusqu'à la ville la plus proche : on ne les récupère qu'à leur arrivée
 - **v0.70** : 🚩 si tous tes châteaux sont isolés, ton armée est bloquée dedans : ton territoire coupé n'est plus défendu et aucune armée ne peut en partir (relie-le ou bâtis un château) ; tes soldats défendent ton dernier château moins bien (x0,8), mais tous d'office quand il est attaqué

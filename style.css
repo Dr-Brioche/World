@@ -347,3 +347,15 @@ button:hover { background: #e8d6a8; }
 .quickMenu button.danger { color: #c0392b; }
 .actionMenu button:disabled { opacity: 0.5; cursor: not-allowed; }
 .actionMenu small { color: var(--danger); font-size: 11px; margin: -2px 4px 2px; }
+
+/* Barre de résumé d'un royaume survolé (au-dessus de la souris) */
+.kTip {
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+  font-size: 13px;
+  padding: 3px 10px;
+  z-index: 30;
+}
+.kTip .bn { height: 20px; vertical-align: middle; margin-right: 4px; }
+.kTip span { white-space: nowrap; }
