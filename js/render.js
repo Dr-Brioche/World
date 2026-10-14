@@ -469,7 +469,9 @@ const Render = {
           ctx.setLineDash([]);
           ctx.lineDashOffset = 0;
         }
-        this.drawArmyBanner(a, bx, by, `⚔ ${fmt(a.troops)}${extra}`);
+        // Siège en cours : compte à rebours avant la chute du château
+        const siege = a.siege ? `🏰 ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s · ` : '';
+        this.drawArmyBanner(a, bx, by, `${siege}⚔ ${fmt(a.troops)}${extra}`);
         continue;
       }
       // Préparation : pas de flèche. Le front menacé scintille à la couleur de l'attaquant,

@@ -136,11 +136,13 @@ const BARRACKS_LEVELS = [
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
 // dans sa muraille (ex. forêt x1.6 + niveau 3 → x5.6).
+// siege = secondes de siège : arrivée au pied du château, l'armée doit tenir ce temps avant qu'il ne tombe
+// (le défenseur peut encore envoyer des soldats pendant ce temps).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 5,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, garrison: 15, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 60 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 35, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 150 },
+  { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 5,  siege: 5,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, garrison: 15, siege: 10, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 60 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 35, siege: 15, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 150 },
 ];
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
 // le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.
