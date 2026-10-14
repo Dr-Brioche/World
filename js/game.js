@@ -910,7 +910,18 @@ const GameRules = {
 
   // Toute l'armée du royaume : les soldats disponibles + ceux en garnison + ceux stationnés aux avant-postes
   // (ils comptent tous pour le maximum)
-  armySize(p) { return p.troops + this.garrisonOf(p) + this.stationedOf(p); },
+  armySize(p) { return p.troops + this.garrisonOf(p) + this.stationedOf(p) + this.atSeaOf(p); },
+
+  // Soldats de pid à bord de ses bateaux (débarquements, renforts, retours au port)
+  atSeaOf(p) {
+    let sum = 0;
+    for (const e of this.expeditions) {
+      if (e.done || e.pid !== p.id) continue;
+      const k = Math.min(1, (this.tick - e.start) / Math.max(1, e.arrive - e.start));
+      sum += e.sent - (e.sent - e.troops) * k;
+    }
+    return sum;
+  },
 
   troopRate(p) {
     const max = this.maxTroops(p), army = this.armySize(p);
@@ -1879,6 +1890,26 @@ const GameRules = {
   },
 
   // Les bateaux arrivés débarquent : ils prennent les terres libres autour et y bâtissent un avant-poste
+  // Faire rentrer une de ses expéditions en mer (débarquement ou renforts) : comme une retraite, le bateau fait
+  // demi-tour là où il est et rentre au port (aussi long que le chemin déjà fait), et RETREAT_LOSS des
+  // soldats à bord se perdent. Ceux qui restent rejoignent l'armée en arrivant. (L'or n'est pas rendu.)
+  recallExpedition(pid, id) {
+    const e = this.expeditions.find(x => x.id === id && !x.done && x.pid === pid && x.home === undefined);
+    if (!e || this.tick >= e.arrive) return null;
+    const k = Math.min(1, (this.tick - e.start) / Math.max(1, e.arrive - e.start));
+    const idx = Math.min(e.path.length - 1, Math.floor(k * e.path.length));
+    const aboard = e.sent - (e.sent - e.troops) * k; // (les pertes en mer déjà subies)
+    e.troops = e.sent = aboard * (1 - CONFIG.RETREAT_LOSS);
+    e.reinforce = undefined;
+    e.home = e.port !== undefined ? e.port : e.path[0];
+    e.path = e.path.slice(0, idx + 1).reverse();
+    const back = Math.max(1, this.tick - e.start);
+    e.start = this.tick;
+    e.arrive = this.tick + back;
+    e.recalled = true;
+    return e;
+  },
+
   // --- Traversée de fleuve ---
   // Pour prendre des terres libres de l'autre côté d'un fleuve (pas le grand fleuve, infranchissable) :
   // l'armée part de ses terres, passe le fleuve à gué (lentement) et prend une tête de pont sur l'autre rive.
