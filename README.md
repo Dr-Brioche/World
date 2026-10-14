@@ -160,6 +160,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      il est juste plus difficile à défendre.
    - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend.
      Aucune armée ne peut partir de lui.
+   - Sur la carte, chacun de tes châteaux (ou ports royaux) isolés porte un **petit fanion rouge** sur le côté.
    - Pour le sauver, **clique sur ton château (ou port) isolé** : tu lances un **assaut classique** (marche depuis ta cité la plus proche,
      renforts…) depuis ton royaume, qui traverse les terres ennemies (en évitant leurs murailles) pour le rejoindre.
      **S'il y arrive**, sa route s'élargit un peu : tu récupères des terres entre le château et ton royaume,
@@ -399,6 +400,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.72.2** : 🚩 un petit fanion rouge marque tes châteaux isolés sur la carte · 🐛 correction : la ligne d'un assaut de jonction part de l'endroit où l'armée entre chez l'ennemi (et plus du milieu de ton royaume, ce qui faisait croire qu'un autre château était visé) · 🔎 clic sur « ton château isolé » dans la barre de l'assaut : la caméra va le voir
 - **v0.72.1** : 🎯 l'assaut part du point le plus proche de la cible (une ville ou un avant-poste) ; un avant-poste vide (garnison seule) n'est plus choisi : l'assaut part alors de la ville
 - **v0.72** : ⛵ tes bateaux en mer ont leur barre en bas de l'écran, comme les assauts · ❌ une petite croix dans le coin d'une barre (assaut ou bateau) ordonne la retraite (15 % de pertes ; un bateau fait demi-tour vers le port) · les soldats en mer comptent dans la jauge de ton armée
 - **v0.71.1** : 🎨 menus plus médiévaux, sans emojis : une simple flèche dessinée pour améliorer un bâtiment, une nef pour débarquer ou envoyer des renforts par la mer, une ancre pour rapatrier

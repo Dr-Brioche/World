@@ -1650,6 +1650,16 @@ const GameRules = {
     return best;
   },
 
+  // La ligne d'un assaut de jonction part de l'endroit où l'armée entre chez l'ennemi (la case de nos terres
+  // à côté du début de son chemin), pas du milieu du royaume
+  linkEntry(a, first) {
+    let edge = -1;
+    this.forNeighbors(first, n => { if (edge < 0 && this.owner[n] === a.attacker) edge = n; });
+    const t = edge >= 0 ? edge : first;
+    a.fromX = t % this.W + 0.5;
+    a.fromY = ((t / this.W) | 0) + 0.5;
+  },
+
   // Un assaut de jonction vers ce château est-il déjà lancé ?
   linkFor(c) { return this.attacks.find(a => !a.done && a.link === c); },
 
@@ -1681,6 +1691,7 @@ const GameRules = {
     let edge = -1;
     this.forNeighbors(route.path[0], n => { if (edge < 0 && this.owner[n] === pid) edge = n; });
     this.startMarch(a, edge);
+    this.linkEntry(a, route.path[0]);
     a.list = this.buildFrontier(pid, route.target);
     a.set = new Set(a.list);
     a.limitZone = this.corridor(c, route.path, route.passable);
@@ -2529,6 +2540,7 @@ const GameRules = {
         a.piece = route.piece;
         a.limitZone = this.corridor(a.link, route.path, route.passable);
         a.frontTile = route.path[0];
+        this.linkEntry(a, route.path[0]);
       }
     }
     // Début d'un assaut sur un château : sa garnison sort le défendre
