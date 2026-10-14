@@ -251,8 +251,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **Les garnisons sont fixes** : leurs soldats ne quittent jamais leur château, port ou avant-poste
    (ils ne servent qu'à le défendre ; pour attaquer, tu utilises tes soldats disponibles, ou ceux stationnés
    à un avant-poste). **Les soldats en garnison et stationnés** comptent aussi dans ton armée (la jauge les affiche) :
-   ensemble, ils ne peuvent pas dépasser le maximum. Le recrutement est **le plus rapide vers 40 % du maximum** (trait doré sur la jauge),
-   puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée est pleine.
+   ensemble, ils ne peuvent pas dépasser le maximum. Le recrutement est **le plus rapide quand ton armée n'est
+   ni vide ni trop pleine**, puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée
+   est pleine. Pas de repère précis : c'est la **couleur de la jauge** qui te guide (vert = au top, orange = normal,
+   rouge = ralenti).
    Envoie donc tes troupes au combat plutôt que de les garder !
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
@@ -273,6 +275,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.39.3** : plus de trait doré sur la jauge des soldats : seule sa couleur indique, à peu près, quand le recrutement va bien
 - **v0.39.2** : plus de flèche pendant la préparation d'un assaut : la bannière de l'attaquant est plantée sur la frontière, les terres menacées scintillent à sa couleur et le bâtiment visé a un halo qui pulse
 - **v0.39.1** : 🧱 la muraille du port royal donne +1 de défense dans sa zone, comme un fort en bois
 - **v0.39** : 🎯 une flèche rouge en pointillés, légèrement courbée, montre chaque assaut : un cercle au départ (juste à l'intérieur de la frontière) et une cible sur la zone attaquée · 🧱 le port royal (niveau 3) a une petite muraille, comme un fort en bois

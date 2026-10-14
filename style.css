@@ -137,15 +137,6 @@ html, body {
   width: 0;
   transition: width 0.2s linear, background 0.3s;
 }
-#troopPeak {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  margin-left: -1px;
-  background: var(--gold);
-  box-shadow: 0 0 0 1px rgba(43, 29, 14, 0.6);
-}
 #troopText {
   position: absolute;
   inset: 0;
