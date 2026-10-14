@@ -262,6 +262,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
    - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
      ton armée : l'avant-poste disparaît et ses soldats rejoignent tes troupes.
+   - **Toute la zone de l'avant-poste** (son morceau de territoire, tant qu'il n'est pas relié au royaume) est défendue
+     par **ses soldats stationnés** : si l'ennemi y attaque une église ou un port, ce sont eux qui partent le défendre.
+   - On ne peut **pas bâtir de château à moins de 12 cases d'un avant-poste** (cercle rouge) : il faut d'abord
+     conquérir des terres autour de lui.
    - Les ennemis peuvent **viser l'avant-poste** pour le détruire (après un **siège de 10 s**, pendant lequel
      ses soldats stationnés et des renforts peuvent encore le défendre) ; sans lui, ses terres sont à nouveau
      un petit morceau isolé, facile à encercler.
@@ -336,6 +340,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.62** : ⛺ toute la zone d'un avant-poste est défendue par ses soldats stationnés (pas par ceux du royaume, au-delà des mers) · pas de château à moins de 12 cases d'un avant-poste : il faut conquérir des terres autour avant
 - **v0.61.6** : ⛵ si un avant-poste tombe pendant que des renforts sont en mer, leur bateau fait demi-tour jusqu'au port (au lieu de rentrer d'un coup)
 - **v0.61.5** : 🐛 correction : les soldats débarqués en plus de la garnison d'un avant-poste ne disparaissent plus à la fin de sa construction (ils stationnent, prêts à agir)
 - **v0.61.4** : 🚨 une expédition ennemie qui vise ta côte : la zone où elle va débarquer clignote en rouge sur ton territoire

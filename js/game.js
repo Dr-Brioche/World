@@ -196,7 +196,11 @@ const GameRules = {
     const own = t => this.buildingTiles.filter(a => this.building[a] === t && this.owner[a] === pid);
     if (type === B_CHURCH) return own(B_CASTLE).map(a => ({ a, R: castleR })).concat(own(B_PORT).map(a => ({ a, R: churchR })));
     if (type === B_PORT) return own(B_CASTLE).map(a => ({ a, R: castleR })).concat(own(B_CHURCH).map(a => ({ a, R: churchR })));
-    if (type === B_CASTLE) return own(B_CHURCH).concat(own(B_PORT)).map(a => ({ a, R: castleR + 2 }));
+    if (type === B_CASTLE) {
+      // (ni trop près d'un de ses avant-postes : il faut d'abord conquérir des terres autour de lui)
+      return own(B_CHURCH).concat(own(B_PORT)).map(a => ({ a, R: castleR + 2 }))
+        .concat(own(B_OUTPOST).map(a => ({ a, R: CONFIG.OUTPOST_CASTLE_DISTANCE })));
+    }
     return [];
   },
 
@@ -904,7 +908,8 @@ const GameRules = {
       }
       if (i >= 0 && this.owner[i] === p.id && this.churchCastleConflict(p.id, i, type)) {
         return type === B_CASTLE
-          ? 'Trop près d\'une de tes églises ou d\'un de tes ports : la muraille de ce château pourrait les englober (cercle rouge).'
+          ? 'Trop près d\'une de tes églises, d\'un de tes ports ou d\'un de tes avant-postes (cercle rouge) : ' +
+            'pour un château près d\'un avant-poste, conquiers d\'abord des terres autour de lui.'
           : 'Trop près : une église ou un port doit rester hors de la zone de tes châteaux (même améliorés) ' +
             'et de tes églises (cercles rouges).';
       }
@@ -2095,12 +2100,10 @@ const GameRules = {
     const p = this.players[pid];
     const a = this.attacks.find(a => a.id === attackId && a.target === pid && !a.done);
     if (!a || this.defendWait(a) > 0) return null; // (les défenseurs se regroupent entre deux envois)
-    // Château isolé : personne ne peut le rejoindre. Avant-poste bâti : ses soldats stationnés le défendent.
-    let src = -1;
-    if (this.cutOff(a)) {
-      if (this.building[a.targetCastle] !== B_OUTPOST || !this.outpostReady(a.targetCastle)) return null;
-      src = a.targetCastle;
-    }
+    // Dans la zone d'un avant-poste (pas encore reliée au royaume) : ce sont ses soldats stationnés qui défendent.
+    // Château isolé : personne ne peut le rejoindre.
+    let src = this.outpostZoneOf(a);
+    if (src < 0 && this.cutOff(a)) return null;
     troops = Math.floor(Math.min(troops, this.troopsAt(pid, src)));
     if (troops < 1) return null;
     this.takeTroops(pid, src, troops);
@@ -2113,6 +2116,16 @@ const GameRules = {
     (a.defPending = a.defPending || []).push({ troops, from, start: this.tick,
       arrive: this.tick + Math.max(1, Math.round(dist / CONFIG.DEFENDER_SPEED * TPS)) });
     return a;
+  },
+
+  // L'avant-poste bâti dont la zone est attaquée (son morceau de territoire, pas encore relié au royaume), ou -1 :
+  // ses soldats stationnés défendent tout ce morceau, tant qu'un château ne l'a pas fait entrer dans le royaume
+  outpostZoneOf(a) {
+    const t = a.targetCastle >= 0 ? a.targetCastle : a.frontTile;
+    if (t < 0 || a.target < 0 || this.owner[t] !== a.target) return -1;
+    const r = this.regions(), k = r.comp[t];
+    if (k < 0 || k === r.main[a.target]) return -1;
+    return r.outpost[k] >= 0 ? r.outpost[k] : -1;
   },
 
   // Où se bat l'assaut a (en cases, coordonnées du centre) : au pied des murs pendant un siège, sinon sur son front

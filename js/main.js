@@ -610,8 +610,10 @@ const UI = {
     if (target && G.defendWait(target) > 0) {
       return this.log(`⏳ Tes défenseurs se regroupent : prochains renforts dans ${Math.ceil(G.defendWait(target))} s.`, 'warn');
     }
-    if (target && G.cutOff(target)) {
-      const op = target.targetCastle;
+    // Zone d'un avant-poste (pas encore reliée au royaume) : seuls ses soldats stationnés peuvent la défendre
+    const zoneOp = target ? G.outpostZoneOf(target) : -1;
+    if (target && (zoneOp >= 0 || G.cutOff(target))) {
+      const op = zoneOp >= 0 ? zoneOp : target.targetCastle;
       if (G.building[op] === B_OUTPOST) {
         // Avant-poste : ses soldats stationnés peuvent le défendre (pas ceux du royaume, au-delà des mers)
         const before = G.troopsAt(h.id, op);
