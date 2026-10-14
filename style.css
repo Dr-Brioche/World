@@ -68,6 +68,9 @@ html, body {
 #lb li { margin: 2px 0; white-space: nowrap; }
 #lb li.me { font-weight: bold; }
 #lb li.ally .nm { color: var(--good); font-weight: bold; }
+/* Royaume qui nous attaque : son nom clignote en rouge (la classe « on » est ajoutée une fois sur deux) */
+#lb li.attacker .nm { color: var(--danger); font-weight: bold; }
+#lb li.attacker.on .nm { color: #fff; background: var(--danger); border-radius: 3px; }
 #lb .allies { display: inline-block; width: 30px; }
 #lb .allies i {
   display: inline-block;

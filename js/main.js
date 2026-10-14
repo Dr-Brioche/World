@@ -497,7 +497,10 @@ const UI = {
       const btn = p.isHuman || !h.alive || !G.pactsAllowed ? '' : allied
         ? `<button data-ally="${p.id}" title="Rompre l'alliance (trahison !)">💔</button>`
         : `<button data-ally="${p.id}" title="Proposer une alliance">🤝</button>`;
-      return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}">${this.bannerImg(p, 'lbb')}` +
+      // Un royaume qui nous attaque (ou prépare un assaut contre nous) : son nom clignote en rouge
+      const attacking = !p.isHuman && G.attacks.some(a => !a.done && a.attacker === p.id && a.target === h.id);
+      const blink = attacking ? (Math.floor(performance.now() / 400) % 2 ? ' attacker' : ' attacker on') : '';
+      return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}${blink}">${this.bannerImg(p, 'lbb')}` +
         `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${escapeHtml(p.name)}</span>` +
         `<span class="allies" title="${this.alliesTitle(p)}">` +
         G.allies(p.id).map(o => `<i style="background:rgb(${o.color})"></i>`).join('') + `</span>` +

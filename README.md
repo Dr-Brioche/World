@@ -335,6 +335,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.61.3** : 🚨 un royaume qui t'attaque (ou prépare un assaut contre toi) voit son nom clignoter en rouge dans le classement, en haut à droite
 - **v0.61.2** : 🟩🟥 en posant un moulin ou une caserne, les zones constructibles (châteaux, églises, ports) montrent en vert où il peut se poser et en rouge où c'est impossible
 - **v0.61.1** : 💰 l'amélioration du château au niveau 2 coûte 300 (au lieu de 90)
 - **v0.61** : 🛡️ les défenseurs n'arrivent plus instantanément : ils partent du château le plus proche et marchent à la rencontre de l'armée ennemie (bannière visible, « en route » dans le panneau)
