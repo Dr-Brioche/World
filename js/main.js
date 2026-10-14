@@ -600,6 +600,17 @@ const UI = {
         } });
       }
     }
+    // Terre libre de l'autre côté d'un fleuve : la traverser à gué
+    if (G.owner[i] === -1 && G.isLand(i) && G.terrain[i] !== TERRAIN.RIVER) {
+      const plan = G.planCrossing(h.id, i);
+      if (!plan.error) {
+        items.push({ label: `🛶 Traverser le fleuve avec ${fmt(h.troops * this.ratio)} soldats (${Math.round(plan.time)} s de traversée)`, run: () => {
+          const err = G.launchCrossing(h.id, i, h.troops * this.ratio);
+          if (err) this.log(err, 'warn');
+          else this.log('🛶 Tes soldats passent le fleuve à gué : c\'est long et difficile !', 'good');
+        } });
+      }
+    }
     if (G.isCoastal(i) && G.landable(h.id, i)) {
       const plan = G.planLanding(h.id, i);
       const sending = Math.floor(h.troops * this.ratio);

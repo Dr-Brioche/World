@@ -232,7 +232,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      selon la force de chaque camp). Si l'escadre gagne, l'expédition est **coulée** et ses survivants rentrent ;
      sinon, l'expédition débarque quand même, avec moins de soldats. Tu es prévenu quand une expédition vise ta côte.
 
-   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Débarquer).
+   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Débarquer · 🛶 Traverser le fleuve).
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
    **75 %**, le reste se perd en route, et sans dépasser son armée maximum.
 4. **Forme des pactes** (si tu les as autorisés dans le menu : on peut aussi les **interdire**, chacun pour soi) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
@@ -272,14 +272,19 @@ a un **gros bonus de défense (+3, soit +300 %)**. Il y a entre **3 et 12 fleuve
 Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer.
 Certains fleuves forment aussi un **lac** en chemin.
+**🛶 Traverser un fleuve** : pour prendre des terres libres de l'autre côté, fais un **clic droit** sur la rive d'en face
+et choisis **🛶 Traverser le fleuve**. Le % de soldats choisi passe à gué depuis tes terres : c'est **long**
+(**3 s par case de fleuve**), et tout le monde voit le radeau. À l'arrivée, tu prends le gué et une **tête de pont**
+sur l'autre rive, reliée à ton royaume ; les survivants rejoignent ton armée. (Le grand fleuve, lui, ne se traverse pas.)
 
 🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
 il faut les contourner.
 
-**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.42** : 🛶 clic droit sur une terre libre de l'autre côté d'un fleuve → « Traverser le fleuve » : l'armée passe à gué (3 s par case de fleuve) et prend une tête de pont sur l'autre rive
 - **v0.41** : 🏰 siège : un château ne tombe plus tout de suite, l'armée doit l'assiéger 5 s (niveau 1), 10 s (niveau 2) ou 15 s (niveau 3), le temps pour le défenseur d'envoyer des soldats
 - **v0.40** : 🐢 les assauts contre un royaume avancent 3 fois moins vite (toujours plus lentement dans les forêts, collines, montagnes et fleuves) : on a le temps de voir venir l'ennemi et de réagir
 - **v0.39.3** : plus de trait doré sur la jauge des soldats : seule sa couleur indique, à peu près, quand le recrutement va bien
