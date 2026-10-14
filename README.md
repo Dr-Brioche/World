@@ -91,6 +91,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      l'assiéger **5 s** (fort en bois), **10 s** (château) ou **15 s** (citadelle) : pendant ce temps,
      le défenseur peut encore **envoyer des soldats** le défendre, qui se battent avec le bonus de ses murs.
      Le compte à rebours s'affiche sur la bannière de l'assaut.
+     **Deux armées ennemies** (pas alliées) qui assiègent **le même château** d'un troisième royaume s'affrontent
+     d'abord entre elles, au pied des murs : le siège attend la fin de la bataille, et la gagnante le reprend.
    - **Prendre un château** te donne d'un coup **toute sa zone de défense** (dans sa muraille) et
      **les moulins et casernes** qui s'y trouvent. L'assaut s'arrête alors et les survivants rentrent.
      Tu peux relancer un nouvel assaut aussitôt.
@@ -251,6 +253,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Débarquer · 🛶 Traverser le fleuve).
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
    **75 %**, le reste se perd en route, et sans dépasser son armée maximum.
+   Si cet allié **se fait attaquer**, le menu propose aussi **🛡️ Aider [allié] contre [attaquant]** : tes soldats
+   arrivent en **5 s** et se battent avec ses défenseurs ; à la fin de l'assaut, les survivants rentrent chez toi.
+   Les royaumes rivaux aident aussi leurs alliés.
 4. **Forme des pactes** (si tu les as autorisés dans le menu : on peut aussi les **interdire**, chacun pour soi) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
    pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
@@ -301,6 +306,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.49** : ⚔️ deux armées ennemies qui assiègent le même château s'affrontent d'abord entre elles, la gagnante reprend le siège · 🛡️ clic droit chez un allié attaqué → l'aider à se défendre (ses survivants rentrent ensuite)
 - **v0.48** : 🗺️ un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé · ⚰️ après un assaut réussi, 60 s d'après-guerre pour le vainqueur (−25 % de soldats produits) et 🔥 de galvanisation pour le perdant (+25 %)
 - **v0.47** : 🏰 une citadelle (château niveau 3) permet 2 assauts en même temps contre un même royaume, et coûte 1000 · garnisons des châteaux bien plus grandes (petite, x5, puis x3) et chaque soldat de garnison vaut 3 au combat · le port royal a la même petite garnison qu'un fort en bois
 - **v0.46** : ⏳ 5 s d'attente entre deux envois de défenseurs contre un même assaut (fini les renforts envoyés en continu, soldat par soldat)

@@ -1808,7 +1808,10 @@ const GameRules = {
     // La garnison combat en premier, puis les défenseurs envoyés
     const fromGarrison = Math.min(gar, defLoss);
     a.garrison = (a.garrison || 0) - fromGarrison / gp;
+    const before = a.defenders;
     a.defenders -= defLoss - fromGarrison;
+    // les alliés venus aider subissent leur part des pertes
+    if (a.allyDef && before > 0) for (const k in a.allyDef) a.allyDef[k] *= Math.max(0, a.defenders) / before;
     a.troops = Math.max(0, a.troops - defLoss * D * defBonus / atkBonus);
     if (a.troops < 1) {
       const p = this.players[a.attacker], d = this.players[a.target];
@@ -1818,6 +1821,7 @@ const GameRules = {
     } else if (a.defenders + a.garrison < 1) {
       a.defenders = 0;
       a.garrison = 0;
+      if (a.allyDef) for (const k in a.allyDef) a.allyDef[k] = 0;
     }
   },
 
@@ -1861,6 +1865,27 @@ const GameRules = {
     a.lastDefend = this.tick;
     if (src >= 0) a.defSource = src;
     return a;
+  },
+
+  // Envoyer une armée aider un allié du pacte qui se fait attaquer : elle arrive en REINFORCE_DELAY secondes
+  // et se bat avec ses défenseurs ; à la fin de l'assaut, ses survivants rentrent. Renvoie un message d'erreur, ou null.
+  helpAlly(pid, attackId, troops) {
+    const p = this.players[pid], TPS = CONFIG.TICKS_PER_SECOND;
+    const a = this.attacks.find(x => x.id === attackId && !x.done);
+    if (!a || a.target < 0 || !this.areAllied(pid, a.target)) return 'Cet assaut ne vise pas un de tes alliés.';
+    if (this.cutOff(a)) return 'Ce bâtiment est coupé de son royaume : aucun renfort ne peut le rejoindre.';
+    if (!a.allyLast) { a.allyLast = {}; a.allyDef = {}; a.allyPending = []; }
+    const wait = a.allyLast[pid] === undefined ? 0 : (a.allyLast[pid] + CONFIG.DEFEND_COOLDOWN * TPS - this.tick) / TPS;
+    if (wait > 0) return `Tes soldats se regroupent : prochaine aide dans ${Math.ceil(wait)} s.`;
+    troops = Math.floor(Math.min(troops, p.troops));
+    if (troops < 1) return 'Pas assez de soldats !';
+    p.troops -= troops;
+    a.allyPending.push({ pid, troops, tick: this.tick + CONFIG.REINFORCE_DELAY * TPS });
+    a.allyLast[pid] = this.tick;
+    const d = this.players[a.target], e = this.players[a.attacker];
+    if (d.isHuman) UI.log(`🤝 ${p.name} envoie ${fmt(troops)} soldats t'aider contre ${e.name} !`, 'good', p);
+    else if (e.isHuman) UI.log(`🤝 ${p.name} envoie ${fmt(troops)} soldats défendre son allié ${d.name} contre toi !`, 'warn', p);
+    return null;
   },
 
   // Secondes à attendre avant de pouvoir renvoyer des défenseurs contre cet assaut (0 = tout de suite).
@@ -1918,6 +1943,15 @@ const GameRules = {
     // Arrivée des renforts
     for (const r of a.pending) if (r.tick <= this.tick) a.troops += r.troops;
     a.pending = a.pending.filter(r => r.tick > this.tick);
+    // Arrivée des alliés venus aider le défenseur : ils se battent avec ses défenseurs
+    if (a.allyPending) {
+      for (const r of a.allyPending) {
+        if (r.tick > this.tick) continue;
+        a.defenders += r.troops;
+        a.allyDef[r.pid] = (a.allyDef[r.pid] || 0) + r.troops;
+      }
+      a.allyPending = a.allyPending.filter(r => r.tick > this.tick);
+    }
     // Tant que des défenseurs (garnison ou renforts) tiennent la position, l'assaut se bat au lieu d'avancer
     if (a.defenders + (a.garrison || 0) >= 1) return this.fight(a);
     // Siège : l'armée est au pied des murs. Le château ne tombe qu'à la fin du siège ;
@@ -2032,6 +2066,47 @@ const GameRules = {
     else if (d.isHuman) UI.log(`🏰 ${p.name} assiège ton château ! Il tombe dans ${secs} s : envoie vite des défenseurs !`, 'warn', p);
   },
 
+  // Deux armées de royaumes ennemis assiègent le même château (d'un troisième royaume) : elles s'affrontent
+  // d'abord entre elles, au pied des murs. Pendant la bataille, le siège est en pause ; la gagnante le reprend.
+  siegeClashes() {
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    for (const a of this.attacks) a.clash = undefined;
+    const sieges = this.attacks.filter(a => !a.done && a.siege);
+    for (let i = 0; i < sieges.length; i++) {
+      for (let j = i + 1; j < sieges.length; j++) {
+        const a = sieges[i], b = sieges[j];
+        if (a.done || b.done || a.attacker === b.attacker || this.areAllied(a.attacker, b.attacker)) continue;
+        if (this.anchor[a.siege.tile] !== this.anchor[b.siege.tile]) continue; // (pas le même château)
+        a.clash = b.attacker;
+        b.clash = a.attacker;
+        if (!a.clashSeen || !b.clashSeen) {
+          a.clashSeen = b.clashSeen = true;
+          for (const [x, y] of [[a, b], [b, a]]) {
+            if (this.players[x.attacker].isHuman) {
+              UI.log(`⚔️ Ton armée affronte celle ${this.deName(this.players[y.attacker].name)} au pied du château ! La gagnante reprendra le siège.`, 'warn', this.players[y.attacker]);
+            }
+          }
+        }
+        // Combat comme contre des défenseurs : la supériorité en nombre et la force des soldats comptent
+        const ba = this.numbersBonus(a.troops, b.troops), bb = this.numbersBonus(b.troops, a.troops);
+        const pa = this.troopPower(a.attacker), pb = this.troopPower(b.attacker);
+        const base = Math.max(CONFIG.FIGHT_MIN_LOSS, CONFIG.FIGHT_RATE * Math.min(a.troops, b.troops)) * ba * bb;
+        a.troops = Math.max(0, a.troops - base * (bb / ba) * (pb / pa));
+        b.troops = Math.max(0, b.troops - base * (ba / bb) * (pa / pb));
+        // le siège attend la fin de la bataille
+        a.siege.end++;
+        b.siege.end++;
+        for (const [x, y] of [[a, b], [b, a]]) {
+          if (x.troops >= 1) continue;
+          const px = this.players[x.attacker], py = this.players[y.attacker];
+          if (px.isHuman) UI.log(`💥 Ton armée a été battue par celle de ${py.name} au pied du château.`, 'warn', py);
+          else if (py.isHuman) UI.log(`⚔️ Tu as battu l'armée de ${px.name} : ton siège reprend !`, 'good', px);
+          this.endAttack(x);
+        }
+      }
+    }
+  },
+
   // Fin du siège : le château tombe, avec toute sa zone (voir onCastleTaken), et l'assaut s'arrête
   takeCastle(a, t) {
     const castle = this.anchor[t], zone = this.castleZone(castle, a.target, 0); // (zone notée avant la prise)
@@ -2052,7 +2127,7 @@ const GameRules = {
     }
     a.cut = true; // la zone prise peut couper le royaume du défenseur (voir captureEnclaves)
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (p.isHuman) UI.log(`🏰 Tu as pris un château de ${d.name}, avec toute sa zone et ses bâtiments !`, 'good', d);
+    if (p.isHuman) UI.log(`🏰 Tu as pris un château ${this.deName(d.name)}, avec toute sa zone et ses bâtiments !`, 'good', d);
     else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn', p);
   },
 
@@ -2087,6 +2162,15 @@ const GameRules = {
     const p = this.players[a.attacker];
     // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste)
     this.giveTroops(a.attacker, this.sourceOfAttack(a), a.troops + a.pending.reduce((s, r) => s + r.troops, 0));
+    // Les alliés venus aider rentrent chez eux avec leurs survivants
+    if (a.allyDef) {
+      for (const k in a.allyDef) {
+        const back = Math.min(a.allyDef[k], Math.max(0, a.defenders));
+        a.defenders -= back;
+        if (this.players[k].alive) this.players[k].troops += back;
+      }
+      for (const r of a.allyPending) if (this.players[r.pid].alive) this.players[r.pid].troops += r.troops; // (pas encore arrivés)
+    }
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château
     if (a.target >= 0 && this.players[a.target].alive) {
       this.giveTroops(a.target, a.defSource === undefined ? -1 : a.defSource, a.defenders);
@@ -2260,6 +2344,7 @@ const GameRules = {
 
     this.levy();
     for (const a of this.attacks.slice()) if (!a.done) this.stepAttack(a);
+    this.siegeClashes();
     // Un assaut a pu couper un royaume en morceaux : les petits morceaux encerclés sont pris
     for (const a of this.attacks) {
       if (a.cut) { a.cut = false; this.captureEnclaves(a.target, a.attacker); }
