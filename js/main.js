@@ -468,7 +468,8 @@ const UI = {
       const pending = a.pending ? a.pending.reduce((s, r) => s + r.troops, 0) : 0;
       const defenders = (a.defenders || 0) + (a.garrison || 0);
       el.textContent = `⚔ ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
-        (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '');
+        (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
+        (a.siege ? ` · 🏰 siège ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s` : '');
     }
   },
 

@@ -1783,6 +1783,13 @@ const GameRules = {
     a.pending = a.pending.filter(r => r.tick > this.tick);
     // Tant que des défenseurs (garnison ou renforts) tiennent la position, l'assaut se bat au lieu d'avancer
     if (a.defenders + (a.garrison || 0) >= 1) return this.fight(a);
+    // Siège : l'armée est au pied des murs. Le château ne tombe qu'à la fin du siège ;
+    // d'ici là, le défenseur peut encore envoyer des soldats (on se bat alors, juste au-dessus).
+    if (a.siege) {
+      if (this.owner[a.siege.tile] !== a.target) return this.endAttack(a); // le château a changé de mains
+      if (this.tick < a.siege.end) return;
+      return this.takeCastle(a, a.siege.tile);
+    }
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
     // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5, fleuve 4). On avance donc vite en plaine
     // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
@@ -1795,6 +1802,8 @@ const GameRules = {
       const t = this.pickFrontier(a);
       if (t < 0) return this.endAttack(a);
       if (a.troops < this.tileCost(a, t)) return this.endAttack(a); // plus assez de soldats
+      // Arrivée au pied d'un château : le siège commence (il ne tombe pas tout de suite)
+      if (a.target >= 0 && this.building[t] === B_CASTLE) return this.startSiege(a, t);
       const steps = TERRAIN_INFO[this.terrain[t]].cost;
       if (a.move < steps) {
         a.set.add(t); // pas assez de points ce tour-ci : on réessaiera
@@ -1805,16 +1814,9 @@ const GameRules = {
       if (a.troops < cost) return this.endAttack(a);
       a.troops -= cost;
       a.frontTile = t;
-      // Prise d'un château : on note sa zone de défense (avant qu'elle ne change de mains)
-      const castle = a.target >= 0 && this.building[t] === B_CASTLE ? this.anchor[t] : -1;
-      const zone = castle >= 0 ? this.castleZone(castle, a.target, 0) : null;
       // Prendre une case entre deux cases du défenseur peut couper son royaume (voir captureEnclaves)
       if (a.target >= 0 && this.countNeighborsOwnedBy(t, a.target) >= 2) a.cut = true;
       this.setOwner(t, a.attacker);
-      if (zone) {
-        this.onCastleTaken(a, castle, zone);
-        return this.endAttack(a);
-      }
       // Prise de l'église, du port ou de l'avant-poste visé : l'assaut s'arrête là
       const b = this.building[t];
       if (a.targetCastle >= 0 && b && b !== B_CASTLE && this.anchor[t] === a.targetCastle) {
@@ -1842,6 +1844,25 @@ const GameRules = {
 
   // Château pris : toute sa zone de défense passe d'un coup à l'attaquant, avec les moulins et casernes
   // qui s'y trouvent (une église, un port ou un autre château reste au défenseur : il faut le viser)
+  // L'armée arrive au pied du château (case t) : le siège dure quelques secondes selon son niveau
+  startSiege(a, t) {
+    const secs = this.castleInfo(this.anchor[t]).siege;
+    a.siege = { tile: t, end: this.tick + secs * CONFIG.TICKS_PER_SECOND };
+    a.frontTile = t; // on se bat au pied des murs (avec leur bonus de défense)
+    const p = this.players[a.attacker], d = this.players[a.target];
+    if (p.isHuman) UI.log(`🏰 Ton armée assiège un château ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`, 'good', d);
+    else if (d.isHuman) UI.log(`🏰 ${p.name} assiège ton château ! Il tombe dans ${secs} s : envoie vite des défenseurs !`, 'warn', p);
+  },
+
+  // Fin du siège : le château tombe, avec toute sa zone (voir onCastleTaken), et l'assaut s'arrête
+  takeCastle(a, t) {
+    const castle = this.anchor[t], zone = this.castleZone(castle, a.target, 0); // (zone notée avant la prise)
+    a.troops = Math.max(0, a.troops - this.tileCost(a, t));
+    this.setOwner(t, a.attacker);
+    this.onCastleTaken(a, castle, zone);
+    return this.endAttack(a);
+  },
+
   onCastleTaken(a, castle, zone) {
     a.castleTaken = true;
     for (const i of zone) {

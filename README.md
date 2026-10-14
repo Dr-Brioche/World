@@ -83,6 +83,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      tue plus vite et perd moins de soldats par ennemi tué (jusqu'à **x5** pour un écrasement, comme 300 contre 4).
      Envoyer 2 ou 3 défenseurs à la fois ne suffit donc pas à bloquer une grosse armée !
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
+   - **🏰 Le siège** : quand ton armée arrive au pied d'un château, il ne tombe pas tout de suite. Elle doit
+     l'assiéger **5 s** (fort en bois), **10 s** (château) ou **15 s** (citadelle) : pendant ce temps,
+     le défenseur peut encore **envoyer des soldats** le défendre, qui se battent avec le bonus de ses murs.
+     Le compte à rebours s'affiche sur la bannière de l'assaut.
    - **Prendre un château** te donne d'un coup **toute sa zone de défense** (dans sa muraille) et
      **les moulins et casernes** qui s'y trouvent. L'assaut s'arrête alors et les survivants rentrent.
      Tu peux relancer un nouvel assaut aussitôt.
@@ -276,6 +280,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.41** : 🏰 siège : un château ne tombe plus tout de suite, l'armée doit l'assiéger 5 s (niveau 1), 10 s (niveau 2) ou 15 s (niveau 3), le temps pour le défenseur d'envoyer des soldats
 - **v0.40** : 🐢 les assauts contre un royaume avancent 3 fois moins vite (toujours plus lentement dans les forêts, collines, montagnes et fleuves) : on a le temps de voir venir l'ennemi et de réagir
 - **v0.39.3** : plus de trait doré sur la jauge des soldats : seule sa couleur indique, à peu près, quand le recrutement va bien
 - **v0.39.2** : plus de flèche pendant la préparation d'un assaut : la bannière de l'attaquant est plantée sur la frontière, les terres menacées scintillent à sa couleur et le bâtiment visé a un halo qui pulse
