@@ -550,6 +550,33 @@ const Render = {
     }
   },
 
+  // Expédition ennemie qui vise notre côte : la zone où elle va débarquer est marquée en rouge (elle clignote)
+  drawLandingWarnings(ox, oy) {
+    const G = Game, h = G.human, ctx = this.ctx, s = this.cam.scale;
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 250);
+    for (const e of G.expeditions) {
+      if (e.done || e.home !== undefined || e.reinforce !== undefined || e.pid === h.id || G.owner[e.landing] !== h.id) continue;
+      // zone de débarquement (recalculée seulement si la carte a changé)
+      if (e.warnVersion !== G.version) {
+        e.warnVersion = G.version;
+        const zone = G.landingZone(e.pid, e.landing).tiles, set = new Set(zone);
+        e.warnTiles = zone;
+        e.warnEdges = this.zoneEdges(zone, (i, n) => set.has(n));
+      }
+      this.fillTiles(ox, oy, e.warnTiles, `rgba(230,40,30,${0.2 + 0.25 * pulse})`);
+      ctx.beginPath();
+      for (const [x1, y1, x2, y2] of e.warnEdges) {
+        ctx.moveTo(ox + x1 * s, oy + y1 * s);
+        ctx.lineTo(ox + x2 * s, oy + y2 * s);
+      }
+      ctx.setLineDash([5, 4]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(200,20,15,${0.6 + 0.4 * pulse})`;
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  },
+
   // Bateaux d'expédition : ils avancent sur l'eau vers la côte visée (visibles par tous)
   drawExpeditions(ox, oy) {
     const G = Game;
@@ -1139,6 +1166,7 @@ const Render = {
     this.drawFloaters(ox, oy);
 
     // Par-dessus tout le reste, pour bien les voir
+    this.drawLandingWarnings(ox, oy);
     this.drawExpeditions(ox, oy);
     this.drawDefendersOnTheWay(ox, oy);
     this.drawAttackArrows(ox, oy);
