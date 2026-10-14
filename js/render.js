@@ -488,6 +488,11 @@ const Render = {
   drawExpeditions(ox, oy) {
     const G = Game;
     this.boatHits = [];
+    // Traversées de fleuve : un radeau avance le long du gué
+    for (const c of G.crossings) {
+      const t = Math.min(1, (G.tick - c.start) / Math.max(1, c.arrive - c.start));
+      this.drawBoat(ox, oy, c.path, t, c.pid, c.troops, '🛶');
+    }
     for (const e of G.expeditions) {
       // soldats à bord (ils diminuent un peu pendant la traversée)
       const t = Math.min(1, (G.tick - e.start) / Math.max(1, e.arrive - e.start));
@@ -502,7 +507,7 @@ const Render = {
   },
 
   // Bateau qui avance le long de son trajet (t = 0 au départ, 1 à l'arrivée), avec ses soldats à bord
-  drawBoat(ox, oy, path, t, pid, troops) {
+  drawBoat(ox, oy, path, t, pid, troops, icon = '⛵') {
     const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
     const px = i => ox + (i % W + 0.5) * s, py = i => oy + (((i / W) | 0) + 0.5) * s;
     const k = Math.min(path.length - 1, Math.floor(t * path.length));
@@ -520,7 +525,7 @@ const Render = {
     ctx.font = '20px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('⛵', x, y);
+    ctx.fillText(icon, x, y);
     ctx.font = '700 12px Georgia, serif';
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(20,12,4,0.85)';

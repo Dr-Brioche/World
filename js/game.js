@@ -25,6 +25,7 @@ const GameRules = {
     this.players = [];
     this.attacks = [];
     this.expeditions = []; // bateaux en route vers une côte
+    this.crossings = [];   // armées qui traversent un fleuve à gué
     this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
     this.colonies = new Map(); // château bâti ou pris dans la zone d'un avant-poste → son royaume
     this.nextAttackId = 1;
@@ -1477,6 +1478,92 @@ const GameRules = {
   },
 
   // Les bateaux arrivés débarquent : ils prennent les terres libres autour et y bâtissent un avant-poste
+  // --- Traversée de fleuve ---
+  // Pour prendre des terres libres de l'autre côté d'un fleuve (pas le grand fleuve, infranchissable) :
+  // l'armée part de ses terres, passe le fleuve à gué (lentement) et prend une tête de pont sur l'autre rive.
+  // Renvoie { path, river, time } (path : de nos terres jusqu'à la case visée i) ou { error }.
+  planCrossing(pid, i) {
+    if (this.owner[i] !== -1 || !this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) {
+      return { error: 'Il faut viser une terre libre, de l\'autre côté du fleuve.' };
+    }
+    const W = this.W, x0 = i % W, y0 = (i / W) | 0;
+    const near = (j, R) => (j % W - x0) ** 2 + (((j / W) | 0) - y0) ** 2 <= R * R;
+    // Recherche en largeur depuis la case visée : on passe par les terres libres de la rive (tout près),
+    // puis par le fleuve, jusqu'à une case de fleuve qui touche nos terres
+    const prev = new Map([[i, -1]]), queue = [i];
+    for (let q = 0; q < queue.length; q++) {
+      const t = queue[q];
+      if (this.terrain[t] === TERRAIN.RIVER) {
+        let from = -1;
+        this.forNeighbors(t, n => { if (from < 0 && this.owner[n] === pid && this.isBase(n)) from = n; });
+        if (from >= 0) {
+          const path = [from];
+          for (let k = t; k >= 0; k = prev.get(k)) path.push(k);
+          const river = path.filter(k => this.terrain[k] === TERRAIN.RIVER).length;
+          return { path, river, time: river * CONFIG.CROSSING_TIME_PER_TILE };
+        }
+      }
+      this.forNeighbors(t, n => {
+        if (prev.has(n) || this.owner[n] !== -1 || !this.isLand(n)) return;
+        const ok = this.terrain[n] === TERRAIN.RIVER ? near(n, CONFIG.CROSSING_MAX_DISTANCE) : near(n, CONFIG.CROSSING_BANK_RADIUS);
+        if (!ok) return;
+        prev.set(n, t);
+        queue.push(n);
+      });
+    }
+    return { error: 'Pas de gué ici : il faut un fleuve entre tes terres et cette terre libre (le grand fleuve, lui, est infranchissable).' };
+  },
+
+  // Lance une traversée de fleuve vers la terre libre i. Renvoie un message d'erreur, ou null.
+  launchCrossing(pid, i, troops) {
+    const p = this.players[pid], plan = this.planCrossing(pid, i);
+    if (plan.error) return plan.error;
+    troops = Math.floor(Math.min(troops, p.troops));
+    if (troops < 1) return 'Pas assez de soldats !';
+    p.troops -= troops;
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    this.crossings.push({ pid, target: i, path: plan.path, troops, start: this.tick,
+      arrive: this.tick + Math.max(1, Math.round(plan.time * TPS)) });
+    return null;
+  },
+
+  // Arrivée des traversées : on prend le gué (les cases de fleuve traversées) et une tête de pont sur l'autre rive.
+  // Si quelqu'un a pris le passage entre-temps, la traversée échoue et les soldats rentrent.
+  stepCrossings() {
+    for (const c of this.crossings) {
+      if (this.tick < c.arrive) continue;
+      c.done = true;
+      const p = this.players[c.pid];
+      if (!p.alive) continue;
+      const blocked = c.path.slice(1).some(t => this.owner[t] !== -1 && this.owner[t] !== c.pid);
+      if (blocked || this.owner[c.path[0]] !== c.pid) {
+        p.troops += c.troops;
+        if (p.isHuman) UI.log('🚫 Le passage du fleuve a été pris par un autre : tes soldats rentrent.', 'warn');
+        continue;
+      }
+      // Le gué, puis les terres libres de la rive autour de la case visée (sans repasser par le fleuve)
+      const R = CONFIG.CROSSING_BANK_RADIUS, W = this.W, x0 = c.target % W, y0 = (c.target / W) | 0;
+      const bank = new Set([c.target]);
+      for (const j of bank) {
+        this.forNeighbors(j, n => {
+          if (bank.has(n) || this.owner[n] !== -1 || !this.isLand(n) || this.terrain[n] === TERRAIN.RIVER) return;
+          if ((n % W - x0) ** 2 + (((n / W) | 0) - y0) ** 2 <= R * R) bank.add(n);
+        });
+      }
+      let troops = c.troops;
+      for (const t of [...c.path.slice(1), ...bank]) {
+        if (this.owner[t] === c.pid) continue;
+        const cost = CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost;
+        if (troops < cost) break;
+        troops -= cost;
+        this.setOwner(t, c.pid);
+      }
+      p.troops += troops; // les survivants rejoignent l'armée
+      if (p.isHuman) UI.log('🛶 Tes soldats ont traversé le fleuve : la terre de l\'autre rive est à toi !', 'good');
+    }
+    this.crossings = this.crossings.filter(c => !c.done);
+  },
+
   stepExpeditions() {
     for (const e of this.expeditions) {
       if (this.tick < e.arrive) continue;
@@ -2071,6 +2158,7 @@ const GameRules = {
     }
     this.attacks = this.attacks.filter(a => !a.done);
     this.stepExpeditions();
+    this.stepCrossings();
     this.stepOutposts();
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive) this.captureEnclaves(p.id);
