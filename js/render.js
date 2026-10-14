@@ -216,9 +216,13 @@ const Render = {
       const h = upgrading ? G.anchor[this.hover] : this.anchorAt(this.mouse.x, this.mouse.y, B_CASTLE);
       if (h < 0) return;
       const ok = upgrading ? G.upgradeCost(h) !== null : G.canPlace(G.human.id, h, B_CASTLE);
-      const zone = G.castleZone(h, G.human.id, upgrading ? Math.min(3, G.level[h] + 1) : 1);
+      const level = upgrading ? Math.min(3, G.level[h] + 1) : 1;
+      const zone = G.castleZone(h, G.human.id, level);
       if (!zone.length) return;
       const set = new Set(zone);
+      // Petite bulle près de la souris : la défense totale de la muraille (dessinée par-dessus tout, voir draw)
+      const def = Math.round((G.castleZoneDefense(zone, level) - 1) * 100);
+      this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: `🛡️ Défense dans la muraille : +${def} %` };
       this.fillTiles(ox, oy, zone, ok ? 'rgba(255,230,120,0.3)' : 'rgba(220,60,50,0.3)');
       this.drawWall(ox, oy, this.zoneEdges(zone, (i, n) => set.has(n)),
         ok ? 'rgba(255,230,140,0.95)' : 'rgba(230,90,80,0.95)', 'rgba(30,22,12,0.8)');
@@ -1015,5 +1019,28 @@ const Render = {
     // Par-dessus tout le reste, pour bien les voir
     this.drawExpeditions(ox, oy);
     this.drawAttackArrows(ox, oy);
+    this.drawCastleTip();
+  },
+
+  // Bulle d'info pendant la pose (ou l'amélioration) d'un château : la défense totale de sa muraille
+  drawCastleTip() {
+    const tip = this.castleTip;
+    this.castleTip = null; // (recalculée à chaque image tant qu'on vise un emplacement)
+    if (!tip) return;
+    const ctx = this.ctx;
+    ctx.font = '700 13px Georgia, serif';
+    const w = ctx.measureText(tip.text).width + 16, h = 24;
+    const x = Math.min(tip.x + 18, this.vw - w - 4), y = Math.min(tip.y + 18, this.vh - h - 4);
+    ctx.fillStyle = 'rgba(241,228,195,0.95)';
+    ctx.strokeStyle = '#5a3a1c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x, y, w, h, 6) : ctx.rect(x, y, w, h);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#2b1d0e';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tip.text, x + 8, y + h / 2 + 1);
   },
 };

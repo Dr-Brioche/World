@@ -495,6 +495,16 @@ const GameRules = {
 
   castleProtects(pid, i) { return this.castleBonus(pid, i) > 0; },
 
+  // Défense moyenne qu'aurait la zone d'un château de ce niveau : terrain + bonus des murs, en moyenne sur
+  // les cases de sa muraille (1 = aucune défense en plus, 2 = +100 %…). Pour la bulle d'aperçu du château.
+  castleZoneDefense(zone, level) {
+    if (!zone.length) return 1;
+    const bonus = CASTLE_LEVELS[level].bonus;
+    let sum = 0;
+    for (const i of zone) sum += TERRAIN_INFO[this.terrain[i]].cost + bonus;
+    return sum / zone.length;
+  },
+
   // Ports royaux (niveau 3) : ils ont une petite muraille autour de leur zone
   // (liste recalculée seulement quand la carte a changé)
   walledPorts() {
