@@ -695,11 +695,17 @@ const GameRules = {
   // avec les bonus de route et de terrain
   buildingOutput(a) {
     const t = this.building[a], info = this.buildingInfo(a);
-    const owner = this.players[this.owner[a]], eff = owner && t !== B_BARRACKS ? this.goldEfficiency(owner) : 1;
+    const owner = this.players[this.owner[a]];
+    const eff = !owner ? 1 : t === B_BARRACKS ? this.barracksEfficiency(owner) : this.goldEfficiency(owner);
     if (t === B_PORT) return info.gold * eff; // le port : ni route ni terrain
-    const v = t === B_MILL ? info.gold * eff : info.troops;
+    const v = (t === B_MILL ? info.gold : info.troops) * eff;
     const road = this.roads().get(a);
     return v * (1 + (road ? road.bonus : 0)) * this.terrainFactor(a, t);
+  },
+
+  // Rendement des casernes d'un royaume : plus il en a, moins chacune produit (voir BARRACKS_DIMINISHING)
+  barracksEfficiency(p) {
+    return 1 / (1 + CONFIG.BARRACKS_DIMINISHING * Math.max(0, p.bCount[B_BARRACKS] - 1));
   },
 
   // Rendement des moulins et des ports d'un royaume : plus il en a, moins chacun rapporte
@@ -799,7 +805,7 @@ const GameRules = {
   troopRate(p) {
     const max = this.maxTroops(p), army = this.armySize(p);
     if (army >= max) return 0;
-    const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
+    const base = CONFIG.BASE_TROOP_GROWTH + Math.sqrt(p.tiles) * CONFIG.TROOP_GROWTH_SQRT;
     return base * this.growthFactor(army / max) * this.warFactor(p) * this.earlyBoost();
   },
 
@@ -1094,7 +1100,8 @@ const GameRules = {
         this.setOwner(i, winner);
         took++;
       }
-      if (!took) continue;
+      // Message seulement pour un gros morceau (ou un château isolé) : sinon, les petits bouts coupés spammeraient
+      if (!took || (took < CONFIG.ENCLAVE_LOG_MIN && !keep.length)) continue;
       const A = this.players[winner];
       const keepTxt = keep.length ? ` ${keep.length > 1 ? 'Ses châteaux (ou ports) tiennent' : (this.building[keep[0]] === B_CASTLE ? 'Son château tient' : 'Son port tient')} encore, isolé${keep.length > 1 ? 's' : ''}.` : '';
       if (A.isHuman) UI.log(`✂️ Des terres ${this.deName(T.name)}, coupées de leur royaume, sont englobées par le tien !${keepTxt}`, 'good', T);
