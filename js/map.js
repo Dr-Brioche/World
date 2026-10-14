@@ -57,6 +57,7 @@ function generateMap(seed, type = 'normal') {
   const elevNoise = makeValueNoise(rand);
   const forestNoise = makeValueNoise(rand);
   const reliefNoise = makeValueNoise(rand);
+  const dryNoise = makeValueNoise(rand);
 
   // 1. Altitude : du bruit, plus bas sur les bords pour former un continent.
   //    (carte « Base navale » : plus bas loin de plusieurs centres, pour former plusieurs îles)
@@ -120,6 +121,10 @@ function generateMap(seed, type = 'normal') {
   keepMainland(terrain, W, H, minLand);
   if (type === 'normal') addIslets(terrain, W, H, rand);
   if (cont) addLakes(terrain, elev, W, H, rand);
+
+  // 3 bis. Quelques déserts : là où le « bruit de sécheresse » est le plus fort (environ DESERT_RATIO des plaines
+  //    et forêts), elles deviennent du désert (les collines et les montagnes restent)
+  addDeserts(terrain, W, H, dryNoise);
 
   // 4. Les fleuves : chacun part d'une montagne et descend la pente jusqu'à la mer (ou un lac).
   addRivers(terrain, elev, W, H, rand);
@@ -219,6 +224,22 @@ function addRivers(terrain, elev, W, H, rand) {
       }
     }
     lakes++;
+  }
+}
+
+// Déserts des cartes aléatoires : de grandes taches, sur à peu près CONFIG.DESERT_RATIO des plaines et forêts
+function addDeserts(terrain, W, H, dryNoise) {
+  const N = W * H, dry = new Float32Array(N), land = [];
+  for (let i = 0; i < N; i++) {
+    if (terrain[i] !== TERRAIN.PLAINS && terrain[i] !== TERRAIN.FOREST) continue;
+    dry[i] = fbm(dryNoise, (i % W) / 45, ((i / W) | 0) / 45, 4);
+    land.push(dry[i]);
+  }
+  if (!land.length) return;
+  land.sort((a, b) => a - b);
+  const lvl = land[Math.floor(land.length * (1 - CONFIG.DESERT_RATIO))];
+  for (let i = 0; i < N; i++) {
+    if ((terrain[i] === TERRAIN.PLAINS || terrain[i] === TERRAIN.FOREST) && dry[i] > lvl) terrain[i] = TERRAIN.DESERT;
   }
 }
 

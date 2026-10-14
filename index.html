@@ -82,13 +82,20 @@
       <details class="rulesBox">
         <summary>📜 Règles du jeu <small>(clique pour dérouler)</small></summary>
         <ul class="rules">
-          <li>🖱️ <b>Clique</b> sur une terre libre voisine pour t'étendre, ou sur un <b>château ennemi</b> (ou une église) pour le viser, puis <b>une 2e fois</b> pour lancer l'assaut avec le % de soldats choisi : ton armée part de ta cité la plus proche et marche jusqu'à ta frontière.</li>
-          <li>🛡️ Un assaut te vise ? Clique sur sa <b>bannière</b> pour envoyer tes défenseurs.</li>
-          <li>⌨️ Touches <b>1</b> à <b>5</b> : le bâtiment apparaît sous la souris, un clic le pose. <b>Clic droit</b> : menu d'actions (attaquer, construire, débarquer).</li>
-          <li>🤝 Fais des <b>pactes</b> avec d'autres royaumes : ils sont entourés d'une frontière dorée.</li>
-          <li>✂️ Coupe un royaume en deux : le plus petit morceau est à toi d'un coup, quelle que soit sa taille, avec ses églises, ports et bâtiments. Seuls ses châteaux et ports de niveau 3 tiennent, isolés : leur propriétaire clique dessus pour les relier par un assaut.</li>
-          <li>🌲 Forêts, collines et montagnes coûtent plus de soldats à conquérir. 🌊 Les fleuves sont des frontières naturelles : personne ne les possède, on ne les passe qu'en traversant à gué (clic droit sur la rive d'en face).</li>
-          <li>🌾 Moulins = or · ⚔️ Casernes = soldats · 🏰 Châteaux = défense · ⛪ Églises = plus de place pour bâtir · ⚓ Ports = or et expéditions maritimes (niveau 2). Moulins et casernes se bâtissent dans l'enceinte d'un château ou près d'une église. Clique sur un de tes bâtiments pour l'améliorer.</li>
+          <li>👑 <b>Départ</b> : les royaumes rivaux sont déjà installés. Regarde qui est où, puis clique sur une terre libre pour fonder ta capitale.</li>
+          <li>🖱️ <b>S'étendre</b> : clique sur une terre libre voisine (le curseur « Envoyer » choisit le % de soldats). Au début de la partie, ton royaume recrute et s'étend plus vite.</li>
+          <li>🎯 <b>Attaquer un royaume</b> : clique sur un de ses <b>châteaux, églises, ports ou avant-postes</b> pour le viser (chemin doré), puis <b>une 2e fois</b> pour lancer. Sans aucun de ces bâtiments, il s'attaque de front, n'importe où.</li>
+          <li>⚔️ <b>L'assaut</b> part de ta cité la plus proche et marche sur tes terres jusqu'à ta frontière : reclique sur la cible pour lui ajouter des soldats tout de suite. Chez l'ennemi, il avance lentement (surtout dans le relief) et tes renforts mettent 5 s à arriver. Au pied d'un château, il faut tenir un <b>siège</b> (5, 10 ou 15 s selon son niveau ; 10 s pour un avant-poste). Prendre un château, une église ou un port donne toute sa zone et ses bâtiments.</li>
+          <li>🏳️ <b>Annuler</b> un assaut, c'est battre en retraite : 3 s pour décrocher, et 15 % de pertes.</li>
+          <li>🛡️ <b>Défendre</b> : un assaut te vise (son nom clignote dans le classement) ? Clique sur sa <b>bannière</b> : tes défenseurs partent de ton château le plus proche et marchent à sa rencontre (un envoi toutes les 5 s). Chaque soldat en garnison vaut 3 au combat. Tes alliés peuvent t'envoyer de l'aide.</li>
+          <li>⚰️ <b>Après-guerre</b> : gagner un assaut réduit ta production de soldats (−25 %, 30 s) ; le perdant est <b>galvanisé</b> (+25 %). Ces effets s'additionnent.</li>
+          <li>✂️ <b>Couper</b> un royaume : sur chaque île, il ne garde que son plus grand morceau ; les autres passent d'un coup à celui qui l'a coupé. Seuls ses châteaux et ports de niveau 3 tiennent, isolés : leur propriétaire clique dessus pour les relier par un assaut.</li>
+          <li>🗺️ <b>Terrain</b> : forêts, collines et montagnes se défendent mieux ; les sommets enneigés sont infranchissables. 🌊 Les fleuves n'appartiennent à personne : on les traverse à gué (clic droit sur la rive d'en face). 🏜️ Les <b>déserts</b> se prennent comme des plaines, mais les bâtiments posés dessus produisent 20 % de moins.</li>
+          <li>🏗️ <b>Bâtiments</b> (touches <b>1</b> à <b>5</b>, puis clic) : 🌾 moulin = or · ⚔️ caserne = soldats et armée plus grande · 🏰 château = défense · ⛪ église = place pour bâtir et châteaux en plus · ⚓ port = or et expéditions. Moulins et casernes se bâtissent dans l'enceinte d'un château ou près d'une église (ou d'un port). Châteaux, églises et ports gardent leurs distances entre eux (cercles rouges). Clique sur un de tes bâtiments : ⬆️ améliorer ou ✖ détruire.</li>
+          <li>💰 <b>Économie</b> : plus ton royaume est grand, plus il recrute, mais de moins en moins vite. Une armée trop pleine coûte de l'or (jusqu'à −25 % d'or gagné).</li>
+          <li>⛵ <b>Mer</b> : avec un port de niveau 2, clic droit sur une côte lointaine → attaque navale. Tes soldats y bâtissent un <b>avant-poste</b> qui défend sa zone avec ses soldats ; clique dessus pour envoyer des renforts ou rapatrier ses troupes. Un château bâti ou pris dans sa zone la fait entrer dans ton royaume.</li>
+          <li>🤝 <b>Pactes</b> (si autorisés) : les alliés sont entourés d'une frontière dorée. Attaquer un allié, c'est le trahir.</li>
+          <li>⌨️ <b>Clic droit</b> : menu d'actions · <b>Échap</b> : annuler · <b>P</b> : pause · molette : zoom · glisser : déplacer la carte.</li>
           <li>🏆 Possède 85 % des terres (ou élimine tout le monde) pour gagner.</li>
         </ul>
       </details>
