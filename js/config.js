@@ -187,7 +187,7 @@ const BARRACKS_LEVELS = [
   null,
   { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.1, img: 'img/caserne1.webp', size: 2.5 },
   { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.2, img: 'img/caserne2.webp', size: 2.8, upgradeCost: 80 },
-  { name: 'Grande caserne',       troops: 7, maxTroops: 80, power: 1.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 800 },
+  { name: 'Grande caserne',       troops: 9, maxTroops: 200, power: 1.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 800 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
@@ -284,6 +284,6 @@ const KINGDOMS = ['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence',
 
 const DIFFICULTIES = {
   facile:    { bots: 5,  aggression: [0.6, 0.85], hateHuman: 0 },
-  normal:    { bots: 7,  aggression: [0.45, 0.7], hateHuman: 0.2 },
-  difficile: { bots: 10, aggression: [0.3, 0.55], hateHuman: 0.5 },
+  normal:    { bots: 7,  aggression: [0.45, 0.7], hateHuman: 0.1 },
+  difficile: { bots: 10, aggression: [0.3, 0.55], hateHuman: 0.25 },
 };
