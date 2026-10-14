@@ -69,6 +69,12 @@ const UI = {
     $('pauseBtn').addEventListener('click', () => this.togglePause());
     $('attacks').addEventListener('click', e => {
       if (e.target.dataset.defend) return this.defend(+e.target.dataset.defend);
+      // Clic sur « ton château isolé » : la caméra va le voir
+      const go = e.target.closest('[data-goto]');
+      if (go) {
+        const c = +go.dataset.goto, half = Game.sizeOf(Game.building[c]) / 2;
+        return Render.centerOn(c % Game.W + half, ((c / Game.W) | 0) + half);
+      }
       // Croix d'un transport en mer : il fait demi-tour vers le port
       if (e.target.dataset.recall) {
         const boat = Game.recallExpedition(Game.human.id, +e.target.dataset.recall);
@@ -619,7 +625,7 @@ const UI = {
       this.attacksKey = key;
       box.innerHTML = list.map(a => {
         if (a.link !== undefined && a.attacker === h.id) {
-          return `<div class="attack panel"><span>⚔️ → ${G.building[a.link] === B_PORT ? '⚓ ton port isolé' : '🏰 ton château isolé'}</span><b data-troops="${a.id}"></b>` +
+          return `<div class="attack panel"><span class="goto" data-goto="${a.link}" title="Clique pour voir ce bâtiment isolé">⚔️ → ${G.building[a.link] === B_PORT ? '⚓ ton port isolé' : '🏰 ton château isolé'} 🔎</span><b data-troops="${a.id}"></b>` +
             (a.retreatEnd !== undefined ? '<span class="retreat">🏳️ retraite…</span></div>'
               : `${this.retreatCross('data-cancel', a.id)}</div>`);
         }

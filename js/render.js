@@ -559,6 +559,28 @@ const Render = {
     }
   },
 
+  // Petit fanion rouge (mât et drapeau triangulaire) : marque un de nos bâtiments isolés
+  drawIsolatedFlag(x, y) {
+    const ctx = this.ctx, h = 22;
+    ctx.save();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#2b1a0c';
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y - h);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y - h);
+    ctx.lineTo(x - 14, y - h + 5);
+    ctx.lineTo(x, y - h + 10);
+    ctx.closePath();
+    ctx.fillStyle = '#d0352a';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  },
+
   // Défenseurs qui rentrent à pied vers leur ville (l'assaut qu'ils allaient contrer est fini)
   drawReturning(ox, oy) {
     const G = Game, ctx = this.ctx, s = this.cam.scale;
@@ -1103,6 +1125,8 @@ const Render = {
         ctx.font = `${Math.max(9, Math.min(20 * half, s * half * 2))}px serif`;
         if (BUILDING_LEVELS[type]) this.drawLeveledBuilding(i, px, py, imgAlpha);
         else this.drawSimpleBuilding(type, px, py, imgAlpha);
+        // Un de nos châteaux (ou ports royaux) coupé de notre royaume : un petit fanion rouge au-dessus
+        if (G.owner[i] === G.human.id && G.holdsAlone(i) && G.isIsolated(i)) this.drawIsolatedFlag(px - half * s - 4, py + 6);
         // Au-dessus du bâtiment : 🛡 sa garnison, ⚔ les soldats stationnés (avant-poste), 🏗️ la construction
         if (s >= 4) {
           // (au-dessus de l'image quand on la voit, sinon au-dessus de l'icône)

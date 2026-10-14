@@ -174,6 +174,7 @@ html, body {
   color: #fff; background: var(--danger); border: 2px solid var(--wood);
 }
 .attack button.x:hover { background: #a3261f; }
+.attack .goto { cursor: pointer; }
 
 #bottombar {
   display: flex;
