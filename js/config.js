@@ -85,7 +85,10 @@ const CONFIG = {
   // --- Combat ---
   ATTACK_SPEED: 0.25,          // vitesse de conquête (plus petit = les armées avancent plus lentement sur la carte)
   MIN_ATTACK_SPEED: 0.25,      // vitesse minimum d'une petite armée (cases de plaine par tour)
-  ASSAULT_SLOWDOWN: 6,         // un assaut contre un royaume avance 6 fois moins vite que sur les terres libres
+  ASSAULT_SPEED: 0.5,          // vitesse d'un assaut contre un royaume (cases de plaine par tour)... divisée par
+  ASSAULT_HEAVY: 500,          // (1 + soldats / 500) : plus l'armée est grande, plus elle est lente
+                               // (100 soldats : ~4 cases/s · 500 : 2,5 · 1000 : 1,7 · 3000 : 0,7)
+  ASSAULT_MIN_SPEED: 0.04,     // vitesse minimum d'un assaut (cases de plaine par tour)
   MARCH_SPEED: 5,              // un assaut contre un royaume part de la cité la plus proche et marche sur ses terres
                                // jusqu'à la frontière (cases par seconde) : pendant ce temps, tout le monde le voit venir
   MARCH_MIN_TIME: 2,           // ...en au moins 2 secondes
