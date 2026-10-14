@@ -546,16 +546,19 @@ const UI = {
       const op = target.targetCastle;
       if (G.building[op] === B_OUTPOST) {
         // Avant-poste : ses soldats stationnés peuvent le défendre (pas ceux du royaume, au-delà des mers)
-        const a = G.sendDefenders(h.id, attackId, G.troopsAt(h.id, op) * this.ratio);
-        if (a) return this.log('🛡️ Les soldats stationnés à ton avant-poste partent le défendre !', 'good');
+        const before = G.troopsAt(h.id, op);
+        const a = G.sendDefenders(h.id, attackId, before * this.ratio);
+        if (a) return this.log(`🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldats stationnés à ton avant-poste partent le défendre ` +
+          '(seuls eux peuvent le rejoindre, au-delà des mers).', 'good');
         return this.log('🚫 Ton avant-poste est au-delà des mers : seuls ses soldats le défendent, et il n\'en a plus de libres. ' +
           'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.', 'warn');
       }
       return this.log('🚫 Il est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
         'Clique dessus pour lancer un assaut qui le relie à ton royaume.', 'warn');
     }
+    const before = h.troops;
     const a = G.sendDefenders(h.id, attackId, h.troops * this.ratio);
-    if (a) this.log(`🛡️ Tes défenseurs partent contrer l'assaut de ${G.players[a.attacker].name} !`, 'good');
+    if (a) this.log(`🛡️ ${fmt(before - h.troops)} défenseurs partent contrer l'assaut de ${G.players[a.attacker].name} !`, 'good');
     else this.log('Pas assez de soldats pour défendre !', 'warn');
   },
 

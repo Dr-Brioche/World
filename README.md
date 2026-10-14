@@ -330,6 +330,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.59.1** : 🛡️ en défendant, le message indique combien de soldats partent (et, pour un avant-poste, que seuls ses soldats stationnés peuvent le défendre)
 - **v0.59** : 🚢 clic droit sur un de ses avant-postes → « Rapatrier » : les soldats qui y attendent rentrent en bateau au port le plus proche
 - **v0.58.1** : ⛵ l'option s'appelle « Attaque navale » et se trouve plus facilement : plus besoin de cliquer pile sur la côte, un clic droit tout près (même dans l'eau) suffit · une expédition au plus toutes les 5 s
 - **v0.58** : 🐢 recrutement freiné pour les grands royaumes (il suit la racine carrée du territoire) et rendement décroissant des casernes · 💰 améliorations plus chères : grand moulin 100, grande caserne 800, port royal 600, cathédrale 1000 · ✂️ plus de message pour les petits morceaux englobés (seulement à partir de 50 cases, ou s'il reste un château isolé)
