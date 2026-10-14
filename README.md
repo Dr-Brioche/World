@@ -196,8 +196,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Soldats produits | Bonus d'armée max | Force de **tous** tes soldats | Prix |
      |---|---|---|---|---|
      | 1. Camp d'entraînement | quelques-uns | un peu | **+10 %** | prix de la caserne |
-     | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 80 |
-     | 3. Grande caserne | +125 % | **x4** (+200 soldats) | **+50 %** | 💰 800 |
+     | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 400 |
+     | 3. Grande caserne | +125 % | **x4** (+200 soldats) | **+50 %** | 💰 1600 |
 
      Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
      tes casernes s'additionnent, mais avec un **rendement décroissant** (comme les moulins) : plus tu as de casernes,
@@ -378,6 +378,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.69.1** : ⚔️ améliorer une caserne coûte plus cher : 400 pour le niveau 2, 1600 pour le niveau 3
 - **v0.69** : ⚠️ un morceau de royaume coupé de tous ses châteaux s'attaque de front, sans défenseurs, jusqu'à ce que son royaume le relie à un château (l'assaut s'arrête alors) · 🏰 la citadelle (château niveau 3) coûte 3000
 - **v0.68** : 🔎 clic sur le nom (en rouge) d'un royaume qui t'attaque : la caméra va voir son armée · ⏱️ les renforts d'un assaut marchent depuis sa cité de départ : plus l'armée est loin, plus ils mettent de temps · 🐛 correction : l'armée part bien vers le point où commence son chemin chez l'ennemi (la marche, la flèche et le chemin coïncident) · 🤖 les royaumes rivaux n'envoient plus leurs soldats au compte-gouttes : ils attendent et envoient de plus gros paquets · 🩸 une armée en marche perd un pourcentage de ses hommes à chaque case (une grosse armée perd plus qu'une petite)
 - **v0.67** : 🛤️ un port à moins de 30 cases d'une ville (château) est relié à elle par un chemin de terre : +30 % d'or · ⛪ une église construite sur ce chemin produit un peu d'or (+2 💰 toutes les 10 s)
