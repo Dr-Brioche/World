@@ -98,7 +98,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      un **pourcentage de son effectif** (0,1 % par case de plaine, plus dans le relief) : une grosse armée en perd
      plus qu'une petite.
    - **Prendre des terres** coûte peu (comme une terre libre, selon le terrain). Ce qui coûte cher,
-     ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi : **6 fois moins vite**
+     ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi, et **plus l'armée est grande,
+     plus elle est lente** (100 soldats : environ 4 cases de plaine par seconde, 500 : 2,5, 1000 : 1,7, 3000 : 0,7) :
+     une énorme armée écrase tout, mais l'ennemi a le temps de la voir venir. Elle avance bien moins vite
      que sur les terres libres, et encore moins dans le relief (forêt, colline, montagne, fleuve).
    - **Où est l'attaque ?** Un royaume qui t'attaque a son nom qui **clignote en rouge** dans le classement, en haut
      à droite : **clique sur son nom**, la caméra va directement voir son armée (s'il a plusieurs assauts contre toi,
@@ -378,6 +380,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.69.2** : 🐢 plus une armée d'assaut est grande, plus elle avance lentement chez l'ennemi (sur les terres libres, rien ne change)
 - **v0.69.1** : ⚔️ améliorer une caserne coûte plus cher : 400 pour le niveau 2, 1600 pour le niveau 3
 - **v0.69** : ⚠️ un morceau de royaume coupé de tous ses châteaux s'attaque de front, sans défenseurs, jusqu'à ce que son royaume le relie à un château (l'assaut s'arrête alors) · 🏰 la citadelle (château niveau 3) coûte 3000
 - **v0.68** : 🔎 clic sur le nom (en rouge) d'un royaume qui t'attaque : la caméra va voir son armée · ⏱️ les renforts d'un assaut marchent depuis sa cité de départ : plus l'armée est loin, plus ils mettent de temps · 🐛 correction : l'armée part bien vers le point où commence son chemin chez l'ennemi (la marche, la flèche et le chemin coïncident) · 🤖 les royaumes rivaux n'envoient plus leurs soldats au compte-gouttes : ils attendent et envoient de plus gros paquets · 🩸 une armée en marche perd un pourcentage de ses hommes à chaque case (une grosse armée perd plus qu'une petite)
