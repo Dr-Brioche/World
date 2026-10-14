@@ -687,6 +687,28 @@ const Render = {
     }
   },
 
+  // Aperçu du bâtiment qu'on s'apprête à poser, sous la souris : son image (niveau 1), à moitié transparente
+  // (ou son icône si l'image n'est pas encore chargée)
+  drawBuildingGhost(type, px, py, ok) {
+    const ctx = this.ctx, s = this.cam.scale;
+    const levels = BUILDING_LEVELS[type];
+    const img = levels ? this.buildingImages[type][1] : this.simpleImages[type];
+    const size = levels ? levels[1].size : BUILDINGS[type].size;
+    ctx.globalAlpha = ok ? 0.8 : 0.55;
+    if (img && img.complete && img.naturalWidth && size) {
+      const half = Game.sizeOf(type) / 2, w = Math.max(size * s, 28), h = w * img.naturalHeight / img.naturalWidth;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(img, px - w / 2, py + Math.max(s * (half + 0.1), 14) - h, w, h);
+      ctx.imageSmoothingEnabled = false;
+    } else {
+      ctx.font = `${Math.max(18, Game.sizeOf(type) * s * 0.8)}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(BUILDINGS[type].icon, px, py);
+    }
+    ctx.globalAlpha = 1;
+  },
+
   // Bâtiment à niveaux (moulin, caserne, château, église) : icône de loin, image quand on zoome
   drawLeveledBuilding(i, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, G = Game;
@@ -975,11 +997,12 @@ const Render = {
         if (a >= 0) {
           const ok = G.canPlace(G.human.id, a, t) || (t === B_CASTLE && G.building[this.hover] === B_CASTLE);
           const rx = ox + (a % G.W) * s, ry = oy + ((a / G.W) | 0) * s;
-          ctx.fillStyle = ok ? 'rgba(255,255,255,0.35)' : 'rgba(230,80,70,0.45)';
+          ctx.fillStyle = ok ? 'rgba(255,255,255,0.25)' : 'rgba(230,80,70,0.4)';
           ctx.fillRect(rx, ry, n * s, n * s);
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 2;
           ctx.strokeStyle = ok ? '#1f6b1a' : '#a3261f';
           ctx.strokeRect(rx, ry, n * s, n * s);
+          this.drawBuildingGhost(t, rx + n * s / 2, ry + n * s / 2, ok);
         }
       } else {
         ctx.strokeRect(ox + hx * s, oy + hy * s, s, s);

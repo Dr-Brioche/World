@@ -122,7 +122,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ils sont **réunis** et tu peux le défendre comme avant. Si le château était attaqué, les soldats
      de ton assaut rejoignent sa défense.
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
-   **sous ta souris**, puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
+   **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise) ; les châteaux pris à l'ennemi
    ne comptent pas dans cette limite, et une **église** améliorée en débloque d'autres.
@@ -316,6 +316,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.54.2** : en construisant, l'image du bâtiment apparaît sous la souris (sur un carré vert ou rouge) au lieu d'un simple carré
 - **v0.54.1** : les pactes sont interdits par défaut dans le menu de départ (chacun pour soi) ; on peut toujours les autoriser
 - **v0.54** : 🚀 élan de départ : les 4 premières minutes, recrutement et prise des terres libres plus rapides (+50 %, qui diminue peu à peu) · 💰 solde des troupes : au-delà de la moitié de l'armée maximum, les soldats disponibles font baisser l'or gagné (jusqu'à −25 %)
 - **v0.53** : 🛡️ en posant ou en améliorant un château, une bulle près de la souris montre la défense totale de sa muraille (terrain + murs)
