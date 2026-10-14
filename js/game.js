@@ -497,7 +497,8 @@ const GameRules = {
   stepOutposts() {
     for (const [a, o] of this.outposts) {
       const p = this.players[this.owner[a]];
-      if (this.tick === o.ready) {
+      if (!o.settled && this.tick >= o.ready) {
+        o.settled = true;
         this.version++; // l'avant-poste devient une base d'attaque
         // Une petite garnison fixe reste ; les autres soldats stationnent et peuvent partir à l'attaque
         const keep = Math.min(CONFIG.OUTPOST_GARRISON, this.garrison[a]);
@@ -2480,7 +2481,15 @@ const GameRules = {
     }
     const c = a.targetCastle;
     if (c >= 0 && a.garrison > 0 && this.owner[c] === a.target) {
-      this.garrison[c] = Math.min(this.garrisonMax(c), this.garrison[c] + a.garrison);
+      // ce qui dépasse la garnison maximum n'est pas perdu : à un avant-poste, ces soldats stationnent ;
+      // à un château, ils rejoignent l'armée
+      const total = this.garrison[c] + a.garrison, max = this.garrisonMax(c);
+      this.garrison[c] = Math.min(max, total);
+      const extra = total - this.garrison[c];
+      if (extra > 0) {
+        if (this.outposts.has(c)) this.outposts.get(c).stationed += extra;
+        else this.players[a.target].troops += extra;
+      }
     }
   },
 
@@ -2640,6 +2649,7 @@ const GameRules = {
     const besieged = new Set(this.attacks.filter(a => !a.done && !this.isPreparing(a)).map(a => a.targetCastle));
     const full = this.players.map(p => p.alive && this.armySize(p) >= this.maxTroops(p));
     for (const c of this.buildingTiles) {
+      if (this.building[c] === B_OUTPOST) continue; // (la garnison d'un avant-poste ne se reconstitue pas : voir stepOutposts)
       const max = this.garrisonMax(c);
       if (!max || max === Infinity || this.owner[c] < 0 || besieged.has(c) || full[this.owner[c]]) continue;
       this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);

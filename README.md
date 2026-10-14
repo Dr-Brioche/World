@@ -335,6 +335,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.61.5** : 🐛 correction : les soldats débarqués en plus de la garnison d'un avant-poste ne disparaissent plus à la fin de sa construction (ils stationnent, prêts à agir)
 - **v0.61.4** : 🚨 une expédition ennemie qui vise ta côte : la zone où elle va débarquer clignote en rouge sur ton territoire
 - **v0.61.3** : 🚨 un royaume qui t'attaque (ou prépare un assaut contre toi) voit son nom clignoter en rouge dans le classement, en haut à droite
 - **v0.61.2** : 🟩🟥 en posant un moulin ou une caserne, les zones constructibles (châteaux, églises, ports) montrent en vert où il peut se poser et en rouge où c'est impossible
