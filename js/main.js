@@ -433,7 +433,11 @@ const UI = {
         txt += info.bonus ? ` · 🧱 petite muraille : +${info.bonus} de défense dans sa zone (on peut l'attaquer directement)`
           : ' · ⚠️ pas de muraille : on peut l\'attaquer directement';
       }
-      if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
+      if (G.building[i] === B_CHURCH) {
+        txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
+        G.roads();
+        if (G.roadChurches.has(a)) txt += ` · 🛤️ sur la route d'un port : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s`;
+      }
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (G.works.has(a)) txt += { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[G.works.get(a).kind];
@@ -596,12 +600,23 @@ const UI = {
     }
   },
 
-  // Pendant la construction d'un moulin ou d'une caserne : production prévue selon le terrain
+  // Pendant la construction d'un moulin, d'une caserne ou d'un port : production prévue selon le terrain
+  // (et, pour un port, s'il sera relié à une ville ; pour une église, si elle sera sur la route d'un port)
   terrainHint() {
-    const t = this.selectedBuild;
-    if (!TERRAIN_PRODUCTION[t] || !Render.mouse) return '';
+    const t = this.selectedBuild, G = Game, h = G.human;
+    if (!Render.mouse) return '';
     const a = Render.anchorAt(Render.mouse.x, Render.mouse.y, t);
-    return a < 0 ? '' : ` · production ici : ${prodText(Game.terrainFactor(a, t))}`;
+    if (a < 0) return '';
+    if (t === B_CHURCH) {
+      return G.churchOnRoad(h.id, a) ? ` · 🛤️ sur la route d'un port : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` : '';
+    }
+    if (!TERRAIN_PRODUCTION[t]) return '';
+    let txt = ` · production ici : ${prodText(G.terrainFactor(a, t))}`;
+    if (t === B_PORT) {
+      txt += G.portRoadCastle(h.id, a) >= 0 ? ` · 🛤️ relié à une ville : +${Math.round(CONFIG.PORT_ROAD_BONUS * 100)} % d'or`
+        : ` · aucune ville à moins de ${CONFIG.PORT_ROAD_DISTANCE} cases (pas de chemin)`;
+    }
+    return txt;
   },
 
   // Envoyer des soldats (selon le curseur « Envoyer ») contre un assaut ennemi

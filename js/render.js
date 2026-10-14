@@ -926,15 +926,12 @@ const Render = {
     const w = Math.max(2, s * 0.55);
     const dirt = new Path2D(), paved = new Path2D();
     for (const [a, link] of G.roads()) {
-      const c = link.castle, hc = G.sizeOf(B_CASTLE) / 2, hb = G.sizeOf(G.building[a]) / 2;
-      const x1 = ox + (c % G.W + hc) * s, y1 = oy + (((c / G.W) | 0) + hc) * s;
-      const x2 = ox + (a % G.W + hb) * s, y2 = oy + (((a / G.W) | 0) + hb) * s;
-      // d'abord à l'horizontale puis à la verticale (ou l'inverse, selon le bâtiment)
-      const [cx, cy] = a % 2 ? [x2, y1] : [x1, y2];
+      // (le tracé, avec son coin à angle droit, est le même que pour le jeu : voir Game.roadPoints)
+      const pts = G.roadPoints(a, link.castle).map(([x, y]) => [ox + x * s, oy + y * s]);
       const path = link.road === 'paved' ? paved : dirt;
-      path.moveTo(x1, y1);
-      path.lineTo(cx, cy);
-      path.lineTo(x2, y2);
+      path.moveTo(pts[0][0], pts[0][1]);
+      path.lineTo(pts[1][0], pts[1][1]);
+      path.lineTo(pts[2][0], pts[2][1]);
     }
     ctx.lineCap = 'square';
     ctx.lineJoin = 'miter';
