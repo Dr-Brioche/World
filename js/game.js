@@ -40,7 +40,7 @@ const GameRules = {
     this.roadsVersion = -1;
     this.regionsVersion = -1;
     this.landCount = 0;
-    for (let i = 0; i < this.N; i++) if (this.isLand(i)) this.landCount++;
+    for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
     this.pactsAllowed = opts.pacts !== false; // choisi dans le menu : pactes autorisés ou interdits
@@ -81,6 +81,10 @@ const GameRules = {
     const t = this.terrain[i];
     return t !== TERRAIN.WATER && t !== TERRAIN.GREAT_RIVER && t !== TERRAIN.PEAK;
   },
+
+  // Case qu'un royaume peut posséder : une terre, mais jamais un fleuve (il reste neutre, bleu, pour toujours ;
+  // on ne le franchit qu'avec une traversée à gué, voir planCrossing)
+  claimable(i) { return this.isLand(i) && this.terrain[i] !== TERRAIN.RIVER; },
 
   forNeighbors(i, cb) {
     const x = i % this.W, y = (i / this.W) | 0;
@@ -128,6 +132,7 @@ const GameRules = {
   setOwner(i, pid) {
     const old = this.owner[i];
     if (old === pid) return;
+    if (pid >= 0 && this.terrain[i] === TERRAIN.RIVER) return; // un fleuve ne s'achète ni ne se conquiert
     const x = i % this.W, y = (i / this.W) | 0;
     // Un bâtiment n'est compté qu'une fois : sur sa case d'ancrage
     const b = this.anchor[i] === i ? this.building[i] : 0;
@@ -616,7 +621,7 @@ const GameRules = {
         const x = cx + dx, y = cy + dy;
         if (x < 0 || y < 0 || x >= this.W || y >= this.H) continue;
         const i = y * this.W + x;
-        if (this.isLand(i) && this.owner[i] === -1) this.setOwner(i, p.id);
+        if (this.claimable(i) && this.owner[i] === -1) this.setOwner(i, p.id);
       }
     }
     p.capital = center;
@@ -900,6 +905,8 @@ const GameRules = {
     const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [];
     const main = new Array(this.players.length).fill(-1); // royaume → son plus grand morceau
     let n = 0;
+    this.riverTiles(); // (prépare riverSide : les cases qui touchent un fleuve)
+    const side = this.riverSide;
     for (let i = 0; i < this.N; i++) {
       const o = this.owner[i];
       if (o < 0 || comp[i] >= 0) continue;
@@ -908,9 +915,9 @@ const GameRules = {
       comp[i] = k;
       order[n++] = i;
       for (let q = s; q < n; q++) {
-        this.forNeighbors(order[q], j => {
-          if (comp[j] < 0 && this.owner[j] === o) { comp[j] = k; order[n++] = j; }
-        });
+        const add = j => { if (comp[j] < 0 && this.owner[j] === o) { comp[j] = k; order[n++] = j; } };
+        this.forNeighbors(order[q], add);
+        if (side[order[q]]) this.acrossRiver(order[q], add); // les deux rives d'un fleuve restent un même morceau
       }
       size.push(n - s); start.push(s); owner.push(o);
       // Ce morceau a-t-il un avant-poste (bâti ou non), ou le château d'une ancienne zone d'avant-poste ?
@@ -927,6 +934,37 @@ const GameRules = {
     this.regionsCache = { comp, order, size, start, owner, main, outpost, anyOutpost, colony };
     this.regionsVersion = this.version;
     return this.regionsCache;
+  },
+
+  // Toutes les cases de fleuve de la carte (calculées une seule fois par carte)
+  riverTiles() {
+    if (this.riverCacheFor !== this.terrain) {
+      this.riverCacheFor = this.terrain;
+      this.riverCache = [];
+      this.riverSide = new Uint8Array(this.N); // 1 = case qui touche un fleuve
+      for (let i = 0; i < this.N; i++) {
+        if (this.terrain[i] !== TERRAIN.RIVER) continue;
+        this.riverCache.push(i);
+        this.forNeighbors(i, n => { this.riverSide[n] = 1; });
+      }
+    }
+    return this.riverCache;
+  },
+
+  // Les cases de terre juste en face, de l'autre côté d'un fleuve (en ligne droite, au plus 3 cases d'eau) :
+  // un royaume des deux côtés d'un fleuve n'est pas coupé en deux pour autant
+  acrossRiver(i, fn) {
+    const W = this.W, x0 = i % W, y0 = (i / W) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      for (let k = 1; k <= 4; k++) {
+        const x = x0 + dx * k, y = y0 + dy * k;
+        if (x < 0 || y < 0 || x >= W || y >= this.H) break;
+        const j = y * W + x;
+        if (this.terrain[j] === TERRAIN.RIVER) continue;
+        if (k > 1) fn(j);
+        break;
+      }
+    }
   },
 
   // Bâtiment qui sait se défendre seul (avec sa garnison) : un château, ou un port de niveau 3.
@@ -1064,7 +1102,7 @@ const GameRules = {
   buildFrontier(pid, target, source) {
     const list = [];
     for (let i = 0; i < this.N; i++) {
-      if (this.owner[i] === target && this.isLand(i) && this.touchesOwn(i, pid, source)) list.push(i);
+      if (this.owner[i] === target && this.claimable(i) && this.touchesOwn(i, pid, source)) list.push(i);
     }
     return list;
   },
@@ -1632,7 +1670,7 @@ const GameRules = {
           const path = [from];
           for (let k = t; k >= 0; k = prev.get(k)) path.push(k);
           const river = path.filter(k => this.terrain[k] === TERRAIN.RIVER).length;
-          return { path, river, time: river * CONFIG.CROSSING_TIME_PER_TILE };
+          return { path, river, time: CONFIG.CROSSING_TIME_FIRST + Math.max(0, river - 1) * CONFIG.CROSSING_TIME_NEXT };
         }
       }
       this.forNeighbors(t, n => {
@@ -1659,7 +1697,7 @@ const GameRules = {
     return null;
   },
 
-  // Arrivée des traversées : on prend le gué (les cases de fleuve traversées) et une tête de pont sur l'autre rive.
+  // Arrivée des traversées : on prend une tête de pont sur l'autre rive (le fleuve, lui, reste neutre).
   // Si quelqu'un a pris le passage entre-temps, la traversée échoue et les soldats rentrent.
   stepCrossings() {
     for (const c of this.crossings) {
@@ -1667,13 +1705,13 @@ const GameRules = {
       c.done = true;
       const p = this.players[c.pid];
       if (!p.alive) continue;
-      const blocked = c.path.slice(1).some(t => this.owner[t] !== -1 && this.owner[t] !== c.pid);
+      const blocked = c.path.slice(1).some(t => this.terrain[t] !== TERRAIN.RIVER && this.owner[t] !== -1 && this.owner[t] !== c.pid);
       if (blocked || this.owner[c.path[0]] !== c.pid) {
         p.troops += c.troops;
         if (p.isHuman) UI.log('🚫 Le passage du fleuve a été pris par un autre : tes soldats rentrent.', 'warn');
         continue;
       }
-      // Le gué, puis les terres libres de la rive autour de la case visée (sans repasser par le fleuve)
+      // Les terres libres de la rive autour de la case visée (sans repasser par le fleuve) ; le fleuve reste neutre
       const R = CONFIG.CROSSING_BANK_RADIUS, W = this.W, x0 = c.target % W, y0 = (c.target / W) | 0;
       const bank = new Set([c.target]);
       for (const j of bank) {
@@ -1684,7 +1722,7 @@ const GameRules = {
       }
       let troops = c.troops;
       for (const t of [...c.path.slice(1), ...bank]) {
-        if (this.owner[t] === c.pid) continue;
+        if (this.owner[t] === c.pid || !this.claimable(t)) continue; // (le gué, lui, reste neutre)
         const cost = CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost;
         if (troops < cost) break;
         troops -= cost;
@@ -2106,7 +2144,7 @@ const GameRules = {
       // Assaut de jonction : il touche le morceau de son château isolé, c'est gagné
       if (a.link >= 0 && this.touchesSet(t, a.piece, a.attacker)) return this.linkArrives(a);
       this.forNeighbors(t, n => {
-        if (this.owner[n] === a.target && this.isLand(n) && !a.set.has(n)) {
+        if (this.owner[n] === a.target && this.claimable(n) && !a.set.has(n)) {
           a.set.add(n);
           a.list.push(n);
         }
@@ -2512,7 +2550,7 @@ const GameRules = {
       if (this.owner[i] !== pid) continue;
       this.forNeighbors(i, n => {
         const o = this.owner[n];
-        if (o !== pid && this.isLand(n)) stats.set(o, (stats.get(o) || 0) + 1);
+        if (o !== pid && this.claimable(n)) stats.set(o, (stats.get(o) || 0) + 1);
       });
     }
     return stats;

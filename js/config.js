@@ -100,7 +100,8 @@ const CONFIG = {
   SEA_LOSS_PER_SECOND: 0.01, // 1 % des soldats par seconde de mer...
   SEA_LOSS_MAX: 0.25,        // ...au plus 25 %
   // Traversée de fleuve (clic droit sur une terre libre de l'autre côté) : l'armée passe à gué
-  CROSSING_TIME_PER_TILE: 3, // secondes pour traverser chaque case de fleuve (c'est difficile !)
+  CROSSING_TIME_FIRST: 10,   // secondes pour traverser la 1re case de fleuve (c'est difficile !)...
+  CROSSING_TIME_NEXT: 6,     // ...et chacune des suivantes (fleuve double)
   CROSSING_MAX_DISTANCE: 14, // on ne traverse que si le fleuve est à moins de 14 cases de la terre visée
   CROSSING_BANK_RADIUS: 4,   // terres libres prises sur l'autre rive, autour de la case visée
   INTERCEPT_SPEED: 6,        // vitesse (cases/s) des bateaux d'un port qui part intercepter un débarquement
