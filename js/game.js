@@ -519,7 +519,7 @@ const GameRules = {
     for (const [a, o] of this.outposts) {
       const pid = this.owner[a], k = r.comp[a];
       // Relié par la terre au royaume : ses soldats stationnés rejoignent l'armée du royaume
-      if (k === r.main[pid] && o.stationed > 0) { this.players[pid].troops += o.stationed; o.stationed = 0; }
+      if (r.heart[k] && o.stationed > 0) { this.players[pid].troops += o.stationed; o.stationed = 0; }
       const castle = this.castles.find(c => this.owner[c] === pid && r.comp[c] === k);
       if (castle === undefined) continue;
       const p = this.players[pid];
@@ -614,9 +614,12 @@ const GameRules = {
       for (const i of order) size[i] = order.length;
     }
     this.landSizes = size;
+    this.landComps = comp; // comp[i] = numéro de l'île (ou du continent) de la case i, -1 pour l'eau
     this.landSizesMap = this.map;
     return size;
   },
+  // Numéro de l'île (ou du continent) de chaque case
+  landComp() { this.landSize(); return this.landComps; },
 
   canSpawnAt(i, minDist) {
     if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER || this.owner[i] !== -1) return false;
@@ -933,12 +936,15 @@ const GameRules = {
 
   // --- Morceaux de territoire ---
   // Découpe la carte en « morceaux » : des cases d'un même royaume qui se touchent.
-  // Le plus grand morceau d'un royaume est son cœur ; les autres sont coupés de lui.
+  // Sur chaque île (ou continent), le plus grand morceau d'un royaume est un cœur ; les autres sont coupés de lui.
+  // Avant, seul le plus grand morceau de toute la carte comptait : une grande zone d'avant-poste sur un autre
+  // continent pouvait alors faire passer toute l'île du royaume pour « coupée » (et ses châteaux pour isolés).
+  // (un royaume qui s'étend sur plusieurs îles, par la mer, n'est donc pas « coupé » d'une île à l'autre)
   // Recalculé seulement quand la carte change.
   regions() {
     if (this.regionsVersion === this.version) return this.regionsCache;
     const comp = new Int32Array(this.N).fill(-1), order = new Int32Array(this.N);
-    const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [];
+    const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [], hasCastle = [];
     const main = new Array(this.players.length).fill(-1); // royaume → son plus grand morceau
     let n = 0;
     this.riverTiles(); // (prépare riverSide : les cases qui touchent un fleuve)
@@ -957,17 +963,28 @@ const GameRules = {
       }
       size.push(n - s); start.push(s); owner.push(o);
       // Ce morceau a-t-il un avant-poste (bâti ou non), ou le château d'une ancienne zone d'avant-poste ?
-      let op = -1, anyOp = false, col = false;
+      let op = -1, anyOp = false, col = false, cas = false;
       for (let q = s; q < n; q++) {
         const t = order[q], b = this.building[t];
         if (b === B_OUTPOST) { anyOp = true; if (this.outpostReady(this.anchor[t])) op = this.anchor[t]; }
-        if (b === B_CASTLE && this.colonies.get(this.anchor[t]) === o) col = true;
+        if (b === B_CASTLE) { cas = true; if (this.colonies.get(this.anchor[t]) === o) col = true; }
       }
-      outpost.push(op); anyOutpost.push(anyOp); colony.push(col);
+      outpost.push(op); anyOutpost.push(anyOp); colony.push(col); hasCastle.push(cas);
       if (main[o] < 0 || size[k] > size[main[o]]) main[o] = k;
     }
-    // outpost[k] = avant-poste bâti du morceau k (-1 s'il n'y en a pas)
-    this.regionsCache = { comp, order, size, start, owner, main, outpost, anyOutpost, colony };
+    // Les cœurs du royaume : sur chaque île (ou continent), son plus grand morceau.
+    // Une zone d'avant-poste n'est pas un cœur (c'est une tête de pont), sauf si un château s'y trouve.
+    const land = this.landComp(), heart = new Uint8Array(size.length), best = new Map(), hasHeart = new Set();
+    for (let k = 0; k < size.length; k++) {
+      if (anyOutpost[k] && !hasCastle[k]) continue;
+      const key = owner[k] + ':' + land[order[start[k]]];
+      if (!best.has(key) || size[k] > size[best.get(key)]) best.set(key, k);
+    }
+    for (const k of best.values()) { heart[k] = 1; hasHeart.add(owner[k]); }
+    // (un royaume qui n'a plus que des zones d'avant-poste : son plus grand morceau reste son cœur)
+    for (let o = 0; o < main.length; o++) if (main[o] >= 0 && !hasHeart.has(o)) heart[main[o]] = 1;
+    // outpost[k] = avant-poste bâti du morceau k (-1 s'il n'y en a pas) ; heart[k] = 1 si k est un cœur du royaume
+    this.regionsCache = { comp, order, size, start, owner, main, heart, outpost, anyOutpost, colony };
     this.regionsVersion = this.version;
     return this.regionsCache;
   },
@@ -1016,7 +1033,7 @@ const GameRules = {
     if (o < 0) return false;
     if (this.colonies.get(c) === o) return false; // château d'une ancienne zone d'avant-poste : terre du royaume
     const r = this.regions();
-    return r.comp[c] !== r.main[o];
+    return !r.heart[r.comp[c]];
   },
 
   // Une armée peut-elle partir de cette case ? Oui si elle est dans le cœur de son royaume
@@ -1026,7 +1043,7 @@ const GameRules = {
     const o = this.owner[i];
     if (o < 0) return false;
     const r = this.regions(), k = r.comp[i];
-    return k === r.main[o] || r.outpost[k] >= 0 || r.colony[k];
+    return r.heart[k] || r.outpost[k] >= 0 || r.colony[k];
   },
 
   // D'où part une armée qui passe par cette case du royaume ? -1 = du royaume (ses soldats disponibles),
@@ -1035,7 +1052,7 @@ const GameRules = {
     const o = this.owner[i];
     if (o < 0) return null;
     const r = this.regions(), k = r.comp[i];
-    if (k === r.main[o]) return -1;
+    if (r.heart[k]) return -1;
     if (r.outpost[k] >= 0) return r.outpost[k];
     return this.isBase(i) ? -1 : null;
   },
@@ -1077,8 +1094,8 @@ const GameRules = {
     return this.targetsOf(pid).length > 0;
   },
 
-  // Encerclement : un royaume reste d'un seul tenant. Quand il est coupé en morceaux, il ne garde que
-  // le plus grand ; tous les autres, quelle que soit leur taille, sont englobés d'un coup par le royaume qui
+  // Encerclement : un royaume reste d'un seul tenant (sur chaque île). Quand il est coupé en morceaux, il ne
+  // garde que le plus grand de l'île (son cœur, voir regions) ; tous les autres, quelle que soit leur taille, sont englobés d'un coup par le royaume qui
   // l'a coupé (cutter), avec leurs églises, ports, moulins et casernes. Sans coupeur connu (ou s'il ne touche
   // pas le morceau), c'est le royaume qui l'entoure le plus qui le prend.
   // Exceptions :
@@ -1090,7 +1107,7 @@ const GameRules = {
     if (!T.alive) return;
     const r = this.regions(), pieces = [];
     for (let k = 0; k < r.size.length; k++) {
-      if (r.owner[k] !== target || k === r.main[target]) continue;
+      if (r.owner[k] !== target || r.heart[k]) continue;
       if (r.anyOutpost[k] || r.colony[k]) continue;
       pieces.push(Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k])));
     }
@@ -2124,7 +2141,7 @@ const GameRules = {
     const t = a.targetCastle >= 0 ? a.targetCastle : a.frontTile;
     if (t < 0 || a.target < 0 || this.owner[t] !== a.target) return -1;
     const r = this.regions(), k = r.comp[t];
-    if (k < 0 || k === r.main[a.target]) return -1;
+    if (k < 0 || r.heart[k]) return -1;
     return r.outpost[k] >= 0 ? r.outpost[k] : -1;
   },
 

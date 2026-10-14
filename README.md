@@ -107,11 +107,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (jusqu'à −75 % : qui attaque trop le paie cher), chaque défaite ajoute +25 % (jusqu'à +100 % : qui est trop
      ciblé peut se rattraper). La jauge des soldats indique le total.
 
-   **✂️ Couper** : un royaume reste **d'un seul tenant**. Quand un assaut le coupe en morceaux, il ne garde
-   que le plus grand : **celui qui a coupé prend d'un coup tous les autres**, **quelle que soit leur taille**,
+   **✂️ Couper** : un royaume reste **d'un seul tenant** (sur chaque île). Quand un assaut le coupe en morceaux, il ne garde
+   que le plus grand de l'île : **celui qui a coupé prend d'un coup tous les autres**, **quelle que soit leur taille**,
    avec leurs **églises, ports, moulins et casernes**. Si personne ne l'a coupé (par exemple après la perte
    d'un avant-poste), c'est le royaume qui entoure le plus le morceau qui le prend.
    Un morceau avec un **avant-poste** (une invasion par la mer) se défend : il faut viser l'avant-poste.
+   Un royaume installé sur **plusieurs îles** (par la mer, puis un château) n'est pas « coupé » d'une île à l'autre.
 
    **🚩 Château isolé** : les **châteaux** et les **ports de niveau 3** savent se défendre seuls (avec leur
    garnison) : quand leur morceau est pris, ils **restent à leur royaume**, avec les terres de leur zone,
@@ -340,6 +341,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.62.1** : 🐛 correction : une grande zone d'avant-poste (ou des terres sur un autre continent) ne fait plus passer toute l'île de ton royaume pour « coupée » — tes châteaux ne sont plus isolés d'un coup et tes terres ne sont plus données à l'ennemi · les soldats stationnés restent à l'avant-poste
 - **v0.62** : ⛺ toute la zone d'un avant-poste est défendue par ses soldats stationnés (pas par ceux du royaume, au-delà des mers) · pas de château à moins de 12 cases d'un avant-poste : il faut conquérir des terres autour avant
 - **v0.61.6** : ⛵ si un avant-poste tombe pendant que des renforts sont en mer, leur bateau fait demi-tour jusqu'au port (au lieu de rentrer d'un coup)
 - **v0.61.5** : 🐛 correction : les soldats débarqués en plus de la garnison d'un avant-poste ne disparaissent plus à la fin de sa construction (ils stationnent, prêts à agir)
