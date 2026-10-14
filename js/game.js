@@ -376,7 +376,8 @@ const GameRules = {
     if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
-    this.startWorks(p, a, 'up', CONFIG.UPGRADE_TIME, cost);
+    // (passer au niveau 3 prend plus longtemps)
+    this.startWorks(p, a, 'up', this.level[a] + 1 >= 3 ? CONFIG.UPGRADE_TIME_LEVEL3 : CONFIG.UPGRADE_TIME, cost);
     return null;
   },
 
@@ -399,6 +400,17 @@ const GameRules = {
     if (!w || w.pid !== p.id) return;
     p.gold += w.paid;
     this.works.delete(a);
+    // Chantier annulé : le bâtiment n'est pas construit
+    if (w.kind === 'build') {
+      if (this.building[a] === B_CASTLE) p.castlesBuilt--;
+      this.removeBuilding(a);
+    }
+  },
+
+  // Le bâtiment est-il encore en chantier (juste posé) ?
+  underConstruction(a) {
+    const w = this.works.get(a);
+    return !!w && w.kind === 'build';
   },
 
   // Fin des travaux : le bâtiment monte d'un niveau, ou disparaît. S'il a été pris entre-temps, ils sont perdus.
@@ -413,6 +425,7 @@ const GameRules = {
       if (this.tick < w.end) continue;
       this.works.delete(a);
       const type = this.building[a], icon = BUILDINGS[type].icon;
+      if (w.kind === 'build') continue; // chantier fini : le bâtiment fonctionne
       if (w.kind === 'up') {
         this.level[a]++;
         this.version++;
@@ -722,6 +735,7 @@ const GameRules = {
     for (const a of this.buildingTiles) {
       const t = this.building[a];
       if (t !== B_MILL && t !== B_BARRACKS && t !== B_PORT) continue;
+      if (this.underConstruction(a)) continue; // en chantier : il ne produit pas encore
       if ((this.tick + a * 7) % period !== 0) continue;
       const p = this.players[this.owner[a]];
       if (!p || !p.alive) continue;
@@ -906,6 +920,8 @@ const GameRules = {
     p.gold -= cost;
     if (type === B_CASTLE) p.castlesBuilt++;
     this.placeBuilding(i, type);
+    // Chantier de BUILD_TIME secondes (petite jauge) : le bâtiment ne produit rien avant la fin
+    this.startWorks(p, i, 'build', CONFIG.BUILD_TIME, cost);
     return null;
   },
 
