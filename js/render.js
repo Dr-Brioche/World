@@ -482,7 +482,7 @@ const Render = {
         }
         // Siège en cours : compte à rebours avant la chute du château
         const siege = a.retreatEnd !== undefined ? '🏳️ retraite · ' : a.clash !== undefined ? '⚔️ bataille · '
-          : a.siege ? `🏰 ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s · ` : '';
+          : a.siege ? `${G.building[a.siege.tile] === B_OUTPOST ? '⛺' : '🏰'} ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s · ` : '';
         // Deux armées qui s'affrontent au pied du même château : leurs bannières se font face
         const shift = a.clash !== undefined ? (a.attacker < a.clash ? -30 : 30) : 0;
         this.drawArmyBanner(a, bx + shift, by, `${siege}⚔ ${fmt(a.troops)}${extra}`);
