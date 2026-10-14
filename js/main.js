@@ -371,7 +371,7 @@ const UI = {
       if (G.building[i] === B_CHURCH) txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
-      if (G.works.has(a)) txt += G.works.get(a).kind === 'up' ? ' · ⬆️ amélioration en cours' : ' · 🧨 démolition en cours';
+      if (G.works.has(a)) txt += { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[G.works.get(a).kind];
       else if (o === G.human.id && BUILDING_LEVELS[G.building[i]] && !(G.holdsAlone(a) && G.isIsolated(a))) txt += ` · clique pour l'améliorer ou le détruire`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;

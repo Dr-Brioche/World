@@ -126,8 +126,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      de ton assaut rejoignent sa défense.
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
+   Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
    **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : **⬆️** pour l'améliorer
-   (travaux de **5 s**) et **✖** rouge pour le détruire (travaux de **10 s**). La fenêtre en haut à gauche explique
+   (travaux de **5 s**, ou **10 s** pour passer au niveau 3) et **✖** rouge pour le détruire (travaux de **10 s**). La fenêtre en haut à gauche explique
    ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
@@ -330,6 +331,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.60** : 🏗️ un bâtiment posé est en chantier pendant 3 s (petite jauge verte, il ne produit rien avant) · passer au niveau 3 prend 10 s de travaux
 - **v0.59.1** : 🛡️ en défendant, le message indique combien de soldats partent (et, pour un avant-poste, que seuls ses soldats stationnés peuvent le défendre)
 - **v0.59** : 🚢 clic droit sur un de ses avant-postes → « Rapatrier » : les soldats qui y attendent rentrent en bateau au port le plus proche
 - **v0.58.1** : ⛵ l'option s'appelle « Attaque navale » et se trouve plus facilement : plus besoin de cliquer pile sur la côte, un clic droit tout près (même dans l'eau) suffit · une expédition au plus toutes les 5 s

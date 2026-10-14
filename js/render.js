@@ -729,7 +729,7 @@ const Render = {
       const x = ox + (a % G.W + n / 2) * s - bw / 2, y = oy + (((a / G.W) | 0) + n) * s + 3;
       ctx.fillStyle = 'rgba(20,12,4,0.75)';
       ctx.fillRect(x - 1, y - 1, bw + 2, bh + 2);
-      ctx.fillStyle = w.kind === 'up' ? '#e6b422' : '#c0392b';
+      ctx.fillStyle = w.kind === 'up' ? '#e6b422' : w.kind === 'build' ? '#4f9d3a' : '#c0392b';
       ctx.fillRect(x, y, bw * k, bh);
     }
   },
