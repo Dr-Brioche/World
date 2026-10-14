@@ -201,45 +201,62 @@ const UI = {
   },
 
   // Petite fenêtre pour améliorer un bâtiment (château, moulin)
-  // Menu rapide d'un de ses bâtiments (clic dessus) : l'améliorer ou le détruire, juste à côté de lui.
+  // Fenêtre explicative d'un de ses bâtiments (en haut à gauche) : ce qu'apporterait son amélioration
+  showUpgrade(a) {
+    const G = Game, type = G.building[a], icon = BUILDINGS[type].icon;
+    if (this.upgradeBox) this.upgradeBox.remove();
+    const el = document.createElement('div');
+    this.upgradeBox = el;
+    el.className = 'msg request upgrade';
+    const cur = G.buildingInfo(a), cost = G.upgradeCost(a);
+    const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
+    if (cost === null) {
+      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : déjà au maximum ! ` +
+        `${this.levelEffect(type, cur)}.<div class="choices"><button data-no>OK</button></div>`;
+    } else {
+      const next = BUILDING_LEVELS[type][G.level[a] + 1];
+      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
+        (next.img ? `<img src="${next.img}" alt="">` : '') +
+        `<b>${this.upgradeEffect(type, cur, next)}</b>` +
+        `<div class="choices"><button data-yes>Améliorer (💰 ${fmt(cost)})</button><button data-no>Fermer</button></div>`;
+      el.querySelector('[data-yes]').addEventListener('click', () => {
+        const err = G.upgradeBuilding(G.human, a);
+        if (err) return this.log(err, 'warn');
+        close();
+      });
+    }
+    el.querySelector('[data-no]').addEventListener('click', close);
+    $('log').prepend(el);
+    setTimeout(close, 15000);
+  },
+
+  // Menu rapide d'un de ses bâtiments (clic dessus) : deux icônes juste à côté de lui,
+  // ⬆️ pour l'améliorer et ✖ (rouge) pour le détruire ; l'explication s'affiche en haut à gauche.
   // Les travaux prennent du temps (UPGRADE_TIME / DEMOLISH_TIME) : une petite jauge s'affiche sur le bâtiment.
   openBuildingMenu(a, sx, sy) {
-    const G = Game, h = G.human, type = G.building[a], icon = BUILDINGS[type].icon;
+    const G = Game, h = G.human, cost = G.upgradeCost(a), work = G.works.get(a);
     this.closeActionMenu();
-    const cur = G.buildingInfo(a), cost = G.upgradeCost(a), work = G.works.get(a), items = [];
-    const head = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]})`;
-    if (work) {
-      items.push({ label: work.kind === 'up' ? '✖ Annuler l\'amélioration (or rendu)' : '✖ Annuler la démolition',
-        run: () => G.cancelWorks(h, a) });
-    } else {
-      if (cost === null) items.push({ label: '⬆️ Améliorer', disabled: 'Déjà au niveau maximum.' });
-      else {
-        const next = BUILDING_LEVELS[type][G.level[a] + 1];
-        const label = `⬆️ Améliorer en ${next.name} (💰 ${fmt(cost)}, ${CONFIG.UPGRADE_TIME} s)`;
-        items.push(h.gold < cost ? { label, disabled: `Pas assez d'or (${fmt(cost)} nécessaires).` }
-          : { label, title: this.upgradeEffect(type, cur, next), run: () => {
-            const err = G.upgradeBuilding(h, a);
-            if (err) this.log(err, 'warn');
-          } });
-      }
-      items.push({ label: `🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)`, run: () => {
-        const err = G.demolishBuilding(h, a);
-        if (err) this.log(err, 'warn');
-      } });
-    }
+    this.showUpgrade(a);
+    const canUp = !work && cost !== null && h.gold >= cost;
     const el = document.createElement('div');
-    el.className = 'panel actionMenu';
-    el.innerHTML = `<div class="menuHead">${head}</div>` + items.map((it, k) =>
-      `<button data-k="${k}"${it.disabled ? ' disabled' : ''}${it.title ? ` title="${escapeHtml(it.title)}"` : ''}>${it.label}</button>` +
-      (it.disabled ? `<small>${escapeHtml(it.disabled)}</small>` : '')).join('');
-    el.style.left = Math.min(sx + 16, window.innerWidth - 260) + 'px';
-    el.style.top = Math.min(sy - 10, window.innerHeight - 50 * items.length - 40) + 'px';
+    el.className = 'panel actionMenu quickMenu';
+    el.innerHTML = `<button data-up${canUp ? '' : ' disabled'} title="Améliorer">⬆️</button>` +
+      `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>`;
+    el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
+    el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
     el.addEventListener('pointerdown', e => e.stopPropagation());
-    el.addEventListener('click', e => {
-      const btn = e.target.closest('button[data-k]');
-      if (!btn || btn.disabled) return;
+    el.querySelector('[data-up]').addEventListener('click', () => {
       this.closeActionMenu();
-      items[+btn.dataset.k].run();
+      const err = G.upgradeBuilding(h, a);
+      if (err) this.log(err, 'warn');
+      else if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
+    });
+    el.querySelector('[data-x]').addEventListener('click', () => {
+      this.closeActionMenu();
+      if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
+      if (work) return G.cancelWorks(h, a);
+      const err = G.demolishBuilding(h, a);
+      if (err) this.log(err, 'warn');
     });
     document.body.appendChild(el);
     this.actionMenu = el;
