@@ -42,7 +42,8 @@ const CONFIG = {
   // Le début de partie ne change pas, mais l'économie ne s'emballe plus.
   GOLD_DIMINISHING: 0.1,
   PRODUCTION_INTERVAL: 10,   // moulins et casernes produisent toutes les 10 secondes
-  BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type coûte x1.5 plus cher
+  BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type construit soi-même rend le suivant x1.5 plus cher
+                             // (ceux pris à l'ennemi ne comptent pas)
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   MAX_CASTLES: 3,            // châteaux qu'un royaume peut construire dans la partie (capitale comprise ;
@@ -57,7 +58,7 @@ const CONFIG = {
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière
   // Après un assaut réussi (château, église, port ou avant-poste pris), pendant WAR_EFFECT_TIME secondes :
   // le vainqueur subit un malus d'après-guerre (-25 % de soldats produits), le perdant est galvanisé (+25 %).
-  WAR_EFFECT_TIME: 60,
+  WAR_EFFECT_TIME: 30,
   POST_WAR_MALUS: 0.25,
   RALLY_BONUS: 0.25,
   WAYPOINT_EDGE_DISTANCE: 4,   // un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé

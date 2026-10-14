@@ -99,7 +99,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Prendre une église ou un port** (qui permet de construire autour de lui) te donne aussi **sa zone**
      et **les moulins et casernes construits grâce à lui**. Ce qui est dans la muraille d'un château reste au défenseur.
    - **⚰️ Après-guerre et 🔥 galvanisation** : après un assaut réussi (château, église, port ou avant-poste pris),
-     pendant **60 s**, le vainqueur panse ses blessures (**−25 %** de soldats produits), et le perdant est galvanisé
+     pendant **30 s**, le vainqueur panse ses blessures (**−25 %** de soldats produits), et le perdant est galvanisé
      par la défaite (**+25 %**). La jauge des soldats l'indique.
 
    **✂️ Couper** : un royaume reste **d'un seul tenant**. Quand un assaut le coupe en morceaux, il ne garde
@@ -128,6 +128,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **Le terrain compte** : un moulin produit plus en plaine (+30 %) qu'en forêt (normal), colline (-10 %) ou montagne (-30 %) ;
    une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
+   **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher**.
+   Les bâtiments que tu **prends à l'ennemi** ne comptent pas (et un bâtiment perdu ne compte plus).
    **Les moulins et casernes se construisent dans l'enceinte d'un de tes châteaux** (dans sa muraille),
    **ou près d'une de tes églises** (ou d'un port amélioré) qui a encore de la place, pas ailleurs dans l'arrière-pays.
    Les châteaux et les églises, eux, se construisent partout sur ton territoire.
@@ -306,6 +308,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.50** : 💰 seuls les bâtiments que tu construis toi-même font monter le prix des suivants (ceux pris à l'ennemi ne comptent plus) · ⚰️🔥 l'après-guerre et la galvanisation durent 30 s
 - **v0.49** : ⚔️ deux armées ennemies qui assiègent le même château s'affrontent d'abord entre elles, la gagnante reprend le siège · 🛡️ clic droit chez un allié attaqué → l'aider à se défendre (ses survivants rentrent ensuite)
 - **v0.48** : 🗺️ un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé · ⚰️ après un assaut réussi, 60 s d'après-guerre pour le vainqueur (−25 % de soldats produits) et 🔥 de galvanisation pour le perdant (+25 %)
 - **v0.47** : 🏰 une citadelle (château niveau 3) permet 2 assauts en même temps contre un même royaume, et coûte 1000 · garnisons des châteaux bien plus grandes (petite, x5, puis x3) et chaque soldat de garnison vaut 3 au combat · le port royal a la même petite garnison qu'un fort en bois
