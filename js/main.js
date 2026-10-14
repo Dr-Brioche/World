@@ -117,6 +117,31 @@ const UI = {
   },
 
   // Petite image de la bannière d'un royaume, pour les messages et les listes
+  // Barre de résumé au-dessus de la souris quand on survole un autre royaume : ses soldats, ses bâtiments
+  // (le nombre de chaque type, quel que soit le niveau) et la part des terres qu'il possède
+  refreshKingdomTip() {
+    const G = Game, h = G.human, i = Render.hover, m = Render.mouse;
+    let tip = $('kTip');
+    if (!tip) {
+      tip = document.createElement('div');
+      tip.id = 'kTip';
+      tip.className = 'panel kTip hidden';
+      document.body.appendChild(tip);
+    }
+    const o = i >= 0 && m && (G.phase === 'playing' || G.phase === 'spawn') && !this.selectedBuild ? G.owner[i] : -1;
+    if (o < 0 || !h || o === h.id) { tip.classList.add('hidden'); this.tipFor = -1; return; }
+    const p = G.players[o];
+    const types = [B_CASTLE, B_CHURCH, B_PORT, B_MILL, B_BARRACKS, B_OUTPOST];
+    const html = `${this.bannerImg(p)}<b>${escapeHtml(p.name)}</b>${G.areAllied(o, h.id) ? ' 🤝' : ''}` +
+      ` · <span title="Soldats">👥 ${fmt(p.troops)}</span>` +
+      types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
+      ` · <span title="Part des terres">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)} %</span>`;
+    if (tip.innerHTML !== html) tip.innerHTML = html;
+    tip.style.left = m.x + 'px';
+    tip.style.top = (m.y - 18) + 'px';
+    tip.classList.remove('hidden');
+  },
+
   bannerImg(p, cls = 'bn') {
     return `<img class="${cls}" src="${BANNERS[p.banner].img}" alt="" title="${escapeHtml(p.name)}">`;
   },
@@ -939,9 +964,13 @@ function setupInput(canvas) {
     }
   });
 
+  // La souris quitte la carte (vers un panneau) : plus de case survolée
+  canvas.addEventListener('pointerleave', () => { Render.hover = -1; UI.refreshKingdomTip(); });
+
   canvas.addEventListener('pointermove', e => {
     Render.hover = Render.tileAt(e.clientX, e.clientY);
     Render.mouse = { x: e.clientX, y: e.clientY };
+    UI.refreshKingdomTip();
     if (!pointers.has(e.pointerId)) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 1 && drag) {
@@ -999,7 +1028,7 @@ function main() {
     Render.flush();
     Render.draw();
     uiTimer += dt;
-    if (uiTimer > 200) { uiTimer = 0; UI.refresh(); }
+    if (uiTimer > 200) { uiTimer = 0; UI.refresh(); UI.refreshKingdomTip(); }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
