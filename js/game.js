@@ -2086,10 +2086,51 @@ const GameRules = {
     troops = Math.floor(Math.min(troops, this.troopsAt(pid, src)));
     if (troops < 1) return null;
     this.takeTroops(pid, src, troops);
-    a.defenders += troops;
     a.lastDefend = this.tick;
     if (src >= 0) a.defSource = src;
+    // Les défenseurs partent tout de suite, du château le plus proche (ou de l'avant-poste),
+    // et marchent à la rencontre de l'armée ennemie : ils se battent en arrivant
+    const from = this.defenseOrigin(pid, a, src), to = this.attackFront(a);
+    const dist = Math.hypot(to.x - from.x, to.y - from.y), TPS = CONFIG.TICKS_PER_SECOND;
+    (a.defPending = a.defPending || []).push({ troops, from, start: this.tick,
+      arrive: this.tick + Math.max(1, Math.round(dist / CONFIG.DEFENDER_SPEED * TPS)) });
     return a;
+  },
+
+  // Où se bat l'assaut a (en cases, coordonnées du centre) : au pied des murs pendant un siège, sinon sur son front
+  attackFront(a) {
+    const W = this.W, center = t => ({ x: t % W + 0.5, y: ((t / W) | 0) + 0.5 });
+    if (a.siege) return center(a.siege.tile);
+    if (a.bannerX !== undefined) return { x: a.bannerX, y: a.bannerY };
+    if (a.frontTile >= 0) return center(a.frontTile);
+    return { x: a.toX, y: a.toY };
+  },
+
+  // D'où partent les défenseurs de pid : l'avant-poste attaqué, sinon son château le plus proche du combat
+  // (pas un château isolé), sinon le cœur de son royaume
+  defenseOrigin(pid, a, src) {
+    const W = this.W, mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
+    if (src >= 0) return mid(src);
+    const to = this.attackFront(a);
+    let best = null, bestD = Infinity;
+    for (const c of this.castles) {
+      if (this.owner[c] !== pid || !this.isBase(c)) continue;
+      const m = mid(c), d = (m.x - to.x) ** 2 + (m.y - to.y) ** 2;
+      if (d < bestD) { bestD = d; best = m; }
+    }
+    if (best) return best;
+    const p = this.players[pid];
+    return { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 };
+  },
+
+  // Défenseurs en route vers cet assaut (pas encore arrivés)
+  defendersOnTheWay(a) { return a.defPending ? a.defPending.reduce((s, r) => s + r.troops, 0) : 0; },
+
+  // Arrivée des défenseurs en route : ils rejoignent le combat
+  arriveDefenders(a) {
+    if (!a.defPending || !a.defPending.length) return;
+    for (const r of a.defPending) if (r.arrive <= this.tick) { a.defenders += r.troops; r.done = true; }
+    a.defPending = a.defPending.filter(r => !r.done);
   },
 
   // Envoyer une armée aider un allié du pacte qui se fait attaquer : elle arrive en REINFORCE_DELAY secondes
@@ -2122,6 +2163,7 @@ const GameRules = {
   },
 
   stepAttack(a) {
+    this.arriveDefenders(a);
     if (this.stepRetreat(a)) return;
     if (this.isPreparing(a)) return;
     if (a.prepTicks && this.tick === a.startTick) {
@@ -2432,9 +2474,9 @@ const GameRules = {
       }
       for (const r of a.allyPending) if (this.players[r.pid].alive) this.players[r.pid].troops += r.troops; // (pas encore arrivés)
     }
-    // Les défenseurs survivants rentrent aussi, et la garnison regagne son château
+    // Les défenseurs survivants (et ceux encore en route) rentrent aussi, et la garnison regagne son château
     if (a.target >= 0 && this.players[a.target].alive) {
-      this.giveTroops(a.target, a.defSource === undefined ? -1 : a.defSource, a.defenders);
+      this.giveTroops(a.target, a.defSource === undefined ? -1 : a.defSource, a.defenders + this.defendersOnTheWay(a));
     }
     const c = a.targetCastle;
     if (c >= 0 && a.garrison > 0 && this.owner[c] === a.target) {

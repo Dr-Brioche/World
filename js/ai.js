@@ -134,7 +134,7 @@ const AI = {
       if (a.done || a.target !== p.id || Game.defendWait(a) > 0) continue; // (5 s entre deux envois)
       const D = Game.combatRatio(a);
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
-      const needed = (a.troops / D) * 0.8 - a.defenders - (a.garrison || 0) * Game.garrisonPower(a);
+      const needed = (a.troops / D) * 0.8 - a.defenders - Game.defendersOnTheWay(a) - (a.garrison || 0) * Game.garrisonPower(a);
       if (needed <= 0) continue;
       // Château isolé (ou avant-poste) : impossible d'y envoyer des défenseurs. Pour un château, on tente
       // de le rejoindre par un assaut ; pour un avant-poste, on envoie des renforts par la mer.

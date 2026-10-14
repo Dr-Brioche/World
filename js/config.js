@@ -86,6 +86,7 @@ const CONFIG = {
   ENCLAVE_LOG_MIN: 50,         // un message n'annonce un morceau englobé que s'il fait au moins 50 cases
   WAYPOINT_EDGE_DISTANCE: 4,   // un point de passage d'assaut doit être à au moins 4 cases du bord du royaume visé
   CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
+  DEFENDER_SPEED: 6,           // les défenseurs partent du château le plus proche et marchent vers l'ennemi (cases/s)
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
   RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite

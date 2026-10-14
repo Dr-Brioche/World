@@ -582,9 +582,10 @@ const UI = {
       if (!el) continue;
       const wait = Math.ceil((a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND);
       const pending = a.pending ? a.pending.reduce((s, r) => s + r.troops, 0) : 0;
-      const defenders = (a.defenders || 0) + (a.garrison || 0);
+      const defenders = (a.defenders || 0) + (a.garrison || 0), coming = G.defendersOnTheWay(a);
       el.textContent = `⚔ ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
-        (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
+        (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (coming >= 1 ? ` (🛡 +${fmt(coming)} en route)` : '') +
+        (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
         (a.siege ? ` · 🏰 siège ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s` : '') +
         (a.target === G.human.id && G.defendWait(a) > 0 ? ` · ⏳ renforts dans ${Math.ceil(G.defendWait(a))} s` : '');
     }
@@ -622,7 +623,7 @@ const UI = {
     }
     const before = h.troops;
     const a = G.sendDefenders(h.id, attackId, h.troops * this.ratio);
-    if (a) this.log(`🛡️ ${fmt(before - h.troops)} défenseurs partent contrer l'assaut de ${G.players[a.attacker].name} !`, 'good');
+    if (a) this.log(`🛡️ ${fmt(before - h.troops)} défenseurs partent de ton château le plus proche à la rencontre de ${G.players[a.attacker].name} !`, 'good');
     else this.log('Pas assez de soldats pour défendre !', 'warn');
   },
 
