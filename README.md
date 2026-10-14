@@ -276,6 +276,7 @@ Certains fleuves forment aussi un **lac** en chemin.
 et choisis **🛶 Traverser le fleuve**. Le % de soldats choisi passe à gué depuis tes terres : c'est **long**
 (**3 s par case de fleuve**), et tout le monde voit le radeau. À l'arrivée, tu prends le gué et une **tête de pont**
 sur l'autre rive, reliée à ton royaume ; les survivants rejoignent ton armée. (Le grand fleuve, lui, ne se traverse pas.)
+Les royaumes rivaux savent aussi traverser les fleuves quand une rive libre les attend en face.
 
 🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
 il faut les contourner.
@@ -284,6 +285,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.42.1** : 🤖 les royaumes rivaux traversent aussi les fleuves à gué pour prendre les terres libres d'en face
 - **v0.42** : 🛶 clic droit sur une terre libre de l'autre côté d'un fleuve → « Traverser le fleuve » : l'armée passe à gué (3 s par case de fleuve) et prend une tête de pont sur l'autre rive
 - **v0.41** : 🏰 siège : un château ne tombe plus tout de suite, l'armée doit l'assiéger 5 s (niveau 1), 10 s (niveau 2) ou 15 s (niveau 3), le temps pour le défenseur d'envoyer des soldats
 - **v0.40** : 🐢 les assauts contre un royaume avancent 3 fois moins vite (toujours plus lentement dans les forêts, collines, montagnes et fleuves) : on a le temps de voir venir l'ennemi et de réagir

@@ -42,6 +42,9 @@ const AI = {
       if (lost !== undefined && !Game.launchLink(p.id, lost, p.troops * 0.5)) return;
     }
 
+    // De temps en temps, des terres libres de l'autre côté d'un fleuve : on le traverse à gué
+    if (nb.has(-1) && p.troops > max * 0.3 && Math.random() < 0.1 && this.tryCrossing(p)) return;
+
     // S'il reste des terres libres, on s'étend en priorité
     if (nb.has(-1) && p.troops > max * 0.2 && Math.random() < 0.85) {
       Game.launchAttack(p.id, -1, p.troops * 0.4);
@@ -78,6 +81,42 @@ const AI = {
     } else if (best === null && full && Math.random() < 0.15) {
       this.betray(p, nb);
     }
+  },
+
+  // Cherche une rive libre en face de nos terres, de l'autre côté d'un fleuve, et la traverse à gué.
+  // Renvoie true si une traversée est lancée.
+  tryCrossing(p) {
+    const G = Game, W = G.W;
+    if (G.crossings.some(c => c.pid === p.id)) return false; // une traversée à la fois
+    // Les cases de fleuve libres qui touchent nos terres
+    const fords = [];
+    for (let i = 0; i < G.N; i++) {
+      if (G.terrain[i] !== TERRAIN.RIVER || G.owner[i] !== -1) continue;
+      let mine = false;
+      G.forNeighbors(i, n => { if (G.owner[n] === p.id) mine = true; });
+      if (mine) fords.push(i);
+    }
+    if (!fords.length) return false;
+    // On part d'une de ces cases au hasard et on suit le fleuve jusqu'à une rive libre loin de nos terres
+    const near = j => {
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const x = j % W + dx, y = ((j / W) | 0) + dy;
+        if (x >= 0 && y >= 0 && x < W && y < G.H && G.owner[y * W + x] === p.id) return true;
+      }
+      return false;
+    };
+    const seen = new Set([fords[(Math.random() * fords.length) | 0]]);
+    for (const r of seen) {
+      if (seen.size > 200) break;
+      let bank = -1;
+      G.forNeighbors(r, n => {
+        if (G.owner[n] !== -1 || !G.isLand(n)) return;
+        if (G.terrain[n] === TERRAIN.RIVER) seen.add(n);
+        else if (bank < 0 && !near(n)) bank = n;
+      });
+      if (bank >= 0) return !G.launchCrossing(p.id, bank, p.troops * 0.35);
+    }
+    return false;
   },
 
   // Des assauts nous visent : on envoie des défenseurs contre chacun.
