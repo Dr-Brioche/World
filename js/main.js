@@ -62,7 +62,10 @@ const UI = {
     // pointerdown plutôt que click : le classement est redessiné souvent
     $('lb').addEventListener('pointerdown', e => {
       const btn = e.target.closest('button[data-ally]');
-      if (btn) this.onAllyButton(+btn.dataset.ally);
+      if (btn) return this.onAllyButton(+btn.dataset.ally);
+      // Clic sur le nom d'un royaume qui nous attaque (en rouge) : la caméra va voir son attaque
+      const li = e.target.closest('li.attacker');
+      if (li) this.showAttackBy(+li.dataset.pid);
     });
 
     window.addEventListener('keydown', e => {
@@ -506,7 +509,8 @@ const UI = {
       // Un royaume qui nous attaque (ou prépare un assaut contre nous) : son nom clignote en rouge
       const attacking = !p.isHuman && G.attacks.some(a => !a.done && a.attacker === p.id && a.target === h.id);
       const blink = attacking ? (Math.floor(performance.now() / 400) % 2 ? ' attacker' : ' attacker on') : '';
-      return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}${blink}">${this.bannerImg(p, 'lbb')}` +
+      return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}${blink}" data-pid="${p.id}"` +
+        `${attacking ? ' title="Il t\'attaque ! Clique pour voir où."' : ''}>${this.bannerImg(p, 'lbb')}` +
         `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${escapeHtml(p.name)}</span>` +
         `<span class="allies" title="${this.alliesTitle(p)}">` +
         G.allies(p.id).map(o => `<i style="background:rgb(${o.color})"></i>`).join('') + `</span>` +
@@ -617,6 +621,18 @@ const UI = {
         : ` · aucune ville à moins de ${CONFIG.PORT_ROAD_DISTANCE} cases (pas de chemin)`;
     }
     return txt;
+  },
+
+  // La caméra va voir une attaque de pid contre nous (s'il en a plusieurs, chaque clic montre la suivante)
+  showAttackBy(pid) {
+    const G = Game, h = G.human;
+    const list = G.attacks.filter(a => !a.done && a.attacker === pid && a.target === h.id);
+    if (!list.length) return;
+    this.shownAttack = this.shownAttack === undefined ? 0 : (this.shownAttack + 1) % list.length;
+    const a = list[this.shownAttack];
+    // en marche sur ses terres : là où est son armée ; sinon, le front de l'assaut
+    const pos = G.isPreparing(a) && a.marchFrom ? G.marchPosition(a) : G.attackFront(a);
+    Render.centerOn(pos.x, pos.y);
   },
 
   // Envoyer des soldats (selon le curseur « Envoyer ») contre un assaut ennemi

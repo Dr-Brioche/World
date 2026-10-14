@@ -17,12 +17,19 @@ const AI = {
     const mine = Game.attacks.find(a => !a.done && a.attacker === p.id);
     if (mine) {
       // Assaut de jonction bloqué par des défenseurs : renforts
+      // (un bot attend AI_SEND_INTERVAL secondes entre deux envois, et que son armée ait repris des forces :
+      //  il envoie alors un gros paquet d'un coup, au lieu de quelques soldats à chaque instant)
+      const ready = (mine.aiSent === undefined || Game.tick - mine.aiSent >= CONFIG.AI_SEND_INTERVAL * CONFIG.TICKS_PER_SECOND)
+        && p.troops > Game.maxTroops(p) * 0.3;
       if (mine.link !== undefined) {
-        if (mine.defenders > mine.troops && p.troops > 2) Game.launchLink(p.id, mine.link, p.troops * 0.4);
+        if (ready && mine.defenders > mine.troops) { Game.launchLink(p.id, mine.link, p.troops * 0.6); mine.aiSent = Game.tick; }
         return;
       }
-      if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) * Game.garrisonPower(mine) > mine.troops && p.troops > 2) {
-        Game.launchAttack(p.id, mine.target, p.troops * 0.4, mine.targetCastle >= 0 ? mine.targetCastle : undefined);
+      if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) * Game.garrisonPower(mine) > mine.troops) {
+        if (ready) {
+          Game.launchAttack(p.id, mine.target, p.troops * 0.6, mine.targetCastle >= 0 ? mine.targetCastle : undefined);
+          mine.aiSent = Game.tick;
+        }
         return;
       }
       // Avec une citadelle : un deuxième assaut contre le même royaume, sur une autre de ses cibles
@@ -55,8 +62,9 @@ const AI = {
     if (p.troops > max * 0.3 && Math.random() < (nb.has(-1) ? 0.1 : 0.3) && this.tryCrossing(p)) return;
 
     // S'il reste des terres libres, on s'étend en priorité
-    if (nb.has(-1) && p.troops > max * 0.2 && Math.random() < 0.85) {
-      Game.launchAttack(p.id, -1, p.troops * 0.4);
+    // (il attend d'avoir assez de soldats, puis envoie un gros morceau, plutôt que de petits paquets sans arrêt)
+    if (nb.has(-1) && p.troops > max * 0.4 && Math.random() < 0.85) {
+      Game.launchAttack(p.id, -1, p.troops * 0.6);
       return;
     }
 
@@ -132,6 +140,8 @@ const AI = {
     // Envoyer des défenseurs contre chaque assaut : assez pour l'arrêter, vu la défense du terrain
     for (const a of Game.attacks) {
       if (a.done || a.target !== p.id || Game.defendWait(a) > 0) continue; // (5 s entre deux envois)
+      // (un bot n'envoie pas ses défenseurs au compte-gouttes : un gros paquet, puis il attend AI_SEND_INTERVAL secondes)
+      if (a.aiDefSent !== undefined && Game.tick - a.aiDefSent < CONFIG.AI_SEND_INTERVAL * CONFIG.TICKS_PER_SECOND) continue;
       const D = Game.combatRatio(a);
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
       const needed = (a.troops / D) * 0.8 - a.defenders - Game.defendersOnTheWay(a) - (a.garrison || 0) * Game.garrisonPower(a);
@@ -141,8 +151,8 @@ const AI = {
       const op = Game.outpostZoneOf(a);
       if (op >= 0) {
         // zone d'un avant-poste : d'abord ses soldats stationnés, puis des renforts par la mer
-        const sent = Game.sendDefenders(p.id, a.id, needed);
-        if (sent) continue;
+        const sent = Game.sendDefenders(p.id, a.id, needed * 1.3);
+        if (sent) { a.aiDefSent = Game.tick; continue; }
         if (!Game.expeditions.some(e => e.reinforce === op)) {
           Game.reinforceOutpost(p.id, op, Math.min(needed, p.troops * 0.4));
         }
@@ -152,7 +162,8 @@ const AI = {
         if (Game.holdsAlone(a.targetCastle) && !Game.linkFor(a.targetCastle)) Game.launchLink(p.id, a.targetCastle, Math.min(needed * 1.5, p.troops * 0.5));
         continue;
       }
-      Game.sendDefenders(p.id, a.id, Math.min(needed, p.troops * 0.5));
+      const chunk = Math.max(needed * 1.3, Game.maxTroops(p) * 0.1); // (au moins un bon paquet)
+      if (Game.sendDefenders(p.id, a.id, Math.min(chunk, p.troops * 0.6))) a.aiDefSent = Game.tick;
     }
     // Un allié du pacte se fait attaquer : on envoie parfois une armée l'aider
     for (const a of Game.attacks) {

@@ -1317,11 +1317,11 @@ const GameRules = {
           `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`;
       }
     }
-    // Assaut déjà sur les terres ennemies : les renforts partent et arrivent dans REINFORCE_DELAY secondes
+    // Assaut déjà sur les terres ennemies : les renforts partent de sa cité et marchent jusqu'au front (reinforceTicks)
     // (pendant sa marche sur nos terres, les soldats en plus le rejoignent tout de suite, plus bas)
     if (a && target >= 0 && !this.isPreparing(a)) {
       this.takeTroops(pid, source, troops);
-      a.pending.push({ troops, tick: this.tick + CONFIG.REINFORCE_DELAY * CONFIG.TICKS_PER_SECOND });
+      a.pending.push({ troops, tick: this.tick + this.reinforceTicks(a) });
       return null;
     }
     if (!a) {
@@ -1337,6 +1337,9 @@ const GameRules = {
         // Contre un royaume, l'armée part de sa cité la plus proche (ou de son avant-poste) et marche
         // sur ses propres terres jusqu'à la frontière : tout le monde la voit venir
         this.aimArrow(a, frontier, aimTile);
+        // Assaut sur un château (une église…) : l'armée entre chez l'ennemi là où commence son chemin ;
+        // elle marche jusque-là depuis sa cité la plus proche (et la flèche part de là)
+        if (path) this.entryFromPath(a, path, source);
         const secs = this.startMarch(a, a.startTile);
         if (this.players[target].isHuman) {
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
@@ -1566,7 +1569,7 @@ const GameRules = {
       p.troops -= troops;
       // Pendant la préparation, les soldats s'ajoutent tout de suite ; ensuite, ce sont des renforts
       if (this.isPreparing(a)) a.troops += troops;
-      else a.pending.push({ troops, tick: this.tick + CONFIG.REINFORCE_DELAY * CONFIG.TICKS_PER_SECOND });
+      else a.pending.push({ troops, tick: this.tick + this.reinforceTicks(a) });
       return null;
     }
     const route = this.linkRoute(pid, c);
@@ -1988,6 +1991,29 @@ const GameRules = {
     }
   },
 
+  // La case de nos terres d'où l'armée entrera sur le chemin path (sa première case chez l'ennemi)
+  entryFromPath(a, path, source) {
+    let entry = -1;
+    this.forNeighbors(path[0], n => {
+      if (entry >= 0 || this.owner[n] !== a.attacker) return;
+      if (source >= 0 ? this.sourceOf(n) === source : this.isBase(n)) entry = n;
+    });
+    if (entry < 0) return;
+    a.startTile = entry;
+    a.fromX = entry % this.W + 0.5;
+    a.fromY = ((entry / this.W) | 0) + 0.5;
+  },
+
+  // Temps (en ticks) que mettent des renforts à rejoindre l'assaut a : ils partent de la cité d'où l'assaut
+  // est parti et marchent jusqu'au front (MARCH_SPEED cases par seconde, au moins REINFORCE_MIN_TIME secondes).
+  // Plus l'armée s'est enfoncée loin de sa cité, plus ils mettent de temps.
+  reinforceTicks(a) {
+    const TPS = CONFIG.TICKS_PER_SECOND, p = this.players[a.attacker];
+    const from = a.marchFrom || { x: p.sumX / Math.max(1, p.tiles) + 0.5, y: p.sumY / Math.max(1, p.tiles) + 0.5 };
+    const to = this.attackFront(a), dist = Math.hypot(to.x - from.x, to.y - from.y);
+    return Math.round(Math.max(CONFIG.REINFORCE_MIN_TIME, dist / CONFIG.MARCH_SPEED) * TPS);
+  },
+
   // L'armée est-elle encore en marche sur ses propres terres (pas encore entrée chez l'ennemi) ?
   isPreparing(a) { return this.tick < a.startTick; },
 
@@ -2051,9 +2077,12 @@ const GameRules = {
 
   // Prendre une case coûte comme une terre libre (selon le terrain), même chez l'ennemi :
   // ce sont les soldats du défenseur qui rendent un assaut coûteux (voir fight).
+  // Une armée en marche perd des hommes : un pourcentage de son effectif (TILE_LOSS_RATE par case, selon le
+  // terrain), donc une grosse armée en perd plus qu'une petite ; au moins NEUTRAL_TILE_COST par case.
   // (sur une grande carte, une terre libre coûte moins : voir landBoost)
   tileCost(a, t) {
-    return CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost / (a.target < 0 ? this.landBoost : 1);
+    const loss = Math.max(CONFIG.NEUTRAL_TILE_COST, a.troops * CONFIG.TILE_LOSS_RATE);
+    return loss * TERRAIN_INFO[this.terrain[t]].cost / (a.target < 0 ? this.landBoost : 1);
   },
 
   // Défense de l'endroit où se trouve l'assaut : terrain + château (x0.5 si le défenseur est traître).

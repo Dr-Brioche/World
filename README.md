@@ -84,12 +84,20 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Tout le monde la voit venir : ta **bannière** ⚔️ avance sur la carte avec le temps restant et tes soldats ;
      en face, les terres menacées **scintillent à ta couleur**, et le bâtiment visé est entouré d'un **halo** qui pulse.
      Pendant la marche, reclique sur la cible pour **ajouter des soldats tout de suite** : c'est ce qui fixe l'ampleur de l'assaut.
-     Une fois chez l'ennemi, une **flèche rouge en pointillés** le montre jusqu'à sa cible.
+     L'armée entre chez l'ennemi là où commence son chemin (en pointillés dorés) : c'est de là que part la
+     **flèche rouge en pointillés** qui la montre jusqu'à sa cible.
    - **L'assaut entre chez l'ennemi** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
-     mais ils mettent **5 secondes** à arriver.
+     mais ils partent de la cité d'où l'assaut est parti et **marchent jusqu'au front** (au moins 3 s) :
+     plus ton armée s'est enfoncée loin de sa cité, plus ils mettent de temps à arriver.
+   - **Pertes en route** : une armée qui avance (sur une terre libre ou chez l'ennemi) perd des hommes à chaque case,
+     un **pourcentage de son effectif** (0,1 % par case de plaine, plus dans le relief) : une grosse armée en perd
+     plus qu'une petite.
    - **Prendre des terres** coûte peu (comme une terre libre, selon le terrain). Ce qui coûte cher,
      ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi : **6 fois moins vite**
      que sur les terres libres, et encore moins dans le relief (forêt, colline, montagne, fleuve).
+   - **Où est l'attaque ?** Un royaume qui t'attaque a son nom qui **clignote en rouge** dans le classement, en haut
+     à droite : **clique sur son nom**, la caméra va directement voir son armée (s'il a plusieurs assauts contre toi,
+     chaque clic montre le suivant).
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
      à la rencontre de l'ennemi (on voit leur bannière 🛡 avancer) : ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
@@ -365,6 +373,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.68** : 🔎 clic sur le nom (en rouge) d'un royaume qui t'attaque : la caméra va voir son armée · ⏱️ les renforts d'un assaut marchent depuis sa cité de départ : plus l'armée est loin, plus ils mettent de temps · 🐛 correction : l'armée part bien vers le point où commence son chemin chez l'ennemi (la marche, la flèche et le chemin coïncident) · 🤖 les royaumes rivaux n'envoient plus leurs soldats au compte-gouttes : ils attendent et envoient de plus gros paquets · 🩸 une armée en marche perd un pourcentage de ses hommes à chaque case (une grosse armée perd plus qu'une petite)
 - **v0.67** : 🛤️ un port à moins de 30 cases d'une ville (château) est relié à elle par un chemin de terre : +30 % d'or · ⛪ une église construite sur ce chemin produit un peu d'or (+2 💰 toutes les 10 s)
 - **v0.66.3** : 🛶 traverser un fleuve ne coûte plus aucun soldat : seulement le temps de la traversée (10 s, +6 s pour un fleuve double)
 - **v0.66.2** : 🐛 correction : le bouton « Améliorer » d'un bâtiment (menu rapide ⬆️ et fenêtre en haut à gauche) se débloque tout seul dès que tu as assez d'or, sans devoir refermer et rouvrir le menu (en survolant le bouton, tu vois l'or qu'il manque)

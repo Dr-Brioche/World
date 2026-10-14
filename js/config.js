@@ -105,7 +105,10 @@ const CONFIG = {
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
   RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite
-  REINFORCE_DELAY: 5,          // une fois l'assaut lancé, les renforts mettent 5 s à arriver
+  REINFORCE_DELAY: 5,          // une armée alliée venue aider met 5 s à arriver
+  REINFORCE_MIN_TIME: 3,       // les renforts d'un assaut marchent de sa cité jusqu'au front (MARCH_SPEED) : au moins 3 s
+  AI_SEND_INTERVAL: 12,        // un bot attend au moins 12 s entre deux envois de soldats (renforts, défenseurs)
+                               // et envoie alors un gros paquet, au lieu de quelques soldats à chaque instant
   FIGHT_RATE: 0.03,            // vitesse des combats (part des soldats engagés qui tombent par tour)
   FIGHT_MIN_LOSS: 0.1,         // pertes minimum par tour, pour que chaque combat finisse vite
   // Supériorité en nombre : quand un camp a plus de 2 fois plus de soldats que l'autre, il a un bonus.
@@ -115,7 +118,8 @@ const CONFIG = {
   NUMBERS_MAX_BONUS: 5,
   GARRISON_POWER: 3,           // au combat, chaque soldat de garnison (château, port, avant-poste bâti) en vaut 3
   GARRISON_REGEN: 0.05,        // la garnison d'un château se reconstitue de 5 % par seconde
-  NEUTRAL_TILE_COST: 0.08,     // soldats perdus pour prendre une case (libre ou ennemie)
+  NEUTRAL_TILE_COST: 0.08,     // soldats perdus (au moins) pour prendre une case (libre ou ennemie)...
+  TILE_LOSS_RATE: 0.001,       // ...ou 0,1 % de l'armée par case (x la défense du terrain) : une grosse armée perd plus d'hommes
   REGIONS_REUSE: 5,            // (technique) tours de jeu pendant lesquels le découpage en morceaux peut servir tel quel
   BIG_MAP_LAND: 27000,         // terres d'une carte « normale » : au-delà (cartes Monde, Europe), les terres libres
   BIG_MAP_BOOST_MAX: 4,        // se prennent plus vite et moins cher (racine du rapport de taille, au plus x4)

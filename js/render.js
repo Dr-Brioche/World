@@ -58,6 +58,14 @@ const Render = {
     this.cam.y = Game.H / 2 - this.vh / 2 / s;
   },
 
+  // Centre la caméra sur un point de la carte (en cases), en zoomant un peu si on est très loin
+  centerOn(x, y) {
+    const c = this.cam;
+    c.scale = Math.min(this.maxScale, Math.max(c.scale, 6));
+    c.x = x - this.vw / 2 / c.scale;
+    c.y = y - this.vh / 2 / c.scale;
+  },
+
   zoomAt(sx, sy, factor) {
     const c = this.cam;
     const wx = c.x + sx / c.scale, wy = c.y + sy / c.scale;
