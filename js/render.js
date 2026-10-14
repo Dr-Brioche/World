@@ -498,6 +498,37 @@ const Render = {
     }
   },
 
+  // Défenseurs en route vers un assaut : leur bannière marche du château vers le combat (visible par tous)
+  drawDefendersOnTheWay(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    for (const a of G.attacks) {
+      if (a.done || !a.defPending || !a.defPending.length || a.target < 0) continue;
+      const to = G.attackFront(a), d = G.players[a.target];
+      for (const r of a.defPending) {
+        const k = Math.min(1, (G.tick - r.start) / Math.max(1, r.arrive - r.start));
+        const x = ox + (r.from.x + (to.x - r.from.x) * k) * s, y = oy + (r.from.y + (to.y - r.from.y) * k) * s;
+        // les pointillés du reste du trajet
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(ox + to.x * s, oy + to.y * s);
+        ctx.setLineDash([4, 6]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(${d.color.join(',')},0.85)`;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        this.drawBannerImage(d, x, y, 30);
+        ctx.font = '700 12px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+        ctx.fillStyle = '#fff';
+        ctx.strokeText('🛡 ' + fmt(r.troops), x, y - 22);
+        ctx.fillText('🛡 ' + fmt(r.troops), x, y - 22);
+      }
+    }
+  },
+
   // Bateaux d'expédition : ils avancent sur l'eau vers la côte visée (visibles par tous)
   drawExpeditions(ox, oy) {
     const G = Game;
@@ -1088,6 +1119,7 @@ const Render = {
 
     // Par-dessus tout le reste, pour bien les voir
     this.drawExpeditions(ox, oy);
+    this.drawDefendersOnTheWay(ox, oy);
     this.drawAttackArrows(ox, oy);
     this.drawCastleTip();
   },

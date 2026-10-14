@@ -76,7 +76,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi : **6 fois moins vite**
      que sur les terres libres, et encore moins dans le relief (forêt, colline, montagne, fleuve).
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
-     pour envoyer le % de soldats choisi. Ils arrivent **tout de suite**, mais il faut attendre **5 s** entre deux envois
+     pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
+     à la rencontre de l'ennemi (on voit leur bannière 🛡 avancer) : ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
      contre un même assaut (le temps de regrouper les soldats).
    - **La garnison** : chaque château a ses propres défenseurs (beaucoup plus nombreux selon son niveau),
      qui sortent le défendre seuls le temps que le royaume réagisse. **Au combat, chaque soldat de garnison
@@ -332,6 +333,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.61** : 🛡️ les défenseurs n'arrivent plus instantanément : ils partent du château le plus proche et marchent à la rencontre de l'armée ennemie (bannière visible, « en route » dans le panneau)
 - **v0.60.5** : ⛺ un avant-poste ne tombe plus tout de suite : il faut l'assiéger 10 s, le temps pour son propriétaire de le défendre
 - **v0.60.4** : ⛺ cliquer sur un de ses avant-postes n'envoie plus directement de renforts : ça ouvre sa fenêtre d'info et un menu rapide ⛵ Renforts / 🚢 Rapatrier
 - **v0.60.3** : 💰 l'amélioration de la caserne au niveau 2 coûte 80 (au lieu de 40)
