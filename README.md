@@ -257,6 +257,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      à côté de lui propose **⛵ Renforts** (le % choisi part par la mer, depuis un port de niveau 2 ou plus) et
      **🚢 Rapatrier** (les soldats qui y attendent rembarquent vers ton port le plus proche et rejoignent ton armée ;
      la garnison, elle, reste).
+     Si l'avant-poste tombe pendant que des renforts sont en mer, leur bateau **fait demi-tour** jusqu'au port.
      Les renforts qui arrivent sur un avant-poste **déjà bâti** complètent sa garnison, et les autres
      stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
    - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
@@ -335,6 +336,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.61.6** : ⛵ si un avant-poste tombe pendant que des renforts sont en mer, leur bateau fait demi-tour jusqu'au port (au lieu de rentrer d'un coup)
 - **v0.61.5** : 🐛 correction : les soldats débarqués en plus de la garnison d'un avant-poste ne disparaissent plus à la fin de sa construction (ils stationnent, prêts à agir)
 - **v0.61.4** : 🚨 une expédition ennemie qui vise ta côte : la zone où elle va débarquer clignote en rouge sur ton territoire
 - **v0.61.3** : 🚨 un royaume qui t'attaque (ou prépare un assaut contre toi) voit son nom clignoter en rouge dans le classement, en haut à droite

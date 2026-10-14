@@ -536,7 +536,7 @@ const GameRules = {
       const path = this.boatPath(port, o.landing);
       if (!path) continue;
       const time = path.length / this.buildingInfo(port).boatSpeed;
-      if (!best || time < best.time) best = { path, time };
+      if (!best || time < best.time) best = { path, time, port };
     }
     if (!best) return 'Aucun de tes ports d\'expédition (niveau 2 ou plus) ne peut rejoindre cet avant-poste.';
     troops = Math.floor(Math.min(troops, p.troops));
@@ -544,7 +544,7 @@ const GameRules = {
     p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, path: best.path, cost: 0, sent: troops,
-      reinforce: a, interceptors: [], troops: troops * (1 - this.seaLoss(best.time)),
+      reinforce: a, port: best.port, interceptors: [], troops: troops * (1 - this.seaLoss(best.time)),
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
     return null;
   },
@@ -1816,6 +1816,23 @@ const GameRules = {
   },
 
   stepExpeditions() {
+    // Renforts en mer vers un avant-poste qui n'existe plus : demi-tour vers leur port (même trajet en sens
+    // inverse, aussi long que le chemin déjà fait) ; en arrivant, ils rejoignent l'armée
+    for (const e of this.expeditions) {
+      if (e.reinforce === undefined || e.done || this.tick >= e.arrive) continue;
+      if (this.building[e.reinforce] === B_OUTPOST && this.owner[e.reinforce] === e.pid) continue;
+      const k = Math.min(1, (this.tick - e.start) / Math.max(1, e.arrive - e.start));
+      const idx = Math.min(e.path.length - 1, Math.floor(k * e.path.length));
+      const back = Math.max(1, this.tick - e.start);
+      this.returnInterceptors(e);
+      e.interceptors = [];
+      e.reinforce = undefined;
+      e.home = e.port;
+      e.path = e.path.slice(0, idx + 1).reverse();
+      e.start = this.tick;
+      e.arrive = this.tick + back;
+      if (this.players[e.pid].isHuman) UI.log('⛵ Ton avant-poste est tombé : tes renforts font demi-tour vers le port.', 'warn');
+    }
     for (const e of this.expeditions) {
       if (this.tick < e.arrive) continue;
       e.done = true;
