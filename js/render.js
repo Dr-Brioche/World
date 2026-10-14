@@ -239,7 +239,7 @@ const Render = {
       const half = G.sizeOf(G.building[a]) / 2;
       const cx = ox + (a % G.W + half) * s, cy = oy + (((a / G.W) | 0) + half) * s;
       ctx.beginPath();
-      ctx.arc(cx, cy, (R + 0.5) * s, 0, Math.PI * 2);
+      ctx.arc(cx, cy, R * s, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(220,50,40,0.12)';
       ctx.fill();
       ctx.setLineDash([8, 6]);

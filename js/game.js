@@ -180,28 +180,24 @@ const GameRules = {
       && !this.churchCastleConflict(pid, a, type);
   },
 
-  // Une église doit rester assez loin des châteaux de son royaume pour ne jamais se retrouver dans
-  // leur muraille, même améliorée (la plus grande muraille possible). Et inversement : pas de nouveau
-  // château trop près d'une de ses églises.
-  churchCastleRange() { return CASTLE_LEVELS[CASTLE_LEVELS.length - 1].radius; },
-
-  // Plus grande zone possible d'une église (au niveau maximum)
-  churchMaxRadius() { return CHURCH_LEVELS[CHURCH_LEVELS.length - 1].radius; },
-
-  // Cercles interdits (cercles rouges) pour construire ce type de bâtiment :
-  // une église ou un port reste hors de la zone des châteaux (même améliorés) et des églises du royaume,
-  // et un château ne se construit pas assez près d'une église ou d'un port pour les englober.
+  // Les grands bâtiments d'un royaume (châteaux, églises, ports) gardent leurs distances entre eux, dans tous
+  // les sens : une église ou un port reste hors de la muraille de ses châteaux (même améliorés), deux églises
+  // (ou ports) ne se collent pas, deux châteaux non plus. Et pas de château trop près d'un de ses avant-postes.
+  // Renvoie les cercles interdits (cercles rouges) pour construire ce type de bâtiment : le centre du nouveau
+  // bâtiment ne doit être dans aucun d'eux.
   placementCircles(pid, type) {
-    const castleR = this.churchCastleRange(), churchR = this.churchMaxRadius();
-    const own = t => this.buildingTiles.filter(a => this.building[a] === t && this.owner[a] === pid);
-    if (type === B_CHURCH) return own(B_CASTLE).map(a => ({ a, R: castleR })).concat(own(B_PORT).map(a => ({ a, R: churchR })));
-    if (type === B_PORT) return own(B_CASTLE).map(a => ({ a, R: castleR })).concat(own(B_CHURCH).map(a => ({ a, R: churchR })));
-    if (type === B_CASTLE) {
-      // (ni trop près d'un de ses avant-postes : il faut d'abord conquérir des terres autour de lui)
-      return own(B_CHURCH).concat(own(B_PORT)).map(a => ({ a, R: castleR + 2 }))
-        .concat(own(B_OUTPOST).map(a => ({ a, R: CONFIG.OUTPOST_CASTLE_DISTANCE })));
+    if (type !== B_CASTLE && type !== B_CHURCH && type !== B_PORT) return [];
+    const C = CONFIG, circles = [];
+    for (const a of this.buildingTiles) {
+      if (this.owner[a] !== pid) continue;
+      const b = this.building[a];
+      let R = 0;
+      if (b === B_CASTLE) R = type === B_CASTLE ? C.CASTLE_CASTLE_DISTANCE : C.CASTLE_CHURCH_DISTANCE;
+      else if (b === B_CHURCH || b === B_PORT) R = type === B_CASTLE ? C.CASTLE_CHURCH_DISTANCE : C.CHURCH_CHURCH_DISTANCE;
+      else if (b === B_OUTPOST && type === B_CASTLE) R = C.OUTPOST_CASTLE_DISTANCE;
+      if (R) circles.push({ a, R });
     }
-    return [];
+    return circles;
   },
 
   // La case j est-elle à moins de R cases du centre du bâtiment a ?
@@ -211,9 +207,13 @@ const GameRules = {
     return dx * dx + dy * dy <= R * R;
   },
 
+  // Le bâtiment type, posé en a, aurait-il son centre dans un cercle rouge ?
   churchCastleConflict(pid, a, type) {
-    const cells = this.footprint(a, type);
-    return this.placementCircles(pid, type).some(c => cells.some(j => this.nearBuilding(c.a, j, c.R)));
+    const h = this.sizeOf(type) / 2, x = a % this.W + h, y = ((a / this.W) | 0) + h;
+    return this.placementCircles(pid, type).some(({ a: c, R }) => {
+      const hc = this.sizeOf(this.building[c]) / 2;
+      return (c % this.W + hc - x) ** 2 + (((c / this.W) | 0) + hc - y) ** 2 < R * R;
+    });
   },
 
   // Moulins et casernes se construisent dans l'enceinte d'un de ses châteaux, ou près d'une de ses
@@ -911,10 +911,10 @@ const GameRules = {
       }
       if (i >= 0 && this.owner[i] === p.id && this.churchCastleConflict(p.id, i, type)) {
         return type === B_CASTLE
-          ? 'Trop près d\'une de tes églises, d\'un de tes ports ou d\'un de tes avant-postes (cercle rouge) : ' +
+          ? 'Trop près d\'un de tes châteaux, églises, ports ou avant-postes (cercle rouge) : ' +
             'pour un château près d\'un avant-poste, conquiers d\'abord des terres autour de lui.'
-          : 'Trop près : une église ou un port doit rester hors de la zone de tes châteaux (même améliorés) ' +
-            'et de tes églises (cercles rouges).';
+          : 'Trop près (cercle rouge) : une église ou un port reste hors de la muraille de tes châteaux (même améliorés), ' +
+            'et loin de tes autres églises et ports.';
       }
       if (type === B_PORT && i >= 0 && !this.footprint(i, type).some(j => this.isCoastal(j))) {
         return 'Un port se construit au bord de la mer ou d\'un fleuve.';

@@ -65,6 +65,10 @@ const CONFIG = {
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
+  // Distances minimum (de centre à centre, en cases) entre ses grands bâtiments : cercles rouges à la construction
+  CASTLE_CASTLE_DISTANCE: 13, // entre deux de ses châteaux (l'un n'est jamais dans la muraille de l'autre, même en citadelle)
+  CASTLE_CHURCH_DISTANCE: 15, // entre un château et une église ou un port (ils restent hors de sa muraille)
+  CHURCH_CHURCH_DISTANCE: 11, // entre deux églises, deux ports, ou une église et un port
   MAX_CASTLES: 3,            // châteaux qu'un royaume peut construire dans la partie (capitale comprise ;
                              // les châteaux pris à l'ennemi ne comptent pas). Une église en débloque d'autres.
 

@@ -202,6 +202,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **sauf trop près de tes châteaux** : elle doit rester hors de portée de leur muraille, même améliorée
      au maximum (quand tu places une église, un **cercle rouge** entoure chacun de tes châteaux).
      De même, un nouveau château ne peut pas être construit trop près d'une de tes églises.
+     📏 **Distances entre grands bâtiments** (dans tous les sens, cercles rouges) : château ↔ château **13 cases**,
+     château ↔ église ou port **15 cases**, église ↔ église, port ↔ port ou église ↔ port **11 cases**.
      Elle permet de construire des **moulins ou casernes autour d'elle**, même hors de la muraille d'un château
      (quand tu choisis un moulin ou une caserne, sa zone s'affiche en pointillés clairs).
      Attention : elle **n'est pas défendue** (pas de bonus de défense, pas de garnison), et on peut
@@ -341,6 +343,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.62.2** : 📏 les châteaux, églises et ports se bloquent tous entre eux (cercles rouges, dans les deux sens) : 13 cases entre deux châteaux, 15 entre un château et une église ou un port, 11 entre deux églises ou ports
 - **v0.62.1** : 🐛 correction : une grande zone d'avant-poste (ou des terres sur un autre continent) ne fait plus passer toute l'île de ton royaume pour « coupée » — tes châteaux ne sont plus isolés d'un coup et tes terres ne sont plus données à l'ennemi · les soldats stationnés restent à l'avant-poste
 - **v0.62** : ⛺ toute la zone d'un avant-poste est défendue par ses soldats stationnés (pas par ceux du royaume, au-delà des mers) · pas de château à moins de 12 cases d'un avant-poste : il faut conquérir des terres autour avant
 - **v0.61.6** : ⛵ si un avant-poste tombe pendant que des renforts sont en mer, leur bateau fait demi-tour jusqu'au port (au lieu de rentrer d'un coup)
