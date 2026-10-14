@@ -414,7 +414,6 @@ const UI = {
     const color = eff > 0.85 ? '#3f9a3a' : eff > 0.45 ? '#d99a1e' : '#b8322a';
     $('troopFill').style.width = (r * 100).toFixed(1) + '%';
     $('troopFill').style.background = color;
-    $('troopPeak').style.left = CONFIG.TROOP_PEAK_RATIO * 100 + '%';
     const st = G.stationedOf(h);
     $('troopText').textContent = `⚔️ ${fmt(h.troops)}` + (gar >= 1 ? ` · 🛡️ ${fmt(gar)} en garnison` : '') +
       (st >= 1 ? ` · ⛺ ${fmt(st)} aux avant-postes` : '');
