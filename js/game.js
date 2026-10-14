@@ -28,6 +28,7 @@ const GameRules = {
     this.expeditions = []; // bateaux en route vers une côte
     this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up' ou 'down', start, end, pid, paid }
     this.crossings = [];   // armées qui traversent un fleuve à gué
+    this.returning = [];   // défenseurs qui rentrent à pied (l'assaut qu'ils allaient contrer est fini)
     this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
     this.colonies = new Map(); // château bâti ou pris dans la zone d'un avant-poste → son royaume
     this.nextAttackId = 1;
@@ -2356,6 +2357,43 @@ const GameRules = {
     return { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 };
   },
 
+  // L'assaut a est fini (la ville est prise, ou l'attaquant est parti) : ses défenseurs encore en route font
+  // demi-tour, là où ils sont, et rentrent à pied (DEFENDER_SPEED) jusqu'à la ville (château) la plus proche
+  // de leur royaume (ou à leur avant-poste). On ne les récupère qu'à leur arrivée.
+  sendHome(a, src) {
+    if (!a.defPending || !a.defPending.length) return;
+    const W = this.W, TPS = CONFIG.TICKS_PER_SECOND, pid = a.target, front = this.attackFront(a);
+    const mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
+    for (const r of a.defPending) {
+      const k = Math.min(1, (this.tick - r.start) / Math.max(1, r.arrive - r.start));
+      const from = { x: r.from.x + (front.x - r.from.x) * k, y: r.from.y + (front.y - r.from.y) * k };
+      let to = null, best = Infinity;
+      if (src >= 0 && this.owner[src] === pid && this.building[src] === B_OUTPOST) to = mid(src);
+      else {
+        for (const c of this.castles) {
+          if (this.owner[c] !== pid) continue;
+          const m = mid(c), d = (m.x - from.x) ** 2 + (m.y - from.y) ** 2;
+          if (d < best) { best = d; to = m; }
+        }
+      }
+      if (!to) to = r.from; // (plus aucun château : ils retournent d'où ils venaient)
+      const dist = Math.hypot(to.x - from.x, to.y - from.y);
+      this.returning.push({ pid, troops: r.troops, source: src, from, to, start: this.tick,
+        arrive: this.tick + Math.max(1, Math.round(dist / CONFIG.DEFENDER_SPEED * TPS)) });
+    }
+    a.defPending = [];
+  },
+
+  // Les défenseurs qui rentrent arrivent à leur ville : ils rejoignent l'armée (ou leur avant-poste)
+  stepReturning() {
+    for (const r of this.returning) {
+      if (this.tick < r.arrive) continue;
+      r.done = true;
+      if (this.players[r.pid].alive) this.giveTroops(r.pid, r.source, r.troops);
+    }
+    this.returning = this.returning.filter(r => !r.done);
+  },
+
   // Défenseurs en route vers cet assaut (pas encore arrivés)
   defendersOnTheWay(a) { return a.defPending ? a.defPending.reduce((s, r) => s + r.troops, 0) : 0; },
 
@@ -2702,9 +2740,12 @@ const GameRules = {
       }
       for (const r of a.allyPending) if (this.players[r.pid].alive) this.players[r.pid].troops += r.troops; // (pas encore arrivés)
     }
-    // Les défenseurs survivants (et ceux encore en route) rentrent aussi, et la garnison regagne son château
+    // Les défenseurs survivants rentrent aussi, et la garnison regagne son château. Ceux qui étaient encore
+    // en route font demi-tour : ils rentrent à pied jusqu'à la ville la plus proche (voir sendHome)
     if (a.target >= 0 && this.players[a.target].alive) {
-      this.giveTroops(a.target, a.defSource === undefined ? -1 : a.defSource, a.defenders + this.defendersOnTheWay(a));
+      const src = a.defSource === undefined ? -1 : a.defSource;
+      this.giveTroops(a.target, src, a.defenders);
+      this.sendHome(a, src);
     }
     const c = a.targetCastle;
     if (c >= 0 && a.garrison > 0 && this.owner[c] === a.target) {
@@ -2892,6 +2933,7 @@ const GameRules = {
     this.attacks = this.attacks.filter(a => !a.done);
     this.stepExpeditions();
     this.stepCrossings();
+    this.stepReturning();
     this.stepWorks();
     this.stepOutposts();
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)

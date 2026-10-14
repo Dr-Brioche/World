@@ -109,6 +109,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
      à la rencontre de l'ennemi (on voit leur bannière 🛡 avancer) : ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
      contre un même assaut (le temps de regrouper les soldats).
+     Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **font
+     demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus proche, comme les bateaux
+     de renfort (on voit leur bannière ↩ revenir) : tu ne les récupères qu'à leur arrivée.
    - **La garnison** : chaque château a ses propres défenseurs (beaucoup plus nombreux selon son niveau),
      qui sortent le défendre seuls le temps que le royaume réagisse. **Au combat, chaque soldat de garnison
      en vaut 3.** Ils se reconstituent ensuite peu à peu.
@@ -388,6 +391,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.70.1** : ↩ des défenseurs encore en route quand l'assaut se termine (ville prise…) font demi-tour et rentrent à pied jusqu'à la ville la plus proche : on ne les récupère qu'à leur arrivée
 - **v0.70** : 🚩 si tous tes châteaux sont isolés, ton armée est bloquée dedans : ton territoire coupé n'est plus défendu et aucune armée ne peut en partir (relie-le ou bâtis un château) ; tes soldats défendent ton dernier château moins bien (x0,8), mais tous d'office quand il est attaqué
 - **v0.69.2** : 🐢 plus une armée d'assaut est grande, plus elle avance lentement chez l'ennemi (sur les terres libres, rien ne change)
 - **v0.69.1** : ⚔️ améliorer une caserne coûte plus cher : 400 pour le niveau 2, 1600 pour le niveau 3
