@@ -102,7 +102,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      et **les moulins et casernes construits grâce à lui**. Ce qui est dans la muraille d'un château reste au défenseur.
    - **⚰️ Après-guerre et 🔥 galvanisation** : après un assaut réussi (château, église, port ou avant-poste pris),
      pendant **30 s**, le vainqueur panse ses blessures (**−25 %** de soldats produits), et le perdant est galvanisé
-     par la défaite (**+25 %**). La jauge des soldats l'indique.
+     par la défaite (**+25 %**). **Ces effets s'additionnent** : chaque victoire ajoute −25 % pendant ses 30 s
+     (jusqu'à −75 % : qui attaque trop le paie cher), chaque défaite ajoute +25 % (jusqu'à +100 % : qui est trop
+     ciblé peut se rattraper). La jauge des soldats indique le total.
 
    **✂️ Couper** : un royaume reste **d'un seul tenant**. Quand un assaut le coupe en morceaux, il ne garde
    que le plus grand : **celui qui a coupé prend d'un coup tous les autres**, **quelle que soit leur taille**,
@@ -323,6 +325,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.57.1** : ⚰️🔥 l'après-guerre et la galvanisation s'additionnent : −25 % par victoire récente (jusqu'à −75 %), +25 % par défaite récente (jusqu'à +100 %)
 - **v0.57** : 🌊 les fleuves ne se prennent plus jamais : ils restent neutres et bloquent l'expansion et les assauts ; on ne passe qu'en traversant à gué (10 s pour la 1re case, 6 s pour la 2e) · un royaume des deux côtés d'un fleuve reste un seul royaume
 - **v0.56** : 🏳️ annuler une attaque = retraite : 3 s pour décrocher, puis 15 % de pertes · bouton « Détruire » aussi dans la fenêtre d'un bâtiment, en haut à gauche
 - **v0.55.1** : le menu rapide des bâtiments n'a plus que deux icônes (⬆️ améliorer, ✖ détruire) ; la fenêtre explicative revient en haut à gauche

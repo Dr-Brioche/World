@@ -811,20 +811,28 @@ const GameRules = {
   },
 
   // Effets d'un assaut réussi sur la production de soldats (recrutement et casernes), pendant WAR_EFFECT_TIME s :
-  // le vainqueur subit un malus d'après-guerre, le perdant est galvanisé
-  postWar(p) { return p.postWarUntil !== undefined && this.tick < p.postWarUntil; },
-  rallied(p) { return p.rallyUntil !== undefined && this.tick < p.rallyUntil; },
+  // le vainqueur subit un malus d'après-guerre, le perdant est galvanisé. Ils s'additionnent : chaque victoire
+  // ajoute -25 % pendant 30 s (qui attaque trop le paie cher), chaque défaite +25 % (qui est trop ciblé se rattrape).
+  // postWar / rallied : le malus / bonus total en cours (0 = rien)
+  postWar(p) {
+    p.postWarEnds = (p.postWarEnds || []).filter(t => t > this.tick);
+    return Math.min(CONFIG.POST_WAR_MAX, p.postWarEnds.length * CONFIG.POST_WAR_MALUS);
+  },
+  rallied(p) {
+    p.rallyEnds = (p.rallyEnds || []).filter(t => t > this.tick);
+    return Math.min(CONFIG.RALLY_MAX, p.rallyEnds.length * CONFIG.RALLY_BONUS);
+  },
   warFactor(p) {
-    return (this.postWar(p) ? 1 - CONFIG.POST_WAR_MALUS : 1) * (this.rallied(p) ? 1 + CONFIG.RALLY_BONUS : 1);
+    return (1 - this.postWar(p)) * (1 + this.rallied(p));
   },
   warEffects(a) {
     const end = this.tick + CONFIG.WAR_EFFECT_TIME * CONFIG.TICKS_PER_SECOND;
     const p = this.players[a.attacker], d = a.target >= 0 ? this.players[a.target] : null;
-    p.postWarUntil = end;
-    if (d) d.rallyUntil = end;
+    (p.postWarEnds = p.postWarEnds || []).push(end);
+    if (d) (d.rallyEnds = d.rallyEnds || []).push(end);
     const secs = CONFIG.WAR_EFFECT_TIME;
-    if (p.isHuman) UI.log(`⚰️ Après-guerre : ton royaume panse ses blessures, −${Math.round(CONFIG.POST_WAR_MALUS * 100)} % de soldats produits pendant ${secs} s.`, 'warn');
-    if (d && d.isHuman) UI.log(`🔥 Ton peuple est galvanisé par la défaite : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s !`, 'good');
+    if (p.isHuman) UI.log(`⚰️ Après-guerre : ton royaume panse ses blessures, −${Math.round(CONFIG.POST_WAR_MALUS * 100)} % de soldats produits pendant ${secs} s (en tout : −${Math.round(this.postWar(p) * 100)} %).`, 'warn');
+    if (d && d.isHuman) UI.log(`🔥 Ton peuple est galvanisé par la défaite : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s (en tout : +${Math.round(this.rallied(d) * 100)} %) !`, 'good');
   },
 
   // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
