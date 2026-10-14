@@ -214,7 +214,7 @@ const CASTLE_LEVELS = [
   null,
   { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 10,  siege: 5,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
   { name: 'Château',      radius: 10, bonus: 2, garrison: 50,  siege: 10, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 300 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 150, siege: 15, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 1000 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 150, siege: 15, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000 },
 ];
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
 // le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.

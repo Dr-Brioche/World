@@ -61,6 +61,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
    de la frontière. **Tant qu'un royaume a un château, une église, un port ou un avant-poste, tu ne peux viser que ceux-ci.**
+   **Exception — morceau coupé de ses châteaux** : si un morceau de son royaume n'a plus **aucun château** (il s'est fait
+   isoler du reste), personne ne le commande : tu peux **l'attaquer de front**, comme une terre désorganisée et
+   **vide** (aucun défenseur ne peut venir). En le survolant, tu vois « ⚠️ coupé de tous ses châteaux ». Mais si
+   son royaume arrive à le **relier à un château** (en reprenant des terres, ou en y bâtissant un château),
+   **l'assaut s'arrête**. Attention, ça marche aussi contre toi !
    Quand il n'en a **plus aucun**, clique n'importe où sur ses terres : l'assaut se fait
    **de front, sur tout son territoire** (comme sur une terre libre).
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
@@ -212,7 +217,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Fort en bois | +100 % | petite | quelques soldats | 💰 100 (puis plus cher à chaque château) |
      | 2. Château | +200 % | moyenne | x5 | 💰 300 |
-     | 3. Citadelle | +400 % | grande | x3 | 💰 1000 |
+     | 3. Citadelle | +400 % | grande | x3 | 💰 3000 |
 
      Chaque soldat de garnison **vaut 3 soldats** au combat. **Une citadelle** permet aussi de mener
      **2 assauts en même temps** contre un même royaume (sur deux de ses cibles différentes).
@@ -373,6 +378,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.69** : ⚠️ un morceau de royaume coupé de tous ses châteaux s'attaque de front, sans défenseurs, jusqu'à ce que son royaume le relie à un château (l'assaut s'arrête alors) · 🏰 la citadelle (château niveau 3) coûte 3000
 - **v0.68** : 🔎 clic sur le nom (en rouge) d'un royaume qui t'attaque : la caméra va voir son armée · ⏱️ les renforts d'un assaut marchent depuis sa cité de départ : plus l'armée est loin, plus ils mettent de temps · 🐛 correction : l'armée part bien vers le point où commence son chemin chez l'ennemi (la marche, la flèche et le chemin coïncident) · 🤖 les royaumes rivaux n'envoient plus leurs soldats au compte-gouttes : ils attendent et envoient de plus gros paquets · 🩸 une armée en marche perd un pourcentage de ses hommes à chaque case (une grosse armée perd plus qu'une petite)
 - **v0.67** : 🛤️ un port à moins de 30 cases d'une ville (château) est relié à elle par un chemin de terre : +30 % d'or · ⛪ une église construite sur ce chemin produit un peu d'or (+2 💰 toutes les 10 s)
 - **v0.66.3** : 🛶 traverser un fleuve ne coûte plus aucun soldat : seulement le temps de la traversée (10 s, +6 s pour un fleuve double)
