@@ -48,7 +48,9 @@ const GameRules = {
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
     // Les bots reçoivent au hasard les bannières que le joueur n'a pas prises
     const banners = BANNERS.map((b, k) => k).filter(k => k !== opts.banner).sort(() => Math.random() - 0.5);
-    for (let k = 0; k < this.difficulty.bots && k < names.length && k < banners.length; k++) {
+    // (la carte « Monde » est grande : quelques royaumes de plus)
+    const bots = this.difficulty.bots + (this.mapType === 'world' ? CONFIG.WORLD_EXTRA_BOTS : 0);
+    for (let k = 0; k < bots && k < names.length && k < banners.length; k++) {
       this.addPlayer(names[k], banners[k], false);
     }
     this.phase = 'spawn';

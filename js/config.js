@@ -6,6 +6,9 @@ const CONFIG = {
   // --- Carte ---
   MAP_WIDTH: 294,          // largeur de la carte (en cases)
   MAP_HEIGHT: 192,         // hauteur de la carte (en cases)
+  WORLD_MAP_WIDTH: 540,    // taille de la carte « Monde » (bien plus grande : on dézoome beaucoup)
+  WORLD_MAP_HEIGHT: 204,
+  WORLD_EXTRA_BOTS: 3,     // royaumes en plus sur la carte « Monde » (elle est grande)
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
