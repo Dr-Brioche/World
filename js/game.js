@@ -37,10 +37,15 @@ const GameRules = {
     this.castles = [];
     this.tick = 0;
     this.version = 0; // augmente à chaque changement de la carte
+    // (calculs gardés en mémoire d'une partie à l'autre : on les oublie)
+    this.regionsCache = null; this.regionsVersion = -1; this.nbStatsVersion = -1; this.nbStatsTick = undefined; this.assaultPlans = new Map();
     this.roadsVersion = -1;
     this.regionsVersion = -1;
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
+    // Grande carte (Monde, Europe) : les terres libres se prennent plus vite et coûtent moins de soldats,
+    // sinon la partie n'en finirait pas (x1 sur les cartes aléatoires, jusqu'à x BIG_MAP_BOOST_MAX)
+    this.landBoost = Math.min(CONFIG.BIG_MAP_BOOST_MAX, Math.max(1, Math.sqrt(this.landCount / CONFIG.BIG_MAP_LAND)));
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
     this.pactsAllowed = opts.pacts !== false; // choisi dans le menu : pactes autorisés ou interdits
@@ -48,8 +53,8 @@ const GameRules = {
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
     // Les bots reçoivent au hasard les bannières que le joueur n'a pas prises
     const banners = BANNERS.map((b, k) => k).filter(k => k !== opts.banner).sort(() => Math.random() - 0.5);
-    // (la carte « Monde » est grande : quelques royaumes de plus)
-    const bots = this.difficulty.bots + (this.mapType === 'world' ? CONFIG.WORLD_EXTRA_BOTS : 0);
+    // (les cartes « Monde » et « Europe » sont grandes : quelques royaumes de plus)
+    const bots = this.difficulty.bots + (this.mapType === 'world' || this.mapType === 'europe' ? CONFIG.WORLD_EXTRA_BOTS : 0);
     for (let k = 0; k < bots && k < names.length && k < banners.length; k++) {
       this.addPlayer(names[k], banners[k], false);
     }
@@ -314,6 +319,7 @@ const GameRules = {
     this.buildingTiles = this.buildingTiles.filter(b => b !== a);
     this.castles = this.castles.filter(c => c !== a);
     this.version++;
+    this.regionsCache = null;
   },
 
   churchesOf(pid) { return this.buildingTiles.filter(a => this.building[a] === B_CHURCH && this.owner[a] === pid); },
@@ -343,6 +349,7 @@ const GameRules = {
 
   placeBuilding(i, type) {
     this.version++;
+    this.regionsCache = null; // (le découpage dépend des bâtiments : à refaire)
     for (const j of this.footprint(i, type)) {
       this.building[j] = type;
       this.anchor[j] = i;
@@ -505,6 +512,7 @@ const GameRules = {
       const p = this.players[this.owner[a]];
       if (!o.settled && this.tick >= o.ready) {
         o.settled = true;
+        this.regionsCache = null; // (l'avant-poste bâti change le découpage)
         this.version++; // l'avant-poste devient une base d'attaque
         // Une petite garnison fixe reste ; les autres soldats stationnent et peuvent partir à l'attaque
         const keep = Math.min(CONFIG.OUTPOST_GARRISON, this.garrison[a]);
@@ -527,6 +535,7 @@ const GameRules = {
       const p = this.players[pid];
       p.troops += this.garrison[a] + o.stationed;
       this.colonies.set(castle, pid);
+      this.regionsCache = null;
       this.removeBuilding(a);
       if (p.isHuman) UI.log('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', 'good');
       return; // la carte a changé : on regardera les autres au prochain tour
@@ -550,7 +559,7 @@ const GameRules = {
     p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, path: best.path, cost: 0, sent: troops,
-      reinforce: a, port: best.port, interceptors: [], troops: troops * (1 - this.seaLoss(best.time)),
+      reinforce: a, port: best.port, troops: troops * (1 - this.seaLoss(best.time)),
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
     return null;
   },
@@ -943,25 +952,43 @@ const GameRules = {
   // continent pouvait alors faire passer toute l'île du royaume pour « coupée » (et ses châteaux pour isolés).
   // (un royaume qui s'étend sur plusieurs îles, par la mer, n'est donc pas « coupé » d'une île à l'autre)
   // Recalculé seulement quand la carte change.
-  regions() {
-    if (this.regionsVersion === this.version) return this.regionsCache;
-    const comp = new Int32Array(this.N).fill(-1), order = new Int32Array(this.N);
+  // (fresh = false : on réutilise le découpage déjà fait pendant REGIONS_REUSE tours de jeu, même si quelques cases
+  //  ont changé de mains entre-temps : sur une grande carte, le refaire à chaque tour ralentirait le jeu.
+  //  fresh = true : toujours à jour, pour décider des encerclements.)
+  regions(fresh = false) {
+    if (this.regionsCache && this.regionsVersion === this.version) return this.regionsCache;
+    if (!fresh && this.regionsCache && this.tick - this.regionsTick < CONFIG.REGIONS_REUSE && this.tick >= this.regionsTick) return this.regionsCache;
+    this.regionsTick = this.tick;
+    // (order est réutilisé d'un calcul à l'autre : ceux qui s'en servent en recopient tout de suite un morceau)
+    if (!this.regionsOrder || this.regionsOrder.length !== this.N) this.regionsOrder = new Int32Array(this.N);
+    const comp = new Int32Array(this.N).fill(-1), order = this.regionsOrder;
     const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [], hasCastle = [];
     const main = new Array(this.players.length).fill(-1); // royaume → son plus grand morceau
     let n = 0;
     this.riverTiles(); // (prépare riverSide : les cases qui touchent un fleuve)
     const side = this.riverSide;
-    for (let i = 0; i < this.N; i++) {
-      const o = this.owner[i];
+    const W = this.W, N = this.N, own = this.owner;
+    // (cases d'en face, de l'autre côté d'un fleuve ; pas de fonction qui modifie n ou comp : c'est plus rapide)
+    const across = [], pushAcross = j => { across.push(j); };
+    for (let i = 0; i < N; i++) {
+      const o = own[i];
       if (o < 0 || comp[i] >= 0) continue;
       // Nouveau morceau : on le parcourt de proche en proche
+      // (les 4 voisins sont écrits à la main : c'est la fonction la plus appelée des grandes cartes)
       const k = size.length, s = n;
       comp[i] = k;
       order[n++] = i;
       for (let q = s; q < n; q++) {
-        const add = j => { if (comp[j] < 0 && this.owner[j] === o) { comp[j] = k; order[n++] = j; } };
-        this.forNeighbors(order[q], add);
-        if (side[order[q]]) this.acrossRiver(order[q], add); // les deux rives d'un fleuve restent un même morceau
+        const t = order[q], x = t % W;
+        if (x > 0 && comp[t - 1] < 0 && own[t - 1] === o) { comp[t - 1] = k; order[n++] = t - 1; }
+        if (x < W - 1 && comp[t + 1] < 0 && own[t + 1] === o) { comp[t + 1] = k; order[n++] = t + 1; }
+        if (t >= W && comp[t - W] < 0 && own[t - W] === o) { comp[t - W] = k; order[n++] = t - W; }
+        if (t < N - W && comp[t + W] < 0 && own[t + W] === o) { comp[t + W] = k; order[n++] = t + W; }
+        if (side[t]) { // les deux rives d'un fleuve restent un même morceau
+          across.length = 0;
+          this.acrossRiver(t, pushAcross);
+          for (const j of across) if (comp[j] < 0 && own[j] === o) { comp[j] = k; order[n++] = j; }
+        }
       }
       size.push(n - s); start.push(s); owner.push(o);
       // Ce morceau a-t-il un avant-poste (bâti ou non), ou le château d'une ancienne zone d'avant-poste ?
@@ -989,6 +1016,12 @@ const GameRules = {
     this.regionsCache = { comp, order, size, start, owner, main, heart, outpost, anyOutpost, colony };
     this.regionsVersion = this.version;
     return this.regionsCache;
+  },
+
+  // Le découpage, à jour pour la case i : si elle a changé de mains depuis le dernier calcul, on le refait
+  regionsAt(i) {
+    const r = this.regions(), k = r.comp[i];
+    return k < 0 ? (this.owner[i] < 0 ? r : this.regions(true)) : r.owner[k] !== this.owner[i] ? this.regions(true) : r;
   },
 
   // Toutes les cases de fleuve de la carte (calculées une seule fois par carte)
@@ -1034,7 +1067,7 @@ const GameRules = {
     const o = this.owner[c];
     if (o < 0) return false;
     if (this.colonies.get(c) === o) return false; // château d'une ancienne zone d'avant-poste : terre du royaume
-    const r = this.regions();
+    const r = this.regionsAt(c);
     return !r.heart[r.comp[c]];
   },
 
@@ -1044,7 +1077,7 @@ const GameRules = {
   isBase(i) {
     const o = this.owner[i];
     if (o < 0) return false;
-    const r = this.regions(), k = r.comp[i];
+    const r = this.regionsAt(i), k = r.comp[i];
     return r.heart[k] || r.outpost[k] >= 0 || r.colony[k];
   },
 
@@ -1053,7 +1086,7 @@ const GameRules = {
   sourceOf(i) {
     const o = this.owner[i];
     if (o < 0) return null;
-    const r = this.regions(), k = r.comp[i];
+    const r = this.regionsAt(i), k = r.comp[i];
     if (r.heart[k]) return -1;
     if (r.outpost[k] >= 0) return r.outpost[k];
     return this.isBase(i) ? -1 : null;
@@ -1107,7 +1140,7 @@ const GameRules = {
   captureEnclaves(target, cutter = -1) {
     const T = this.players[target];
     if (!T.alive) return;
-    const r = this.regions(), pieces = [];
+    const r = this.regions(true), pieces = [];
     for (let k = 0; k < r.size.length; k++) {
       if (r.owner[k] !== target || r.heart[k]) continue;
       if (r.anyOutpost[k] || r.colony[k]) continue;
@@ -1155,10 +1188,21 @@ const GameRules = {
 
   // --- Attaques ---
   // (on n'attaque que depuis son propre territoire, ou depuis un avant-poste)
+  // Les cases de target qui touchent nos terres (celles d'où l'armée peut partir, voir touchesOwn).
+  // On part de nos propres cases (bien moins nombreuses que la carte entière) et on regarde leurs voisines.
   buildFrontier(pid, target, source) {
-    const list = [];
-    for (let i = 0; i < this.N; i++) {
-      if (this.owner[i] === target && this.claimable(i) && this.touchesOwn(i, pid, source)) list.push(i);
+    const list = [], W = this.W, N = this.N, own = this.owner, seen = new Set();
+    for (let i = 0; i < N; i++) {
+      if (own[i] !== pid) continue;
+      const x = i % W;
+      let ok; // cette case peut-elle servir de départ ? (calculé seulement si besoin)
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+        if (n < 0 || own[n] !== target || seen.has(n) || !this.claimable(n)) continue;
+        if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
+        if (!ok) break;
+        seen.add(n);
+        list.push(n);
+      }
     }
     return list;
   },
@@ -1292,7 +1336,21 @@ const GameRules = {
     const heap = new MinHeap();
     const start = i => { dist[i] = this.tileDefense(target, i); prev[i] = -1; heap.push(dist[i], i); };
     if (from >= 0) start(from);
-    else for (let i = 0; i < this.N; i++) if (passable(i) && this.touchesOwn(i, pid, source)) start(i);
+    else {
+      // départ : les cases passables qui touchent nos terres (on part de nos cases, bien moins nombreuses que la carte)
+      const W = this.W, N = this.N, own = this.owner;
+      for (let i = 0; i < N; i++) {
+        if (own[i] !== pid) continue;
+        const x = i % W;
+        let ok;
+        for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+          if (n < 0 || own[n] === pid || prev[n] !== -2 || !passable(n)) continue;
+          if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
+          if (!ok) break;
+          start(n);
+        }
+      }
+    }
     while (heap.size) {
       const [d, i] = heap.pop();
       if (done[i]) continue;
@@ -1331,9 +1389,17 @@ const GameRules = {
 
   // Pour les bots : quel château viser, et quelle défense de terrain attendre au premier combat ?
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
+  // (gardé 2 secondes en mémoire : chercher les chemins coûte cher sur une grande carte)
   planAssault(pid, target) {
-    const castles = this.nearestTargets(pid, target);
     if (!this.isProtected(target)) return { castle: null, D: 1.3 };
+    const key = pid * 1000 + target, old = (this.assaultPlans = this.assaultPlans || new Map()).get(key);
+    if (old && this.tick - old.tick < 2 * CONFIG.TICKS_PER_SECOND && (old.plan.castle < 0 || this.owner[old.plan.castle] === target)) return old.plan;
+    const plan = this.computeAssaultPlan(pid, target);
+    this.assaultPlans.set(key, { tick: this.tick, plan });
+    return plan;
+  },
+  computeAssaultPlan(pid, target) {
+    const castles = this.nearestTargets(pid, target);
     let best = { castle: -1, D: 1 }, bestLen = Infinity;
     for (const c of castles) {
       const path = this.castlePath(pid, c);
@@ -1366,7 +1432,7 @@ const GameRules = {
 
   // Cases du morceau de territoire où se trouve le château c (lui et ce qui reste dans sa muraille)
   castlePiece(c) {
-    const r = this.regions(), k = r.comp[c];
+    const r = this.regionsAt(c), k = r.comp[c];
     return new Set(r.order.subarray(r.start[k], r.start[k] + r.size[k]));
   },
 
@@ -1632,7 +1698,7 @@ const GameRules = {
     o.stationed -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, home: best.port,
-      path: best.path.slice().reverse(), sent: troops, interceptors: [],
+      path: best.path.slice().reverse(), sent: troops,
       troops: troops * (1 - this.seaLoss(best.time)),
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
     return null;
@@ -1661,80 +1727,14 @@ const GameRules = {
     p.lastExpedition = this.tick;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: i, path: plan.path, cost: plan.cost, sent: troops,
-      interceptors: [], // bateaux ennemis partis l'intercepter
       troops: troops * (1 - this.seaLoss(plan.time)), // ceux qui arriveront
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(plan.time * TPS)) });
     // Prévenir les royaumes dont la côte est visée
     const o = this.owner[i];
     if (o >= 0 && this.players[o].isHuman) {
-      UI.log(`⛵ ${p.name} envoie une expédition vers ta côte ! Avec un port, clique sur son bateau pour l'intercepter.`, 'warn', p);
+      UI.log(`⛵ ${p.name} envoie une expédition vers ta côte ! Tiens-toi prêt à attaquer son avant-poste quand elle accostera.`, 'warn', p);
     }
     return null;
-  },
-
-  // --- Intercepter un débarquement ---
-  // Avec un port (de n'importe quel niveau), on peut envoyer des soldats en bateau jusqu'à la côte visée
-  // par une expédition ennemie. S'ils y arrivent avant elle, il y a bataille en mer à son arrivée.
-  // Renvoie { error } ou { port, path, arrive } (le plus rapide de ses ports).
-  planInterception(pid, e) {
-    if (e.pid === pid || this.areAllied(pid, e.pid)) return { error: 'Ce bateau n\'est pas ennemi.' };
-    if (e.home !== undefined) return { error: 'Ce bateau rentre au port : il ne débarque nulle part.' };
-    const ports = this.buildingTiles.filter(a => this.building[a] === B_PORT && this.owner[a] === pid);
-    if (!ports.length) return { error: 'Il te faut un port pour intercepter un débarquement.' };
-    let best = null;
-    for (const a of ports) {
-      const path = this.boatPath(a, e.landing);
-      if (!path) continue;
-      const speed = Math.max(this.buildingInfo(a).boatSpeed, CONFIG.INTERCEPT_SPEED);
-      const arrive = this.tick + Math.max(1, Math.round(path.length / speed * CONFIG.TICKS_PER_SECOND));
-      if (!best || arrive < best.arrive) best = { port: a, path, arrive };
-    }
-    if (!best) return { error: 'Aucun de tes ports ne peut rejoindre ces eaux.' };
-    if (best.arrive > e.arrive) return { error: 'Trop loin : tes bateaux arriveraient après le débarquement.' };
-    return best;
-  },
-
-  launchInterception(pid, expeditionId, troops) {
-    const e = this.expeditions.find(x => x.id === expeditionId && !x.done), p = this.players[pid];
-    if (!e) return 'Cette expédition est déjà arrivée.';
-    const plan = this.planInterception(pid, e);
-    if (plan.error) return plan.error;
-    troops = Math.floor(Math.min(troops, p.troops));
-    if (troops < 1) return 'Pas assez de soldats !';
-    p.troops -= troops;
-    e.interceptors.push({ pid, troops, path: plan.path, start: this.tick, arrive: plan.arrive });
-    if (this.players[e.pid].isHuman) UI.log(`⚓ ${p.name} envoie des bateaux intercepter ton expédition !`, 'warn', p);
-    return null;
-  },
-
-  // Bataille en mer à l'arrivée de l'expédition e : chaque escadre qui l'attend la combat (1 contre 1,
-  // corrigé par la force des soldats). Renvoie les soldats de l'expédition qui restent.
-  seaBattle(e) {
-    let troops = e.troops;
-    const p = this.players[e.pid];
-    for (const it of e.interceptors) {
-      const q = this.players[it.pid];
-      if (!q.alive) continue;
-      if (troops < 1) { q.troops += it.troops; continue; } // plus personne à combattre : retour au port
-      const pe = this.troopPower(e.pid), pi = this.troopPower(it.pid);
-      const se = troops * pe, si = it.troops * pi;
-      if (si >= se) {
-        q.troops += (si - se) / pi; // les survivants rentrent
-        troops = 0;
-        if (q.isHuman) UI.log(`⚓ Ton escadre a coulé l'expédition ${this.deName(p.name)} !`, 'good', p);
-        if (p.isHuman) UI.log(`⚓ ${q.name} a intercepté et coulé ton expédition !`, 'warn', q);
-      } else {
-        troops = (se - si) / pe;
-        if (q.isHuman) UI.log(`⚓ Ton escadre n'a pas suffi : l'expédition ${this.deName(p.name)} débarque quand même.`, 'warn', p);
-        if (p.isHuman) UI.log(`⚓ Ton expédition a repoussé les bateaux ${this.deName(q.name)}, mais avec des pertes.`, 'warn', q);
-      }
-    }
-    return troops;
-  },
-
-  // Les soldats d'escadres qui n'ont pas eu à combattre rentrent
-  returnInterceptors(e) {
-    for (const it of e.interceptors) if (this.players[it.pid].alive) this.players[it.pid].troops += it.troops;
   },
 
   // Les bateaux arrivés débarquent : ils prennent les terres libres autour et y bâtissent un avant-poste
@@ -1833,8 +1833,6 @@ const GameRules = {
       const k = Math.min(1, (this.tick - e.start) / Math.max(1, e.arrive - e.start));
       const idx = Math.min(e.path.length - 1, Math.floor(k * e.path.length));
       const back = Math.max(1, this.tick - e.start);
-      this.returnInterceptors(e);
-      e.interceptors = [];
       e.reinforce = undefined;
       e.home = e.port;
       e.path = e.path.slice(0, idx + 1).reverse();
@@ -1846,7 +1844,7 @@ const GameRules = {
       if (this.tick < e.arrive) continue;
       e.done = true;
       const p = this.players[e.pid];
-      if (!p.alive) { this.returnInterceptors(e); continue; }
+      if (!p.alive) continue;
       // Soldats rapatriés d'un avant-poste : ils rejoignent l'armée
       if (e.home !== undefined) {
         p.troops += e.troops;
@@ -1855,8 +1853,6 @@ const GameRules = {
       }
       // Renforts pour un avant-poste : ils rejoignent sa garnison (ou rentrent s'il n'existe plus)
       if (e.reinforce !== undefined) {
-        if (e.interceptors.length) e.troops = this.seaBattle(e);
-        if (e.troops < 1) continue;
         if (this.building[e.reinforce] === B_OUTPOST && this.owner[e.reinforce] === e.pid) {
           // bâti : on complète la garnison, les autres stationnent (prêts à agir) ; en construction : tous bâtissent
           const a = e.reinforce, o = this.outposts.get(a);
@@ -1874,16 +1870,10 @@ const GameRules = {
       }
       const zone = this.landingZone(e.pid, e.landing);
       if (!this.landable(e.pid, e.landing) || zone.anchor < 0) {
-        this.returnInterceptors(e);
         p.gold += e.cost; // la côte n'est plus possible (prise par soi ou un allié, bâtie…) : l'or est rendu
         p.troops += e.troops; // et les soldats rentrent
         if (p.isHuman) UI.log('⛵ Impossible de débarquer sur la côte visée : l\'expédition rentre (or et soldats rendus).', 'warn');
         continue;
-      }
-      // Bataille en mer contre ceux qui attendent l'expédition
-      if (e.interceptors.length) {
-        e.troops = this.seaBattle(e);
-        if (e.troops < 1) continue; // expédition coulée : l'or est perdu
       }
       const victims = new Set(zone.tiles.map(j => this.owner[j]).filter(o => o >= 0));
       for (const j of zone.tiles) this.setOwner(j, e.pid);
@@ -2007,8 +1997,9 @@ const GameRules = {
 
   // Prendre une case coûte comme une terre libre (selon le terrain), même chez l'ennemi :
   // ce sont les soldats du défenseur qui rendent un assaut coûteux (voir fight).
+  // (sur une grande carte, une terre libre coûte moins : voir landBoost)
   tileCost(a, t) {
-    return CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost;
+    return CONFIG.NEUTRAL_TILE_COST * TERRAIN_INFO[this.terrain[t]].cost / (a.target < 0 ? this.landBoost : 1);
   },
 
   // Défense de l'endroit où se trouve l'assaut : terrain + château (x0.5 si le défenseur est traître).
@@ -2160,7 +2151,7 @@ const GameRules = {
   outpostZoneOf(a) {
     const t = a.targetCastle >= 0 ? a.targetCastle : a.frontTile;
     if (t < 0 || a.target < 0 || this.owner[t] !== a.target) return -1;
-    const r = this.regions(), k = r.comp[t];
+    const r = this.regionsAt(t), k = r.comp[t];
     if (k < 0 || r.heart[k]) return -1;
     return r.outpost[k] >= 0 ? r.outpost[k] : -1;
   },
@@ -2305,7 +2296,7 @@ const GameRules = {
     // Contre un royaume, l'armée avance ASSAULT_SLOWDOWN fois moins vite (elle traverse des terres défendues).
     let speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
     if (a.target >= 0) speed /= CONFIG.ASSAULT_SLOWDOWN;
-    else speed *= this.earlyBoost(); // élan de départ : les terres libres se prennent plus vite au début
+    else speed *= this.earlyBoost() * this.landBoost; // élan de départ (et grande carte) : les terres libres se prennent plus vite
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
     while (!a.done) {
@@ -2721,6 +2712,7 @@ const GameRules = {
     this.stepWorks();
     this.stepOutposts();
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
+    // (le découpage n'est refait que si l'un d'eux a vraiment englobé des terres)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive) this.captureEnclaves(p.id);
 
     for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
@@ -2751,16 +2743,30 @@ const GameRules = {
   },
 
   // Combien de cases de frontière avec chaque voisin (-1 = terres libres).
+  // Calculé pour tous les royaumes d'un coup (les bots le demandent souvent).
   neighborStats(pid) {
-    const stats = new Map();
-    for (let i = 0; i < this.N; i++) {
-      if (this.owner[i] !== pid) continue;
-      this.forNeighbors(i, n => {
-        const o = this.owner[n];
-        if (o !== pid && this.claimable(n)) stats.set(o, (stats.get(o) || 0) + 1);
-      });
+    // (au plus une fois par seconde : les bots n'ont pas besoin d'un compte exact à chaque instant)
+    if (this.nbStatsVersion !== this.version && !(this.tick - this.nbStatsTick < CONFIG.TICKS_PER_SECOND)) {
+      this.nbStatsVersion = this.version;
+      this.nbStatsTick = this.tick;
+      const all = this.players.map(() => new Map()), W = this.W, N = this.N, own = this.owner;
+      const count = (o, j) => {
+        const q = own[j];
+        if (q !== o && this.claimable(j)) all[o].set(q, (all[o].get(q) || 0) + 1);
+      };
+      for (let i = 0; i < N; i++) {
+        const o = own[i];
+        if (o < 0) continue;
+        const x = i % W;
+        // (une case entourée des siennes ne compte pas : on passe vite)
+        if (x > 0 && own[i - 1] !== o) count(o, i - 1);
+        if (x < W - 1 && own[i + 1] !== o) count(o, i + 1);
+        if (i >= W && own[i - W] !== o) count(o, i - W);
+        if (i < N - W && own[i + W] !== o) count(o, i + W);
+      }
+      this.nbStatsCache = all;
     }
-    return stats;
+    return this.nbStatsCache[pid];
   },
 };
 

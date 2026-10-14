@@ -581,7 +581,6 @@ const Render = {
   // Bateaux d'expédition : ils avancent sur l'eau vers la côte visée (visibles par tous)
   drawExpeditions(ox, oy) {
     const G = Game;
-    this.boatHits = [];
     // Traversées de fleuve : un radeau avance le long du gué
     for (const c of G.crossings) {
       const t = Math.min(1, (G.tick - c.start) / Math.max(1, c.arrive - c.start));
@@ -590,13 +589,7 @@ const Render = {
     for (const e of G.expeditions) {
       // soldats à bord (ils diminuent un peu pendant la traversée)
       const t = Math.min(1, (G.tick - e.start) / Math.max(1, e.arrive - e.start));
-      const pos = this.drawBoat(ox, oy, e.path, t, e.pid, e.sent - (e.sent - e.troops) * t);
-      this.boatHits.push({ id: e.id, x: pos.x, y: pos.y });
-      // les escadres parties l'intercepter
-      for (const it of e.interceptors) {
-        const u = Math.min(1, (G.tick - it.start) / Math.max(1, it.arrive - it.start));
-        this.drawBoat(ox, oy, it.path, u, it.pid, it.troops);
-      }
+      this.drawBoat(ox, oy, e.path, t, e.pid, e.sent - (e.sent - e.troops) * t);
     }
   },
 
@@ -627,14 +620,6 @@ const Render = {
     ctx.strokeText('⚔ ' + fmt(troops), x, y - 18);
     ctx.fillText('⚔ ' + fmt(troops), x, y - 18);
     return { x, y };
-  },
-
-  // Bateau d'expédition cliqué (à l'écran) : renvoie l'id de l'expédition, ou -1
-  boatAt(sx, sy) {
-    for (const b of this.boatHits || []) {
-      if (Math.abs(sx - b.x) < 22 && Math.abs(sy - b.y) < 22) return b.id;
-    }
-    return -1;
   },
 
   // Bannière cliquée (à l'écran) : renvoie l'id de l'assaut, ou -1
