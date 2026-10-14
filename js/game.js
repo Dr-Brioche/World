@@ -665,7 +665,7 @@ const GameRules = {
       if ((this.tick + a * 7) % period !== 0) continue;
       const p = this.players[this.owner[a]];
       if (!p || !p.alive) continue;
-      const amount = this.buildingOutput(a) * (t === B_BARRACKS ? this.warFactor(p) : 1);
+      const amount = this.buildingOutput(a) * (t === B_BARRACKS ? this.warFactor(p) : this.upkeepFactor(p));
       let shown = amount;
       if (t === B_MILL || t === B_PORT) p.gold += amount;
       else {
@@ -746,7 +746,14 @@ const GameRules = {
     const max = this.maxTroops(p), army = this.armySize(p);
     if (army >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + p.tiles * CONFIG.TROOP_GROWTH_PER_TILE;
-    return base * this.growthFactor(army / max) * this.warFactor(p);
+    return base * this.growthFactor(army / max) * this.warFactor(p) * this.earlyBoost();
+  },
+
+  // Élan de départ : multiplicateur du recrutement, de 1 + EARLY_GROWTH_BONUS au début de la partie
+  // jusqu'à 1 au bout de EARLY_GROWTH_TIME secondes
+  earlyBoost() {
+    const t = this.tick / (CONFIG.EARLY_GROWTH_TIME * CONFIG.TICKS_PER_SECOND);
+    return 1 + CONFIG.EARLY_GROWTH_BONUS * Math.max(0, 1 - t);
   },
 
   // Effets d'un assaut réussi sur la production de soldats (recrutement et casernes), pendant WAR_EFFECT_TIME s :
@@ -775,7 +782,15 @@ const GameRules = {
   },
 
   goldRate(p) {
-    return CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE;
+    return (CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE) * this.upkeepFactor(p);
+  },
+
+  // Solde des troupes : multiplicateur de l'or gagné (1 = rien à payer). Au-delà de UPKEEP_FROM de l'armée
+  // maximum, les soldats disponibles en surnombre coûtent de l'or, jusqu'à -UPKEEP_MAX avec une armée pleine.
+  upkeepFactor(p) {
+    const r = p.troops / Math.max(1, this.maxTroops(p));
+    if (r <= CONFIG.UPKEEP_FROM) return 1;
+    return 1 - CONFIG.UPKEEP_MAX * Math.min(1, (r - CONFIG.UPKEEP_FROM) / (1 - CONFIG.UPKEEP_FROM));
   },
 
   buildCost(p, type) {
@@ -2004,6 +2019,7 @@ const GameRules = {
     // Contre un royaume, l'armée avance ASSAULT_SLOWDOWN fois moins vite (elle traverse des terres défendues).
     let speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED);
     if (a.target >= 0) speed /= CONFIG.ASSAULT_SLOWDOWN;
+    else speed *= this.earlyBoost(); // élan de départ : les terres libres se prennent plus vite au début
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
     while (!a.done) {

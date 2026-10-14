@@ -428,7 +428,8 @@ const UI = {
     else if (eff > 0.85) tip = 'recrutement au top';
     // Effets d'un assaut réussi (voir warFactor)
     const war = (G.postWar(h) ? ` · <span style="color:#b8322a">⚰️ après-guerre −${Math.round(CONFIG.POST_WAR_MALUS * 100)} %</span>` : '') +
-      (G.rallied(h) ? ` · <span style="color:#2f6b2a">🔥 galvanisé +${Math.round(CONFIG.RALLY_BONUS * 100)} %</span>` : '');
+      (G.rallied(h) ? ` · <span style="color:#2f6b2a">🔥 galvanisé +${Math.round(CONFIG.RALLY_BONUS * 100)} %</span>` : '') +
+      (G.upkeepFactor(h) < 0.995 ? ` · <span style="color:#b8322a">💰 solde des troupes −${Math.round((1 - G.upkeepFactor(h)) * 100)} % d'or</span>` : '');
     $('troopRate').innerHTML = `<b style="color:${color}">${tip}</b>${war}`;
   },
 
