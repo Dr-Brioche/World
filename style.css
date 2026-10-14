@@ -336,5 +336,6 @@ button:hover { background: #e8d6a8; }
   max-width: 250px;
 }
 .actionMenu button { text-align: left; }
+.actionMenu .menuHead { font-size: 13px; padding: 2px 4px 5px; border-bottom: 1px solid var(--parchment-dark); }
 .actionMenu button:disabled { opacity: 0.5; cursor: not-allowed; }
 .actionMenu small { color: var(--danger); font-size: 11px; margin: -2px 4px 2px; }

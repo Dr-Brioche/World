@@ -123,6 +123,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      de ton assaut rejoignent sa défense.
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
+   **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, pour **⬆️ l'améliorer** (travaux de **5 s**)
+   ou **🧨 le détruire** (travaux de **10 s**). Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
+   recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise) ; les châteaux pris à l'ennemi
    ne comptent pas dans cette limite, et une **église** améliorée en débloque d'autres.
@@ -138,7 +141,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    (l'aperçu devient rouge si c'est trop près).
    Si un ennemi prend une seule de ces cases, il capture tout le bâtiment !
    - 🌾 **Moulin** : **toutes les 10 secondes**, il verse un peu d'or d'un coup
-     (un petit chiffre `+2 💰` s'envole au-dessus de lui). **Clique dessus pour l'améliorer** (2 niveaux) :
+     (un petit chiffre `+2 💰` s'envole au-dessus de lui). **Clique dessus pour l'améliorer** (menu rapide) (2 niveaux) :
 
      | Niveau | Or produit | Prix |
      |---|---|---|
@@ -150,7 +153,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      riche trop vite en en accumulant (le survol d'un moulin montre son rendement).
 
    - ⚔️ **Caserne** : **toutes les 10 secondes**, elle forme quelques soldats (`+3 ⚔️` au-dessus d'elle),
-     et elle agrandit ton armée maximum. **Clique dessus pour l'améliorer** (3 niveaux) :
+     et elle agrandit ton armée maximum. **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
 
      | Niveau | Soldats produits | Bonus d'armée max | Force de **tous** tes soldats | Prix |
      |---|---|---|---|---|
@@ -169,7 +172,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Seules les cases à l'intérieur de la muraille sont renforcées : le bonus s'ajoute à la défense du terrain.
      Pendant que tu le poses (ou l'améliores), une **petite bulle** près de la souris montre la **défense totale**
      de sa muraille à cet endroit (terrain + murs, en moyenne) : en forêt ou en colline, elle est bien plus forte.
-     **Clique sur un de tes châteaux pour l'améliorer** (3 niveaux) :
+     **Clique sur un de tes châteaux pour l'améliorer** (menu rapide) (3 niveaux) :
 
      | Niveau | Défense des murs | Muraille | Garnison | Prix |
      |---|---|---|---|---|
@@ -194,7 +197,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Attention : elle **n'est pas défendue** (pas de bonus de défense, pas de garnison), et on peut
      **l'attaquer directement, comme un château** : clique sur une église ennemie pour lancer un assaut
      (il contourne les murailles des châteaux et s'arrête une fois l'église prise).
-     **Clique dessus pour l'améliorer** (3 niveaux) :
+     **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
 
      | Niveau | Moulins ou casernes autour d'elle | Châteaux en plus dans le royaume | Prix |
      |---|---|---|---|
@@ -208,7 +211,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Il **n'est pas défendu** :
      on peut l'attaquer directement, comme un château. **Toutes les 10 secondes**, il rapporte de l'or.
-     **Clique dessus pour l'améliorer** (3 niveaux) :
+     **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
 
      | Niveau | Or produit | Moulins ou casernes autour | Expéditions maritimes | Prix |
      |---|---|---|---|---|
@@ -316,6 +319,7 @@ il faut les contourner.
 
 ## 🆕 Nouveautés
 
+- **v0.55** : 🛠️ clic sur un de ses bâtiments → menu rapide juste à côté : l'améliorer (5 s de travaux) ou le détruire (10 s), avec une petite jauge qui se remplit
 - **v0.54.3** : 👆 en survolant un bâtiment sélectionnable, la souris devient une main et le bâtiment s'illumine (doré chez soi, rouge chez l'ennemi)
 - **v0.54.2** : en construisant, l'image du bâtiment apparaît sous la souris (sur un carré vert ou rouge) au lieu d'un simple carré
 - **v0.54.1** : les pactes sont interdits par défaut dans le menu de départ (chacun pour soi) ; on peut toujours les autoriser

@@ -54,6 +54,8 @@ const CONFIG = {
   PRODUCTION_INTERVAL: 10,   // moulins et casernes produisent toutes les 10 secondes
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type construit soi-même rend le suivant x1.5 plus cher
                              // (ceux pris à l'ennemi ne comptent pas)
+  UPGRADE_TIME: 5,           // secondes de travaux pour améliorer un bâtiment
+  DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   MAX_CASTLES: 3,            // châteaux qu'un royaume peut construire dans la partie (capitale comprise ;
