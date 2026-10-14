@@ -417,7 +417,7 @@ const UI = {
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
     if (o >= 0 && !G.building[i] && G.isUnlinked(i)) {
-      txt += o === G.human.id ? ' · 🚩 coupé de tous tes châteaux : l\'ennemi peut l\'attaquer directement (relie-le à un château ou bâtis-en un)'
+      txt += o === G.human.id ? ' · 🚩 coupé de tous tes châteaux : tes soldats sont bloqués dans ton château isolé, ce territoire n\'est plus défendu et aucune armée ne peut en partir ! Relie-le à un château (clique sur ton château isolé) ou bâtis-en un nouveau'
         : ' · ⚠️ coupé de tous ses châteaux : clique pour l\'attaquer de front (personne ne le défend)';
     }
     const info = G.building[i] ? G.buildingInfo(G.anchor[i]) : null;

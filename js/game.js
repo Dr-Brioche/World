@@ -101,6 +101,13 @@ const GameRules = {
     if (y < this.H - 1) cb(i + this.W);
   },
 
+  // Une des 4 voisines de la case i vérifie-t-elle test(n) ?
+  hasNeighbor(i, test) {
+    let found = false;
+    this.forNeighbors(i, n => { if (!found && test(n)) found = true; });
+    return found;
+  },
+
   hasNeighborOwnedBy(i, pid) {
     let found = false;
     this.forNeighbors(i, n => { if (this.owner[n] === pid) found = true; });
@@ -1080,19 +1087,35 @@ const GameRules = {
   },
 
   // Morceau de royaume coupé de tous ses châteaux : il n'a ni château ni avant-poste, alors que son royaume
-  // est protégé ailleurs. Personne ne le commande : on peut l'attaquer de front, comme une terre désorganisée
-  // et vide (aucun défenseur ne peut y venir), tant que son royaume ne l'a pas relié à un château.
-  isUnlinked(i) {
-    const o = this.owner[i];
-    if (o < 0 || !this.isProtected(o)) return false;
-    const r = this.regionsAt(i), k = r.comp[i];
-    return k >= 0 && !r.hasCastle[k] && !r.anyOutpost[k];
+  // a encore un château ailleurs (isolé, par exemple). Ses soldats sont bloqués dans ce château :
+  //  - personne ne peut venir le défendre (on l'attaque de front, comme une terre vide) ;
+  //  - aucune armée ne peut en partir (il n'a pas de château, la « zone de départ » des armées).
+  // Le seul moyen d'en sortir : le relier à un château (assaut de jonction depuis le château isolé), ou y bâtir
+  // un nouveau château.
+  pieceUnlinked(r, k) {
+    return k >= 0 && !r.hasCastle[k] && !r.anyOutpost[k] && this.castles.some(c => this.owner[c] === r.owner[k]);
   },
-  // Le royaume pid a-t-il au moins un morceau coupé de tous ses châteaux ? (vérification rapide, pour les bots)
+  // Tous les châteaux de pid sont isolés (aucun n'est relié à son cœur) : son armée est bloquée dans
+  // ces châteaux. Elle peut les défendre (elle y est !), mais désorganisée (x LEADERLESS_DEFENSE) ;
+  // quand l'un d'eux est attaqué, toutes ses troupes restantes le défendent d'office (voir lastStand).
+  troopsInCastles(pid) {
+    let any = false;
+    for (const c of this.castles) {
+      if (this.owner[c] !== pid) continue;
+      if (!this.isIsolated(c)) return false;
+      any = true;
+    }
+    return any;
+  },
+  isUnlinked(i) {
+    if (this.owner[i] < 0) return false;
+    const r = this.regionsAt(i);
+    return this.pieceUnlinked(r, r.comp[i]);
+  },
+  // Le royaume pid a-t-il au moins un morceau coupé de tous ses châteaux ? (vérification rapide)
   hasUnlinked(pid) {
-    if (!this.isProtected(pid)) return false;
     const r = this.regions();
-    for (let k = 0; k < r.size.length; k++) if (r.owner[k] === pid && !r.hasCastle[k] && !r.anyOutpost[k]) return true;
+    for (let k = 0; k < r.size.length; k++) if (r.owner[k] === pid && this.pieceUnlinked(r, k)) return true;
     return false;
   },
   // Les cases de ce morceau (null s'il n'est pas coupé de ses châteaux)
@@ -1162,7 +1185,8 @@ const GameRules = {
     const o = this.owner[i];
     if (o < 0) return false;
     const r = this.regionsAt(i), k = r.comp[i];
-    return r.heart[k] || r.outpost[k] >= 0 || r.colony[k];
+    // (un cœur coupé de tous ses châteaux n'est plus une base : voir pieceUnlinked)
+    return (r.heart[k] && !this.pieceUnlinked(r, k)) || r.outpost[k] >= 0 || r.colony[k];
   },
 
   // D'où part une armée qui passe par cette case du royaume ? -1 = du royaume (ses soldats disponibles),
@@ -1171,7 +1195,6 @@ const GameRules = {
     const o = this.owner[i];
     if (o < 0) return null;
     const r = this.regionsAt(i), k = r.comp[i];
-    if (r.heart[k]) return -1;
     if (r.outpost[k] >= 0) return r.outpost[k];
     return this.isBase(i) ? -1 : null;
   },
@@ -1309,6 +1332,10 @@ const GameRules = {
     if (frontier.length === 0) {
       // (un avant-poste en construction ne sert pas encore de base : ses soldats bâtissent)
       const building = [...this.outposts.keys()].some(a => this.owner[a] === pid && !this.outpostReady(a));
+      if (this.hasUnlinked(pid)) {
+        return 'Ton territoire est coupé de tous tes châteaux : tes armées ne peuvent plus en partir. ' +
+          'Relie-le à un château (clique sur ton château isolé pour lancer un assaut de jonction) ou bâtis-en un nouveau.';
+      }
       return (target < 0 ? 'Aucune terre libre à ta frontière.' : `Tu n'as pas de frontière avec ${this.players[target].name}.`) +
         (building ? ' Ton avant-poste est encore en construction : ses soldats ne pourront attaquer qu\'une fois les travaux finis.' : '');
     }
@@ -1546,8 +1573,10 @@ const GameRules = {
     };
     const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
     const done = new Uint8Array(this.N), heap = new MinHeap();
+    // (départ : les cases qui touchent le cœur de son royaume, même s'il est coupé de ses châteaux)
+    const r = this.regions(true), heartOf = n => this.owner[n] === pid && r.comp[n] >= 0 && r.heart[r.comp[n]];
     for (let i = 0; i < this.N; i++) {
-      if (passable(i) && this.touchesOwn(i, pid)) {
+      if (passable(i) && this.hasNeighbor(i, heartOf)) {
         dist[i] = this.tileDefense(o, i);
         prev[i] = -1;
         heap.push(dist[i], i);
@@ -2158,6 +2187,8 @@ const GameRules = {
     let r = this.frontDefense(a) * this.troopPower(a.target) / this.troopPower(a.attacker);
     // Royaume sans château ni église : ses troupes, désorganisées, ne comptent que pour 0.8
     if (this.leaderless(a)) r *= CONFIG.LEADERLESS_DEFENSE;
+    // Armée bloquée dans ses châteaux isolés : elle les défend, mais moins bien
+    else if (a.targetCastle >= 0 && this.building[a.targetCastle] === B_CASTLE && this.troopsInCastles(a.target)) r *= CONFIG.LEADERLESS_DEFENSE;
     return r;
   },
 
@@ -2166,13 +2197,21 @@ const GameRules = {
     return a.target >= 0 && a.targetCastle < 0 && !this.isProtected(a.target);
   },
 
+  // Dernier carré : l'assaut vise un château d'un royaume dont tous les châteaux sont isolés (son armée y est
+  // bloquée). Toutes ses troupes restantes le défendent d'office.
+  lastStand(a) {
+    const c = a.targetCastle;
+    return a.target >= 0 && c >= 0 && this.building[c] === B_CASTLE && this.owner[c] === a.target && this.troopsInCastles(a.target);
+  },
+
   // Un royaume sans château ni église n'a plus de pouvoir en place : quand un assaut de front commence,
   // toutes les troupes encore présentes dans le royaume défendent d'office (partagées entre les assauts
   // qui commencent en même temps). Les soldats recrutés ensuite restent au royaume.
+  // Même chose quand un assaut commence contre le dernier carré d'un royaume (voir lastStand).
   levy() {
     const byTarget = new Map();
     for (const a of this.attacks) {
-      if (a.done || a.levied || this.isPreparing(a) || !this.leaderless(a)) continue;
+      if (a.done || a.levied || this.isPreparing(a) || !(this.leaderless(a) || this.lastStand(a))) continue;
       a.levied = true;
       if (!byTarget.has(a.target)) byTarget.set(a.target, []);
       byTarget.get(a.target).push(a);
@@ -2181,6 +2220,9 @@ const GameRules = {
       const p = this.players[t];
       if (!p.alive || p.troops <= 0) continue;
       for (const a of list) a.defenders += p.troops / list.length;
+      if (p.isHuman && list.some(a => this.lastStand(a))) {
+        UI.log(`🏰 Ton dernier château est attaqué : tes ${fmt(p.troops)} soldats restants le défendent d'office !`, 'warn');
+      }
       p.troops = 0;
     }
   },
@@ -2242,10 +2284,14 @@ const GameRules = {
 
   // L'assaut vise-t-il un château isolé ? Ses défenseurs ne peuvent alors pas le rejoindre.
   // (un avant-poste, au-delà des mers, ne peut compter que sur sa garnison)
-  // (un morceau coupé de tous ses châteaux non plus : personne ne peut venir le défendre)
+  // (un morceau coupé de tous ses châteaux non plus : ses soldats sont bloqués dans le château isolé,
+  //  personne ne peut venir le défendre, même pour une église ou un port qui s'y trouve)
   cutOff(a) {
     if (a.unlinked) return true;
     const c = a.targetCastle, b = this.building[c];
+    if (c >= 0 && this.owner[c] === a.target && b !== B_CASTLE && b !== B_OUTPOST && this.isUnlinked(c)) return true;
+    // (château isolé, mais l'armée du royaume y est bloquée : elle peut le défendre, voir troopsInCastles)
+    if (c >= 0 && b === B_CASTLE && this.owner[c] === a.target && this.troopsInCastles(a.target)) return false;
     return c >= 0 && (b === B_CASTLE || b === B_PORT || b === B_OUTPOST) && this.owner[c] === a.target && this.isIsolated(c);
   },
 
@@ -2296,6 +2342,8 @@ const GameRules = {
   defenseOrigin(pid, a, src) {
     const W = this.W, mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
     if (src >= 0) return mid(src);
+    // (armée bloquée dans ses châteaux isolés : les défenseurs sortent du château attaqué)
+    if (a.targetCastle >= 0 && this.building[a.targetCastle] === B_CASTLE && this.troopsInCastles(pid)) return mid(a.targetCastle);
     const to = this.attackFront(a);
     let best = null, bestD = Infinity;
     for (const c of this.castles) {
@@ -2849,6 +2897,17 @@ const GameRules = {
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
     // (le découpage n'est refait que si l'un d'eux a vraiment englobé des terres)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive) this.captureEnclaves(p.id);
+    // Le joueur vient de perdre le lien entre son territoire et ses châteaux : on le prévient (une fois)
+    const h = this.human;
+    if (this.tick % (2 * TPS) === 0 && h && h.alive) {
+      const cut = this.hasUnlinked(h.id);
+      if (cut && !h.cutWarned) {
+        UI.log('🚩 Ton territoire est coupé de tous tes châteaux ! Tes soldats sont bloqués dans ton château isolé : ' +
+          'ce territoire n\'est plus défendu et aucune armée ne peut en partir. Relie-le (clique sur ton château isolé) ' +
+          'ou bâtis un nouveau château.', 'warn');
+      }
+      h.cutWarned = cut;
+    }
 
     for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
 
