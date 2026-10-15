@@ -500,7 +500,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
-- **v0.88.2** : 🏰🧱🏰 un mur peut relier deux de tes villes (vise l'autre ville : le mur va jusqu'à sa muraille) ; une fois debout, chacune gagne +50 soldats de garnison · 🤖 les bots relient aussi leurs villes
+- **v0.88.2** : 🏰🧱🏰 un mur peut relier deux de tes villes (vise l'autre ville : le mur va jusqu'à sa muraille) ; une fois debout, chacune gagne +50 soldats de garnison · 🤖 les bots relient aussi leurs villes · ⚡ un territoire désorganisé se prend 25 % plus vite
 - **v0.88.1** : ⚔️ l'icône des troupes montre le niveau des casernes de chaque royaume : deux épées médiévales croisées (sans caserne ou niveau 1), avec un casque (niveau 2), puis avec un bouclier (niveau 3), sur la carte, les armées, la fiche des royaumes et ta jauge
 - **v0.88** : 🏰 une ville a un nombre de places pour ses moulins et casernes : 4 au niveau 1, 6 au niveau 2, 9 au niveau 3 (« places prises » en la survolant) · ⛵ avant-poste : nouvelles icônes, un petit bateau avec une flèche vers la gauche pour envoyer des renforts, vers la droite pour rapatrier
 - **v0.87.7** : ⚡ les assauts vont 15 % plus vite (en terre ennemie, dans leur marche jusqu'à la frontière et pour leurs renforts) et les défenseurs 15 % moins vite : ils ne vont plus que 18 % plus vite qu'un assaut de même taille (au lieu de 60 %)

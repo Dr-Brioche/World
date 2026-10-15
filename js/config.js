@@ -124,8 +124,8 @@ const CONFIG = {
   ASSAULT_HEAVY: 500,          // (1 + soldats / 500) : plus l'armée est grande, plus elle est lente
                                // (100 soldats : ~5,5 cases/s · 500 : 3,3 · 1000 : 2,2 · 3000 : 0,9)
   ASSAULT_MIN_SPEED: 0.053,     // vitesse minimum d'un assaut (cases de plaine par tour)
-  DISORGANIZED_SPEED: 1.25,    // un territoire désorganisé (sans château, ou coupé de ses châteaux) se prend plus vite,
-                               // et d'autant plus vite que l'armée est grande (100 soldats : ~6 cases/s · 500 : 8 · 2000 : 13)
+  DISORGANIZED_SPEED: 1.5625,  // un territoire désorganisé (sans ville ni port fortifié, ou coupé d'eux) se prend plus vite,
+                               // et d'autant plus vite que l'armée est grande (100 soldats : ~7,5 cases/s · 500 : 10 · 2000 : 16)
   // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,
   // par le chemin le plus rapide, comme les défenseurs (voir DEFENDER_SPEED_BONUS) : pendant ce temps,
   // tout le monde le voit venir
