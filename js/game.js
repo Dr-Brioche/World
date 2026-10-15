@@ -30,6 +30,7 @@ const GameRules = {
     this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up' ou 'down', start, end, pid, paid }
     this.walls = [];         // murs bâtis par les villes : { castle, owner, tiles, start, ready, done }
     this.faithProgress = new Map(); this.faithCache = null; // (Croyance : voir stepFaith)
+    this.crusades = []; // croisades religieuses en cours : { church, owner, end } (voir startCrusade)
     this.wallAt = new Uint8Array(this.N); // 1 = case d'un mur fini (aucun assaut ne la franchit)
     this.crossings = [];   // armées qui traversent un fleuve à gué
     this.returning = [];   // défenseurs qui rentrent à pied (l'assaut qu'ils allaient contrer est fini)
@@ -481,10 +482,40 @@ const GameRules = {
       if (w && w.kind === 'build') continue; // (encore en chantier)
       f[o] += this.buildingInfo(a).faith * (this.churchLink(o, a, links) ? 1 + CONFIG.FAITH_ROAD_BONUS : 1);
     }
+    // Croisades en cours : +CRUSADE_FAITH chacune (tant que la cathédrale est au royaume)
+    for (const c of this.crusades) if (this.tick < c.end && this.owner[c.church] === c.owner) f[c.owner] += CONFIG.CRUSADE_FAITH;
     this.faithCache = f;
     return f;
   },
   faithOf(pid) { return this.faithAll()[pid] || 0; },
+
+  // Croisade religieuse en cours de la cathédrale a (ou null)
+  crusadeOf(a) { return this.crusades.find(c => c.church === a && this.tick < c.end) || null; },
+
+  // Pourquoi la cathédrale a ne peut pas lancer de croisade (null si elle le peut)
+  crusadeError(p, a) {
+    if (this.building[a] !== B_CHURCH || this.owner[a] !== p.id) return 'Ce n\'est pas une de tes églises.';
+    if (this.level[a] < 3) return 'Il faut une cathédrale (église de niveau 3) pour lancer une croisade.';
+    if (this.crusadeOf(a)) return 'Une croisade est déjà en cours depuis cette cathédrale.';
+    if (p.gold < CONFIG.CRUSADE_COST) return `Pas assez d'or : il faut 💰 ${CONFIG.CRUSADE_COST}.`;
+    return null;
+  },
+
+  // Lancer une croisade religieuse : CRUSADE_COST pièces, +CRUSADE_FAITH de Croyance pendant CRUSADE_TIME s.
+  // Renvoie un message d'erreur, ou null.
+  startCrusade(p, a) {
+    const err = this.crusadeError(p, a);
+    if (err) return err;
+    p.gold -= CONFIG.CRUSADE_COST;
+    this.crusades = this.crusades.filter(c => this.tick < c.end);
+    this.crusades.push({ church: a, owner: p.id, end: this.tick + CONFIG.CRUSADE_TIME * CONFIG.TICKS_PER_SECOND });
+    this.faithCache = null; // (la Croyance change tout de suite)
+    const h = this.human;
+    if (!p.isHuman && h && h.alive && this.neighborStats(p.id).has(h.id)) {
+      UI.log(`✝️ ${p.name} lance une croisade religieuse : sa Croyance monte de ${CONFIG.CRUSADE_FAITH} pendant ${CONFIG.CRUSADE_TIME} s !`, 'warn', p);
+    }
+    return null;
+  },
 
   // Écart de Croyance avec lequel pid convertit les terres de o (0 s'il ne les convertit pas) : il faut être
   // voisins, ne pas être alliés, et que pid ait une ville (un royaume désorganisé ne prêche pas)
@@ -511,6 +542,14 @@ const GameRules = {
   // est convertie (voir preach)
   stepFaith() {
     if (this.tick % CONFIG.TICKS_PER_SECOND !== 0) return;
+    // Croisades terminées
+    for (const c of this.crusades) {
+      if (this.tick < c.end) continue;
+      c.over = true;
+      this.faithCache = null;
+      if (this.players[c.owner].isHuman) UI.log('✝️ Ta croisade religieuse est terminée : ta Croyance redescend.');
+    }
+    this.crusades = this.crusades.filter(c => !c.over);
     const due = new Map(); // royaume converti → les royaumes qui lui prennent une case maintenant
     for (const p of this.players) {
       if (!p.alive || this.faithOf(p.id) <= 0) continue;

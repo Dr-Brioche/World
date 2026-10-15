@@ -351,6 +351,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      les **murs** 🧱, les **terres libres**, et la route d'un **assaut en cours**. Elle ne part que d'une **zone de royaume**
      organisée : pas d'une zone d'avant-poste, ni d'un morceau coupé de ses villes, ni d'un royaume désorganisé (sans ville).
      Les **bots** bâtissent et améliorent plus d'églises quand un voisin les dépasse en Croyance (surtout en Difficile).
+     ✝️ **Croisade religieuse** : une **cathédrale** (église de niveau 3) propose une action dans son menu rapide (la croix,
+     comme le mur des villes) et dans sa fenêtre : pour **💰 2000**, ta Croyance monte de **+1000 pendant 60 s** (une croisade
+     à la fois par cathédrale). De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
+     en retard de Croyance (un message te prévient si c'est un voisin).
 
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Comme l'église, il donne des
@@ -500,6 +504,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.89** : ✝️ croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2000 pièces, et la Croyance du royaume monte de 1000 pendant 60 s ; les bots en lancent aussi quand un voisin les dépasse en Croyance
 - **v0.88.2** : 🏰🧱🏰 un mur peut relier deux de tes villes (vise l'autre ville : le mur va jusqu'à sa muraille) ; une fois debout, chacune gagne +50 soldats de garnison · 🤖 les bots relient aussi leurs villes · ⚡ un territoire désorganisé se prend 25 % plus vite
 - **v0.88.1** : ⚔️ l'icône des troupes montre le niveau des casernes de chaque royaume : deux épées médiévales croisées (sans caserne ou niveau 1), avec un casque (niveau 2), puis avec un bouclier (niveau 3), sur la carte, les armées, la fiche des royaumes et ta jauge
 - **v0.88** : 🏰 une ville a un nombre de places pour ses moulins et casernes : 4 au niveau 1, 6 au niveau 2, 9 au niveau 3 (« places prises » en la survolant) · ⛵ avant-poste : nouvelles icônes, un petit bateau avec une flèche vers la gauche pour envoyer des renforts, vers la droite pour rapatrier
