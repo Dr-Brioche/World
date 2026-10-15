@@ -577,7 +577,7 @@ const UI = {
     this.refreshBuildingMenu();
 
     const ranking = G.players.filter(p => p.alive && p.tiles > 0).sort((a, b) => b.tiles - a.tiles);
-    $('lb').innerHTML = ranking.slice(0, 10).map(p => {
+    const row = p => {
       const allied = G.areAllied(p.id, h.id);
       const btn = p.isHuman || !h.alive || !G.pactsAllowed ? '' : allied
         ? `<button data-ally="${p.id}" title="Rompre l'alliance (trahison !)">💔</button>`
@@ -591,6 +591,24 @@ const UI = {
         `<span class="allies" title="${this.alliesTitle(p)}">` +
         G.allies(p.id).map(o => `<i style="background:rgb(${o.color})"></i>`).join('') + `</span>` +
         `<span class="pct">${(p.tiles / G.landCount * 100).toFixed(1)}%</span>${btn}</li>`;
+    };
+    // Les membres d'un même pacte sont regroupés dans un cadre, avec la part des terres du pacte entier.
+    // Les groupes (pactes et royaumes seuls) sont classés selon leurs terres.
+    const groups = [], seen = new Map();
+    for (const p of ranking) {
+      if (p.pact >= 0 && seen.has(p.pact)) { seen.get(p.pact).members.push(p); continue; }
+      const g = { pact: p.pact, members: [p] };
+      if (p.pact >= 0) seen.set(p.pact, g);
+      groups.push(g);
+    }
+    const tilesOf = g => g.members.reduce((s, p) => s + p.tiles, 0);
+    groups.sort((a, b) => tilesOf(b) - tilesOf(a));
+    $('lb').innerHTML = groups.slice(0, 10).map(g => {
+      if (g.members.length < 2) return row(g.members[0]);
+      const mine = g.members.includes(h);
+      return `<li class="pactGroup${mine ? ' mine' : ''}"><div class="pactHead"><span>🤝 ${escapeHtml(G.pacts.get(g.pact).name)}</span>` +
+        `<span class="pct">${(tilesOf(g) / G.landCount * 100).toFixed(1)}%</span></div>` +
+        `<ul>${g.members.map(row).join('')}</ul></li>`;
     }).join('');
 
     this.refreshAttacks();
