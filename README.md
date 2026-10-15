@@ -97,7 +97,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (en pointillés) : vite en plaine, plus lentement en forêt, en colline, en montagne ou en traversant un fleuve,
      et d'autant plus lentement que l'armée est grande (sa vitesse est fixée au départ ; 2 s au minimum).
      Chez toi, elle marche **60 % plus vite** qu'un assaut en terre ennemie.
-     Tout le monde la voit venir : ta **bannière** ⚔️ avance sur la carte avec le temps restant et tes soldats ;
+     Tout le monde la voit venir : ta **bannière** ⚔️ avance sur la carte avec tes soldats ;
      en face, les terres menacées **scintillent à ta couleur**, et le bâtiment visé est entouré d'un **halo** qui pulse.
      Pendant la marche, reclique sur la cible pour **ajouter des soldats tout de suite** : c'est ce qui fixe l'ampleur de l'assaut.
      L'armée entre chez l'ennemi là où commence son chemin (en pointillés dorés) : c'est de là que part la
@@ -169,6 +169,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    que le plus grand de l'île : **celui qui a coupé prend d'un coup tous les autres**, **quelle que soit leur taille**,
    avec leurs **églises, ports, moulins et casernes**. Si personne ne l'a coupé (par exemple après la perte
    d'un avant-poste), c'est le royaume qui entoure le plus le morceau qui le prend.
+   Mais la **route** d'un assaut vers un objectif (château, église, port…) n'est que **visuelle** tant que le combat
+   n'est pas joué : elle ne coupe le royaume que si l'assaut **prend son objectif**. S'il échoue, elle est rendue et rien n'est coupé.
    Un morceau avec un **avant-poste** (une invasion par la mer) se défend : il faut viser l'avant-poste.
    Un royaume installé sur **plusieurs îles** (par la mer, puis un château) n'est pas « coupé » d'une île à l'autre.
 
@@ -424,6 +426,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.78.2** : ✂️ la route d'un assaut vers un objectif n'est que visuelle tant que le combat n'est pas joué : elle ne coupe le royaume traversé que si l'assaut prend son objectif (s'il échoue, elle est rendue et rien n'est coupé) · ⏱️ plus de temps de trajet affiché à côté des armées en marche
 - **v0.78.1** : 🛡️ on ne peut envoyer des défenseurs contre un assaut qu'une fois qu'il est entré sur nos terres (fini les défenseurs qui partent l'attendre en terre ennemie pendant sa marche) ; les bots aussi
 - **v0.78** : ⛪ une église pas trop loin d'une route de port (10 cases) s'y relie par un petit chemin, et une église pas trop loin d'une ville (25 cases) est reliée à elle : reliée, elle rapporte +2 💰 toutes les 10 s (un port seul, sans ville, ne crée pas de chemin)
 - **v0.77.4** : 🧤 la souris est une petite main médiévale sur la carte · 🗡️ l'épée n'apparaît plus que sur les cibles qu'on peut vraiment attaquer (château ennemi atteignable, armée ennemie…)

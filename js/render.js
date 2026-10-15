@@ -515,9 +515,8 @@ const Render = {
         continue;
       }
       // Marche sur ses propres terres : pas de flèche. Le front menacé scintille à la couleur de l'attaquant,
-      // et sa bannière avance de sa cité vers la frontière, avec le temps restant avant l'attaque.
+      // et sa bannière avance de sa cité vers la frontière, avec ses soldats.
       this.drawThreat(ox, oy, a);
-      const remaining = (a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND;
       const m = a.marchFrom ? G.marchPosition(a) : null, st = a.startTile >= 0 ? a.startTile : -1;
       // le reste du chemin de la marche (le plus rapide sur ses terres), en pointillés
       if (a.march) {
@@ -530,7 +529,7 @@ const Render = {
       }
       const bx = m ? ox + m.x * s : st >= 0 ? ox + (st % G.W + 0.5) * s : x1;
       const by = m ? oy + m.y * s : st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
-      this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
+      this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `⚔ ${fmt(a.troops)}${extra}`); // (pas de temps de trajet affiché)
     }
   },
 
