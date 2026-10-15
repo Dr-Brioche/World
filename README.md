@@ -440,6 +440,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ses soldats stationnés et des renforts peuvent encore le défendre). Détruit, il emporte **toute sa zone** avec lui :
      les terres qu'il avait prises passent **d'un coup** à celui qui l'a détruit (sauf si cette zone est déjà reliée au
      royaume, ou tenue par une ville ou un port fortifié).
+   - Un royaume qui n'a **plus que des avant-postes** (plus aucune ville ni port fortifié, et plus de terres hors de leurs
+     zones) est **perdu** : il est anéanti (la prime va à celui qui lui a pris ses dernières terres), ses avant-postes
+     sont supprimés et leurs zones redeviennent des terres libres.
    - Une expédition en mer **ne peut pas être interceptée** : tu es prévenu quand elle vise ta côte
      (une petite zone rouge marque l'endroit du débarquement), et tu l'attaques quand elle accoste.
 
@@ -521,6 +524,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.8** : ⛺ un royaume qui n'a plus que des avant-postes est perdu : il est anéanti, ses avant-postes sont supprimés et leurs zones redeviennent libres
 - **v0.91.7** : ✂️ un royaume coupé en deux sur un même continent garde ses deux morceaux comme des cœurs à part entière si le plus petit est tenu par une ville (ou un port fortifié) et fait au moins 25 % du plus grand : ses villes ne sont plus isolées, ses armées en partent ; seuls les petits morceaux restent coupés
 - **v0.91.6** : ⚡ assauts (marche, combat, renforts) et défenseurs 15 % plus rapides
 - **v0.91.5** : ⚡ un territoire désorganisé se prend 30 % plus vite
