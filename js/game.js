@@ -552,9 +552,8 @@ const GameRules = {
     }
     this.crusades = this.crusades.filter(c => !c.over);
     // Chaque paire (prêcheur, converti) avance ; une conversion complète = une case. Avec un grand écart,
-    // il y en a plusieurs par seconde : on fait plusieurs tours (le k-ième tour ne garde que les paires qui
-    // ont au moins k + 1 cases à prendre cette seconde)
-    const counts = []; // [prêcheur, converti, cases à prendre]
+    // il y en a plusieurs par seconde : preach les prend toutes d'un coup (les meilleures)
+    const due = new Map(); // royaume converti → (prêcheur → cases à lui prendre cette seconde)
     for (const p of this.players) {
       if (!p.alive || this.faithOf(p.id) <= 0) continue;
       for (const o of this.neighborStats(p.id).keys()) {
@@ -563,22 +562,17 @@ const GameRules = {
         if (diff <= 0) { this.faithProgress.delete(key); continue; }
         const prog = (this.faithProgress.get(key) || 0) + 1 / this.faithInterval(diff), n = Math.floor(prog);
         this.faithProgress.set(key, prog - n);
-        if (n > 0) counts.push([p.id, o, n]);
+        if (n <= 0) continue;
+        if (!due.has(o)) due.set(o, new Map());
+        due.get(o).set(p.id, n);
       }
     }
-    for (let k = 0; counts.some(c => c[2] > k); k++) {
-      const due = new Map(); // royaume converti → les royaumes qui lui prennent une case à ce tour
-      for (const [pid, o, n] of counts) {
-        if (n <= k) continue;
-        if (!due.has(o)) due.set(o, new Set());
-        due.get(o).add(pid);
-      }
-      this.preach(due);
-    }
+    if (due.size) this.preach(due);
   },
 
-  // Convertit une case pour chaque paire (prêcheur, converti) de due : une case du converti collée à une terre du
-  // prêcheur, de préférence dans un couloir étroit ou une pointe entourée par le prêcheur.
+  // Pour chaque paire (prêcheur, converti) de due, convertit le nombre de cases demandé : des cases du converti
+  // collées à une terre du prêcheur, de préférence dans un couloir étroit ou une pointe entourée par le prêcheur
+  // (on garde les meilleures en un seul passage sur la carte).
   preach(due) {
     const W = this.W, H = this.H, N = this.N, own = this.owner, r = this.regions();
     const routes = new Set(this.pendingRoutes().map(([t]) => t)); // (routes d'assauts en cours : on n'y touche pas)
@@ -590,7 +584,7 @@ const GameRules = {
       return k >= 0 && r.owner[k] === pid && !routes.has(j) && (!r.anyOutpost[k] || r.hasCastle[k])
         && ((r.heart[k] && !this.pieceUnlinked(r, k)) || r.colony[k]);
     };
-    const best = new Map(); // prêcheur * 1000 + converti → { t, score }
+    const best = new Map(); // prêcheur * 1000 + converti → les meilleures cases [{ t, score, pid, o }], la meilleure d'abord
     for (let i = 0; i < N; i++) {
       const o = own[i];
       if (o < 0 || !due.has(o)) continue;
@@ -612,13 +606,18 @@ const GameRules = {
         else if (q === o && (!dx || !dy)) theirs++;
       }
       const score = mine + (4 - theirs) * 2 + Math.random();
-      const key = pid * 1000 + o, b = best.get(key);
-      if (b && b.score >= score) continue;
+      const key = pid * 1000 + o, n = preachers.get(pid);
+      let list = best.get(key);
+      if (list && list.length >= n && list[list.length - 1].score >= score) continue;
       if (!this.faithConvertible(i, o, routes, sites)) continue;
-      best.set(key, { t: i, score, pid, o });
+      if (!list) best.set(key, list = []);
+      let k = list.length;
+      while (k > 0 && list[k - 1].score < score) k--;
+      list.splice(k, 0, { t: i, score, pid, o });
+      if (list.length > n) list.pop();
     }
-    for (const { t, pid, o } of best.values()) {
-      if (this.owner[t] !== o) continue;
+    for (const { t, pid, o } of [...best.values()].flat()) {
+      if (this.owner[t] !== o || !this.players[o].alive) continue;
       this.setOwner(t, pid);
       // la conversion peut couper son royaume : la coupe s'applique tout de suite (voir captureEnclaves)
       if (this.players[o].alive && this.countNeighborsOwnedBy(t, o) >= 2) this.captureEnclaves(o, pid);

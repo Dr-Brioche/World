@@ -349,7 +349,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      qu'un voisin, tu **convertis lentement ses terres** collées aux tiennes, une case à la fois. C'est l'**écart** qui compte :
      avec 100 contre 80, ta Croyance vaut 20 face à lui. Plus l'écart est grand, plus ça va vite : environ une case
      toutes les **30 s** avec 20 d'écart, toutes les **20 s** avec 50, toutes les **5 s** avec 100, **une par seconde**
-     avec 200, **2 par seconde** avec 500, et **5 par seconde** à partir de **1000** (le maximum). Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
+     avec 200, **2 par seconde** avec 500, **5 par seconde** avec 1000 ; au-delà, ça accélère **de moins en moins** :
+     **7 par seconde** avec 2000, **8,5** avec 3000, et **10 par seconde** à partir de **5000** (le maximum). Plusieurs
+     croisades en même temps (une par cathédrale) servent donc encore. Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
      s'avancent dans le tien : les frontières deviennent plus nettes, et ses routes trop fines se referment.
      Si une conversion **coupe** son royaume, la coupe s'applique tout de suite (le morceau coupé est englobé).
      Ça marche dans les deux sens : un voisin plus croyant convertit **tes** terres ! Dans le classement, une **📖 bible verte**
@@ -513,6 +515,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91** : ✝️ la conversion monte jusqu'à 5000 d'écart de Croyance (au lieu de 1000), avec une accélération de plus en plus faible : 5 cases par seconde à 1000, 7 à 2000, 8,5 à 3000, 10 à 5000 (le maximum) ; plusieurs croisades en même temps servent donc encore
 - **v0.90.9** : 🐛 les soldats en campagne (assauts, renforts en route, défenseurs, retours) comptent dans l'armée maximum : un royaume ne recrute plus au-delà de son maximum pendant que son armée est au loin (un assaut ne peut plus grossir sans fin) ; ta jauge l'affiche (« dont ⚔ … en campagne »)
 - **v0.90.8** : ⏳ tous les bâtiments s'améliorent au même rythme que les villes : 40 s pour passer au niveau 2, 60 s pour le niveau 3 (au lieu de 5 s et 10 s pour les autres)
 - **v0.90.7** : ⚓ un port fortifié (niveau 3) sert aussi de point de départ pour les armées (assauts et défenseurs), et de point de retour, comme une ville
