@@ -7,6 +7,7 @@ const AI = {
     p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Math.random() * 2));
 
     if (Math.random() < 0.4) this.tryBuild(p);
+    if (Math.random() < 0.1) this.tryWall(p);
     if (Math.random() < 0.05) this.tryExpedition(p);
     if (this.stuckOnIsland(p)) this.goToSea(p);
     if (Math.random() < 0.08) this.tryAlliance(p);
@@ -239,6 +240,43 @@ const AI = {
       if (freeFirst && k < 45 && Game.owner[i] !== -1) continue;
       if (!Game.launchExpedition(p.id, i, Math.max(p.troops * 0.3, 12))) return;
     }
+  },
+
+  // Un mur pour fermer un passage : une ville de niveau 2 (ou 3) qui a assez d'or regarde par où un royaume
+  // ennemi voisin l'attaquerait (son chemin d'assaut), et bâtit un mur qui coupe ce chemin en s'accrochant à un
+  // obstacle tout proche (lac, mer, fleuve, sommet, autre mur) : l'ennemi devra faire un détour (ou renoncer).
+  // Renvoie true si un chantier est lancé.
+  tryWall(p) {
+    const G = Game, W = G.W;
+    const enemies = [...G.neighborStats(p.id).keys()].filter(o => o >= 0 && !G.areAllied(p.id, o));
+    if (!enemies.length) return false;
+    for (const c of G.castles) {
+      if (G.owner[c] !== p.id || G.works.has(c) || G.wallsOf(c).length >= G.wallMax(c)) continue;
+      if (p.gold < G.wallCost(c)) continue;
+      // le chemin qu'un ennemi (pris au hasard parmi les voisins) suivrait pour assiéger cette ville
+      const e = enemies[(Math.random() * enemies.length) | 0];
+      const path = G.castlePath(e, c);
+      if (!path) continue;
+      const route = new Set(path);
+      // on essaie des murs dans toutes les directions : il doit couper ce chemin ; le mieux est qu'il s'accroche à
+      // un obstacle (il ferme vraiment le passage), et qu'il soit court (passage étroit). Sinon, un mur qui coupe le
+      // chemin oblige quand même l'ennemi à faire un détour.
+      const R = G.castleInfo(c).radius, h = G.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
+      let best = -1, bestScore = Infinity;
+      for (let k = 0; k < 32; k++) {
+        const ang = k / 32 * Math.PI * 2;
+        for (let d = R + 3; d <= R + CONFIG.WALL_MAX_REACH; d += 3) {
+          const x = Math.round(cx + Math.cos(ang) * d), y = Math.round(cy + Math.sin(ang) * d);
+          if (x < 0 || y < 0 || x >= W || y >= G.H) continue;
+          const plan = G.planWall(p.id, c, y * W + x);
+          if (plan.error || !plan.tiles.some(t => route.has(t))) continue;
+          const score = plan.tiles.length + (plan.sealed ? 0 : 100);
+          if (score < bestScore) { bestScore = score; best = y * W + x; }
+        }
+      }
+      if (best >= 0 && !G.buildWall(p, c, best)) return true;
+    }
+    return false;
   },
 
   tryBuild(p, forced) {

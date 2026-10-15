@@ -82,7 +82,8 @@ const CONFIG = {
   // ville jusqu'à l'endroit choisi, au plus WALL_MAX_REACH cases plus loin. Aucun assaut ne peut le franchir.
   WALL_COSTS: [500, 1000],   // prix du 1er mur, puis du 2e
   WALL_BUILD_TIME: 40,       // secondes de chantier
-  WALL_MAX_REACH: 15,
+  WALL_MAX_REACH: 12,
+  WALL_RETREAT_LOSS: 0.5,    // une armée en retraite qui doit franchir un mur (bâti dans son dos) y perd 50 % de ses soldats, par mur
   WALL_SNAP: 3,              // visé à moins de 3 cases d'un obstacle (lac, sommet, fleuve, autre mur) : le mur s'y accroche
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
   PORT_ROAD_DISTANCE: 30,    // un port à moins de 30 cases d'un de ses châteaux (sur la même terre) y est relié
