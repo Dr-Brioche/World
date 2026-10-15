@@ -282,12 +282,12 @@ const GameRules = {
     return -1;
   },
 
-  // Châteaux qu'un royaume peut construire dans la partie : MAX_CASTLES, plus ceux de chacune de ses églises
-  // (elles s'additionnent : autant d'églises améliorées qu'on peut se payer)
+  // Châteaux qu'un royaume peut construire dans la partie : MAX_CASTLES, plus ceux de sa meilleure église
+  // (seule la meilleure compte : les églises ne s'additionnent pas)
   maxCastles(p) {
     let extra = 0;
     for (const ch of this.buildingTiles) {
-      if (this.building[ch] === B_CHURCH && this.owner[ch] === p.id) extra += this.buildingInfo(ch).castles;
+      if (this.building[ch] === B_CHURCH && this.owner[ch] === p.id) extra = Math.max(extra, this.buildingInfo(ch).castles);
     }
     return CONFIG.MAX_CASTLES + extra;
   },
@@ -1302,10 +1302,12 @@ const GameRules = {
     return [-1, ...[...this.outposts.keys()].filter(a => this.owner[a] === pid && this.outpostReady(a) && this.troopsAt(pid, a) >= 1)];
   },
 
-  // Le royaume a-t-il encore un château ou une église ? Alors on ne peut l'attaquer qu'en visant
-  // l'un d'eux. Sinon, on peut attaquer tout son territoire de front.
+  // Le royaume a-t-il encore une ville (un château) ? Alors on ne peut l'attaquer qu'en visant un de ses châteaux,
+  // églises, ports ou avant-postes. Sinon, il est désorganisé (même s'il lui reste des églises ou des ports) :
+  // on peut attaquer tout son territoire de front, sans devoir prendre ses bâtiments un par un.
+  // (ses avant-postes, eux, se visent toujours : un assaut de front ne les prend pas)
   isProtected(pid) {
-    return this.targetsOf(pid).length > 0;
+    return this.castles.some(c => this.owner[c] === pid);
   },
 
   // Encerclement : un royaume reste d'un seul tenant (sur chaque île). Quand il est coupé en morceaux, il ne
@@ -1411,12 +1413,14 @@ const GameRules = {
       return (target < 0 ? 'Aucune terre libre à ta frontière.' : `Tu n'as pas de frontière avec ${this.players[target].name}.`) +
         (building ? ' Ton avant-poste est encore en construction : ses soldats ne pourront attaquer qu\'une fois les travaux finis.' : '');
     }
-    // Un royaume qui a encore un château ou une église ne s'attaque qu'en visant l'un d'eux.
-    // Sans château ni église, on peut attaquer tout son territoire de front (comme une terre libre).
-    // castle = château ou église visé par l'assaut
+    // Un royaume qui a encore une ville (un château) ne s'attaque qu'en visant un de ses bâtiments (voir isProtected).
+    // Sans château, il est désorganisé : on peut attaquer tout son territoire de front (comme une terre libre),
+    // sauf ses avant-postes, qui se visent toujours.
+    // castle = bâtiment visé par l'assaut (château, église, port ou avant-poste)
     // unlinked = cases d'un morceau coupé de tous ses châteaux (voir isUnlinked) : attaque de front, sans défenseurs
     let castle = -1, path = null, unlinked = null, front = frontier;
-    if (target >= 0 && this.isProtected(target)) {
+    const outpostAim = aimTile !== undefined && this.building[aimTile] === B_OUTPOST && this.owner[aimTile] === target;
+    if (target >= 0 && (this.isProtected(target) || outpostAim)) {
       const name = this.players[target].name, b = aimTile !== undefined ? this.building[aimTile] : 0;
       if (TARGET_TYPES.includes(b) && this.owner[aimTile] === target) castle = this.anchor[aimTile];
       else if (aimTile !== undefined && this.owner[aimTile] === target) unlinked = this.unlinkedPiece(aimTile);
@@ -1467,6 +1471,7 @@ const GameRules = {
         frontTile: -1, // case où se trouve l'assaut (pour la défense du terrain)
       };
       if (unlinked) a.unlinked = true; // (morceau coupé de ses châteaux : personne ne vient le défendre)
+      else if (target >= 0 && castle < 0) a.disorganized = true; // (royaume sans château : attaque de front)
       if (target >= 0) {
         // Contre un royaume, l'armée part de sa cité la plus proche (ou de son avant-poste) et marche
         // sur ses propres terres jusqu'à la frontière : tout le monde la voit venir
@@ -1479,7 +1484,7 @@ const GameRules = {
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
           UI.log(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! ` +
             (unlinked ? 'Il vise ton territoire coupé de tous tes châteaux : personne ne peut le défendre !'
-              : castle < 0 ? 'Sans château ni église, toutes tes troupes défendront d\'office, désorganisées.'
+              : castle < 0 ? 'Sans château, toutes tes troupes défendront d\'office, désorganisées.'
               : alone ? 'Il vise ton avant-poste : seuls les soldats débarqués le défendront.'
               : 'Dès qu\'elle entre sur tes terres, clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.'), 'warn', p);
         }
@@ -2261,10 +2266,10 @@ const GameRules = {
       const score = around / TERRAIN_INFO[this.terrain[t]].cost;
       // Un assaut vers un objectif ne sort pas de son couloir (limitZone)
       const outside = a.limitZone && !a.limitZone.has(t);
-      // Un assaut de front ne prend pas de château (il faut le viser, en cliquant dessus),
+      // Un assaut de front ne prend pas de château ni d'avant-poste (il faut les viser, en cliquant dessus),
       // et ne passe pas les murailles : il s'arrête au pied du mur
       const castle = a.target >= 0 && a.targetCastle < 0 && a.link === undefined &&
-        (this.building[t] === B_CASTLE || this.castleProtects(a.target, t));
+        (this.building[t] === B_CASTLE || this.building[t] === B_OUTPOST || this.castleProtects(a.target, t));
       if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside || castle) {
         a.list[idx] = a.list[a.list.length - 1];
         a.list.pop();
@@ -2318,14 +2323,14 @@ const GameRules = {
   // corrigée par la force des soldats des deux camps (casernes de niveau 2 et 3)
   combatRatio(a) {
     let r = this.frontDefense(a) * this.troopPower(a.target) / this.troopPower(a.attacker);
-    // Royaume sans château ni église : ses troupes, désorganisées, ne comptent que pour 0.8
+    // Royaume sans château (ville) : ses troupes, désorganisées, ne comptent que pour 0.8
     if (this.leaderless(a)) r *= CONFIG.LEADERLESS_DEFENSE;
     // Armée bloquée dans ses châteaux isolés : elle les défend, mais moins bien
     else if (a.targetCastle >= 0 && this.building[a.targetCastle] === B_CASTLE && this.troopsInCastles(a.target)) r *= CONFIG.LEADERLESS_DEFENSE;
     return r;
   },
 
-  // Assaut de front contre un royaume qui n'a plus ni château ni église
+  // Assaut de front contre un royaume qui n'a plus de château (ville)
   leaderless(a) {
     return a.target >= 0 && a.targetCastle < 0 && !this.isProtected(a.target);
   },
@@ -2337,7 +2342,7 @@ const GameRules = {
     return a.target >= 0 && c >= 0 && this.building[c] === B_CASTLE && this.owner[c] === a.target && this.troopsInCastles(a.target);
   },
 
-  // Un royaume sans château ni église n'a plus de pouvoir en place : quand un assaut de front commence,
+  // Un royaume sans château (ville) n'a plus de pouvoir en place : quand un assaut de front commence,
   // toutes les troupes encore présentes dans le royaume défendent d'office (partagées entre les assauts
   // qui commencent en même temps). Les soldats recrutés ensuite restent au royaume.
   // Même chose quand un assaut commence contre le dernier carré d'un royaume (voir lastStand).
@@ -2658,6 +2663,14 @@ const GameRules = {
       else if (d.isHuman) UI.log(`🔗 Tes terres coupées sont de nouveau reliées à un château : l'assaut ${this.deName(p.name)} s'arrête !`, 'good', p);
       return this.endAttack(a);
     }
+    // Assaut de front contre un royaume désorganisé : s'il rebâtit (ou reprend) un château entre-temps,
+    // il est de nouveau organisé, et l'assaut s'arrête
+    if (a.disorganized && this.tick % CONFIG.TICKS_PER_SECOND === 0 && this.isProtected(a.target)) {
+      const p = this.players[a.attacker], d = this.players[a.target];
+      if (p.isHuman) UI.log(`🏰 ${d.name} a de nouveau une ville : il n'est plus désorganisé, ton assaut s'arrête.`, 'warn', d);
+      else if (d.isHuman) UI.log(`🏰 Tu as de nouveau une ville : l'assaut ${this.deName(p.name)} contre tes terres désorganisées s'arrête !`, 'good', p);
+      return this.endAttack(a);
+    }
     if (a.prepTicks && this.tick === a.startTick) {
       // Fin de la préparation : la frontière a pu bouger entre-temps
       a.list = this.buildFrontier(a.attacker, a.target, this.sourceOfAttack(a));
@@ -2729,13 +2742,15 @@ const GameRules = {
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
     // (plaine 1, forêt 1.6, colline 2.2, montagne 2.8, fleuve 4). On avance donc vite en plaine
     // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
-    // Sur les terres libres, une grosse armée s'étend plus vite. Mais contre un royaume, c'est l'inverse :
+    // Sur les terres libres, une grosse armée s'étend plus vite. Mais contre un royaume organisé, c'est l'inverse :
     // plus l'armée d'assaut est grande, plus elle est lente (ASSAULT_SPEED / (1 + soldats / ASSAULT_HEAVY)).
+    // Contre un territoire désorganisé (royaume sans château, ou morceau coupé de ses châteaux), personne ne
+    // tient le terrain : il se prend plus vite (DISORGANIZED_SPEED), et d'autant plus vite que l'armée est grande.
     let speed;
-    if (a.target >= 0) {
+    if (a.target >= 0 && (a.unlinked || this.leaderless(a))) {
+      speed = CONFIG.ASSAULT_SPEED * CONFIG.DISORGANIZED_SPEED * (0.5 + 0.5 * Math.sqrt(a.troops / CONFIG.ASSAULT_HEAVY));
+    } else if (a.target >= 0) {
       speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_HEAVY));
-      // Territoire désorganisé (royaume sans château ni église, ou morceau coupé de ses châteaux) : il se prend plus vite
-      if (a.unlinked || this.leaderless(a)) speed *= CONFIG.DISORGANIZED_SPEED;
     } else {
       speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED)
         * this.earlyBoost() * this.landBoost; // élan de départ (et grande carte) : les terres libres se prennent plus vite

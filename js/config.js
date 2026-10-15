@@ -93,7 +93,8 @@ const CONFIG = {
   ASSAULT_HEAVY: 500,          // (1 + soldats / 500) : plus l'armée est grande, plus elle est lente
                                // (100 soldats : ~4 cases/s · 500 : 2,5 · 1000 : 1,7 · 3000 : 0,7)
   ASSAULT_MIN_SPEED: 0.04,     // vitesse minimum d'un assaut (cases de plaine par tour)
-  DISORGANIZED_SPEED: 1.25,    // un territoire désorganisé (sans château ni église, ou coupé de ses châteaux) se prend 25 % plus vite
+  DISORGANIZED_SPEED: 1.25,    // un territoire désorganisé (sans château, ou coupé de ses châteaux) se prend plus vite,
+                               // et d'autant plus vite que l'armée est grande (100 soldats : ~4,5 cases/s · 500 : 6 · 2000 : 9)
   // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,
   // par le chemin le plus rapide, comme les défenseurs (voir DEFENDER_SPEED_BONUS) : pendant ce temps,
   // tout le monde le voit venir
@@ -143,7 +144,7 @@ const CONFIG = {
   BIG_MAP_BOOST_MAX: 4,        // se prennent plus vite et moins cher (racine du rapport de taille, au plus x4)
   // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
   // puis l'assaut s'arrête (les survivants rentrent).
-  // Un royaume sans château ni église peut être attaqué de front : toutes ses troupes défendent d'office,
+  // Un royaume sans château (ville) peut être attaqué de front : toutes ses troupes défendent d'office,
   // mais désorganisées (sans pouvoir en place), chaque soldat ne compte que pour 0.8.
   LEADERLESS_DEFENSE: 0.8,
   // Expéditions maritimes : en débarquant, on prend les terres libres autour du point de débarquement
@@ -210,7 +211,7 @@ const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTP
 const MILL_LEVELS = [
   null,
   { name: 'Moulin',       gold: 1.5, img: 'img/moulin1.webp', size: 2.3 },
-  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 2.8, upgradeCost: 100 },
+  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 2.8, upgradeCost: 150 },
 ];
 
 // Les 3 niveaux de la caserne : troops = soldats produits toutes les PRODUCTION_INTERVAL secondes,
@@ -232,7 +233,7 @@ const BARRACKS_LEVELS = [
 const CASTLE_LEVELS = [
   null,
   { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 300 },
+  { name: 'Château',      radius: 10, bonus: 2, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500 },
   { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000 },
 ];
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
@@ -250,8 +251,8 @@ const CASTLE_LEVELS = [
 const CHURCH_LEVELS = [
   null,
   { name: 'Église',        slots: 1, castles: 0, radius: 7,  img: 'img/eglise1.webp', size: 2.6 },
-  { name: 'Grande église', slots: 2, castles: 1, radius: 8,  img: 'img/eglise2.webp', size: 3,   upgradeCost: 100 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 1000 },
+  { name: 'Grande église', slots: 2, castles: 1, radius: 8,  img: 'img/eglise2.webp', size: 3,   upgradeCost: 800 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 2000 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu

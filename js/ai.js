@@ -84,7 +84,7 @@ const AI = {
       // (une garnison vaut 3 au combat ; les soldats d'un avant-poste en construction, affaiblis, comptent pour 1)
       const garrison = aim === null ? 0 : Game.garrison[aim] * (Game.builders(aim) ? 1 : CONFIG.GARRISON_POWER);
       // Un château isolé ne reçoit pas de défenseurs : seule sa garnison le défend (proie facile !)
-      // (sans château ni église, toutes ses troupes défendent d'office, mais à 0.8)
+      // (sans château, toutes ses troupes défendent d'office, mais à 0.8)
       // (un morceau coupé de tous ses châteaux : personne ne le défend)
       const helpers = plan.tile !== undefined ? 0 : aim === null ? e.troops * CONFIG.LEADERLESS_DEFENSE
         : Game.isIsolated(aim) ? 0 : e.troops * 0.5;
