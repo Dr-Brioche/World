@@ -4,8 +4,13 @@
 
 const CONFIG = {
   // --- Carte ---
-  MAP_WIDTH: 294,          // largeur de la carte (en cases)
-  MAP_HEIGHT: 192,         // hauteur de la carte (en cases)
+  // Tailles des cartes aléatoires (en cases), au format 16:9, choisies dans le menu
+  // (les cartes prédéfinies, Monde et Europe, ont leur propre taille, plus bas)
+  MAP_SIZES: {
+    petit: [500, 281],
+    moyen: [750, 422],
+    grand: [1000, 562],
+  },
   DESERT_RATIO: 0.15,      // part des plaines et forêts en désert sur les cartes aléatoires (production -20 %)
   WORLD_MAP_WIDTH: 1080,   // taille de la carte « Monde » (bien plus grande : on dézoome beaucoup)
   WORLD_MAP_HEIGHT: 408,
@@ -15,11 +20,14 @@ const CONFIG = {
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
-  ISLETS: [3, 8],          // nombre de petits îlots ajoutés à la carte « Normale »
+  // Les nombres d'îlots, de fleuves et de lacs ci-dessous sont pour une « Petite » carte ; une plus grande en a plus
+  // (multipliés par la racine carrée du rapport de surface : x1,5 pour « Moyenne », x2 pour « Grande »)
+  ISLETS: [4, 10],         // nombre de petits îlots ajoutés à la carte « Normale »
   MEDIUM_ISLETS: [1, 3],   // ...et d'îlots moyens (avec un peu de relief)
-  MIN_SPAWN_LAND: 200,     // une capitale se fonde sur une terre d'au moins 200 cases (pas sur un îlot)
-  RIVERS_MIN: 3,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
-  RIVERS_MAX: 12,          // (ils partent des montagnes et vont jusqu'à la mer)
+  MIN_SPAWN_LAND: 600,     // une capitale se fonde sur une terre d'au moins 600 cases (pas sur un îlot)
+  RIVERS_MIN: 5,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
+  RIVERS_MAX: 18,          // (ils partent des montagnes et vont jusqu'à la mer)
+  LAKES_MAX: 4,            // lacs au plus (au milieu d'un fleuve)
 
   // --- Vitesse ---
   TICKS_PER_SECOND: 10,    // nombre de "tours" de jeu par seconde
@@ -141,8 +149,6 @@ const CONFIG = {
   NEUTRAL_TILE_COST: 0.08,     // soldats perdus (au moins) pour prendre une case (libre ou ennemie)...
   TILE_LOSS_RATE: 0.001,       // ...ou 0,1 % de l'armée par case (x la défense du terrain) : une grosse armée perd plus d'hommes
   REGIONS_REUSE: 5,            // (technique) tours de jeu pendant lesquels le découpage en morceaux peut servir tel quel
-  BIG_MAP_LAND: 27000,         // terres d'une carte « normale » : au-delà (cartes Monde, Europe), les terres libres
-  BIG_MAP_BOOST_MAX: 4,        // se prennent plus vite et moins cher (racine du rapport de taille, au plus x4)
   // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
   // puis l'assaut s'arrête (les survivants rentrent).
   // Un royaume sans château (ville) peut être attaqué de front : toutes ses troupes défendent d'office,

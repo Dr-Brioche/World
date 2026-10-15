@@ -50,10 +50,17 @@ const EDGE_MARGIN = 14;
 
 // type : 'normal' (un continent et quelques îlots), 'continental' (que de la terre, bordée de montagnes
 // infranchissables, avec de grands lacs), 'naval' (plusieurs grandes îles), 'world' (la carte du monde), 'europe' (la carte d'Europe)
-function generateMap(seed, type = 'normal') {
+// size : 'petit', 'moyen' ou 'grand' (voir MAP_SIZES ; les cartes prédéfinies gardent leur propre taille)
+function generateMap(seed, type = 'normal', size = 'moyen') {
   if (type === 'world') return generateWorldMap(seed); // la carte du monde (voir worldmap.js)
   if (type === 'europe') return generateEuropeMap(seed); // la carte d'Europe (voir europemap.js)
-  const W = CONFIG.MAP_WIDTH, H = CONFIG.MAP_HEIGHT, N = W * H;
+  const [W, H] = CONFIG.MAP_SIZES[size] || CONFIG.MAP_SIZES.moyen, N = W * H;
+  // Une plus grande carte a plus d'îlots, de fleuves et de lacs (voir mapCount)
+  const [w0, h0] = CONFIG.MAP_SIZES.petit;
+  mapScale = Math.sqrt((W * H) / (w0 * h0));
+  // Sur une plus grande carte, les formes (continents, chaînes de montagnes, forêts) sont un peu plus grandes,
+  // pour ne pas avoir un relief trop morcelé (fs = 1,3 pour « Petite », 1,6 « Moyenne », 1,85 « Grande »)
+  const fs = Math.sqrt(W / 294);
   const rand = mulberry32(seed);
   const elevNoise = makeValueNoise(rand);
   const forestNoise = makeValueNoise(rand);
@@ -77,7 +84,7 @@ function generateMap(seed, type = 'normal') {
       // Près des bords, le terrain plonge dans l'océan : la terre n'est jamais coupée net par le bord
       const edge = Math.min(x, y, W - 1 - x, H - 1 - y);
       const sink = edge < EDGE_MARGIN ? ((EDGE_MARGIN - edge) / EDGE_MARGIN) ** 2 : 0;
-      elev[y * W + x] = cont ? fbm(elevNoise, x / 40, y / 40, 5) : fbm(elevNoise, x / 40, y / 40, 5) - 0.6 * d - sink;
+      elev[y * W + x] = cont ? fbm(elevNoise, x / (40 * fs), y / (40 * fs), 5) : fbm(elevNoise, x / (40 * fs), y / (40 * fs), 5) - 0.6 * d - sink;
     }
   }
 
@@ -90,7 +97,7 @@ function generateMap(seed, type = 'normal') {
   const relief = new Float32Array(N);
   for (let i = 0; i < N; i++) {
     const x = i % W, y = (i / W) | 0;
-    relief[i] = fbm(reliefNoise, x / 22, y / 22, 4) + (elev[i] - waterLvl) * 0.5;
+    relief[i] = fbm(reliefNoise, x / (22 * fs), y / (22 * fs), 4) + (elev[i] - waterLvl) * 0.5;
   }
   const landRelief = Array.from(relief).filter((r, i) => cont || elev[i] >= waterLvl).sort((a, b) => a - b);
   const peakLvl = Math.max(0.8, landRelief[Math.floor(landRelief.length * 0.97)]);
@@ -110,7 +117,7 @@ function generateMap(seed, type = 'normal') {
         if (r > peakLvl) terrain[i] = TERRAIN.PEAK; // le cœur des montagnes : infranchissable
         else if (r > 0.72) terrain[i] = TERRAIN.MOUNTAIN;
         else if (r > 0.64) terrain[i] = TERRAIN.HILLS;
-        else if (fbm(forestNoise, x / 14, y / 14, 3) > 0.56) terrain[i] = TERRAIN.FOREST;
+        else if (fbm(forestNoise, x / (14 * fs), y / (14 * fs), 3) > 0.56) terrain[i] = TERRAIN.FOREST;
         else terrain[i] = TERRAIN.PLAINS;
       }
     }
@@ -121,14 +128,14 @@ function generateMap(seed, type = 'normal') {
   const minLand = 12;
   keepMainland(terrain, W, H, minLand);
   if (type === 'normal') {
-    addIslets(terrain, W, H, rand, CONFIG.MEDIUM_ISLETS, 7, 12, 8);        // îlots moyens (avec un peu de relief)
-    addIslets(terrain, W, H, rand, CONFIG.ISLETS, 3, 5.5, 4);              // petits îlots
+    addIslets(terrain, W, H, rand, mapCount(CONFIG.MEDIUM_ISLETS), 7, 12, 8);  // îlots moyens (avec un peu de relief)
+    addIslets(terrain, W, H, rand, mapCount(CONFIG.ISLETS), 3, 5.5, 4);        // petits îlots
   }
   if (cont) addLakes(terrain, elev, W, H, rand);
 
   // 3 bis. Quelques déserts : là où le « bruit de sécheresse » est le plus fort (environ DESERT_RATIO des plaines
   //    et forêts), elles deviennent du désert (les collines et les montagnes restent)
-  addDeserts(terrain, W, H, dryNoise);
+  addDeserts(terrain, W, H, dryNoise, fs);
 
   // 4. Les fleuves : chacun part d'une montagne et descend la pente jusqu'à la mer (ou un lac).
   addRivers(terrain, elev, W, H, rand);
@@ -182,7 +189,8 @@ function addRivers(terrain, elev, W, H, rand) {
   const sources = [];
   for (let i = 0; i < N; i++) if (depth[i] === 2 || depth[i] === 3) sources.push(i); // 1 = bord du massif
   // 3. On suit l'eau depuis des sources tirées au hasard
-  const wanted = CONFIG.RIVERS_MIN + Math.floor(rand() * (CONFIG.RIVERS_MAX - CONFIG.RIVERS_MIN + 1));
+  const [rMin, rMax] = mapCount([CONFIG.RIVERS_MIN, CONFIG.RIVERS_MAX]);
+  const wanted = rMin + Math.floor(rand() * (rMax - rMin + 1));
   const flow = new Uint8Array(N); // nombre de fleuves qui passent par chaque case
   const starts = [], paths = [];
   let made = 0;
@@ -218,7 +226,7 @@ function addRivers(terrain, elev, W, H, rand) {
   // 5. Parfois, un fleuve s'élargit en lac au milieu de son cours (pas trop souvent)
   let lakes = 0;
   for (const path of paths) {
-    if (lakes >= LAKES_MAX || rand() > LAKE_CHANCE || path.length < 20) continue;
+    if (lakes >= Math.round(CONFIG.LAKES_MAX * mapScale) || rand() > LAKE_CHANCE || path.length < 20) continue;
     const c = path[Math.floor(path.length * (0.35 + rand() * 0.35))];
     const cx = c % W, cy = (c / W) | 0, r = 2 + rand() * 2.5;
     for (let y = Math.max(1, cy - 5); y <= Math.min(H - 2, cy + 5); y++) {
@@ -232,11 +240,11 @@ function addRivers(terrain, elev, W, H, rand) {
 }
 
 // Déserts des cartes aléatoires : de grandes taches, sur à peu près CONFIG.DESERT_RATIO des plaines et forêts
-function addDeserts(terrain, W, H, dryNoise) {
+function addDeserts(terrain, W, H, dryNoise, fs = 1) {
   const N = W * H, dry = new Float32Array(N), land = [];
   for (let i = 0; i < N; i++) {
     if (terrain[i] !== TERRAIN.PLAINS && terrain[i] !== TERRAIN.FOREST) continue;
-    dry[i] = fbm(dryNoise, (i % W) / 45, ((i / W) | 0) / 45, 4);
+    dry[i] = fbm(dryNoise, (i % W) / (45 * fs), ((i / W) | 0) / (45 * fs), 4);
     land.push(dry[i]);
   }
   if (!land.length) return;
@@ -247,8 +255,13 @@ function addDeserts(terrain, W, H, dryNoise) {
   }
 }
 
-// Lacs : au plus LAKES_MAX par carte, chaque fleuve a LAKE_CHANCE chances d'en avoir un
-const LAKES_MAX = 3, LAKE_CHANCE = 0.3;
+// Lacs : au plus LAKES_MAX par carte (voir config.js), chaque fleuve a LAKE_CHANCE chances d'en avoir un
+const LAKE_CHANCE = 0.3;
+
+// Taille de la carte en cours de création, par rapport à une « Petite » carte (1 = petite, ~2 = grande)
+let mapScale = 1;
+// Un nombre [min, max] prévu pour une petite carte, agrandi pour la carte en cours
+function mapCount([lo, hi]) { return [Math.round(lo * mapScale), Math.round(hi * mapScale)]; }
 
 // Garde seulement le plus grand morceau de terre (la mer et les grands fleuves séparent les terres) :
 // les autres morceaux deviennent de la mer.

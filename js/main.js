@@ -31,6 +31,11 @@ const UI = {
       builds.appendChild(btn);
     }
 
+    // Taille de la carte : seulement pour les cartes aléatoires (Monde et Europe ont leur propre taille)
+    const sizeForType = () => { $('mapSize').disabled = ['world', 'europe'].includes($('mapType').value); };
+    $('mapType').addEventListener('change', sizeForType);
+    sizeForType();
+
     // Choix de la bannière dans le menu (elle donne la couleur du royaume)
     this.banner = BANNERS.findIndex(b => b.name === 'Aigle vert');
     $('bannerPick').innerHTML = BANNERS.map((b, k) =>
@@ -112,6 +117,7 @@ const UI = {
       banner: this.banner,
       difficulty: $('difficulty').value,
       mapType: $('mapType').value,
+      mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
     });
     $('kBanner').src = BANNERS[this.banner].img;
