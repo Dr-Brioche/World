@@ -75,7 +75,8 @@ const UI = {
       if (!cancel) return;
       const id = cancel.dataset.cancel;
       const a = Game.cancelAttack(Game.human.id, +id);
-      if (a) this.log(`🏳️ Retraite ordonnée : tes soldats décrochent en ${CONFIG.RETREAT_TIME} s, et environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdront.`, 'warn');
+      if (a && a.calledBack) this.log('↩️ Ton armée n\'avait pas encore quitté tes terres : elle rentre tout de suite, sans perte.', 'good');
+      else if (a) this.log(`🏳️ Retraite ordonnée : tes soldats décrochent en ${CONFIG.RETREAT_TIME} s, et environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdront.`, 'warn');
       this.refreshAttacks();
     });
 
@@ -98,7 +99,7 @@ const UI = {
       if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden) {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
-      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.closeBuildingMenus(); }
+      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.closeBuildingMenus(); this.freeArm = 0; }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
     // Les emojis de la page deviennent des icônes médiévales dessinées (voir icons.js)
@@ -564,6 +565,9 @@ const UI = {
     $('gold').textContent = fmt(h.gold);
     this.refreshTroopGauge();
     $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + ' %';
+    // Durée de la partie (le temps de jeu : la pause l'arrête)
+    const secs = Math.floor(G.tick / CONFIG.TICKS_PER_SECOND), hh = Math.floor(secs / 3600), mm = Math.floor(secs / 60) % 60;
+    $('clock').textContent = (hh ? hh + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(secs % 60).padStart(2, '0');
     const traitorSecs = Math.ceil((h.traitorUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
     $('traitor').classList.toggle('hidden', !G.isTraitor(h));
     $('traitor').textContent = `🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % ` +
@@ -622,7 +626,9 @@ const UI = {
     this.refreshAttacks();
 
     if (G.phase === 'playing') {
+      const freeArm = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
       $('hint').textContent = this.plan ? this.planHint()
+        : freeArm ? `🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`
         : this.selectedBuild
         ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`
         : UI.describeTile(Render.hover) || 'Clique sur une terre voisine pour attaquer · molette = zoom · glisser = déplacer';
@@ -876,7 +882,8 @@ const UI = {
     if (G.phase !== 'playing' || !h.alive || i < 0) return;
     const items = [];
     const own = G.owner[i] === h.id;
-    if (G.isLand(i) && !own) items.push({ label: '⚔️ Attaquer', run: () => this.onMapClick(sx, sy) });
+    // (choisir « Attaquer » dans le menu vaut le double clic des terres libres)
+    if (G.isLand(i) && !own) items.push({ label: '⚔️ Attaquer', run: () => { this.freeArm = performance.now(); this.onMapClick(sx, sy); } });
     // Sur un royaume ennemi : lui proposer une alliance (ou, s'il est allié, rompre le pacte)
     const o = G.owner[i];
     if (o >= 0 && !own && G.players[o].alive && G.pactsAllowed) {
@@ -998,6 +1005,9 @@ const UI = {
   onMapClick(sx, sy) {
     const G = Game, i = Render.tileAt(sx, sy);
     if (i < 0) return;
+    // (terres libres : il faut deux clics de suite pour les attaquer, voir plus bas)
+    const armed = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
+    this.freeArm = 0;
     if (G.phase === 'spawn') {
       const err = G.spawnError(i);
       if (err) return this.log(err, 'warn');
@@ -1035,6 +1045,9 @@ const UI = {
     }
     if (!G.isLand(i) || G.owner[i] === h.id) return;
     const target = G.owner[i];
+    // Terres libres : un 1er clic prépare l'attaque, un 2e clic de suite (sur des terres libres) la lance.
+    // (évite de lancer des soldats par erreur, par exemple en cliquant à côté pour fermer un menu)
+    if (target < 0 && !armed) { this.freeArm = performance.now(); return; }
     // Royaume ennemi : un 1er clic choisit la cible (château, église… ou ses terres s'il n'en a plus),
     // un 2e clic lance l'assaut. Assaut déjà en cours sur cette cible : on envoie tout de suite des soldats en plus.
     // Terres libres : on attaque tout de suite.
@@ -1072,7 +1085,7 @@ function escapeHtml(s) {
 // --- Souris et tactile : clic, glisser pour déplacer, molette/pincement pour zoomer ---
 function setupInput(canvas) {
   const pointers = new Map();
-  let drag = null, dragging = false, pinchDist = null;
+  let drag = null, dragging = false, pinchDist = null, closedMenu = false;
 
   // Clic droit : annule une construction ou un assaut en préparation, sinon ouvre le menu d'actions
   canvas.addEventListener('contextmenu', e => {
@@ -1082,7 +1095,9 @@ function setupInput(canvas) {
   });
 
   canvas.addEventListener('pointerdown', e => {
-    UI.closeBuildingMenus(); // un clic à côté ferme le menu rapide et la fenêtre d'info du bâtiment
+    // un clic à côté ferme le menu rapide et la fenêtre d'info du bâtiment (et ne fait rien d'autre)
+    closedMenu = !!(UI.actionMenu || UI.upgradeBox);
+    UI.closeBuildingMenus();
     if (e.button === 2) return;
     canvas.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -1121,7 +1136,7 @@ function setupInput(canvas) {
 
   const up = e => {
     if (!pointers.has(e.pointerId)) return;
-    if (pointers.size === 1 && !dragging) UI.onMapClick(e.clientX, e.clientY);
+    if (pointers.size === 1 && !dragging && !closedMenu) UI.onMapClick(e.clientX, e.clientY);
     pointers.delete(e.pointerId);
     pinchDist = null;
     if (pointers.size === 1) {

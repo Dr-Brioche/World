@@ -55,7 +55,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    (x2 environ sur la carte Monde, x4 en Europe) : sinon la conquête n'en finirait pas. Les combats ne changent pas.
    Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
    porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
-2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
+2. **Étends-toi** : clique **deux fois de suite** sur une terre libre voisine pour t'en emparer (le 1er clic prépare l'attaque,
+   le 2e la lance : un clic à côté pour fermer un menu ne lance donc rien).
    **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** (ou une de ses églises ⛪, ports ⚓ ou avant-postes ⛺, sans défense) : ton armée se fraie un chemin depuis ta
    frontière en **contournant ses autres fortifications**, capture tout sur son passage jusqu'à la **muraille**
    du château, puis l'assiège. L'armée **ne traverse pas la muraille** : si le château tombe, toute sa zone tombe avec lui.
@@ -83,7 +84,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Tes attaques en cours s'affichent en bas de l'écran avec leurs soldats, ainsi que tes **bateaux en mer**
    (débarquement, renforts vers un avant-poste, retour au port) avec les soldats à bord et le temps restant.
    La **petite croix rouge** dans le coin d'une barre ordonne la **retraite** 🏳️ : pour un assaut, tes soldats mettent
-   **3 s** à décrocher (ils peuvent encore se faire attaquer), puis rentrent en perdant **15 %** de leurs effectifs ;
+   **3 s** à décrocher (ils peuvent encore se faire attaquer), puis rentrent en perdant **15 %** de leurs effectifs
+   (mais si l'armée n'a pas encore quitté tes terres, elle rentre tout de suite, **sans aucune perte**) ;
    pour un bateau, il fait demi-tour vers le port, et **15 %** des soldats à bord se perdent (l'or de l'expédition
    n'est pas rendu). Les soldats en mer comptent dans ton armée (la jauge en bas indique « ⛵ en mer »).
    Les attaques ennemies contre toi y apparaissent aussi, en rouge.
@@ -417,6 +419,7 @@ Certains fleuves forment aussi un **lac** en chemin.
 **🛶 Traverser un fleuve** : pour prendre des terres libres de l'autre côté, fais un **clic droit** sur la rive d'en face
 et choisis **🛶 Traverser le fleuve**. La traversée **ne coûte aucun soldat**, seulement du **temps**
 (**10 s** pour la première case de fleuve, **6 s** pour la seconde d'un fleuve double), et tout le monde voit le radeau.
+On ne peut lancer qu'**une traversée toutes les 10 s**.
 À l'arrivée, tu prends une **tête de pont** sur l'autre rive (le fleuve, lui, reste neutre).
 (Le grand fleuve, lui, ne se traverse pas.)
 Les royaumes rivaux savent aussi traverser les fleuves quand une rive libre les attend en face.
@@ -433,6 +436,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.81** : 🖱️ terres libres : il faut deux clics de suite pour les attaquer, et un clic qui ferme un menu ne lance plus rien · ↩️ une retraite avant que l'armée ait quitté tes terres est immédiate et sans perte · ↩️ si la ville (église, port) que tu vises est prise par un autre avant ton arrivée, ton armée fait demi-tour · 🛶 une traversée de fleuve toutes les 10 s au plus · ⏳ un chrono de la partie en haut de l'écran · 🔱 les soldats sont représentés par deux lances croisées (au lieu d'un casque)
 - **v0.80.1** : 🏚️ un royaume qui n'a plus de ville (château) est désorganisé, même s'il lui reste des églises ou des ports : on l'attaque de front, sans devoir prendre ses bâtiments un par un (ses avant-postes se visent toujours) · 🏰 s'il rebâtit ou reprend un château pendant l'assaut, l'assaut s'arrête · ⚡ contre un territoire désorganisé, plus l'armée est grande, plus elle avance vite · pas de flèche rouge pour ces assauts de front · ⛪ seule ta meilleure église débloque des châteaux en plus (elles ne s'additionnent plus) · 💰 nouveaux prix : grand moulin 150, château niveau 2 500, grande église 800, cathédrale 2000
 - **v0.80** : 🛡️ les garnisons ne comptent plus dans ton armée (ce sont des armées liées à leur bâtiment : des villes bien gardées ne freinent plus le recrutement) · 💰 anéantir un royaume rapporte une prime de 500 pièces et tout son trésor · ⏳ une ville, une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant 30 s · 🧹 grande vérification du code : 🐛 le bouton « Défendre » ne marchait qu'en cliquant sur son bord (le clic sur l'icône était ignoré) · 🐛 le jeu pouvait se figer si la cible d'un de tes assauts disparaissait · 🐛 plus de trahison « pour rien » (attaquer un allié là où il n'y a rien à attaquer) · 🐛 un royaume anéanti en plein assaut faisait disparaître les défenseurs et la garnison d'en face · 🐛 un assaut de jonction ne prend plus de bande de terres (ni de bâtiments) qu'il n'a pas traversée · 🐛 renforcer l'assaut contre un morceau coupé visait parfois le mauvais morceau · 🐛 bataille à 3 armées au pied d'un château : le siège ne recule plus · 🐛 on ne peut plus aider un allié contre une armée qui marche encore chez elle · 🐛 l'aperçu du chemin d'assaut tient compte de tes avant-postes · ⚡ grandes cartes plus fluides (dessin de la carte, survol d'un royaume, chemins d'assaut) · petites corrections d'affichage et nettoyage du code inutile
 - **v0.79.1** : ✂️ la barre d'un assaut ennemi est raccourcie : juste « Écosse attaque · ⚔ soldats · Défendre »

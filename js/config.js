@@ -156,6 +156,8 @@ const CONFIG = {
   CROSSING_TIME_FIRST: 10,   // secondes pour traverser la 1re case de fleuve (c'est difficile !)...
   CROSSING_TIME_NEXT: 6,     // ...et chacune des suivantes (fleuve double)
   CROSSING_MAX_DISTANCE: 14, // on ne traverse que si le fleuve est à moins de 14 cases de la terre visée
+  CROSSING_COOLDOWN: 10,
+  FREE_LAND_CLICK_TIME: 4,   // terres libres : le 2e clic qui lance l'attaque doit venir dans les 4 secondes     // une seule traversée de fleuve toutes les 10 secondes
   CROSSING_BANK_RADIUS: 4,   // terres libres prises sur l'autre rive, autour de la case visée
   EXPEDITION_COOLDOWN: 5,    // une expédition maritime au plus toutes les 5 secondes
   REPATRIATE_SPEED: 5,       // vitesse minimum (cases/s) des bateaux qui rapatrient les soldats d'un avant-poste

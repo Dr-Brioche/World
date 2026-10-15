@@ -17,8 +17,10 @@ const ICON_DEFS = {
   // --- Ressources et armée ---
   gold: [{ d: 'M15.5 9.5a6 6 0 1 1-.01 0z', f: '#d9a520', s: '#6b4a12', w: 1.2 },
     { d: 'M9 6.5a6 6 0 1 1-.01 0z', f: '#efc23e', s: '#6b4a12', w: 1.2 }, { d: 'M9 9.5a3 3 0 1 1-.01 0z', s: '#8a6416', w: 1 }],
-  helmet: [{ d: 'M4.5 15a7.5 7.5 0 0 1 15 0v2.5h-15z', f: 'c' }, { d: 'M11 13.5h2V21h-2zM3.5 17.5h17', s: 'c', w: 1.6 },
-    { d: 'M7.5 12.5h3M13.5 12.5h3', s: '#f3e3bf', w: 1.3 }],
+  // deux lances croisées (les soldats)
+  spears: [{ d: 'M4.5 21L17 8.5M19.5 21L7 8.5', s: 'c', w: 1.9 },
+    { d: 'M16 9.5l1.2-5.2L21.5 2l-1.8 4.6zM8 9.5L6.8 4.3 2.5 2l1.8 4.6z', f: 'c' },
+    { d: 'M14.5 11l2.5 2.5M9.5 11L7 13.5', s: 'c', w: 1.6 }],
   shield: [{ d: 'M12 2l8.5 3v6.5c0 5.5-3.7 9.3-8.5 10.8C7.2 20.8 3.5 17 3.5 11.5V5z', f: 'c' },
     { d: 'M12 5.5v13M7 10.5h10', s: '#f3e3bf', w: 1.6, o: 0.85 }],
   scroll: [{ d: 'M6 4h11a2 2 0 0 1 2 2v13H8a2 2 0 0 1-2-2z', f: '#f3e3bf', s: 'c', w: 1.5 },
@@ -81,7 +83,7 @@ const ICON_DEFS = {
 // Emojis → icônes. (Les emojis des « title » et des listes déroulantes restent : là, on ne peut pas dessiner.)
 const EMOJI_ICONS = {
   '🏰': 'castle', '⛪': 'church', '🌾': 'mill', '⚔': 'swords', '⛺': 'tent', '⚓': 'anchor',
-  '💰': 'gold', '👥': 'helmet', '🛡': 'shield', '📜': 'scroll', '🗺': 'map',
+  '💰': 'gold', '👥': 'spears', '🛡': 'shield', '📜': 'scroll', '🗺': 'map',
   '⛵': 'ship', '🚢': 'anchor', '🛶': 'raft', '🌊': 'waves',
   '⬆': 'up', '✖': 'x', '🚩': 'pennant', '🏳': 'whiteflag', '⚠': 'warning', '🎯': 'target', '✂': 'axe',
   '🤝': 'seal', '💔': 'brokenseal', '⏳': 'hourglass', '⏱': 'hourglass', '🔥': 'flame', '⚰': 'tomb',
