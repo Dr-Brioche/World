@@ -533,8 +533,9 @@ const GameRules = {
     this.version++;
   },
 
-  // Chaque tour : les murs dont le chantier se termine se dressent ; un assaut dont le chemin est coupé par un mur
-  // tout neuf rebrousse chemin (il est annulé, sans pertes). Un mur dont la ville n'est plus au royaume disparaît.
+  // Chaque tour : les murs dont le chantier se termine se dressent. Un assaut dont la route encore devant lui
+  // (pas la partie déjà passée) est coupée par ce mur tout neuf le contourne ; s'il n'a pas d'autre chemin, il
+  // rebrousse chemin (assaut annulé). Un mur dont la ville n'est plus au royaume disparaît.
   stepWalls() {
     for (const w of this.walls.slice()) {
       if (this.building[w.castle] !== B_CASTLE || this.owner[w.castle] !== w.owner) { this.removeWall(w); continue; }
@@ -544,15 +545,93 @@ const GameRules = {
       this.version++;
       const o = this.players[w.owner];
       if (o.isHuman) UI.log('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.', 'good');
+      const mine = new Set(w.tiles);
       for (const a of this.attacks) {
-        if (a.done || a.target !== w.owner) continue;
+        if (a.done || a.target !== w.owner || a.retreatEnd !== undefined || a.castleTaken) continue;
         const route = a.pathTiles || a.path;
-        if (!route || !route.some(t => this.wallAt[t] && this.owner[t] === w.owner)) continue;
+        if (!route || !route.slice(this.pathPassed(a)).some(t => mine.has(t))) continue;
         const p = this.players[a.attacker];
-        if (p.isHuman) UI.log(`🧱 Un mur ${this.deName(o.name)} coupe la route de ton armée : elle rebrousse chemin.`, 'warn', o);
-        else if (o.isHuman) UI.log(`🧱 Ton mur coupe la route de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, 'good', p);
+        if (this.rerouteAssault(a)) {
+          if (p.isHuman) UI.log(`🧱 Un mur ${this.deName(o.name)} barre la route de ton armée : elle le contourne.`, 'warn', o);
+          else if (o.isHuman) UI.log(`🧱 Ton mur barre la route de l'armée ${this.deName(p.name)} : elle doit faire le tour !`, 'good', p);
+          continue;
+        }
+        if (p.isHuman) UI.log(`🧱 Un mur ${this.deName(o.name)} ferme le seul passage de ton armée : elle rebrousse chemin.`, 'warn', o);
+        else if (o.isHuman) UI.log(`🧱 Ton mur ferme le seul passage de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, 'good', p);
+        this.wallRetreatLoss(a);
         this.endAttack(a);
       }
+    }
+  },
+
+  // Jusqu'où l'assaut a est passé sur son chemin : les cases de route d'index < à ce nombre sont derrière lui
+  // (0 tant qu'il marche encore sur ses terres)
+  pathPassed(a) {
+    const route = a.pathTiles || a.path;
+    if (!route || this.isPreparing(a)) return 0;
+    for (let j = route.length - 1; j >= 0; j--) if (this.owner[route[j]] === a.attacker) return j + 1;
+    return 0;
+  },
+
+  // Un mur barre la route de l'assaut a : il cherche un autre chemin depuis là où il se bat (ou, s'il marche
+  // encore sur ses terres, depuis toute sa frontière). Renvoie false s'il n'y en a pas.
+  rerouteAssault(a) {
+    if (a.link !== undefined && a.link >= 0) {
+      // assaut de jonction : nouveau chemin vers son bâtiment isolé
+      const route = this.linkRoute(a.attacker, a.link, a.target);
+      if (!route) return false;
+      a.path = route.path;
+      a.piece = route.piece;
+      a.limitZone = this.corridor(a.link, route.path, route.passable);
+    } else {
+      const c = a.targetCastle;
+      if (c < 0 || this.owner[c] !== a.target) return false;
+      const src = this.sourceOfAttack(a);
+      let path;
+      if (this.isPreparing(a)) path = this.castlePath(a.attacker, c, src);
+      else {
+        // on repart du front : la case ennemie, collée à nos terres, la plus proche de la suite de l'ancien chemin
+        const passable = this.castlePassable(c), old = a.pathTiles, next = old[Math.min(old.length - 1, this.pathPassed(a))];
+        const nx = next % this.W, ny = (next / this.W) | 0;
+        let from = -1, best = Infinity;
+        for (const t of [a.frontTile, ...a.list]) {
+          if (t < 0 || !passable(t) || !this.countFriendNeighbors(t, a.attacker)) continue;
+          const d = (t % this.W - nx) ** 2 + (((t / this.W) | 0) - ny) ** 2;
+          if (d < best) { best = d; from = t; }
+        }
+        if (from < 0) return false;
+        path = this.searchPath(a.attacker, from, new Set(this.footprint(c, this.building[c])), passable, a.target, src);
+        if (path && this.building[c] === B_CASTLE) {
+          const k = path.findIndex(i => this.inWalls(c, i));
+          if (k >= 0) path.length = k + 1;
+        }
+        if (path) path = old.slice(0, this.pathPassed(a)).concat(path);
+      }
+      if (!path) return false;
+      a.pathTiles = path;
+      a.limitZone = this.corridor(c, path);
+    }
+    const route = a.pathTiles || a.path, start = route[this.pathPassed(a)];
+    if (start !== undefined) {
+      a.frontTile = start;
+      if (!a.set.has(start)) { a.set.add(start); a.list.push(start); }
+    }
+    return true;
+  },
+
+  // Cas rare : un mur a été bâti dans le dos d'un assaut (sur le chemin déjà parcouru). Pour rentrer, l'armée le
+  // franchit quand même, mais y perd WALL_RETREAT_LOSS de ses soldats, à chaque mur.
+  wallRetreatLoss(a) {
+    const route = a.pathTiles || a.path;
+    if (!route || !this.walls.length) return;
+    const behind = new Set(route.slice(0, this.pathPassed(a)));
+    const n = this.walls.filter(w => w.done && w.owner === a.target && w.tiles.some(t => behind.has(t))).length;
+    if (!n) return;
+    const keep = Math.pow(1 - CONFIG.WALL_RETREAT_LOSS, n);
+    a.troops *= keep;
+    for (const r of a.pending) r.troops *= keep;
+    if (this.players[a.attacker].isHuman) {
+      UI.log(`🧱 Pour rentrer, ton armée doit franchir ${n > 1 ? n + ' murs' : 'un mur'} : elle y perd ${Math.round((1 - keep) * 100)} % de ses soldats.`, 'warn');
     }
   },
 
@@ -3072,6 +3151,7 @@ const GameRules = {
     const keep = 1 - CONFIG.RETREAT_LOSS;
     a.troops *= keep;
     for (const r of a.pending) r.troops *= keep;
+    this.wallRetreatLoss(a); // (et un mur bâti dans son dos coûte cher à franchir)
     const p = this.players[a.attacker];
     if (p.isHuman) UI.log(`↩️ Retraite terminée : ${fmt(a.troops + a.pending.reduce((s, r) => s + r.troops, 0))} soldats rentrent.`, 'good');
     this.endAttack(a);
