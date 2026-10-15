@@ -438,7 +438,8 @@ const GameRules = {
     return next ? next.upgradeCost : null;
   },
 
-  // Lance l'amélioration d'un bâtiment : on paie tout de suite, les travaux durent UPGRADE_TIME secondes.
+  // Lance l'amélioration d'un bâtiment : on paie tout de suite, les travaux durent UPGRADE_TIME secondes
+  // (40 s pour passer au niveau 2, 60 s pour le niveau 3, quel que soit le bâtiment).
   // Renvoie un message d'erreur, ou null si les travaux commencent.
   upgradeBuilding(p, a) {
     if (!this.building[a] || this.owner[a] !== p.id) return 'Ce n\'est pas un de tes bâtiments.';
@@ -447,10 +448,8 @@ const GameRules = {
     if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
-    // (passer au niveau 3 prend plus longtemps ; une ville, encore plus : voir CASTLE_UPGRADE_TIME)
     const lvl3 = this.level[a] + 1 >= 3;
-    const secs = this.building[a] === B_CASTLE ? CONFIG.CASTLE_UPGRADE_TIME[lvl3 ? 1 : 0]
-      : lvl3 ? CONFIG.UPGRADE_TIME_LEVEL3 : CONFIG.UPGRADE_TIME;
+    const secs = CONFIG.UPGRADE_TIME[lvl3 ? 1 : 0];
     this.startWorks(p, a, 'up', secs, cost);
     return null;
   },
@@ -1483,7 +1482,28 @@ const GameRules = {
   // Toute l'armée du royaume : les soldats disponibles + ceux stationnés aux avant-postes + ceux en mer
   // (ils comptent tous pour le maximum). Les garnisons, elles, n'en font pas partie : ce sont des armées liées
   // à leur bâtiment (avoir des villes bien gardées ne freine pas le recrutement).
-  armySize(p) { return p.troops + this.stationedOf(p) + this.atSeaOf(p); },
+  armySize(p) { return p.troops + this.stationedOf(p) + this.atSeaOf(p) + this.campaignOf(p); },
+
+  // Soldats de p partis en campagne : dans ses assauts (et leurs renforts en route), ses défenseurs (au combat,
+  // en route ou qui rentrent), et ceux qu'il a envoyés aider un allié. Ils comptent dans son armée : pendant qu'ils
+  // sont loin, le royaume ne recrute pas au-delà de son maximum (sinon un assaut pourrait grossir sans fin).
+  campaignOf(p) {
+    let sum = 0;
+    const id = p.id;
+    for (const a of this.attacks) {
+      if (a.done) continue;
+      if (a.attacker === id) sum += a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
+      if (a.target === id) {
+        let allies = 0;
+        if (a.allyDef) for (const k in a.allyDef) allies += a.allyDef[k];
+        sum += Math.max(0, a.defenders - allies) + (a.defPending ? a.defPending.reduce((s, r) => s + r.troops, 0) : 0);
+      }
+      if (a.allyDef && a.allyDef[id]) sum += Math.max(0, a.allyDef[id]);
+      if (a.allyPending) for (const r of a.allyPending) if (r.pid === id) sum += r.troops;
+    }
+    for (const r of this.returning) if (r.pid === id) sum += r.troops;
+    return sum;
+  },
 
   // Soldats de pid à bord de ses bateaux (débarquements, renforts, retours au port)
   atSeaOf(p) {
