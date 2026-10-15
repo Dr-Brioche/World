@@ -1429,7 +1429,7 @@ const GameRules = {
         // Assaut sur un château (une église…) : l'armée entre chez l'ennemi là où commence son chemin ;
         // elle marche jusque-là depuis sa cité la plus proche (et la flèche part de là)
         if (path) this.entryFromPath(a, path, source);
-        const secs = this.startMarch(a, a.startTile);
+        const secs = this.startMarch(a, a.startTile, troops);
         if (this.players[target].isHuman) {
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
           UI.log(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! ` +
@@ -2151,10 +2151,12 @@ const GameRules = {
   isPreparing(a) { return this.tick < a.startTick; },
 
   // Départ d'un assaut contre un royaume : l'armée part de la cité (château) de son royaume la plus proche
-  // de la frontière visée (ou de son avant-poste) et marche sur ses terres jusqu'à la case edge, à
-  // MARCH_SPEED cases par seconde. Pendant cette marche, les soldats en plus la rejoignent tout de suite ;
-  // une fois chez l'ennemi, ce sont des renforts (avec délai). Renvoie la durée de la marche (en secondes).
-  startMarch(a, edge) {
+  // de la frontière visée (ou de son avant-poste) et marche sur ses terres jusqu'à la case edge, par le chemin
+  // le plus rapide (walkRoute) : vite en plaine, lentement dans le relief, et plus lentement si elle est grande
+  // (comme les défenseurs : chez elle, elle marche 60 % plus vite qu'un assaut en terre ennemie). Pendant cette marche, les soldats en plus la
+  // rejoignent tout de suite ; une fois chez l'ennemi, ce sont des renforts (avec délai).
+  // Renvoie la durée de la marche (en secondes).
+  startMarch(a, edge, troops = a.troops) {
     const W = this.W, TPS = CONFIG.TICKS_PER_SECOND, p = this.players[a.attacker];
     const to = edge >= 0 ? { x: edge % W + 0.5, y: ((edge / W) | 0) + 0.5 } : { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 };
     const src = this.sourceOfAttack(a), mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
@@ -2168,16 +2170,19 @@ const GameRules = {
       }
     }
     if (!from) from = { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 }; // (pas de château : du cœur du royaume)
-    const secs = Math.max(CONFIG.MARCH_MIN_TIME, Math.hypot(to.x - from.x, to.y - from.y) / CONFIG.MARCH_SPEED);
+    const march = this.walkRoute(a.attacker, from, to, troops);
+    march.arrive = Math.max(march.arrive, this.tick + Math.round(CONFIG.MARCH_MIN_TIME * TPS));
+    a.march = march;
     a.marchFrom = from;
     a.marchTo = to;
-    a.startTick = this.tick + Math.round(secs * TPS);
+    a.startTick = march.arrive;
     a.prepTicks = a.startTick - this.tick;
-    return Math.ceil(secs);
+    return Math.ceil(a.prepTicks / TPS);
   },
 
-  // Où en est la marche de l'armée (coordonnées en cases) : de sa cité vers la frontière
+  // Où en est la marche de l'armée (coordonnées en cases) : de sa cité vers la frontière, le long de son chemin
   marchPosition(a) {
+    if (a.march) return this.walkPosition(a.march);
     const f = a.marchFrom, t = a.marchTo, k = 1 - Math.max(0, a.startTick - this.tick) / Math.max(1, a.prepTicks);
     return { x: f.x + (t.x - f.x) * k, y: f.y + (t.y - f.y) * k };
   },
@@ -2374,11 +2379,82 @@ const GameRules = {
     if (src >= 0) a.defSource = src;
     // Les défenseurs partent tout de suite, du château le plus proche (ou de l'avant-poste),
     // et marchent à la rencontre de l'armée ennemie : ils se battent en arrivant
+    // (par le chemin le plus rapide de leurs terres : voir walkRoute)
     const from = this.defenseOrigin(pid, a, src), to = this.attackFront(a);
-    const dist = Math.hypot(to.x - from.x, to.y - from.y), TPS = CONFIG.TICKS_PER_SECOND;
-    (a.defPending = a.defPending || []).push({ troops, from, start: this.tick,
-      arrive: this.tick + Math.max(1, Math.round(dist / CONFIG.DEFENDER_SPEED * TPS)) });
+    (a.defPending = a.defPending || []).push(this.walkRoute(pid, from, to, troops));
     return a;
+  },
+
+  // --- Marche à pied sur ses propres terres (défenseurs) ---
+  // Vitesse d'un groupe de défenseurs (en « points de terrain » par tour) : comme un assaut de même taille
+  // (plus ils sont nombreux, plus ils sont lents), mais DEFENDER_SPEED_BONUS fois plus vite, car ils sont chez eux.
+  // (c'est aussi la vitesse d'une armée d'assaut qui marche sur ses terres jusqu'à la frontière)
+  defenderSpeed(troops) {
+    return CONFIG.DEFENDER_SPEED_BONUS *
+      Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + troops / CONFIG.ASSAULT_HEAVY));
+  },
+
+  // Trajet de troops soldats de pid, du point from au point to (en cases) : ils prennent le chemin le plus rapide
+  // à travers leurs terres (une case de plaine coûte 1, une forêt 1.6, une colline 2.2, une montagne 3.5, un fleuve 4).
+  // Renvoie { troops, from, pts, cum, start, arrive } : pts = les points du chemin, cum = le coût cumulé jusqu'à chacun.
+  // (pas de chemin sur ses terres : ils vont tout droit, comme en plaine)
+  walkRoute(pid, from, to, troops) {
+    const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x);
+    const path = this.ownLandPath(pid, tile(from), tile(to));
+    const pts = [from], cum = [0];
+    const add = q => {
+      const last = pts[pts.length - 1];
+      const t = tile(q), cost = this.isLand(t) ? Math.min(4, TERRAIN_INFO[this.terrain[t]].cost) : 1;
+      pts.push(q);
+      cum.push(cum[cum.length - 1] + Math.hypot(q.x - last.x, q.y - last.y) * cost);
+    };
+    if (path) for (let k = 1; k < path.length - 1; k++) add({ x: path[k] % this.W + 0.5, y: ((path[k] / this.W) | 0) + 0.5 });
+    add(to);
+    const ticks = Math.max(1, Math.round(cum[cum.length - 1] / this.defenderSpeed(troops)));
+    return { troops, from, pts, cum, start: this.tick, arrive: this.tick + ticks };
+  },
+
+  // Où en est ce trajet (walkRoute) à ce tour ? Renvoie { x, y, k } (k = l'étape du chemin atteinte)
+  walkPosition(r) {
+    const total = r.cum[r.cum.length - 1];
+    const done = total * Math.min(1, (this.tick - r.start) / Math.max(1, r.arrive - r.start));
+    let k = 1;
+    while (k < r.cum.length - 1 && r.cum[k] < done) k++;
+    const a = r.pts[k - 1], b = r.pts[k], seg = r.cum[k] - r.cum[k - 1];
+    const f = seg > 0 ? (done - r.cum[k - 1]) / seg : 1;
+    return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, k };
+  },
+
+  // Chemin le plus rapide (Dijkstra) de la case from à la case to, en ne passant que par les terres de pid
+  // (to elle-même peut être à l'ennemi : c'est le front). Renvoie la liste des cases, ou null.
+  // (les tableaux sont gardés d'une fois sur l'autre : la carte peut être très grande)
+  ownLandPath(pid, from, to) {
+    const N = this.N, W = this.W, own = this.owner;
+    if (from < 0 || from >= N || to < 0 || to >= N) return null;
+    if (!this.walkBuf || this.walkBuf.seen.length !== N)
+      this.walkBuf = { dist: new Float64Array(N), prev: new Int32Array(N), seen: new Int32Array(N), stamp: 0 };
+    const B = this.walkBuf, stamp = ++B.stamp, heap = new MinHeap();
+    // (seen[i] = stamp : case déjà vue lors de CETTE recherche ; seen[i] = -stamp : case finie)
+    const passable = i => i === to || (own[i] === pid && this.isLand(i));
+    B.seen[from] = stamp; B.dist[from] = 0; B.prev[from] = -1;
+    heap.push(0, from);
+    while (heap.size) {
+      const [d, i] = heap.pop();
+      if (B.seen[i] === -stamp) continue;
+      B.seen[i] = -stamp;
+      if (i === to) {
+        const path = [];
+        for (let j = i; j >= 0; j = B.prev[j]) path.push(j);
+        return path.reverse();
+      }
+      const x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+        if (n < 0 || B.seen[n] === -stamp || !passable(n)) continue;
+        const nd = d + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; B.prev[n] = i; heap.push(nd, n); }
+      }
+    }
+    return null;
   },
 
   // L'avant-poste bâti dont la zone est attaquée (son morceau de territoire, pas encore relié au royaume), ou -1 :
@@ -2420,15 +2496,14 @@ const GameRules = {
   },
 
   // L'assaut a est fini (la ville est prise, ou l'attaquant est parti) : ses défenseurs encore en route font
-  // demi-tour, là où ils sont, et rentrent à pied (DEFENDER_SPEED) jusqu'à la ville (château) la plus proche
+  // demi-tour, là où ils sont, et rentrent à pied (walkRoute) jusqu'à la ville (château) la plus proche
   // de leur royaume (ou à leur avant-poste). On ne les récupère qu'à leur arrivée.
   sendHome(a, src) {
     if (!a.defPending || !a.defPending.length) return;
-    const W = this.W, TPS = CONFIG.TICKS_PER_SECOND, pid = a.target, front = this.attackFront(a);
+    const W = this.W, pid = a.target;
     const mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
     for (const r of a.defPending) {
-      const k = Math.min(1, (this.tick - r.start) / Math.max(1, r.arrive - r.start));
-      const from = { x: r.from.x + (front.x - r.from.x) * k, y: r.from.y + (front.y - r.from.y) * k };
+      const pos = this.walkPosition(r), from = { x: pos.x, y: pos.y };
       let to = null, best = Infinity;
       if (src >= 0 && this.owner[src] === pid && this.building[src] === B_OUTPOST) to = mid(src);
       else {
@@ -2439,9 +2514,7 @@ const GameRules = {
         }
       }
       if (!to) to = r.from; // (plus aucun château : ils retournent d'où ils venaient)
-      const dist = Math.hypot(to.x - from.x, to.y - from.y);
-      this.returning.push({ pid, troops: r.troops, source: src, from, to, start: this.tick,
-        arrive: this.tick + Math.max(1, Math.round(dist / CONFIG.DEFENDER_SPEED * TPS)) });
+      this.returning.push(Object.assign(this.walkRoute(pid, from, to, r.troops), { pid, source: src, to }));
     }
     a.defPending = [];
   },

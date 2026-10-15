@@ -91,7 +91,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
    **⚔️ Le déroulement d'un assaut**
    - **La marche (sur tes terres)** : ton armée part de **ta cité (château) la plus proche** de la cible
-     (ou de ton avant-poste) et **marche jusqu'à ta frontière** (5 cases par seconde, 2 s au minimum).
+     (ou de ton avant-poste) et **marche jusqu'à ta frontière** par le **chemin le plus rapide** de tes terres
+     (en pointillés) : vite en plaine, plus lentement en forêt, en colline, en montagne ou en traversant un fleuve,
+     et d'autant plus lentement que l'armée est grande (sa vitesse est fixée au départ ; 2 s au minimum).
+     Chez toi, elle marche **60 % plus vite** qu'un assaut en terre ennemie.
      Tout le monde la voit venir : ta **bannière** ⚔️ avance sur la carte avec le temps restant et tes soldats ;
      en face, les terres menacées **scintillent à ta couleur**, et le bâtiment visé est entouré d'un **halo** qui pulse.
      Pendant la marche, reclique sur la cible pour **ajouter des soldats tout de suite** : c'est ce qui fixe l'ampleur de l'assaut.
@@ -116,7 +119,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      chaque clic montre le suivant).
    - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
-     à la rencontre de l'ennemi (on voit leur bannière 🛡 avancer) : ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
+     à la rencontre de l'ennemi par le **chemin le plus rapide** de tes terres (on voit leur bannière 🛡 avancer, et
+     leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
+     groupe est plus lent, mais ils sont chez eux : **60 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
      contre un même assaut (le temps de regrouper les soldats).
      Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **font
      demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus proche, comme les bateaux
@@ -403,6 +408,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.75** : 🥾 les défenseurs, et les armées d'assaut qui marchent jusqu'à la frontière, prennent le chemin le plus rapide de leurs terres (en pointillés sur la carte) : vite en plaine, lentement dans le relief, plus lentement s'ils sont nombreux, mais 60 % plus vite qu'un assaut en terre ennemie car ils sont chez eux (même chose pour les défenseurs qui rentrent)
 - **v0.74.1** : 🔍 la barre de résumé d'un royaume survolé ne suit plus la souris : elle s'affiche toujours au même endroit, juste sous ta barre d'infos en haut de l'écran
 - **v0.74** : 🎨 fini les emojis : toutes les icônes du jeu (menus, barre du haut, journal, classement, bâtiments et armées sur la carte…) sont maintenant de petits dessins médiévaux (épées croisées, bourse d'or, heaume, écu, nef, sceau, sablier…)
 - **v0.73** : 🛡️ un assaut qui échoue (repoussé, retraite…) rend au défenseur la route qu'il avait tracée à travers ses terres : elle ne reste à l'attaquant que s'il prend son objectif

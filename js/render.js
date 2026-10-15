@@ -519,10 +519,30 @@ const Render = {
       this.drawThreat(ox, oy, a);
       const remaining = (a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND;
       const m = a.marchFrom ? G.marchPosition(a) : null, st = a.startTile >= 0 ? a.startTile : -1;
+      // le reste du chemin de la marche (le plus rapide sur ses terres), en pointillés
+      if (a.march) {
+        this.walkTrail(a.march, ox, oy);
+        ctx.setLineDash([3, 6]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(${G.players[a.attacker].color.join(',')},0.7)`;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
       const bx = m ? ox + m.x * s : st >= 0 ? ox + (st % G.W + 0.5) * s : x1;
       const by = m ? oy + m.y * s : st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
       this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `${Math.ceil(remaining)} s · ${fmt(a.troops)}${extra}`);
     }
+  },
+
+  // Trajet à pied (Game.walkRoute) : prépare le tracé du reste du chemin (à dessiner ensuite avec stroke)
+  // et renvoie la position actuelle du groupe, en pixels
+  walkTrail(r, ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, pos = G.walkPosition(r);
+    const x = ox + pos.x * s, y = oy + pos.y * s;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let k = pos.k; k < r.pts.length; k++) ctx.lineTo(ox + r.pts[k].x * s, oy + r.pts[k].y * s);
+    return { x, y };
   },
 
   // Défenseurs en route vers un assaut : leur bannière marche du château vers le combat (visible par tous)
@@ -530,14 +550,9 @@ const Render = {
     const G = Game, ctx = this.ctx, s = this.cam.scale;
     for (const a of G.attacks) {
       if (a.done || !a.defPending || !a.defPending.length || a.target < 0) continue;
-      const to = G.attackFront(a), d = G.players[a.target];
+      const d = G.players[a.target];
       for (const r of a.defPending) {
-        const k = Math.min(1, (G.tick - r.start) / Math.max(1, r.arrive - r.start));
-        const x = ox + (r.from.x + (to.x - r.from.x) * k) * s, y = oy + (r.from.y + (to.y - r.from.y) * k) * s;
-        // les pointillés du reste du trajet
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(ox + to.x * s, oy + to.y * s);
+        const { x, y } = this.walkTrail(r, ox, oy); // (les pointillés du reste du trajet)
         ctx.setLineDash([4, 6]);
         ctx.lineWidth = 2;
         ctx.strokeStyle = `rgba(${d.color.join(',')},0.85)`;
@@ -581,11 +596,8 @@ const Render = {
   drawReturning(ox, oy) {
     const G = Game, ctx = this.ctx, s = this.cam.scale;
     for (const r of G.returning) {
-      const p = G.players[r.pid], k = Math.min(1, (G.tick - r.start) / Math.max(1, r.arrive - r.start));
-      const x = ox + (r.from.x + (r.to.x - r.from.x) * k) * s, y = oy + (r.from.y + (r.to.y - r.from.y) * k) * s;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(ox + r.to.x * s, oy + r.to.y * s);
+      const p = G.players[r.pid];
+      const { x, y } = this.walkTrail(r, ox, oy);
       ctx.setLineDash([2, 6]);
       ctx.lineWidth = 2;
       ctx.strokeStyle = `rgba(${p.color.join(',')},0.6)`;
