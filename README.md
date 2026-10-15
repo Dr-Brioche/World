@@ -407,8 +407,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    tes soldats disponibles (pas les garnisons) réduisent **tout l'or que tu gagnes**, jusqu'à **−25 %** avec
    une armée pleine (c'est affiché sous la jauge).
    Envoie donc tes troupes au combat plutôt que de les garder !
-   **🚀 Élan de départ** : au début de la partie, tout le monde recrute et prend les terres libres **50 % plus vite** ;
-   cet élan diminue peu à peu et disparaît au bout de **4 minutes**.
+   **🚀 Élan de départ** : au début de la partie, tout le monde recrute et prend les terres libres **3 fois plus vite** ;
+   cet élan diminue peu à peu et disparaît au bout de **5 minutes** (la moitié des terres est prise en 3 minutes environ).
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
    **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
@@ -442,6 +442,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.83.1** : 🚀 départ plus rapide : l'élan de départ triple le recrutement et la conquête des terres libres (au lieu de +50 %), puis disparaît en 5 minutes : l'expansion va environ 2 fois plus vite (la moitié des terres prise en 3 minutes au lieu de 6)
 - **v0.83** : ⚡ assauts, marches et défenseurs 15 % plus rapides · 🧨 tu peux abandonner un avant-poste : tous ses soldats rentrent automatiquement par la mer (détruit par l'ennemi, ses soldats sont vaincus) · ⛪⚓ un moulin dans les zones d'un port et d'une église n'occupe plus qu'une place (celle du port en priorité) · 🏝️ les petits îlots ne disparaissent plus à la création de la carte, et il y a aussi des îlots moyens · ⚡ partie 2 fois plus fluide (les bots cherchent plus vite où construire)
 - **v0.82** : 🏰 un assaut part de ta ville (château) la plus proche de l'objectif, et entre chez l'ennemi par le meilleur passage depuis elle (plus besoin de traverser la moitié du royaume) · 🛡️ tes défenseurs suivent l'assaut qui avance et passent par tes terres (plus de ligne droite à travers celles de l'ennemi) · 🤖 les bots ne s'acharnent plus à plusieurs sur la même cible et se battent aussi entre eux (ils ne te visent plus en priorité quand il reste peu de royaumes) · 🗺️ les frontières des royaumes suivent aussi les côtes et les lacs · 🌄 le relief et les sols se voient mieux sous la couleur des royaumes
 - **v0.81** : 🖱️ terres libres : il faut deux clics de suite pour les attaquer, et un clic qui ferme un menu ne lance plus rien · ↩️ une retraite avant que l'armée ait quitté tes terres est immédiate et sans perte · ↩️ si la ville (église, port) que tu vises est prise par un autre avant ton arrivée, ton armée fait demi-tour · 🛶 une traversée de fleuve toutes les 10 s au plus · ⏳ un chrono de la partie en haut de l'écran · 🔱 les soldats sont représentés par deux lances croisées (au lieu d'un casque)
