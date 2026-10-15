@@ -2737,9 +2737,12 @@ const GameRules = {
   // ce sont les soldats du défenseur qui rendent un assaut coûteux (voir fight).
   // Une armée en marche perd des hommes : un pourcentage de son effectif (TILE_LOSS_RATE par case, selon le
   // terrain), donc une grosse armée en perd plus qu'une petite ; au moins NEUTRAL_TILE_COST par case.
+  // Terres libres : quand l'élan de départ du recrutement retombe, elles coûtent moins de soldats d'autant
+  // (jusqu'à 3 fois moins) : l'expansion en terre vierge garde le rythme du début, toute la partie.
   tileCost(a, t) {
     const loss = Math.max(CONFIG.NEUTRAL_TILE_COST, a.troops * CONFIG.TILE_LOSS_RATE);
-    return loss * TERRAIN_INFO[this.terrain[t]].cost;
+    const free = a.target < 0 ? this.earlyBoost() / (1 + CONFIG.EARLY_GROWTH_BONUS) : 1;
+    return loss * TERRAIN_INFO[this.terrain[t]].cost * free;
   },
 
   // Défense de l'endroit où se trouve l'assaut : terrain + château (x0.5 si le défenseur est traître).
@@ -3238,7 +3241,7 @@ const GameRules = {
       speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_HEAVY));
     } else {
       speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED)
-        * this.earlyBoost(); // élan de départ : au début, les terres libres se prennent plus vite
+        * CONFIG.FREE_LAND_SPEED_BONUS; // les terres libres se prennent vite, toute la partie
     }
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));

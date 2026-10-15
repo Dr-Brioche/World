@@ -48,11 +48,12 @@ const CONFIG = {
   TROOP_GROWTH_SQRT: 0.016,
   // Rendement décroissant des casernes, comme les moulins : rendement = 1 / (1 + 0.1 × (casernes - 1))
   BARRACKS_DIMINISHING: 0.1,
-  // Élan de départ : au début de la partie, le recrutement ET la conquête des terres libres vont plus vite
-  // (x3 au tout début : +200 %), puis ce bonus diminue peu à peu jusqu'à disparaître au bout de EARLY_GROWTH_TIME secondes
-  // (la fin de partie ne change pas)
+  // Élan de départ : au début de la partie, le recrutement va plus vite (x3 au tout début : +200 %), puis ce bonus
+  // diminue peu à peu jusqu'à disparaître au bout de EARLY_GROWTH_TIME secondes (la fin de partie ne change pas)
   EARLY_GROWTH_BONUS: 2,
   EARLY_GROWTH_TIME: 300,
+  // Les terres libres (vierges) se prennent toujours vite, toute la partie (x3), comme au début
+  FREE_LAND_SPEED_BONUS: 3,
   // Le recrutement dépend du remplissage de l'armée : il monte jusqu'à TROOP_PEAK_RATIO
   // du maximum, puis baisse jusqu'à 0 quand on s'approche du maximum.
   TROOP_PEAK_RATIO: 0.4,       // remplissage idéal (40 % du maximum)
