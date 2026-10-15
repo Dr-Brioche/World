@@ -3469,7 +3469,9 @@ const GameRules = {
       }
       // (un avant-poste visé s'assiège aussi : il ne tombe pas tout de suite)
       if (this.building[t] === B_OUTPOST && this.anchor[t] === a.targetCastle) return this.startSiege(a, t);
-      const steps = TERRAIN_INFO[this.terrain[t]].cost;
+      // (un assaut contre un royaume avance un peu plus vite que la normale dans le relief : ASSAULT_TERRAIN_SLOWDOWN)
+      const raw = TERRAIN_INFO[this.terrain[t]].cost;
+      const steps = a.target >= 0 ? 1 + (raw - 1) * CONFIG.ASSAULT_TERRAIN_SLOWDOWN : raw;
       if (a.move < steps) {
         a.set.add(t); // pas assez de points ce tour-ci : on réessaiera
         return;

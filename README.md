@@ -509,6 +509,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90.5** : ⛰️ les assauts contre un royaume avancent un peu plus vite dans le relief : forêt +10 %, colline +16 %, montagne +19 % de vitesse (le relief ralentit 25 % moins qu'avant ; l'expansion en terre libre ne change pas)
 - **v0.90.4** : 🧭 assauts, défenseurs et soldats qui rentrent partent de (ou rentrent à) la ville d'où le trajet à pied est le plus rapide, en comptant les fleuves, le relief et les détours, et plus la ville la plus proche à vol d'oiseau
 - **v0.90.3** : 💰 le port royal (niveau 3) coûte 2000 (au lieu de 1200)
 - **v0.90.2** : 💰 la grande caserne (niveau 3) coûte 2500 (au lieu de 1600), mais agrandit bien plus l'armée maximum : +350 soldats (au lieu de +200)
