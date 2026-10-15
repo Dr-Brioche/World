@@ -543,7 +543,10 @@ const UI = {
       const a = G.anchor[i];
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
       if (G.building[i] === B_CASTLE) {
-        txt += ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} % · places prises : ${G.churchUsed(a)} sur ${info.slots}`;
+        const links = G.wallLinked(a).size;
+        txt += ` · 🛡️ garnison ${Math.round(G.garrison[a] / G.garrisonMax(a) * 100)} %` +
+          (links ? ` (🧱 reliée par un mur à ${links > 1 ? links + ' villes' : 'une autre ville'} : +${links * CONFIG.WALL_LINK_GARRISON} soldats)` : '') +
+          ` · places prises : ${G.churchUsed(a)} sur ${info.slots}`;
       }
       if (G.holdsAlone(a) && G.isIsolated(a)) {
         txt += o === G.human.id ? ' · 🚩 coupé de ton royaume (il produit toujours) : clique pour lancer un assaut qui le relie à ton royaume'
@@ -1096,7 +1099,8 @@ const UI = {
   wallHint() {
     const G = Game, c = this.wallFor, cost = G.wallCost(c);
     return `🧱 Mur (💰 ${fmt(cost)}, ${CONFIG.WALL_BUILD_TIME} s) : clique sur tes terres, à ${CONFIG.WALL_MAX_REACH} cases au plus de la muraille de la ville ` +
-      `: le mur ira tout droit de la ville jusque-là (près d'un lac, d'un sommet, d'un fleuve ou d'un autre mur, il s'y accroche tout seul) · Échap ou clic droit pour annuler`;
+      `: le mur ira tout droit de la ville jusque-là (près d'un lac, d'un sommet, d'un fleuve ou d'un autre mur, il s'y accroche tout seul ; ` +
+      `vise une autre de tes villes pour les relier : +${CONFIG.WALL_LINK_GARRISON} de garnison pour chacune) · Échap ou clic droit pour annuler`;
   },
 
   closeActionMenu() {
