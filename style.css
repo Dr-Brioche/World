@@ -364,10 +364,10 @@ button:disabled .ico { opacity: 0.6; }
 .actionMenu button:disabled { opacity: 0.5; cursor: not-allowed; }
 .actionMenu small { color: var(--danger); font-size: 11px; margin: -2px 4px 2px; }
 
-/* Barre de résumé d'un royaume survolé (au-dessus de la souris) */
+/* Barre de résumé d'un royaume survolé (fixe, juste sous la barre du haut) */
 .kTip {
   pointer-events: none;
-  transform: translate(-50%, -100%);
+  transform: translateX(-50%);
   white-space: nowrap;
   font-size: 13px;
   padding: 3px 10px;
