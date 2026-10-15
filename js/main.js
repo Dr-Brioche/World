@@ -682,7 +682,10 @@ const UI = {
       const wait = Math.ceil((a.startTick - G.tick) / CONFIG.TICKS_PER_SECOND);
       const pending = a.pending ? a.pending.reduce((s, r) => s + r.troops, 0) : 0;
       const defenders = (a.defenders || 0) + (a.garrison || 0), coming = G.defendersOnTheWay(a);
-      el.textContent = `⚔ ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
+      // Assaut ennemi contre nous : ses soldats encore en réserve chez lui, et entre parenthèses ceux envoyés
+      const incoming = a.target === h.id && a.attacker !== h.id;
+      const army = incoming ? `⚔ réserve ${fmt(G.players[a.attacker].troops)} (${fmt(a.troops)} envoyés)` : `⚔ ${fmt(a.troops)}`;
+      el.textContent = army + (pending ? ` (+${fmt(pending)} en route)` : '') +
         (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (coming >= 1 ? ` (🛡 +${fmt(coming)} en route)` : '') +
         (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
         // (garnison du château visé : elle attend derrière sa muraille, et n'entre en jeu qu'au siège)

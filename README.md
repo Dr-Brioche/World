@@ -119,7 +119,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Où est l'attaque ?** Un royaume qui t'attaque a son nom qui **clignote en rouge** dans le classement, en haut
      à droite : **clique sur son nom**, la caméra va directement voir son armée (s'il a plusieurs assauts contre toi,
      chaque clic montre le suivant).
-   - **Défendre** : quand un assaut te vise, clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
+   - **Défendre** : quand un assaut te vise, sa barre en bas de l'écran montre les soldats que l'attaquant garde
+     **en réserve** chez lui, et entre parenthèses ceux qu'il a envoyés (ex. « réserve 54 (740 envoyés) »).
+     Clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
      à la rencontre de l'ennemi par le **chemin le plus rapide** de tes terres (on voit leur bannière 🛡 avancer, et
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
@@ -418,6 +420,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.77.2** : 🔎 la barre d'un assaut ennemi montre les soldats que l'attaquant garde en réserve, et entre parenthèses ceux qu'il a envoyés
 - **v0.77.1** : 📊 la jauge des soldats affiche ton armée sur son maximum (ex. « armée 150 / 300 »)
 - **v0.77** : 🎯 un cercle de ciblage rouge entoure l'armée ennemie survolée (clic = envoyer tes défenseurs) · 🗡️ la souris devient une petite épée (au lieu d'une main) sur tout ce qu'on peut sélectionner
 - **v0.76.7** : ⚖️ après-guerre et galvanisation s'additionnent au lieu de se multiplier : un +25 % annule un −25 % (la jauge affiche le total quand les deux sont actifs)
