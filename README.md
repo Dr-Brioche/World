@@ -266,6 +266,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (la meilleure compte, ça ne s'additionne pas) : au combat, chacun de tes soldats vaut 1,3 soldat
      (niveau 1), 1,8 soldat (niveau 2) ou 2,5 soldats (niveau 3), en attaque comme en défense.
      C'est un rapport entre les deux camps : une grande caserne (x2,5) contre une caserne (x1,8), c'est x1,4 pour toi.
+     **L'icône des troupes** montre le niveau de la meilleure caserne de chaque royaume (sur la carte, sur ses armées,
+     dans sa fiche) : **deux épées croisées** (sans caserne ou niveau 1), les épées avec **un casque** (niveau 2), puis
+     avec **un bouclier** devant (niveau 3). Tu vois tout de suite quelles troupes sont les plus fortes.
      Tu ne vois que les chiffres de **tes** bâtiments, pas ceux des autres royaumes.
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
@@ -493,6 +496,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.88.1** : ⚔️ l'icône des troupes montre le niveau des casernes de chaque royaume : deux épées médiévales croisées (sans caserne ou niveau 1), avec un casque (niveau 2), puis avec un bouclier (niveau 3), sur la carte, les armées, la fiche des royaumes et ta jauge
 - **v0.88** : 🏰 une ville a un nombre de places pour ses moulins et casernes : 4 au niveau 1, 6 au niveau 2, 9 au niveau 3 (« places prises » en la survolant) · ⛵ avant-poste : nouvelles icônes, un petit bateau avec une flèche vers la gauche pour envoyer des renforts, vers la droite pour rapatrier
 - **v0.87.7** : ⚡ les assauts vont 15 % plus vite (en terre ennemie, dans leur marche jusqu'à la frontière et pour leurs renforts) et les défenseurs 15 % moins vite : ils ne vont plus que 18 % plus vite qu'un assaut de même taille (au lieu de 60 %)
 - **v0.87.6** : 🛤️ un moulin, une caserne ou un port relié à plusieurs villes a une route vers chacune, et les bonus s'additionnent (double avec 2 villes, triple avec 3, jamais plus), que les villes soient bâties avant ou après lui

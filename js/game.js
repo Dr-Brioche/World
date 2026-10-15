@@ -2829,6 +2829,20 @@ const GameRules = {
     return def;
   },
 
+  // Niveau de la meilleure caserne d'un royaume (0 s'il n'en a pas), et l'icône de ses troupes qui va avec :
+  // deux épées (sans caserne ou niveau 1), + un casque (niveau 2), + un bouclier (niveau 3)
+  troopLevel(pid) {
+    let best = 0;
+    for (const a of this.buildingTiles) {
+      if (this.building[a] === B_BARRACKS && this.owner[a] === pid) best = Math.max(best, this.level[a] || 1);
+    }
+    return best;
+  },
+  troopIcon(pid) {
+    const l = pid >= 0 ? this.troopLevel(pid) : 0;
+    return l >= 3 ? '🎖' : l === 2 ? '🪖' : '⚔';
+  },
+
   // Force des soldats d'un royaume : celle de sa meilleure caserne (1 sans caserne améliorée)
   troopPower(pid) {
     let best = 1;

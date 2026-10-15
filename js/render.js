@@ -618,7 +618,7 @@ const Render = {
           : a.siege ? `${G.building[a.siege.tile] === B_OUTPOST ? '⛺' : '🏰'} ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s · ` : '';
         // Deux armées qui s'affrontent au pied du même château : leurs bannières se font face
         const shift = a.clash !== undefined ? (a.attacker < a.clash ? -30 : 30) : 0;
-        this.drawArmyBanner(a, bx + shift, by, `${siege}⚔ ${fmt(a.troops)}${extra}`);
+        this.drawArmyBanner(a, bx + shift, by, `${siege}${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
         continue;
       }
       // Marche sur ses propres terres : pas de flèche. Le front menacé scintille à la couleur de l'attaquant,
@@ -636,7 +636,7 @@ const Render = {
       }
       const bx = m ? ox + m.x * s : st >= 0 ? ox + (st % G.W + 0.5) * s : x1;
       const by = m ? oy + m.y * s : st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
-      this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `⚔ ${fmt(a.troops)}${extra}`);
+      this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
     }
   },
 
@@ -793,7 +793,7 @@ const Render = {
     ctx.strokeStyle = 'rgba(20,12,4,0.85)';
     ctx.fillStyle = '#fff';
     if (troops !== null) { // (un radeau de traversée n'emporte pas de soldats de l'armée)
-      Icons.text(ctx, '⚔ ' + fmt(troops), x, y - 18);
+      Icons.text(ctx, Game.troopIcon(pid) + ' ' + fmt(troops), x, y - 18);
     }
     return { x, y };
   },
@@ -1410,7 +1410,7 @@ const Render = {
       const tw = ctx.measureText(label).width;
       this.drawBannerImage(p, cx - tw / 2 - size * 0.55, cy + size * 0.6, size * 1.9);
       ctx.font = `600 ${size * 0.75}px Georgia, serif`;
-      Icons.text(ctx, '⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
+      Icons.text(ctx, G.troopIcon(p.id) + ' ' + fmt(p.troops), cx, cy + size * 0.55);
     }
 
     this.drawCastleAssaultPreview(ox, oy);
