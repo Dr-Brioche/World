@@ -253,16 +253,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Soldats produits | Bonus d'armée max | Force de **tous** tes soldats | Prix |
      |---|---|---|---|---|
-     | 1. Camp d'entraînement | quelques-uns | un peu | **+10 %** | prix de la caserne |
-     | 2. Caserne | +100 % | +100 % | **+20 %** | 💰 400 |
-     | 3. Grande caserne | +125 % | **x4** (+200 soldats) | **+50 %** | 💰 1600 |
+     | 1. Camp d'entraînement | quelques-uns | un peu | **+30 %** | prix de la caserne |
+     | 2. Caserne | +100 % | +100 % | **+80 %** | 💰 400 |
+     | 3. Grande caserne | +125 % | **x4** (+200 soldats) | **+150 %** | 💰 1600 |
 
      Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
      tes casernes s'additionnent, mais avec un **rendement décroissant** (comme les moulins) : plus tu as de casernes,
      moins chacune produit de soldats (3 → 83 % chacune, 6 → 67 %).
      **La force des soldats** vaut pour tout le royaume dès **une seule** caserne de ce niveau
-     (la meilleure compte, ça ne s'additionne pas) : au combat, chacun de tes soldats vaut 1,1 soldat
-     (niveau 1), 1,2 soldat (niveau 2) ou 1,5 soldat (niveau 3), en attaque comme en défense.
+     (la meilleure compte, ça ne s'additionne pas) : au combat, chacun de tes soldats vaut 1,3 soldat
+     (niveau 1), 1,8 soldat (niveau 2) ou 2,5 soldats (niveau 3), en attaque comme en défense.
+     C'est un rapport entre les deux camps : une grande caserne (x2,5) contre une caserne (x1,8), c'est x1,4 pour toi.
      Tu ne vois que les chiffres de **tes** bâtiments, pas ceux des autres royaumes.
    - 🏰 **Château** : entoure les terres proches d'une **muraille** dessinée sur la carte.
      La muraille suit tes frontières sans déborder chez le voisin.
@@ -481,6 +482,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.87.2** : ⚔️ casernes bien plus fortes : chaque soldat vaut 1,3 (camp d'entraînement), 1,8 (caserne) ou 2,5 soldats (grande caserne) au combat, au lieu de 1,1, 1,2 et 1,5
 - **v0.87.1** : 🏛️ la règle du pouvoir : une muraille avec sa garnison maintient le pouvoir, donc un **port fortifié** (niveau 3) tient sa région comme une ville. Un royaume qui garde un port fortifié n'est plus désorganisé, et une région avec un port fortifié peut construire ; sans ville ni port fortifié, c'est l'anarchie
 - **v0.87** : ✝️ **la Croyance** : chaque église en apporte (10, 30 ou 50 selon son niveau, +50 % si reliée à une route) ; plus croyant qu'un voisin ennemi, tu convertis lentement ses terres frontalières (d'abord ses couloirs étroits et ses pointes), d'autant plus vite que l'écart est grand ; jamais ses villes, ports fortifiés, avant-postes ni ce qui est dans leur muraille ; bible verte ou rouge dans le classement · 🎚️ menu : la difficulté et le nombre de royaumes rivaux (3 à 11) se choisissent séparément · 🧨 détruire une ville, une église ou un port fait aussi sauter les moulins et casernes qui en dépendaient · ⚓ un morceau de royaume avec un port fortifié n'est plus « coupé de ses châteaux » : il est défendu, comme avec une ville
 - **v0.86** : 🧱 murs plus courts (12 cases au plus après la muraille de la ville, au lieu de 15) · 🔀 un mur tout neuf sur la route d'un assaut : l'armée le contourne, et ne rebrousse chemin que s'il ferme son seul passage (un mur sur la partie déjà passée ne l'arrête pas) · ↩️ une armée en retraite qui doit franchir un mur bâti dans son dos y perd 50 % de ses soldats, par mur · 🤖 les bots bâtissent aussi des murs, là où un voisin ennemi viendrait les attaquer
