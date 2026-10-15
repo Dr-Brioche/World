@@ -1727,6 +1727,12 @@ const GameRules = {
       if (!best.has(key) || size[k] > size[best.get(key)]) best.set(key, k);
     }
     for (const k of best.values()) { heart[k] = 1; hasHeart.add(owner[k]); }
+    // (un autre morceau du même continent, tenu par une ville ou un port fortifié et assez grand : un cœur aussi)
+    for (let k = 0; k < size.length; k++) {
+      if (heart[k] || !held[k] || (anyOutpost[k] && !hasCastle[k])) continue;
+      const b = best.get(owner[k] + ':' + land[order[start[k]]]);
+      if (b !== undefined && size[k] >= size[b] * CONFIG.SPLIT_HEART_SHARE) heart[k] = 1;
+    }
     // (un royaume qui n'a plus que des zones d'avant-poste : son plus grand morceau reste son cœur)
     for (let o = 0; o < main.length; o++) if (main[o] >= 0 && !hasHeart.has(o)) heart[main[o]] = 1;
     // outpost[k] = avant-poste bâti du morceau k (-1 s'il n'y en a pas) ; heart[k] = 1 si k est un cœur du royaume

@@ -193,6 +193,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Un morceau avec un **avant-poste** (une invasion par la mer) se défend : il faut viser l'avant-poste.
    Un royaume installé sur **plusieurs îles** (par la mer, puis un château) n'est pas « coupé » d'une île à l'autre.
 
+   **✂️ Grand morceau coupé** : si un royaume est coupé en deux sur un même continent, un autre morceau tenu par une **ville**
+   (ou un port fortifié) et **assez grand** (au moins **25 %** de son plus grand morceau) n'est pas « coupé » : c'est un
+   **cœur à part entière**, comme une autre île. Ses armées en partent, ses défenseurs y vont, et il n'est pas englobé.
+   Seuls les **petits** morceaux sont pris (sauf la zone de leurs villes, qui restent isolées, voir ci-dessous).
    **🚩 Château isolé** : les **châteaux** et les **ports de niveau 3** savent se défendre seuls (avec leur
    garnison) : quand leur morceau est pris, ils **restent à leur royaume**, avec les terres de leur zone,
    **isolés** au milieu des terres ennemies.
@@ -517,6 +521,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.7** : ✂️ un royaume coupé en deux sur un même continent garde ses deux morceaux comme des cœurs à part entière si le plus petit est tenu par une ville (ou un port fortifié) et fait au moins 25 % du plus grand : ses villes ne sont plus isolées, ses armées en partent ; seuls les petits morceaux restent coupés
 - **v0.91.6** : ⚡ assauts (marche, combat, renforts) et défenseurs 15 % plus rapides
 - **v0.91.5** : ⚡ un territoire désorganisé se prend 30 % plus vite
 - **v0.91.4** : 🐎 une grosse armée est moins ralentie par sa taille (assauts, marches et défenseurs) : 1000 soldats avancent 50 % plus vite qu'avant, 3000 soldats 75 % plus vite (le ralentissement est deux fois plus faible)

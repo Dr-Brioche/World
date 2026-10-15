@@ -17,6 +17,10 @@ const CONFIG = {
   EUROPE_MAP_WIDTH: 1000,  // taille de la carte « Europe »
   EUROPE_MAP_HEIGHT: 1000,
   MIN_OPPONENTS: 3,
+  // Royaume coupé en deux sur un même continent : son plus grand morceau est son cœur. Un autre morceau tenu par
+  // une ville (ou un port fortifié) et assez grand (au moins 25 % du plus grand) est aussi un cœur, à part entière :
+  // ses armées en partent, ses défenseurs y vont. Plus petit, il reste isolé (ses villes tiennent seules).
+  SPLIT_HEART_SHARE: 0.25,
   CAMERA_KEY_SPEED: 900,   // déplacement de la caméra au clavier (ZQSD / flèches), en pixels d'écran par seconde        // au moins 3 royaumes rivaux (on en choisit le nombre dans le menu, jusqu'à 11)
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
