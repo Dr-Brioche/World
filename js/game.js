@@ -3137,7 +3137,7 @@ const GameRules = {
   // (une armée d'assaut qui marche sur ses terres jusqu'à la frontière, elle, va MARCH_OWN_LAND_BONUS fois plus vite)
   defenderSpeed(troops, bonus = CONFIG.DEFENDER_SPEED_BONUS) {
     return bonus *
-      Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + troops / CONFIG.ASSAULT_HEAVY));
+      Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + troops / CONFIG.ASSAULT_SLOWDOWN));
   },
 
   // Trajet de troops soldats de pid, du point from au point to (en cases) : ils prennent le chemin le plus rapide
@@ -3492,14 +3492,14 @@ const GameRules = {
     // (plaine 1, forêt 1.6, colline 2.2, montagne 2.8, fleuve 4). On avance donc vite en plaine
     // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
     // Sur les terres libres, une grosse armée s'étend plus vite. Mais contre un royaume organisé, c'est l'inverse :
-    // plus l'armée d'assaut est grande, plus elle est lente (ASSAULT_SPEED / (1 + soldats / ASSAULT_HEAVY)).
+    // plus l'armée d'assaut est grande, plus elle est lente (ASSAULT_SPEED / (1 + soldats / ASSAULT_SLOWDOWN)).
     // Contre un territoire désorganisé (royaume sans château, ou morceau coupé de ses châteaux), personne ne
     // tient le terrain : il se prend plus vite (DISORGANIZED_SPEED), et d'autant plus vite que l'armée est grande.
     let speed;
     if (a.target >= 0 && (a.unlinked || this.leaderless(a))) {
       speed = CONFIG.ASSAULT_SPEED * CONFIG.DISORGANIZED_SPEED * (0.5 + 0.5 * Math.sqrt(a.troops / CONFIG.ASSAULT_HEAVY));
     } else if (a.target >= 0) {
-      speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_HEAVY));
+      speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_SLOWDOWN));
     } else {
       speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED)
         * CONFIG.FREE_LAND_SPEED_BONUS * CONFIG.FREE_LAND_BOOST; // les terres libres se prennent vite, toute la partie
