@@ -235,6 +235,9 @@ button:hover { background: #e8d6a8; }
 .build .count.full { color: var(--danger); }
 .build.active { background: var(--gold); box-shadow: 0 0 0 2px var(--ink) inset; }
 .build.poor .cost { color: var(--danger); }
+/* bouton « Croisade » (avec une cathédrale) : un peu doré pour le distinguer des constructions */
+.build.crusade { border-color: var(--gold); }
+.build.crusade:disabled { opacity: 0.7; cursor: default; }
 
 #hint {
   bottom: 8px;
@@ -355,6 +358,9 @@ button:hover { background: #e8d6a8; }
   .nm { width: 80px; }
   #bottomwrap { left: 8px; right: 8px; transform: none; }
   #bottombar { flex-wrap: wrap; justify-content: center; }
+  /* (boutons plus étroits : les 5 constructions et la croisade tiennent sur un téléphone) */
+  #builds { flex-wrap: wrap; justify-content: center; gap: 4px; }
+  .build { min-width: 56px; padding: 4px; }
   #hint { display: none; }
   #log { top: 80px; width: calc(100% - 16px); }
 }
