@@ -565,7 +565,11 @@ const UI = {
         else txt += ' · pas de chemin (ni route de port ni ville assez proche)';
       }
       const road = G.roads().get(a);
-      if (road) txt += ` · ${road.onRoad ? '🛤️ au bord d\'une route' : road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
+      if (road) {
+        const n = G.linkRoads(road).length;
+        txt += ` · ${road.onRoad ? '🛤️ au bord d\'une route' : n > 1 ? `🛤️ ${n} routes (vers ${n} villes)`
+          : road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
+      }
       if (G.works.has(a)) txt += { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[G.works.get(a).kind];
       else if (o === G.human.id && BUILDING_LEVELS[G.building[i]] && !(G.holdsAlone(a) && G.isIsolated(a))) txt += ` · clique pour l'améliorer ou le détruire`;
     } else if (G.building[i]) {
@@ -808,11 +812,15 @@ const UI = {
     }
     if (!TERRAIN_PRODUCTION[t]) return '';
     let txt = ` · production ici : ${prodText(G.terrainFactor(a, t))}`;
-    if ((t === B_MILL || t === B_BARRACKS) && G.onRoad(h.id, a, t)) {
-      txt += ` · 🛤️ au bord d'une route : +${Math.round(CONFIG.MILL_ROAD_BONUS * 100)} %`;
+    if (t === B_MILL || t === B_BARRACKS) {
+      // (dans la muraille de villes de niveau 2 ou 3 : une route par ville, 3 au plus ; sinon, au bord d'une route)
+      const list = G.cityRoads(h.id, a, t).slice(0, CONFIG.ROAD_MAX_CITIES), sum = list.reduce((s, r) => s + r.bonus, 0);
+      if (list.length) txt += ` · 🛤️ ${list.length > 1 ? `${list.length} routes (vers ${list.length} villes)` : 'route vers la ville'} : +${Math.round(sum * 100)} %`;
+      else if (G.onRoad(h.id, a, t)) txt += ` · 🛤️ au bord d'une route : +${Math.round(CONFIG.MILL_ROAD_BONUS * 100)} %`;
     }
     if (t === B_PORT) {
-      txt += G.portRoadCastle(h.id, a) >= 0 ? ` · 🛤️ relié à une ville : +${Math.round(CONFIG.PORT_ROAD_BONUS * 100)} % d'or`
+      const n = G.portRoadCastles(h.id, a).length;
+      txt += n ? ` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(n * CONFIG.PORT_ROAD_BONUS * 100)} % d'or`
         : ` · aucune ville à moins de ${CONFIG.PORT_ROAD_DISTANCE} cases (pas de chemin)`;
     }
     return txt;

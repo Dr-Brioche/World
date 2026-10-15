@@ -92,6 +92,7 @@ const CONFIG = {
   // Une église pas trop loin d'une de ces routes port–ville (à moins de 10 cases) y est reliée par un petit chemin ;
   // sinon, une église pas trop loin d'une ville (à moins de 25 cases, sur la même terre) est reliée à elle.
   // Reliée, elle produit 2 pièces d'or toutes les PRODUCTION_INTERVAL secondes. (Un port seul, sans ville, ne suffit pas.)
+  ROAD_MAX_CITIES: 3,        // un moulin, une caserne ou un port relié à plusieurs villes : une route par ville (3 au plus), les bonus s'additionnent
   CHURCH_ROAD_DISTANCE: 10,
   CHURCH_CITY_DISTANCE: 25,
   CHURCH_ROAD_GOLD: 2,
