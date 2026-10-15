@@ -89,6 +89,7 @@ const CONFIG = {
   ASSAULT_HEAVY: 500,          // (1 + soldats / 500) : plus l'armée est grande, plus elle est lente
                                // (100 soldats : ~4 cases/s · 500 : 2,5 · 1000 : 1,7 · 3000 : 0,7)
   ASSAULT_MIN_SPEED: 0.04,     // vitesse minimum d'un assaut (cases de plaine par tour)
+  DISORGANIZED_SPEED: 1.25,    // un territoire désorganisé (sans château ni église, ou coupé de ses châteaux) se prend 25 % plus vite
   // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,
   // par le chemin le plus rapide, comme les défenseurs (voir DEFENDER_SPEED_BONUS) : pendant ce temps,
   // tout le monde le voit venir
@@ -217,13 +218,14 @@ const BARRACKS_LEVELS = [
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
 // dans sa muraille (ex. forêt x1.6 + niveau 3 → x5.6).
-// siege = secondes de siège : arrivée au pied du château, l'armée doit tenir ce temps avant qu'il ne tombe
+// siege = secondes de siège : une armée ne traverse pas la muraille ; arrivée au pied du mur, elle doit
+// tenir ce temps avant que le château ne tombe (avec toute la zone de sa muraille)
 // (le défenseur peut encore envoyer des soldats pendant ce temps).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 10,  siege: 5,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, garrison: 50,  siege: 10, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 300 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 150, siege: 15, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000 },
+  { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 300 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000 },
 ];
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
 // le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.

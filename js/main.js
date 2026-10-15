@@ -665,6 +665,8 @@ const UI = {
       el.textContent = `⚔ ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
         (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (coming >= 1 ? ` (🛡 +${fmt(coming)} en route)` : '') +
         (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
+        // (garnison du château visé : elle attend derrière sa muraille, et n'entre en jeu qu'au siège)
+        (G.garrisonWaiting(a) >= 1 ? ` · 🏰 ${fmt(G.garrisonWaiting(a))} derrière les murs` : '') +
         (a.siege ? ` · 🏰 siège ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s` : '') +
         (a.target === G.human.id && G.defendWait(a) > 0 ? ` · ⏳ renforts dans ${Math.ceil(G.defendWait(a))} s` : '');
     }

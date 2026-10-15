@@ -1477,10 +1477,20 @@ const GameRules = {
   // Chemin le plus court de la frontière de pid jusqu'au château c, en contournant les
   // autres fortifications du défenseur. Renvoie la liste des cases, ou null s'il n'y en a pas.
   // Le chemin préfère les terrains faciles (plaines) : chaque case « coûte » sa défense.
+  // Pour un château : le chemin s'arrête à sa muraille (la première case dans son rayon) : l'armée ne la
+  // traverse pas, elle l'assiège depuis là (voir step).
   castlePath(pid, c, source) {
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
-    return this.searchPath(pid, -1, foot, passable, this.owner[c], source); // (-1 = on part de la frontière)
+    const path = this.searchPath(pid, -1, foot, passable, this.owner[c], source); // (-1 = on part de la frontière)
+    if (path && this.building[c] === B_CASTLE) {
+      const k = path.findIndex(i => this.inWalls(c, i));
+      if (k >= 0) path.length = k + 1;
+    }
+    return path;
   },
+
+  // La case i est-elle dans la muraille (le rayon) du château c ?
+  inWalls(c, i) { return this.inCastleRange(c, i % this.W, (i / this.W) | 0, this.castleInfo(c).radius); },
 
   // Recherche du chemin le plus facile (algorithme de Dijkstra) depuis la case from
   // (ou depuis toute la frontière de pid si from = -1) jusqu'à une case de goal.
@@ -2198,8 +2208,10 @@ const GameRules = {
       const score = around / TERRAIN_INFO[this.terrain[t]].cost;
       // Après la prise d'un château, l'assaut ne sort plus de la zone du château
       const outside = a.limitZone && !a.limitZone.has(t);
-      // Un assaut de front ne prend pas de château : il faut le viser (en cliquant dessus)
-      const castle = a.target >= 0 && a.targetCastle < 0 && this.building[t] === B_CASTLE;
+      // Un assaut de front ne prend pas de château (il faut le viser, en cliquant dessus),
+      // et ne passe pas les murailles : il s'arrête au pied du mur
+      const castle = a.target >= 0 && a.targetCastle < 0 && a.link === undefined &&
+        (this.building[t] === B_CASTLE || this.castleProtects(a.target, t));
       if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside || castle) {
         a.list[idx] = a.list[a.list.length - 1];
         a.list.pop();
@@ -2337,6 +2349,15 @@ const GameRules = {
 
   // Combien vaut un soldat de garnison au combat : GARRISON_POWER (3), sauf pour un avant-poste en construction
   // (sa « garnison », ce sont tous les soldats débarqués, occupés à bâtir)
+  // Garnison qui défendra contre l'assaut a : celle qui se bat déjà, ou celle qui attend derrière la muraille
+  // du château visé (elle n'entre en jeu qu'au siège). Pour les bots, qui calculent combien de défenseurs envoyer.
+  garrisonFor(a) { return (a.garrison || 0) + this.garrisonWaiting(a); },
+  // Garnison du château visé qui attend encore derrière sa muraille (0 une fois sortie)
+  garrisonWaiting(a) {
+    const c = a.targetCastle;
+    return !a.garrisonOut && c >= 0 && this.building[c] === B_CASTLE && this.owner[c] === a.target ? this.garrison[c] : 0;
+  },
+
   garrisonPower(a) {
     const c = a.targetCastle;
     if (c >= 0 && this.building[c] === B_OUTPOST && !this.outpostReady(c)) return 1;
@@ -2617,10 +2638,12 @@ const GameRules = {
         this.linkEntry(a, route.path[0]);
       }
     }
-    // Début d'un assaut sur un château : sa garnison sort le défendre
-    if (a.prepTicks && this.tick === a.startTick && a.targetCastle >= 0 && !a.done) {
+    // Début d'un assaut sur un port ou un avant-poste : sa garnison sort le défendre
+    // (celle d'un château, elle, attend l'ennemi derrière sa muraille : voir startSiege)
+    if (a.prepTicks && this.tick === a.startTick && a.targetCastle >= 0 && this.building[a.targetCastle] !== B_CASTLE && !a.done) {
       a.garrison = this.garrison[a.targetCastle];
       this.garrison[a.targetCastle] = 0;
+      a.garrisonOut = true;
     }
     // Arrivée des renforts
     for (const r of a.pending) if (r.tick <= this.tick) a.troops += r.troops;
@@ -2652,6 +2675,8 @@ const GameRules = {
     // plus l'armée d'assaut est grande, plus elle est lente (ASSAULT_SPEED / (1 + soldats / ASSAULT_HEAVY)).
     let speed;
     if (a.target >= 0) speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_HEAVY));
+    // Territoire désorganisé (royaume sans château ni église, ou morceau coupé de ses châteaux) : il se prend plus vite
+    if (a.target >= 0 && (a.unlinked || this.leaderless(a))) speed *= CONFIG.DISORGANIZED_SPEED;
     else speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED)
       * this.earlyBoost() * this.landBoost; // élan de départ (et grande carte) : les terres libres se prennent plus vite
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
@@ -2661,7 +2686,13 @@ const GameRules = {
       if (t < 0) return this.endAttack(a);
       if (a.troops < this.tileCost(a, t)) return this.endAttack(a); // plus assez de soldats
       // Arrivée au pied d'un château : le siège commence (il ne tombe pas tout de suite)
-      if (a.target >= 0 && this.building[t] === B_CASTLE) return this.startSiege(a, t);
+      if (a.target >= 0 && this.building[t] === B_CASTLE) return this.startSiege(a, this.anchor[t]);
+      // Arrivée à la muraille du château visé : l'armée ne la traverse pas, elle s'arrête au pied du mur
+      // et commence le siège (on s'y bat avec le bonus de défense des murs)
+      const tc = a.targetCastle;
+      if (a.target >= 0 && tc >= 0 && this.building[tc] === B_CASTLE && this.owner[tc] === a.target && this.inWalls(tc, t)) {
+        return this.startSiege(a, tc);
+      }
       // (un avant-poste visé s'assiège aussi : il ne tombe pas tout de suite)
       if (this.building[t] === B_OUTPOST && this.anchor[t] === a.targetCastle) return this.startSiege(a, t);
       const steps = TERRAIN_INFO[this.terrain[t]].cost;
@@ -2757,6 +2788,12 @@ const GameRules = {
     const secs = outpost ? CONFIG.OUTPOST_SIEGE : this.castleInfo(this.anchor[t]).siege;
     a.siege = { tile: t, end: this.tick + secs * CONFIG.TICKS_PER_SECOND };
     a.frontTile = t; // on se bat au pied des murs (avec leur bonus de défense)
+    // L'ennemi est à la muraille : la garnison du château entre enfin en jeu (elle n'en sort pas avant)
+    if (!outpost && t === a.targetCastle && !a.garrisonOut) {
+      a.garrison = (a.garrison || 0) + this.garrison[t];
+      this.garrison[t] = 0;
+      a.garrisonOut = true;
+    }
     const p = this.players[a.attacker], d = this.players[a.target];
     const what = outpost ? ['un avant-poste', 'ton avant-poste', '⛺'] : ['un château', 'ton château', '🏰'];
     if (p.isHuman) UI.log(`${what[2]} Ton armée assiège ${what[0]} ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`, 'good', d);

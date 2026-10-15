@@ -145,7 +145,7 @@ const AI = {
       if (a.aiDefSent !== undefined && Game.tick - a.aiDefSent < CONFIG.AI_SEND_INTERVAL * CONFIG.TICKS_PER_SECOND) continue;
       const D = Game.combatRatio(a);
       // (un bot ne défend pas parfaitement : il envoie 80 % de ce qu'il faudrait, au plus la moitié de son armée)
-      const needed = (a.troops / D) * 0.8 - a.defenders - Game.defendersOnTheWay(a) - (a.garrison || 0) * Game.garrisonPower(a);
+      const needed = (a.troops / D) * 0.8 - a.defenders - Game.defendersOnTheWay(a) - Game.garrisonFor(a) * Game.garrisonPower(a);
       if (needed <= 0) continue;
       // Château isolé (ou avant-poste) : impossible d'y envoyer des défenseurs. Pour un château, on tente
       // de le rejoindre par un assaut ; pour un avant-poste, on envoie des renforts par la mer.
@@ -169,7 +169,7 @@ const AI = {
     // Un allié du pacte se fait attaquer : on envoie parfois une armée l'aider
     for (const a of Game.attacks) {
       if (a.done || a.target < 0 || a.attacker === p.id || !Game.areAllied(p.id, a.target) || Game.isPreparing(a) || Game.cutOff(a)) continue;
-      const need = a.troops / Game.combatRatio(a) - a.defenders - (a.garrison || 0) * Game.garrisonPower(a);
+      const need = a.troops / Game.combatRatio(a) - a.defenders - Game.garrisonFor(a) * Game.garrisonPower(a);
       if (need <= 0 || p.troops < Game.maxTroops(p) * 0.3 || Math.random() > 0.3) continue;
       Game.helpAlly(p.id, a.id, Math.min(need, p.troops * 0.25));
     }
