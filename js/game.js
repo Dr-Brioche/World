@@ -895,18 +895,24 @@ const GameRules = {
   },
 
   // Soldats en garnison dans les châteaux, ports et avant-postes du royaume
+  // (pas les soldats d'un avant-poste en construction : ce n'est pas une garnison, voir builders)
   garrisonOf(p) {
     let sum = 0;
-    for (const a of this.buildingTiles) if (this.owner[a] === p.id) sum += this.garrison[a];
+    for (const a of this.buildingTiles) if (this.owner[a] === p.id && !this.builders(a)) sum += this.garrison[a];
     return sum;
   },
 
-  // Soldats stationnés dans les avant-postes du royaume (ils peuvent attaquer depuis là)
+  // Soldats stationnés dans les avant-postes du royaume (ils peuvent attaquer depuis là),
+  // et ceux qui bâtissent un avant-poste (ils n'en sont pas encore la garnison)
   stationedOf(p) {
     let sum = 0;
-    for (const [a, o] of this.outposts) if (this.owner[a] === p.id) sum += o.stationed;
+    for (const [a, o] of this.outposts) if (this.owner[a] === p.id) sum += o.stationed + this.builders(a);
     return sum;
   },
+
+  // Avant-poste en construction : ses soldats ne sont pas une garnison active, ce sont des soldats affaiblis,
+  // occupés à bâtir (ils défendent sans le bonus de garnison, et avec -0.2 de défense). Renvoie leur nombre (0 sinon).
+  builders(a) { return this.building[a] === B_OUTPOST && !this.outpostReady(a) ? this.garrison[a] : 0; },
 
   // Toute l'armée du royaume : les soldats disponibles + ceux en garnison + ceux stationnés aux avant-postes
   // (ils comptent tous pour le maximum)
@@ -960,6 +966,14 @@ const GameRules = {
     const secs = CONFIG.WAR_EFFECT_TIME;
     if (p.isHuman) UI.log(`⚰️ Après-guerre : ton royaume panse ses blessures, −${Math.round(CONFIG.POST_WAR_MALUS * 100)} % de soldats produits pendant ${secs} s (en tout : −${Math.round(this.postWar(p) * 100)} %).`, 'warn');
     if (d && d.isHuman) UI.log(`🔥 Ton peuple est galvanisé par la défaite : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s (en tout : +${Math.round(this.rallied(d) * 100)} %) !`, 'good');
+  },
+
+  // Défense réussie (assaut repoussé) : le défenseur est galvanisé (+RALLY_BONUS de soldats produits)
+  // pendant DEFENSE_RALLY_TIME secondes (ça s'additionne avec les autres galvanisations, voir rallied)
+  defenseRally(d) {
+    const secs = CONFIG.DEFENSE_RALLY_TIME;
+    (d.rallyEnds = d.rallyEnds || []).push(this.tick + secs * CONFIG.TICKS_PER_SECOND);
+    if (d.isHuman) UI.log(`🔥 Victoire ! Ton peuple est galvanisé : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s (en tout : +${Math.round(this.rallied(d) * 100)} %) !`, 'good');
   },
 
   // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
@@ -2079,7 +2093,7 @@ const GameRules = {
       this.outposts.set(zone.anchor, { ready: this.tick + CONFIG.OUTPOST_BUILD_TIME * CONFIG.TICKS_PER_SECOND,
         landing: e.landing, stationed: 0 });
       if (p.isHuman) {
-        UI.log(`⛺ Débarquement réussi ! ${fmt(e.troops)} soldats défendent ton avant-poste ` +
+        UI.log(`⛺ Débarquement réussi ! ${fmt(e.troops)} soldats bâtissent ton avant-poste (affaiblis tant qu'il n'est pas bâti) ` +
           `(${fmt(e.sent - e.troops)} perdus en mer). Il sera bâti dans ${CONFIG.OUTPOST_BUILD_TIME} s.`, 'good');
         Render.floatText(zone.anchor, B_OUTPOST, '⛵ Débarquement !');
       }
@@ -2339,6 +2353,7 @@ const GameRules = {
       const p = this.players[a.attacker], d = this.players[a.target];
       if (p.isHuman) UI.log(`💥 Ton assaut contre ${d.name} a été repoussé !`, 'warn', d);
       else if (d.isHuman) UI.log(`🛡️ Tu as repoussé l'assaut de ${p.name} !`, 'good', p);
+      this.defenseRally(d);
       this.endAttack(a);
     } else if (a.defenders + a.garrison < 1) {
       a.defenders = 0;

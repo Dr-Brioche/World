@@ -158,6 +158,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      par la défaite (**+25 %**). **Ces effets s'additionnent** : chaque victoire ajoute −25 % pendant ses 30 s
      (jusqu'à −75 % : qui attaque trop le paie cher), chaque défaite ajoute +25 % (jusqu'à +100 % : qui est trop
      ciblé peut se rattraper). La jauge des soldats indique le total.
+     **Repousser un assaut** galvanise aussi le défenseur : **+25 %** de soldats produits pendant **15 s** (ça s'additionne aussi).
 
    **✂️ Couper** : un royaume reste **d'un seul tenant** (sur chaque île). Quand un assaut le coupe en morceaux, il ne garde
    que le plus grand de l'île : **celui qui a coupé prend d'un coup tous les autres**, **quelle que soit leur taille**,
@@ -320,7 +321,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      un bâtiment** : il se pose juste à côté.
    - L'avant-poste met **20 secondes à être bâti** après le débarquement (compte à rebours sur la carte).
      Pendant ce temps, ses soldats bâtissent et **ne peuvent rien faire d'autre** (pas d'attaque depuis lui) ;
-     on peut déjà l'attaquer, et ses défenseurs, occupés à bâtir, ont **-0,2 de défense**. Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
+     on peut déjà l'attaquer. Il n'a **pas encore de garnison** : juste des **soldats affaiblis**, occupés à bâtir
+     (« ⚔ 30 affaiblis » sur la carte) : chacun ne compte que pour 1 au combat (pas 3 comme une garnison), avec **-0,2 de défense**. Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
      tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
    - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** (au-delà des
      mers, ton royaume ne peut pas lui envoyer de défenseurs ; une fois relié, ses soldats stationnés rejoignent
@@ -413,6 +415,8 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.76.4** : 🔥 réussir une défense (repousser un assaut) galvanise ton peuple : +25 % de soldats produits pendant 15 s
+- **v0.76.3** : ⛺ un avant-poste en construction n'a pas de garnison : ses soldats sont des soldats affaiblis occupés à bâtir (« ⚔ affaiblis » sur la carte, comptés avec les avant-postes dans la jauge, et les bots ne les comptent plus comme une garnison)
 - **v0.76.2** : ⚓ le grand port (niveau 2) coûte 500 et le port royal (niveau 3) 1200
 - **v0.76.1** : 🛡️ en survolant (ou en visant) un château ou un port fortifié ennemi, la fenêtre d'info en bas affiche juste sa défense globale (terrain + murs), sans les longues explications
 - **v0.76** : 🏰 une armée ne traverse plus la muraille d'un château : elle s'arrête au pied du mur et l'assiège (la muraille reste entière ; si le château tombe, toute sa zone tombe) · ⏳ sièges plus longs : 8, 13 et 18 s selon le niveau · 🛡️ la garnison d'un château attend derrière sa muraille et n'entre en jeu qu'au siège · ⚡ un territoire désorganisé se prend 25 % plus vite

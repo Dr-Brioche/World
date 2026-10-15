@@ -79,7 +79,8 @@ const AI = {
       // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
       const plan = Game.planAssault(p.id, o), aim = plan.castle;
       if (aim === -1) continue;
-      const garrison = aim === null ? 0 : Game.garrison[aim] * CONFIG.GARRISON_POWER; // (une garnison vaut 3 au combat)
+      // (une garnison vaut 3 au combat ; les soldats d'un avant-poste en construction, affaiblis, comptent pour 1)
+      const garrison = aim === null ? 0 : Game.garrison[aim] * (Game.builders(aim) ? 1 : CONFIG.GARRISON_POWER);
       // Un château isolé ne reçoit pas de défenseurs : seule sa garnison le défend (proie facile !)
       // (sans château ni église, toutes ses troupes défendent d'office, mais à 0.8)
       // (un morceau coupé de tous ses châteaux : personne ne le défend)
