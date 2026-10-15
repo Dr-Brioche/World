@@ -604,10 +604,10 @@ const UI = {
     $('troopFill').style.width = (r * 100).toFixed(1) + '%';
     $('troopFill').style.background = color;
     const st = G.stationedOf(h), sea = G.atSeaOf(h);
-    // soldats disponibles, puis le reste de l'armée, et enfin toute l'armée sur le maximum (ex. « 150 / 300 »)
-    $('troopText').textContent = `⚔️ ${fmt(h.troops)}` + (gar >= 1 ? ` · 🛡️ ${fmt(gar)} en garnison` : '') +
-      (st >= 1 ? ` · ⛺ ${fmt(st)} aux avant-postes` : '') + (sea >= 1 ? ` · ⛵ ${fmt(sea)} en mer` : '') +
-      ` · armée ${fmt(G.armySize(h))} / ${fmt(max)}`;
+    // toute l'armée sur le maximum (ex. « 150 / 300 »), puis ce qui n'est pas disponible pour attaquer
+    const rest = [gar >= 1 ? `🛡️ ${fmt(gar)} en garnison` : '', st >= 1 ? `⛺ ${fmt(st)} aux avant-postes` : '',
+      sea >= 1 ? `⛵ ${fmt(sea)} en mer` : ''].filter(Boolean);
+    $('troopText').textContent = `⚔️ ${fmt(G.armySize(h))} / ${fmt(max)}` + (rest.length ? ` · dont ${rest.join(', ')}` : '');
     // Pas de chiffre précis : juste l'état du recrutement
     let tip = 'recrutement normal';
     if (r >= 0.98) tip = 'armée pleine !';
