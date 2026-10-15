@@ -260,7 +260,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Camp d'entraînement | quelques-uns | un peu | **+30 %** | prix de la caserne |
      | 2. Caserne | +100 % | +100 % | **+80 %** | 💰 400 |
-     | 3. Grande caserne | +125 % | **x4** (+200 soldats) | **+150 %** | 💰 1600 |
+     | 3. Grande caserne | +125 % | **x4** (+200 soldats) | **+150 %** | 💰 2500 |
 
      Une caserne ne fait pas dépasser l'armée maximum. Les soldats produits et l'armée max de toutes
      tes casernes s'additionnent, mais avec un **rendement décroissant** (comme les moulins) : plus tu as de casernes,
@@ -508,6 +508,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90.2** : 💰 la grande caserne (niveau 3) coûte 2500 (au lieu de 1600)
 - **v0.90.1** : 🛤️ une église a un chemin vers chaque ville proche (et vers la route d'un port), 3 au plus : une nouvelle ville bâtie près d'elle ajoute un chemin au lieu de remplacer l'ancien ; chaque chemin rapporte +2 💰 et +50 % de Croyance
 - **v0.90** : ⏩ partie accélérée : au menu, « Vitesse de la partie : Accélérée » fait tout aller 2 fois plus vite (le jeu fait 2 tours au lieu d'un) ; le chrono affiche « (x2) »
 - **v0.89.1** : ✝️ la conversion continue d'accélérer au-delà de 200 d'écart de Croyance : 2 cases par seconde à 500, 5 par seconde à 1000 (le maximum)

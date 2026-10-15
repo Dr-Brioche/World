@@ -259,7 +259,7 @@ const BARRACKS_LEVELS = [
   null,
   { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 2.5 },
   { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 2.8, upgradeCost: 400 },
-  { name: 'Grande caserne',       troops: 9, maxTroops: 200, power: 2.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 1600 },
+  { name: 'Grande caserne',       troops: 9, maxTroops: 200, power: 2.5, img: 'img/caserne3.webp', size: 3.2, upgradeCost: 2500 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
