@@ -213,6 +213,16 @@ button:hover { background: #e8d6a8; }
   color: var(--wood);
 }
 .build .icon { font-size: 20px; }
+/* petit compteur en haut à droite (châteaux construits / maximum) */
+.build .count {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--wood);
+}
+.build .count.full { color: var(--danger); }
 .build.active { background: var(--gold); box-shadow: 0 0 0 2px var(--ink) inset; }
 .build.poor .cost { color: var(--danger); }
 

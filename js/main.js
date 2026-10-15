@@ -25,7 +25,8 @@ const UI = {
       btn.dataset.type = t;
       btn.title = `${b.name} : ${b.desc} (touche ${t})`;
       btn.innerHTML = `<span class="key">${t}</span><span class="icon">${b.icon}</span>` +
-        `<span>${b.name}</span><span class="cost"></span>`;
+        `<span>${b.name}</span><span class="cost"></span>` +
+        (t === B_CASTLE ? '<span class="count" title="Châteaux construits / maximum (chaque église en débloque d\'autres)"></span>' : '');
       btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
       builds.appendChild(btn);
     }
@@ -565,6 +566,13 @@ const UI = {
       const cost = G.buildCost(h, +btn.dataset.type);
       btn.querySelector('.cost').textContent = `💰 ${fmt(cost)}`;
       btn.classList.toggle('poor', h.gold < cost);
+      // Château : petit compteur « construits / maximum » (le maximum monte avec les églises)
+      const count = btn.querySelector('.count');
+      if (count) {
+        const max = G.maxCastles(h);
+        count.textContent = `${h.castlesBuilt}/${max}`;
+        count.classList.toggle('full', h.castlesBuilt >= max);
+      }
     });
     this.refreshBuildingMenu();
 

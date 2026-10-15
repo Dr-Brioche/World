@@ -2742,11 +2742,14 @@ const GameRules = {
     // Sur les terres libres, une grosse armée s'étend plus vite. Mais contre un royaume, c'est l'inverse :
     // plus l'armée d'assaut est grande, plus elle est lente (ASSAULT_SPEED / (1 + soldats / ASSAULT_HEAVY)).
     let speed;
-    if (a.target >= 0) speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_HEAVY));
-    // Territoire désorganisé (royaume sans château ni église, ou morceau coupé de ses châteaux) : il se prend plus vite
-    if (a.target >= 0 && (a.unlinked || this.leaderless(a))) speed *= CONFIG.DISORGANIZED_SPEED;
-    else speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED)
-      * this.earlyBoost() * this.landBoost; // élan de départ (et grande carte) : les terres libres se prennent plus vite
+    if (a.target >= 0) {
+      speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_HEAVY));
+      // Territoire désorganisé (royaume sans château ni église, ou morceau coupé de ses châteaux) : il se prend plus vite
+      if (a.unlinked || this.leaderless(a)) speed *= CONFIG.DISORGANIZED_SPEED;
+    } else {
+      speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED)
+        * this.earlyBoost() * this.landBoost; // élan de départ (et grande carte) : les terres libres se prennent plus vite
+    }
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
     while (!a.done) {
