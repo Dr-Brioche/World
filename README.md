@@ -294,7 +294,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      on peut l'attaquer directement, comme un château. **Toutes les 10 secondes**, il rapporte de l'or.
      🛤️ **Route du port** : si une de tes **villes** (un château, de n'importe quel niveau) est à **moins de 30 cases**
      du port, sur la même terre, un **chemin de terre** les relie : le port produit **+30 % d'or**.
-     Une **église** construite **sur ce chemin** (à moins de 3 cases) produit aussi **un peu d'or** (+2 💰 toutes les 10 s).
+     Une **église** pas trop loin de ce chemin (à moins de **10 cases**) s'y relie par un **petit chemin** ; sinon, une église
+     pas trop loin d'une **ville** (à moins de **25 cases**, sur la même terre) est reliée à elle. Reliée, l'église produit
+     **un peu d'or** (+2 💰 toutes les 10 s). Mais une église près d'un **port seul** (sans ville proche, donc sans route)
+     ne crée pas de chemin.
      En posant un port ou une église, la barre d'aide en bas indique s'il sera relié à une ville (ou sur la route).
      **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
 
@@ -420,6 +423,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.78** : ⛪ une église pas trop loin d'une route de port (10 cases) s'y relie par un petit chemin, et une église pas trop loin d'une ville (25 cases) est reliée à elle : reliée, elle rapporte +2 💰 toutes les 10 s (un port seul, sans ville, ne crée pas de chemin)
 - **v0.77.4** : 🧤 la souris est une petite main médiévale sur la carte · 🗡️ l'épée n'apparaît plus que sur les cibles qu'on peut vraiment attaquer (château ennemi atteignable, armée ennemie…)
 - **v0.77.3** : 📊 la jauge des soldats affiche simplement « ⚔️ 150 / 300 » (sans le chiffre en double), puis ce qui est en garnison, aux avant-postes ou en mer
 - **v0.77.2** : 🔎 la barre d'un assaut ennemi montre les soldats que l'attaquant garde en réserve, et entre parenthèses ceux qu'il a envoyés
