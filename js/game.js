@@ -178,12 +178,12 @@ const GameRules = {
       && !this.churchCastleConflict(pid, a, type) && this.commanded(a, type);
   },
 
-  // Un territoire désorganisé (son morceau n'a aucun château pour le diriger, ni avant-poste) ne peut rien
-  // construire d'autre qu'un château : il lui faut d'abord un château pour diriger le royaume.
+  // Un territoire désorganisé (son morceau n'a ni ville ni port fortifié pour le diriger, ni avant-poste) ne peut
+  // rien construire d'autre qu'un château : il lui faut d'abord une ville pour diriger le royaume.
   commanded(a, type) {
     if (type === B_CASTLE) return true;
     const r = this.regionsAt(a), k = r.comp[a];
-    return k >= 0 && (r.hasCastle[k] || r.anyOutpost[k]);
+    return k >= 0 && (r.held[k] || r.anyOutpost[k]);
   },
 
   // Les grands bâtiments d'un royaume (châteaux, églises, ports) gardent leurs distances entre eux, dans tous
@@ -1413,7 +1413,7 @@ const GameRules = {
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
       if (i >= 0 && this.owner[i] === p.id && !this.commanded(i, type)) {
-        return 'Ce territoire n\'a plus aucun château pour le diriger : il ne peut rien construire d\'autre. ' +
+        return 'Ce territoire n\'a plus ni ville ni port fortifié pour le diriger : il ne peut rien construire d\'autre. ' +
           'Bâtis d\'abord un château ici (ou relie ce territoire à un de tes châteaux).';
       }
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
@@ -1558,14 +1558,14 @@ const GameRules = {
   // Le seul moyen d'en sortir : le relier à un château (assaut de jonction depuis le château isolé), ou y bâtir
   // un nouveau château.
   pieceUnlinked(r, k) {
-    return k >= 0 && !r.held[k] && !r.anyOutpost[k] && this.castles.some(c => this.owner[c] === r.owner[k]);
+    return k >= 0 && !r.held[k] && !r.anyOutpost[k] && this.isProtected(r.owner[k]);
   },
   // Tous les châteaux de pid sont isolés (aucun n'est relié à son cœur) : son armée est bloquée dans
   // ces châteaux. Elle peut les défendre (elle y est !), mais désorganisée (x LEADERLESS_DEFENSE) ;
   // quand l'un d'eux est attaqué, toutes ses troupes restantes le défendent d'office (voir lastStand).
   troopsInCastles(pid) {
     let any = false;
-    for (const c of this.castles) {
+    for (const c of this.castles.concat(this.walledPorts())) {
       if (this.owner[c] !== pid) continue;
       if (!this.isIsolated(c)) return false;
       any = true;
@@ -1702,12 +1702,13 @@ const GameRules = {
     return [-1, ...[...this.outposts.keys()].filter(a => this.owner[a] === pid && this.outpostReady(a) && this.troopsAt(pid, a) >= 1)];
   },
 
-  // Le royaume a-t-il encore une ville (un château) ? Alors on ne peut l'attaquer qu'en visant un de ses châteaux,
-  // églises, ports ou avant-postes. Sinon, il est désorganisé (même s'il lui reste des églises ou des ports) :
+  // Le royaume a-t-il encore le pouvoir : une muraille avec sa garnison, c'est-à-dire une ville (un château) ou un
+  // port fortifié (niveau 3) ? Alors on ne peut l'attaquer qu'en visant un de ses châteaux, églises, ports ou
+  // avant-postes. Sinon, c'est l'anarchie : il est désorganisé (même s'il lui reste des églises ou des petits ports),
   // on peut attaquer tout son territoire de front, sans devoir prendre ses bâtiments un par un.
   // (ses avant-postes, eux, se visent toujours : un assaut de front ne les prend pas)
   isProtected(pid) {
-    return this.castles.some(c => this.owner[c] === pid);
+    return this.castles.some(c => this.owner[c] === pid) || this.walledPorts().some(a => this.owner[a] === pid);
   },
 
   // Encerclement : un royaume reste d'un seul tenant (sur chaque île). Quand il est coupé en morceaux, il ne
@@ -1884,7 +1885,7 @@ const GameRules = {
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
           UI.log(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! ` +
             (unlinked ? 'Il vise ton territoire coupé de tous tes châteaux : personne ne peut le défendre !'
-              : castle < 0 ? 'Sans château, toutes tes troupes défendront d\'office, désorganisées.'
+              : castle < 0 ? 'Sans ville ni port fortifié, toutes tes troupes défendront d\'office, désorganisées.'
               : alone ? 'Il vise ton avant-poste : seuls les soldats débarqués le défendront.'
               : 'Dès qu\'elle entre sur tes terres, clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.'), 'warn', p);
         }
@@ -3150,8 +3151,8 @@ const GameRules = {
     // il est de nouveau organisé, et l'assaut s'arrête
     if (a.disorganized && this.tick % CONFIG.TICKS_PER_SECOND === 0 && this.isProtected(a.target)) {
       const p = this.players[a.attacker], d = this.players[a.target];
-      if (p.isHuman) UI.log(`🏰 ${d.name} a de nouveau une ville : il n'est plus désorganisé, ton assaut s'arrête.`, 'warn', d);
-      else if (d.isHuman) UI.log(`🏰 Tu as de nouveau une ville : l'assaut ${this.deName(p.name)} contre tes terres désorganisées s'arrête !`, 'good', p);
+      if (p.isHuman) UI.log(`🏰 ${d.name} a de nouveau une ville (ou un port fortifié) : il n'est plus désorganisé, ton assaut s'arrête.`, 'warn', d);
+      else if (d.isHuman) UI.log(`🏰 Tu as de nouveau une ville (ou un port fortifié) : l'assaut ${this.deName(p.name)} contre tes terres désorganisées s'arrête !`, 'good', p);
       return this.endAttack(a);
     }
     if (a.prepTicks && this.tick === a.startTick) {

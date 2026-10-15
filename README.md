@@ -68,15 +68,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
    de la frontière. **Tant qu'un royaume a une ville (un château), tu ne peux viser que ses châteaux, églises, ports ou avant-postes.**
    **Exception — morceau coupé de ses châteaux** : si un morceau de son royaume n'a plus **aucune ville ni port fortifié** (port de niveau 3) (il s'est fait
-   isoler du reste, alors que son royaume a encore un château ailleurs), personne ne le commande : tu peux
+   isoler du reste, alors que son royaume a encore une ville ou un port fortifié ailleurs), personne ne le commande : tu peux
    **l'attaquer de front**, comme une terre **vide** (aucun défenseur ne peut venir). En le survolant, tu vois
    « ⚠️ coupé de tous ses châteaux ». Mais si son royaume arrive à le **relier à un château** (en reprenant des
    terres, ou en y bâtissant un château), **l'assaut s'arrête**. Attention, ça marche aussi contre toi !
-   Quand il n'a **plus aucune ville (château)**, il est **désorganisé**, même s'il lui reste des églises ou des ports :
+   🏛️ **La règle du pouvoir** : c'est une **muraille avec sa garnison** qui maintient le pouvoir dans une zone, c'est-à-dire une
+   **ville (château)** ou un **port fortifié** (niveau 3). Chacun tient sa région, même isolé.
+   Quand un royaume n'a **plus aucune ville ni port fortifié**, c'est l'**anarchie** : il est **désorganisé**, même s'il lui reste des églises ou des petits ports :
    clique n'importe où sur ses terres, l'assaut se fait **de front, sur tout son territoire** (comme sur une terre libre),
    sans devoir prendre ses bâtiments un par un (ses avant-postes, eux, se visent toujours).
-   Un territoire **désorganisé** (royaume sans château, ou morceau coupé de ses châteaux) se prend **plus vite**, et **d'autant plus vite
-   que ton armée est grande**. Si le royaume rebâtit (ou reprend) une ville pendant l'assaut, il est de nouveau organisé : l'assaut s'arrête.
+   Un territoire **désorganisé** (royaume sans ville ni port fortifié, ou morceau coupé d'eux) se prend **plus vite**, et **d'autant plus vite
+   que ton armée est grande**. Si le royaume rebâtit (ou reprend) une ville, ou fortifie un port, pendant l'assaut, il est de nouveau organisé : l'assaut s'arrête.
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
    sans pouvoir en place : chaque soldat ne compte que pour **0,8**.
 
@@ -207,7 +209,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      - **le seul moyen d'en sortir** : relier ton territoire à un château (clique sur ton château isolé pour un
        assaut de jonction) ou **bâtir un nouveau château** sur ton territoire, pour avoir de nouveau une zone de
        départ pour tes armées. Un message 🚩 te prévient quand ça arrive.
-     - un territoire **désorganisé** (sans château pour le diriger, ni avant-poste) **ne peut rien construire
+     - un territoire **désorganisé** (sans ville ni port fortifié pour le diriger, ni avant-poste) **ne peut rien construire
        d'autre qu'un château** : il lui faut d'abord un château pour diriger le royaume.
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
@@ -479,6 +481,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.87.1** : 🏛️ la règle du pouvoir : une muraille avec sa garnison maintient le pouvoir, donc un **port fortifié** (niveau 3) tient sa région comme une ville. Un royaume qui garde un port fortifié n'est plus désorganisé, et une région avec un port fortifié peut construire ; sans ville ni port fortifié, c'est l'anarchie
 - **v0.87** : ✝️ **la Croyance** : chaque église en apporte (10, 30 ou 50 selon son niveau, +50 % si reliée à une route) ; plus croyant qu'un voisin ennemi, tu convertis lentement ses terres frontalières (d'abord ses couloirs étroits et ses pointes), d'autant plus vite que l'écart est grand ; jamais ses villes, ports fortifiés, avant-postes ni ce qui est dans leur muraille ; bible verte ou rouge dans le classement · 🎚️ menu : la difficulté et le nombre de royaumes rivaux (3 à 11) se choisissent séparément · 🧨 détruire une ville, une église ou un port fait aussi sauter les moulins et casernes qui en dépendaient · ⚓ un morceau de royaume avec un port fortifié n'est plus « coupé de ses châteaux » : il est défendu, comme avec une ville
 - **v0.86** : 🧱 murs plus courts (12 cases au plus après la muraille de la ville, au lieu de 15) · 🔀 un mur tout neuf sur la route d'un assaut : l'armée le contourne, et ne rebrousse chemin que s'il ferme son seul passage (un mur sur la partie déjà passée ne l'arrête pas) · ↩️ une armée en retraite qui doit franchir un mur bâti dans son dos y perd 50 % de ses soldats, par mur · 🤖 les bots bâtissent aussi des murs, là où un voisin ennemi viendrait les attaquer
 - **v0.85** : 🧱 **murs** : une ville de niveau 2 bâtit un mur (💰 500), une citadelle un second (💰 1000) : il va tout droit de la ville jusqu'à l'endroit choisi (15 cases au plus après sa muraille), s'accroche tout seul à un obstacle proche (lac, mer, fleuve, sommet, autre mur) et aucun assaut ne le franchit ; un assaut dont la route est coupée par un mur tout neuf rebrousse chemin · ⏳ améliorer une ville prend plus de temps : 40 s pour le niveau 2, 60 s pour le niveau 3
