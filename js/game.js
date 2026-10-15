@@ -3838,6 +3838,31 @@ const GameRules = {
     for (let i = 0; i < this.N; i++) if (this.owner[i] === p.id) this.setOwner(i, -1);
   },
 
+  // Plus aucun port : plus de lien par la mer avec les avant-postes. Ils sont supprimés de la carte, avec leurs
+  // soldats (perdus : aucun bateau ne peut les ramener) ; leurs zones (pas reliées au royaume ni tenues par une
+  // ville ou un port fortifié) redeviennent des terres libres, avec leurs bâtiments.
+  dropOutposts(p) {
+    const r = this.regions(true), zone = [];
+    let lost = 0, n = 0;
+    for (const [a, o] of [...this.outposts]) {
+      if (this.owner[a] !== p.id) continue;
+      const k = r.comp[a];
+      if (k >= 0 && r.owner[k] === p.id && r.anyOutpost[k] && !r.held[k] && !r.heart[k]) {
+        zone.push(...r.order.subarray(r.start[k], r.start[k] + r.size[k]));
+      }
+      lost += (o.stationed || 0) + (this.garrison[a] || 0);
+      this.removeBuilding(a);
+      n++;
+    }
+    const tiles = new Set(zone);
+    for (const a of this.buildingTiles.slice()) if (this.owner[a] === p.id && tiles.has(a)) this.removeBuilding(a);
+    for (const t of tiles) if (this.owner[t] === p.id) this.setOwner(t, -1);
+    if (p.isHuman && n) {
+      UI.log(`⚓ Tu as perdu ton dernier port : ${n > 1 ? `tes ${n} avant-postes sont abandonnés` : 'ton avant-poste est abandonné'}` +
+        (lost >= 1 ? ` et leurs ${fmt(lost)} soldats sont perdus` : '') + ' (plus aucun bateau ne peut les rejoindre).', 'warn');
+    }
+  },
+
   eliminate(id, by) {
     const p = this.players[id];
     if (!p.alive) return;
@@ -4026,6 +4051,8 @@ const GameRules = {
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive) this.captureEnclaves(p.id);
     // Toutes les 2 secondes : un royaume qui n'a plus que des avant-postes est perdu (voir outpostsOnly)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && this.outpostsOnly(p)) this.loseKingdom(p);
+    // ... et un royaume qui a perdu tous ses ports perd aussi tous ses avant-postes (voir dropOutposts)
+    if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && !p.bCount[B_PORT] && p.bCount[B_OUTPOST]) this.dropOutposts(p);
     // Le joueur vient de perdre le lien entre son territoire et ses châteaux : on le prévient (une fois)
     const h = this.human;
     if (this.tick % (2 * TPS) === 0 && h && h.alive) {
