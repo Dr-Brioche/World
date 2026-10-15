@@ -95,6 +95,28 @@ const UI = {
       if (li) this.showAttackBy(+li.dataset.pid);
     });
 
+    // Déplacer la caméra au clavier : ZQSD (sur un clavier AZERTY ; WASD sur un QWERTY) ou les flèches.
+    // On regarde la touche physique (e.code) : elle est au même endroit quel que soit le clavier.
+    // Tant qu'une touche est enfoncée, la caméra glisse (voir panCamera, appelée à chaque image).
+    const PAN = { KeyW: [0, -1], ArrowUp: [0, -1], KeyS: [0, 1], ArrowDown: [0, 1],
+      KeyA: [-1, 0], ArrowLeft: [-1, 0], KeyD: [1, 0], ArrowRight: [1, 0] };
+    this.panKeys = new Set();
+    window.addEventListener('keydown', e => {
+      if (!PAN[e.code] || Game.phase === undefined || !$('menu').classList.contains('hidden') || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+      this.panKeys.add(e.code);
+      e.preventDefault(); // (les flèches ne font pas défiler la page)
+    });
+    window.addEventListener('keyup', e => this.panKeys.delete(e.code));
+    window.addEventListener('blur', () => this.panKeys.clear()); // (fenêtre quittée : on lâche tout)
+    this.panCamera = dt => {
+      if (!this.panKeys.size) return;
+      let dx = 0, dy = 0;
+      for (const k of this.panKeys) { dx += PAN[k][0]; dy += PAN[k][1]; }
+      const move = CONFIG.CAMERA_KEY_SPEED * dt / 1000 / Render.cam.scale, n = Math.hypot(dx, dy) || 1;
+      Render.cam.x += dx / n * move;
+      Render.cam.y += dy / n * move;
+    };
+
     window.addEventListener('keydown', e => {
       if (Game.phase !== 'playing' || e.target.tagName === 'INPUT') return;
       // Touche 1, 2 ou 3 : le bâtiment suit la souris, un clic le pose (même touche = annuler)
@@ -709,7 +731,7 @@ const UI = {
         : freeArm ? `🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`
         : this.selectedBuild
         ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`
-        : UI.describeTile(Render.hover) || 'Clique sur une terre voisine pour attaquer · molette = zoom · glisser = déplacer';
+        : UI.describeTile(Render.hover) || 'Clique sur une terre voisine pour attaquer · molette = zoom · glisser, ZQSD ou flèches = déplacer';
     } else if (G.phase === 'over') {
       $('hint').textContent = '';
     }
@@ -1341,6 +1363,7 @@ function main() {
     requestAnimationFrame(frame); // (demandé en premier : une erreur dans ce tour ne fige pas le jeu)
     const dt = Math.min(now - last, 1000);
     last = now;
+    UI.panCamera(dt); // (caméra au clavier : ZQSD ou flèches)
     if (Game.phase === 'playing' && !Game.paused) {
       acc += dt * Game.speed; // (partie accélérée : 2 tours de jeu au lieu d'un, tout va 2 fois plus vite)
       while (acc >= step) { Game.update(); acc -= step; }

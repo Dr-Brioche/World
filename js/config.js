@@ -16,7 +16,8 @@ const CONFIG = {
   WORLD_MAP_HEIGHT: 408,
   EUROPE_MAP_WIDTH: 1000,  // taille de la carte « Europe »
   EUROPE_MAP_HEIGHT: 1000,
-  MIN_OPPONENTS: 3,        // au moins 3 royaumes rivaux (on en choisit le nombre dans le menu, jusqu'à 11)
+  MIN_OPPONENTS: 3,
+  CAMERA_KEY_SPEED: 900,   // déplacement de la caméra au clavier (ZQSD / flèches), en pixels d'écran par seconde        // au moins 3 royaumes rivaux (on en choisit le nombre dans le menu, jusqu'à 11)
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
