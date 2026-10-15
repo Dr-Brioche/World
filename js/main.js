@@ -4,7 +4,7 @@
 const $ = id => document.getElementById(id);
 
 // Petites icônes dessinées pour les menus (voir icons.js) : un style médiéval, pas des emojis
-const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor') };
+const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall') };
 
 const UI = {
   selectedBuild: 0,
@@ -104,7 +104,7 @@ const UI = {
       if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden) {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
-      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.closeBuildingMenus(); this.freeArm = 0; }
+      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.closeBuildingMenus(); this.freeArm = 0; }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
     // Les emojis de la page deviennent des icônes médiévales dessinées (voir icons.js)
@@ -128,7 +128,7 @@ const UI = {
   },
 
   selectBuild(t) {
-    if (t) this.cancelPlan();
+    if (t) { this.cancelPlan(); this.cancelWall(); }
     this.selectedBuild = t;
     document.querySelectorAll('.build').forEach(b => b.classList.toggle('active', +b.dataset.type === t));
     document.body.style.cursor = t ? 'cell' : '';
@@ -284,6 +284,14 @@ const UI = {
         close();
       });
     }
+    // Ville de niveau 2 ou plus : bouton « Mur » (avant « Détruire »)
+    if (type === B_CASTLE && G.level[a] >= 2) {
+      const btn = document.createElement('button');
+      btn.dataset.wall = '';
+      el.querySelector('.choices').prepend(btn);
+      this.updateWallButton(btn, a, true);
+      btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.startWall(a); });
+    }
     // Détruire le bâtiment (DEMOLISH_TIME secondes de travaux)
     el.querySelector('[data-del]').addEventListener('click', () => {
       close();
@@ -308,6 +316,7 @@ const UI = {
     el.buildingAnchor = a; // (pour le garder à jour : voir refreshBuildingMenu)
     // (la flèche est dessinée en SVG, de la couleur du texte : pas d'emoji)
     el.innerHTML = `<button data-up class="up"${canUp ? '' : ' disabled'} title="Améliorer">${ICONS.up}</button>` +
+      (G.building[a] === B_CASTLE && G.level[a] >= 2 ? `<button data-wall class="wall">${ICONS.wall}</button>` : '') +
       `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>`;
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
@@ -318,6 +327,11 @@ const UI = {
       if (err) this.log(err, 'warn');
       else if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
     });
+    const wallBtn = el.querySelector('[data-wall]');
+    if (wallBtn) {
+      this.updateWallButton(wallBtn, a, false);
+      wallBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.startWall(a); });
+    }
     el.querySelector('[data-x]').addEventListener('click', () => {
       this.closeActionMenu();
       if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
@@ -499,6 +513,8 @@ const UI = {
     let txt = t.cost > 1 ? `${t.name} (défense ${pct(t.cost - 1)})` : t.name;
     if (G.terrain[i] === TERRAIN.DESERT) txt = `🏜️ ${t.name} (bâtiments : production ${pct(DESERT_PRODUCTION - 1)})`;
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
+    if (G.wallAt[i]) txt += ' · 🧱 Mur (aucun assaut ne le franchit)';
+    else if (G.walls.some(w => w.tiles.includes(i))) txt += ' · 🧱 Mur en chantier';
     if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
     if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
     if (o >= 0 && !G.building[i] && G.isUnlinked(i)) {
@@ -642,7 +658,7 @@ const UI = {
 
     if (G.phase === 'playing') {
       const freeArm = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
-      $('hint').textContent = this.plan ? this.planHint()
+      $('hint').textContent = this.wallFor >= 0 ? this.wallHint() : this.plan ? this.planHint()
         : freeArm ? `🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`
         : this.selectedBuild
         ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`
@@ -1005,6 +1021,51 @@ const UI = {
       btn.title = cost === null ? 'Déjà au niveau maximum'
         : h.gold >= cost ? `Améliorer (💰 ${fmt(cost)})` : `Pas assez d'or : il faut 💰 ${fmt(cost)}`;
     }
+    for (const [box, text] of [[this.actionMenu, false], [this.upgradeBox, true]]) {
+      const btn = box && box.buildingAnchor !== undefined && box.querySelector('[data-wall]');
+      if (btn) this.updateWallButton(btn, box.buildingAnchor, text);
+    }
+  },
+
+  // --- Murs d'une ville (château de niveau 2 ou plus) ---
+  // Bouton « Mur » : actif s'il reste un mur à bâtir, sans travaux en cours, et avec assez d'or.
+  // text = bouton de la fenêtre d'info (avec son texte), sinon petit bouton du menu rapide (juste l'icône)
+  updateWallButton(btn, a, text) {
+    const G = Game, h = G.human, n = G.wallsOf(a).length, max = G.wallMax(a);
+    const cost = n < max ? G.wallCost(a) : null;
+    const why = G.owner[a] !== h.id ? 'Cette ville n\'est plus à toi'
+      : cost === null ? (max < 2 ? 'Cette ville a déjà son mur (une citadelle, niveau 3, peut en bâtir un second)' : 'Cette ville a déjà ses deux murs')
+      : G.works.get(a) ? 'Des travaux sont en cours sur cette ville'
+      : h.gold < cost ? `Pas assez d'or : il faut 💰 ${fmt(cost)}` : '';
+    btn.disabled = !!why;
+    btn.title = why || `Bâtir un mur (💰 ${fmt(cost)}, ${CONFIG.WALL_BUILD_TIME} s) : il ferme un passage, aucun assaut ne le franchit`;
+    if (text) {
+      const html = `🧱 Mur ${n}/${max}` + (cost !== null ? ` (💰 ${fmt(cost)})` : '');
+      if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
+    }
+  },
+
+  // Pose d'un mur : la souris montre le mur, un clic sur la carte le bâtit (Échap ou clic droit = annuler)
+  startWall(c) {
+    const G = Game, err = G.planWall(G.human.id, c, c).error;
+    // (on vérifie juste qu'il reste un mur à bâtir : la case visée, elle, sera choisie sur la carte)
+    if (err && G.wallsOf(c).length >= G.wallMax(c)) return this.log(err, 'warn');
+    this.selectBuild(0);
+    this.cancelPlan();
+    this.wallFor = c;
+    document.body.style.cursor = 'crosshair';
+  },
+
+  cancelWall() {
+    if (this.wallFor === undefined || this.wallFor < 0) return;
+    this.wallFor = -1;
+    document.body.style.cursor = '';
+  },
+
+  wallHint() {
+    const G = Game, c = this.wallFor, cost = G.wallCost(c);
+    return `🧱 Mur (💰 ${fmt(cost)}, ${CONFIG.WALL_BUILD_TIME} s) : clique sur tes terres, à ${CONFIG.WALL_MAX_REACH} cases au plus de la muraille de la ville ` +
+      `: le mur ira tout droit de la ville jusque-là (près d'un lac, d'un sommet, d'un fleuve ou d'un autre mur, il s'y accroche tout seul) · Échap ou clic droit pour annuler`;
   },
 
   closeActionMenu() {
@@ -1037,6 +1098,16 @@ const UI = {
     const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;
     if (assault && assault.target === h.id) return this.defend(banner);
     if (this.plan && this.planClick(i)) return;
+    // Pose d'un mur : le clic choisit jusqu'où il va
+    if (this.wallFor >= 0) {
+      const c = this.wallFor;
+      if (G.building[c] !== B_CASTLE || G.owner[c] !== h.id) { this.cancelWall(); return; }
+      const cost = G.wallCost(c), err = G.buildWall(h, c, i);
+      if (err) return this.log(err, 'warn');
+      this.cancelWall();
+      this.log(`🧱 Chantier du mur lancé (💰 ${fmt(cost)}) : il sera debout dans ${CONFIG.WALL_BUILD_TIME} s.`, 'good');
+      return;
+    }
     const t = G.building[i];
     // Clic sur un de ses avant-postes : sa fenêtre d'info et son menu rapide (renforts / rapatrier)
     if (t === B_OUTPOST && G.owner[i] === h.id && !this.selectedBuild) {
@@ -1105,7 +1176,7 @@ function setupInput(canvas) {
   // Clic droit : annule une construction ou un assaut en préparation, sinon ouvre le menu d'actions
   canvas.addEventListener('contextmenu', e => {
     e.preventDefault();
-    if (UI.selectedBuild || UI.plan) { UI.selectBuild(0); UI.cancelPlan(); return; }
+    if (UI.selectedBuild || UI.plan || UI.wallFor >= 0) { UI.selectBuild(0); UI.cancelPlan(); UI.cancelWall(); return; }
     UI.openActionMenu(e.clientX, e.clientY);
   });
 

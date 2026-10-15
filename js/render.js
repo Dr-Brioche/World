@@ -214,6 +214,96 @@ const Render = {
     ctx.stroke();
   },
 
+  // Murs bâtis par les villes : une ligne de pierres d'une case de large (en chantier : à moitié transparente,
+  // avec une jauge qui se remplit), et l'aperçu du mur qu'on est en train de poser
+  drawCityWalls(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    const stones = (tiles, stone, dark) => {
+      // les cases voisines (même en diagonale) sont reliées par un trait, chaque case est un bloc de pierre
+      ctx.lineCap = 'square';
+      ctx.beginPath();
+      for (let k = 1; k < tiles.length; k++) {
+        const a = tiles[k - 1], b = tiles[k], ax = a % W, ay = (a / W) | 0, bx = b % W, by = (b / W) | 0;
+        if (Math.abs(ax - bx) > 1 || Math.abs(ay - by) > 1) continue;
+        ctx.moveTo(ox + (ax + 0.5) * s, oy + (ay + 0.5) * s);
+        ctx.lineTo(ox + (bx + 0.5) * s, oy + (by + 0.5) * s);
+      }
+      ctx.lineWidth = Math.max(5, s * 0.95);
+      ctx.strokeStyle = dark;
+      ctx.stroke();
+      ctx.lineWidth = Math.max(3, s * 0.7);
+      ctx.strokeStyle = stone;
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+      const m = Math.max(4, s * 0.85);
+      ctx.beginPath();
+      for (const i of tiles) ctx.rect(ox + (i % W + 0.5) * s - m / 2, oy + (((i / W) | 0) + 0.5) * s - m / 2, m, m);
+      ctx.fillStyle = stone;
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = dark;
+      ctx.stroke();
+      if (s < 6) return;
+      // de près : les joints entre les pierres
+      ctx.beginPath();
+      for (const i of tiles) {
+        const x = ox + (i % W) * s, y = oy + ((i / W) | 0) * s;
+        ctx.moveTo(x + s * 0.1, y + s * 0.5); ctx.lineTo(x + s * 0.9, y + s * 0.5);
+        ctx.moveTo(x + s * 0.5, y + s * 0.1); ctx.lineTo(x + s * 0.5, y + s * 0.5);
+        ctx.moveTo(x + s * 0.3, y + s * 0.5); ctx.lineTo(x + s * 0.3, y + s * 0.9);
+        ctx.moveTo(x + s * 0.7, y + s * 0.5); ctx.lineTo(x + s * 0.7, y + s * 0.9);
+      }
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    };
+    for (const w of G.walls) {
+      if (w.done) { stones(w.tiles, '#b3aa98', 'rgba(30,22,12,0.9)'); continue; }
+      ctx.globalAlpha = 0.45;
+      stones(w.tiles, '#b3aa98', 'rgba(30,22,12,0.9)');
+      ctx.globalAlpha = 1;
+      // jauge du chantier, au milieu du mur
+      const mid = w.tiles[w.tiles.length >> 1], k = Math.min(1, (G.tick - w.start) / Math.max(1, w.ready - w.start));
+      const bw = Math.max(26, s * 3), bh = Math.max(5, s * 0.4);
+      const x = ox + (mid % W + 0.5) * s - bw / 2, y = oy + (((mid / W) | 0) + 1) * s + 3;
+      ctx.fillStyle = 'rgba(20,12,4,0.75)';
+      ctx.fillRect(x - 1, y - 1, bw + 2, bh + 2);
+      ctx.fillStyle = '#4f9d3a';
+      ctx.fillRect(x, y, bw * k, bh);
+    }
+    // Aperçu du mur qu'on pose (recalculé au plus toutes les 0,1 s) : vert s'il est possible, rouge sinon
+    const c = UI.wallFor;
+    if (c === undefined || c < 0 || this.hover < 0 || G.phase !== 'playing') return;
+    const now = performance.now();
+    if (!this.wallPlan || this.wallPlan.key !== c + ':' + this.hover || (this.wallPlan.version !== G.version && now - this.wallPlan.time > 100)) {
+      this.wallPlan = Object.assign(G.planWall(G.human.id, c, this.hover), { key: c + ':' + this.hover, version: G.version, time: now });
+    }
+    const plan = this.wallPlan, h = G.sizeOf(B_CASTLE) / 2;
+    if (plan.error) {
+      // (une ligne rouge pointillée de la ville jusqu'à la souris)
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(ox + (c % W + h) * s, oy + (((c / W) | 0) + h) * s);
+      ctx.lineTo(ox + (this.hover % W + 0.5) * s, oy + (((this.hover / W) | 0) + 0.5) * s);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = 'rgba(200,50,40,0.9)';
+      ctx.stroke();
+      ctx.setLineDash([]);
+      return;
+    }
+    ctx.globalAlpha = 0.75;
+    stones(plan.tiles, '#cfe8b8', '#1f6b1a');
+    ctx.globalAlpha = 1;
+    // Accroché à un obstacle : un petit rond vert à l'endroit où il s'accroche (le passage est bien fermé)
+    if (plan.sealed) {
+      const ex = ox + (plan.end % W + 0.5) * s, ey = oy + (((plan.end / W) | 0) + 0.5) * s;
+      ctx.beginPath();
+      ctx.arc(ex, ey, Math.max(4, s * 0.6), 0, Math.PI * 2);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#2f9e2a';
+      ctx.stroke();
+    }
+  },
+
   // Remplit légèrement des cases (zone survolée ou aperçu)
   fillTiles(ox, oy, tiles, color) {
     const ctx = this.ctx, s = this.cam.scale, W = Game.W;
@@ -971,9 +1061,9 @@ const Render = {
   },
 
   drawSelectable(ox, oy) {
-    const G = Game, a = this.selectableAt(this.hover);
+    const G = Game, a = UI.wallFor >= 0 ? -1 : this.selectableAt(this.hover);
     // épée sur une cible attaquable, main médiévale ailleurs ; pendant une construction, le curseur de pose (voir UI)
-    const cursor = UI.selectedBuild ? '' : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
+    const cursor = UI.selectedBuild || UI.wallFor >= 0 ? '' : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
     // (on garde le dernier curseur choisi : le navigateur réécrit l'adresse de l'image à sa façon)
     if (this.curCursor !== cursor) { this.curCursor = cursor; this.canvas.style.cursor = cursor; }
     if (a < 0) return;
@@ -1233,6 +1323,7 @@ const Render = {
     this.drawRoads(ox, oy);
     this.drawPactBorders(ox, oy);
     this.drawCastleZones(ox, oy);
+    this.drawCityWalls(ox, oy);
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

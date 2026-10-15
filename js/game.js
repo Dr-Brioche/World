@@ -28,6 +28,8 @@ const GameRules = {
     this.attacks = [];
     this.expeditions = []; // bateaux en route vers une côte
     this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up' ou 'down', start, end, pid, paid }
+    this.walls = [];         // murs bâtis par les villes : { castle, owner, tiles, start, ready, done }
+    this.wallAt = new Uint8Array(this.N); // 1 = case d'un mur fini (aucun assaut ne la franchit)
     this.crossings = [];   // armées qui traversent un fleuve à gué
     this.returning = [];   // défenseurs qui rentrent à pied (l'assaut qu'ils allaient contrer est fini)
     this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
@@ -137,6 +139,8 @@ const GameRules = {
     }
     this.owner[i] = pid;
     this.version++;
+    // (une case d'un mur, finie ou en chantier, change de mains : le mur est perdu)
+    if (this.walls.length) for (const w of this.walls) if (w.tiles.includes(i)) { this.removeWall(w); break; }
     if (pid >= 0) {
       const p = this.players[pid];
       p.tiles++; p.sumX += x; p.sumY += y;
@@ -425,8 +429,11 @@ const GameRules = {
     if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
-    // (passer au niveau 3 prend plus longtemps)
-    this.startWorks(p, a, 'up', this.level[a] + 1 >= 3 ? CONFIG.UPGRADE_TIME_LEVEL3 : CONFIG.UPGRADE_TIME, cost);
+    // (passer au niveau 3 prend plus longtemps ; une ville, encore plus : voir CASTLE_UPGRADE_TIME)
+    const lvl3 = this.level[a] + 1 >= 3;
+    const secs = this.building[a] === B_CASTLE ? CONFIG.CASTLE_UPGRADE_TIME[lvl3 ? 1 : 0]
+      : lvl3 ? CONFIG.UPGRADE_TIME_LEVEL3 : CONFIG.UPGRADE_TIME;
+    this.startWorks(p, a, 'up', secs, cost);
     return null;
   },
 
@@ -436,6 +443,117 @@ const GameRules = {
     if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
     this.startWorks(p, a, 'down', CONFIG.DEMOLISH_TIME, 0);
     return null;
+  },
+
+  // --- Murs ---
+  // Une ville de niveau 2 peut bâtir un mur (et une citadelle, un second) : une muraille en ligne droite, de sa
+  // muraille jusqu'à l'endroit choisi (pas trop loin), pour fermer un passage. Aucun assaut ne peut la franchir.
+  // Nombre de murs qu'une ville peut avoir (selon son niveau), et ceux qu'elle a déjà (finis ou en chantier)
+  wallMax(c) { return this.building[c] === B_CASTLE ? Math.max(0, (this.level[c] || 1) - 1) : 0; },
+  wallsOf(c) { return this.walls.filter(w => w.castle === c); },
+  // Prix du prochain mur de la ville c (le 1er, puis le 2e)
+  wallCost(c) { return CONFIG.WALL_COSTS[Math.min(CONFIG.WALL_COSTS.length - 1, this.wallsOf(c).length)]; },
+
+  // Case infranchissable pour un assaut, où un mur peut s'accrocher : mer, lac, fleuve, sommet, ou un autre mur
+  wallBarrier(i) {
+    return !this.isLand(i) || this.terrain[i] === TERRAIN.RIVER || this.wallAt[i] === 1
+      || this.walls.some(w => !w.done && w.tiles.includes(i));
+  },
+
+  // « Aimant » : visé près d'un obstacle (à moins de WALL_SNAP cases), le mur va jusqu'à lui, pour qu'il ne
+  // reste pas de trou entre les deux. Renvoie la case d'obstacle la plus proche de la case visée, ou -1.
+  wallSnap(target) {
+    const W = this.W, x0 = target % W, y0 = (target / W) | 0, S = CONFIG.WALL_SNAP;
+    if (this.wallBarrier(target)) return target;
+    let best = -1, bestD = Infinity;
+    for (let dy = -S; dy <= S; dy++) for (let dx = -S; dx <= S; dx++) {
+      const x = x0 + dx, y = y0 + dy, d = dx * dx + dy * dy;
+      if (x < 0 || y < 0 || x >= W || y >= this.H || d > S * S || d >= bestD) continue;
+      if (this.wallBarrier(y * W + x)) { best = y * W + x; bestD = d; }
+    }
+    return best;
+  },
+
+  // Le mur que la ville c bâtirait jusqu'à la case visée : { tiles, end, sealed } ou { error }.
+  // Il part de la muraille de la ville et va tout droit jusqu'à la case visée (ou jusqu'à l'obstacle tout proche :
+  // voir wallSnap, sealed = il s'y accroche) ; il ne passe que sur les terres du royaume (là où il croise un
+  // obstacle infranchissable, il n'y a pas besoin de mur : il le laisse).
+  planWall(pid, c, target) {
+    if (this.building[c] !== B_CASTLE || this.owner[c] !== pid) return { error: 'Ce n\'est pas une de tes villes.' };
+    if (this.wallsOf(c).length >= this.wallMax(c)) {
+      return { error: this.level[c] < 2 ? 'Il faut une ville de niveau 2 pour bâtir un mur.'
+        : this.level[c] < 3 ? 'Cette ville a déjà son mur (une citadelle peut en bâtir un second).' : 'Cette ville a déjà ses deux murs.' };
+    }
+    const W = this.W, h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
+    const snap = this.wallSnap(target), sealed = snap >= 0;
+    if (sealed) target = snap;
+    const tx = target % W + 0.5, ty = ((target / W) | 0) + 0.5, R = this.castleInfo(c).radius;
+    const dist = Math.hypot(tx - cx, ty - cy);
+    if (dist < R + 2) return { error: 'Vise un endroit hors de la muraille de la ville.' };
+    if (dist > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.` };
+    // le mur part du bord de la muraille de la ville, vers la case visée (tracé case par case, sans trou)
+    const sx = Math.floor(cx + (tx - cx) / dist * (R - 0.5)), sy = Math.floor(cy + (ty - cy) / dist * (R - 0.5));
+    const tiles = [], ex = target % W, ey = (target / W) | 0;
+    let x = sx, y = sy;
+    const dx = Math.abs(ex - x), dy = -Math.abs(ey - y), stx = x < ex ? 1 : -1, sty = y < ey ? 1 : -1;
+    let err = dx + dy;
+    for (;;) {
+      const i = y * W + x;
+      // (les cases dans la muraille de la ville sont la ville elle-même : le mur commence juste après)
+      if (!this.wallBarrier(i) && !this.inCastleRange(c, x, y, R)) {
+        if (this.owner[i] !== pid) return { error: 'Le mur doit être entièrement sur tes terres.' };
+        if (this.building[i]) return { error: 'Un bâtiment est sur le chemin du mur.' };
+        tiles.push(i);
+      }
+      if (x === ex && y === ey) break;
+      const e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x += stx; }
+      if (e2 <= dx) { err += dx; y += sty; }
+    }
+    if (tiles.length < 2) return { error: 'Le mur est trop court.' };
+    return { tiles, end: target, sealed };
+  },
+
+  // Bâtir un mur de la ville c jusqu'à la case visée. Renvoie un message d'erreur, ou null.
+  buildWall(p, c, target) {
+    const plan = this.planWall(p.id, c, target);
+    if (plan.error) return plan.error;
+    const cost = this.wallCost(c);
+    if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
+    p.gold -= cost;
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    this.walls.push({ castle: c, owner: p.id, tiles: plan.tiles, start: this.tick, ready: this.tick + CONFIG.WALL_BUILD_TIME * TPS, done: false });
+    return null;
+  },
+
+  // Retire un mur (sa ville est prise ou détruite, ou une de ses cases a changé de mains)
+  removeWall(w) {
+    for (const t of w.tiles) if (w.done) { this.wallAt[t] = 0; Render.markDirty(t); }
+    this.walls = this.walls.filter(x => x !== w);
+    this.version++;
+  },
+
+  // Chaque tour : les murs dont le chantier se termine se dressent ; un assaut dont le chemin est coupé par un mur
+  // tout neuf rebrousse chemin (il est annulé, sans pertes). Un mur dont la ville n'est plus au royaume disparaît.
+  stepWalls() {
+    for (const w of this.walls.slice()) {
+      if (this.building[w.castle] !== B_CASTLE || this.owner[w.castle] !== w.owner) { this.removeWall(w); continue; }
+      if (w.done || this.tick < w.ready) continue;
+      w.done = true;
+      for (const t of w.tiles) { this.wallAt[t] = 1; Render.markDirty(t); }
+      this.version++;
+      const o = this.players[w.owner];
+      if (o.isHuman) UI.log('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.', 'good');
+      for (const a of this.attacks) {
+        if (a.done || a.target !== w.owner) continue;
+        const route = a.pathTiles || a.path;
+        if (!route || !route.some(t => this.wallAt[t] && this.owner[t] === w.owner)) continue;
+        const p = this.players[a.attacker];
+        if (p.isHuman) UI.log(`🧱 Un mur ${this.deName(o.name)} coupe la route de ton armée : elle rebrousse chemin.`, 'warn', o);
+        else if (o.isHuman) UI.log(`🧱 Ton mur coupe la route de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, 'good', p);
+        this.endAttack(a);
+      }
+    }
   },
 
   startWorks(p, a, kind, secs, paid) {
@@ -1536,6 +1654,7 @@ const GameRules = {
     a.set = new Set(front);
     if (unlinked) a.limitZone = unlinked; // (l'assaut reste dans ce morceau)
     if (castle >= 0 && !a.castleTaken) {
+      a.pathTiles = path; // (pour savoir si un mur vient couper sa route, voir stepWalls)
       a.limitZone = this.corridor(castle, path);
       if (a.frontTile < 0 || this.owner[a.frontTile] !== target) a.frontTile = path[0]; // on se bat au début du chemin
     }
@@ -1557,7 +1676,7 @@ const GameRules = {
     const R = isCastle ? this.castleInfo(c).radius : 0;
     const others = this.castles.filter(o => o !== c && this.owner[o] === target);
     return i => {
-      if (this.owner[i] !== target) return false;
+      if (this.owner[i] !== target || this.wallAt[i]) return false; // (aucun assaut ne franchit un mur)
       const x = i % this.W, y = (i / this.W) | 0;
       if (isCastle && this.inCastleRange(c, x, y, R)) return true;
       if (this.anchor[i] === c) return true; // le bâtiment visé lui-même
@@ -1717,7 +1836,7 @@ const GameRules = {
   // Chemin du cœur du royaume pid jusqu'au morceau isolé `piece`, à travers les terres du royaume o
   // (sans passer dans la muraille d'un château de o). Renvoie { path, passable }, ou null.
   linkPath(pid, piece, o) {
-    const passable = i => this.owner[i] === o && !this.castleProtects(o, i);
+    const passable = i => this.owner[i] === o && !this.wallAt[i] && !this.castleProtects(o, i);
     const touchesPiece = i => {
       let found = false;
       this.forNeighbors(i, n => { if (piece.has(n)) found = true; });
@@ -2359,7 +2478,7 @@ const GameRules = {
       // et ne passe pas les murailles : il s'arrête au pied du mur
       const castle = a.target >= 0 && a.targetCastle < 0 && a.link === undefined &&
         (this.building[t] === B_CASTLE || this.building[t] === B_OUTPOST || this.castleProtects(a.target, t));
-      if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside || castle) {
+      if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside || castle || this.wallAt[t]) {
         a.list[idx] = a.list[a.list.length - 1];
         a.list.pop();
         a.set.delete(t);
@@ -2806,6 +2925,7 @@ const GameRules = {
           if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers le château est bloqué : assaut annulé.', 'warn');
           return this.endAttack(a);
         }
+        a.pathTiles = path;
         a.limitZone = this.corridor(a.targetCastle, path);
         a.frontTile = path[0];
       }
@@ -3344,6 +3464,7 @@ const GameRules = {
     this.stepCrossings();
     this.stepReturning();
     this.stepWorks();
+    this.stepWalls();
     this.stepOutposts();
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
     // (le découpage n'est refait que si l'un d'eux a vraiment englobé des terres)

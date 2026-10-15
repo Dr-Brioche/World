@@ -211,7 +211,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
    **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : une **flèche ⬆️** pour l'améliorer
-   (travaux de **5 s**, ou **10 s** pour passer au niveau 3) et **✖** rouge pour le détruire (travaux de **10 s**, après une confirmation). La fenêtre en haut à gauche explique
+   (travaux de **5 s**, ou **10 s** pour passer au niveau 3 ; pour une **ville (château)** : **40 s** pour le niveau 2, **60 s** pour le niveau 3) et **✖** rouge pour le détruire (travaux de **10 s**, après une confirmation). La fenêtre en haut à gauche explique
    ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
@@ -280,6 +280,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Au niveau 3, ce sont des **routes pavées** 🛣️ grises : **+50 %**.
 
      Exemple : une forêt (+60 %) protégée par une citadelle passe à +460 %.
+
+     🧱 **Murs** : une ville de **niveau 2** peut bâtir **un mur** (💰 500), et une **citadelle** (niveau 3) **un second** (💰 1000).
+     Clique sur ta ville, puis sur le bouton **🧱 Mur** (menu rapide ou fenêtre en haut à gauche, avec le compte, ex. « Mur 0/1 »),
+     puis sur l'endroit de tes terres où il doit aller (au plus **15 cases** après la muraille de la ville) : le mur part de la
+     ville et va **tout droit** jusque-là (aperçu **vert** s'il est possible, ligne **rouge** sinon ; il ne passe que sur tes
+     terres, sans bâtiment sur le chemin). **🧲 Aimant** : vise à moins de **3 cases** d'un obstacle (mer, lac, fleuve, sommet
+     ou un autre mur) et le mur va s'y accrocher tout seul (petit rond vert), pour **fermer le passage** sans laisser de trou.
+     Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
+     le franchir** : les armées ennemies doivent faire le tour. Si un assaut déjà lancé voit sa route **coupée** par un mur
+     tout neuf, il **rebrousse chemin** (assaut annulé). Si la ville est prise ou détruite, ses murs disparaissent (et un mur
+     dont une case est prise aussi). `Échap` ou clic droit annule la pose. Les bots, eux, ne bâtissent pas de murs.
    - ⛪ **Église** : elle coûte cher, mais **se construit n'importe où** sur ton territoire,
      **sauf trop près de tes châteaux** : elle doit rester hors de portée de leur muraille, même améliorée
      au maximum (quand tu places une église, un **cercle rouge** entoure chacun de tes châteaux).
@@ -444,6 +455,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.85** : 🧱 **murs** : une ville de niveau 2 bâtit un mur (💰 500), une citadelle un second (💰 1000) : il va tout droit de la ville jusqu'à l'endroit choisi (15 cases au plus après sa muraille), s'accroche tout seul à un obstacle proche (lac, mer, fleuve, sommet, autre mur) et aucun assaut ne le franchit ; un assaut dont la route est coupée par un mur tout neuf rebrousse chemin · ⏳ améliorer une ville prend plus de temps : 40 s pour le niveau 2, 60 s pour le niveau 3
 - **v0.84.1** : 📏 nouvelles tailles de carte : Petite 300 x 169, Moyenne 650 x 366, Grande 1000 x 562
 - **v0.84** : 📏 choix de la taille de la carte avant la partie (cartes aléatoires) : Petite 500 x 281, Moyenne 750 x 422, Grande 1000 x 562 (format 16:9) ; plus d'îlots, de fleuves et de lacs sur les grandes, avec des reliefs plus étendus · ⚖️ toutes les cartes ont les mêmes règles de vitesse (fini le bonus des terres libres sur les cartes Monde et Europe : une grande carte prend juste plus de temps) · 🏝️ une capitale ne se fonde plus sur un îlot (terre d'au moins 600 cases)
 - **v0.83.1** : 🚀 départ plus rapide : l'élan de départ triple le recrutement et la conquête des terres libres (au lieu de +50 %), puis disparaît en 5 minutes : l'expansion va environ 2 fois plus vite (la moitié des terres prise en 3 minutes au lieu de 6)
