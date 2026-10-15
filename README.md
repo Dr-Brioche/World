@@ -158,7 +158,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      pendant **30 s**, le vainqueur panse ses blessures (**−25 %** de soldats produits), et le perdant est galvanisé
      par la défaite (**+25 %**). **Ces effets s'additionnent** : chaque victoire ajoute −25 % pendant ses 30 s
      (jusqu'à −75 % : qui attaque trop le paie cher), chaque défaite ajoute +25 % (jusqu'à +100 % : qui est trop
-     ciblé peut se rattraper). La jauge des soldats indique le total.
+     ciblé peut se rattraper). Après-guerre et galvanisation **s'additionnent aussi entre eux** : un +25 % annule
+     un −25 %. La jauge des soldats indique le total.
      **Repousser un assaut** galvanise aussi le défenseur : **+25 %** de soldats produits pendant **15 s** (ça s'additionne aussi).
 
    **✂️ Couper** : un royaume reste **d'un seul tenant** (sur chaque île). Quand un assaut le coupe en morceaux, il ne garde
@@ -416,6 +417,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.76.7** : ⚖️ après-guerre et galvanisation s'additionnent au lieu de se multiplier : un +25 % annule un −25 % (la jauge affiche le total quand les deux sont actifs)
 - **v0.76.6** : ⛺ détruire un avant-poste ennemi ne donne plus de malus d'après-guerre (son propriétaire est toujours galvanisé)
 - **v0.76.5** : 🏔️ la montagne défend un peu moins : +180 % au lieu de +250 % (elle se prend aussi un peu plus vite et moins cher)
 - **v0.76.4** : 🔥 réussir une défense (repousser un assaut) galvanise ton peuple : +25 % de soldats produits pendant 15 s

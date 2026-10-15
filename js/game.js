@@ -955,8 +955,9 @@ const GameRules = {
     p.rallyEnds = (p.rallyEnds || []).filter(t => t > this.tick);
     return Math.min(CONFIG.RALLY_MAX, p.rallyEnds.length * CONFIG.RALLY_BONUS);
   },
+  // Après-guerre et galvanisation s'additionnent (pas de multiplication) : un +25 % annule un −25 %
   warFactor(p) {
-    return (1 - this.postWar(p)) * (1 + this.rallied(p));
+    return 1 - this.postWar(p) + this.rallied(p);
   },
   // noMalus = pas de malus d'après-guerre pour le vainqueur (avant-poste détruit) : seul le perdant est galvanisé
   warEffects(a, noMalus = false) {
