@@ -447,8 +447,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    tes soldats disponibles (pas les garnisons) réduisent **tout l'or que tu gagnes**, jusqu'à **−25 %** avec
    une armée pleine (c'est affiché sous la jauge).
    Envoie donc tes troupes au combat plutôt que de les garder !
-   **🚀 Élan de départ** : au début de la partie, tout le monde recrute et prend les terres libres **3 fois plus vite** ;
-   cet élan diminue peu à peu et disparaît au bout de **5 minutes** (la moitié des terres est prise en 3 minutes environ).
+   **🚀 Élan de départ** : au début de la partie, tout le monde recrute **3 fois plus vite** ;
+   cet élan diminue peu à peu et disparaît au bout de **5 minutes**. Les **terres libres**, elles, se prennent
+   **3 fois plus vite toute la partie**, et quand l'élan du recrutement retombe, elles coûtent **moins de soldats**
+   (jusqu'à 3 fois moins) : l'expansion en terre vierge garde le même rythme qu'au début, toute la partie.
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
    **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
@@ -482,6 +484,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.87.3** : 🌾 l'expansion en terre libre ne ralentit plus : les terres libres se prennent 3 fois plus vite toute la partie, et coûtent jusqu'à 3 fois moins de soldats quand l'élan de recrutement retombe (au bout de 5 minutes) : la conquête des terres vierges garde le rythme du début
 - **v0.87.2** : ⚔️ casernes bien plus fortes : chaque soldat vaut 1,3 (camp d'entraînement), 1,8 (caserne) ou 2,5 soldats (grande caserne) au combat, au lieu de 1,1, 1,2 et 1,5
 - **v0.87.1** : 🏛️ la règle du pouvoir : une muraille avec sa garnison maintient le pouvoir, donc un **port fortifié** (niveau 3) tient sa région comme une ville. Un royaume qui garde un port fortifié n'est plus désorganisé, et une région avec un port fortifié peut construire ; sans ville ni port fortifié, c'est l'anarchie
 - **v0.87** : ✝️ **la Croyance** : chaque église en apporte (10, 30 ou 50 selon son niveau, +50 % si reliée à une route) ; plus croyant qu'un voisin ennemi, tu convertis lentement ses terres frontalières (d'abord ses couloirs étroits et ses pointes), d'autant plus vite que l'écart est grand ; jamais ses villes, ports fortifiés, avant-postes ni ce qui est dans leur muraille ; bible verte ou rouge dans le classement · 🎚️ menu : la difficulté et le nombre de royaumes rivaux (3 à 11) se choisissent séparément · 🧨 détruire une ville, une église ou un port fait aussi sauter les moulins et casernes qui en dépendaient · ⚓ un morceau de royaume avec un port fortifié n'est plus « coupé de ses châteaux » : il est défendu, comme avec une ville
