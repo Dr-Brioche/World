@@ -143,8 +143,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus rapide à pied** (pas forcément le plus proche à vol d'oiseau) et marchent
      à la rencontre de l'ennemi par le **chemin le plus rapide** de tes terres (on voit leur bannière 🛡 avancer, et
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
-     groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
-     contre un même assaut (le temps de regrouper les soldats).
+     groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Contre un même assaut, tu n'envoies qu'**une armée de défense** :
+     si tu recliques, les soldats en plus **la renforcent** (ils la rejoignent en **3 s**, qu'elle soit encore en route
+     ou déjà au combat) au lieu de former une nouvelle armée.
      Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **font
      demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus rapide à rejoindre, comme les bateaux
      de renfort (on voit leur bannière ↩ revenir) : tu ne les récupères qu'à leur arrivée.
@@ -529,6 +530,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.12** : 🛡️ une seule armée de défense par assaut : recliquer sur « Défendre » la renforce (les soldats la rejoignent en 3 s, en route ou au combat) au lieu de créer une nouvelle armée ; plus d'attente de 5 s entre deux envois
 - **v0.91.11** : 🐛 un débarquement ne peut plus se poser dans la muraille d'une ville ou d'un port fortifié (ni sur un mur) : il fallait l'assiéger, pas y planter un avant-poste
 - **v0.91.10** : ✝️ un royaume désorganisé (sans ville ni port fortifié) se fait convertir 2 fois plus vite par la Croyance de ses voisins
 - **v0.91.9** : ⚓ un royaume qui perd tous ses ports perd aussi tous ses avant-postes : ils sont supprimés de la carte avec leurs soldats, et leurs zones redeviennent libres
