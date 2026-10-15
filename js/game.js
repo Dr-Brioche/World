@@ -2860,20 +2860,19 @@ const GameRules = {
     return Math.ceil(a.prepTicks / TPS);
   },
 
-  // D'où part une armée de pid vers le point (x, y) : son avant-poste (source), sinon sa ville (château) d'où
+  // D'où part une armée de pid vers le point (x, y) : son avant-poste (source), sinon sa place forte (ville ou port fortifié) d'où
   // l'on arrive LE PLUS VITE à ce point en marchant (relief, fleuves, détours compris : voir fastestCity), sinon
   // (aucune ville n'y mène à pied) la plus proche à vol d'oiseau, sinon le cœur de son royaume. Renvoie le centre.
   departurePoint(pid, x, y, source) {
     const W = this.W, mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
     if (source >= 0 && this.building[source] === B_OUTPOST) return mid(source);
     const start = Math.floor(y) * W + Math.floor(x), o = this.owner[start];
-    const fast = this.fastestCity(pid, start, this.castles.filter(c => this.owner[c] === pid && this.isBase(c)), o !== pid ? o : -2);
+    const fast = this.fastestCity(pid, start, this.strongholds(pid, true), o !== pid ? o : -2);
     if (fast >= 0) return mid(fast);
     // (une ville sur la même terre que le point visé passe avant une ville de l'autre côté de la mer)
     const land = this.landComp(), here = land[Math.floor(y) * W + Math.floor(x)];
     let best = null, bestD = Infinity;
-    for (const c of this.castles) {
-      if (this.owner[c] !== pid || !this.isBase(c)) continue;
+    for (const c of this.strongholds(pid, true)) {
       const m = mid(c), d = ((m.x - x) ** 2 + (m.y - y) ** 2) * (land[c] === here ? 1 : 100);
       if (d < bestD) { bestD = d; best = m; }
     }
@@ -3153,6 +3152,12 @@ const GameRules = {
     return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, k };
   },
 
+  // Les places fortes de pid d'où partent (et où rentrent) ses armées : ses villes (châteaux) et ses ports
+  // fortifiés (niveau 3) : une muraille et sa garnison. base = seulement celles reliées au cœur du royaume.
+  strongholds(pid, base) {
+    return this.castles.concat(this.walledPorts()).filter(c => this.owner[c] === pid && (!base || this.isBase(c)));
+  },
+
   // La ville (parmi cands) que des soldats de pid rejoignent LE PLUS VITE en marchant depuis la case start (ou,
   // ce qui revient au même, d'où ils arrivent le plus vite à start) : on compte le vrai chemin, comme walkRoute
   // (chaque case coûte son terrain : les fleuves, montagnes et détours rallongent), pas la distance à vol d'oiseau.
@@ -3252,12 +3257,11 @@ const GameRules = {
     // (armée bloquée dans ses châteaux isolés : les défenseurs sortent du château attaqué)
     if (a.targetCastle >= 0 && this.building[a.targetCastle] === B_CASTLE && this.troopsInCastles(pid)) return mid(a.targetCastle);
     const goal = this.defenseGoal(a);
-    const fast = this.fastestCity(pid, Math.floor(goal.y) * W + Math.floor(goal.x), this.castles.filter(c => this.owner[c] === pid && this.isBase(c)));
+    const fast = this.fastestCity(pid, Math.floor(goal.y) * W + Math.floor(goal.x), this.strongholds(pid, true));
     if (fast >= 0) return mid(fast);
     const to = this.attackFront(a);
     let best = null, bestD = Infinity;
-    for (const c of this.castles) {
-      if (this.owner[c] !== pid || !this.isBase(c)) continue;
+    for (const c of this.strongholds(pid, true)) {
       const m = mid(c), d = (m.x - to.x) ** 2 + (m.y - to.y) ** 2;
       if (d < bestD) { bestD = d; best = m; }
     }
@@ -3279,10 +3283,9 @@ const GameRules = {
       if (src >= 0 && this.owner[src] === pid && this.building[src] === B_OUTPOST) to = mid(src);
       else {
         // (la ville la plus rapide à rejoindre à pied, sinon la plus proche à vol d'oiseau)
-        const fast = this.fastestCity(pid, Math.floor(from.y) * W + Math.floor(from.x), this.castles.filter(c => this.owner[c] === pid));
+        const fast = this.fastestCity(pid, Math.floor(from.y) * W + Math.floor(from.x), this.strongholds(pid, false));
         if (fast >= 0) to = mid(fast);
-        else for (const c of this.castles) {
-          if (this.owner[c] !== pid) continue;
+        else for (const c of this.strongholds(pid, false)) {
           const m = mid(c), d = (m.x - from.x) ** 2 + (m.y - from.y) ** 2;
           if (d < best) { best = d; to = m; }
         }
