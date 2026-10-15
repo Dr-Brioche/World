@@ -482,6 +482,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    cet élan diminue peu à peu et disparaît au bout de **5 minutes**. Les **terres libres**, elles, se prennent
    **3 fois plus vite toute la partie**, et quand l'élan du recrutement retombe, elles coûtent **moins de soldats**
    (jusqu'à 3 fois moins) : l'expansion en terre vierge garde le même rythme qu'au début, toute la partie.
+   Et elle va encore **30 % plus vite** (`FREE_LAND_BOOST`) : chaque armée avance plus vite et perd moins de soldats par case libre.
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
    **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
@@ -515,6 +516,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.1** : 🌾 l'expansion en terre libre (la première phase de la partie) va 30 % plus vite : les armées avancent 30 % plus vite et chaque case libre coûte 30 % de soldats en moins
 - **v0.91** : ✝️ la conversion monte jusqu'à 5000 d'écart de Croyance (au lieu de 1000), avec une accélération de plus en plus faible : 5 cases par seconde à 1000, 7 à 2000, 8,5 à 3000, 10 à 5000 (le maximum) ; plusieurs croisades en même temps servent donc encore
 - **v0.90.9** : 🐛 les soldats en campagne (assauts, renforts en route, défenseurs, retours) comptent dans l'armée maximum : un royaume ne recrute plus au-delà de son maximum pendant que son armée est au loin (un assaut ne peut plus grossir sans fin) ; ta jauge l'affiche (« dont ⚔ … en campagne »)
 - **v0.90.8** : ⏳ tous les bâtiments s'améliorent au même rythme que les villes : 40 s pour passer au niveau 2, 60 s pour le niveau 3 (au lieu de 5 s et 10 s pour les autres)

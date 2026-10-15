@@ -54,6 +54,7 @@ const CONFIG = {
   EARLY_GROWTH_TIME: 300,
   // Les terres libres (vierges) se prennent toujours vite, toute la partie (x3), comme au début
   FREE_LAND_SPEED_BONUS: 3,
+  FREE_LAND_BOOST: 1.3,      // et l'expansion en terre libre va encore 30 % plus vite : plus rapide, et moins de soldats par case
   // Le recrutement dépend du remplissage de l'armée : il monte jusqu'à TROOP_PEAK_RATIO
   // du maximum, puis baisse jusqu'à 0 quand on s'approche du maximum.
   TROOP_PEAK_RATIO: 0.4,       // remplissage idéal (40 % du maximum)

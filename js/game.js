@@ -2938,7 +2938,7 @@ const GameRules = {
   // (jusqu'à 3 fois moins) : l'expansion en terre vierge garde le rythme du début, toute la partie.
   tileCost(a, t) {
     const loss = Math.max(CONFIG.NEUTRAL_TILE_COST, a.troops * CONFIG.TILE_LOSS_RATE);
-    const free = a.target < 0 ? this.earlyBoost() / (1 + CONFIG.EARLY_GROWTH_BONUS) : 1;
+    const free = a.target < 0 ? this.earlyBoost() / (1 + CONFIG.EARLY_GROWTH_BONUS) / CONFIG.FREE_LAND_BOOST : 1;
     return loss * TERRAIN_INFO[this.terrain[t]].cost * free;
   },
 
@@ -3502,7 +3502,7 @@ const GameRules = {
       speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_HEAVY));
     } else {
       speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED)
-        * CONFIG.FREE_LAND_SPEED_BONUS; // les terres libres se prennent vite, toute la partie
+        * CONFIG.FREE_LAND_SPEED_BONUS * CONFIG.FREE_LAND_BOOST; // les terres libres se prennent vite, toute la partie
     }
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
