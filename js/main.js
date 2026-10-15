@@ -584,8 +584,9 @@ const UI = {
         if (cr) txt += ` · ✝️ croisade en cours : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance encore ${Math.ceil((cr.end - G.tick) / CONFIG.TICKS_PER_SECOND)} s`;
         else if (G.level[a] >= 3 && o === G.human.id) txt += ` · ✝️ clique pour lancer une croisade (💰 ${fmt(CONFIG.CRUSADE_COST)})`;
         G.roads();
-        const link = G.roadChurches.get(a);
-        if (link) txt += ` · 🛤️ reliée ${link.port !== undefined ? 'à la route d\'un port' : 'à une ville'} : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s`;
+        const list = G.roadChurches.get(a) || [];
+        if (list.length) txt += ` · 🛤️ ${this.churchLinksText(list)} : +${CONFIG.CHURCH_ROAD_GOLD * list.length} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
+          `, Croyance +${Math.round(CONFIG.FAITH_ROAD_BONUS * list.length * 100)} %`;
         else txt += ' · pas de chemin (ni route de port ni ville assez proche)';
       }
       const road = G.roads().get(a);
@@ -831,8 +832,9 @@ const UI = {
     const a = Render.anchorAt(Render.mouse.x, Render.mouse.y, t);
     if (a < 0) return '';
     if (t === B_CHURCH) {
-      const link = G.churchLink(h.id, a);
-      return link ? ` · 🛤️ reliée ${link.port !== undefined ? 'à la route d\'un port' : 'à une ville'} par un chemin : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s`
+      const list = G.churchLinks(h.id, a);
+      return list.length ? ` · 🛤️ ${this.churchLinksText(list)} : +${CONFIG.CHURCH_ROAD_GOLD * list.length} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
+          `, Croyance +${Math.round(CONFIG.FAITH_ROAD_BONUS * list.length * 100)} %`
         : ' · trop loin d\'une ville ou d\'une route de port : pas de chemin';
     }
     if (!TERRAIN_PRODUCTION[t]) return '';
@@ -849,6 +851,15 @@ const UI = {
         : ` · aucune ville à moins de ${CONFIG.PORT_ROAD_DISTANCE} cases (pas de chemin)`;
     }
     return txt;
+  },
+
+  // « reliée à 2 villes et à la route d'un port » (chemins d'une église, voir Game.churchLinks)
+  churchLinksText(list) {
+    const cities = list.filter(l => l.castle !== undefined).length, port = list.some(l => l.port !== undefined);
+    const parts = [];
+    if (cities) parts.push(cities > 1 ? `${cities} villes` : 'une ville');
+    if (port) parts.push('la route d\'un port');
+    return 'reliée à ' + parts.join(' et à ') + (list.length > 1 ? ` (${list.length} chemins)` : '');
   },
 
   // La caméra va voir une attaque de pid contre nous (s'il en a plusieurs, chaque clic montre la suivante)

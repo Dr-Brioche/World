@@ -339,7 +339,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (une cathédrale donne +2 châteaux, même si tu as d'autres grandes églises). La **Croyance**, elle, s'additionne.
 
      ✝️ **La Croyance** (en haut de l'écran, à côté de tes terres) : au départ, tu en as 0. Chaque église en apporte
-     (voir le tableau), et **+50 %** si elle est **reliée à une route** (chemin vers une ville ou la route d'un port).
+     (voir le tableau), et **+50 %** par **chemin** qui la relie à une ville ou à la route d'un port (3 au plus : jusqu'à +150 %).
      Tes églises **prêchent chez tes voisins ennemis** (pas chez tes alliés de pacte) : si tu as **plus de Croyance**
      qu'un voisin, tu **convertis lentement ses terres** collées aux tiennes, une case à la fois. C'est l'**écart** qui compte :
      avec 100 contre 80, ta Croyance vaut 20 face à lui. Plus l'écart est grand, plus ça va vite : environ une case
@@ -367,10 +367,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      🛤️ **Route du port** : si une de tes **villes** (un château, de n'importe quel niveau) est à **moins de 30 cases**
      du port, sur la même terre, un **chemin de terre** les relie : le port produit **+30 % d'or**. Avec **deux** ou **trois
      villes** assez proches, il a **un chemin vers chacune** : **+60 %** ou **+90 %** (3 villes au plus).
-     Une **église** pas trop loin de ce chemin (à moins de **10 cases**) s'y relie par un **petit chemin** ; sinon, une église
-     pas trop loin d'une **ville** (à moins de **25 cases**, sur la même terre) est reliée à elle. Reliée, l'église produit
-     **un peu d'or** (+2 💰 toutes les 10 s). Mais une église près d'un **port seul** (sans ville proche, donc sans route)
-     ne crée pas de chemin.
+     Une **église** pas trop loin de ce chemin (à moins de **10 cases**) s'y relie par un **petit chemin**, et elle a aussi
+     un chemin vers **chaque ville** proche (à moins de **25 cases**, sur la même terre) : **3 chemins au plus**. Une nouvelle
+     ville bâtie près d'elle **ajoute** un chemin (elle ne remplace pas les autres). Chaque chemin rapporte **un peu d'or**
+     (+2 💰 toutes les 10 s) et **+50 % de Croyance** : les bonus s'additionnent. Mais une église près d'un **port seul**
+     (sans ville proche, donc sans route) ne crée pas de chemin.
      🌾 **Au bord d'une route** : un **moulin** ou une **caserne** bâti **hors des villes** (près d'une église ou d'un port),
      **sur** une de ces routes ou juste à côté (à moins de **2 cases** de son centre), produit **+20 %**. En le posant,
      la barre d'aide en bas l'indique (« 🛤️ au bord d'une route »).
@@ -507,6 +508,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90.1** : 🛤️ une église a un chemin vers chaque ville proche (et vers la route d'un port), 3 au plus : une nouvelle ville bâtie près d'elle ajoute un chemin au lieu de remplacer l'ancien ; chaque chemin rapporte +2 💰 et +50 % de Croyance
 - **v0.90** : ⏩ partie accélérée : au menu, « Vitesse de la partie : Accélérée » fait tout aller 2 fois plus vite (le jeu fait 2 tours au lieu d'un) ; le chrono affiche « (x2) »
 - **v0.89.1** : ✝️ la conversion continue d'accélérer au-delà de 200 d'écart de Croyance : 2 cases par seconde à 500, 5 par seconde à 1000 (le maximum)
 - **v0.89** : ✝️ croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2000 pièces, et la Croyance du royaume monte de 1000 pendant 60 s ; les bots en lancent aussi quand un voisin les dépasse en Croyance
