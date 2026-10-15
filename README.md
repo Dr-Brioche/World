@@ -153,6 +153,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      d'abord entre elles, au pied des murs : le siège attend la fin de la bataille, et la gagnante le reprend.
    - **Prendre un château** te donne d'un coup **toute sa zone de défense** (dans sa muraille) et
      **les moulins et casernes** qui s'y trouvent. L'assaut s'arrête alors et les survivants rentrent.
+   - **⏳ Trêve** : une ville (château), une église ou un port qui vient d'être conquis **ne peut pas être attaqué
+     pendant 30 s** (ni par son ancien maître, ni par un autre royaume).
      Tu peux relancer un nouvel assaut aussitôt.
    - **Prendre une église ou un port** (qui permet de construire autour de lui) te donne aussi **sa zone**
      et **les moulins et casernes construits grâce à lui**. Ce qui est dans la muraille d'un château reste au défenseur.
@@ -200,7 +202,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
-   **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : une **flèche ▲** pour l'améliorer
+   **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : une **flèche ⬆️** pour l'améliorer
    (travaux de **5 s**, ou **10 s** pour passer au niveau 3) et **✖** rouge pour le détruire (travaux de **10 s**, après une confirmation). La fenêtre en haut à gauche explique
    ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
@@ -383,8 +385,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    au-dessus, si ton recrutement va bien.
    **Les garnisons sont fixes** : leurs soldats ne quittent jamais leur château, port ou avant-poste
    (ils ne servent qu'à le défendre ; pour attaquer, tu utilises tes soldats disponibles, ou ceux stationnés
-   à un avant-poste). **Les soldats en garnison et stationnés** comptent aussi dans ton armée (la jauge les affiche) :
-   ensemble, ils ne peuvent pas dépasser le maximum. Le recrutement est **le plus rapide quand ton armée n'est
+   à un avant-poste). **Les garnisons ne comptent pas dans ton armée** : ce sont des armées liées à leur bâtiment
+   (des villes bien gardées ne freinent donc pas ton recrutement). Les soldats **stationnés** aux avant-postes et
+   ceux **en mer**, eux, comptent dans ton armée (la jauge les affiche) : ensemble, ils ne peuvent pas dépasser le maximum. Le recrutement est **le plus rapide quand ton armée n'est
    ni vide ni trop pleine**, puis il **ralentit** si tu accumules trop de soldats, jusqu'à s'arrêter quand l'armée
    est pleine. Pas de repère précis : c'est la **couleur de la jauge** qui te guide (vert = au top, orange = normal,
    rouge = ralenti).
@@ -397,6 +400,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **🚀 Élan de départ** : au début de la partie, tout le monde recrute et prend les terres libres **50 % plus vite** ;
    cet élan diminue peu à peu et disparaît au bout de **4 minutes**.
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
+   **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
@@ -427,6 +431,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.80** : 🛡️ les garnisons ne comptent plus dans ton armée (ce sont des armées liées à leur bâtiment : des villes bien gardées ne freinent plus le recrutement) · 💰 anéantir un royaume rapporte une prime de 500 pièces et tout son trésor · ⏳ une ville, une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant 30 s · 🧹 grande vérification du code : 🐛 le bouton « Défendre » ne marchait qu'en cliquant sur son bord (le clic sur l'icône était ignoré) · 🐛 le jeu pouvait se figer si la cible d'un de tes assauts disparaissait · 🐛 plus de trahison « pour rien » (attaquer un allié là où il n'y a rien à attaquer) · 🐛 un royaume anéanti en plein assaut faisait disparaître les défenseurs et la garnison d'en face · 🐛 un assaut de jonction ne prend plus de bande de terres (ni de bâtiments) qu'il n'a pas traversée · 🐛 renforcer l'assaut contre un morceau coupé visait parfois le mauvais morceau · 🐛 bataille à 3 armées au pied d'un château : le siège ne recule plus · 🐛 on ne peut plus aider un allié contre une armée qui marche encore chez elle · 🐛 l'aperçu du chemin d'assaut tient compte de tes avant-postes · ⚡ grandes cartes plus fluides (dessin de la carte, survol d'un royaume, chemins d'assaut) · petites corrections d'affichage et nettoyage du code inutile
 - **v0.79.1** : ✂️ la barre d'un assaut ennemi est raccourcie : juste « Écosse attaque · ⚔ soldats · Défendre »
 - **v0.79** : 🤝 dans le classement, les membres d'un pacte sont regroupés dans un cadre, avec le nom du pacte et sa part des terres
 - **v0.78.3** : 🐛 correction : les assauts contre un royaume avançaient beaucoup trop vite (à la vitesse des terres libres) depuis la v0.76 · 🏰 le bouton Château affiche un petit compteur « construits / maximum » (ex. 1/3), qui monte avec tes églises
