@@ -119,8 +119,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Où est l'attaque ?** Un royaume qui t'attaque a son nom qui **clignote en rouge** dans le classement, en haut
      à droite : **clique sur son nom**, la caméra va directement voir son armée (s'il a plusieurs assauts contre toi,
      chaque clic montre le suivant).
-   - **Défendre** : quand un assaut te vise, sa barre en bas de l'écran montre les soldats que l'attaquant garde
-     **en réserve** chez lui, et entre parenthèses ceux qu'il a envoyés (ex. « réserve 54 (740 envoyés) »).
+   - **Défendre** : quand un assaut te vise, une barre courte s'affiche en bas de l'écran : « Écosse attaque · ⚔ 242 · 🛡️ Défendre »
+     (les soldats de l'assaut). Le reste (réserve de l'attaquant…) se voit sur la carte, sous son nom.
      Dès que l'armée **entre sur tes terres** (pas avant : pendant sa marche chez elle, tes défenseurs n'iront jamais
      l'attendre en terre ennemie, et le bouton **🛡️ Défendre** reste grisé), clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
@@ -427,6 +427,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.79.1** : ✂️ la barre d'un assaut ennemi est raccourcie : juste « Écosse attaque · ⚔ soldats · Défendre »
 - **v0.79** : 🤝 dans le classement, les membres d'un pacte sont regroupés dans un cadre, avec le nom du pacte et sa part des terres
 - **v0.78.3** : 🐛 correction : les assauts contre un royaume avançaient beaucoup trop vite (à la vitesse des terres libres) depuis la v0.76 · 🏰 le bouton Château affiche un petit compteur « construits / maximum » (ex. 1/3), qui monte avec tes églises
 - **v0.78.2** : ✂️ la route d'un assaut vers un objectif n'est que visuelle tant que le combat n'est pas joué : elle ne coupe le royaume traversé que si l'assaut prend son objectif (s'il échoue, elle est rendue et rien n'est coupé) · ⏱️ plus de temps de trajet affiché à côté des armées en marche
