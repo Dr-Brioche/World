@@ -1206,9 +1206,32 @@ const GameRules = {
       const link = this.churchLink(this.owner[ch], ch, links);
       if (link) this.roadChurches.set(ch, link);
     }
+    // Un moulin ou une caserne hors des villes, posé sur une de ces routes (ou juste à côté) : +MILL_ROAD_BONUS
+    for (const a of this.buildingTiles) {
+      const t = this.building[a], o = this.owner[a];
+      if ((t !== B_MILL && t !== B_BARRACKS) || o < 0 || links.has(a)) continue;
+      if (this.onRoad(o, a, t, links)) links.set(a, { bonus: CONFIG.MILL_ROAD_BONUS, road: 'dirt', onRoad: true });
+    }
     this.roadsCache = links;
     this.roadsVersion = this.version;
     return links;
+  },
+
+  // Un moulin (ou une caserne) de pid posé en a est-il sur une route, hors des villes ? Les routes : celles des ports
+  // (vers une ville) et les chemins des églises, à moins de MILL_ROAD_DISTANCE cases de son centre.
+  // (dans la muraille d'une ville, ce sont les routes de la ville qui comptent : voir roads)
+  onRoad(pid, a, type, links = this.roads()) {
+    const cells = this.footprint(a, type);
+    if (cells.some(j => this.castleProtects(pid, j))) return false;
+    const W = this.W, h = this.sizeOf(type) / 2, x = a % W + h, y = ((a / W) | 0) + h, D = CONFIG.MILL_ROAD_DISTANCE;
+    for (const [b, link] of links) {
+      if (this.building[b] !== B_PORT || this.owner[b] !== pid || link.castle === undefined) continue;
+      if (this.roadNearest(this.roadPoints(b, link.castle), x, y).d <= D) return true;
+    }
+    for (const [ch, link] of this.roadChurches || []) {
+      if (this.owner[ch] === pid && this.roadNearest(link.pts, x, y).d <= D) return true;
+    }
+    return false;
   },
 
   // Château (une « ville ») de pid auquel un port posé en a serait relié par un chemin de terre : le plus proche,
