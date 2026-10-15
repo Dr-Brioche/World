@@ -130,7 +130,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      prend l'objectif**. S'il est repoussé, bat en retraite ou est bloqué, le défenseur **reprend toute la route**.
    - **Prendre des terres** coûte peu (comme une terre libre, selon le terrain). Ce qui coûte cher,
      ce sont les **défenseurs** ennemis. Mais un assaut **avance lentement** chez l'ennemi, et **plus l'armée est grande,
-     plus elle est lente** (100 soldats : environ 6 cases de plaine par seconde, 500 : 4,4, 1000 : 3,3, 3000 : 1,65) :
+     plus elle est lente** (100 soldats : environ 6,9 cases de plaine par seconde, 500 : 5,1, 1000 : 3,8, 3000 : 1,9) :
      une énorme armée écrase tout, mais l'ennemi a le temps de la voir venir. Elle avance bien moins vite
      que sur les terres libres, et encore moins dans le relief (forêt, colline, montagne, fleuve).
    - **Où est l'attaque ?** Un royaume qui t'attaque a son nom qui **clignote en rouge** dans le classement, en haut
@@ -517,6 +517,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.6** : ⚡ assauts (marche, combat, renforts) et défenseurs 15 % plus rapides
 - **v0.91.5** : ⚡ un territoire désorganisé se prend 30 % plus vite
 - **v0.91.4** : 🐎 une grosse armée est moins ralentie par sa taille (assauts, marches et défenseurs) : 1000 soldats avancent 50 % plus vite qu'avant, 3000 soldats 75 % plus vite (le ralentissement est deux fois plus faible)
 - **v0.91.3** : ⛺ détruire un avant-poste ennemi reprend d'un coup toute la zone qu'il avait prise (si elle n'est pas reliée à son royaume ni tenue par une ville ou un port fortifié)
