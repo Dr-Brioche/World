@@ -33,7 +33,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
    🎲 **Cartes aléatoires** (différentes à chaque partie) :
-   - **Normale** : un grand continent entouré d'océan, et parfois quelques îlots au large.
+   - **Normale** : un grand continent entouré d'océan, avec quelques petits îlots et un à trois îlots moyens au large.
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
    - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
@@ -301,7 +301,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (une cathédrale donne +2 châteaux, même si tu as d'autres grandes églises).
 
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
-     que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Il **n'est pas défendu** :
+     que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Comme l'église, il donne des
+     places pour des moulins et casernes autour de lui ; un moulin dans les zones d'un port **et** d'une église n'occupe
+     qu'**une** place : celle du port en priorité. Il **n'est pas défendu** :
      on peut l'attaquer directement, comme un château. **Toutes les 10 secondes**, il rapporte de l'or.
      🛤️ **Route du port** : si une de tes **villes** (un château, de n'importe quel niveau) est à **moins de 30 cases**
      du port, sur la même terre, un **chemin de terre** les relie : le port produit **+30 % d'or**.
@@ -347,7 +349,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ton armée). **Clique sur ton avant-poste** : sa fenêtre d'info s'ouvre en haut à gauche, et un **menu rapide**
      à côté de lui propose une **nef** pour les **Renforts** (le % choisi part par la mer, depuis un port de niveau 2
      ou plus) et une **ancre** pour **Rapatrier** (les soldats qui y attendent rembarquent vers ton port le plus proche et rejoignent ton armée ;
-     la garnison, elle, reste).
+     la garnison, elle, reste). Le bouton **🧨 Abandonner** (dans sa fenêtre d'info) fait disparaître l'avant-poste
+     (ses terres te restent) : **tous ses soldats**, garnison comprise, rentrent automatiquement par la mer.
+     Si c'est l'**ennemi** qui le détruit, ses soldats ont été vaincus : ils sont perdus.
      Si l'avant-poste tombe pendant que des renforts sont en mer, leur bateau **fait demi-tour** jusqu'au port.
      Les renforts qui arrivent sur un avant-poste **déjà bâti** complètent sa garnison, et les autres
      stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
@@ -438,6 +442,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.83** : ⚡ assauts, marches et défenseurs 15 % plus rapides · 🧨 tu peux abandonner un avant-poste : tous ses soldats rentrent automatiquement par la mer (détruit par l'ennemi, ses soldats sont vaincus) · ⛪⚓ un moulin dans les zones d'un port et d'une église n'occupe plus qu'une place (celle du port en priorité) · 🏝️ les petits îlots ne disparaissent plus à la création de la carte, et il y a aussi des îlots moyens · ⚡ partie 2 fois plus fluide (les bots cherchent plus vite où construire)
 - **v0.82** : 🏰 un assaut part de ta ville (château) la plus proche de l'objectif, et entre chez l'ennemi par le meilleur passage depuis elle (plus besoin de traverser la moitié du royaume) · 🛡️ tes défenseurs suivent l'assaut qui avance et passent par tes terres (plus de ligne droite à travers celles de l'ennemi) · 🤖 les bots ne s'acharnent plus à plusieurs sur la même cible et se battent aussi entre eux (ils ne te visent plus en priorité quand il reste peu de royaumes) · 🗺️ les frontières des royaumes suivent aussi les côtes et les lacs · 🌄 le relief et les sols se voient mieux sous la couleur des royaumes
 - **v0.81** : 🖱️ terres libres : il faut deux clics de suite pour les attaquer, et un clic qui ferme un menu ne lance plus rien · ↩️ une retraite avant que l'armée ait quitté tes terres est immédiate et sans perte · ↩️ si la ville (église, port) que tu vises est prise par un autre avant ton arrivée, ton armée fait demi-tour · 🛶 une traversée de fleuve toutes les 10 s au plus · ⏳ un chrono de la partie en haut de l'écran · 🔱 les soldats sont représentés par deux lances croisées (au lieu d'un casque)
 - **v0.80.1** : 🏚️ un royaume qui n'a plus de ville (château) est désorganisé, même s'il lui reste des églises ou des ports : on l'attaque de front, sans devoir prendre ses bâtiments un par un (ses avant-postes se visent toujours) · 🏰 s'il rebâtit ou reprend un château pendant l'assaut, l'assaut s'arrête · ⚡ contre un territoire désorganisé, plus l'armée est grande, plus elle avance vite · pas de flèche rouge pour ces assauts de front · ⛪ seule ta meilleure église débloque des châteaux en plus (elles ne s'additionnent plus) · 💰 nouveaux prix : grand moulin 150, château niveau 2 500, grande église 800, cathédrale 2000

@@ -120,7 +120,10 @@ function generateMap(seed, type = 'normal') {
   //    la carte continentale de grands lacs (où finiront ses fleuves).
   const minLand = 12;
   keepMainland(terrain, W, H, minLand);
-  if (type === 'normal') addIslets(terrain, W, H, rand);
+  if (type === 'normal') {
+    addIslets(terrain, W, H, rand, CONFIG.MEDIUM_ISLETS, 7, 12, 8);        // îlots moyens (avec un peu de relief)
+    addIslets(terrain, W, H, rand, CONFIG.ISLETS, 3, 5.5, 4);              // petits îlots
+  }
   if (cont) addLakes(terrain, elev, W, H, rand);
 
   // 3 bis. Quelques déserts : là où le « bruit de sécheresse » est le plus fort (environ DESERT_RATIO des plaines
@@ -346,24 +349,33 @@ function islandCenters(W, H, rand) {
   return centers;
 }
 
-// Quelques îlots au large de la carte « Normale » : de petites taches de terre dans la mer
-function addIslets(terrain, W, H, rand) {
-  const want = CONFIG.ISLETS[0] + Math.floor(rand() * (CONFIG.ISLETS[1] - CONFIG.ISLETS[0] + 1));
+// Quelques îlots au large de la carte « Normale » : des taches de terre en pleine mer.
+// count = [min, max] îlots, de rayon rMin à rMax cases, à au moins `margin` cases de toute autre terre.
+// (rayon d'au moins 3 : un îlot plus petit serait retiré comme une « miette », voir keepMainland)
+// Les plus grands ont un peu de relief : des collines au centre, des forêts autour.
+function addIslets(terrain, W, H, rand, count, rMin, rMax, margin) {
+  const want = count[0] + Math.floor(rand() * (count[1] - count[0] + 1));
+  const pad = Math.ceil(rMax + margin + 2);
+  if (W < pad * 2 + 4 || H < pad * 2 + 4) return;
   let made = 0;
   for (let tries = 0; tries < 400 && made < want; tries++) {
-    const cx = 20 + Math.floor(rand() * (W - 40)), cy = 20 + Math.floor(rand() * (H - 40));
-    const r = 2 + rand() * 3.5;
-    // en pleine mer : pas de terre à moins de r + 4 cases
+    const cx = pad + Math.floor(rand() * (W - pad * 2)), cy = pad + Math.floor(rand() * (H - pad * 2));
+    const r = rMin + rand() * (rMax - rMin);
+    // en pleine mer : pas de terre à moins de r + margin cases
     let free = true;
-    for (let y = cy - r - 4; y <= cy + r + 4 && free; y++) {
-      for (let x = cx - r - 4; x <= cx + r + 4; x++) {
-        if (terrain[Math.round(y) * W + Math.round(x)] !== TERRAIN.WATER) { free = false; break; }
+    for (let y = Math.floor(cy - r - margin); y <= cy + r + margin && free; y++) {
+      for (let x = Math.floor(cx - r - margin); x <= cx + r + margin; x++) {
+        if (terrain[y * W + x] !== TERRAIN.WATER) { free = false; break; }
       }
     }
     if (!free) continue;
     for (let y = Math.floor(cy - r - 1); y <= cy + r + 1; y++) {
       for (let x = Math.floor(cx - r - 1); x <= cx + r + 1; x++) {
-        if (Math.hypot(x - cx, y - cy) <= r + (rand() - 0.5) * 1.5) terrain[y * W + x] = rand() < 0.3 ? TERRAIN.FOREST : TERRAIN.PLAINS;
+        const d = Math.hypot(x - cx, y - cy);
+        if (d > r + (rand() - 0.5) * 1.5) continue;
+        // un îlot moyen a des collines en son cœur
+        terrain[y * W + x] = r >= 6 && d < r * 0.35 && rand() < 0.7 ? TERRAIN.HILLS
+          : rand() < 0.3 ? TERRAIN.FOREST : TERRAIN.PLAINS;
       }
     }
     made++;

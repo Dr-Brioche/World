@@ -41,7 +41,7 @@ const GameRules = {
     this.version = 0; // augmente à chaque changement de la carte
     // (calculs gardés en mémoire d'une partie à l'autre : on les oublie)
     this.regionsCache = null; this.regionsVersion = -1; this.nbStatsVersion = -1; this.nbStatsTick = undefined; this.assaultPlans = new Map();
-    this.roadsVersion = -1; this.walledPortsVersion = -1;
+    this.roadsVersion = -1; this.walledPortsVersion = -1; this.slotVersion = -1; this.slotCache = null;
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
     // Grande carte (Monde, Europe) : les terres libres se prennent plus vite et coûtent moins de soldats,
@@ -249,20 +249,63 @@ const GameRules = {
     return zone;
   },
 
-  // Nombre de moulins et casernes déjà construits grâce à l'église ch
-  // (ceux de son royaume dans sa zone, hors de la muraille d'un château)
+  // Nombre de moulins et casernes déjà construits grâce à l'église (ou au port) ch
   churchUsed(ch) {
-    const o = this.owner[ch], R = this.buildingInfo(ch).radius;
-    let n = 0;
-    for (const b of this.buildingTiles) {
-      const t = this.building[b];
-      if ((t !== B_MILL && t !== B_BARRACKS) || this.owner[b] !== o) continue;
-      const cells = this.footprint(b, t);
-      if (!cells.every(j => this.inChurchRange(ch, j, R))) continue;
-      if (cells.every(j => this.castleProtects(o, j))) continue;
-      n++;
+    this.slotHosts();
+    return this.slotUsed.get(ch) || 0;
+  },
+
+  // Églises et ports du royaume pid qui ont des places, les ports d'abord (ils passent en priorité)
+  // (liste gardée en mémoire avec slotHosts : les bots la demandent pour chaque case de leur royaume)
+  slotBuildings(pid) {
+    this.slotHosts();
+    return this.slotLists.get(pid) || [];
+  },
+
+  // Pour chaque moulin ou caserne bâti hors de la muraille d'un château : l'église ou le port dont il occupe
+  // une place. Un bâtiment dans les zones d'une église ET d'un port ne compte que pour l'un des deux :
+  // le port en priorité (s'il lui reste de la place), sinon l'église. Renvoie une Map : bâtiment → église/port.
+  // (recalculé seulement quand la carte change)
+  slotHosts() {
+    if (this.slotCache && this.slotCheckTick === this.tick) return this.slotCache; // (vérifié une fois par tour)
+    this.slotCheckTick = this.tick;
+    // (signature des bâtiments : on recalcule s'ils ont changé, sinon au plus une fois par seconde)
+    let sig = this.buildingTiles.length;
+    for (const a of this.buildingTiles) sig = (sig * 31 + a * 7 + this.owner[a] * 3 + this.level[a]) | 0;
+    if (this.slotCache && this.slotSig === sig && (this.slotVersion === this.version || this.tick - this.slotTick < CONFIG.TICKS_PER_SECOND)) {
+      return this.slotCache;
     }
-    return n;
+    this.slotSig = sig; this.slotTick = this.tick;
+    // les églises et ports avec des places, par royaume, les ports d'abord
+    const lists = new Map();
+    for (const a of this.buildingTiles) {
+      if (!this.hasSlots(a) || this.owner[a] < 0) continue;
+      if (!lists.has(this.owner[a])) lists.set(this.owner[a], []);
+      lists.get(this.owner[a]).push(a);
+    }
+    for (const list of lists.values()) list.sort((a, b) => (this.building[b] === B_PORT) - (this.building[a] === B_PORT));
+    this.slotLists = lists;
+    const hosts = new Map(), used = new Map(), pending = [];
+    for (const b of this.buildingTiles) {
+      const t = this.building[b], o = this.owner[b];
+      if ((t !== B_MILL && t !== B_BARRACKS) || o < 0) continue;
+      const cells = this.footprint(b, t);
+      if (cells.every(j => this.castleProtects(o, j))) continue; // (dans la muraille : pas besoin de place)
+      const cands = (lists.get(o) || []).filter(ch => cells.every(j => this.inChurchRange(ch, j, this.buildingInfo(ch).radius)));
+      if (!cands.length) continue;
+      // un seul hôte possible : il le prend tout de suite ; sinon on décide après (voir plus bas)
+      if (cands.length === 1) { hosts.set(b, cands[0]); used.set(cands[0], (used.get(cands[0]) || 0) + 1); }
+      else pending.push([b, cands]);
+    }
+    for (const [b, cands] of pending) {
+      const ch = cands.find(c => (used.get(c) || 0) < this.buildingInfo(c).slots) ?? cands[0];
+      hosts.set(b, ch);
+      used.set(ch, (used.get(ch) || 0) + 1);
+    }
+    this.slotCache = hosts;
+    this.slotUsed = used;
+    this.slotVersion = this.version;
+    return hosts;
   },
 
   // Bâtiment qui permet de construire autour de lui : une église, ou un port de niveau 2 ou 3
@@ -272,10 +315,10 @@ const GameRules = {
   },
 
   // Une église (ou un port) du royaume qui accepte ce bâtiment (il est dans sa zone et elle a de la place), ou -1
+  // (les ports d'abord : voir slotHosts)
   churchFor(pid, a, type) {
     const cells = this.footprint(a, type);
-    for (const ch of this.buildingTiles) {
-      if (!this.hasSlots(ch) || this.owner[ch] !== pid) continue;
+    for (const ch of this.slotBuildings(pid)) {
       const info = this.buildingInfo(ch);
       if (cells.every(j => this.inChurchRange(ch, j, info.radius)) && this.churchUsed(ch) < info.slots) return ch;
     }
@@ -1939,14 +1982,7 @@ const GameRules = {
     if (!this.outpostReady(a)) return 'L\'avant-poste est encore en construction : ses soldats bâtissent.';
     const troops = Math.floor(o.stationed);
     if (troops < 1) return 'Aucun soldat n\'attend à cet avant-poste (sa garnison, elle, reste sur place).';
-    let best = null;
-    for (const b of this.buildingTiles) {
-      if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
-      const path = this.boatPath(b, o.landing);
-      if (!path) continue;
-      const time = path.length / Math.max(this.buildingInfo(b).boatSpeed, CONFIG.REPATRIATE_SPEED);
-      if (!best || time < best.time) best = { port: b, path, time };
-    }
+    const best = this.homePort(pid, o.landing);
     if (!best) return 'Aucun de tes ports n\'est relié par l\'eau à cet avant-poste.';
     o.stationed -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
@@ -1955,6 +1991,37 @@ const GameRules = {
       troops: troops * (1 - this.seaLoss(best.time)),
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
     return null;
+  },
+
+  // Port de pid le plus rapide à rejoindre depuis la côte `landing` : { port, path, time }, ou null
+  homePort(pid, landing) {
+    let best = null;
+    for (const b of this.buildingTiles) {
+      if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
+      const path = this.boatPath(b, landing);
+      if (!path) continue;
+      const time = path.length / Math.max(this.buildingInfo(b).boatSpeed, CONFIG.REPATRIATE_SPEED);
+      if (!best || time < best.time) best = { port: b, path, time };
+    }
+    return best;
+  },
+
+  // Abandonner un de ses avant-postes : il disparaît (ses terres restent au royaume), et tous ses soldats
+  // (garnison comprise) rembarquent tout seuls vers le port le plus proche ; sans port relié par l'eau,
+  // ils rentrent quand même (comme ramenés par un navire marchand). Renvoie un message d'erreur, ou le nombre de soldats.
+  abandonOutpost(pid, a) {
+    const o = this.outposts.get(a);
+    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
+    if (this.attacks.some(x => !x.done && x.target === pid && x.targetCastle === a)) return 'Ton avant-poste est attaqué : impossible de l\'abandonner maintenant.';
+    const troops = Math.floor(this.garrison[a] + o.stationed), landing = o.landing;
+    this.removeBuilding(a);
+    if (troops < 1) return 0;
+    const home = this.homePort(pid, landing), TPS = CONFIG.TICKS_PER_SECOND;
+    if (!home) { this.players[pid].troops += troops; return troops; }
+    this.expeditions.push({ id: this.nextAttackId++, pid, landing, home: home.port,
+      path: home.path.slice().reverse(), sent: troops, troops: troops * (1 - this.seaLoss(home.time)),
+      start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(home.time * TPS)) });
+    return troops;
   },
 
   // Part des soldats perdus pendant une traversée de `time` secondes
@@ -2937,6 +3004,9 @@ const GameRules = {
   // Fin du siège d'un avant-poste : il est détruit (ses terres passent à l'attaquant), et l'assaut s'arrête
   takeOutpost(a, t) {
     const c = this.anchor[t];
+    // (ses soldats qui attendaient là sont vaincus avec lui)
+    const o = this.outposts.get(c), d = this.players[a.target], lost = Math.floor((o ? o.stationed : 0) + this.garrison[c]);
+    if (d.isHuman && lost >= 1) UI.log(`⛺ Ton avant-poste est détruit : ses ${fmt(lost)} soldats ont été vaincus.`, 'warn', this.players[a.attacker]);
     a.troops = Math.max(0, a.troops - this.tileCost(a, t));
     this.setOwner(t, a.attacker);
     this.onTargetTaken(a, B_OUTPOST, false);
