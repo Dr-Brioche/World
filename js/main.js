@@ -929,7 +929,8 @@ const UI = {
     }
     const before = h.troops;
     const a = G.sendDefenders(h.id, attackId, h.troops * this.ratio);
-    if (a) this.log(`🛡️ ${fmt(before - h.troops)} défenseurs partent de ton château le plus proche à la rencontre de ${G.players[a.attacker].name} !`, 'good');
+    if (a && a.reinforced) this.log(`🛡️ ${fmt(before - h.troops)} soldats renforcent ton armée de défense contre ${G.players[a.attacker].name} (ils la rejoignent dans ${CONFIG.DEFEND_REINFORCE_DELAY} s).`, 'good');
+    else if (a) this.log(`🛡️ ${fmt(before - h.troops)} défenseurs partent de ton château le plus proche à la rencontre de ${G.players[a.attacker].name} !`, 'good');
     else this.log('Pas assez de soldats pour défendre !', 'warn');
   },
 

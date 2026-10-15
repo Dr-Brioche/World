@@ -167,7 +167,8 @@ const CONFIG = {
                                // le plus rapide de leurs terres (comme un assaut : vite en plaine, lentement dans le
                                // relief, et plus lentement s'ils sont nombreux), mais 18 % plus vite qu'un assaut
                                // de même taille, car ils sont chez eux (même chose pour ceux qui rentrent)
-  DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
+  DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois d'aide à un allié contre un même assaut
+  DEFEND_REINFORCE_DELAY: 3,   // défenseurs envoyés en plus : ils rejoignent l'armée de défense déjà partie en 3 s
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
   RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite
   REINFORCE_DELAY: 5,          // une armée alliée venue aider met 5 s à arriver

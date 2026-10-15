@@ -1498,7 +1498,7 @@ const GameRules = {
       if (a.target === id) {
         let allies = 0;
         if (a.allyDef) for (const k in a.allyDef) allies += a.allyDef[k];
-        sum += Math.max(0, a.defenders - allies) + (a.defPending ? a.defPending.reduce((s, r) => s + r.troops, 0) : 0);
+        sum += Math.max(0, a.defenders - allies) + this.defendersOnTheWay(a);
       }
       if (a.allyDef && a.allyDef[id]) sum += Math.max(0, a.allyDef[id]);
       if (a.allyPending) for (const r of a.allyPending) if (r.pid === id) sum += r.troops;
@@ -3134,6 +3134,14 @@ const GameRules = {
     this.takeTroops(pid, src, troops);
     a.lastDefend = this.tick;
     if (src >= 0) a.defSource = src;
+    // Une armée de défense est déjà partie (en route ou au combat) : ces soldats la renforcent, après un court
+    // délai (DEFEND_REINFORCE_DELAY), au lieu de former une nouvelle armée
+    if ((a.defPending && a.defPending.length) || a.defenders >= 1) {
+      (a.defReinf = a.defReinf || []).push({ troops, tick: this.tick + CONFIG.DEFEND_REINFORCE_DELAY * CONFIG.TICKS_PER_SECOND });
+      a.reinforced = true;
+      return a;
+    }
+    a.reinforced = false;
     // Les défenseurs partent tout de suite, du château le plus proche (ou de l'avant-poste),
     // et marchent à la rencontre de l'armée ennemie : ils se battent en arrivant
     // (par le chemin le plus rapide de leurs terres : voir walkRoute ; leur but suit l'assaut, voir arriveDefenders)
@@ -3337,7 +3345,10 @@ const GameRules = {
   },
 
   // Défenseurs en route vers cet assaut (pas encore arrivés)
-  defendersOnTheWay(a) { return a.defPending ? a.defPending.reduce((s, r) => s + r.troops, 0) : 0; },
+  defendersOnTheWay(a) {
+    return (a.defPending ? a.defPending.reduce((s, r) => s + r.troops, 0) : 0)
+      + (a.defReinf ? a.defReinf.reduce((s, r) => s + r.troops, 0) : 0);
+  },
 
   // Où vont les défenseurs : la case de leurs terres la plus proche de l'endroit où se bat l'assaut
   // (pour qu'ils y aillent par leurs terres, et pas en ligne droite à travers celles de l'ennemi)
@@ -3360,6 +3371,16 @@ const GameRules = {
   // Arrivée des défenseurs en route : ils rejoignent le combat. Toutes les secondes, ceux qui marchent encore
   // corrigent leur route : ils suivent l'assaut, qui avance pendant qu'ils viennent à sa rencontre.
   arriveDefenders(a) {
+    // Renforts de l'armée de défense : après leur court délai, ils la rejoignent (en route, ou au combat)
+    if (a.defReinf && a.defReinf.length) {
+      for (const r of a.defReinf) {
+        if (r.tick > this.tick) continue;
+        r.done = true;
+        if (a.defPending && a.defPending.length) a.defPending[0].troops += r.troops;
+        else a.defenders += r.troops;
+      }
+      a.defReinf = a.defReinf.filter(r => !r.done);
+    }
     if (!a.defPending || !a.defPending.length) return;
     if (this.tick % CONFIG.TICKS_PER_SECOND === 0) {
       const goal = this.defenseGoal(a);
@@ -3396,13 +3417,9 @@ const GameRules = {
     return null;
   },
 
-  // Secondes à attendre avant de pouvoir renvoyer des défenseurs contre cet assaut (0 = tout de suite).
-  // Ce petit délai (DEFEND_COOLDOWN) évite d'envoyer les soldats un par un en continu.
-  defendWait(a) {
-    if (a.lastDefend === undefined) return 0;
-    const TPS = CONFIG.TICKS_PER_SECOND;
-    return Math.max(0, (a.lastDefend + CONFIG.DEFEND_COOLDOWN * TPS - this.tick) / TPS);
-  },
+  // Secondes à attendre avant de pouvoir renvoyer des défenseurs contre cet assaut : plus d'attente, chaque envoi
+  // en plus renforce l'armée de défense déjà partie (voir sendDefenders)
+  defendWait() { return 0; },
 
   stepAttack(a) {
     this.arriveDefenders(a);
@@ -3783,6 +3800,8 @@ const GameRules = {
     if (a.target >= 0 && this.players[a.target].alive) {
       const src = a.defSource === undefined ? -1 : a.defSource;
       this.giveTroops(a.target, src, a.defenders);
+      if (a.defReinf) this.giveTroops(a.target, src, a.defReinf.reduce((s, r) => s + r.troops, 0)); // (renforts pas encore arrivés)
+      a.defReinf = [];
       this.sendHome(a, src);
     }
     const c = a.targetCastle;
