@@ -138,7 +138,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
      à la rencontre de l'ennemi par le **chemin le plus rapide** de tes terres (on voit leur bannière 🛡 avancer, et
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
-     groupe est plus lent, mais ils sont chez eux : **60 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
+     groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
      contre un même assaut (le temps de regrouper les soldats).
      Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **font
      demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus proche, comme les bateaux
@@ -491,6 +491,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.87.7** : ⚡ les assauts vont 15 % plus vite (en terre ennemie, dans leur marche jusqu'à la frontière et pour leurs renforts) et les défenseurs 15 % moins vite : ils ne vont plus que 18 % plus vite qu'un assaut de même taille (au lieu de 60 %)
 - **v0.87.6** : 🛤️ un moulin, une caserne ou un port relié à plusieurs villes a une route vers chacune, et les bonus s'additionnent (double avec 2 villes, triple avec 3, jamais plus), que les villes soient bâties avant ou après lui
 - **v0.87.5** : 🌾 un moulin ou une caserne bâti hors des villes, sur une route (celle d'un port ou le chemin d'une église) ou juste à côté, produit +20 %
 - **v0.87.4** : ⚓ ports plus rentables : le grand port rapporte 50 % d'or de plus qu'avant (9 au lieu de 6) et le port royal 100 % de plus (20 au lieu de 10)
