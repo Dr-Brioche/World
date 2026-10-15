@@ -142,6 +142,7 @@ const AI = {
     // Envoyer des défenseurs contre chaque assaut : assez pour l'arrêter, vu la défense du terrain
     for (const a of Game.attacks) {
       if (a.done || a.target !== p.id || Game.defendWait(a) > 0) continue; // (5 s entre deux envois)
+      if (Game.isPreparing(a)) continue; // (l'armée n'est pas encore entrée sur nos terres)
       // (un bot n'envoie pas ses défenseurs au compte-gouttes : un gros paquet, puis il attend AI_SEND_INTERVAL secondes)
       if (a.aiDefSent !== undefined && Game.tick - a.aiDefSent < CONFIG.AI_SEND_INTERVAL * CONFIG.TICKS_PER_SECOND) continue;
       const D = Game.combatRatio(a);

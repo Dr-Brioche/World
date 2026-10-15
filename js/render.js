@@ -905,7 +905,7 @@ const Render = {
     for (const b of this.bannerHits || []) {
       if (Math.abs(m.x - b.x) >= 30 || Math.abs(m.y - b.y) >= 24) continue;
       const a = G.attacks.find(a => a.id === b.id && !a.done);
-      if (a && a.target === G.human.id) return b;
+      if (a && a.target === G.human.id && !G.isPreparing(a)) return b; // (en marche chez lui : pas encore attaquable)
     }
     return null;
   },

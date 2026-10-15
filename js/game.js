@@ -2420,6 +2420,9 @@ const GameRules = {
     const p = this.players[pid];
     const a = this.attacks.find(a => a.id === attackId && a.target === pid && !a.done);
     if (!a || this.defendWait(a) > 0) return null; // (les défenseurs se regroupent entre deux envois)
+    // L'armée ennemie marche encore sur ses propres terres : on ne peut la contrer qu'une fois entrée chez nous
+    // (nos défenseurs ne vont jamais l'attendre en terre ennemie)
+    if (this.isPreparing(a)) return null;
     // Dans la zone d'un avant-poste (pas encore reliée au royaume) : ce sont ses soldats stationnés qui défendent.
     // Château isolé : personne ne peut le rejoindre.
     let src = this.outpostZoneOf(a);
