@@ -449,6 +449,16 @@ const UI = {
     $('endscreen').classList.remove('hidden');
   },
 
+  // Défense globale d'un château ou d'un port fortifié (terrain + murs, traître compris), en plus (0.5 = +50 %),
+  // ou null si ce n'est pas un bâtiment fortifié
+  fortDefense(a) {
+    const G = Game, b = G.building[a], o = G.owner[a];
+    if (o < 0 || !(b === B_CASTLE || (b === B_PORT && G.buildingInfo(a).bonus))) return null;
+    let def = G.tileDefense(o, a);
+    if (G.isTraitor(G.players[o])) def *= CONFIG.TRAITOR_DEFENSE_MALUS;
+    return def - 1;
+  },
+
   describeTile(i) {
     if (i < 0) return '';
     const G = Game, t = TERRAIN_INFO[G.terrain[i]];
@@ -457,6 +467,12 @@ const UI = {
     if (G.terrain[i] === TERRAIN.PEAK) return '🏔️ Sommet (infranchissable)';
     if (!G.isLand(i)) return '🌊 Mer';
     const o = G.owner[i];
+    // Château (ou port fortifié) ennemi : juste sa défense globale, en bref
+    const def = o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) ? this.fortDefense(G.anchor[i]) : null;
+    if (def !== null) {
+      const b = G.building[i], info = G.buildingInfo(G.anchor[i]);
+      return `${BUILDINGS[b].icon} ${info.name} ${G.deName(G.players[o].name)} · 🛡️ défense globale ${pct(def)}`;
+    }
     let txt = t.cost > 1 ? `${t.name} (défense ${pct(t.cost - 1)})` : t.name;
     if (G.terrain[i] === TERRAIN.DESERT) txt = `🏜️ ${t.name} (bâtiments : production ${pct(DESERT_PRODUCTION - 1)})`;
     txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
@@ -772,8 +788,10 @@ const UI = {
 
   planHint() {
     const G = Game, p = this.plan, b = p.castle >= 0 ? BUILDINGS[G.building[p.castle]] : null;
-    return `🎯 Assaut sur ${b ? b.icon + ' ' : ''}${G.players[p.target].name} avec ${fmt(G.troopsAt(G.human.id, p.source) * this.ratio)} soldats : ` +
-      'clique encore une fois sur la cible pour lancer · Échap pour annuler';
+    const def = p.castle >= 0 ? this.fortDefense(p.castle) : null;
+    return `🎯 Assaut sur ${b ? b.icon + ' ' : ''}${G.players[p.target].name} avec ${fmt(G.troopsAt(G.human.id, p.source) * this.ratio)} soldats` +
+      (def !== null ? ` · 🛡️ défense globale ${pct(def)}` : '') +
+      ' : clique encore une fois sur la cible pour lancer · Échap pour annuler';
   },
 
   // Clic pendant qu'une cible est choisie. Renvoie true si le clic a servi (assaut lancé) ;
