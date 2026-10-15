@@ -875,7 +875,7 @@ const Render = {
     }
   },
 
-  // Curseur « épée » (au lieu de la petite main) quand on survole quelque chose qu'on peut sélectionner :
+  // Curseur « épée » (au lieu de la petite main) quand on survole une cible qu'on peut vraiment attaquer :
   // une épée dessinée en SVG, la pointe en haut à gauche (c'est là que se fait le clic)
   SWORD_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
@@ -884,6 +884,18 @@ const Render = {
     '<path d="M2 2L20 20" stroke="#e9e6dc" stroke-width="3"/><path d="M4 4L19 19" stroke="#ffffff" stroke-width="1"/>' +
     '<path d="M15 25L25 15" stroke="#d9a520" stroke-width="3"/><path d="M21 21L26 26" stroke="#7a4a22" stroke-width="3"/>' +
     '<circle cx="28" cy="28" r="2.6" fill="#d9a520" stroke="#1c1208" stroke-width="1.2"/></g></svg>') + '") 2 2, pointer',
+
+  // Curseur habituel sur la carte : une petite main médiévale (gantelet de cuir à manchette dorée) qui pointe
+  // de l'index (le clic se fait au bout du doigt)
+  HAND_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
+    '<path d="M7 16V4a2.5 2.5 0 0 1 5 0v8.5h.8a2.3 2.3 0 0 1 4.2.6a2.3 2.3 0 0 1 4.2.8a2.1 2.1 0 0 1 3.8 1.3V21c0 3-2.2 4.5-5 4.5h-6.5' +
+    'c-2.3 0-3.4-1.2-4.4-2.6l-3.6-5.2a1.9 1.9 0 0 1 3-2.3z" fill="#dcc39a" stroke="#2a1a0c" stroke-width="1.6" stroke-linejoin="round"/>' +
+    '<path d="M12.8 12.5v4.2M17 13.1v4M21.2 14v3.6" stroke="#2a1a0c" stroke-width="1.1" stroke-linecap="round"/>' +
+    '<path d="M8.5 6.5h2" stroke="#8a6a44" stroke-width="1" stroke-linecap="round"/>' +
+    '<rect x="9.5" y="24.6" width="14" height="5.6" rx="1.2" fill="#c9962b" stroke="#2a1a0c" stroke-width="1.4"/>' +
+    '<circle cx="12.5" cy="27.4" r="0.9" fill="#2a1a0c"/><circle cx="16.5" cy="27.4" r="0.9" fill="#2a1a0c"/><circle cx="20.5" cy="27.4" r="0.9" fill="#2a1a0c"/>' +
+    '</svg>') + '") 9 1, auto',
 
   // Armée ennemie survolée sur laquelle on peut cliquer (un assaut contre nous : clic = envoyer des défenseurs) :
   // renvoie sa zone cliquable { id, x, y } (à l'écran), ou null
@@ -925,9 +937,26 @@ const Render = {
     ctx.restore();
   },
 
+  // La souris est-elle sur une cible qu'on peut attaquer ? (a = bâtiment sélectionnable survolé, ou -1)
+  // Château, église, port ou avant-poste ennemi atteignable, cible déjà visée (2e clic pour lancer),
+  // terres ennemies qui s'attaquent de front (sans château ni église, ou coupées de leurs châteaux),
+  // ou armée ennemie qui nous attaque. (Nos bâtiments gardent la petite main.)
+  attackableUnderMouse(a) {
+    const G = Game, h = G.human, i = this.hover;
+    if (this.armyUnderMouse()) return true;
+    if (!h || G.phase !== 'playing' || !h.alive || UI.selectedBuild || i < 0) return false;
+    const o = G.owner[i];
+    if (o < 0 || o === h.id || G.areAllied(o, h.id)) return false;
+    const p = UI.plan;
+    if (p) return p.castle >= 0 ? G.anchor[i] === p.castle && !!G.building[i] : o === p.target;
+    if (a >= 0) return !!(this.castlePreview && this.castlePreview.castle === a && this.castlePreview.path);
+    return !G.isProtected(o) || G.isUnlinked(i);
+  },
+
   drawSelectable(ox, oy) {
     const G = Game, a = this.selectableAt(this.hover);
-    const cursor = a >= 0 || this.armyUnderMouse() ? this.SWORD_CURSOR : '';
+    // épée sur une cible attaquable, main médiévale ailleurs ; pendant une construction, le curseur de pose (voir UI)
+    const cursor = UI.selectedBuild ? '' : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
     // (on garde le dernier curseur choisi : le navigateur réécrit l'adresse de l'image à sa façon)
     if (this.curCursor !== cursor) { this.curCursor = cursor; this.canvas.style.cursor = cursor; }
     if (a < 0) return;
