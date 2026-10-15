@@ -135,7 +135,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      en vaut 3.** Ils se reconstituent ensuite peu à peu.
    - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
      **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
-     où se bat l'assaut (forêt +60 %, colline +120 %, montagne +250 %, + bonus du château dans sa muraille).
+     où se bat l'assaut (forêt +60 %, colline +120 %, montagne +180 %, + bonus du château dans sa muraille).
      L'assaut choisit donc un chemin qui passe le plus possible par les plaines.
    - **La supériorité en nombre** compte : un camp qui a **plus de 2 fois plus de soldats** que l'autre
      tue plus vite et perd moins de soldats par ennemi tué (jusqu'à **x5** pour un écrasement, comme 300 contre 4).
@@ -387,7 +387,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
-🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +250 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
+🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 
 🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont de vraies **frontières naturelles**.
 **Personne ne peut les prendre** : ils restent bleus et neutres pour toujours, et ni l'expansion ni les assauts ne les franchissent.
@@ -415,6 +415,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.76.5** : 🏔️ la montagne défend un peu moins : +180 % au lieu de +250 % (elle se prend aussi un peu plus vite et moins cher)
 - **v0.76.4** : 🔥 réussir une défense (repousser un assaut) galvanise ton peuple : +25 % de soldats produits pendant 15 s
 - **v0.76.3** : ⛺ un avant-poste en construction n'a pas de garnison : ses soldats sont des soldats affaiblis occupés à bâtir (« ⚔ affaiblis » sur la carte, comptés avec les avant-postes dans la jauge, et les bots ne les comptent plus comme une garnison)
 - **v0.76.2** : ⚓ le grand port (niveau 2) coûte 500 et le port royal (niveau 3) 1200

@@ -2431,7 +2431,7 @@ const GameRules = {
   },
 
   // Trajet de troops soldats de pid, du point from au point to (en cases) : ils prennent le chemin le plus rapide
-  // à travers leurs terres (une case de plaine coûte 1, une forêt 1.6, une colline 2.2, une montagne 3.5, un fleuve 4).
+  // à travers leurs terres (une case de plaine coûte 1, une forêt 1.6, une colline 2.2, une montagne 2.8, un fleuve 4).
   // Renvoie { troops, from, pts, cum, start, arrive } : pts = les points du chemin, cum = le coût cumulé jusqu'à chacun.
   // (pas de chemin sur ses terres : ils vont tout droit, comme en plaine)
   walkRoute(pid, from, to, troops) {
@@ -2684,7 +2684,7 @@ const GameRules = {
       return this.building[a.siege.tile] === B_OUTPOST ? this.takeOutpost(a, a.siege.tile) : this.takeCastle(a, a.siege.tile);
     }
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
-    // (plaine 1, forêt 1.6, colline 2.2, montagne 3.5, fleuve 4). On avance donc vite en plaine
+    // (plaine 1, forêt 1.6, colline 2.2, montagne 2.8, fleuve 4). On avance donc vite en plaine
     // et lentement dans le relief. Les points non utilisés sont gardés pour le tour suivant.
     // Sur les terres libres, une grosse armée s'étend plus vite. Mais contre un royaume, c'est l'inverse :
     // plus l'armée d'assaut est grande, plus elle est lente (ASSAULT_SPEED / (1 + soldats / ASSAULT_HEAVY)).
