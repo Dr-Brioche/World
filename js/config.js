@@ -89,9 +89,11 @@ const CONFIG = {
   ASSAULT_HEAVY: 500,          // (1 + soldats / 500) : plus l'armée est grande, plus elle est lente
                                // (100 soldats : ~4 cases/s · 500 : 2,5 · 1000 : 1,7 · 3000 : 0,7)
   ASSAULT_MIN_SPEED: 0.04,     // vitesse minimum d'un assaut (cases de plaine par tour)
-  MARCH_SPEED: 5,              // un assaut contre un royaume part de la cité la plus proche et marche sur ses terres
-                               // jusqu'à la frontière (cases par seconde) : pendant ce temps, tout le monde le voit venir
-  MARCH_MIN_TIME: 2,           // ...en au moins 2 secondes
+  // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,
+  // par le chemin le plus rapide, comme les défenseurs (voir DEFENDER_SPEED_BONUS) : pendant ce temps,
+  // tout le monde le voit venir
+  MARCH_SPEED: 5,              // (les renforts d'un assaut déjà chez l'ennemi marchent à 5 cases par seconde)
+  MARCH_MIN_TIME: 2,           // la marche jusqu'à la frontière dure au moins 2 secondes
                                // (on peut y ajouter des soldats tout de suite)
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière
   // Après un assaut réussi (château, église, port ou avant-poste pris), pendant WAR_EFFECT_TIME secondes :
@@ -104,7 +106,11 @@ const CONFIG = {
   RALLY_MAX: 1,        // au mieux +100 %
   ENCLAVE_LOG_MIN: 50,         // un message n'annonce un morceau englobé que s'il fait au moins 50 cases
   CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
-  DEFENDER_SPEED: 6,           // les défenseurs partent du château le plus proche et marchent vers l'ennemi (cases/s)
+  DEFENDER_SPEED_BONUS: 1.6,   // les défenseurs partent du château le plus proche et marchent vers l'ennemi par le chemin
+                               // le plus rapide de leurs terres (comme un assaut : vite en plaine, lentement dans le
+                               // relief, et plus lentement s'ils sont nombreux), mais 60 % plus vite qu'un assaut
+                               // de même taille, car ils sont chez eux (même chose pour ceux qui rentrent, et pour
+                               // une armée d'assaut qui marche sur ses terres jusqu'à la frontière)
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
   RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite
