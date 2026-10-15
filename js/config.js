@@ -108,6 +108,7 @@ const CONFIG = {
   // ✝️ Croyance : chaque église en apporte (voir faith dans CHURCH_LEVELS), +50 % si elle est reliée à une route.
   // Un royaume qui a plus de Croyance qu'un voisin ennemi convertit peu à peu ses terres frontalières.
   FAITH_ROAD_BONUS: 0.5,
+  FAITH_DISORGANIZED: 2,     // un royaume désorganisé (sans ville ni port fortifié) se fait convertir 2 fois plus vite
   // Croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2000 pièces :
   // +1000 de Croyance pour le royaume pendant 60 s (une croisade à la fois par cathédrale)
   CRUSADE_COST: 2000,

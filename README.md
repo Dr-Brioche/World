@@ -358,6 +358,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      croisades en même temps (une par cathédrale) servent donc encore. Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
      s'avancent dans le tien : les frontières deviennent plus nettes, et ses routes trop fines se referment.
      Si une conversion **coupe** son royaume, la coupe s'applique tout de suite (le morceau coupé est englobé).
+     Un royaume **désorganisé** (sans ville ni port fortifié) se fait convertir **2 fois plus vite**.
      Ça marche dans les deux sens : un voisin plus croyant convertit **tes** terres ! Dans le classement, une **📖 bible verte**
      à côté d'un voisin veut dire que tu convertis ses terres, une **bible rouge** que c'est lui qui convertit les tiennes.
      Ce n'est **pas une agression** (pas d'alerte, pas d'après-guerre). Ce que la Croyance **ne convertit jamais** : les
@@ -527,6 +528,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.10** : ✝️ un royaume désorganisé (sans ville ni port fortifié) se fait convertir 2 fois plus vite par la Croyance de ses voisins
 - **v0.91.9** : ⚓ un royaume qui perd tous ses ports perd aussi tous ses avant-postes : ils sont supprimés de la carte avec leurs soldats, et leurs zones redeviennent libres
 - **v0.91.8** : ⛺ un royaume qui n'a plus que des avant-postes est perdu : il est anéanti, ses avant-postes sont supprimés et leurs zones redeviennent libres
 - **v0.91.7** : ✂️ un royaume coupé en deux sur un même continent garde ses deux morceaux comme des cœurs à part entière si le plus petit est tenu par une ville (ou un port fortifié) et fait au moins 25 % du plus grand : ses villes ne sont plus isolées, ses armées en partent ; seuls les petits morceaux restent coupés

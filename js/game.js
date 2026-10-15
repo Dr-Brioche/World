@@ -561,7 +561,9 @@ const GameRules = {
         if (o < 0) continue;
         const diff = this.faithEdge(p.id, o), key = p.id * 1000 + o;
         if (diff <= 0) { this.faithProgress.delete(key); continue; }
-        const prog = (this.faithProgress.get(key) || 0) + 1 / this.faithInterval(diff), n = Math.floor(prog);
+        // (un royaume désorganisé, sans ville ni port fortifié pour tenir ses terres, se fait convertir plus vite)
+        const mult = this.isProtected(o) ? 1 : CONFIG.FAITH_DISORGANIZED;
+        const prog = (this.faithProgress.get(key) || 0) + mult / this.faithInterval(diff), n = Math.floor(prog);
         this.faithProgress.set(key, prog - n);
         if (n <= 0) continue;
         if (!due.has(o)) due.set(o, new Map());
