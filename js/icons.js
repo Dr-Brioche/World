@@ -75,6 +75,10 @@ const ICON_DEFS = {
     { d: 'M9 9.5a2 2 0 1 1-.01 0zM15 9.5a2 2 0 1 1-.01 0z', f: '#f3e3bf' }, { d: 'M10 17v3M14 17v3', s: '#f3e3bf', w: 1 }],
   play: [{ d: 'M7 4l13 8-13 8z', f: 'c' }],
   pause: [{ d: 'M6 4h4v16H6zM14 4h4v16h-4z', f: 'c' }],
+  // Croyance : une croix chrétienne, et une bible (couverture de la couleur du texte, croix dorée)
+  cross: [{ d: 'M10 2h4v5.5h5v4h-5V22h-4V11.5H5v-4h5z', f: 'c' }],
+  bible: [{ d: 'M5 3h12.5a1.5 1.5 0 0 1 1.5 1.5V21H6.5A1.5 1.5 0 0 1 5 19.5z', f: 'c' }, { d: 'M6.5 18h12.5v3H6.5z', f: '#f3e3bf' },
+    { d: 'M12 6v8.5M9.2 8.6h5.6', s: '#e8c15a', w: 1.8 }],
   dice: [{ d: 'M4 4h16v16H4z', f: '#f3e3bf', s: 'c', w: 1.6 }, { d: 'M8.5 7a1.5 1.5 0 1 1-.01 0zM15.5 14a1.5 1.5 0 1 1-.01 0zM12 10.5a1.5 1.5 0 1 1-.01 0z', f: 'c' }],
   mouse: [{ d: 'M12 3a6 6 0 0 1 6 6v6a6 6 0 0 1-12 0V9a6 6 0 0 1 6-6zM12 3v6M6 9h12', s: 'c', w: 1.6 }],
   keys: [{ d: 'M2 7h20v11H2z', s: 'c', w: 1.6 }, { d: 'M5 10h2M9 10h2M13 10h2M17 10h2M6 14h12', s: 'c', w: 1.6 }],
@@ -90,7 +94,7 @@ const EMOJI_ICONS = {
   '🏗': 'hammer', '🧨': 'pick', '🏚': 'pick', '🔎': 'lens', '🔍': 'lens', '↩': 'back', '🛤': 'road', '🛣': 'road',
   '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
-  '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys',
+  '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 

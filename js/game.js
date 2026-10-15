@@ -29,6 +29,7 @@ const GameRules = {
     this.expeditions = []; // bateaux en route vers une côte
     this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up' ou 'down', start, end, pid, paid }
     this.walls = [];         // murs bâtis par les villes : { castle, owner, tiles, start, ready, done }
+    this.faithProgress = new Map(); this.faithCache = null; // (Croyance : voir stepFaith)
     this.wallAt = new Uint8Array(this.N); // 1 = case d'un mur fini (aucun assaut ne la franchit)
     this.crossings = [];   // armées qui traversent un fleuve à gué
     this.returning = [];   // défenseurs qui rentrent à pied (l'assaut qu'ils allaient contrer est fini)
@@ -54,8 +55,8 @@ const GameRules = {
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
     // Les bots reçoivent au hasard les bannières que le joueur n'a pas prises
     const banners = BANNERS.map((b, k) => k).filter(k => k !== opts.banner).sort(() => Math.random() - 0.5);
-    // (les cartes « Monde » et « Europe » sont grandes : quelques royaumes de plus)
-    const bots = this.difficulty.bots + (this.mapType === 'world' || this.mapType === 'europe' ? CONFIG.WORLD_EXTRA_BOTS : 0);
+    // Nombre de royaumes rivaux : choisi dans le menu (au moins MIN_OPPONENTS), sinon celui de la difficulté
+    const bots = Math.max(CONFIG.MIN_OPPONENTS, opts.opponents || this.difficulty.bots);
     for (let k = 0; k < bots && k < names.length && k < banners.length; k++) {
       this.addPlayer(names[k], banners[k], false);
     }
@@ -445,6 +446,137 @@ const GameRules = {
     return null;
   },
 
+  // --- Croyance ✝️ ---
+  // Chaque église apporte de la Croyance à son royaume (faith, selon son niveau ; +50 % si elle est reliée à une
+  // route). Un royaume qui a plus de Croyance qu'un voisin ennemi (pas un allié) prêche chez lui et convertit
+  // lentement ses terres frontalières : d'abord les couloirs étroits et les pointes qui s'avancent dans son
+  // propre territoire. C'est passif : pas un acte de guerre (ni alerte, ni après-guerre).
+  // Croyance de chaque royaume (recalculée au plus une fois par seconde)
+  faithAll() {
+    if (this.faithCache && (this.faithVersion === this.version || this.tick - this.faithTick < CONFIG.TICKS_PER_SECOND)) {
+      return this.faithCache;
+    }
+    this.faithVersion = this.version;
+    this.faithTick = this.tick;
+    const f = this.players.map(() => 0), links = this.roads();
+    for (const a of this.buildingTiles) {
+      const o = this.owner[a];
+      if (this.building[a] !== B_CHURCH || o < 0) continue;
+      const w = this.works.get(a);
+      if (w && w.kind === 'build') continue; // (encore en chantier)
+      f[o] += this.buildingInfo(a).faith * (this.churchLink(o, a, links) ? 1 + CONFIG.FAITH_ROAD_BONUS : 1);
+    }
+    this.faithCache = f;
+    return f;
+  },
+  faithOf(pid) { return this.faithAll()[pid] || 0; },
+
+  // Écart de Croyance avec lequel pid convertit les terres de o (0 s'il ne les convertit pas) : il faut être
+  // voisins, ne pas être alliés, et que pid ait une ville (un royaume désorganisé ne prêche pas)
+  faithEdge(pid, o) {
+    const P = this.players[pid], O = this.players[o];
+    if (pid === o || !P.alive || !O.alive || this.areAllied(pid, o) || !this.isProtected(pid)) return 0;
+    if (!this.neighborStats(pid).has(o)) return 0;
+    return Math.max(0, this.faithOf(pid) - this.faithOf(o));
+  },
+
+  // Secondes pour convertir une case avec cet écart de Croyance (voir FAITH_PACE)
+  faithInterval(diff) {
+    const pace = CONFIG.FAITH_PACE;
+    if (diff <= 0) return Infinity;
+    if (diff <= pace[0][0]) return pace[0][1] * pace[0][0] / diff;
+    for (let k = 1; k < pace.length; k++) {
+      const [d1, s1] = pace[k - 1], [d2, s2] = pace[k];
+      if (diff <= d2) return s1 + (s2 - s1) * (diff - d1) / (d2 - d1);
+    }
+    return pace[pace.length - 1][1];
+  },
+
+  // Chaque seconde : chaque royaume avance sa conversion de chaque voisin ; quand elle est complète, une case
+  // est convertie (voir preach)
+  stepFaith() {
+    if (this.tick % CONFIG.TICKS_PER_SECOND !== 0) return;
+    const due = new Map(); // royaume converti → les royaumes qui lui prennent une case maintenant
+    for (const p of this.players) {
+      if (!p.alive || this.faithOf(p.id) <= 0) continue;
+      for (const o of this.neighborStats(p.id).keys()) {
+        if (o < 0) continue;
+        const diff = this.faithEdge(p.id, o), key = p.id * 1000 + o;
+        if (diff <= 0) { this.faithProgress.delete(key); continue; }
+        let prog = (this.faithProgress.get(key) || 0) + 1 / this.faithInterval(diff);
+        if (prog >= 1) {
+          prog -= 1;
+          if (!due.has(o)) due.set(o, new Set());
+          due.get(o).add(p.id);
+        }
+        this.faithProgress.set(key, Math.min(1, prog));
+      }
+    }
+    if (due.size) this.preach(due);
+  },
+
+  // Convertit une case pour chaque paire (prêcheur, converti) de due : une case du converti collée à une terre du
+  // prêcheur, de préférence dans un couloir étroit ou une pointe entourée par le prêcheur.
+  preach(due) {
+    const W = this.W, H = this.H, N = this.N, own = this.owner, r = this.regions();
+    const routes = new Set(this.pendingRoutes().map(([t]) => t)); // (routes d'assauts en cours : on n'y touche pas)
+    const sites = new Set();
+    for (const w of this.walls) if (!w.done) for (const t of w.tiles) sites.add(t);
+    // On ne prêche que depuis une zone de royaume : pas une zone d'avant-poste, pas un morceau coupé de ses villes
+    const from = (j, pid) => {
+      const k = r.comp[j];
+      return k >= 0 && r.owner[k] === pid && !routes.has(j) && (!r.anyOutpost[k] || r.hasCastle[k])
+        && ((r.heart[k] && !this.pieceUnlinked(r, k)) || r.colony[k]);
+    };
+    const best = new Map(); // prêcheur * 1000 + converti → { t, score }
+    for (let i = 0; i < N; i++) {
+      const o = own[i];
+      if (o < 0 || !due.has(o)) continue;
+      const preachers = due.get(o), x = i % W;
+      let pid = -1;
+      if (x > 0 && preachers.has(own[i - 1]) && from(i - 1, own[i - 1])) pid = own[i - 1];
+      else if (x < W - 1 && preachers.has(own[i + 1]) && from(i + 1, own[i + 1])) pid = own[i + 1];
+      else if (i >= W && preachers.has(own[i - W]) && from(i - W, own[i - W])) pid = own[i - W];
+      else if (i < N - W && preachers.has(own[i + W]) && from(i + W, own[i + W])) pid = own[i + W];
+      if (pid < 0) continue;
+      // Couloir étroit ou pointe : beaucoup de cases du prêcheur autour, peu de cases du converti à côté
+      const y = (i / W) | 0;
+      let mine = 0, theirs = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy;
+        if ((!dx && !dy) || xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+        const q = own[yy * W + xx];
+        if (q === pid) mine++;
+        else if (q === o && (!dx || !dy)) theirs++;
+      }
+      const score = mine + (4 - theirs) * 2 + Math.random();
+      const key = pid * 1000 + o, b = best.get(key);
+      if (b && b.score >= score) continue;
+      if (!this.faithConvertible(i, o, routes, sites)) continue;
+      best.set(key, { t: i, score, pid, o });
+    }
+    for (const { t, pid, o } of best.values()) {
+      if (this.owner[t] !== o) continue;
+      this.setOwner(t, pid);
+      // la conversion peut couper son royaume : la coupe s'applique tout de suite (voir captureEnclaves)
+      if (this.players[o].alive && this.countNeighborsOwnedBy(t, o) >= 2) this.captureEnclaves(o, pid);
+    }
+  },
+
+  // La Croyance peut-elle convertir cette case du royaume o ? Jamais une ville ni un port fortifié (ils tiennent
+  // leur région seuls), ni ce qui est dans leur muraille ; ni un avant-poste et sa zone, ni un mur, ni la route
+  // d'un assaut en cours. Les autres bâtiments (église, moulin, caserne, petit port…) passent avec leur case.
+  faithConvertible(i, o, routes, sites) {
+    if (!this.claimable(i) || this.wallAt[i] || sites.has(i) || routes.has(i)) return false;
+    if (this.building[i]) {
+      const a = this.anchor[i];
+      if (this.holdsAlone(a) || this.building[a] === B_OUTPOST) return false;
+      // (un bâtiment de plusieurs cases : toutes doivent pouvoir passer)
+      if (this.footprint(a, this.building[a]).some(j => this.castleBonus(o, j) > 0 || this.portBonus(o, j) > 0 || this.outpostBonus(o, j) > 0)) return false;
+    }
+    return !(this.castleBonus(o, i) > 0 || this.portBonus(o, i) > 0 || this.outpostBonus(o, i) > 0);
+  },
+
   // --- Murs ---
   // Une ville de niveau 2 peut bâtir un mur (et une citadelle, un second) : une muraille en ligne droite, de sa
   // muraille jusqu'à l'endroit choisi (pas trop loin), pour fermer un passage. Aucun assaut ne peut la franchir.
@@ -679,10 +811,38 @@ const GameRules = {
       } else {
         // Les soldats de la garnison rejoignent l'armée
         p.troops += this.garrison[a] || 0;
-        if (p.isHuman) UI.log(`🧨 ${BUILDINGS[type].name} détruit.`, 'good');
+        // Une ville, une église ou un port détruit : les moulins et casernes bâtis grâce à lui (dans sa muraille
+        // ou à une de ses places) sautent aussi, sauf si une autre ville, église ou port les accueille
+        const linked = this.linkedBuildings(a);
         this.removeBuilding(a);
+        const lost = linked.filter(b => !this.stillHosted(b));
+        for (const b of lost) this.removeBuilding(b);
+        if (p.isHuman) UI.log(`🧨 ${BUILDINGS[type].name} détruit` +
+          (lost.length ? `, et ${lost.length > 1 ? `les ${lost.length} moulins ou casernes qui en dépendaient` : 'le moulin ou la caserne qui en dépendait'}.` : '.'), 'good');
       }
     }
+  },
+
+  // Moulins et casernes qui dépendent du bâtiment a : dans la muraille d'une ville, ou à une place d'une église
+  // (ou d'un port)
+  linkedBuildings(a) {
+    const type = this.building[a], o = this.owner[a];
+    if (type === B_CASTLE) {
+      return this.buildingTiles.filter(b => (this.building[b] === B_MILL || this.building[b] === B_BARRACKS)
+        && this.owner[b] === o && this.footprint(b, this.building[b]).some(j => this.inWalls(a, j)));
+    }
+    if (type === B_CHURCH || type === B_PORT) {
+      const hosts = this.slotHosts();
+      return this.buildingTiles.filter(b => hosts.get(b) === a);
+    }
+    return [];
+  },
+
+  // Ce moulin (ou cette caserne) est-il encore accueilli : dans la muraille d'une ville, ou près d'une église
+  // (ou d'un port) du royaume ?
+  stillHosted(b) {
+    const o = this.owner[b], cells = this.footprint(b, this.building[b]);
+    return cells.every(j => this.castleProtects(o, j)) || this.slotHosts().has(b);
   },
 
   // Cases protégées par un château : celles de son royaume, dans son rayon.
@@ -1300,7 +1460,7 @@ const GameRules = {
     // (order est réutilisé d'un calcul à l'autre : ceux qui s'en servent en recopient tout de suite un morceau)
     if (!this.regionsOrder || this.regionsOrder.length !== this.N) this.regionsOrder = new Int32Array(this.N);
     const comp = new Int32Array(this.N).fill(-1), order = this.regionsOrder;
-    const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [], hasCastle = [];
+    const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [], hasCastle = [], held = [];
     const main = new Array(this.players.length).fill(-1); // royaume → son plus grand morceau
     let n = 0;
     this.riverTiles(); // (prépare riverSide : les cases qui touchent un fleuve)
@@ -1352,13 +1512,15 @@ const GameRules = {
       }
       size.push(n - s); start.push(s); owner.push(o);
       // Ce morceau a-t-il un avant-poste (bâti ou non), ou le château d'une ancienne zone d'avant-poste ?
-      let op = -1, anyOp = false, col = false, cas = false;
+      // (et une ville ou un port fortifié, qui tient la région : sans eux, elle est coupée de ses châteaux)
+      let op = -1, anyOp = false, col = false, cas = false, hold = false;
       for (let q = s; q < n; q++) {
         const t = order[q], b = this.building[t];
         if (b === B_OUTPOST) { anyOp = true; if (this.outpostReady(this.anchor[t])) op = this.anchor[t]; }
         if (b === B_CASTLE) { cas = true; if (this.colonies.get(this.anchor[t]) === o) col = true; }
+        if (b && this.holdsAlone(this.anchor[t])) hold = true;
       }
-      outpost.push(op); anyOutpost.push(anyOp); colony.push(col); hasCastle.push(cas);
+      outpost.push(op); anyOutpost.push(anyOp); colony.push(col); hasCastle.push(cas); held.push(hold);
       if (main[o] < 0 || size[k] > size[main[o]]) main[o] = k;
     }
     if (bridge) for (const [t] of bridges) bridge[t] = -1; // (on remet le tableau à zéro pour la prochaine fois)
@@ -1374,7 +1536,7 @@ const GameRules = {
     // (un royaume qui n'a plus que des zones d'avant-poste : son plus grand morceau reste son cœur)
     for (let o = 0; o < main.length; o++) if (main[o] >= 0 && !hasHeart.has(o)) heart[main[o]] = 1;
     // outpost[k] = avant-poste bâti du morceau k (-1 s'il n'y en a pas) ; heart[k] = 1 si k est un cœur du royaume
-    this.regionsCache = { comp, order, size, start, owner, main, heart, outpost, anyOutpost, colony, hasCastle };
+    this.regionsCache = { comp, order, size, start, owner, main, heart, outpost, anyOutpost, colony, hasCastle, held };
     this.regionsVersion = this.version;
     return this.regionsCache;
   },
@@ -1396,7 +1558,7 @@ const GameRules = {
   // Le seul moyen d'en sortir : le relier à un château (assaut de jonction depuis le château isolé), ou y bâtir
   // un nouveau château.
   pieceUnlinked(r, k) {
-    return k >= 0 && !r.hasCastle[k] && !r.anyOutpost[k] && this.castles.some(c => this.owner[c] === r.owner[k]);
+    return k >= 0 && !r.held[k] && !r.anyOutpost[k] && this.castles.some(c => this.owner[c] === r.owner[k]);
   },
   // Tous les châteaux de pid sont isolés (aucun n'est relié à son cœur) : son armée est bloquée dans
   // ces châteaux. Elle peut les défendre (elle y est !), mais désorganisée (x LEADERLESS_DEFENSE) ;
@@ -3545,6 +3707,7 @@ const GameRules = {
     this.stepReturning();
     this.stepWorks();
     this.stepWalls();
+    this.stepFaith();
     this.stepOutposts();
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
     // (le découpage n'est refait que si l'un d'eux a vraiment englobé des terres)

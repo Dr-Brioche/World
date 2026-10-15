@@ -16,7 +16,7 @@ const CONFIG = {
   WORLD_MAP_HEIGHT: 408,
   EUROPE_MAP_WIDTH: 1000,  // taille de la carte « Europe »
   EUROPE_MAP_HEIGHT: 1000,
-  WORLD_EXTRA_BOTS: 3,     // royaumes en plus sur les cartes « Monde » et « Europe » (elles sont grandes)
+  MIN_OPPONENTS: 3,        // au moins 3 royaumes rivaux (on en choisit le nombre dans le menu, jusqu'à 11)
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
@@ -94,6 +94,13 @@ const CONFIG = {
   CHURCH_ROAD_DISTANCE: 10,
   CHURCH_CITY_DISTANCE: 25,
   CHURCH_ROAD_GOLD: 2,
+  // ✝️ Croyance : chaque église en apporte (voir faith dans CHURCH_LEVELS), +50 % si elle est reliée à une route.
+  // Un royaume qui a plus de Croyance qu'un voisin ennemi convertit peu à peu ses terres frontalières.
+  FAITH_ROAD_BONUS: 0.5,
+  // Vitesse de la conversion selon l'écart de Croyance : [écart, secondes pour convertir une case].
+  // (entre deux lignes, on passe en douceur de l'une à l'autre ; plus petit que 20 : encore plus lent ;
+  //  au-delà de 200 : une case par seconde au plus)
+  FAITH_PACE: [[20, 30], [100, 5], [200, 1]],
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   // Distances minimum (de centre à centre, en cases) entre ses grands bâtiments : cercles rouges à la construction
@@ -264,12 +271,13 @@ const CASTLE_LEVELS = [
 // directement, comme un château.
 // slots = moulins ou casernes qu'on peut construire autour d'elle (à moins de radius cases),
 //         même hors de la muraille d'un château ;
-// castles = châteaux en plus que le royaume peut construire (chaque église compte : elles s'additionnent).
+// castles = châteaux en plus que le royaume peut construire (seule sa meilleure église compte) ;
+// faith = Croyance apportée au royaume (les églises s'additionnent).
 const CHURCH_LEVELS = [
   null,
-  { name: 'Église',        slots: 1, castles: 0, radius: 7,  img: 'img/eglise1.webp', size: 2.6 },
-  { name: 'Grande église', slots: 2, castles: 1, radius: 8,  img: 'img/eglise2.webp', size: 3,   upgradeCost: 800 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 2000 },
+  { name: 'Église',        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.6 },
+  { name: 'Grande église', slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3,   upgradeCost: 800 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 2000 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu
@@ -339,7 +347,7 @@ const KINGDOMS = ['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence',
   'Saxe', 'Castille', 'Écosse', 'Flandre', 'Aragon'];
 
 const DIFFICULTIES = {
-  facile:    { bots: 5,  aggression: [0.6, 0.85], hateHuman: 0 },
-  normal:    { bots: 7,  aggression: [0.45, 0.7], hateHuman: 0.1 },
-  difficile: { bots: 10, aggression: [0.3, 0.55], hateHuman: 0.25 },
+  facile:    { bots: 5,  aggression: [0.6, 0.85], hateHuman: 0,    zeal: 0.5 },
+  normal:    { bots: 7,  aggression: [0.45, 0.7], hateHuman: 0.1,  zeal: 1 },
+  difficile: { bots: 10, aggression: [0.3, 0.55], hateHuman: 0.25, zeal: 2 },
 };
