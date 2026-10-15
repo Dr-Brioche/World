@@ -253,6 +253,12 @@ const AI = {
     for (const c of G.castles) {
       if (G.owner[c] !== p.id || G.works.has(c) || G.wallsOf(c).length >= G.wallMax(c)) continue;
       if (p.gold < G.wallCost(c)) continue;
+      // Relier deux de ses villes par un mur : +50 de garnison pour chacune (s'il y en a une à portée)
+      for (const o of G.castles) {
+        if (o === c || G.owner[o] !== p.id || G.wallLinked(c).has(o)) continue;
+        const aim = o + G.W + 1; // (une case au cœur de l'autre ville)
+        if (!G.planWall(p.id, c, aim).error && !G.buildWall(p, c, aim)) return true;
+      }
       // le chemin qu'un ennemi (pris au hasard parmi les voisins) suivrait pour assiéger cette ville
       const e = enemies[(Math.random() * enemies.length) | 0];
       const path = G.castlePath(e, c);

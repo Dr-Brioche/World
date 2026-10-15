@@ -632,12 +632,25 @@ const GameRules = {
         : this.level[c] < 3 ? 'Cette ville a déjà son mur (une citadelle peut en bâtir un second).' : 'Cette ville a déjà ses deux murs.' };
     }
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
-    const snap = this.wallSnap(target), sealed = snap >= 0;
-    if (sealed) target = snap;
+    // Visé dans (ou tout près de) la muraille d'une autre de ses villes : le mur va jusqu'à elle, et les relie
+    // (city = cette ville : voir garrisonMax)
+    let city = -1, Rcity = 0;
+    for (const o of this.castles) {
+      if (o === c || this.owner[o] !== pid) continue;
+      const ox = o % W + h, oy = ((o / W) | 0) + h, Ro = this.castleInfo(o).radius;
+      if (Math.hypot(target % W + 0.5 - ox, ((target / W) | 0) + 0.5 - oy) <= Ro + CONFIG.WALL_SNAP) {
+        city = o; Rcity = Ro;
+        target = Math.floor(oy) * W + Math.floor(ox); // (on vise son centre ; le mur s'arrête à sa muraille)
+        break;
+      }
+    }
+    // Sinon, l'aimant : un obstacle tout proche (voir wallSnap)
+    const snap = city >= 0 ? -1 : this.wallSnap(target), sealed = city >= 0 || snap >= 0;
+    if (snap >= 0) target = snap;
     const tx = target % W + 0.5, ty = ((target / W) | 0) + 0.5, R = this.castleInfo(c).radius;
-    const dist = Math.hypot(tx - cx, ty - cy);
-    if (dist < R + 2) return { error: 'Vise un endroit hors de la muraille de la ville.' };
-    if (dist > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.` };
+    const dist = Math.hypot(tx - cx, ty - cy), reach = dist - Rcity; // (jusqu'à la muraille de l'autre ville)
+    if (reach < R + 2) return { error: city >= 0 ? 'Ces deux villes se touchent déjà : pas besoin de mur entre elles.' : 'Vise un endroit hors de la muraille de la ville.' };
+    if (reach > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.` };
     // le mur part du bord de la muraille de la ville, vers la case visée (tracé case par case, sans trou)
     const sx = Math.floor(cx + (tx - cx) / dist * (R - 0.5)), sy = Math.floor(cy + (ty - cy) / dist * (R - 0.5));
     const tiles = [], ex = target % W, ey = (target / W) | 0;
@@ -646,6 +659,7 @@ const GameRules = {
     let err = dx + dy;
     for (;;) {
       const i = y * W + x;
+      if (city >= 0 && this.inCastleRange(city, x, y, Rcity)) break; // (arrivé à la muraille de l'autre ville)
       // (les cases dans la muraille de la ville sont la ville elle-même : le mur commence juste après)
       if (!this.wallBarrier(i) && !this.inCastleRange(c, x, y, R)) {
         if (this.owner[i] !== pid) return { error: 'Le mur doit être entièrement sur tes terres.' };
@@ -657,8 +671,8 @@ const GameRules = {
       if (e2 >= dy) { err += dy; x += stx; }
       if (e2 <= dx) { err += dx; y += sty; }
     }
-    if (tiles.length < 2) return { error: 'Le mur est trop court.' };
-    return { tiles, end: target, sealed };
+    if (tiles.length < 2) return { error: city >= 0 ? 'Ces deux villes sont trop proches : pas besoin de mur entre elles.' : 'Le mur est trop court.' };
+    return { tiles, end: city >= 0 ? tiles[tiles.length - 1] : target, sealed, city };
   },
 
   // Bâtir un mur de la ville c jusqu'à la case visée. Renvoie un message d'erreur, ou null.
@@ -669,7 +683,7 @@ const GameRules = {
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
     const TPS = CONFIG.TICKS_PER_SECOND;
-    this.walls.push({ castle: c, owner: p.id, tiles: plan.tiles, start: this.tick, ready: this.tick + CONFIG.WALL_BUILD_TIME * TPS, done: false });
+    this.walls.push({ castle: c, owner: p.id, tiles: plan.tiles, city: plan.city, start: this.tick, ready: this.tick + CONFIG.WALL_BUILD_TIME * TPS, done: false });
     return null;
   },
 
@@ -691,7 +705,10 @@ const GameRules = {
       for (const t of w.tiles) { this.wallAt[t] = 1; Render.markDirty(t); }
       this.version++;
       const o = this.players[w.owner];
-      if (o.isHuman) UI.log('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.', 'good');
+      if (o.isHuman) {
+        UI.log('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.' + (w.city >= 0 && this.owner[w.city] === w.owner
+          ? ` Il relie deux de tes villes : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacune !` : ''), 'good');
+      }
       const mine = new Set(w.tiles);
       for (const a of this.attacks) {
         if (a.done || a.target !== w.owner || a.retreatEnd !== undefined || a.castleTaken) continue;
@@ -836,6 +853,17 @@ const GameRules = {
           (lost.length ? `, et ${lost.length > 1 ? `les ${lost.length} moulins ou casernes qui en dépendaient` : 'le moulin ou la caserne qui en dépendait'}.` : '.'), 'good');
       }
     }
+  },
+
+  // Villes du même royaume reliées à la ville c par un mur fini (son mur vers elle, ou le leur vers c)
+  wallLinked(c) {
+    const o = this.owner[c], set = new Set();
+    for (const w of this.walls) {
+      if (!w.done || w.city === undefined || w.city < 0 || w.owner !== o) continue;
+      const other = w.castle === c ? w.city : w.city === c ? w.castle : -1;
+      if (other >= 0 && this.building[other] === B_CASTLE && this.owner[other] === o && this.owner[w.castle] === o) set.add(other);
+    }
+    return set;
   },
 
   // Moulins et casernes qui dépendent du bâtiment a : dans la muraille d'une ville, ou à une place d'une église
@@ -1348,7 +1376,9 @@ const GameRules = {
   garrisonMax(a) {
     const t = this.building[a];
     if (t === B_OUTPOST) return this.outpostReady(a) ? CONFIG.OUTPOST_GARRISON : Infinity; // en construction : tous
-    if (t === B_CASTLE || t === B_PORT) return this.buildingInfo(a).garrison || 0;
+    // (une ville reliée par un mur à d'autres villes du royaume : WALL_LINK_GARRISON soldats de plus par ville reliée)
+    if (t === B_CASTLE) return this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0);
+    if (t === B_PORT) return this.buildingInfo(a).garrison || 0;
     return 0;
   },
 

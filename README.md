@@ -301,6 +301,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ville et va **tout droit** jusque-là (aperçu **vert** s'il est possible, ligne **rouge** sinon ; il ne passe que sur tes
      terres, sans bâtiment sur le chemin). **🧲 Aimant** : vise à moins de **3 cases** d'un obstacle (mer, lac, fleuve, sommet
      ou un autre mur) et le mur va s'y accrocher tout seul (petit rond vert), pour **fermer le passage** sans laisser de trou.
+     🏰🧱🏰 **Relier deux villes** : vise une **autre de tes villes** (dans sa muraille, ou à moins de 3 cases) et le mur va
+     jusqu'à sa muraille. Une fois debout, il **relie les deux villes** : **+50 soldats de garnison pour chacune** (en survolant
+     la ville : « reliée par un mur à une autre ville : +50 soldats »). Si l'une des deux est prise, le bonus disparaît.
+     Les bots relient aussi leurs villes quand ils le peuvent.
      Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
      le franchir** : les armées ennemies doivent faire le tour. Si un mur tout neuf coupe la route d'un assaut déjà lancé,
      **devant lui** (là où il n'est pas encore passé), l'armée **le contourne** par un autre chemin ; s'il n'y a **pas d'autre
@@ -496,6 +500,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.88.2** : 🏰🧱🏰 un mur peut relier deux de tes villes (vise l'autre ville : le mur va jusqu'à sa muraille) ; une fois debout, chacune gagne +50 soldats de garnison · 🤖 les bots relient aussi leurs villes · ⚡ un territoire désorganisé se prend 25 % plus vite
 - **v0.88.1** : ⚔️ l'icône des troupes montre le niveau des casernes de chaque royaume : deux épées médiévales croisées (sans caserne ou niveau 1), avec un casque (niveau 2), puis avec un bouclier (niveau 3), sur la carte, les armées, la fiche des royaumes et ta jauge
 - **v0.88** : 🏰 une ville a un nombre de places pour ses moulins et casernes : 4 au niveau 1, 6 au niveau 2, 9 au niveau 3 (« places prises » en la survolant) · ⛵ avant-poste : nouvelles icônes, un petit bateau avec une flèche vers la gauche pour envoyer des renforts, vers la droite pour rapatrier
 - **v0.87.7** : ⚡ les assauts vont 15 % plus vite (en terre ennemie, dans leur marche jusqu'à la frontière et pour leurs renforts) et les défenseurs 15 % moins vite : ils ne vont plus que 18 % plus vite qu'un assaut de même taille (au lieu de 60 %)

@@ -85,6 +85,7 @@ const CONFIG = {
   WALL_BUILD_TIME: 40,       // secondes de chantier
   WALL_MAX_REACH: 12,
   WALL_RETREAT_LOSS: 0.5,    // une armée en retraite qui doit franchir un mur (bâti dans son dos) y perd 50 % de ses soldats, par mur
+  WALL_LINK_GARRISON: 50,    // deux de ses villes reliées par un mur : +50 soldats de garnison pour chacune
   WALL_SNAP: 3,              // visé à moins de 3 cases d'un obstacle (lac, sommet, fleuve, autre mur) : le mur s'y accroche
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
   PORT_ROAD_DISTANCE: 30,    // un port à moins de 30 cases d'un de ses châteaux (sur la même terre) y est relié
@@ -123,8 +124,8 @@ const CONFIG = {
   ASSAULT_HEAVY: 500,          // (1 + soldats / 500) : plus l'armée est grande, plus elle est lente
                                // (100 soldats : ~5,5 cases/s · 500 : 3,3 · 1000 : 2,2 · 3000 : 0,9)
   ASSAULT_MIN_SPEED: 0.053,     // vitesse minimum d'un assaut (cases de plaine par tour)
-  DISORGANIZED_SPEED: 1.25,    // un territoire désorganisé (sans château, ou coupé de ses châteaux) se prend plus vite,
-                               // et d'autant plus vite que l'armée est grande (100 soldats : ~6 cases/s · 500 : 8 · 2000 : 13)
+  DISORGANIZED_SPEED: 1.5625,  // un territoire désorganisé (sans ville ni port fortifié, ou coupé d'eux) se prend plus vite,
+                               // et d'autant plus vite que l'armée est grande (100 soldats : ~7,5 cases/s · 500 : 10 · 2000 : 16)
   // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,
   // par le chemin le plus rapide, comme les défenseurs (voir DEFENDER_SPEED_BONUS) : pendant ce temps,
   // tout le monde le voit venir
