@@ -370,7 +370,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    et la **production de tes moulins et casernes**, versée toutes les 10 secondes.
    Le jeu ne montre **pas de chiffres précis** (pas de « +X par seconde ») : seulement des pourcentages.
    À toi de voir ce qui marche le mieux !
-   La jauge en bas de l'écran montre tes soldats, et au-dessus si ton recrutement va bien.
+   La jauge en bas de l'écran montre tes soldats, et au bout **ton armée sur son maximum** (ex. « armée 150 / 300 ») ;
+   au-dessus, si ton recrutement va bien.
    **Les garnisons sont fixes** : leurs soldats ne quittent jamais leur château, port ou avant-poste
    (ils ne servent qu'à le défendre ; pour attaquer, tu utilises tes soldats disponibles, ou ceux stationnés
    à un avant-poste). **Les soldats en garnison et stationnés** comptent aussi dans ton armée (la jauge les affiche) :
@@ -417,6 +418,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.77.1** : 📊 la jauge des soldats affiche ton armée sur son maximum (ex. « armée 150 / 300 »)
 - **v0.77** : 🎯 un cercle de ciblage rouge entoure l'armée ennemie survolée (clic = envoyer tes défenseurs) · 🗡️ la souris devient une petite épée (au lieu d'une main) sur tout ce qu'on peut sélectionner
 - **v0.76.7** : ⚖️ après-guerre et galvanisation s'additionnent au lieu de se multiplier : un +25 % annule un −25 % (la jauge affiche le total quand les deux sont actifs)
 - **v0.76.6** : ⛺ détruire un avant-poste ennemi ne donne plus de malus d'après-guerre (son propriétaire est toujours galvanisé)
