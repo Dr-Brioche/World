@@ -37,8 +37,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
    - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
-   📏 **Taille de la carte** (pour les cartes aléatoires, au format 16:9) : **Petite** (500 x 281 cases), **Moyenne**
-   (750 x 422) ou **Grande** (1000 x 562). Une grande carte a plus d'îlots, de fleuves et de lacs, et une partie plus longue.
+   📏 **Taille de la carte** (pour les cartes aléatoires, au format 16:9) : **Petite** (300 x 169 cases), **Moyenne**
+   (650 x 366) ou **Grande** (1000 x 562). Une grande carte a plus d'îlots, de fleuves et de lacs, et une partie plus longue.
    🗺️ **Cartes prédéfinies** (les vraies cartes, avec un peu de hasard dans les forêts et les côtes) :
    - **Monde** 🌍 (1080 x 408 cases) : la **vraie carte du monde**, bien plus grande (on dézoome beaucoup) : les continents, les grandes
      îles, les mers intérieures (mer Noire, Caspienne, Grands Lacs), les **chaînes de montagnes** (Rocheuses, Andes,
@@ -444,6 +444,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.84.1** : 📏 nouvelles tailles de carte : Petite 300 x 169, Moyenne 650 x 366, Grande 1000 x 562
 - **v0.84** : 📏 choix de la taille de la carte avant la partie (cartes aléatoires) : Petite 500 x 281, Moyenne 750 x 422, Grande 1000 x 562 (format 16:9) ; plus d'îlots, de fleuves et de lacs sur les grandes, avec des reliefs plus étendus · ⚖️ toutes les cartes ont les mêmes règles de vitesse (fini le bonus des terres libres sur les cartes Monde et Europe : une grande carte prend juste plus de temps) · 🏝️ une capitale ne se fonde plus sur un îlot (terre d'au moins 600 cases)
 - **v0.83.1** : 🚀 départ plus rapide : l'élan de départ triple le recrutement et la conquête des terres libres (au lieu de +50 %), puis disparaît en 5 minutes : l'expansion va environ 2 fois plus vite (la moitié des terres prise en 3 minutes au lieu de 6)
 - **v0.83** : ⚡ assauts, marches et défenseurs 15 % plus rapides · 🧨 tu peux abandonner un avant-poste : tous ses soldats rentrent automatiquement par la mer (détruit par l'ennemi, ses soldats sont vaincus) · ⛪⚓ un moulin dans les zones d'un port et d'une église n'occupe plus qu'une place (celle du port en priorité) · 🏝️ les petits îlots ne disparaissent plus à la création de la carte, et il y a aussi des îlots moyens · ⚡ partie 2 fois plus fluide (les bots cherchent plus vite où construire)

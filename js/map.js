@@ -55,11 +55,10 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
   if (type === 'world') return generateWorldMap(seed); // la carte du monde (voir worldmap.js)
   if (type === 'europe') return generateEuropeMap(seed); // la carte d'Europe (voir europemap.js)
   const [W, H] = CONFIG.MAP_SIZES[size] || CONFIG.MAP_SIZES.moyen, N = W * H;
-  // Une plus grande carte a plus d'îlots, de fleuves et de lacs (voir mapCount)
-  const [w0, h0] = CONFIG.MAP_SIZES.petit;
-  mapScale = Math.sqrt((W * H) / (w0 * h0));
+  // Une plus grande carte a plus d'îlots, de fleuves et de lacs (voir mapCount ; référence : 500 x 281 cases)
+  mapScale = Math.sqrt((W * H) / (500 * 281));
   // Sur une plus grande carte, les formes (continents, chaînes de montagnes, forêts) sont un peu plus grandes,
-  // pour ne pas avoir un relief trop morcelé (fs = 1,3 pour « Petite », 1,6 « Moyenne », 1,85 « Grande »)
+  // pour ne pas avoir un relief trop morcelé (fs = 1 pour « Petite », 1,5 « Moyenne », 1,85 « Grande »)
   const fs = Math.sqrt(W / 294);
   const rand = mulberry32(seed);
   const elevNoise = makeValueNoise(rand);
@@ -258,7 +257,7 @@ function addDeserts(terrain, W, H, dryNoise, fs = 1) {
 // Lacs : au plus LAKES_MAX par carte (voir config.js), chaque fleuve a LAKE_CHANCE chances d'en avoir un
 const LAKE_CHANCE = 0.3;
 
-// Taille de la carte en cours de création, par rapport à une « Petite » carte (1 = petite, ~2 = grande)
+// Taille de la carte en cours de création, par rapport à une carte de 500 x 281 cases (0,6 = petite, 2 = grande)
 let mapScale = 1;
 // Un nombre [min, max] prévu pour une petite carte, agrandi pour la carte en cours
 function mapCount([lo, hi]) { return [Math.round(lo * mapScale), Math.round(hi * mapScale)]; }

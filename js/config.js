@@ -7,8 +7,8 @@ const CONFIG = {
   // Tailles des cartes aléatoires (en cases), au format 16:9, choisies dans le menu
   // (les cartes prédéfinies, Monde et Europe, ont leur propre taille, plus bas)
   MAP_SIZES: {
-    petit: [500, 281],
-    moyen: [750, 422],
+    petit: [300, 169],
+    moyen: [650, 366],
     grand: [1000, 562],
   },
   DESERT_RATIO: 0.15,      // part des plaines et forêts en désert sur les cartes aléatoires (production -20 %)
@@ -20,8 +20,8 @@ const CONFIG = {
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
-  // Les nombres d'îlots, de fleuves et de lacs ci-dessous sont pour une « Petite » carte ; une plus grande en a plus
-  // (multipliés par la racine carrée du rapport de surface : x1,5 pour « Moyenne », x2 pour « Grande »)
+  // Les nombres d'îlots, de fleuves et de lacs ci-dessous sont pour une carte de 500 x 281 cases ; les autres en ont
+  // plus ou moins (multipliés par la racine carrée du rapport de surface : x0,6 « Petite », x1,3 « Moyenne », x2 « Grande »)
   ISLETS: [4, 10],         // nombre de petits îlots ajoutés à la carte « Normale »
   MEDIUM_ISLETS: [1, 3],   // ...et d'îlots moyens (avec un peu de relief)
   MIN_SPAWN_LAND: 600,     // une capitale se fonde sur une terre d'au moins 600 cases (pas sur un îlot)
