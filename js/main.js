@@ -717,15 +717,15 @@ const UI = {
 
   // Jauge des soldats en bas de l'écran, avec le recrutement par seconde au-dessus
   refreshTroopGauge() {
-    // (les soldats stationnés aux avant-postes et ceux en mer comptent aussi pour le maximum ; pas les garnisons)
+    // (les soldats stationnés aux avant-postes, en mer et en campagne comptent aussi pour le maximum ; pas les garnisons)
     const G = Game, h = G.human, max = G.maxTroops(h), r = Math.min(1, G.armySize(h) / max);
     const eff = G.growthFactor(r) / CONFIG.TROOP_GROWTH_AT_PEAK; // 1 = recrutement au top
     const color = eff > 0.85 ? '#3f9a3a' : eff > 0.45 ? '#d99a1e' : '#b8322a';
     $('troopFill').style.width = (r * 100).toFixed(1) + '%';
     $('troopFill').style.background = color;
-    const st = G.stationedOf(h), sea = G.atSeaOf(h);
+    const st = G.stationedOf(h), sea = G.atSeaOf(h), away = G.campaignOf(h);
     // toute l'armée sur le maximum (ex. « 150 / 300 »), puis ce qui n'est pas disponible pour attaquer
-    const rest = [st >= 1 ? `⛺ ${fmt(st)} aux avant-postes` : '',
+    const rest = [away >= 1 ? `⚔ ${fmt(away)} en campagne` : '', st >= 1 ? `⛺ ${fmt(st)} aux avant-postes` : '',
       sea >= 1 ? `⛵ ${fmt(sea)} en mer` : ''].filter(Boolean);
     $('troopText').textContent = `${G.troopIcon(h.id)} ${fmt(G.armySize(h))} / ${fmt(max)}` + (rest.length ? ` · dont ${rest.join(', ')}` : '');
     // Pas de chiffre précis : juste l'état du recrutement
