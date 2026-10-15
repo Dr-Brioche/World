@@ -105,7 +105,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    impossible de lancer un assaut depuis les terres d'un allié.
 
    **⚔️ Le déroulement d'un assaut**
-   - **La marche (sur tes terres)** : ton armée part de **ta cité (château) d'où elle arrive le plus vite** à la cible
+   - **La marche (sur tes terres)** : ton armée part de **ta place forte d'où elle arrive le plus vite** à la cible
+     (une ville, ou un **port fortifié** de niveau 3 : une muraille et sa garnison)
      (le vrai trajet à pied compte : fleuves, montagnes et détours, pas la distance à vol d'oiseau)
      (ou de ton avant-poste) et **marche jusqu'à ta frontière** par le **chemin le plus rapide** de tes terres ;
      elle entre chez l'ennemi par le meilleur passage **depuis cette ville** (et pas forcément par le bout de frontière
@@ -510,6 +511,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90.7** : ⚓ un port fortifié (niveau 3) sert aussi de point de départ pour les armées (assauts et défenseurs), et de point de retour, comme une ville
 - **v0.90.6** : 🧱 deux villes qui bâtissent chacune un mur vers l'autre, et dont les murs se rejoignent, sont reliées aussi : +50 soldats de garnison pour chacune
 - **v0.90.5** : ⛰️ les assauts contre un royaume avancent un peu plus vite dans le relief : forêt +10 %, colline +16 %, montagne +19 % de vitesse (le relief ralentit 25 % moins qu'avant ; l'expansion en terre libre ne change pas)
 - **v0.90.4** : 🧭 assauts, défenseurs et soldats qui rentrent partent de (ou rentrent à) la ville d'où le trajet à pied est le plus rapide, en comptant les fleuves, le relief et les détours, et plus la ville la plus proche à vol d'oiseau
