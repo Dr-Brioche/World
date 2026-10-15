@@ -371,7 +371,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Les **bots** bâtissent et améliorent plus d'églises quand un voisin les dépasse en Croyance (surtout en Difficile).
      ✝️ **Croisade religieuse** : une **cathédrale** (église de niveau 3) propose une action dans son menu rapide (la croix,
      comme le mur des villes) et dans sa fenêtre : pour **💰 2000**, ta Croyance monte de **+1000 pendant 60 s** (une croisade
-     à la fois par cathédrale). De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
+     à la fois par cathédrale). Dès ta première cathédrale, un bouton **✝️ Croisade** apparaît aussi dans la barre des
+     constructions, en bas : un clic la lance tout de suite (depuis une cathédrale libre), et il affiche le temps restant
+     quand toutes tes cathédrales ont déjà leur croisade en cours. De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
      en retard de Croyance (un message te prévient si c'est un voisin).
 
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
@@ -532,6 +534,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.14** : ✝️ un bouton « Croisade » apparaît dans la barre des constructions dès ta première cathédrale, pour lancer une croisade sans aller cliquer sur l'église · 📱 boutons de la barre un peu plus étroits sur téléphone
 - **v0.91.13** : 🎯 contre un royaume désorganisé, on peut toujours viser ses églises et ses ports (pour prendre leur zone d'un coup) ou l'attaquer de front en cliquant ailleurs ; avec une citadelle, les deux à la fois · 🤖 les bots font pareil
 - **v0.91.12** : 🛡️ une seule armée de défense par assaut : recliquer sur « Défendre » la renforce (les soldats la rejoignent en 3 s, en route ou au combat) au lieu de créer une nouvelle armée ; plus d'attente de 5 s entre deux envois
 - **v0.91.11** : 🐛 un débarquement ne peut plus se poser dans la muraille d'une ville ou d'un port fortifié (ni sur un mur) : il fallait l'assiéger, pas y planter un avant-poste

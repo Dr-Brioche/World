@@ -31,6 +31,17 @@ const UI = {
       btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
       builds.appendChild(btn);
     }
+    // Bouton « Croisade » : il apparaît dès qu'on a une cathédrale (église de niveau 3),
+    // pour lancer une croisade d'ici, sans aller cliquer sur l'église (voir refreshCrusadeBar)
+    const cb = document.createElement('button');
+    cb.className = 'build crusade hidden';
+    cb.innerHTML = `<span class="icon">${ICONS.cross}</span><span>Croisade</span><span class="cost"></span>`;
+    cb.addEventListener('click', () => {
+      const a = this.crusadeChurch();
+      if (a >= 0) this.crusade(a);
+    });
+    builds.appendChild(cb);
+    this.crusadeBar = cb;
 
     // Taille de la carte : seulement pour les cartes aléatoires (Monde et Europe ont leur propre taille)
     const sizeForType = () => { $('mapSize').disabled = ['world', 'europe'].includes($('mapType').value); };
@@ -155,7 +166,7 @@ const UI = {
   selectBuild(t) {
     if (t) { this.cancelPlan(); this.cancelWall(); }
     this.selectedBuild = t;
-    document.querySelectorAll('.build').forEach(b => b.classList.toggle('active', +b.dataset.type === t));
+    document.querySelectorAll('.build[data-type]').forEach(b => b.classList.toggle('active', +b.dataset.type === t));
     document.body.style.cursor = t ? 'cell' : '';
   },
 
@@ -683,7 +694,7 @@ const UI = {
       `(${Math.floor(traitorSecs / 60)}:${String(traitorSecs % 60).padStart(2, '0')})`;
     $('ratioVal').textContent = `${Math.round(this.ratio * 100)} % (${fmt(h.troops * this.ratio)})`;
 
-    document.querySelectorAll('.build').forEach(btn => {
+    document.querySelectorAll('.build[data-type]').forEach(btn => {
       const cost = G.buildCost(h, +btn.dataset.type);
       btn.querySelector('.cost').textContent = `💰 ${fmt(cost)}`;
       btn.classList.toggle('poor', h.gold < cost);
@@ -696,6 +707,7 @@ const UI = {
       }
     });
     this.refreshBuildingMenu();
+    this.refreshCrusadeBar();
 
     const ranking = G.players.filter(p => p.alive && p.tiles > 0).sort((a, b) => b.tiles - a.tiles);
     const row = p => {
@@ -1137,6 +1149,40 @@ const UI = {
     if (text) {
       const html = cur ? `✝️ Croisade : ${left} s` : `✝️ Croisade (💰 ${fmt(CONFIG.CRUSADE_COST)})`;
       if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
+    }
+  },
+
+  // Nos cathédrales (églises de niveau 3) : celle d'où partira la croisade du bouton de la barre,
+  // la première qui n'a pas de croisade en cours (-1 si on n'en a pas, ou si elles en ont toutes une)
+  cathedrals() {
+    const G = Game, h = G.human;
+    return G.buildingTiles.filter(a => G.building[a] === B_CHURCH && G.owner[a] === h.id && G.level[a] >= 3);
+  },
+  crusadeChurch() {
+    const free = this.cathedrals().find(a => !Game.crusadeOf(a));
+    return free === undefined ? -1 : free;
+  },
+
+  // Bouton « Croisade » de la barre : caché sans cathédrale ; sinon son prix, ou le temps qui reste
+  // si toutes nos cathédrales ont déjà une croisade en cours
+  refreshCrusadeBar() {
+    const G = Game, h = G.human, btn = this.crusadeBar, list = this.cathedrals();
+    btn.classList.toggle('hidden', !list.length);
+    if (!list.length) return;
+    const a = this.crusadeChurch(), cost = btn.querySelector('.cost');
+    if (a >= 0) {
+      const err = G.crusadeError(h, a);
+      cost.textContent = `💰 ${fmt(CONFIG.CRUSADE_COST)}`;
+      btn.classList.toggle('poor', h.gold < CONFIG.CRUSADE_COST);
+      btn.disabled = !!err;
+      btn.title = err || `Croisade religieuse (💰 ${fmt(CONFIG.CRUSADE_COST)}) : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance ` +
+        `pendant ${CONFIG.CRUSADE_TIME} s` + (list.length > 1 ? ' (chaque cathédrale peut lancer la sienne)' : '');
+    } else {
+      const end = Math.min(...list.map(c => G.crusadeOf(c).end));
+      cost.textContent = `⏳ ${Math.ceil((end - G.tick) / CONFIG.TICKS_PER_SECOND)} s`;
+      btn.classList.remove('poor');
+      btn.disabled = true;
+      btn.title = 'Croisade en cours : attends qu\'elle se termine pour en relancer une';
     }
   },
 
