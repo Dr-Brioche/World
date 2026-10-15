@@ -964,7 +964,7 @@ const Render = {
     if (i < 0 || !t || G.phase !== 'playing' || !h.alive || UI.selectedBuild || UI.plan) return -1;
     const o = G.owner[i];
     if (o === h.id && (BUILDING_LEVELS[t] || t === B_OUTPOST)) return G.anchor[i];
-    if (o >= 0 && o !== h.id && !G.areAllied(o, h.id) && TARGET_TYPES.includes(t) && (G.isProtected(o) || t === B_OUTPOST)) return G.anchor[i];
+    if (o >= 0 && o !== h.id && !G.areAllied(o, h.id) && TARGET_TYPES.includes(t)) return G.anchor[i];
     return -1;
   },
 

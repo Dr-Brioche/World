@@ -79,7 +79,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **ville (château)** ou un **port fortifié** (niveau 3). Chacun tient sa région, même isolé.
    Quand un royaume n'a **plus aucune ville ni port fortifié**, c'est l'**anarchie** : il est **désorganisé**, même s'il lui reste des églises ou des petits ports :
    clique n'importe où sur ses terres, l'assaut se fait **de front, sur tout son territoire** (comme sur une terre libre),
-   sans devoir prendre ses bâtiments un par un (ses avant-postes, eux, se visent toujours).
+   sans devoir prendre ses bâtiments un par un. Tu peux **quand même viser** une de ses **églises** ou un de ses **ports**
+   (ou un avant-poste) pour foncer droit dessus et **prendre toute sa zone d'un coup**. Avec une **citadelle** (château niveau 3),
+   tu as droit à 2 assauts à la fois : **un de front et un sur une église ou un port**, ou deux ciblés.
    Un territoire **désorganisé** (royaume sans ville ni port fortifié, ou morceau coupé d'eux) se prend **plus vite**, et **d'autant plus vite
    que ton armée est grande**. Si le royaume rebâtit (ou reprend) une ville, ou fortifie un port, pendant l'assaut, il est de nouveau organisé : l'assaut s'arrête.
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
@@ -530,6 +532,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.13** : 🎯 contre un royaume désorganisé, on peut toujours viser ses églises et ses ports (pour prendre leur zone d'un coup) ou l'attaquer de front en cliquant ailleurs ; avec une citadelle, les deux à la fois · 🤖 les bots font pareil
 - **v0.91.12** : 🛡️ une seule armée de défense par assaut : recliquer sur « Défendre » la renforce (les soldats la rejoignent en 3 s, en route ou au combat) au lieu de créer une nouvelle armée ; plus d'attente de 5 s entre deux envois
 - **v0.91.11** : 🐛 un débarquement ne peut plus se poser dans la muraille d'une ville ou d'un port fortifié (ni sur un mur) : il fallait l'assiéger, pas y planter un avant-poste
 - **v0.91.10** : ✝️ un royaume désorganisé (sans ville ni port fortifié) se fait convertir 2 fois plus vite par la Croyance de ses voisins
