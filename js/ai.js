@@ -30,15 +30,18 @@ const AI = {
       if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) * Game.garrisonPower(mine) > mine.troops) {
         if (ready) {
           // (renforts : même cible et même point de départ que l'assaut en cours)
+          // (assaut de front sur un royaume désorganisé : pas de case visée, sinon on risquerait de viser une église)
           const src = Game.sourceOfAttack(mine);
-          Game.launchAttack(p.id, mine.target, Game.troopsAt(p.id, src) * 0.6, mine.targetCastle >= 0 ? mine.targetCastle : mine.frontTile, src);
+          const aim = mine.targetCastle >= 0 ? mine.targetCastle : mine.disorganized ? undefined : mine.frontTile;
+          Game.launchAttack(p.id, mine.target, Game.troopsAt(p.id, src) * 0.6, aim, src);
           mine.aiSent = Game.tick;
         }
         return;
       }
       // Avec une citadelle : un deuxième assaut contre le même royaume, sur une autre de ses cibles
+      // (contre un royaume désorganisé attaqué de front : sur une de ses églises ou un de ses ports)
       const all = Game.attacks.filter(a => !a.done && a.attacker === p.id && a.target === mine.target && a.link === undefined);
-      if (mine.target >= 0 && Game.isProtected(mine.target) && all.length < Game.maxAssaults(p.id)
+      if (mine.target >= 0 && all.length < Game.maxAssaults(p.id)
         && p.troops > Game.maxTroops(p) * 0.4 && Math.random() < 0.3) {
         const other = Game.nearestTargets(p.id, mine.target).find(c => !all.some(a => a.targetCastle === c));
         if (other !== undefined) Game.launchAttack(p.id, mine.target, p.troops * 0.5, other);

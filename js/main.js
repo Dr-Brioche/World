@@ -647,7 +647,16 @@ const UI = {
         txt += ' · 🏰 protégé : vise un de ses châteaux, églises, ports ou avant-postes';
       }
     } else if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id)) {
-      txt += ' · ⚔️ plus de ville (château) : royaume désorganisé, clique pour l\'attaquer de front (ses troupes défendent, désorganisées)';
+      const b = G.building[i];
+      if (TARGET_TYPES.includes(b) && G.truceLeft(G.anchor[i])) {
+        txt += ` · ⏳ vient de changer de mains : inattaquable encore ${Math.ceil(G.truceLeft(G.anchor[i]))} s`;
+      } else if (TARGET_TYPES.includes(b)) {
+        txt += Render.castlePreview && Render.castlePreview.path
+          ? ` · 🎯 royaume désorganisé : clique pour viser ${G.targetLabel(G.anchor[i])} et prendre toute sa zone (ou clique ailleurs sur ses terres pour l'attaquer de front)`
+          : ' · 🚫 inaccessible : des châteaux bloquent le passage';
+      } else {
+        txt += ' · ⚔️ plus de ville (château) : royaume désorganisé, clique pour l\'attaquer de front (ses troupes défendent, désorganisées), ou vise une de ses églises ou un de ses ports';
+      }
     }
     if (G.isCoastal(i) && G.landable(G.human.id, i) && G.expeditionPorts(G.human.id).length) {
       txt += ' · ⛵ côte : clic droit → Débarquer';
@@ -988,7 +997,8 @@ const UI = {
     if (!same) return false;
     // (l'avant-poste choisi s'est vidé entre les deux clics : l'assaut part de la ville)
     const src = p.source >= 0 && G.troopsAt(h.id, p.source) < 1 ? -1 : p.source;
-    const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, src) * this.ratio, p.castle >= 0 ? p.castle : i, src);
+    // (assaut de front : on garde la case du 1er clic, pour ne pas viser par erreur une église cliquée au 2e)
+    const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, src) * this.ratio, p.castle >= 0 ? p.castle : p.tile, src);
     if (err) this.log(err, 'warn');
     return true;
   },
@@ -1248,8 +1258,9 @@ const UI = {
     // un 2e clic lance l'assaut. Assaut déjà en cours sur cette cible : on envoie tout de suite des soldats en plus.
     // Terres libres : on attaque tout de suite.
     const b = G.building[i], c = G.anchor[i];
-    // (un avant-poste se vise toujours, même chez un royaume désorganisé)
-    const aimed = target >= 0 && TARGET_TYPES.includes(b) && (G.isProtected(target) || b === B_OUTPOST);
+    // (ses églises, ports et avant-postes se visent toujours, même chez un royaume désorganisé ;
+    // ailleurs sur ses terres, l'assaut se fait de front)
+    const aimed = target >= 0 && TARGET_TYPES.includes(b);
     const running = target >= 0 && G.attacks.find(a => !a.done && a.attacker === h.id && a.target === target
       && a.link === undefined && a.retreatEnd === undefined && (!aimed || a.targetCastle === c));
     const attack = confirmed => {

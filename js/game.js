@@ -2019,12 +2019,13 @@ const GameRules = {
     }
     // Un royaume qui a encore une ville (un château) ne s'attaque qu'en visant un de ses bâtiments (voir isProtected).
     // Sans château, il est désorganisé : on peut attaquer tout son territoire de front (comme une terre libre),
-    // sauf ses avant-postes, qui se visent toujours.
+    // ou viser quand même une de ses églises ou un de ses ports (pour prendre sa zone d'un coup) ;
+    // ses avant-postes, eux, se visent toujours. (Avec une citadelle, on peut faire les deux à la fois.)
     // castle = bâtiment visé par l'assaut (château, église, port ou avant-poste)
     // unlinked = cases d'un morceau coupé de tous ses châteaux (voir isUnlinked) : attaque de front, sans défenseurs
     let castle = -1, path = null, unlinked = null, front = frontier;
-    const outpostAim = aimTile !== undefined && this.building[aimTile] === B_OUTPOST && this.owner[aimTile] === target;
-    if (target >= 0 && (this.isProtected(target) || outpostAim)) {
+    const buildingAim = aimTile !== undefined && TARGET_TYPES.includes(this.building[aimTile]) && this.owner[aimTile] === target;
+    if (target >= 0 && (this.isProtected(target) || buildingAim)) {
       const name = this.players[target].name, b = aimTile !== undefined ? this.building[aimTile] : 0;
       if (TARGET_TYPES.includes(b) && this.owner[aimTile] === target) castle = this.anchor[aimTile];
       else if (aimTile !== undefined && this.owner[aimTile] === target) unlinked = this.unlinkedPiece(aimTile);
@@ -2088,8 +2089,8 @@ const GameRules = {
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
           UI.log(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! ` +
             (unlinked ? 'Il vise ton territoire coupé de tous tes châteaux : personne ne peut le défendre !'
-              : castle < 0 ? 'Sans ville ni port fortifié, toutes tes troupes défendront d\'office, désorganisées.'
               : alone ? 'Il vise ton avant-poste : seuls les soldats débarqués le défendront.'
+              : !this.isProtected(target) ? 'Sans ville ni port fortifié, toutes tes troupes défendront d\'office, désorganisées.'
               : 'Dès qu\'elle entre sur tes terres, clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.'), 'warn', p);
         }
       }
@@ -3004,9 +3005,11 @@ const GameRules = {
     return r;
   },
 
-  // Assaut de front contre un royaume qui n'a plus de château (ville)
+  // Assaut contre un royaume qui n'a plus de château (ville) : de front, ou sur une de ses églises ou un de ses ports
+  // (pas sur un avant-poste : seuls les soldats débarqués le défendent)
   leaderless(a) {
-    return a.target >= 0 && a.targetCastle < 0 && !this.isProtected(a.target);
+    if (a.target < 0 || this.isProtected(a.target)) return false;
+    return a.targetCastle < 0 || this.building[a.targetCastle] !== B_OUTPOST;
   },
 
   // Dernier carré : l'assaut vise un château d'un royaume dont tous les châteaux sont isolés (son armée y est
