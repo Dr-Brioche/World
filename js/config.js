@@ -80,11 +80,11 @@ const CONFIG = {
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   // Distances minimum (de centre à centre, en cases) entre ses grands bâtiments : cercles rouges à la construction
-  CASTLE_CASTLE_DISTANCE: 13, // entre deux de ses châteaux (l'un n'est jamais dans la muraille de l'autre, même en citadelle)
+  CASTLE_CASTLE_DISTANCE: 13, // entre deux de ses châteaux
   CASTLE_CHURCH_DISTANCE: 15, // entre un château et une église ou un port (ils restent hors de sa muraille)
   CHURCH_CHURCH_DISTANCE: 11, // entre deux églises, deux ports, ou une église et un port
   MAX_CASTLES: 3,            // châteaux qu'un royaume peut construire dans la partie (capitale comprise ;
-                             // les châteaux pris à l'ennemi ne comptent pas). Une église en débloque d'autres.
+                             // les châteaux pris à l'ennemi ne comptent pas). Une église améliorée en débloque d'autres.
 
   // --- Combat ---
   ATTACK_SPEED: 0.25,          // vitesse de conquête (plus petit = les armées avancent plus lentement sur la carte)
@@ -102,8 +102,11 @@ const CONFIG = {
                                // (on peut y ajouter des soldats tout de suite)
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière
   // Après un assaut réussi (château, église, port ou avant-poste pris), pendant WAR_EFFECT_TIME secondes :
-  // le vainqueur subit un malus d'après-guerre (-25 % de soldats produits), le perdant est galvanisé (+25 %).
+  // le vainqueur subit un malus d'après-guerre (-25 % de soldats produits ; pas pour un avant-poste détruit),
+  // le perdant est galvanisé (+25 %). Les deux s'additionnent : un +25 % annule un -25 %.
   WAR_EFFECT_TIME: 30,
+  CAPTURE_TRUCE: 30,           // une ville (château), une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant 30 s
+  ELIMINATION_BOUNTY: 500,     // anéantir un royaume rapporte une prime de 500 pièces, plus le trésor qui lui restait
   POST_WAR_MALUS: 0.25,
   RALLY_BONUS: 0.25,
   DEFENSE_RALLY_TIME: 15, // repousser un assaut galvanise aussi le défenseur (+25 % de soldats produits) pendant 15 s

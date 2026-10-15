@@ -26,7 +26,7 @@ const UI = {
       btn.title = `${b.name} : ${b.desc} (touche ${t})`;
       btn.innerHTML = `<span class="key">${t}</span><span class="icon">${b.icon}</span>` +
         `<span>${b.name}</span><span class="cost"></span>` +
-        (t === B_CASTLE ? '<span class="count" title="Châteaux construits / maximum (chaque église en débloque d\'autres)"></span>' : '');
+        (t === B_CASTLE ? '<span class="count" title="Châteaux construits / maximum (une église améliorée en débloque d\'autres)"></span>' : '');
       btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
       builds.appendChild(btn);
     }
@@ -55,7 +55,9 @@ const UI = {
     });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
     $('attacks').addEventListener('click', e => {
-      if (e.target.dataset.defend) return this.defend(+e.target.dataset.defend);
+      // (closest : le texte des boutons est remplacé par des icônes, le clic peut tomber sur l'icône)
+      const def = e.target.closest('[data-defend]');
+      if (def) return this.defend(+def.dataset.defend);
       // Clic sur « ton château isolé » : la caméra va le voir
       const go = e.target.closest('[data-goto]');
       if (go) {
@@ -63,13 +65,15 @@ const UI = {
         return Render.centerOn(c % Game.W + half, ((c / Game.W) | 0) + half);
       }
       // Croix d'un transport en mer : il fait demi-tour vers le port
-      if (e.target.dataset.recall) {
-        const boat = Game.recallExpedition(Game.human.id, +e.target.dataset.recall);
+      const rec = e.target.closest('[data-recall]');
+      if (rec) {
+        const boat = Game.recallExpedition(Game.human.id, +rec.dataset.recall);
         if (boat) this.log(`Ton bateau fait demi-tour vers le port : environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % des soldats à bord se perdront.`, 'warn');
         return this.refreshAttacks();
       }
-      const id = e.target.dataset.cancel;
-      if (!id) return;
+      const cancel = e.target.closest('[data-cancel]');
+      if (!cancel) return;
+      const id = cancel.dataset.cancel;
       const a = Game.cancelAttack(Game.human.id, +id);
       if (a) this.log(`🏳️ Retraite ordonnée : tes soldats décrochent en ${CONFIG.RETREAT_TIME} s, et environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdront.`, 'warn');
       this.refreshAttacks();
@@ -134,7 +138,6 @@ const UI = {
     $('pauseBtn').textContent = Game.paused ? '▶ Reprendre' : '⏸ Pause';
   },
 
-  // Petite image de la bannière d'un royaume, pour les messages et les listes
   // Barre de résumé (fixe, juste sous la barre du haut) quand on survole un autre royaume : ses soldats, ses bâtiments
   // (le nombre de chaque type, quel que soit le niveau) et la part des terres qu'il possède
   refreshKingdomTip() {
@@ -154,7 +157,8 @@ const UI = {
       ` · <span title="Soldats">👥 ${fmt(p.troops)}</span>` +
       types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
       ` · <span title="Part des terres">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)} %</span>`;
-    if (tip.innerHTML !== html) tip.innerHTML = html;
+    // (on compare avec le dernier texte écrit : innerHTML, lui, a déjà vu ses emojis remplacés par des icônes)
+    if (this.tipHtml !== html) { this.tipHtml = html; tip.innerHTML = html; }
     // toujours au même endroit : centrée juste sous la barre de nos infos, en haut de l'écran
     const bar = $('topbar').getBoundingClientRect();
     tip.style.left = (bar.left + bar.width / 2) + 'px';
@@ -162,6 +166,7 @@ const UI = {
     tip.classList.remove('hidden');
   },
 
+  // Petite image de la bannière d'un royaume, pour les messages et les listes
   bannerImg(p, cls = 'bn') {
     return `<img class="${cls}" src="${BANNERS[p.banner].img}" alt="" title="${escapeHtml(p.name)}">`;
   },
@@ -246,7 +251,6 @@ const UI = {
     return `or produit ${pct(next.gold / cur.gold - 1)}`;
   },
 
-  // Petite fenêtre pour améliorer un bâtiment (château, moulin)
   // Fenêtre explicative d'un de ses bâtiments (en haut à gauche) : ce qu'apporterait son amélioration
   showUpgrade(a) {
     const G = Game, type = G.building[a], icon = BUILDINGS[type].icon;
@@ -472,7 +476,9 @@ const UI = {
     const def = o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) ? this.fortDefense(G.anchor[i]) : null;
     if (def !== null) {
       const b = G.building[i], info = G.buildingInfo(G.anchor[i]);
-      return `${BUILDINGS[b].icon} ${info.name} ${G.deName(G.players[o].name)} · 🛡️ défense globale ${pct(def)}`;
+      const truce = G.truceLeft(G.anchor[i]);
+      return `${BUILDINGS[b].icon} ${info.name} ${G.deName(G.players[o].name)} · 🛡️ défense globale ${pct(def)}` +
+        (truce ? ` · ⏳ vient de changer de mains : inattaquable encore ${Math.ceil(truce)} s` : '');
     }
     let txt = t.cost > 1 ? `${t.name} (défense ${pct(t.cost - 1)})` : t.name;
     if (G.terrain[i] === TERRAIN.DESERT) txt = `🏜️ ${t.name} (bâtiments : production ${pct(DESERT_PRODUCTION - 1)})`;
@@ -532,7 +538,9 @@ const UI = {
     // Conseils d'attaque contre un royaume ennemi
     if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && G.isProtected(o)) {
       const b = G.building[i];
-      if (TARGET_TYPES.includes(b)) {
+      if (TARGET_TYPES.includes(b) && G.truceLeft(G.anchor[i])) {
+        txt += ` · ⏳ vient de changer de mains : inattaquable encore ${Math.ceil(G.truceLeft(G.anchor[i]))} s`;
+      } else if (TARGET_TYPES.includes(b)) {
         txt += Render.castlePreview && Render.castlePreview.path
           ? ` · 🎯 clique pour viser ${G.targetLabel(G.anchor[i])} (puis une 2e fois pour lancer l'assaut)`
           : ' · 🚫 inaccessible : des châteaux bloquent le passage';
@@ -625,15 +633,15 @@ const UI = {
 
   // Jauge des soldats en bas de l'écran, avec le recrutement par seconde au-dessus
   refreshTroopGauge() {
-    // (les soldats en garnison dans les châteaux et avant-postes, et ceux en mer, comptent aussi pour le maximum)
-    const G = Game, h = G.human, max = G.maxTroops(h), gar = G.garrisonOf(h), r = Math.min(1, G.armySize(h) / max);
+    // (les soldats stationnés aux avant-postes et ceux en mer comptent aussi pour le maximum ; pas les garnisons)
+    const G = Game, h = G.human, max = G.maxTroops(h), r = Math.min(1, G.armySize(h) / max);
     const eff = G.growthFactor(r) / CONFIG.TROOP_GROWTH_AT_PEAK; // 1 = recrutement au top
     const color = eff > 0.85 ? '#3f9a3a' : eff > 0.45 ? '#d99a1e' : '#b8322a';
     $('troopFill').style.width = (r * 100).toFixed(1) + '%';
     $('troopFill').style.background = color;
     const st = G.stationedOf(h), sea = G.atSeaOf(h);
     // toute l'armée sur le maximum (ex. « 150 / 300 »), puis ce qui n'est pas disponible pour attaquer
-    const rest = [gar >= 1 ? `🛡️ ${fmt(gar)} en garnison` : '', st >= 1 ? `⛺ ${fmt(st)} aux avant-postes` : '',
+    const rest = [st >= 1 ? `⛺ ${fmt(st)} aux avant-postes` : '',
       sea >= 1 ? `⛵ ${fmt(sea)} en mer` : ''].filter(Boolean);
     $('troopText').textContent = `⚔️ ${fmt(G.armySize(h))} / ${fmt(max)}` + (rest.length ? ` · dont ${rest.join(', ')}` : '');
     // Pas de chiffre précis : juste l'état du recrutement
@@ -669,16 +677,19 @@ const UI = {
         }
         if (G.cutOff(a) && a.target === h.id) {
           // Pas de bouton « Défendre » : le château est coupé du royaume
-          return `<div class="attack panel incoming" title="${G.building[a.targetCastle] === B_OUTPOST
+          const tb = a.unlinked ? -1 : G.building[a.targetCastle];
+          return `<div class="attack panel incoming" title="${tb === B_OUTPOST
             ? 'Ton avant-poste ne compte que sur sa garnison : clique dessus pour envoyer des renforts par la mer'
+            : a.unlinked ? 'Ce territoire est coupé de tous tes châteaux : relie-le à un château (clique sur ton château isolé) ou bâtis-en un'
             : 'Il est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie'}">` +
             `<span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque ` +
-            `${G.building[a.targetCastle] === B_OUTPOST ? 'ton avant-poste ⛺' : G.building[a.targetCastle] === B_PORT ? 'ton port isolé 🚩' : 'ton château isolé 🚩'}</span>` +
+            `${tb === B_OUTPOST ? 'ton avant-poste ⛺' : a.unlinked ? 'ton territoire coupé 🚩' : tb === B_PORT ? 'ton port isolé 🚩'
+              : tb === B_CASTLE ? 'ton château isolé 🚩' : 'ton bâtiment isolé 🚩'}</span>` +
             `<b data-troops="${a.id}"></b></div>`;
         }
         if (a.attacker === h.id) {
           const target = a.target < 0 ? 'Terres libres'
-            : (a.targetCastle >= 0 ? BUILDINGS[G.building[a.targetCastle]].icon + ' ' : '') + escapeHtml(G.players[a.target].name);
+            : (a.targetCastle >= 0 && BUILDINGS[G.building[a.targetCastle]] ? BUILDINGS[G.building[a.targetCastle]].icon + ' ' : '') + escapeHtml(G.players[a.target].name);
           const flag = a.target >= 0 ? this.bannerImg(G.players[a.target]) : '';
           const from = G.sourceOfAttack(a) >= 0 ? '⛺ ' : '';
           return `<div class="attack panel"><span>${from}⚔️ → ${flag}${target}</span><b data-troops="${a.id}"></b>` +
@@ -788,6 +799,8 @@ const UI = {
         return this.log('🚫 Ton avant-poste est au-delà des mers : seuls ses soldats le défendent, et il n\'en a plus de libres. ' +
           'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.', 'warn');
       }
+      if (target.unlinked) return this.log('🚫 Ce territoire est coupé de tous tes châteaux : personne ne peut le défendre. ' +
+        'Relie-le à un château (clique sur ton château isolé) ou bâtis-en un nouveau.', 'warn');
       return this.log('🚫 Il est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
         'Clique dessus pour lancer un assaut qui le relie à ton royaume.', 'warn');
     }
@@ -810,6 +823,10 @@ const UI = {
   // c = bâtiment visé (-1 = attaque de front), tile = case cliquée
   startPlan(target, c, tile) {
     const G = Game, h = G.human;
+    // (ville, église ou port qui vient d'être conquis : pas d'assaut avant la fin de la trêve)
+    if (c >= 0 && G.truceLeft(c)) {
+      return this.log(`⏳ ${G.targetLabel(c)[0].toUpperCase()}${G.targetLabel(c).slice(1)} vient de changer de mains : impossible de l'attaquer avant ${Math.ceil(G.truceLeft(c))} s.`, 'warn');
+    }
     let source = null;
     if (c >= 0) {
       // D'où part l'armée : du royaume ou d'un avant-poste bâti (le chemin le plus court)
@@ -869,12 +886,12 @@ const UI = {
         items.push({ label: `🎁 Envoyer ${fmt(n)} soldats à ${name} (il en recevra ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`, run: () => {
           const got = G.sendTroopsToAlly(h.id, o, n);
           if (typeof got === 'string') this.log(got, 'warn');
-          else this.log(`🎁 ${fmt(got)} soldats arrivent chez ${G.players[o].name} (un quart s'est perdu en route).`, 'good', G.players[o]);
+          else this.log(`🎁 ${fmt(got)} soldats arrivent chez ${G.players[o].name} (${Math.round((1 - CONFIG.ALLY_GIFT_RATIO) * 100)} % se sont perdus en route).`, 'good', G.players[o]);
         } });
         // L'allié se fait attaquer : on peut envoyer une armée l'aider à se défendre
         const n2 = Math.floor(h.troops * this.ratio);
         for (const a of G.attacks) {
-          if (a.done || a.target !== o || a.attacker === h.id || G.cutOff(a)) continue;
+          if (a.done || a.target !== o || a.attacker === h.id || G.cutOff(a) || G.isPreparing(a)) continue;
           items.push({ label: `🛡️ Aider ${name} contre ${escapeHtml(G.players[a.attacker].name)} avec ${fmt(n2)} soldats (arrivée en ${CONFIG.REINFORCE_DELAY} s)`, run: () => {
             const err = G.helpAlly(h.id, a.id, n2);
             if (err) this.log(err, 'warn');
@@ -995,7 +1012,6 @@ const UI = {
     const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;
     if (assault && assault.target === h.id) return this.defend(banner);
     if (this.plan && this.planClick(i)) return;
-    // Clic sur un de ses bâtiments à niveaux (château, moulin) : proposer l'amélioration
     const t = G.building[i];
     // Clic sur un de ses avant-postes : sa fenêtre d'info et son menu rapide (renforts / rapatrier)
     if (t === B_OUTPOST && G.owner[i] === h.id && !this.selectedBuild) {
@@ -1005,6 +1021,7 @@ const UI = {
     if (t && G.owner[i] === h.id && !this.selectedBuild && G.holdsAlone(G.anchor[i]) && G.isIsolated(G.anchor[i])) {
       return this.link(G.anchor[i]);
     }
+    // Clic sur un de ses bâtiments à niveaux : son menu rapide (améliorer / détruire)
     if (BUILDING_LEVELS[t] && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === t)) {
       this.selectBuild(0);
       this.openBuildingMenu(G.anchor[i], sx, sy);
@@ -1035,6 +1052,11 @@ const UI = {
     };
     // Attaquer un allié = le trahir (après confirmation, qui vaut validation de l'assaut)
     if (target >= 0 && G.areAllied(h.id, target)) {
+      // (on vérifie d'abord qu'il y a vraiment une cible à attaquer ici : sinon on le trahirait pour rien)
+      const valid = aimed ? G.attackSources(h.id).some(src => G.castlePath(h.id, c, src))
+        : !G.isProtected(target) || G.isUnlinked(i);
+      if (!valid) return this.log(aimed ? `Impossible d'atteindre ${G.targetLabel(c)} : des fortifications bloquent le passage.`
+        : `${G.players[target].name} est protégé : vise un de ses châteaux, églises, ports ou avant-postes.`, 'warn');
       this.confirmBetrayal(G.players[target], () => { G.breakAlliance(h.id, target); attack(true); });
       return;
     }
@@ -1127,6 +1149,7 @@ function main() {
   const step = 1000 / CONFIG.TICKS_PER_SECOND;
   let last = performance.now(), acc = 0, uiTimer = 0;
   function frame(now) {
+    requestAnimationFrame(frame); // (demandé en premier : une erreur dans ce tour ne fige pas le jeu)
     const dt = Math.min(now - last, 1000);
     last = now;
     if (Game.phase === 'playing' && !Game.paused) {
@@ -1137,20 +1160,19 @@ function main() {
     Render.draw();
     uiTimer += dt;
     if (uiTimer > 200) { uiTimer = 0; UI.refresh(); UI.refreshKingdomTip(); }
-    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 }
 
 main();
 
-// Un bonus en pourcentage : 0.3 → "+30 %", -0.1 → "-10 %"
 // Pourcentage avec son signe (0 → « 0 % », 0.25 → « +25 % », -0.25 → « −25 % »)
 function signedPct(x) {
   const n = Math.round(x * 100);
   return (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n) + ' %';
 }
 
+// Un bonus en pourcentage : 0.3 → "+30 %", -0.1 → "-10 %"
 function pct(x) {
   const n = Math.round(x * 100);
   return (n >= 0 ? '+' : '') + n + ' %';

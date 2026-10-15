@@ -108,13 +108,6 @@ html, body {
 #bannerPick button:hover { background: var(--parchment-dark); }
 #bannerPick button.active { border-color: var(--wood); background: var(--gold); }
 #bannerPick img { height: 92px; display: block; }
-.sw {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 1px solid var(--ink);
-  margin-right: 4px;
-}
 .nm {
   display: inline-block;
   width: 105px;
@@ -330,7 +323,6 @@ button:hover { background: #e8d6a8; }
   border-radius: 4px;
   background: #fffaf0;
 }
-.card input[type=color] { padding: 0; width: 60px; height: 32px; }
 .card select { max-width: 62%; }
 .big {
   font-family: Cinzel, Georgia, serif;

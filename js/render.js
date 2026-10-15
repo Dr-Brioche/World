@@ -46,6 +46,11 @@ const Render = {
     this.dirtyList = [];
     for (let i = 0; i < G.N; i++) this.paintTile(i);
     this.offCtx.putImageData(this.img, 0, 0);
+    // Nouvelle partie : on oublie les dessins gardés en mémoire de la partie d'avant
+    // (Game.version repart de 0 : sans ça, ils pourraient être repris tels quels)
+    this.hlCanvas = null; this.hlKey = null;
+    this.wallsVersion = -1; this.pactVersion = -1;
+    this.previewKey = null; this.planKey = null; this.buildable = null;
     this.fit();
   },
 
@@ -115,9 +120,16 @@ const Render = {
 
   flush() {
     if (!this.dirtyList || !this.dirtyList.length) return;
-    for (const i of this.dirtyList) { this.paintTile(i); this.dirty[i] = 0; }
+    // (on ne recopie que le rectangle qui contient les cases changées : sur une grande carte, c'est bien plus rapide)
+    const W = Game.W;
+    let x0 = W, y0 = Game.H, x1 = -1, y1 = -1;
+    for (const i of this.dirtyList) {
+      this.paintTile(i); this.dirty[i] = 0;
+      const x = i % W, y = (i / W) | 0;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
     this.dirtyList.length = 0;
-    this.offCtx.putImageData(this.img, 0, 0);
+    this.offCtx.putImageData(this.img, 0, 0, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
   },
 
   // --- Murailles des châteaux (et des ports de niveau 3) ---
@@ -306,7 +318,6 @@ const Render = {
     }
   },
 
-  // Armées en préparation : ligne pointillée + bannière ⚔ qui avance vers la cible.
   // Bannière d'une armée : drapeau à la couleur de l'attaquant avec deux épées croisées,
   // ses soldats au-dessus et, s'il y en a, les défenseurs (bouclier à la couleur du défenseur).
   drawArmyBanner(a, bx, by, label) {
@@ -466,9 +477,9 @@ const Render = {
     }
   },
 
-  // Armées contre les royaumes : pendant la préparation, la bannière est plantée sur la frontière
-  // (voir drawThreat) ; une fois l'assaut lancé, une flèche rouge le montre et la bannière se tient
-  // là où se bat l'assaut.
+  // Armées contre les royaumes : pendant la marche sur ses terres, la bannière avance de sa cité vers la
+  // frontière, par son chemin (et le front menacé scintille, voir drawThreat) ; une fois l'assaut lancé,
+  // une flèche rouge le montre et la bannière se tient là où se bat l'assaut.
   drawAttackArrows(ox, oy) {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     const now = performance.now();
@@ -529,7 +540,7 @@ const Render = {
       }
       const bx = m ? ox + m.x * s : st >= 0 ? ox + (st % G.W + 0.5) * s : x1;
       const by = m ? oy + m.y * s : st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
-      this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `⚔ ${fmt(a.troops)}${extra}`); // (pas de temps de trajet affiché)
+      this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `⚔ ${fmt(a.troops)}${extra}`);
     }
   },
 
@@ -546,7 +557,7 @@ const Render = {
 
   // Défenseurs en route vers un assaut : leur bannière marche du château vers le combat (visible par tous)
   drawDefendersOnTheWay(ox, oy) {
-    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    const G = Game, ctx = this.ctx;
     for (const a of G.attacks) {
       if (a.done || !a.defPending || !a.defPending.length || a.target < 0) continue;
       const d = G.players[a.target];
@@ -593,7 +604,7 @@ const Render = {
 
   // Défenseurs qui rentrent à pied vers leur ville (l'assaut qu'ils allaient contrer est fini)
   drawReturning(ox, oy) {
-    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    const G = Game, ctx = this.ctx;
     for (const r of G.returning) {
       const p = G.players[r.pid];
       const { x, y } = this.walkTrail(r, ox, oy);
@@ -745,10 +756,11 @@ const Render = {
   drawHoveredKingdom(ox, oy) {
     const G = Game, o = this.hoveredKingdom();
     if (o < 0) return;
-    // Une petite image (1 pixel = 1 case) des terres de ce royaume, refaite seulement si la carte a changé
-    const key = o + ':' + G.version;
-    if (this.hlKey !== key) {
-      this.hlKey = key;
+    // Une petite image (1 pixel = 1 case) des terres de ce royaume, refaite si on survole un autre royaume,
+    // ou au plus 3 fois par seconde si la carte a changé (sur une grande carte, c'est un gros calcul)
+    const now = performance.now();
+    if (this.hlKey !== o || (this.hlVersion !== G.version && now - (this.hlTime || 0) > 300)) {
+      this.hlKey = o; this.hlVersion = G.version; this.hlTime = now;
       if (!this.hlCanvas) {
         this.hlCanvas = document.createElement('canvas');
         this.hlCanvas.width = G.W; this.hlCanvas.height = G.H;
@@ -948,7 +960,7 @@ const Render = {
     if (o < 0 || o === h.id || G.areAllied(o, h.id)) return false;
     const p = UI.plan;
     if (p) return p.castle >= 0 ? G.anchor[i] === p.castle && !!G.building[i] : o === p.target;
-    if (a >= 0) return !!(this.castlePreview && this.castlePreview.castle === a && this.castlePreview.path);
+    if (a >= 0) return !G.truceLeft(a) && !!(this.castlePreview && this.castlePreview.castle === a && this.castlePreview.path);
     return !G.isProtected(o) || G.isUnlinked(i);
   },
 
@@ -1010,7 +1022,7 @@ const Render = {
   // Fait apparaître un petit chiffre qui monte au-dessus d'un bâtiment (production)
   floatText(a, type, text) {
     const half = Game.sizeOf(type) / 2;
-    this.floaters.push({ x: a % Game.W + half, y: ((a / Game.W) | 0), text, color: type === B_MILL ? '#ffd75e' : '#ffffff', start: performance.now() });
+    this.floaters.push({ x: a % Game.W + half, y: ((a / Game.W) | 0), text, color: type === B_BARRACKS ? '#ffffff' : '#ffd75e', start: performance.now() });
   },
 
   drawFloaters(ox, oy) {
@@ -1038,6 +1050,7 @@ const Render = {
     const G = Game;
     if (this.pactVersion === G.version) return;
     this.pactVersion = G.version;
+    if (!G.pacts.size) { this.pactEdges = []; return; } // (aucun pacte : rien à chercher sur la carte)
     const pactOf = i => (G.owner[i] >= 0 ? G.players[G.owner[i]].pact : -1);
     const tiles = [];
     for (let i = 0; i < G.N; i++) if (pactOf(i) >= 0) tiles.push(i);
@@ -1138,8 +1151,12 @@ const Render = {
     const G = Game, p = UI.plan, ctx = this.ctx, s = this.cam.scale, W = G.W;
     let cx, cy, r;
     if (p.castle >= 0) {
-      const key = p.castle + ':' + G.version + ':' + p.source;
-      if (this.planKey !== key) { this.planKey = key; this.planPath = G.castlePath(G.human.id, p.castle, p.source); }
+      // (chemin recalculé si la cible change, ou au plus 3 fois par seconde si la carte change : c'est un gros calcul)
+      const key = p.castle + ':' + p.source, now = performance.now();
+      if (this.planKey !== key || (this.planVersion !== G.version && now - this.planTime > 300)) {
+        this.planKey = key; this.planVersion = G.version; this.planTime = now;
+        this.planPath = G.castlePath(G.human.id, p.castle, p.source);
+      }
       if (this.planPath) this.strokePath(ox, oy, this.planPath, '#ffd34d', 3);
       const n = G.sizeOf(G.building[p.castle]);
       cx = ox + (p.castle % W + n / 2) * s;
@@ -1168,17 +1185,23 @@ const Render = {
     if (G.phase !== 'playing' || h < 0 || UI.selectedBuild || !G.human.alive) return;
     const o = G.owner[h];
     if (!TARGET_TYPES.includes(G.building[h]) || o < 0 || o === G.human.id || G.areAllied(o, G.human.id)) return;
-    const c = G.anchor[h], key = c + ':' + G.version;
-    if (this.previewKey !== key) {
-      this.previewKey = key;
-      this.previewPath = G.castlePath(G.human.id, c);
+    // Le chemin le plus court, depuis le royaume ou un avant-poste (comme l'assaut qui partira), recalculé
+    // si la cible change, ou au plus 3 fois par seconde si la carte change (c'est un gros calcul)
+    const c = G.anchor[h], now = performance.now();
+    if (this.previewKey !== c || (this.previewVersion !== G.version && now - this.previewTime > 300)) {
+      this.previewKey = c; this.previewVersion = G.version; this.previewTime = now;
+      this.previewPath = null;
+      for (const src of G.attackSources(G.human.id)) {
+        const path = G.castlePath(G.human.id, c, src);
+        if (path && (!this.previewPath || path.length < this.previewPath.length)) this.previewPath = path;
+      }
     }
     this.castlePreview = { castle: c, path: this.previewPath };
     const ctx = this.ctx, s = this.cam.scale, W = G.W;
     if (this.previewPath) {
       this.strokePath(ox, oy, this.previewPath, '#ffd34d', 2.5);
     } else {
-      const n = G.sizeOf(B_CASTLE), cx = ox + (c % W + n / 2) * s, cy = oy + (((c / W) | 0) + n / 2) * s;
+      const n = G.sizeOf(G.building[c]), cx = ox + (c % W + n / 2) * s, cy = oy + (((c / W) | 0) + n / 2) * s;
       const r = Math.max(10, s * n * 0.5);
       ctx.lineWidth = 5;
       ctx.strokeStyle = '#c0281e';
@@ -1247,9 +1270,11 @@ const Render = {
       } else if (UI.selectedBuild && this.mouse) {
         // Aperçu de l'emplacement du bâtiment (2x2 ou 4x4 cases)
         const t = UI.selectedBuild, n = G.sizeOf(t);
-        const a = this.anchorAt(this.mouse.x, this.mouse.y, t);
+        // (château posé sur un de nos châteaux : c'est une amélioration, l'aperçu se cale sur lui)
+        const upgrading = t === B_CASTLE && G.building[this.hover] === B_CASTLE && G.owner[this.hover] === G.human.id;
+        const a = upgrading ? G.anchor[this.hover] : this.anchorAt(this.mouse.x, this.mouse.y, t);
         if (a >= 0) {
-          const ok = G.canPlace(G.human.id, a, t) || (t === B_CASTLE && G.building[this.hover] === B_CASTLE);
+          const ok = upgrading ? G.upgradeCost(a) !== null : G.canPlace(G.human.id, a, t);
           const rx = ox + (a % G.W) * s, ry = oy + ((a / G.W) | 0) * s;
           ctx.fillStyle = ok ? 'rgba(255,255,255,0.25)' : 'rgba(230,80,70,0.4)';
           ctx.fillRect(rx, ry, n * s, n * s);

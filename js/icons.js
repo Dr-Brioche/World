@@ -57,7 +57,6 @@ const ICON_DEFS = {
   back: [{ d: 'M9 5L4 10l5 5', s: 'c', w: 2.2 }, { d: 'M4.5 10H14a6 6 0 0 1 0 12h-3', s: 'c', w: 2.2 }],
   road: [{ d: 'M8 2L3 22M16 2l5 20', s: 'c', w: 1.8 }, { d: 'M12 3v3M12 9.5v3.5M12 16.5v4', s: '#d9a520', w: 2 }],
   dune: [{ d: 'M17 3.5a3 3 0 1 1-.01 0z', f: '#e8a13a' }, { d: 'M2 19c4-6 8-6 12-2s6 1 8-1v6H2z', f: '#d8b46a', s: 'c', w: 1 }],
-  tree: [{ d: 'M12 2L5 12h3l-4 6h16l-4-6h3z', f: '#3f6b2f' }, { d: 'M11 18h2v4h-2z', f: 'c' }],
   mountain: [{ d: 'M1.5 21L9 7l4 6 2.5-3.5L22.5 21z', f: 'c' }, { d: 'M9 7l-2.2 4.2 2.2-1 1.8 1.6z', f: '#fff' }],
   crown: [{ d: 'M3 8l4.5 4L12 4l4.5 8L21 8l-2 11H5z', f: '#d9a520', s: '#6b4a12', w: 1.2 }, { d: 'M5 16h14', s: '#6b4a12', w: 1.2 }],
   dagger: [{ d: 'M12 2l2 4v9h-4V6z', f: 'c', o: 0.75 }, { d: 'M7 15h10', s: 'c', w: 2.2 }, { d: 'M12 15v6', s: 'c', w: 2.4 }],
@@ -87,9 +86,9 @@ const EMOJI_ICONS = {
   '⬆': 'up', '✖': 'x', '🚩': 'pennant', '🏳': 'whiteflag', '⚠': 'warning', '🎯': 'target', '✂': 'axe',
   '🤝': 'seal', '💔': 'brokenseal', '⏳': 'hourglass', '⏱': 'hourglass', '🔥': 'flame', '⚰': 'tomb',
   '🏗': 'hammer', '🧨': 'pick', '🏚': 'pick', '🔎': 'lens', '🔍': 'lens', '↩': 'back', '🛤': 'road', '🛣': 'road',
-  '🏜': 'dune', '🌲': 'tree', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
+  '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
-  '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '🕹': 'mouse',
+  '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 

@@ -27,7 +27,9 @@ const AI = {
       }
       if (mine.target >= 0 && mine.defenders + (mine.garrison || 0) * Game.garrisonPower(mine) > mine.troops) {
         if (ready) {
-          Game.launchAttack(p.id, mine.target, p.troops * 0.6, mine.targetCastle >= 0 ? mine.targetCastle : undefined);
+          // (renforts : même cible et même point de départ que l'assaut en cours)
+          const src = Game.sourceOfAttack(mine);
+          Game.launchAttack(p.id, mine.target, Game.troopsAt(p.id, src) * 0.6, mine.targetCastle >= 0 ? mine.targetCastle : mine.frontTile, src);
           mine.aiSent = Game.tick;
         }
         return;
@@ -92,7 +94,7 @@ const AI = {
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
       if (score > bestScore) { bestScore = score; best = o; bestAim = plan.tile !== undefined ? plan.tile : aim; }
     }
-    const full = Game.armySize(p) >= max * 0.95; // (garnisons comprises)
+    const full = Game.armySize(p) >= max * 0.95; // (sans les garnisons)
     if (best !== null && (bestScore > 1.2 || (full && bestScore > 0.7))) {
       Game.launchAttack(p.id, best, p.troops * 0.7, bestAim === null ? undefined : bestAim);
     } else if (nb.has(-1)) {
@@ -234,7 +236,7 @@ const AI = {
   tryBuild(p, forced) {
     // Parfois, améliorer un château ou un moulin plutôt que construire
     if (Math.random() < 0.3) {
-      const mine = Game.buildingTiles.filter(a => Game.owner[a] === p.id
+      const mine = Game.buildingTiles.filter(a => Game.owner[a] === p.id && !Game.works.has(a)
         && Game.upgradeCost(a) !== null && p.gold >= Game.upgradeCost(a));
       if (mine.length) { Game.upgradeBuilding(p, mine[(Math.random() * mine.length) | 0]); return; }
     }
