@@ -739,6 +739,7 @@ const GameRules = {
   removeWall(w) {
     for (const t of w.tiles) if (w.done) { this.wallAt[t] = 0; Render.markDirty(t); }
     this.walls = this.walls.filter(x => x !== w);
+    for (const x of this.walls) if (x.touch) x.touch.delete(w); // (il ne relie plus rien)
     this.version++;
   },
 
@@ -749,13 +750,21 @@ const GameRules = {
     for (const w of this.walls.slice()) {
       if (this.building[w.castle] !== B_CASTLE || this.owner[w.castle] !== w.owner) { this.removeWall(w); continue; }
       if (w.done || this.tick < w.ready) continue;
+      const before = this.wallLinked(w.castle).size;
       w.done = true;
       for (const t of w.tiles) { this.wallAt[t] = 1; Render.markDirty(t); }
       this.version++;
+      // les murs finis du royaume qu'il touche (deux murs qui se rejoignent relient leurs villes : voir wallLinked)
+      w.touch = new Set();
+      for (const v of this.walls) {
+        if (v === w || !v.done || v.owner !== w.owner || !this.wallsTouch(w, v)) continue;
+        w.touch.add(v);
+        (v.touch = v.touch || new Set()).add(w);
+      }
       const o = this.players[w.owner];
       if (o.isHuman) {
-        UI.log('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.' + (w.city >= 0 && this.owner[w.city] === w.owner
-          ? ` Il relie deux de tes villes : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacune !` : ''), 'good');
+        UI.log('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.' + (this.wallLinked(w.castle).size > before
+          ? ` Il relie tes villes : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacune !` : ''), 'good');
       }
       const mine = new Set(w.tiles);
       for (const a of this.attacks) {
@@ -904,14 +913,34 @@ const GameRules = {
   },
 
   // Villes du même royaume reliées à la ville c par un mur fini (son mur vers elle, ou le leur vers c)
+  // Un mur relie deux villes s'il va de l'une à la muraille de l'autre (w.city), ou si deux murs, chacun parti
+  // de sa ville, se rejoignent (w.touch : les murs finis du royaume qui le touchent). On suit donc la chaîne des
+  // murs qui se touchent, depuis ceux de la ville c.
   wallLinked(c) {
     const o = this.owner[c], set = new Set();
-    for (const w of this.walls) {
-      if (!w.done || w.city === undefined || w.city < 0 || w.owner !== o) continue;
-      const other = w.castle === c ? w.city : w.city === c ? w.castle : -1;
-      if (other >= 0 && this.building[other] === B_CASTLE && this.owner[other] === o && this.owner[w.castle] === o) set.add(other);
+    const ok = w => w.done && w.owner === o && this.owner[w.castle] === o && this.building[w.castle] === B_CASTLE;
+    const isCity = v => v !== undefined && v >= 0 && this.building[v] === B_CASTLE && this.owner[v] === o;
+    const queue = this.walls.filter(w => ok(w) && (w.castle === c || w.city === c)), seen = new Set(queue);
+    while (queue.length) {
+      const w = queue.pop();
+      if (isCity(w.castle)) set.add(w.castle);
+      if (isCity(w.city)) set.add(w.city);
+      for (const v of w.touch || []) if (!seen.has(v) && ok(v)) { seen.add(v); queue.push(v); }
     }
+    set.delete(c);
     return set;
+  },
+
+  // Deux murs se touchent-ils (une case de l'un collée à une case de l'autre, même en diagonale) ?
+  wallsTouch(a, b) {
+    const W = this.W, other = new Set(b.tiles);
+    for (const t of a.tiles) {
+      const x = t % W;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if ((dx || dy) && x + dx >= 0 && x + dx < W && other.has(t + dy * W + dx)) return true;
+      }
+    }
+    return false;
   },
 
   // Moulins et casernes qui dépendent du bâtiment a : dans la muraille d'une ville, ou à une place d'une église

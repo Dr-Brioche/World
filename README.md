@@ -306,7 +306,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      terres, sans bâtiment sur le chemin). **🧲 Aimant** : vise à moins de **3 cases** d'un obstacle (mer, lac, fleuve, sommet
      ou un autre mur) et le mur va s'y accrocher tout seul (petit rond vert), pour **fermer le passage** sans laisser de trou.
      🏰🧱🏰 **Relier deux villes** : vise une **autre de tes villes** (dans sa muraille, ou à moins de 3 cases) et le mur va
-     jusqu'à sa muraille. Une fois debout, il **relie les deux villes** : **+50 soldats de garnison pour chacune** (en survolant
+     jusqu'à sa muraille (ou bien chaque ville bâtit un mur vers l'autre, et les **deux murs se rejoignent** : l'aimant
+     accroche le second au premier). Une fois debout, il **relie les deux villes** : **+50 soldats de garnison pour chacune** (en survolant
      la ville : « reliée par un mur à une autre ville : +50 soldats »). Si l'une des deux est prise, le bonus disparaît.
      Les bots relient aussi leurs villes quand ils le peuvent.
      Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
@@ -509,6 +510,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90.6** : 🧱 deux villes qui bâtissent chacune un mur vers l'autre, et dont les murs se rejoignent, sont reliées aussi : +50 soldats de garnison pour chacune
 - **v0.90.5** : ⛰️ les assauts contre un royaume avancent un peu plus vite dans le relief : forêt +10 %, colline +16 %, montagne +19 % de vitesse (le relief ralentit 25 % moins qu'avant ; l'expansion en terre libre ne change pas)
 - **v0.90.4** : 🧭 assauts, défenseurs et soldats qui rentrent partent de (ou rentrent à) la ville d'où le trajet à pied est le plus rapide, en comptant les fleuves, le relief et les détours, et plus la ville la plus proche à vol d'oiseau
 - **v0.90.3** : 💰 le port royal (niveau 3) coûte 2000 (au lieu de 1200)
