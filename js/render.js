@@ -1181,6 +1181,7 @@ const Render = {
     const w = Math.max(2, s * 0.55);
     const dirt = new Path2D(), paved = new Path2D();
     for (const [a, link] of G.roads()) {
+      if (link.onRoad) continue; // (moulin posé sur une route : pas de chemin en plus)
       // (le tracé, avec son coin à angle droit, est le même que pour le jeu : voir Game.roadPoints)
       const pts = G.roadPoints(a, link.castle).map(([x, y]) => [ox + x * s, oy + y * s]);
       const path = link.road === 'paved' ? paved : dirt;

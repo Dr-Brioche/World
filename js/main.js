@@ -565,7 +565,7 @@ const UI = {
         else txt += ' · pas de chemin (ni route de port ni ville assez proche)';
       }
       const road = G.roads().get(a);
-      if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
+      if (road) txt += ` · ${road.onRoad ? '🛤️ au bord d\'une route' : road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
       if (G.works.has(a)) txt += { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[G.works.get(a).kind];
       else if (o === G.human.id && BUILDING_LEVELS[G.building[i]] && !(G.holdsAlone(a) && G.isIsolated(a))) txt += ` · clique pour l'améliorer ou le détruire`;
     } else if (G.building[i]) {
@@ -808,6 +808,9 @@ const UI = {
     }
     if (!TERRAIN_PRODUCTION[t]) return '';
     let txt = ` · production ici : ${prodText(G.terrainFactor(a, t))}`;
+    if ((t === B_MILL || t === B_BARRACKS) && G.onRoad(h.id, a, t)) {
+      txt += ` · 🛤️ au bord d'une route : +${Math.round(CONFIG.MILL_ROAD_BONUS * 100)} %`;
+    }
     if (t === B_PORT) {
       txt += G.portRoadCastle(h.id, a) >= 0 ? ` · 🛤️ relié à une ville : +${Math.round(CONFIG.PORT_ROAD_BONUS * 100)} % d'or`
         : ` · aucune ville à moins de ${CONFIG.PORT_ROAD_DISTANCE} cases (pas de chemin)`;

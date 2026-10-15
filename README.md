@@ -351,6 +351,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      pas trop loin d'une **ville** (à moins de **25 cases**, sur la même terre) est reliée à elle. Reliée, l'église produit
      **un peu d'or** (+2 💰 toutes les 10 s). Mais une église près d'un **port seul** (sans ville proche, donc sans route)
      ne crée pas de chemin.
+     🌾 **Au bord d'une route** : un **moulin** ou une **caserne** bâti **hors des villes** (près d'une église ou d'un port),
+     **sur** une de ces routes ou juste à côté (à moins de **2 cases** de son centre), produit **+20 %**. En le posant,
+     la barre d'aide en bas l'indique (« 🛤️ au bord d'une route »).
      En posant un port ou une église, la barre d'aide en bas indique s'il sera relié à une ville (ou sur la route).
      **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
 
@@ -484,6 +487,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.87.5** : 🌾 un moulin ou une caserne bâti hors des villes, sur une route (celle d'un port ou le chemin d'une église) ou juste à côté, produit +20 %
 - **v0.87.4** : ⚓ ports plus rentables : le grand port rapporte 50 % d'or de plus qu'avant (9 au lieu de 6) et le port royal 100 % de plus (20 au lieu de 10)
 - **v0.87.3** : 🌾 l'expansion en terre libre ne ralentit plus : les terres libres se prennent 3 fois plus vite toute la partie, et coûtent jusqu'à 3 fois moins de soldats quand l'élan de recrutement retombe (au bout de 5 minutes) : la conquête des terres vierges garde le rythme du début
 - **v0.87.2** : ⚔️ casernes bien plus fortes : chaque soldat vaut 1,3 (camp d'entraînement), 1,8 (caserne) ou 2,5 soldats (grande caserne) au combat, au lieu de 1,1, 1,2 et 1,5

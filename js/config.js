@@ -95,6 +95,10 @@ const CONFIG = {
   CHURCH_ROAD_DISTANCE: 10,
   CHURCH_CITY_DISTANCE: 25,
   CHURCH_ROAD_GOLD: 2,
+  // Un moulin ou une caserne bâti hors des villes, sur une route (route d'un port ou chemin d'une église) ou juste à
+  // côté (à moins de 2 cases de son centre) : +20 % de production
+  MILL_ROAD_DISTANCE: 2,
+  MILL_ROAD_BONUS: 0.2,
   // ✝️ Croyance : chaque église en apporte (voir faith dans CHURCH_LEVELS), +50 % si elle est reliée à une route.
   // Un royaume qui a plus de Croyance qu'un voisin ennemi convertit peu à peu ses terres frontalières.
   FAITH_ROAD_BONUS: 0.5,
