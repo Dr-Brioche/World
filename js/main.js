@@ -134,7 +134,7 @@ const UI = {
   },
 
   // Petite image de la bannière d'un royaume, pour les messages et les listes
-  // Barre de résumé au-dessus de la souris quand on survole un autre royaume : ses soldats, ses bâtiments
+  // Barre de résumé (fixe, juste sous la barre du haut) quand on survole un autre royaume : ses soldats, ses bâtiments
   // (le nombre de chaque type, quel que soit le niveau) et la part des terres qu'il possède
   refreshKingdomTip() {
     const G = Game, h = G.human, i = Render.hover, m = Render.mouse;
@@ -154,8 +154,10 @@ const UI = {
       types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
       ` · <span title="Part des terres">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)} %</span>`;
     if (tip.innerHTML !== html) tip.innerHTML = html;
-    tip.style.left = m.x + 'px';
-    tip.style.top = (m.y - 18) + 'px';
+    // toujours au même endroit : centrée juste sous la barre de nos infos, en haut de l'écran
+    const bar = $('topbar').getBoundingClientRect();
+    tip.style.left = (bar.left + bar.width / 2) + 'px';
+    tip.style.top = (bar.bottom + 6) + 'px';
     tip.classList.remove('hidden');
   },
 
