@@ -3,22 +3,8 @@
 
 const $ = id => document.getElementById(id);
 
-// Petites icônes dessinées (SVG, de la couleur du texte) pour les menus : un style médiéval, pas des emojis
-const ICONS = {
-  // flèche vers le haut : améliorer
-  up: '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17 11 H12.5 V17 H7.5 V11 H3 Z" fill="currentColor"/></svg>',
-  // nef médiévale (coque, mât, voile carrée, fanion) : débarquer, envoyer des renforts par la mer
-  ship: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' +
-    '<path d="M12 2.5V15" stroke="currentColor" stroke-width="1.6"/>' +
-    '<path d="M12 2.5l4.5 1.4L12 5.3z" fill="currentColor"/>' +
-    '<path d="M6 6.5q6 1.8 12 0v6.3q-6 1.8-12 0z" fill="currentColor" opacity=".35" stroke="currentColor" stroke-width="1"/>' +
-    '<path d="M12 7.2v6.6M7.5 10.2h9" stroke="currentColor" stroke-width="1"/>' +
-    '<path d="M2.5 15h19l-3 5h-13z" fill="currentColor"/></svg>',
-  // ancre : rapatrier (rentrer au port)
-  anchor: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">' +
-    '<circle cx="12" cy="4.5" r="2.2"/><path d="M12 6.7V21M8 10h8"/><path d="M4.5 14.5q1 6.5 7.5 6.5t7.5-6.5"/>' +
-    '<path d="M3 16.5l1.5-2.5 2.5 1.5M21 16.5l-1.5-2.5-2.5 1.5"/></svg>',
-};
+// Petites icônes dessinées pour les menus (voir icons.js) : un style médiéval, pas des emojis
+const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor') };
 
 const UI = {
   selectedBuild: 0,
@@ -110,6 +96,8 @@ const UI = {
       if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.closeBuildingMenus(); }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
+    // Les emojis de la page deviennent des icônes médiévales dessinées (voir icons.js)
+    Icons.watch();
   },
 
   start() {

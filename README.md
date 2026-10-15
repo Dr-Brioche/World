@@ -403,6 +403,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.74** : 🎨 fini les emojis : toutes les icônes du jeu (menus, barre du haut, journal, classement, bâtiments et armées sur la carte…) sont maintenant de petits dessins médiévaux (épées croisées, bourse d'or, heaume, écu, nef, sceau, sablier…)
 - **v0.73** : 🛡️ un assaut qui échoue (repoussé, retraite…) rend au défenseur la route qu'il avait tracée à travers ses terres : elle ne reste à l'attaquant que s'il prend son objectif
 - **v0.72.2** : 🚩 un petit fanion rouge marque tes châteaux isolés sur la carte · 🐛 correction : la ligne d'un assaut de jonction part de l'endroit où l'armée entre chez l'ennemi (et plus du milieu de ton royaume, ce qui faisait croire qu'un autre château était visé) · 🔎 clic sur « ton château isolé » dans la barre de l'assaut : la caméra va le voir
 - **v0.72.1** : 🎯 l'assaut part du point le plus proche de la cible (une ville ou un avant-poste) ; un avant-poste vide (garnison seule) n'est plus choisi : l'assaut part alors de la ville
@@ -564,6 +565,7 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/map.js` | Génération aléatoire de la carte |
 | `js/game.js` | Règles : économie, attaques, victoire |
 | `js/ai.js` | Le cerveau des royaumes adverses |
+| `js/icons.js` | Les icônes médiévales dessinées (elles remplacent les emojis partout) |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
 | `img/` | Les images des bâtiments (3 niveaux de château, de caserne, d'église et de port, 2 de moulin, et l'avant-poste) et des bannières (`img/bannieres/`) |
