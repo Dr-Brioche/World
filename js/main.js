@@ -118,6 +118,7 @@ const UI = {
       banner: this.banner,
       difficulty: $('difficulty').value,
       opponents: +$('opponents').value,
+      speed: +$('speed').value,
       mapType: $('mapType').value,
       mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
@@ -642,7 +643,8 @@ const UI = {
     $('faith').textContent = fmt(Math.round(G.faithOf(h.id)));
     // Durée de la partie (le temps de jeu : la pause l'arrête)
     const secs = Math.floor(G.tick / CONFIG.TICKS_PER_SECOND), hh = Math.floor(secs / 3600), mm = Math.floor(secs / 60) % 60;
-    $('clock').textContent = (hh ? hh + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(secs % 60).padStart(2, '0');
+    $('clock').textContent = (hh ? hh + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(secs % 60).padStart(2, '0') +
+      (G.speed > 1 ? ` (x${G.speed})` : '');
     const traitorSecs = Math.ceil((h.traitorUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
     $('traitor').classList.toggle('hidden', !G.isTraitor(h));
     $('traitor').textContent = `🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % ` +
@@ -1329,7 +1331,7 @@ function main() {
     const dt = Math.min(now - last, 1000);
     last = now;
     if (Game.phase === 'playing' && !Game.paused) {
-      acc += dt;
+      acc += dt * Game.speed; // (partie accélérée : 2 tours de jeu au lieu d'un, tout va 2 fois plus vite)
       while (acc >= step) { Game.update(); acc -= step; }
     }
     Render.flush();
