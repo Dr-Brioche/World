@@ -182,7 +182,7 @@ const TERRAIN_INFO = [
   { name: 'Plaine',   color: [172, 186, 112], cost: 1 },
   { name: 'Forêt',    color: [92, 124, 70],   cost: 1.6 },
   { name: 'Colline',  color: [162, 146, 104], cost: 2.2 },
-  { name: 'Montagne', color: [130, 124, 118], cost: 3.5 },
+  { name: 'Montagne', color: [130, 124, 118], cost: 2.8 },
   // Fleuve : une frontière naturelle, longue à traverser, et un gros bonus de défense (+3)
   { name: 'Fleuve',   color: [74, 132, 184],  cost: 4 },
   // Grand fleuve (là où 3 fleuves se sont rejoints) : infranchissable, comme la mer
