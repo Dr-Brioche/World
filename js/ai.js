@@ -8,6 +8,7 @@ const AI = {
 
     if (Math.random() < 0.4) this.tryBuild(p);
     if (Math.random() < 0.1) this.tryWall(p);
+    if (Math.random() < 0.05 * (Game.difficulty.zeal || 1)) this.tryCrusade(p);
     if (Math.random() < 0.05) this.tryExpedition(p);
     if (this.stuckOnIsland(p)) this.goToSea(p);
     if (Math.random() < 0.08) this.tryAlliance(p);
@@ -283,6 +284,16 @@ const AI = {
       if (best >= 0 && !G.buildWall(p, c, best)) return true;
     }
     return false;
+  },
+
+  // Croisade religieuse : en retard de Croyance sur un voisin ennemi, avec une cathédrale et de l'or en réserve
+  // (il garde de quoi construire : pas plus d'une croisade quand il a moins de 1,5 fois son prix)
+  tryCrusade(p) {
+    const G = Game;
+    if (p.gold < CONFIG.CRUSADE_COST * 1.5) return false;
+    if (![...G.neighborStats(p.id).keys()].some(o => o >= 0 && G.faithEdge(o, p.id) > 0)) return false;
+    const church = G.buildingTiles.find(a => G.building[a] === B_CHURCH && !G.crusadeError(p, a));
+    return church !== undefined && !G.startCrusade(p, church);
   },
 
   tryBuild(p, forced) {

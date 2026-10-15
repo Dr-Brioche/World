@@ -4,7 +4,7 @@
 const $ = id => document.getElementById(id);
 
 // Petites icônes dessinées pour les menus (voir icons.js) : un style médiéval, pas des emojis
-const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall'),
+const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall'), cross: iconSVG('cross'),
   boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut') };
 
 const UI = {
@@ -309,6 +309,14 @@ const UI = {
       this.updateWallButton(btn, a, true);
       btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.startWall(a); });
     }
+    // Cathédrale (église de niveau 3) : bouton « Croisade »
+    if (type === B_CHURCH && G.level[a] >= 3) {
+      const btn = document.createElement('button');
+      btn.dataset.crusade = '';
+      el.querySelector('.choices').prepend(btn);
+      this.updateCrusadeButton(btn, a, true);
+      btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.crusade(a); });
+    }
     // Détruire le bâtiment (DEMOLISH_TIME secondes de travaux)
     el.querySelector('[data-del]').addEventListener('click', () => {
       close();
@@ -334,6 +342,7 @@ const UI = {
     // (la flèche est dessinée en SVG, de la couleur du texte : pas d'emoji)
     el.innerHTML = `<button data-up class="up"${canUp ? '' : ' disabled'} title="Améliorer">${ICONS.up}</button>` +
       (G.building[a] === B_CASTLE && G.level[a] >= 2 ? `<button data-wall class="wall">${ICONS.wall}</button>` : '') +
+      (G.building[a] === B_CHURCH && G.level[a] >= 3 ? `<button data-crusade class="up">${ICONS.cross}</button>` : '') +
       `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>`;
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
@@ -348,6 +357,11 @@ const UI = {
     if (wallBtn) {
       this.updateWallButton(wallBtn, a, false);
       wallBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.startWall(a); });
+    }
+    const crusadeBtn = el.querySelector('[data-crusade]');
+    if (crusadeBtn) {
+      this.updateCrusadeButton(crusadeBtn, a, false);
+      crusadeBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.crusade(a); });
     }
     el.querySelector('[data-x]').addEventListener('click', () => {
       this.closeActionMenu();
@@ -565,6 +579,9 @@ const UI = {
       }
       if (G.building[i] === B_CHURCH) {
         txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
+        const cr = G.crusadeOf(a);
+        if (cr) txt += ` · ✝️ croisade en cours : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance encore ${Math.ceil((cr.end - G.tick) / CONFIG.TICKS_PER_SECOND)} s`;
+        else if (G.level[a] >= 3 && o === G.human.id) txt += ` · ✝️ clique pour lancer une croisade (💰 ${fmt(CONFIG.CRUSADE_COST)})`;
         G.roads();
         const link = G.roadChurches.get(a);
         if (link) txt += ` · 🛤️ reliée ${link.port !== undefined ? 'à la route d\'un port' : 'à une ville'} : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s`;
@@ -1058,7 +1075,29 @@ const UI = {
     for (const [box, text] of [[this.actionMenu, false], [this.upgradeBox, true]]) {
       const btn = box && box.buildingAnchor !== undefined && box.querySelector('[data-wall]');
       if (btn) this.updateWallButton(btn, box.buildingAnchor, text);
+      const cb = box && box.buildingAnchor !== undefined && box.querySelector('[data-crusade]');
+      if (cb) this.updateCrusadeButton(cb, box.buildingAnchor, text);
     }
+  },
+
+  // --- Croisade religieuse (cathédrale) ---
+  // Bouton « Croisade » : actif si aucune croisade n'est en cours depuis cette cathédrale et qu'on a assez d'or
+  updateCrusadeButton(btn, a, text) {
+    const G = Game, h = G.human, cur = G.crusadeOf(a), err = G.crusadeError(h, a);
+    const left = cur ? Math.ceil((cur.end - G.tick) / CONFIG.TICKS_PER_SECOND) : 0;
+    btn.disabled = !!err;
+    btn.title = cur ? `Croisade en cours : encore ${left} s` : err ||
+      `Croisade religieuse (💰 ${fmt(CONFIG.CRUSADE_COST)}) : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance pendant ${CONFIG.CRUSADE_TIME} s`;
+    if (text) {
+      const html = cur ? `✝️ Croisade : ${left} s` : `✝️ Croisade (💰 ${fmt(CONFIG.CRUSADE_COST)})`;
+      if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
+    }
+  },
+
+  crusade(a) {
+    const G = Game, err = G.startCrusade(G.human, a);
+    if (err) return this.log(err, 'warn');
+    this.log(`✝️ Croisade religieuse lancée : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance pendant ${CONFIG.CRUSADE_TIME} s ! Tes prêcheurs vont convertir les terres voisines bien plus vite.`, 'good');
   },
 
   // --- Murs d'une ville (château de niveau 2 ou plus) ---
