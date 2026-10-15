@@ -517,6 +517,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.5** : ⚡ un territoire désorganisé se prend 30 % plus vite
 - **v0.91.4** : 🐎 une grosse armée est moins ralentie par sa taille (assauts, marches et défenseurs) : 1000 soldats avancent 50 % plus vite qu'avant, 3000 soldats 75 % plus vite (le ralentissement est deux fois plus faible)
 - **v0.91.3** : ⛺ détruire un avant-poste ennemi reprend d'un coup toute la zone qu'il avait prise (si elle n'est pas reliée à son royaume ni tenue par une ville ou un port fortifié)
 - **v0.91.2** : 🎥 la caméra se déplace aussi au clavier, avec ZQSD (WASD sur un clavier anglais) ou les flèches
