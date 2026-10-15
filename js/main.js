@@ -630,7 +630,7 @@ const UI = {
     const G = Game, h = G.human;
     const list = G.attacks.filter(a => !a.done && (a.attacker === h.id || a.target === h.id));
     const boats = G.expeditions.filter(e => !e.done && e.pid === h.id); // nos transports en mer
-    const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '')).join(',') +
+    const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '') + (G.isPreparing(a) ? 'p' : '')).join(',') +
       '|' + boats.map(e => e.id + (e.home !== undefined ? 'h' : '')).join(',');
     const box = $('attacks');
     if (key !== this.attacksKey) {
@@ -661,7 +661,9 @@ const UI = {
         }
         return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} t'attaque</span>` +
           `<b data-troops="${a.id}"></b>` +
-          `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cet assaut">🛡️ Défendre</button></div>`;
+          (G.isPreparing(a) // (pas encore entrée sur nos terres : on ne peut pas encore la contrer)
+            ? `<button data-defend="${a.id}" disabled title="Elle marche encore sur ses terres : tu pourras la contrer dès qu'elle entre sur les tiennes">🛡️ Défendre</button></div>`
+            : `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cet assaut">🛡️ Défendre</button></div>`);
       }).join('') + boats.map(e => {
         // Transport en mer : débarquement, renforts vers un avant-poste, ou retour au port
         const what = e.home !== undefined ? `${ICONS.anchor} retour au port`
@@ -740,6 +742,11 @@ const UI = {
     const G = Game, h = G.human;
     // Château isolé ou avant-poste : les défenseurs ne peuvent pas le rejoindre
     const target = G.attacks.find(x => x.id === attackId && !x.done);
+    // L'armée marche encore sur ses terres : on ne peut l'affronter qu'une fois entrée sur les nôtres
+    if (target && G.isPreparing(target)) {
+      return this.log(`⏳ L'armée ${G.deName(G.players[target.attacker].name)} marche encore sur ses terres : tes défenseurs ` +
+        `pourront l'affronter dès qu'elle entre sur les tiennes (dans ${Math.ceil((target.startTick - G.tick) / CONFIG.TICKS_PER_SECOND)} s).`, 'warn');
+    }
     if (target && G.defendWait(target) > 0) {
       return this.log(`⏳ Tes défenseurs se regroupent : prochains renforts dans ${Math.ceil(G.defendWait(target))} s.`, 'warn');
     }

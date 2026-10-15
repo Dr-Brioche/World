@@ -121,7 +121,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      chaque clic montre le suivant).
    - **Défendre** : quand un assaut te vise, sa barre en bas de l'écran montre les soldats que l'attaquant garde
      **en réserve** chez lui, et entre parenthèses ceux qu'il a envoyés (ex. « réserve 54 (740 envoyés) »).
-     Clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
+     Dès que l'armée **entre sur tes terres** (pas avant : pendant sa marche chez elle, tes défenseurs n'iront jamais
+     l'attendre en terre ennemie, et le bouton **🛡️ Défendre** reste grisé), clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
      à la rencontre de l'ennemi par le **chemin le plus rapide** de tes terres (on voit leur bannière 🛡 avancer, et
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
@@ -423,6 +424,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.78.1** : 🛡️ on ne peut envoyer des défenseurs contre un assaut qu'une fois qu'il est entré sur nos terres (fini les défenseurs qui partent l'attendre en terre ennemie pendant sa marche) ; les bots aussi
 - **v0.78** : ⛪ une église pas trop loin d'une route de port (10 cases) s'y relie par un petit chemin, et une église pas trop loin d'une ville (25 cases) est reliée à elle : reliée, elle rapporte +2 💰 toutes les 10 s (un port seul, sans ville, ne crée pas de chemin)
 - **v0.77.4** : 🧤 la souris est une petite main médiévale sur la carte · 🗡️ l'épée n'apparaît plus que sur les cibles qu'on peut vraiment attaquer (château ennemi atteignable, armée ennemie…)
 - **v0.77.3** : 📊 la jauge des soldats affiche simplement « ⚔️ 150 / 300 » (sans le chiffre en double), puis ce qui est en garnison, aux avant-postes ou en mer
