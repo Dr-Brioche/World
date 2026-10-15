@@ -433,8 +433,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - On ne peut **pas bâtir de château à moins de 12 cases d'un avant-poste** (cercle rouge) : il faut d'abord
      conquérir des terres autour de lui.
    - Les ennemis peuvent **viser l'avant-poste** pour le détruire (après un **siège de 10 s**, pendant lequel
-     ses soldats stationnés et des renforts peuvent encore le défendre) ; sans lui, ses terres sont à nouveau
-     un petit morceau isolé, facile à encercler.
+     ses soldats stationnés et des renforts peuvent encore le défendre). Détruit, il emporte **toute sa zone** avec lui :
+     les terres qu'il avait prises passent **d'un coup** à celui qui l'a détruit (sauf si cette zone est déjà reliée au
+     royaume, ou tenue par une ville ou un port fortifié).
    - Une expédition en mer **ne peut pas être interceptée** : tu es prévenu quand elle vise ta côte
      (une petite zone rouge marque l'endroit du débarquement), et tu l'attaques quand elle accoste.
 
@@ -516,6 +517,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.3** : ⛺ détruire un avant-poste ennemi reprend d'un coup toute la zone qu'il avait prise (si elle n'est pas reliée à son royaume ni tenue par une ville ou un port fortifié)
 - **v0.91.2** : 🎥 la caméra se déplace aussi au clavier, avec ZQSD (WASD sur un clavier anglais) ou les flèches
 - **v0.91.1** : 🌾 l'expansion en terre libre (la première phase de la partie) va 30 % plus vite : les armées avancent 30 % plus vite et chaque case libre coûte 30 % de soldats en moins
 - **v0.91** : ✝️ la conversion monte jusqu'à 5000 d'écart de Croyance (au lieu de 1000), avec une accélération de plus en plus faible : 5 cases par seconde à 1000, 7 à 2000, 8,5 à 3000, 10 à 5000 (le maximum) ; plusieurs croisades en même temps servent donc encore

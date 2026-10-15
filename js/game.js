@@ -3627,14 +3627,27 @@ const GameRules = {
     else if (d.isHuman) UI.log(`${what[2]} ${p.name} assiège ${what[1]} ! Il tombe dans ${secs} s : envoie vite des défenseurs !`, 'warn', p);
   },
 
-  // Fin du siège d'un avant-poste : il est détruit (ses terres passent à l'attaquant), et l'assaut s'arrête
+  // Fin du siège d'un avant-poste : il est détruit, et l'assaut s'arrête. Toute la zone qu'il avait prise (son
+  // morceau de territoire, s'il n'est pas relié au royaume ni tenu par une ville ou un port fortifié) passe
+  // d'un coup à celui qui l'a détruit.
   takeOutpost(a, t) {
     const c = this.anchor[t];
     // (ses soldats qui attendaient là sont vaincus avec lui)
     const o = this.outposts.get(c), d = this.players[a.target], lost = Math.floor((o ? o.stationed : 0) + this.garrison[c]);
     if (d.isHuman && lost >= 1) UI.log(`⛺ Ton avant-poste est détruit : ses ${fmt(lost)} soldats ont été vaincus.`, 'warn', this.players[a.attacker]);
     a.troops = Math.max(0, a.troops - this.tileCost(a, t));
+    // la zone de l'avant-poste : son morceau de territoire (une tête de pont, pas le cœur du royaume)
+    const r = this.regions(true), k = r.comp[c];
+    const zone = k >= 0 && r.owner[k] === a.target && r.anyOutpost[k] && !r.held[k] && !r.heart[k]
+      ? Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k])) : [];
     this.setOwner(t, a.attacker);
+    let taken = 0;
+    for (const j of zone) if (this.owner[j] === a.target) { this.setOwner(j, a.attacker); taken++; }
+    if (taken >= 1) {
+      const p = this.players[a.attacker];
+      if (p.isHuman) UI.log(`⛺ Avant-poste détruit : les ${fmt(taken)} cases de sa zone sont à toi !`, 'good', d);
+      else if (d.isHuman) UI.log(`⛺ Les ${fmt(taken)} cases de la zone de ton avant-poste passent à ${p.name}.`, 'warn', p);
+    }
     this.onTargetTaken(a, B_OUTPOST, false);
     this.removeBuilding(c);
     return this.endAttack(a);
