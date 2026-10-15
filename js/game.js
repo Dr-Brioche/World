@@ -2831,11 +2831,15 @@ const GameRules = {
     return Math.ceil(a.prepTicks / TPS);
   },
 
-  // D'où part une armée de pid vers le point (x, y) : son avant-poste (source), sinon sa ville (château) la plus
-  // proche de ce point, sinon le cœur de son royaume. Renvoie le centre, en cases.
+  // D'où part une armée de pid vers le point (x, y) : son avant-poste (source), sinon sa ville (château) d'où
+  // l'on arrive LE PLUS VITE à ce point en marchant (relief, fleuves, détours compris : voir fastestCity), sinon
+  // (aucune ville n'y mène à pied) la plus proche à vol d'oiseau, sinon le cœur de son royaume. Renvoie le centre.
   departurePoint(pid, x, y, source) {
     const W = this.W, mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
     if (source >= 0 && this.building[source] === B_OUTPOST) return mid(source);
+    const start = Math.floor(y) * W + Math.floor(x), o = this.owner[start];
+    const fast = this.fastestCity(pid, start, this.castles.filter(c => this.owner[c] === pid && this.isBase(c)), o !== pid ? o : -2);
+    if (fast >= 0) return mid(fast);
     // (une ville sur la même terre que le point visé passe avant une ville de l'autre côté de la mer)
     const land = this.landComp(), here = land[Math.floor(y) * W + Math.floor(x)];
     let best = null, bestD = Infinity;
@@ -3120,6 +3124,45 @@ const GameRules = {
     return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, k };
   },
 
+  // La ville (parmi cands) que des soldats de pid rejoignent LE PLUS VITE en marchant depuis la case start (ou,
+  // ce qui revient au même, d'où ils arrivent le plus vite à start) : on compte le vrai chemin, comme walkRoute
+  // (chaque case coûte son terrain : les fleuves, montagnes et détours rallongent), pas la distance à vol d'oiseau.
+  // Ils marchent sur leurs terres ; si enemy est donné (un assaut), aussi sur les siennes, mais
+  // MARCH_OWN_LAND_BONUS fois plus lentement. Renvoie -1 si aucune ville n'y mène à pied (de l'autre côté de la mer).
+  // (gardé en mémoire une seconde : les bots et les aperçus le demandent souvent)
+  fastestCity(pid, start, cands, enemy = -2) {
+    const N = this.N, W = this.W, own = this.owner, TPS = CONFIG.TICKS_PER_SECOND;
+    if (start < 0 || start >= N || !cands.length) return -1;
+    if (cands.length === 1) return cands[0];
+    if (!this.cityCache || this.cityCacheTick + TPS <= this.tick) { this.cityCache = new Map(); this.cityCacheTick = this.tick; }
+    const key = start + ':' + pid + ':' + enemy + ':' + cands.join(',');
+    if (this.cityCache.has(key)) return this.cityCache.get(key);
+    const goal = new Map(); // case → ville
+    for (const c of cands) for (const j of this.footprint(c, this.building[c])) goal.set(j, c);
+    if (!this.cityBuf || this.cityBuf.seen.length !== N) this.cityBuf = { dist: new Float64Array(N), seen: new Int32Array(N), stamp: 0 };
+    const B = this.cityBuf, stamp = ++B.stamp, heap = new MinHeap(), slow = CONFIG.MARCH_OWN_LAND_BONUS;
+    B.seen[start] = stamp; B.dist[start] = 0;
+    heap.push(0, start);
+    let found = -1;
+    while (heap.size) {
+      const [d, i] = heap.pop();
+      if (B.seen[i] === -stamp) continue;
+      B.seen[i] = -stamp;
+      if (goal.has(i)) { found = goal.get(i); break; }
+      const x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+        if (n < 0 || B.seen[n] === -stamp || !this.isLand(n)) continue;
+        const o = own[n], terrain = Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        const cost = o === pid ? terrain : o === enemy && enemy >= 0 ? terrain * slow : -1;
+        if (cost < 0) continue;
+        const nd = d + cost;
+        if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
+      }
+    }
+    this.cityCache.set(key, found);
+    return found;
+  },
+
   // Chemin le plus rapide (Dijkstra) de la case from à la case to, en ne passant que par les terres de pid
   // (to elle-même peut être à l'ennemi : c'est le front). Renvoie la liste des cases, ou null.
   // (les tableaux sont gardés d'une fois sur l'autre : la carte peut être très grande)
@@ -3171,13 +3214,17 @@ const GameRules = {
     return { x: a.toX, y: a.toY };
   },
 
-  // D'où partent les défenseurs de pid : l'avant-poste attaqué, sinon son château le plus proche du combat
-  // (pas un château isolé), sinon le cœur de son royaume
+  // D'où partent les défenseurs de pid : l'avant-poste attaqué, sinon son château d'où l'on arrive le plus vite
+  // au combat en marchant sur ses terres (pas un château isolé ; voir fastestCity), sinon le plus proche à vol
+  // d'oiseau, sinon le cœur de son royaume
   defenseOrigin(pid, a, src) {
     const W = this.W, mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
     if (src >= 0) return mid(src);
     // (armée bloquée dans ses châteaux isolés : les défenseurs sortent du château attaqué)
     if (a.targetCastle >= 0 && this.building[a.targetCastle] === B_CASTLE && this.troopsInCastles(pid)) return mid(a.targetCastle);
+    const goal = this.defenseGoal(a);
+    const fast = this.fastestCity(pid, Math.floor(goal.y) * W + Math.floor(goal.x), this.castles.filter(c => this.owner[c] === pid && this.isBase(c)));
+    if (fast >= 0) return mid(fast);
     const to = this.attackFront(a);
     let best = null, bestD = Infinity;
     for (const c of this.castles) {
@@ -3202,7 +3249,10 @@ const GameRules = {
       let to = null, best = Infinity;
       if (src >= 0 && this.owner[src] === pid && this.building[src] === B_OUTPOST) to = mid(src);
       else {
-        for (const c of this.castles) {
+        // (la ville la plus rapide à rejoindre à pied, sinon la plus proche à vol d'oiseau)
+        const fast = this.fastestCity(pid, Math.floor(from.y) * W + Math.floor(from.x), this.castles.filter(c => this.owner[c] === pid));
+        if (fast >= 0) to = mid(fast);
+        else for (const c of this.castles) {
           if (this.owner[c] !== pid) continue;
           const m = mid(c), d = (m.x - from.x) ** 2 + (m.y - from.y) ** 2;
           if (d < best) { best = d; to = m; }

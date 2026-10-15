@@ -105,7 +105,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    impossible de lancer un assaut depuis les terres d'un allié.
 
    **⚔️ Le déroulement d'un assaut**
-   - **La marche (sur tes terres)** : ton armée part de **ta cité (château) la plus proche** de la cible
+   - **La marche (sur tes terres)** : ton armée part de **ta cité (château) d'où elle arrive le plus vite** à la cible
+     (le vrai trajet à pied compte : fleuves, montagnes et détours, pas la distance à vol d'oiseau)
      (ou de ton avant-poste) et **marche jusqu'à ta frontière** par le **chemin le plus rapide** de tes terres ;
      elle entre chez l'ennemi par le meilleur passage **depuis cette ville** (et pas forcément par le bout de frontière
      le plus proche de la cible, qui l'obligerait à traverser tout ton royaume)
@@ -138,13 +139,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (les soldats de l'assaut). Le reste (réserve de l'attaquant…) se voit sur la carte, sous son nom.
      Dès que l'armée **entre sur tes terres** (pas avant : pendant sa marche chez elle, tes défenseurs n'iront jamais
      l'attendre en terre ennemie, et le bouton **🛡️ Défendre** reste grisé), clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
-     pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus proche** et marchent
+     pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus rapide à pied** (pas forcément le plus proche à vol d'oiseau) et marchent
      à la rencontre de l'ennemi par le **chemin le plus rapide** de tes terres (on voit leur bannière 🛡 avancer, et
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
      groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Il faut attendre **5 s** entre deux envois
      contre un même assaut (le temps de regrouper les soldats).
      Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **font
-     demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus proche, comme les bateaux
+     demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus rapide à rejoindre, comme les bateaux
      de renfort (on voit leur bannière ↩ revenir) : tu ne les récupères qu'à leur arrivée.
    - **La garnison** : chaque château a ses propres défenseurs (beaucoup plus nombreux selon son niveau).
      Ils attendent l'ennemi **derrière la muraille** et n'entrent en jeu qu'au **siège**, quand l'armée arrive au pied
@@ -508,6 +509,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90.4** : 🧭 assauts, défenseurs et soldats qui rentrent partent de (ou rentrent à) la ville d'où le trajet à pied est le plus rapide, en comptant les fleuves, le relief et les détours, et plus la ville la plus proche à vol d'oiseau
 - **v0.90.3** : 💰 le port royal (niveau 3) coûte 2000 (au lieu de 1200)
 - **v0.90.2** : 💰 la grande caserne (niveau 3) coûte 2500 (au lieu de 1600), mais agrandit bien plus l'armée maximum : +350 soldats (au lieu de +200)
 - **v0.90.1** : 🛤️ une église a un chemin vers chaque ville proche (et vers la route d'un port), 3 au plus : une nouvelle ville bâtie près d'elle ajoute un chemin au lieu de remplacer l'ancien ; chaque chemin rapporte +2 💰 et +50 % de Croyance
