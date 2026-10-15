@@ -382,7 +382,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
      | 2. Grand port | +200 % | 1 | **oui** | 💰 500 |
-     | 3. Port royal | +122 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 1200 |
+     | 3. Port royal | +122 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 2000 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
@@ -508,6 +508,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90.3** : 💰 le port royal (niveau 3) coûte 2000 (au lieu de 1200)
 - **v0.90.2** : 💰 la grande caserne (niveau 3) coûte 2500 (au lieu de 1600), mais agrandit bien plus l'armée maximum : +350 soldats (au lieu de +200)
 - **v0.90.1** : 🛤️ une église a un chemin vers chaque ville proche (et vers la route d'un port), 3 au plus : une nouvelle ville bâtie près d'elle ajoute un chemin au lieu de remplacer l'ancien ; chaque chemin rapporte +2 💰 et +50 % de Croyance
 - **v0.90** : ⏩ partie accélérée : au menu, « Vitesse de la partie : Accélérée » fait tout aller 2 fois plus vite (le jeu fait 2 tours au lieu d'un) ; le chrono affiche « (x2) »
