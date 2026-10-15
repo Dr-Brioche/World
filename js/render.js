@@ -313,16 +313,14 @@ const Render = {
     const ctx = this.ctx, G = Game;
     // La bannière du royaume attaquant, avec deux épées croisées
     this.drawBannerImage(G.players[a.attacker], bx + 14, by, 46);
-    ctx.font = '13px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('⚔️', bx + 2, by - 40);
+    Icons.draw(ctx, 'swords', bx + 2, by - 40, 15, '#f3e3bf');
     ctx.font = '700 12px Georgia, serif';
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(20,12,4,0.85)';
     ctx.fillStyle = '#fff';
-    ctx.strokeText(label, bx + 16, by - 52);
-    ctx.fillText(label, bx + 16, by - 52);
+    Icons.text(ctx, label, bx + 16, by - 52);
     // Défenseurs engagés contre cet assaut
     const defenders = a.defenders + (a.garrison || 0);
     if (a.target >= 0 && defenders >= 1) {
@@ -332,8 +330,7 @@ const Render = {
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = '#ffe2a8';
-      ctx.strokeText('🛡 ' + fmt(defenders), sx, sy - 40);
-      ctx.fillText('🛡 ' + fmt(defenders), sx, sy - 40);
+      Icons.text(ctx, '🛡 ' + fmt(defenders), sx, sy - 40);
     }
     // Zone cliquable (le défenseur clique dessus pour envoyer ses soldats)
     this.bannerHits.push({ id: a.id, x: bx + 20, y: by - 24 });
@@ -553,8 +550,7 @@ const Render = {
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgba(20,12,4,0.85)';
         ctx.fillStyle = '#fff';
-        ctx.strokeText('🛡 ' + fmt(r.troops), x, y - 22);
-        ctx.fillText('🛡 ' + fmt(r.troops), x, y - 22);
+        Icons.text(ctx, '🛡 ' + fmt(r.troops), x, y - 22);
       }
     }
   },
@@ -604,8 +600,7 @@ const Render = {
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = '#fff';
-      ctx.strokeText('↩ ' + fmt(r.troops), x, y - 20);
-      ctx.fillText('↩ ' + fmt(r.troops), x, y - 20);
+      Icons.text(ctx, '↩ ' + fmt(r.troops), x, y - 20);
     }
   },
 
@@ -667,17 +662,20 @@ const Render = {
     ctx.stroke();
     ctx.setLineDash([]);
     this.drawBannerImage(G.players[pid], x + 12, y - 2, 30);
-    ctx.font = '20px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(icon, x, y);
+    // (la nef ou le radeau, sur un petit rond sombre pour bien se voir sur l'eau)
+    ctx.beginPath();
+    ctx.arc(x, y, 11, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(20,12,4,0.6)';
+    ctx.fill();
+    Icons.draw(ctx, icon, x, y, 18, '#f3e3bf');
     ctx.font = '700 12px Georgia, serif';
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(20,12,4,0.85)';
     ctx.fillStyle = '#fff';
     if (troops !== null) { // (un radeau de traversée n'emporte pas de soldats de l'armée)
-      ctx.strokeText('⚔ ' + fmt(troops), x, y - 18);
-      ctx.fillText('⚔ ' + fmt(troops), x, y - 18);
+      Icons.text(ctx, '⚔ ' + fmt(troops), x, y - 18);
     }
     return { x, y };
   },
@@ -787,8 +785,7 @@ const Render = {
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(20,12,4,0.85)';
     ctx.fillStyle = '#ffe9a8';
-    ctx.strokeText(txt, x, y);
-    ctx.fillText(txt, x, y);
+    Icons.text(ctx, txt, x, y);
     ctx.font = f;
   },
 
@@ -799,7 +796,7 @@ const Render = {
     const a = ready ? imgAlpha : 0;
     if (a < 1) {
       ctx.globalAlpha = 1 - a;
-      ctx.fillText(BUILDINGS[type].icon, px, py);
+      Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]));
       ctx.globalAlpha = 1;
     }
     if (a > 0) {
@@ -827,7 +824,7 @@ const Render = {
       ctx.font = `${Math.max(16, Math.min(20 * half, s * half * 2))}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(BUILDINGS[type].icon, px, py);
+      Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]));
     }
     if (imgAlpha > 0) {
       const w = size * s, h = w * img.naturalHeight / img.naturalWidth;
@@ -894,7 +891,7 @@ const Render = {
     // De loin : l'icône et le niveau en chiffres romains
     if (imgAlpha < 1) {
       ctx.globalAlpha = 1 - imgAlpha;
-      ctx.fillText(BUILDINGS[type].icon, px, py);
+      Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]));
       if (lvl > 1 && s >= 5) {
         const f = Math.max(8, Math.min(14, s * 0.8));
         ctx.font = `700 ${f}px Georgia, serif`;
@@ -902,8 +899,7 @@ const Render = {
         ctx.strokeStyle = 'rgba(20,12,4,0.85)';
         ctx.fillStyle = '#ffe9a8';
         const roman = ['', 'I', 'II', 'III'][lvl];
-        ctx.strokeText(roman, px + s * half * 1.2, py - s * half * 0.8);
-        ctx.fillText(roman, px + s * half * 1.2, py - s * half * 0.8);
+        Icons.text(ctx, roman, px + s * half * 1.2, py - s * half * 0.8);
       }
       ctx.globalAlpha = 1;
     }
@@ -937,8 +933,7 @@ const Render = {
       ctx.globalAlpha = t < 0.7 ? 1 : (1 - t) / 0.3;        // ...puis s'efface
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = f.color;
-      ctx.strokeText(f.text, x, y);
-      ctx.fillText(f.text, x, y);
+      Icons.text(ctx, f.text, x, y);
     }
     ctx.globalAlpha = 1;
   },
@@ -1185,14 +1180,12 @@ const Render = {
       ctx.fillStyle = p.isHuman ? '#ffe9a8' : '#fff';
       let label = !p.isHuman && G.areAllied(p.id, G.human.id) ? '🤝 ' + p.name : p.name;
       if (G.isTraitor(p)) label = '🗡️ ' + label;
-      ctx.strokeText(label, cx, cy - size * 0.45);
-      ctx.fillText(label, cx, cy - size * 0.45);
+      Icons.text(ctx, label, cx, cy - size * 0.45);
       // La bannière du royaume, à gauche de son nom
       const tw = ctx.measureText(label).width;
       this.drawBannerImage(p, cx - tw / 2 - size * 0.55, cy + size * 0.6, size * 1.9);
       ctx.font = `600 ${size * 0.75}px Georgia, serif`;
-      ctx.strokeText('⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
-      ctx.fillText('⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
+      Icons.text(ctx, '⚔ ' + fmt(p.troops), cx, cy + size * 0.55);
     }
 
     this.drawCastleAssaultPreview(ox, oy);
@@ -1229,6 +1222,6 @@ const Render = {
     ctx.fillStyle = '#2b1d0e';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(tip.text, x + 8, y + h / 2 + 1);
+    Icons.text(ctx, tip.text, x + 8, y + h / 2 + 1, false);
   },
 };

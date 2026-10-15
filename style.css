@@ -358,7 +358,8 @@ button:hover { background: #e8d6a8; }
 .quickMenu button.up { color: var(--wood); }
 .quickMenu button svg { display: block; margin: auto; width: 20px; height: 20px; }
 /* icônes dessinées dans les menus et les boutons (voir ICONS dans main.js) */
-.ico { width: 16px; height: 16px; vertical-align: -3px; color: var(--wood); }
+.ico { width: 1.2em; height: 1.2em; vertical-align: -0.25em; }
+.icotext { white-space: normal; }
 button:disabled .ico { opacity: 0.6; }
 .actionMenu button:disabled { opacity: 0.5; cursor: not-allowed; }
 .actionMenu small { color: var(--danger); font-size: 11px; margin: -2px 4px 2px; }
