@@ -102,6 +102,7 @@ const CONFIG = {
   WAR_EFFECT_TIME: 30,
   POST_WAR_MALUS: 0.25,
   RALLY_BONUS: 0.25,
+  DEFENSE_RALLY_TIME: 15, // repousser un assaut galvanise aussi le défenseur (+25 % de soldats produits) pendant 15 s
   // Ces effets s'additionnent (chaque victoire ou défaite compte 30 s), jusqu'à ces limites :
   POST_WAR_MAX: 0.75,  // au pire -75 % de soldats produits
   RALLY_MAX: 1,        // au mieux +100 %

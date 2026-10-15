@@ -787,8 +787,10 @@ const Render = {
   // Petite étiquette au-dessus d'un bâtiment : garnison, soldats stationnés, temps de construction
   drawBuildingLabel(a, type, x, y) {
     const G = Game, ctx = this.ctx, parts = [];
-    if (G.garrison[a] >= 1) parts.push('🛡️ ' + fmt(G.garrison[a]));
     const o = type === B_OUTPOST ? G.outposts.get(a) : null;
+    // (avant-poste en construction : pas de garnison, juste des soldats affaiblis qui bâtissent)
+    if (G.builders(a) >= 1) parts.push(`⚔ ${fmt(G.builders(a))} affaiblis`);
+    else if (G.garrison[a] >= 1) parts.push('🛡️ ' + fmt(G.garrison[a]));
     if (o && G.outpostReady(a) && o.stationed >= 1) parts.push('⚔ ' + fmt(o.stationed));
     if (o && !G.outpostReady(a)) parts.push(`🏗️ ${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s`);
     if (!parts.length) return;

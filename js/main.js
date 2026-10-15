@@ -516,7 +516,7 @@ const UI = {
       if (G.building[i] === B_OUTPOST) {
         const a = G.anchor[i], o = G.outposts.get(a);
         txt += G.outpostReady(a) ? ` · 🛡️ ${fmt(G.garrison[a])} en garnison (fixe) · ⚔️ ${fmt(o.stationed)} stationnés (peuvent attaquer)`
-          : ` · 🛡️ ${fmt(G.garrison[a])} soldats sur place`;
+          : ` · ⚔️ ${fmt(G.garrison[a])} soldats affaiblis (pas encore de garnison : ils comptent pour 1, pas 3)`;
         txt += G.outpostReady(a) ? ' · défense +100 % autour · base pour attaquer depuis la côte'
           : ` · 🏗️ en construction (${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s) : ` +
             `ses soldats bâtissent et ne peuvent rien faire d'autre (pas d'attaque depuis lui), ` +
