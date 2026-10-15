@@ -156,6 +156,7 @@ const GameRules = {
       const a = this.anchor[i];
       for (const j of this.footprint(a, this.building[a])) if (this.owner[j] !== pid) this.setOwner(j, pid);
     }
+    if (old >= 0 && pid >= 0) this.players[old].lastHitBy = pid; // (pour savoir qui l'a anéanti, voir outpostsOnly)
     if (old >= 0 && this.players[old].tiles === 0) this.eliminate(old, pid);
   },
 
@@ -3812,6 +3813,31 @@ const GameRules = {
     else if (p.isHuman) UI.log(`🏳️ Ton assaut a échoué : ${d.name} reprend les terres de ton passage (${fmt(back)} cases).`, 'warn', d);
   },
 
+  // Le royaume p n'a-t-il plus que des avant-postes ? Plus aucune ville ni port fortifié, et toutes ses terres sont
+  // dans des zones d'avant-poste (ses terres d'origine sont perdues).
+  outpostsOnly(p) {
+    if (!p.bCount[B_OUTPOST] || this.strongholds(p.id, false).length) return false;
+    const r = this.regions(true);
+    let any = false;
+    for (let k = 0; k < r.size.length; k++) {
+      if (r.owner[k] !== p.id) continue;
+      if (!r.anyOutpost[k]) return false;
+      any = true;
+    }
+    return any;
+  },
+
+  // Un royaume qui n'a plus que des avant-postes est perdu : il est anéanti (par celui qui lui a pris ses dernières
+  // terres), ses avant-postes et leurs bâtiments sont supprimés, et leurs zones redeviennent des terres libres.
+  loseKingdom(p) {
+    const by = p.lastHitBy !== undefined && this.players[p.lastHitBy].alive ? p.lastHitBy : -1;
+    UI.log(`⛺ ${p.name} n'a plus que des avant-postes : son royaume est perdu, ses avant-postes sont abandonnés.`, p.isHuman ? 'warn' : '', p);
+    this.eliminate(p.id, by);
+    for (const e of this.expeditions) if (e.pid === p.id) e.done = true; // (ses bateaux en mer sont perdus)
+    for (const a of this.buildingTiles.slice()) if (this.owner[a] === p.id) this.removeBuilding(a);
+    for (let i = 0; i < this.N; i++) if (this.owner[i] === p.id) this.setOwner(i, -1);
+  },
+
   eliminate(id, by) {
     const p = this.players[id];
     if (!p.alive) return;
@@ -3998,6 +4024,8 @@ const GameRules = {
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
     // (le découpage n'est refait que si l'un d'eux a vraiment englobé des terres)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive) this.captureEnclaves(p.id);
+    // Toutes les 2 secondes : un royaume qui n'a plus que des avant-postes est perdu (voir outpostsOnly)
+    if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && this.outpostsOnly(p)) this.loseKingdom(p);
     // Le joueur vient de perdre le lien entre son territoire et ses châteaux : on le prévient (une fois)
     const h = this.human;
     if (this.tick % (2 * TPS) === 0 && h && h.alive) {
