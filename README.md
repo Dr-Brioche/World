@@ -37,6 +37,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
    - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
+   📏 **Taille de la carte** (pour les cartes aléatoires, au format 16:9) : **Petite** (500 x 281 cases), **Moyenne**
+   (750 x 422) ou **Grande** (1000 x 562). Une grande carte a plus d'îlots, de fleuves et de lacs, et une partie plus longue.
    🗺️ **Cartes prédéfinies** (les vraies cartes, avec un peu de hasard dans les forêts et les côtes) :
    - **Monde** 🌍 (1080 x 408 cases) : la **vraie carte du monde**, bien plus grande (on dézoome beaucoup) : les continents, les grandes
      îles, les mers intérieures (mer Noire, Caspienne, Grands Lacs), les **chaînes de montagnes** (Rocheuses, Andes,
@@ -51,8 +53,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Le Danube (après Belgrade), le Dniepr (après Kiev) et le Don inférieur sont de grands fleuves infranchissables ;
      le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie. 3 royaumes rivaux de plus.
      ⚠️ C'est une très grande carte : la partie est longue, et le jeu peut ralentir un peu sur un ordinateur modeste.
-   Sur les cartes prédéfinies, plus grandes, les **terres libres se prennent plus vite et coûtent moins de soldats**
-   (x2 environ sur la carte Monde, x4 en Europe) : sinon la conquête n'en finirait pas. Les combats ne changent pas.
+   Les cartes prédéfinies ont leur propre taille. **Toutes les cartes ont les mêmes règles** : une plus grande carte
+   demande juste plus de temps.
    Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
    porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
 2. **Étends-toi** : clique **deux fois de suite** sur une terre libre voisine pour t'en emparer (le 1er clic prépare l'attaque,
@@ -442,6 +444,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.84** : 📏 choix de la taille de la carte avant la partie (cartes aléatoires) : Petite 500 x 281, Moyenne 750 x 422, Grande 1000 x 562 (format 16:9) ; plus d'îlots, de fleuves et de lacs sur les grandes, avec des reliefs plus étendus · ⚖️ toutes les cartes ont les mêmes règles de vitesse (fini le bonus des terres libres sur les cartes Monde et Europe : une grande carte prend juste plus de temps) · 🏝️ une capitale ne se fonde plus sur un îlot (terre d'au moins 600 cases)
 - **v0.83.1** : 🚀 départ plus rapide : l'élan de départ triple le recrutement et la conquête des terres libres (au lieu de +50 %), puis disparaît en 5 minutes : l'expansion va environ 2 fois plus vite (la moitié des terres prise en 3 minutes au lieu de 6)
 - **v0.83** : ⚡ assauts, marches et défenseurs 15 % plus rapides · 🧨 tu peux abandonner un avant-poste : tous ses soldats rentrent automatiquement par la mer (détruit par l'ennemi, ses soldats sont vaincus) · ⛪⚓ un moulin dans les zones d'un port et d'une église n'occupe plus qu'une place (celle du port en priorité) · 🏝️ les petits îlots ne disparaissent plus à la création de la carte, et il y a aussi des îlots moyens · ⚡ partie 2 fois plus fluide (les bots cherchent plus vite où construire)
 - **v0.82** : 🏰 un assaut part de ta ville (château) la plus proche de l'objectif, et entre chez l'ennemi par le meilleur passage depuis elle (plus besoin de traverser la moitié du royaume) · 🛡️ tes défenseurs suivent l'assaut qui avance et passent par tes terres (plus de ligne droite à travers celles de l'ennemi) · 🤖 les bots ne s'acharnent plus à plusieurs sur la même cible et se battent aussi entre eux (ils ne te visent plus en priorité quand il reste peu de royaumes) · 🗺️ les frontières des royaumes suivent aussi les côtes et les lacs · 🌄 le relief et les sols se voient mieux sous la couleur des royaumes

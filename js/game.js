@@ -11,7 +11,8 @@ const GameRules = {
 
   init(opts) {
     this.mapType = opts.mapType || 'normal';
-    const map = generateMap((Math.random() * 1e9) | 0, this.mapType);
+    this.mapSize = opts.mapSize || 'moyen';
+    const map = generateMap((Math.random() * 1e9) | 0, this.mapType, this.mapSize);
     this.map = map;
     this.W = map.W; this.H = map.H; this.N = map.N;
     this.terrain = map.terrain;
@@ -44,9 +45,6 @@ const GameRules = {
     this.roadsVersion = -1; this.walledPortsVersion = -1; this.slotVersion = -1; this.slotCache = null;
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
-    // Grande carte (Monde, Europe) : les terres libres se prennent plus vite et coûtent moins de soldats,
-    // sinon la partie n'en finirait pas (x1 sur les cartes aléatoires, jusqu'à x BIG_MAP_BOOST_MAX)
-    this.landBoost = Math.min(CONFIG.BIG_MAP_BOOST_MAX, Math.max(1, Math.sqrt(this.landCount / CONFIG.BIG_MAP_LAND)));
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
     this.pactsAllowed = opts.pacts !== false; // choisi dans le menu : pactes autorisés ou interdits
@@ -2378,10 +2376,9 @@ const GameRules = {
   // ce sont les soldats du défenseur qui rendent un assaut coûteux (voir fight).
   // Une armée en marche perd des hommes : un pourcentage de son effectif (TILE_LOSS_RATE par case, selon le
   // terrain), donc une grosse armée en perd plus qu'une petite ; au moins NEUTRAL_TILE_COST par case.
-  // (sur une grande carte, une terre libre coûte moins : voir landBoost)
   tileCost(a, t) {
     const loss = Math.max(CONFIG.NEUTRAL_TILE_COST, a.troops * CONFIG.TILE_LOSS_RATE);
-    return loss * TERRAIN_INFO[this.terrain[t]].cost / (a.target < 0 ? this.landBoost : 1);
+    return loss * TERRAIN_INFO[this.terrain[t]].cost;
   },
 
   // Défense de l'endroit où se trouve l'assaut : terrain + château (x0.5 si le défenseur est traître).
@@ -2879,7 +2876,7 @@ const GameRules = {
       speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_HEAVY));
     } else {
       speed = Math.max(CONFIG.MIN_ATTACK_SPEED, Math.sqrt(a.troops) * CONFIG.ATTACK_SPEED)
-        * this.earlyBoost() * this.landBoost; // élan de départ (et grande carte) : les terres libres se prennent plus vite
+        * this.earlyBoost(); // élan de départ : au début, les terres libres se prennent plus vite
     }
     // (on peut toujours garder de quoi prendre une montagne, sinon une petite armée resterait bloquée)
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
