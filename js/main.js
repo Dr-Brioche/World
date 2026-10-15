@@ -116,6 +116,7 @@ const UI = {
       name: $('name').value.trim() || 'Mon Royaume',
       banner: this.banner,
       difficulty: $('difficulty').value,
+      opponents: +$('opponents').value,
       mapType: $('mapType').value,
       mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
@@ -163,7 +164,8 @@ const UI = {
     const html = `${this.bannerImg(p)}<b>${escapeHtml(p.name)}</b>${G.areAllied(o, h.id) ? ' 🤝' : ''}` +
       ` · <span title="Soldats">👥 ${fmt(p.troops)}</span>` +
       types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
-      ` · <span title="Part des terres">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)} %</span>`;
+      ` · <span title="Part des terres">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)} %</span>` +
+      ` · <span title="Croyance">✝️ ${fmt(Math.round(G.faithOf(o)))}</span>`;
     // (on compare avec le dernier texte écrit : innerHTML, lui, a déjà vu ses emojis remplacés par des icônes)
     if (this.tipHtml !== html) { this.tipHtml = html; tip.innerHTML = html; }
     // toujours au même endroit : centrée juste sous la barre de nos infos, en haut de l'écran
@@ -171,6 +173,19 @@ const UI = {
     tip.style.left = (bar.left + bar.width / 2) + 'px';
     tip.style.top = (bar.bottom + 6) + 'px';
     tip.classList.remove('hidden');
+  },
+
+  // ✝️ Croyance face à un voisin ennemi, dans le classement : une bible verte si on convertit ses terres,
+  // rouge si c'est lui qui convertit les nôtres (rien sinon)
+  faithBadge(p) {
+    const G = Game, h = G.human;
+    if (p.isHuman || !h.alive) return '<span class="faithB"></span>';
+    const mine = Math.round(G.faithOf(h.id)), theirs = Math.round(G.faithOf(p.id));
+    const win = G.faithEdge(h.id, p.id) > 0, lose = G.faithEdge(p.id, h.id) > 0;
+    if (!win && !lose) return '<span class="faithB"></span>';
+    const title = `Croyance : toi ${mine}, ${p.name} ${theirs} : ` +
+      (win ? 'tes prêcheurs convertissent peu à peu ses terres' : 'ses prêcheurs convertissent peu à peu tes terres (bâtis ou améliore des églises !)');
+    return `<span class="faithB ${win ? 'good' : 'bad'}" title="${escapeHtml(title)}">📖</span>`;
   },
 
   // Petite image de la bannière d'un royaume, pour les messages et les listes
@@ -218,7 +233,8 @@ const UI = {
         (info.road ? `, ${road} : production des bâtiments reliés ${pct(info.roadBonus)}` : '');
     }
     if (type === B_CHURCH) {
-      return `${info.slots} ${info.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} autour d'elle` +
+      return `Croyance +${info.faith} (+${CONFIG.FAITH_ROAD_BONUS * 100} % si reliée à une route), ` +
+        `${info.slots} ${info.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} autour d'elle` +
         (info.castles ? `, ${info.castles} château${info.castles > 1 ? 'x' : ''} de plus dans le royaume` : '');
     }
     if (type === B_BARRACKS) {
@@ -247,9 +263,9 @@ const UI = {
       return txt;
     }
     if (type === B_CHURCH) {
-      return `zone plus grande, ${next.slots} moulins ou casernes autour d'elle (au lieu de ${cur.slots}), ` +
+      return `Croyance +${next.faith} (au lieu de +${cur.faith}), zone plus grande, ${next.slots} moulins ou casernes autour d'elle (au lieu de ${cur.slots}), ` +
         `${next.castles} château${next.castles > 1 ? 'x' : ''} de plus à construire dans le royaume ` +
-        '(les églises s\'additionnent)';
+        '(seule ta meilleure église compte pour les châteaux)';
     }
     if (type === B_BARRACKS) {
       return `soldats produits ${pct(next.troops / cur.troops - 1)}, bonus d'armée max ${pct(next.maxTroops / cur.maxTroops - 1)}, ` +
@@ -596,6 +612,7 @@ const UI = {
     $('gold').textContent = fmt(h.gold);
     this.refreshTroopGauge();
     $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + ' %';
+    $('faith').textContent = fmt(Math.round(G.faithOf(h.id)));
     // Durée de la partie (le temps de jeu : la pause l'arrête)
     const secs = Math.floor(G.tick / CONFIG.TICKS_PER_SECOND), hh = Math.floor(secs / 3600), mm = Math.floor(secs / 60) % 60;
     $('clock').textContent = (hh ? hh + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(secs % 60).padStart(2, '0');
@@ -633,7 +650,7 @@ const UI = {
         `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${escapeHtml(p.name)}</span>` +
         `<span class="allies" title="${this.alliesTitle(p)}">` +
         G.allies(p.id).map(o => `<i style="background:rgb(${o.color})"></i>`).join('') + `</span>` +
-        `<span class="pct">${(p.tiles / G.landCount * 100).toFixed(1)}%</span>${btn}</li>`;
+        `${this.faithBadge(p)}<span class="pct">${(p.tiles / G.landCount * 100).toFixed(1)}%</span>${btn}</li>`;
     };
     // Les membres d'un même pacte sont regroupés dans un cadre, avec la part des terres du pacte entier.
     // Les groupes (pactes et royaumes seuls) sont classés selon leurs terres.

@@ -23,13 +23,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
 - ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
-- 🤖 **5 à 11 royaumes rivaux** (Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
+- 🤖 **3 à 11 royaumes rivaux** (tu choisis combien : Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
-- 🎚️ **3 niveaux de difficulté** : Facile, Normal, Difficile
+- 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile
+- ✝️ **La Croyance** : tes églises prêchent chez tes voisins et convertissent peu à peu leurs terres
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis ta bannière et le **type de carte** dans le menu. Sur la carte, **les royaumes rivaux
+1. **Fonde ta capitale** : choisis ta bannière, le **type de carte**, la **difficulté** (Facile, Normale, Difficile) et le
+   **nombre de royaumes rivaux** (de 3 à 11) dans le menu. Sur la carte, **les royaumes rivaux
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
    🎲 **Cartes aléatoires** (différentes à chaque partie) :
@@ -44,14 +46,14 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      îles, les mers intérieures (mer Noire, Caspienne, Grands Lacs), les **chaînes de montagnes** (Rocheuses, Andes,
      Alpes, Himalaya…) et les **grands fleuves** (Mississippi, Amazone, Nil, Danube, Volga, Yangzi…) sont à leur place.
      Le cours inférieur des plus grands fleuves est un **grand fleuve** infranchissable ; le Groenland est un glacier
-     (seules ses côtes sont habitables). 3 royaumes rivaux de plus que d'habitude.
+     (seules ses côtes sont habitables).
    - **Europe** 🏰 (1000 x 1000 cases, immense) : l'Europe en détail, de l'Islande à la Volga et du cap Nord au Sahara,
      avec l'Afrique du Nord, l'Anatolie et le Caucase. Les îles (Grande-Bretagne, Irlande, Sicile, Sardaigne, Corse,
      Crète, Chypre, les îles danoises…), la mer Noire, les grands lacs (Ladoga, Onega, Vänern, Léman…), les montagnes
      (Alpes, Pyrénées, Carpates, Alpes scandinaves, Apennins, Balkans, Caucase, Atlas, Taurus…) et une cinquantaine
      de fleuves avec leurs méandres (Rhin, Danube, Loire, Seine, Rhône, Pô, Elbe, Vistule, Dniepr, Don, Tamise…).
      Le Danube (après Belgrade), le Dniepr (après Kiev) et le Don inférieur sont de grands fleuves infranchissables ;
-     le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie. 3 royaumes rivaux de plus.
+     le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie.
      ⚠️ C'est une très grande carte : la partie est longue, et le jeu peut ralentir un peu sur un ordinateur modeste.
    Les cartes prédéfinies ont leur propre taille. **Toutes les cartes ont les mêmes règles** : une plus grande carte
    demande juste plus de temps.
@@ -65,7 +67,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés), et en bas sa **défense globale** (terrain + murs). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
    de la frontière. **Tant qu'un royaume a une ville (un château), tu ne peux viser que ses châteaux, églises, ports ou avant-postes.**
-   **Exception — morceau coupé de ses châteaux** : si un morceau de son royaume n'a plus **aucun château** (il s'est fait
+   **Exception — morceau coupé de ses châteaux** : si un morceau de son royaume n'a plus **aucune ville ni port fortifié** (port de niveau 3) (il s'est fait
    isoler du reste, alors que son royaume a encore un château ailleurs), personne ne le commande : tu peux
    **l'attaquer de front**, comme une terre **vide** (aucun défenseur ne peut venir). En le survolant, tu vois
    « ⚠️ coupé de tous ses châteaux ». Mais si son royaume arrive à le **relier à un château** (en reprenant des
@@ -212,7 +214,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
    **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : une **flèche ⬆️** pour l'améliorer
    (travaux de **5 s**, ou **10 s** pour passer au niveau 3 ; pour une **ville (château)** : **40 s** pour le niveau 2, **60 s** pour le niveau 3) et **✖** rouge pour le détruire (travaux de **10 s**, après une confirmation). La fenêtre en haut à gauche explique
-   ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
+   ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Détruire une **ville**, une **église** ou un **port**
+   fait aussi sauter les **moulins et casernes qui en dépendaient** (dans sa muraille, ou à une de ses places), sauf si une autre ville, église ou port les accueille. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise ; le bouton **Château** affiche le compte, ex. « 1/3 ») ; les châteaux pris à l'ennemi
@@ -308,14 +311,31 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (il contourne les murailles des châteaux et s'arrête une fois l'église prise).
      **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
 
-     | Niveau | Moulins ou casernes autour d'elle | Châteaux en plus dans le royaume | Prix |
-     |---|---|---|---|
-     | 1. Église | 1 | aucun | 💰 50 (puis plus cher à chaque église) |
-     | 2. Grande église | 2 | +1 | 💰 800 |
-     | 3. Cathédrale | 5 | +2 | 💰 2000 |
+     | Niveau | Croyance ✝️ | Moulins ou casernes autour d'elle | Châteaux en plus dans le royaume | Prix |
+     |---|---|---|---|---|
+     | 1. Église | +10 | 1 | aucun | 💰 50 (puis plus cher à chaque église) |
+     | 2. Grande église | +30 | 2 | +1 | 💰 800 |
+     | 3. Cathédrale | +50 | 5 | +2 | 💰 2000 |
 
      Seule ta **meilleure église** compte pour les châteaux en plus : elles ne s'additionnent pas
-     (une cathédrale donne +2 châteaux, même si tu as d'autres grandes églises).
+     (une cathédrale donne +2 châteaux, même si tu as d'autres grandes églises). La **Croyance**, elle, s'additionne.
+
+     ✝️ **La Croyance** (en haut de l'écran, à côté de tes terres) : au départ, tu en as 0. Chaque église en apporte
+     (voir le tableau), et **+50 %** si elle est **reliée à une route** (chemin vers une ville ou la route d'un port).
+     Tes églises **prêchent chez tes voisins ennemis** (pas chez tes alliés de pacte) : si tu as **plus de Croyance**
+     qu'un voisin, tu **convertis lentement ses terres** collées aux tiennes, une case à la fois. C'est l'**écart** qui compte :
+     avec 100 contre 80, ta Croyance vaut 20 face à lui. Plus l'écart est grand, plus ça va vite : environ une case
+     toutes les **30 s** avec 20 d'écart, toutes les **20 s** avec 50, toutes les **5 s** avec 100, et **une par seconde**
+     à partir de 200. Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
+     s'avancent dans le tien : les frontières deviennent plus nettes, et ses routes trop fines se referment.
+     Si une conversion **coupe** son royaume, la coupe s'applique tout de suite (le morceau coupé est englobé).
+     Ça marche dans les deux sens : un voisin plus croyant convertit **tes** terres ! Dans le classement, une **📖 bible verte**
+     à côté d'un voisin veut dire que tu convertis ses terres, une **bible rouge** que c'est lui qui convertit les tiennes.
+     Ce n'est **pas une agression** (pas d'alerte, pas d'après-guerre). Ce que la Croyance **ne convertit jamais** : les
+     **villes** et les **ports fortifiés** (niveau 3), tout ce qui est **dans leur muraille**, les **avant-postes** et leur zone,
+     les **murs** 🧱, les **terres libres**, et la route d'un **assaut en cours**. Elle ne part que d'une **zone de royaume**
+     organisée : pas d'une zone d'avant-poste, ni d'un morceau coupé de ses villes, ni d'un royaume désorganisé (sans ville).
+     Les **bots** bâtissent et améliorent plus d'églises quand un voisin les dépasse en Croyance (surtout en Difficile).
 
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Comme l'église, il donne des
@@ -459,6 +479,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.87** : ✝️ **la Croyance** : chaque église en apporte (10, 30 ou 50 selon son niveau, +50 % si reliée à une route) ; plus croyant qu'un voisin ennemi, tu convertis lentement ses terres frontalières (d'abord ses couloirs étroits et ses pointes), d'autant plus vite que l'écart est grand ; jamais ses villes, ports fortifiés, avant-postes ni ce qui est dans leur muraille ; bible verte ou rouge dans le classement · 🎚️ menu : la difficulté et le nombre de royaumes rivaux (3 à 11) se choisissent séparément · 🧨 détruire une ville, une église ou un port fait aussi sauter les moulins et casernes qui en dépendaient · ⚓ un morceau de royaume avec un port fortifié n'est plus « coupé de ses châteaux » : il est défendu, comme avec une ville
 - **v0.86** : 🧱 murs plus courts (12 cases au plus après la muraille de la ville, au lieu de 15) · 🔀 un mur tout neuf sur la route d'un assaut : l'armée le contourne, et ne rebrousse chemin que s'il ferme son seul passage (un mur sur la partie déjà passée ne l'arrête pas) · ↩️ une armée en retraite qui doit franchir un mur bâti dans son dos y perd 50 % de ses soldats, par mur · 🤖 les bots bâtissent aussi des murs, là où un voisin ennemi viendrait les attaquer
 - **v0.85** : 🧱 **murs** : une ville de niveau 2 bâtit un mur (💰 500), une citadelle un second (💰 1000) : il va tout droit de la ville jusqu'à l'endroit choisi (15 cases au plus après sa muraille), s'accroche tout seul à un obstacle proche (lac, mer, fleuve, sommet, autre mur) et aucun assaut ne le franchit ; un assaut dont la route est coupée par un mur tout neuf rebrousse chemin · ⏳ améliorer une ville prend plus de temps : 40 s pour le niveau 2, 60 s pour le niveau 3
 - **v0.84.1** : 📏 nouvelles tailles de carte : Petite 300 x 169, Moyenne 650 x 366, Grande 1000 x 562

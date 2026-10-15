@@ -280,16 +280,24 @@ const AI = {
   },
 
   tryBuild(p, forced) {
+    // ✝️ Un voisin ennemi a plus de Croyance (il convertit nos terres) : on mise un peu plus sur les églises
+    // (zeal : un peu en facile, plus en difficile)
+    const zeal = Game.difficulty.zeal || 1;
+    const behind = [...Game.neighborStats(p.id).keys()].some(o => o >= 0 && Game.faithEdge(o, p.id) > 0);
     // Parfois, améliorer un château ou un moulin plutôt que construire
     if (Math.random() < 0.3) {
       const mine = Game.buildingTiles.filter(a => Game.owner[a] === p.id && !Game.works.has(a)
         && Game.upgradeCost(a) !== null && p.gold >= Game.upgradeCost(a));
+      // (en retard de Croyance : une église d'abord, s'il y en a une à améliorer)
+      const church = behind && Math.random() < 0.4 * zeal ? mine.find(a => Game.building[a] === B_CHURCH) : undefined;
+      if (church !== undefined) { Game.upgradeBuilding(p, church); return; }
       if (mine.length) { Game.upgradeBuilding(p, mine[(Math.random() * mine.length) | 0]); return; }
     }
     const c = p.bCount;
     let type = B_MILL;
     if (c[B_BARRACKS] < c[B_MILL] / 2) type = B_BARRACKS;
     else if (Math.random() < 0.2 && p.castlesBuilt < Game.maxCastles(p)) type = B_CASTLE;
+    else if (behind && Math.random() < 0.15 * zeal && c[B_CHURCH] < 2 + Math.round(zeal)) type = B_CHURCH;
     else if (Math.random() < 0.1 && c[B_CHURCH] < 2) type = B_CHURCH;
     else if (Math.random() < 0.1 && c[B_PORT] < 2) type = B_PORT;
     if (forced) type = forced;

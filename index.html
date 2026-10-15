@@ -17,6 +17,7 @@
       <span><img id="kBanner" alt=""> <b id="kName"></b></span>
       <span title="Or">💰 <span id="gold"></span></span>
       <span title="Part des terres">🗺️ <span id="land"></span></span>
+      <span id="faithBox" title="Croyance (tes églises) : plus que ton voisin ennemi, tu convertis peu à peu ses terres">✝️ <span id="faith"></span></span>
       <span title="Durée de la partie">⏳ <span id="clock">0:00</span></span>
       <span id="traitor" class="hidden"></span>
       <button id="pauseBtn">⏸ Pause</button>
@@ -86,9 +87,22 @@
       </label>
       <label>Difficulté
         <select id="difficulty">
-          <option value="facile">Facile (5 royaumes)</option>
-          <option value="normal" selected>Normal (7 royaumes)</option>
-          <option value="difficile">Difficile (10 royaumes)</option>
+          <option value="facile">Facile</option>
+          <option value="normal" selected>Normale</option>
+          <option value="difficile">Difficile</option>
+        </select>
+      </label>
+      <label>Adversaires
+        <select id="opponents">
+          <option value="3">3 royaumes rivaux</option>
+          <option value="4">4 royaumes rivaux</option>
+          <option value="5">5 royaumes rivaux</option>
+          <option value="6">6 royaumes rivaux</option>
+          <option value="7" selected>7 royaumes rivaux</option>
+          <option value="8">8 royaumes rivaux</option>
+          <option value="9">9 royaumes rivaux</option>
+          <option value="10">10 royaumes rivaux</option>
+          <option value="11">11 royaumes rivaux</option>
         </select>
       </label>
       <button id="startBtn" class="big">Commencer la conquête</button>
@@ -104,7 +118,8 @@
           <li>⚰️ <b>Après-guerre</b> : gagner un assaut réduit ta production de soldats (−25 %, 30 s ; pas pour un avant-poste détruit) ; le perdant est <b>galvanisé</b> (+25 %). Repousser un assaut galvanise aussi (+25 %, 15 s). Ces effets s'additionnent : un +25 % annule un −25 %.</li>
           <li>✂️ <b>Couper</b> un royaume : sur chaque île, il ne garde que son plus grand morceau ; les autres passent d'un coup à celui qui l'a coupé. Seuls ses châteaux et ports de niveau 3 tiennent, isolés : leur propriétaire clique dessus pour les relier par un assaut. Si <b>tous</b> tes châteaux sont isolés, ton armée y est bloquée : ton territoire n'est plus défendu et aucune armée n'en part, jusqu'à ce que tu le relies ou que tu y bâtisses un château (c'est d'ailleurs le seul bâtiment qu'un territoire sans château peut construire).</li>
           <li>🗺️ <b>Terrain</b> : forêts, collines et montagnes se défendent mieux ; les sommets enneigés sont infranchissables. 🌊 Les fleuves n'appartiennent à personne : on les traverse à gué (clic droit sur la rive d'en face). 🏜️ Les <b>déserts</b> se prennent comme des plaines, mais les bâtiments posés dessus produisent 20 % de moins.</li>
-          <li>🏗️ <b>Bâtiments</b> (touches <b>1</b> à <b>5</b>, puis clic) : 🌾 moulin = or · ⚔️ caserne = soldats et armée plus grande · 🏰 château = défense · ⛪ église = place pour bâtir et châteaux en plus · ⚓ port = or et expéditions (un chemin le relie à une ville proche : +30 % d'or, et une église proche de ce chemin ou d'une ville s'y relie et rapporte un peu d'or). Moulins et casernes se bâtissent dans l'enceinte d'un château ou près d'une église (ou d'un port). Châteaux, églises et ports gardent leurs distances entre eux (cercles rouges). Clique sur un de tes bâtiments : flèche ⬆️ pour améliorer ou ✖ pour détruire. 🧱 Une ville de niveau 2 peut bâtir un <b>mur</b> (💰 500, puis 💰 1000 pour le 2e au niveau 3) : il va tout droit de la ville jusqu'à l'endroit choisi (12 cases au plus) et aucun assaut ne le franchit : un assaut dont la route est coupée le contourne, ou rebrousse chemin s'il n'a pas d'autre passage.</li>
+          <li>🏗️ <b>Bâtiments</b> (touches <b>1</b> à <b>5</b>, puis clic) : 🌾 moulin = or · ⚔️ caserne = soldats et armée plus grande · 🏰 château = défense · ⛪ église = Croyance, place pour bâtir et châteaux en plus · ⚓ port = or et expéditions (un chemin le relie à une ville proche : +30 % d'or, et une église proche de ce chemin ou d'une ville s'y relie et rapporte un peu d'or). Moulins et casernes se bâtissent dans l'enceinte d'un château ou près d'une église (ou d'un port). Châteaux, églises et ports gardent leurs distances entre eux (cercles rouges). Clique sur un de tes bâtiments : flèche ⬆️ pour améliorer ou ✖ pour détruire (détruire une ville, une église ou un port fait aussi sauter les moulins et casernes qui en dépendaient). 🧱 Une ville de niveau 2 peut bâtir un <b>mur</b> (💰 500, puis 💰 1000 pour le 2e au niveau 3) : il va tout droit de la ville jusqu'à l'endroit choisi (12 cases au plus) et aucun assaut ne le franchit : un assaut dont la route est coupée le contourne, ou rebrousse chemin s'il n'a pas d'autre passage.</li>
+          <li>✝️ <b>Croyance</b> : chaque église en apporte (10, 30 ou 50 selon son niveau, +50 % si elle est reliée à une route). Si tu as plus de Croyance qu'un voisin ennemi (pas un allié), tu convertis lentement ses terres frontalières, d'autant plus vite que l'écart est grand (📖 verte dans le classement) ; s'il en a plus que toi, c'est lui qui convertit les tiennes (📖 rouge). Les villes, les ports fortifiés et ce qui est dans leur muraille ne sont jamais convertis.</li>
           <li>💰 <b>Économie</b> : plus ton royaume est grand, plus il recrute, mais de moins en moins vite. Une armée trop pleine coûte de l'or (jusqu'à −25 % d'or gagné).</li>
           <li>⛵ <b>Mer</b> : avec un port de niveau 2, clic droit sur une côte lointaine → attaque navale. Tes soldats y bâtissent un <b>avant-poste</b> qui défend sa zone avec ses soldats ; clique dessus pour envoyer des renforts ou rapatrier ses troupes. Un château bâti ou pris dans sa zone la fait entrer dans ton royaume.</li>
           <li>🤝 <b>Pactes</b> (si autorisés) : les alliés sont entourés d'une frontière dorée. Attaquer un allié, c'est le trahir.</li>
