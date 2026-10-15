@@ -1192,11 +1192,13 @@ const Render = {
         path.lineTo(pts[2][0], pts[2][1]);
       }
     }
-    // Chemins de terre des églises (vers une route de port ou une ville), voir Game.churchLink
-    for (const [, link] of G.roadChurches || []) {
-      const pts = link.pts.map(([x, y]) => [ox + x * s, oy + y * s]);
-      dirt.moveTo(pts[0][0], pts[0][1]);
-      for (let k = 1; k < pts.length; k++) dirt.lineTo(pts[k][0], pts[k][1]);
+    // Chemins de terre des églises (vers une route de port ou des villes), voir Game.churchLinks
+    for (const [, list] of G.roadChurches || []) {
+      for (const link of list) {
+        const pts = link.pts.map(([x, y]) => [ox + x * s, oy + y * s]);
+        dirt.moveTo(pts[0][0], pts[0][1]);
+        for (let k = 1; k < pts.length; k++) dirt.lineTo(pts[k][0], pts[k][1]);
+      }
     }
     ctx.lineCap = 'square';
     ctx.lineJoin = 'miter';
