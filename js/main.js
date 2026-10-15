@@ -614,6 +614,8 @@ const UI = {
     // Effets d'un assaut réussi (voir warFactor)
     const war = (G.postWar(h) ? ` · <span style="color:#b8322a">⚰️ après-guerre −${Math.round(G.postWar(h) * 100)} %</span>` : '') +
       (G.rallied(h) ? ` · <span style="color:#2f6b2a">🔥 galvanisé +${Math.round(G.rallied(h) * 100)} %</span>` : '') +
+      // (les deux à la fois : ils s'annulent, on montre le total)
+      (G.postWar(h) && G.rallied(h) ? ` · total ${signedPct(G.warFactor(h) - 1)}` : '') +
       (G.upkeepFactor(h) < 0.995 ? ` · <span style="color:#b8322a">💰 solde des troupes −${Math.round((1 - G.upkeepFactor(h)) * 100)} % d'or</span>` : '');
     $('troopRate').innerHTML = `<b style="color:${color}">${tip}</b>${war}`;
   },
@@ -1102,6 +1104,12 @@ function main() {
 main();
 
 // Un bonus en pourcentage : 0.3 → "+30 %", -0.1 → "-10 %"
+// Pourcentage avec son signe (0 → « 0 % », 0.25 → « +25 % », -0.25 → « −25 % »)
+function signedPct(x) {
+  const n = Math.round(x * 100);
+  return (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n) + ' %';
+}
+
 function pct(x) {
   const n = Math.round(x * 100);
   return (n >= 0 ? '+' : '') + n + ' %';
