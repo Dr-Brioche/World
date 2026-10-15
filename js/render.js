@@ -493,7 +493,8 @@ const Render = {
       const side = a.id % 2 ? 1 : -1; // courbe d'un côté ou de l'autre, pour que deux flèches se croisent moins
       if (!G.isPreparing(a)) {
         // (pas de flèche pour un assaut de jonction : sa ligne mène au château isolé)
-        if (a.link === undefined) this.drawAttackArrow(x1, y1, x2, y2, 0.6, side);
+        // (ni pour l'assaut de front d'un territoire désorganisé : il n'a pas de cible précise)
+        if (a.link === undefined && !a.unlinked && !a.disorganized) this.drawAttackArrow(x1, y1, x2, y2, 0.6, side);
         // (la bannière se tient à sa position lissée sur le front, voir moveBanner ; au début, sur la case du front)
         const t = a.frontTile >= 0 ? a.frontTile : -1;
         if (a.bannerX !== undefined) {
@@ -868,7 +869,7 @@ const Render = {
     if (i < 0 || !t || G.phase !== 'playing' || !h.alive || UI.selectedBuild || UI.plan) return -1;
     const o = G.owner[i];
     if (o === h.id && (BUILDING_LEVELS[t] || t === B_OUTPOST)) return G.anchor[i];
-    if (o >= 0 && o !== h.id && !G.areAllied(o, h.id) && TARGET_TYPES.includes(t) && G.isProtected(o)) return G.anchor[i];
+    if (o >= 0 && o !== h.id && !G.areAllied(o, h.id) && TARGET_TYPES.includes(t) && (G.isProtected(o) || t === B_OUTPOST)) return G.anchor[i];
     return -1;
   },
 
@@ -950,7 +951,7 @@ const Render = {
 
   // La souris est-elle sur une cible qu'on peut attaquer ? (a = bâtiment sélectionnable survolé, ou -1)
   // Château, église, port ou avant-poste ennemi atteignable, cible déjà visée (2e clic pour lancer),
-  // terres ennemies qui s'attaquent de front (sans château ni église, ou coupées de leurs châteaux),
+  // terres ennemies qui s'attaquent de front (sans château, ou coupées de leurs châteaux),
   // ou armée ennemie qui nous attaque. (Nos bâtiments gardent la petite main.)
   attackableUnderMouse(a) {
     const G = Game, h = G.human, i = this.hover;

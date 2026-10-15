@@ -26,7 +26,7 @@ const UI = {
       btn.title = `${b.name} : ${b.desc} (touche ${t})`;
       btn.innerHTML = `<span class="key">${t}</span><span class="icon">${b.icon}</span>` +
         `<span>${b.name}</span><span class="cost"></span>` +
-        (t === B_CASTLE ? '<span class="count" title="Châteaux construits / maximum (une église améliorée en débloque d\'autres)"></span>' : '');
+        (t === B_CASTLE ? '<span class="count" title="Châteaux construits / maximum (ta meilleure église en débloque d\'autres)"></span>' : '');
       btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
       builds.appendChild(btn);
     }
@@ -548,7 +548,7 @@ const UI = {
         txt += ' · 🏰 protégé : vise un de ses châteaux, églises, ports ou avant-postes';
       }
     } else if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id)) {
-      txt += ' · ⚔️ sans château ni église : clique pour l\'attaquer de front (ses troupes défendent, désorganisées)';
+      txt += ' · ⚔️ plus de ville (château) : royaume désorganisé, clique pour l\'attaquer de front (ses troupes défendent, désorganisées)';
     }
     if (G.isCoastal(i) && G.landable(G.human.id, i) && G.expeditionPorts(G.human.id).length) {
       txt += ' · ⛵ côte : clic droit → Débarquer';
@@ -819,7 +819,7 @@ const UI = {
 
   // --- Choisir la cible d'un assaut, puis valider ---
   // 1er clic sur un château, une église, un port ou un avant-poste ennemi (ou sur les terres d'un royaume sans
-  // château ni église) : on choisit la cible, son chemin s'affiche. 2e clic sur la même cible : l'assaut part.
+  // château) : on choisit la cible, son chemin s'affiche. 2e clic sur la même cible : l'assaut part.
   // c = bâtiment visé (-1 = attaque de front), tile = case cliquée
   startPlan(target, c, tile) {
     const G = Game, h = G.human;
@@ -1039,11 +1039,12 @@ const UI = {
     // un 2e clic lance l'assaut. Assaut déjà en cours sur cette cible : on envoie tout de suite des soldats en plus.
     // Terres libres : on attaque tout de suite.
     const b = G.building[i], c = G.anchor[i];
-    const aimed = target >= 0 && TARGET_TYPES.includes(b) && G.isProtected(target);
+    // (un avant-poste se vise toujours, même chez un royaume désorganisé)
+    const aimed = target >= 0 && TARGET_TYPES.includes(b) && (G.isProtected(target) || b === B_OUTPOST);
     const running = target >= 0 && G.attacks.find(a => !a.done && a.attacker === h.id && a.target === target
       && a.link === undefined && a.retreatEnd === undefined && (!aimed || a.targetCastle === c));
     const attack = confirmed => {
-      // (de front : un royaume sans château ni église, ou un morceau de royaume coupé de tous ses châteaux)
+      // (de front : un royaume sans château, ou un morceau de royaume coupé de tous ses châteaux)
       if (target >= 0 && !running && !confirmed && (aimed || !G.isProtected(target) || G.isUnlinked(i))) return this.startPlan(target, aimed ? c : -1, i);
       // L'armée part du royaume ou d'un avant-poste bâti (avec ses soldats stationnés)
       const src = running ? G.sourceOfAttack(running) : G.bestSource(h.id, target, i);

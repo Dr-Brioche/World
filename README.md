@@ -61,15 +61,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    du château, puis l'assiège. L'armée **ne traverse pas la muraille** : si le château tombe, toute sa zone tombe avec lui.
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés), et en bas sa **défense globale** (terrain + murs). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
-   de la frontière. **Tant qu'un royaume a un château, une église, un port ou un avant-poste, tu ne peux viser que ceux-ci.**
+   de la frontière. **Tant qu'un royaume a une ville (un château), tu ne peux viser que ses châteaux, églises, ports ou avant-postes.**
    **Exception — morceau coupé de ses châteaux** : si un morceau de son royaume n'a plus **aucun château** (il s'est fait
    isoler du reste, alors que son royaume a encore un château ailleurs), personne ne le commande : tu peux
    **l'attaquer de front**, comme une terre **vide** (aucun défenseur ne peut venir). En le survolant, tu vois
    « ⚠️ coupé de tous ses châteaux ». Mais si son royaume arrive à le **relier à un château** (en reprenant des
    terres, ou en y bâtissant un château), **l'assaut s'arrête**. Attention, ça marche aussi contre toi !
-   Quand il n'en a **plus aucun**, clique n'importe où sur ses terres : l'assaut se fait
-   **de front, sur tout son territoire** (comme sur une terre libre).
-   Un territoire **désorganisé** (royaume sans château ni église, ou morceau coupé de ses châteaux) se prend **25 % plus vite**.
+   Quand il n'a **plus aucune ville (château)**, il est **désorganisé**, même s'il lui reste des églises ou des ports :
+   clique n'importe où sur ses terres, l'assaut se fait **de front, sur tout son territoire** (comme sur une terre libre),
+   sans devoir prendre ses bâtiments un par un (ses avant-postes, eux, se visent toujours).
+   Un territoire **désorganisé** (royaume sans château, ou morceau coupé de ses châteaux) se prend **plus vite**, et **d'autant plus vite
+   que ton armée est grande**. Si le royaume rebâtit (ou reprend) une ville pendant l'assaut, il est de nouveau organisé : l'assaut s'arrête.
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
    sans pouvoir en place : chaque soldat ne compte que pour **0,8**.
 
@@ -208,7 +210,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise ; le bouton **Château** affiche le compte, ex. « 1/3 ») ; les châteaux pris à l'ennemi
-   ne comptent pas dans cette limite, et une **église** améliorée en débloque d'autres.
+   ne comptent pas dans cette limite, et ta meilleure **église** améliorée en débloque d'autres.
    **Le terrain compte** : un moulin produit plus en plaine (+30 %) qu'en forêt (normal), colline (-10 %) ou montagne (-30 %) ;
    une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
    Dans le **désert** 🏜️, tout bâtiment (moulin, caserne, port) produit **20 % de moins**.
@@ -229,7 +231,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Or produit | Prix |
      |---|---|---|
      | 1. Moulin | un peu | prix du moulin |
-     | 2. Grand moulin | +133 % | 💰 100 |
+     | 2. Grand moulin | +133 % | 💰 150 |
 
      **Rendement décroissant** : plus ton royaume a de moulins et de ports, moins chacun rapporte
      (3 → 83 % chacun, 6 → 67 %, 12 → environ la moitié). Les premiers rapportent bien, mais on ne devient pas
@@ -261,7 +263,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Défense des murs | Muraille | Garnison | Prix |
      |---|---|---|---|---|
      | 1. Fort en bois | +100 % | petite | quelques soldats | 💰 100 (puis plus cher à chaque château) |
-     | 2. Château | +200 % | moyenne | x5 | 💰 300 |
+     | 2. Château | +200 % | moyenne | x5 | 💰 500 |
      | 3. Citadelle | +400 % | grande | x3 | 💰 3000 |
 
      Chaque soldat de garnison **vaut 3 soldats** au combat. **Une citadelle** permet aussi de mener
@@ -288,11 +290,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Moulins ou casernes autour d'elle | Châteaux en plus dans le royaume | Prix |
      |---|---|---|---|
      | 1. Église | 1 | aucun | 💰 50 (puis plus cher à chaque église) |
-     | 2. Grande église | 2 | +1 | 💰 100 |
-     | 3. Cathédrale | 5 | +2 | 💰 1000 |
+     | 2. Grande église | 2 | +1 | 💰 800 |
+     | 3. Cathédrale | 5 | +2 | 💰 2000 |
 
-     **Chaque église améliorée** ajoute ses châteaux : elles s'additionnent, tu peux en construire autant
-     que ton or le permet.
+     Seule ta **meilleure église** compte pour les châteaux en plus : elles ne s'additionnent pas
+     (une cathédrale donne +2 châteaux, même si tu as d'autres grandes églises).
 
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Il **n'est pas défendu** :
@@ -431,6 +433,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.80.1** : 🏚️ un royaume qui n'a plus de ville (château) est désorganisé, même s'il lui reste des églises ou des ports : on l'attaque de front, sans devoir prendre ses bâtiments un par un (ses avant-postes se visent toujours) · 🏰 s'il rebâtit ou reprend un château pendant l'assaut, l'assaut s'arrête · ⚡ contre un territoire désorganisé, plus l'armée est grande, plus elle avance vite · pas de flèche rouge pour ces assauts de front · ⛪ seule ta meilleure église débloque des châteaux en plus (elles ne s'additionnent plus) · 💰 nouveaux prix : grand moulin 150, château niveau 2 500, grande église 800, cathédrale 2000
 - **v0.80** : 🛡️ les garnisons ne comptent plus dans ton armée (ce sont des armées liées à leur bâtiment : des villes bien gardées ne freinent plus le recrutement) · 💰 anéantir un royaume rapporte une prime de 500 pièces et tout son trésor · ⏳ une ville, une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant 30 s · 🧹 grande vérification du code : 🐛 le bouton « Défendre » ne marchait qu'en cliquant sur son bord (le clic sur l'icône était ignoré) · 🐛 le jeu pouvait se figer si la cible d'un de tes assauts disparaissait · 🐛 plus de trahison « pour rien » (attaquer un allié là où il n'y a rien à attaquer) · 🐛 un royaume anéanti en plein assaut faisait disparaître les défenseurs et la garnison d'en face · 🐛 un assaut de jonction ne prend plus de bande de terres (ni de bâtiments) qu'il n'a pas traversée · 🐛 renforcer l'assaut contre un morceau coupé visait parfois le mauvais morceau · 🐛 bataille à 3 armées au pied d'un château : le siège ne recule plus · 🐛 on ne peut plus aider un allié contre une armée qui marche encore chez elle · 🐛 l'aperçu du chemin d'assaut tient compte de tes avant-postes · ⚡ grandes cartes plus fluides (dessin de la carte, survol d'un royaume, chemins d'assaut) · petites corrections d'affichage et nettoyage du code inutile
 - **v0.79.1** : ✂️ la barre d'un assaut ennemi est raccourcie : juste « Écosse attaque · ⚔ soldats · Défendre »
 - **v0.79** : 🤝 dans le classement, les membres d'un pacte sont regroupés dans un cadre, avec le nom du pacte et sa part des terres
