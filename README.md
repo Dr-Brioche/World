@@ -26,12 +26,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🤖 **3 à 11 royaumes rivaux** (tu choisis combien : Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile
+- ⏩ **Partie accélérée** : tout va 2 fois plus vite, pour des parties plus courtes
 - ✝️ **La Croyance** : tes églises prêchent chez tes voisins et convertissent peu à peu leurs terres
 
 ## 🕹️ Comment jouer
 
 1. **Fonde ta capitale** : choisis ta bannière, le **type de carte**, la **difficulté** (Facile, Normale, Difficile) et le
-   **nombre de royaumes rivaux** (de 3 à 11) dans le menu. Sur la carte, **les royaumes rivaux
+   **nombre de royaumes rivaux** (de 3 à 11) dans le menu. ⏩ **Vitesse de la partie** : *Normale*, ou *Accélérée* :
+   **tout** va 2 fois plus vite (production, recrutement, marches, assauts, sièges, chantiers, croisades…). Le chrono en
+   haut affiche le temps de jeu, suivi de « (x2) » : les durées du jeu (« 40 s de chantier ») défilent 2 fois plus vite. Sur la carte, **les royaumes rivaux
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
    🎲 **Cartes aléatoires** (différentes à chaque partie) :
@@ -504,6 +507,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90** : ⏩ partie accélérée : au menu, « Vitesse de la partie : Accélérée » fait tout aller 2 fois plus vite (le jeu fait 2 tours au lieu d'un) ; le chrono affiche « (x2) »
 - **v0.89.1** : ✝️ la conversion continue d'accélérer au-delà de 200 d'écart de Croyance : 2 cases par seconde à 500, 5 par seconde à 1000 (le maximum)
 - **v0.89** : ✝️ croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2000 pièces, et la Croyance du royaume monte de 1000 pendant 60 s ; les bots en lancent aussi quand un voisin les dépasse en Croyance
 - **v0.88.2** : 🏰🧱🏰 un mur peut relier deux de tes villes (vise l'autre ville : le mur va jusqu'à sa muraille) ; une fois debout, chacune gagne +50 soldats de garnison · 🤖 les bots relient aussi leurs villes · ⚡ un territoire désorganisé se prend 25 % plus vite

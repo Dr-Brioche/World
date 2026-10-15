@@ -51,6 +51,7 @@ const GameRules = {
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
+    this.speed = opts.speed > 1 ? opts.speed : 1; // partie accélérée (x2) : la boucle de jeu tourne plus vite (voir main.js)
     this.pactsAllowed = opts.pacts !== false; // choisi dans le menu : pactes autorisés ou interdits
     this.human = this.addPlayer(opts.name, opts.banner, true);
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
