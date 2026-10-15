@@ -82,6 +82,20 @@ html, body {
 }
 
 #lb .pct { display: inline-block; width: 42px; text-align: right; }
+/* Un pacte : ses membres regroupés dans un cadre, avec la part des terres du pacte entier */
+#lb li.pactGroup {
+  border: 2px solid var(--wood);
+  border-radius: 6px;
+  padding: 1px 4px 2px;
+  margin: 4px 0 4px -4px;
+  background: rgba(120, 90, 40, 0.08);
+}
+#lb li.pactGroup.mine { border-color: var(--good); }
+#lb .pactHead { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; font-style: italic; }
+#lb .pactHead .pct { margin-right: 2px; }
+#lb .pactHead span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+#lb li.pactGroup ul { list-style: none; margin: 0; padding: 0; }
+#lb li.pactGroup .allies { visibility: hidden; } /* (les alliés sont déjà dans le cadre) */
 #lb button { padding: 0 4px; margin-left: 4px; font-size: 13px; line-height: 18px; }
 #lb li > * { vertical-align: middle; }
 .lbb { height: 22px; vertical-align: middle; margin-right: 4px; }

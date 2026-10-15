@@ -367,7 +367,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
    Les membres d'un pacte ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer un pacte : accepte ou refuse.
    **Qui est allié avec qui ?** Chaque pacte est entouré d'une **grande frontière dorée**, visible par tous,
-   qui fait le tour de tous ses membres. Les petits carrés de couleur dans le classement montrent aussi les alliés.
+   qui fait le tour de tous ses membres. Dans le **classement**, les membres d'un pacte sont **regroupés dans un cadre**,
+   avec le nom du pacte et sa **part des terres** (tous ses membres ensemble) ; les pactes et les royaumes seuls sont classés ensemble.
    Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée,
    et tu quittes le pacte.
    Mais attention, un **traître** 🗡️ le paie cher pendant 2 minutes : **sa défense est réduite de moitié**
@@ -426,6 +427,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.79** : 🤝 dans le classement, les membres d'un pacte sont regroupés dans un cadre, avec le nom du pacte et sa part des terres
 - **v0.78.3** : 🐛 correction : les assauts contre un royaume avançaient beaucoup trop vite (à la vitesse des terres libres) depuis la v0.76 · 🏰 le bouton Château affiche un petit compteur « construits / maximum » (ex. 1/3), qui monte avec tes églises
 - **v0.78.2** : ✂️ la route d'un assaut vers un objectif n'est que visuelle tant que le combat n'est pas joué : elle ne coupe le royaume traversé que si l'assaut prend son objectif (s'il échoue, elle est rendue et rien n'est coupé) · ⏱️ plus de temps de trajet affiché à côté des armées en marche
 - **v0.78.1** : 🛡️ on ne peut envoyer des défenseurs contre un assaut qu'une fois qu'il est entré sur nos terres (fini les défenseurs qui partent l'attendre en terre ennemie pendant sa marche) ; les bots aussi
