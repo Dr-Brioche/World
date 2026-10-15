@@ -75,6 +75,7 @@ const AI = {
     // Sinon on cherche le voisin le plus faible : on compare notre assaut (70 % de nos soldats)
     // à ce qu'il pourra nous opposer (la moitié de ses soldats + la garnison du château visé).
     let best = null, bestScore = 0, bestAim = -1;
+    const alive = Game.players.filter(q => q.alive).length;
     for (const [o] of nb) {
       if (o < 0 || Game.areAllied(p.id, o)) continue;
       const e = Game.players[o];
@@ -86,11 +87,18 @@ const AI = {
       // Un château isolé ne reçoit pas de défenseurs : seule sa garnison le défend (proie facile !)
       // (sans château, toutes ses troupes défendent d'office, mais à 0.8)
       // (un morceau coupé de tous ses châteaux : personne ne le défend)
-      const helpers = plan.tile !== undefined ? 0 : aim === null ? e.troops * CONFIG.LEADERLESS_DEFENSE
-        : Game.isIsolated(aim) ? 0 : e.troops * 0.5;
+      // (ses soldats partis à l'assaut ailleurs comptent à moitié : ils reviendront, il n'est pas si faible)
+      const away = Game.attacks.reduce((s, a) => s + (!a.done && a.attacker === o ? a.troops : 0), 0);
+      const strength = e.troops + away * 0.5;
+      const helpers = plan.tile !== undefined ? 0 : aim === null ? strength * CONFIG.LEADERLESS_DEFENSE
+        : Game.isIsolated(aim) ? 0 : strength * 0.5;
       const power = Game.troopPower(o) / Game.troopPower(p.id); // force des soldats des deux camps
       let score = p.troops * 0.7 / ((helpers + garrison) * plan.D * power + 1) + Math.random() * 0.3;
-      if (e.isHuman) score += Game.difficulty.hateHuman;
+      // (quand il ne reste que quelques royaumes, les bots n'ont plus de préférence contre le joueur)
+      if (e.isHuman && alive > 4) score += Game.difficulty.hateHuman;
+      // Pas d'acharnement : une cible déjà attaquée par un autre royaume est moins tentante
+      // (les bots ne se liguent pas tous contre le même, ils se battent aussi entre eux)
+      if (Game.attacks.some(a => !a.done && a.target === o && a.attacker !== p.id)) score *= 0.5;
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
       if (score > bestScore) { bestScore = score; best = o; bestAim = plan.tile !== undefined ? plan.tile : aim; }
     }

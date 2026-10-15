@@ -1529,9 +1529,15 @@ const GameRules = {
   // Le chemin préfère les terrains faciles (plaines) : chaque case « coûte » sa défense.
   // Pour un château : le chemin s'arrête à sa muraille (la première case dans son rayon) : l'armée ne la
   // traverse pas, elle l'assiège depuis là (voir step).
+  // L'armée part de la ville (château) la plus proche de l'objectif (ou de son avant-poste) : le point d'entrée
+  // chez l'ennemi est choisi en comptant aussi sa marche sur ses propres terres depuis cette ville (plus rapide,
+  // DEFENDER_SPEED_BONUS), et pas seulement le bout de frontière le plus proche de la cible.
   castlePath(pid, c, source) {
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
-    const path = this.searchPath(pid, -1, foot, passable, this.owner[c], source); // (-1 = on part de la frontière)
+    const h = this.sizeOf(this.building[c]) / 2;
+    const dep = this.departurePoint(pid, c % this.W + h, ((c / this.W) | 0) + h, source), W = this.W;
+    const walk = i => Math.hypot(i % W + 0.5 - dep.x, ((i / W) | 0) + 0.5 - dep.y) / CONFIG.DEFENDER_SPEED_BONUS;
+    const path = this.searchPath(pid, -1, foot, passable, this.owner[c], source, walk); // (-1 = on part de la frontière)
     if (path && this.building[c] === B_CASTLE) {
       const k = path.findIndex(i => this.inWalls(c, i));
       if (k >= 0) path.length = k + 1;
@@ -1544,11 +1550,15 @@ const GameRules = {
 
   // Recherche du chemin le plus facile (algorithme de Dijkstra) depuis la case from
   // (ou depuis toute la frontière de pid si from = -1) jusqu'à une case de goal.
-  searchPath(pid, from, goal, passable, target, source) {
+  // walk (facultatif) : coût de la marche sur nos terres jusqu'à la case de départ i (voir castlePath)
+  searchPath(pid, from, goal, passable, target, source, walk) {
     const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
     const done = new Uint8Array(this.N); // cases déjà traitées (chacune une seule fois)
     const heap = new MinHeap();
-    const start = i => { dist[i] = this.tileDefense(target, i); prev[i] = -1; heap.push(dist[i], i); };
+    const start = (i, extra = 0) => {
+      const d = this.tileDefense(target, i) + extra;
+      if (d < dist[i]) { dist[i] = d; prev[i] = -1; heap.push(d, i); }
+    };
     if (from >= 0) start(from);
     else {
       // départ : les cases passables qui touchent nos terres (on part de nos cases, bien moins nombreuses que la carte)
@@ -1558,10 +1568,10 @@ const GameRules = {
         const x = i % W;
         let ok;
         for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
-          if (n < 0 || own[n] === pid || prev[n] !== -2 || !passable(n)) continue;
+          if (n < 0 || own[n] === pid || (!walk && prev[n] !== -2) || !passable(n)) continue;
           if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
           if (!ok) break;
-          start(n);
+          start(n, walk ? walk(i) : 0);
         }
       }
     }
@@ -2236,17 +2246,10 @@ const GameRules = {
   startMarch(a, edge, troops = a.troops) {
     const W = this.W, TPS = CONFIG.TICKS_PER_SECOND, p = this.players[a.attacker];
     const to = edge >= 0 ? { x: edge % W + 0.5, y: ((edge / W) | 0) + 0.5 } : { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 };
-    const src = this.sourceOfAttack(a), mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
-    let from = src >= 0 && this.building[src] === B_OUTPOST ? mid(src) : null;
-    if (!from) {
-      let bestD = Infinity;
-      for (const c of this.castles) {
-        if (this.owner[c] !== a.attacker || !this.isBase(c)) continue;
-        const m = mid(c), d = (m.x - to.x) ** 2 + (m.y - to.y) ** 2;
-        if (d < bestD) { bestD = d; from = m; }
-      }
-    }
-    if (!from) from = { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 }; // (pas de château : du cœur du royaume)
+    // (assaut sur un bâtiment : de la ville la plus proche de l'objectif, comme son chemin, voir castlePath)
+    const c = a.targetCastle, h = c >= 0 ? this.sizeOf(this.building[c]) / 2 : 0;
+    const ref = c >= 0 ? { x: c % W + h, y: ((c / W) | 0) + h } : to;
+    const from = this.departurePoint(a.attacker, ref.x, ref.y, this.sourceOfAttack(a));
     const march = this.walkRoute(a.attacker, from, to, troops);
     march.arrive = Math.max(march.arrive, this.tick + Math.round(CONFIG.MARCH_MIN_TIME * TPS));
     a.march = march;
@@ -2254,6 +2257,23 @@ const GameRules = {
     a.startTick = march.arrive;
     a.prepTicks = a.startTick - this.tick;
     return Math.ceil(a.prepTicks / TPS);
+  },
+
+  // D'où part une armée de pid vers le point (x, y) : son avant-poste (source), sinon sa ville (château) la plus
+  // proche de ce point, sinon le cœur de son royaume. Renvoie le centre, en cases.
+  departurePoint(pid, x, y, source) {
+    const W = this.W, mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
+    if (source >= 0 && this.building[source] === B_OUTPOST) return mid(source);
+    // (une ville sur la même terre que le point visé passe avant une ville de l'autre côté de la mer)
+    const land = this.landComp(), here = land[Math.floor(y) * W + Math.floor(x)];
+    let best = null, bestD = Infinity;
+    for (const c of this.castles) {
+      if (this.owner[c] !== pid || !this.isBase(c)) continue;
+      const m = mid(c), d = ((m.x - x) ** 2 + (m.y - y) ** 2) * (land[c] === here ? 1 : 100);
+      if (d < bestD) { bestD = d; best = m; }
+    }
+    const p = this.players[pid];
+    return best || { x: p.sumX / Math.max(1, p.tiles) + 0.5, y: p.sumY / Math.max(1, p.tiles) + 0.5 };
   },
 
   // Où en est la marche de l'armée (coordonnées en cases) : de sa cité vers la frontière, le long de son chemin
@@ -2466,8 +2486,8 @@ const GameRules = {
     if (src >= 0) a.defSource = src;
     // Les défenseurs partent tout de suite, du château le plus proche (ou de l'avant-poste),
     // et marchent à la rencontre de l'armée ennemie : ils se battent en arrivant
-    // (par le chemin le plus rapide de leurs terres : voir walkRoute)
-    const from = this.defenseOrigin(pid, a, src), to = this.attackFront(a);
+    // (par le chemin le plus rapide de leurs terres : voir walkRoute ; leur but suit l'assaut, voir arriveDefenders)
+    const from = this.defenseOrigin(pid, a, src), to = this.defenseGoal(a);
     (a.defPending = a.defPending || []).push(this.walkRoute(pid, from, to, troops));
     return a;
   },
@@ -2619,9 +2639,37 @@ const GameRules = {
   // Défenseurs en route vers cet assaut (pas encore arrivés)
   defendersOnTheWay(a) { return a.defPending ? a.defPending.reduce((s, r) => s + r.troops, 0) : 0; },
 
-  // Arrivée des défenseurs en route : ils rejoignent le combat
+  // Où vont les défenseurs : la case de leurs terres la plus proche de l'endroit où se bat l'assaut
+  // (pour qu'ils y aillent par leurs terres, et pas en ligne droite à travers celles de l'ennemi)
+  defenseGoal(a) {
+    const front = this.attackFront(a), W = this.W, pid = a.target;
+    const fx = Math.floor(front.x), fy = Math.floor(front.y);
+    let best = null, bestD = Infinity;
+    for (let r = 0; r <= 8 && !best; r++) {
+      for (let y = fy - r; y <= fy + r; y++) {
+        for (let x = fx - r; x <= fx + r; x++) {
+          if (x < 0 || y < 0 || x >= W || y >= this.H || this.owner[y * W + x] !== pid) continue;
+          const d = (x + 0.5 - front.x) ** 2 + (y + 0.5 - front.y) ** 2;
+          if (d < bestD) { bestD = d; best = { x: x + 0.5, y: y + 0.5 }; }
+        }
+      }
+    }
+    return best || front;
+  },
+
+  // Arrivée des défenseurs en route : ils rejoignent le combat. Toutes les secondes, ceux qui marchent encore
+  // corrigent leur route : ils suivent l'assaut, qui avance pendant qu'ils viennent à sa rencontre.
   arriveDefenders(a) {
     if (!a.defPending || !a.defPending.length) return;
+    if (this.tick % CONFIG.TICKS_PER_SECOND === 0) {
+      const goal = this.defenseGoal(a);
+      for (const r of a.defPending) {
+        const end = r.pts[r.pts.length - 1];
+        if (r.arrive <= this.tick || Math.hypot(end.x - goal.x, end.y - goal.y) < 2) continue;
+        const pos = this.walkPosition(r);
+        Object.assign(r, this.walkRoute(a.target, { x: pos.x, y: pos.y }, goal, r.troops));
+      }
+    }
     for (const r of a.defPending) if (r.arrive <= this.tick) { a.defenders += r.troops; r.done = true; }
     a.defPending = a.defPending.filter(r => !r.done);
   },

@@ -93,9 +93,11 @@ const Render = {
     Game.forNeighbors(i, add);
   },
 
+  // Case au bord du royaume : elle touche une case d'un autre (ou libre), un fleuve, ou la mer / un lac
+  // (la frontière se dessine donc aussi le long des côtes ; pas au pied des sommets enneigés)
   isBorder(i, o) {
     let border = false;
-    Game.forNeighbors(i, n => { if (Game.isLand(n) && Game.owner[n] !== o) border = true; });
+    Game.forNeighbors(i, n => { if (Game.owner[n] !== o && Game.terrain[n] !== TERRAIN.PEAK) border = true; });
     return border;
   },
 
@@ -112,7 +114,10 @@ const Render = {
         // un fleuve reste bien visible dans un royaume
         r = r * 0.7 + pc[0] * 0.3; g = g * 0.7 + pc[1] * 0.3; b = b * 0.7 + pc[2] * 0.3;
       } else {
-        r = r * 0.45 + pc[0] * 0.55; g = g * 0.45 + pc[1] * 0.55; b = b * 0.45 + pc[2] * 0.55;
+        // La couleur du royaume prend la clarté du terrain (forêts et montagnes plus sombres, plaines et déserts
+        // plus clairs, et le relief ombré), pour qu'on distingue bien le sol sous le royaume
+        const lum = (0.3 * r + 0.59 * g + 0.11 * b) / 160;
+        r = r * 0.4 + pc[0] * lum * 0.6; g = g * 0.4 + pc[1] * lum * 0.6; b = b * 0.4 + pc[2] * lum * 0.6;
       }
     }
     d[k] = r; d[k + 1] = g; d[k + 2] = b; d[k + 3] = 255;
