@@ -413,10 +413,11 @@ mais **tout bâtiment posé dessus produit 20 % de moins** (moulins, casernes, p
 ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte **Monde**, ils sont à leur vraie place
 (Sahara, Arabie, Gobi, Kalahari, désert australien…), avec une bande fertile le long des fleuves qui les traversent (le Nil).
 
-**Contrôles** : en survolant un **autre royaume**, une barre fixe, juste sous ta barre d'infos en haut de l'écran, le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), la souris devient une **main** et il s'illumine (doré chez toi, rouge chez l'ennemi) · molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : en survolant un **autre royaume**, une barre fixe, juste sous ta barre d'infos en haut de l'écran, le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), la souris devient une petite **épée** et il s'illumine (doré chez toi, rouge chez l'ennemi) · en survolant une **armée ennemie** qui t'attaque, un **cercle de ciblage** rouge l'entoure (clic = envoyer tes défenseurs) · molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.77** : 🎯 un cercle de ciblage rouge entoure l'armée ennemie survolée (clic = envoyer tes défenseurs) · 🗡️ la souris devient une petite épée (au lieu d'une main) sur tout ce qu'on peut sélectionner
 - **v0.76.7** : ⚖️ après-guerre et galvanisation s'additionnent au lieu de se multiplier : un +25 % annule un −25 % (la jauge affiche le total quand les deux sont actifs)
 - **v0.76.6** : ⛺ détruire un avant-poste ennemi ne donne plus de malus d'après-guerre (son propriétaire est toujours galvanisé)
 - **v0.76.5** : 🏔️ la montagne défend un peu moins : +180 % au lieu de +250 % (elle se prend aussi un peu plus vite et moins cher)

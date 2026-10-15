@@ -875,10 +875,61 @@ const Render = {
     }
   },
 
+  // Curseur « épée » (au lieu de la petite main) quand on survole quelque chose qu'on peut sélectionner :
+  // une épée dessinée en SVG, la pointe en haut à gauche (c'est là que se fait le clic)
+  SWORD_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
+    '<g stroke-linecap="round">' +
+    '<path d="M2 2L20 20" stroke="#1c1208" stroke-width="6"/><path d="M15 25L25 15M20 20L27 27" stroke="#1c1208" stroke-width="6"/>' +
+    '<path d="M2 2L20 20" stroke="#e9e6dc" stroke-width="3"/><path d="M4 4L19 19" stroke="#ffffff" stroke-width="1"/>' +
+    '<path d="M15 25L25 15" stroke="#d9a520" stroke-width="3"/><path d="M21 21L26 26" stroke="#7a4a22" stroke-width="3"/>' +
+    '<circle cx="28" cy="28" r="2.6" fill="#d9a520" stroke="#1c1208" stroke-width="1.2"/></g></svg>') + '") 2 2, pointer',
+
+  // Armée ennemie survolée sur laquelle on peut cliquer (un assaut contre nous : clic = envoyer des défenseurs) :
+  // renvoie sa zone cliquable { id, x, y } (à l'écran), ou null
+  armyUnderMouse() {
+    const G = Game, m = this.mouse;
+    if (!m || G.phase !== 'playing' || !G.human || !G.human.alive || UI.selectedBuild) return null;
+    for (const b of this.bannerHits || []) {
+      if (Math.abs(m.x - b.x) >= 30 || Math.abs(m.y - b.y) >= 24) continue;
+      const a = G.attacks.find(a => a.id === b.id && !a.done);
+      if (a && a.target === G.human.id) return b;
+    }
+    return null;
+  },
+
+  // Petit cercle de ciblage rouge (qui tourne) autour de l'armée ennemie survolée, comme pour viser une ville
+  drawArmyTarget() {
+    const b = this.armyUnderMouse();
+    if (!b) return;
+    const ctx = this.ctx, now = performance.now(), r = 34;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+    ctx.setLineDash([8, 5]);
+    ctx.lineDashOffset = -now / 30;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#ff5b3a';
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 4;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // quatre petits traits de visée
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      ctx.moveTo(b.x + dx * (r - 6), b.y + dy * (r - 6));
+      ctx.lineTo(b.x + dx * (r + 7), b.y + dy * (r + 7));
+    }
+    ctx.stroke();
+    ctx.restore();
+  },
+
   drawSelectable(ox, oy) {
     const G = Game, a = this.selectableAt(this.hover);
-    const cursor = a >= 0 ? 'pointer' : '';
-    if (this.canvas.style.cursor !== cursor) this.canvas.style.cursor = cursor;
+    const cursor = a >= 0 || this.armyUnderMouse() ? this.SWORD_CURSOR : '';
+    // (on garde le dernier curseur choisi : le navigateur réécrit l'adresse de l'image à sa façon)
+    if (this.curCursor !== cursor) { this.curCursor = cursor; this.canvas.style.cursor = cursor; }
     if (a < 0) return;
     const ctx = this.ctx, s = this.cam.scale, n = G.sizeOf(G.building[a]);
     const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 250);
@@ -1214,6 +1265,7 @@ const Render = {
     this.drawDefendersOnTheWay(ox, oy);
     this.drawReturning(ox, oy);
     this.drawAttackArrows(ox, oy);
+    this.drawArmyTarget();
     this.drawCastleTip();
   },
 
