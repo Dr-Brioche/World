@@ -4,7 +4,8 @@
 const $ = id => document.getElementById(id);
 
 // Petites icônes dessinées pour les menus (voir icons.js) : un style médiéval, pas des emojis
-const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall') };
+const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall'),
+  boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut') };
 
 const UI = {
   selectedBuild: 0,
@@ -229,7 +230,7 @@ const UI = {
     }
     if (type === B_CASTLE) {
       const road = info.road === 'paved' ? 'routes pavées' : 'chemins de terre';
-      return `défense des murs ${pct(info.bonus)}` +
+      return `défense des murs ${pct(info.bonus)}, ${info.slots} moulins ou casernes dans sa muraille` +
         (info.road ? `, ${road} : production des bâtiments reliés ${pct(info.roadBonus)}` : '');
     }
     if (type === B_CHURCH) {
@@ -254,7 +255,7 @@ const UI = {
         : 'débloque les expéditions maritimes (clic droit sur une côte → ⛵ Débarquer)');
     }
     if (type === B_CASTLE) {
-      let txt = `muraille plus grande, défense des murs ${pct(next.bonus - cur.bonus)}, ` +
+      let txt = `muraille plus grande, ${next.slots} moulins ou casernes dedans (au lieu de ${cur.slots}), défense des murs ${pct(next.bonus - cur.bonus)}, ` +
         `garnison ${pct(next.garrison / cur.garrison - 1)}`;
       if (next.road) {
         const road = next.road === 'paved' ? 'routes pavées' : 'chemins de terre';
@@ -381,8 +382,8 @@ const UI = {
     box.className = 'msg request upgrade';
     box.innerHTML = `⛺ <b>Avant-poste</b> ${G.outpostReady(a) ? '' : '(en construction)'} · 🛡️ garnison ${fmt(G.garrison[a])}` +
       ` · ⚔ ${fmt(stationed)} soldats qui attendent` +
-      `<div class="choices"><button data-re>${ICONS.ship} Renforts (${fmt(send)} soldats)</button>` +
-      `<button data-rp${stationed < 1 ? ' disabled' : ''}>${ICONS.anchor} Rapatrier</button>` +
+      `<div class="choices"><button data-re>${ICONS.boatIn} Renforts (${fmt(send)} soldats)</button>` +
+      `<button data-rp${stationed < 1 ? ' disabled' : ''}>${ICONS.boatOut} Rapatrier</button>` +
       `<button data-ab title="L'avant-poste disparaît (ses terres te restent) et tous ses soldats rentrent par la mer">🧨 Abandonner</button>` +
       `<button data-no>Fermer</button></div>`;
     const closeBox = () => { box.remove(); if (this.upgradeBox === box) this.upgradeBox = null; };
@@ -401,8 +402,8 @@ const UI = {
     // Menu rapide (à côté de l'avant-poste)
     const el = document.createElement('div');
     el.className = 'panel actionMenu quickMenu';
-    el.innerHTML = `<button data-re class="up" title="Renforts par la mer">${ICONS.ship}</button>` +
-      `<button data-rp class="up" title="Rapatrier"${stationed < 1 ? ' disabled' : ''}>${ICONS.anchor}</button>`;
+    el.innerHTML = `<button data-re class="up" title="Renforts par la mer">${ICONS.boatIn}</button>` +
+      `<button data-rp class="up" title="Rapatrier"${stationed < 1 ? ' disabled' : ''}>${ICONS.boatOut}</button>`;
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
     el.addEventListener('pointerdown', e => e.stopPropagation());
@@ -541,7 +542,9 @@ const UI = {
     if (info) {
       const a = G.anchor[i];
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
-      if (G.building[i] === B_CASTLE) txt += ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} %`;
+      if (G.building[i] === B_CASTLE) {
+        txt += ` · 🛡️ garnison ${Math.round(G.garrison[a] / info.garrison * 100)} % · places prises : ${G.churchUsed(a)} sur ${info.slots}`;
+      }
       if (G.holdsAlone(a) && G.isIsolated(a)) {
         txt += o === G.human.id ? ' · 🚩 coupé de ton royaume (il produit toujours) : clique pour lancer un assaut qui le relie à ton royaume'
           : ' · 🚩 isolé : aucun renfort ne peut le rejoindre';
@@ -761,8 +764,8 @@ const UI = {
             : `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cet assaut">🛡️ Défendre</button></div>`);
       }).join('') + boats.map(e => {
         // Transport en mer : débarquement, renforts vers un avant-poste, ou retour au port
-        const what = e.home !== undefined ? `${ICONS.anchor} retour au port`
-          : e.reinforce !== undefined ? `${ICONS.ship} → renforts pour ton avant-poste`
+        const what = e.home !== undefined ? `${ICONS.boatOut} retour au port`
+          : e.reinforce !== undefined ? `${ICONS.boatIn} renforts pour ton avant-poste`
           : `${ICONS.ship} → débarquement` + (G.owner[e.landing] >= 0 && G.owner[e.landing] !== h.id
             ? ` chez ${this.bannerImg(G.players[G.owner[e.landing]])}${escapeHtml(G.players[G.owner[e.landing]].name)}` : '');
         return `<div class="attack panel"><span>${what}</span><b data-boat="${e.id}"></b>` +
@@ -972,8 +975,8 @@ const UI = {
     // Son avant-poste : rapatrier les soldats qui y attendent vers le port le plus proche
     if (own && G.building[i] === B_OUTPOST) {
       const op = G.anchor[i], o = G.outposts.get(op), n = o ? Math.floor(o.stationed) : 0;
-      if (n < 1) items.push({ label: `${ICONS.anchor} Rapatrier`, disabled: 'Aucun soldat n\'attend ici (la garnison, elle, reste sur place).' });
-      else items.push({ label: `${ICONS.anchor} Rapatrier ${fmt(n)} soldats (vers ton port le plus proche)`, run: () => {
+      if (n < 1) items.push({ label: `${ICONS.boatOut} Rapatrier`, disabled: 'Aucun soldat n\'attend ici (la garnison, elle, reste sur place).' });
+      else items.push({ label: `${ICONS.boatOut} Rapatrier ${fmt(n)} soldats (vers ton port le plus proche)`, run: () => {
         const err = G.repatriate(h.id, op);
         if (err) this.log(err, 'warn');
         else this.log(`🚢 ${fmt(n)} soldats rembarquent vers ton port.`, 'good');

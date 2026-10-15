@@ -222,13 +222,13 @@ const GameRules = {
     });
   },
 
-  // Moulins et casernes se construisent dans l'enceinte d'un de ses châteaux, ou près d'une de ses
-  // églises qui a encore de la place (pas ailleurs dans l'arrière-pays).
+  // Moulins et casernes se construisent dans l'enceinte d'une de ses villes (châteaux), ou près d'une de ses
+  // églises (ou d'un port), qui a encore de la place (pas ailleurs dans l'arrière-pays).
   // Les châteaux et les églises se construisent partout sur son territoire
   // (mais une église reste loin des châteaux : voir churchCastleConflict).
   insideWalls(pid, a, type) {
     if (type === B_CASTLE || type === B_CHURCH || type === B_PORT) return true;
-    return this.footprint(a, type).every(j => this.castleProtects(pid, j)) || this.churchFor(pid, a, type) >= 0;
+    return this.castleFor(pid, a, type) >= 0 || this.churchFor(pid, a, type) >= 0;
   },
 
   // --- Églises ---
@@ -252,7 +252,7 @@ const GameRules = {
     return zone;
   },
 
-  // Nombre de moulins et casernes déjà construits grâce à l'église (ou au port) ch
+  // Nombre de moulins et casernes déjà construits grâce à la ville, à l'église ou au port ch (ses places prises)
   churchUsed(ch) {
     this.slotHosts();
     return this.slotUsed.get(ch) || 0;
@@ -265,10 +265,11 @@ const GameRules = {
     return this.slotLists.get(pid) || [];
   },
 
-  // Pour chaque moulin ou caserne bâti hors de la muraille d'un château : l'église ou le port dont il occupe
-  // une place. Un bâtiment dans les zones d'une église ET d'un port ne compte que pour l'un des deux :
-  // le port en priorité (s'il lui reste de la place), sinon l'église. Renvoie une Map : bâtiment → église/port.
-  // (recalculé seulement quand la carte change)
+  // Pour chaque moulin ou caserne : la ville (château), le port ou l'église dont il occupe une place.
+  // Dans la muraille d'une ville, il prend une place de la ville (slots : 4, 6 ou 9 selon son niveau) ; sinon
+  // (ou si les villes autour sont pleines), celle d'un port ou d'une église. Un bâtiment dans plusieurs zones ne
+  // compte que pour une : la ville d'abord, puis le port, puis l'église (s'il leur reste de la place).
+  // Renvoie une Map : bâtiment → ville/port/église. (recalculé seulement quand la carte change)
   slotHosts() {
     if (this.slotCache && this.slotCheckTick === this.tick) return this.slotCache; // (vérifié une fois par tour)
     this.slotCheckTick = this.tick;
@@ -293,8 +294,9 @@ const GameRules = {
       const t = this.building[b], o = this.owner[b];
       if ((t !== B_MILL && t !== B_BARRACKS) || o < 0) continue;
       const cells = this.footprint(b, t);
-      if (cells.every(j => this.castleProtects(o, j))) continue; // (dans la muraille : pas besoin de place)
-      const cands = (lists.get(o) || []).filter(ch => cells.every(j => this.inChurchRange(ch, j, this.buildingInfo(ch).radius)));
+      // (les villes d'abord, puis les ports et les églises)
+      const cands = this.castles.filter(c => this.owner[c] === o && cells.every(j => this.inWalls(c, j)))
+        .concat((lists.get(o) || []).filter(ch => cells.every(j => this.inChurchRange(ch, j, this.buildingInfo(ch).radius))));
       if (!cands.length) continue;
       // un seul hôte possible : il le prend tout de suite ; sinon on décide après (voir plus bas)
       if (cands.length === 1) { hosts.set(b, cands[0]); used.set(cands[0], (used.get(cands[0]) || 0) + 1); }
@@ -315,6 +317,17 @@ const GameRules = {
   hasSlots(a) {
     const t = this.building[a];
     return (t === B_CHURCH || t === B_PORT) && this.buildingInfo(a).slots > 0;
+  },
+
+  // Une ville (château) du royaume qui accepte ce moulin (ou cette caserne) : il est dans sa muraille et elle a
+  // encore de la place (slots). -1 s'il n'y en a pas.
+  castleFor(pid, a, type) {
+    const cells = this.footprint(a, type);
+    for (const c of this.castles) {
+      if (this.owner[c] !== pid || !cells.every(j => this.inWalls(c, j))) continue;
+      if (this.churchUsed(c) < this.castleInfo(c).slots) return c;
+    }
+    return -1;
   },
 
   // Une église (ou un port) du royaume qui accepte ce bâtiment (il est dans sa zone et elle a de la place), ou -1
@@ -363,6 +376,7 @@ const GameRules = {
     this.castles = this.castles.filter(c => c !== a);
     this.version++;
     this.regionsCache = null;
+    this.slotCache = null; // (voir slotHosts)
   },
 
   // Écart obligatoire entre deux bâtiments : CASTLE_SPACING si l'un des deux est un château,
@@ -391,6 +405,7 @@ const GameRules = {
   placeBuilding(i, type) {
     this.version++;
     this.regionsCache = null; // (le découpage dépend des bâtiments : à refaire)
+    this.slotCache = null;    // (les places prises aussi : voir slotHosts)
     for (const j of this.footprint(i, type)) {
       this.building[j] = type;
       this.anchor[j] = i;
@@ -1469,8 +1484,8 @@ const GameRules = {
           'Bâtis d\'abord un château ici (ou relie ce territoire à un de tes châteaux).';
       }
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
-        return `${BUILDINGS[type].name} : à construire dans l'enceinte d'un de tes châteaux, ou près d'une de tes églises (ou d'un port amélioré) ` +
-          'qui a encore de la place (pas ailleurs dans l\'arrière-pays).';
+        return `${BUILDINGS[type].name} : à construire dans l'enceinte d'une de tes villes, ou près d'une de tes églises (ou d'un port amélioré), ` +
+          'qui a encore de la place (une ville : 4 moulins ou casernes, 6 au niveau 2, 9 au niveau 3 ; pas ailleurs dans l\'arrière-pays).';
       }
       if (i >= 0 && this.owner[i] === p.id && this.churchCastleConflict(p.id, i, type)) {
         return type === B_CASTLE

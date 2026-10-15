@@ -263,10 +263,11 @@ const BARRACKS_LEVELS = [
 // (le défenseur peut encore envoyer des soldats pendant ce temps).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 8,  bonus: 1, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000 },
+  { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000 },
 ];
+// slots = moulins et casernes qu'on peut bâtir dans sa muraille (4, 6 puis 9) ;
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
 // le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.
 // size = largeur de l'image en cases, quand on zoome assez pour la voir

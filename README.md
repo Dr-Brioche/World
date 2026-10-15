@@ -228,8 +228,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
    **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher**.
    Les bâtiments que tu **prends à l'ennemi** ne comptent pas (et un bâtiment perdu ne compte plus).
-   **Les moulins et casernes se construisent dans l'enceinte d'un de tes châteaux** (dans sa muraille),
-   **ou près d'une de tes églises** (ou d'un port amélioré) qui a encore de la place, pas ailleurs dans l'arrière-pays.
+   **Les moulins et casernes se construisent dans l'enceinte d'une de tes villes** (dans sa muraille),
+   **ou près d'une de tes églises** (ou d'un port amélioré), qui a encore de la place, pas ailleurs dans l'arrière-pays.
+   Une ville a **4 places** (niveau 1), **6** (niveau 2) ou **9** (niveau 3) ; quand elle est pleine, un moulin dans sa muraille
+   doit prendre la place d'une église ou d'un port proche (sinon, impossible). En survolant une ville : « places prises : 3 sur 6 ».
    Les châteaux et les églises, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
    (l'aperçu devient rouge si c'est trop près). Quand tu choisis un **moulin** ou une **caserne**, les zones où l'on peut
@@ -272,11 +274,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      de sa muraille à cet endroit (terrain + murs, en moyenne) : en forêt ou en colline, elle est bien plus forte.
      **Clique sur un de tes châteaux pour l'améliorer** (menu rapide) (3 niveaux) :
 
-     | Niveau | Défense des murs | Muraille | Garnison | Prix |
-     |---|---|---|---|---|
-     | 1. Fort en bois | +100 % | petite | quelques soldats | 💰 100 (puis plus cher à chaque château) |
-     | 2. Château | +200 % | moyenne | x5 | 💰 500 |
-     | 3. Citadelle | +400 % | grande | x3 | 💰 3000 |
+     | Niveau | Défense des murs | Muraille | Moulins et casernes dedans | Garnison | Prix |
+     |---|---|---|---|---|---|
+     | 1. Fort en bois | +100 % | petite | 4 | quelques soldats | 💰 100 (puis plus cher à chaque château) |
+     | 2. Château | +200 % | moyenne | 6 | x5 | 💰 500 |
+     | 3. Citadelle | +400 % | grande | 9 | x3 | 💰 3000 |
 
      Chaque soldat de garnison **vaut 3 soldats** au combat. **Une citadelle** permet aussi de mener
      **2 assauts en même temps** contre un même royaume (sur deux de ses cibles différentes).
@@ -491,6 +493,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.88** : 🏰 une ville a un nombre de places pour ses moulins et casernes : 4 au niveau 1, 6 au niveau 2, 9 au niveau 3 (« places prises » en la survolant) · ⛵ avant-poste : nouvelles icônes, un petit bateau avec une flèche vers la gauche pour envoyer des renforts, vers la droite pour rapatrier
 - **v0.87.7** : ⚡ les assauts vont 15 % plus vite (en terre ennemie, dans leur marche jusqu'à la frontière et pour leurs renforts) et les défenseurs 15 % moins vite : ils ne vont plus que 18 % plus vite qu'un assaut de même taille (au lieu de 60 %)
 - **v0.87.6** : 🛤️ un moulin, une caserne ou un port relié à plusieurs villes a une route vers chacune, et les bonus s'additionnent (double avec 2 villes, triple avec 3, jamais plus), que les villes soient bâties avant ou après lui
 - **v0.87.5** : 🌾 un moulin ou une caserne bâti hors des villes, sur une route (celle d'un port ou le chemin d'une église) ou juste à côté, produit +20 %
