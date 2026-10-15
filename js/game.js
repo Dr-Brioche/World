@@ -2467,10 +2467,12 @@ const GameRules = {
   },
 
   // Peut-on débarquer sur cette case ? Terre libre ou ennemie (pas à soi ni à un allié), sans bâtiment :
-  // un débarquement ne prend jamais un bâtiment, il se pose à côté.
+  // un débarquement ne prend jamais un bâtiment, il se pose à côté. Jamais dans la muraille d'une ville ou d'un
+  // port fortifié (on ne la franchit pas : il faut l'assiéger), ni sur un mur.
   landable(pid, j) {
     const o = this.owner[j];
-    return this.isLand(j) && !this.building[j] && o !== pid && (o < 0 || !this.areAllied(pid, o));
+    if (!this.isLand(j) || this.building[j] || o === pid || (o >= 0 && this.areAllied(pid, o)) || this.wallAt[j]) return false;
+    return o < 0 || !(this.castleProtects(o, j) || this.portBonus(o, j) > 0);
   },
 
   // Terres prises en débarquant sur la côte i : une petite zone autour (un demi-cercle le long de la côte),

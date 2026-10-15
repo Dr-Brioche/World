@@ -403,7 +403,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **⛵ Expéditions maritimes** (avec un port de niveau 2 ou 3) : fais un **clic droit** sur une côte
    (au bord de la mer ou d'un fleuve, ou juste dans l'eau à côté) et choisis **⛵ Attaque navale**. Un bateau part de ton port le plus rapide,
    navigue sur la mer et les fleuves (tout le monde le voit passer), puis débarque : tu prends une **petite
-   zone en demi-cercle le long de la côte** et tu y bâtis un **avant-poste ⛺**. L'expédition coûte un peu d'or
+   zone en demi-cercle le long de la côte** et tu y bâtis un **avant-poste ⛺** (jamais dans la **muraille** d'une ville ou
+   d'un port fortifié, ni sur un mur : la côte d'une ville se prend en l'assiégeant). L'expédition coûte un peu d'or
    (un peu plus à chaque avant-poste) et emmène **le % de soldats choisi** avec le curseur « Envoyer » :
    choisis bien avant de partir ! Une petite partie se perd en mer (1 % par seconde de traversée, 25 % au plus).
    Il faut emmener **au moins de quoi remplir la garnison** de l'avant-poste (5 soldats, pertes en mer comprises).
@@ -528,6 +529,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.11** : 🐛 un débarquement ne peut plus se poser dans la muraille d'une ville ou d'un port fortifié (ni sur un mur) : il fallait l'assiéger, pas y planter un avant-poste
 - **v0.91.10** : ✝️ un royaume désorganisé (sans ville ni port fortifié) se fait convertir 2 fois plus vite par la Croyance de ses voisins
 - **v0.91.9** : ⚓ un royaume qui perd tous ses ports perd aussi tous ses avant-postes : ils sont supprimés de la carte avec leurs soldats, et leurs zones redeviennent libres
 - **v0.91.8** : ⛺ un royaume qui n'a plus que des avant-postes est perdu : il est anéanti, ses avant-postes sont supprimés et leurs zones redeviennent libres
