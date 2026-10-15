@@ -1092,6 +1092,18 @@ const GameRules = {
     const W = this.W, N = this.N, own = this.owner;
     // (cases d'en face, de l'autre côté d'un fleuve ; pas de fonction qui modifie n ou comp : c'est plus rapide)
     const across = [], pushAcross = j => { across.push(j); };
+    // Routes d'assauts encore en cours vers un objectif : tant que le combat n'est pas joué, elles ne sont que
+    // visuelles. Elles ne coupent donc pas le royaume traversé : pour lui, ses morceaux restent reliés à travers
+    // elles (bridge[t] = royaume traversé). Si l'assaut prend son objectif, la coupe s'applique ; sinon la
+    // route lui est rendue (voir revertRoute).
+    const bridges = this.pendingRoutes(), bq = [];
+    let bridge = null, bseen = null, stamp = 0;
+    if (bridges.length) {
+      if (!this.bridgeBuf || this.bridgeBuf.length !== N) { this.bridgeBuf = new Int16Array(N).fill(-1); this.bridgeSeen = new Int32Array(N); }
+      bridge = this.bridgeBuf; bseen = this.bridgeSeen;
+      for (const [t, o] of bridges) bridge[t] = o;
+    }
+    const visitBridge = (j, o) => { if (bridge[j] === o && bseen[j] !== stamp) { bseen[j] = stamp; bq.push(j); } };
     for (let i = 0; i < N; i++) {
       const o = own[i];
       if (o < 0 || comp[i] >= 0) continue;
@@ -1100,12 +1112,22 @@ const GameRules = {
       const k = size.length, s = n;
       comp[i] = k;
       order[n++] = i;
-      for (let q = s; q < n; q++) {
-        const t = order[q], x = t % W;
+      stamp = (this.bridgeStamp = (this.bridgeStamp || 0) + 1);
+      bq.length = 0;
+      let b = 0;
+      for (let q = s; q < n || b < bq.length;) {
+        // (les cases d'une route en cours sont traversées sans faire partie du morceau)
+        const t = q < n ? order[q++] : bq[b++], x = t % W;
         if (x > 0 && comp[t - 1] < 0 && own[t - 1] === o) { comp[t - 1] = k; order[n++] = t - 1; }
         if (x < W - 1 && comp[t + 1] < 0 && own[t + 1] === o) { comp[t + 1] = k; order[n++] = t + 1; }
         if (t >= W && comp[t - W] < 0 && own[t - W] === o) { comp[t - W] = k; order[n++] = t - W; }
         if (t < N - W && comp[t + W] < 0 && own[t + W] === o) { comp[t + W] = k; order[n++] = t + W; }
+        if (bridge) {
+          if (x > 0) visitBridge(t - 1, o);
+          if (x < W - 1) visitBridge(t + 1, o);
+          if (t >= W) visitBridge(t - W, o);
+          if (t < N - W) visitBridge(t + W, o);
+        }
         if (side[t]) { // les deux rives d'un fleuve restent un même morceau
           across.length = 0;
           this.acrossRiver(t, pushAcross);
@@ -1123,6 +1145,7 @@ const GameRules = {
       outpost.push(op); anyOutpost.push(anyOp); colony.push(col); hasCastle.push(cas);
       if (main[o] < 0 || size[k] > size[main[o]]) main[o] = k;
     }
+    if (bridge) for (const [t] of bridges) bridge[t] = -1; // (on remet le tableau à zéro pour la prochaine fois)
     // Les cœurs du royaume : sur chaque île (ou continent), son plus grand morceau.
     // Une zone d'avant-poste n'est pas un cœur (c'est une tête de pont), sauf si un château s'y trouve.
     const land = this.landComp(), heart = new Uint8Array(size.length), best = new Map(), hasHeart = new Set();
@@ -1138,6 +1161,16 @@ const GameRules = {
     this.regionsCache = { comp, order, size, start, owner, main, heart, outpost, anyOutpost, colony, hasCastle };
     this.regionsVersion = this.version;
     return this.regionsCache;
+  },
+
+  // Cases des routes d'assauts encore en cours vers un objectif (pas encore pris) : [case, royaume traversé]
+  pendingRoutes() {
+    const list = [];
+    for (const a of this.attacks) {
+      if (a.done || !a.route || a.won || a.castleTaken || a.target < 0) continue;
+      for (const t of a.route) if (this.owner[t] === a.attacker) list.push([t, a.target]);
+    }
+    return list;
   },
 
   // Morceau de royaume coupé de tous ses châteaux : il n'a ni château ni avant-poste, alors que son royaume
@@ -1747,6 +1780,7 @@ const GameRules = {
   // et ses soldats rejoignent la défense du château
   linkArrives(a) {
     a.won = true; // (objectif atteint : la route reste à l'attaquant)
+    this.regionsCache = null; // (sa route n'est plus « en cours » : la coupe s'applique, voir regions)
     const c = a.link, p = this.players[a.attacker], R = CONFIG.LINK_WIDEN_RADIUS;
     // La route s'élargit : on prend les terres ennemies proches du chemin (hors murailles)
     for (const t of a.path) {
@@ -2896,6 +2930,7 @@ const GameRules = {
 
   onCastleTaken(a, castle, zone) {
     a.castleTaken = true;
+    this.regionsCache = null; // (sa route n'est plus « en cours » : la coupe s'applique, voir regions)
     this.warEffects(a);
     for (const i of zone) {
       if (this.owner[i] !== a.target) continue; // (déjà pris avec un bâtiment)
@@ -2925,6 +2960,8 @@ const GameRules = {
 
   onTargetTaken(a, type, withZone) {
     a.won = true; // (objectif pris : la route reste à l'attaquant)
+    a.cut = true; // (et la coupe qu'elle fait dans le royaume s'applique maintenant : voir regions)
+    this.regionsCache = null;
     const p = this.players[a.attacker], d = this.players[a.target];
     this.warEffects(a, type === B_OUTPOST); // (détruire un avant-poste ne donne pas de malus d'après-guerre)
     const what = { [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
