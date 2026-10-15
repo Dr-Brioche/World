@@ -288,8 +288,8 @@ const CHURCH_LEVELS = [
 const PORT_LEVELS = [
   null,
   { name: 'Port',       gold: 3,  boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
-  { name: 'Grand port', gold: 6,  boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.4, upgradeCost: 500 },
-  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 1200, garrison: 10, bonus: 1 },
+  { name: 'Grand port', gold: 9,  boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.4, upgradeCost: 500 },
+  { name: 'Port royal', gold: 20, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 1200, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue

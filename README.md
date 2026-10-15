@@ -357,8 +357,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Or produit | Moulins ou casernes autour | Expéditions maritimes | Prix |
      |---|---|---|---|---|
      | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
-     | 2. Grand port | +100 % | 1 | **oui** | 💰 500 |
-     | 3. Port royal | +67 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 1200 |
+     | 2. Grand port | +200 % | 1 | **oui** | 💰 500 |
+     | 3. Port royal | +122 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 1200 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
@@ -484,6 +484,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.87.4** : ⚓ ports plus rentables : le grand port rapporte 50 % d'or de plus qu'avant (9 au lieu de 6) et le port royal 100 % de plus (20 au lieu de 10)
 - **v0.87.3** : 🌾 l'expansion en terre libre ne ralentit plus : les terres libres se prennent 3 fois plus vite toute la partie, et coûtent jusqu'à 3 fois moins de soldats quand l'élan de recrutement retombe (au bout de 5 minutes) : la conquête des terres vierges garde le rythme du début
 - **v0.87.2** : ⚔️ casernes bien plus fortes : chaque soldat vaut 1,3 (camp d'entraînement), 1,8 (caserne) ou 2,5 soldats (grande caserne) au combat, au lieu de 1,1, 1,2 et 1,5
 - **v0.87.1** : 🏛️ la règle du pouvoir : une muraille avec sa garnison maintient le pouvoir, donc un **port fortifié** (niveau 3) tient sa région comme une ville. Un royaume qui garde un port fortifié n'est plus désorganisé, et une région avec un port fortifié peut construire ; sans ville ni port fortifié, c'est l'anarchie
