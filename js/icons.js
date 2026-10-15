@@ -11,8 +11,22 @@ const ICON_DEFS = {
   church: [{ d: 'M12 1.5v5M9.8 3.5h4.4', s: 'c', w: 1.8 }, { d: 'M4 22V12.5l8-6 8 6V22h-5.5v-5a2.5 2.5 0 0 0-5 0v5z', f: 'c' }],
   mill: [{ d: 'M9.2 22l1.6-11h2.4l1.6 11z', f: 'c' },
     { d: 'M12 10.5L4.5 3.5 3.2 5l7.8 6.6zM12 10.5l7.5-7 1.3 1.5-7.8 6.6zM12 10.5l-6.8 7.3 1.5 1.3 6.5-7.2zM12 10.5l6.8 7.3-1.5 1.3-6.5-7.2z', f: 'c', o: 0.75 }],
-  swords: [{ d: 'M4 3l13.5 13.5M20 3L6.5 16.5', s: 'c', w: 2.3 },
-    { d: 'M14.5 19l5-5M4.5 14l5 5', s: 'c', w: 2.3 }, { d: 'M18.5 18.5l2.5 2.5M5.5 18.5L3 21', s: 'c', w: 2.6 }],
+  // Deux épées médiévales croisées (poignées en haut) : les troupes, sans caserne ou avec une caserne de niveau 1
+  swords: [{ d: 'M7 7l13.5 13.5M17 7L3.5 20.5', s: 'c', w: 2.2 },
+    { d: 'M4.5 9.5l5-5M19.5 9.5l-5-5', s: 'c', w: 2 }, { d: 'M3.6 3.6l2.8 2.8M20.4 3.6l-2.8 2.8', s: 'c', w: 2.5 },
+    { d: 'M2.9 1.6a1.3 1.3 0 1 1-.01 0zM21.1 1.6a1.3 1.3 0 1 1-.01 0z', f: 'c' }],
+  // ... avec un casque entre les deux poignées : caserne de niveau 2
+  troops2: [...[{ d: 'M7 7l13.5 13.5M17 7L3.5 20.5', s: 'c', w: 2.2 },
+    { d: 'M4.5 9.5l5-5M19.5 9.5l-5-5', s: 'c', w: 2 }, { d: 'M3.6 3.6l2.8 2.8M20.4 3.6l-2.8 2.8', s: 'c', w: 2.5 },
+    { d: 'M2.9 1.6a1.3 1.3 0 1 1-.01 0zM21.1 1.6a1.3 1.3 0 1 1-.01 0z', f: 'c' }],
+    { d: 'M7.4 10.4V6.3a4.6 4.6 0 0 1 9.2 0v4.1z', f: '#c3cad0', s: '#22262a', w: 1 }, { d: 'M8.4 7.4h7.2M12 7.4v3', s: '#22262a', w: 1.3 }],
+  // ... et un bouclier (un écusson) devant les deux épées : caserne de niveau 3
+  troops3: [...[{ d: 'M7 7l13.5 13.5M17 7L3.5 20.5', s: 'c', w: 2.2 },
+    { d: 'M4.5 9.5l5-5M19.5 9.5l-5-5', s: 'c', w: 2 }, { d: 'M3.6 3.6l2.8 2.8M20.4 3.6l-2.8 2.8', s: 'c', w: 2.5 },
+    { d: 'M2.9 1.6a1.3 1.3 0 1 1-.01 0zM21.1 1.6a1.3 1.3 0 1 1-.01 0z', f: 'c' }],
+    { d: 'M7.4 10.4V6.3a4.6 4.6 0 0 1 9.2 0v4.1z', f: '#c3cad0', s: '#22262a', w: 1 }, { d: 'M8.4 7.4h7.2M12 7.4v3', s: '#22262a', w: 1.3 },
+    { d: 'M12 11.4l6.2 2v3.6c0 3.6-2.7 5.7-6.2 6.8-3.5-1.1-6.2-3.2-6.2-6.8v-3.6z', f: '#c0392b', s: '#2a1a0c', w: 1 },
+    { d: 'M12 13.8v7.6M9.2 16.6h5.6', s: '#f0c94a', w: 1.6 }],
   tent: [{ d: 'M12 4L2 21h20z', f: 'c' }, { d: 'M12 11l-3.2 10h6.4z', f: '#f3e3bf', o: 0.9 }, { d: 'M12 4V1.5l3 1-3 1', s: 'c', w: 1.2 }],
   // --- Ressources et armée ---
   gold: [{ d: 'M15.5 9.5a6 6 0 1 1-.01 0z', f: '#d9a520', s: '#6b4a12', w: 1.2 },
@@ -101,7 +115,7 @@ const EMOJI_ICONS = {
   '🏗': 'hammer', '🧨': 'pick', '🏚': 'pick', '🔎': 'lens', '🔍': 'lens', '↩': 'back', '🛤': 'road', '🛣': 'road',
   '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
-  '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
+  '🪖': 'troops2', '🎖': 'troops3', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 

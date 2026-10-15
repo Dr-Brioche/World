@@ -163,7 +163,7 @@ const UI = {
     const p = G.players[o];
     const types = [B_CASTLE, B_CHURCH, B_PORT, B_MILL, B_BARRACKS, B_OUTPOST];
     const html = `${this.bannerImg(p)}<b>${escapeHtml(p.name)}</b>${G.areAllied(o, h.id) ? ' 🤝' : ''}` +
-      ` · <span title="Soldats">👥 ${fmt(p.troops)}</span>` +
+      ` · <span title="Soldats (épées : sans caserne ou niveau 1 · casque : caserne niveau 2 · bouclier : niveau 3)">${G.troopIcon(o)} ${fmt(p.troops)}</span>` +
       types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
       ` · <span title="Part des terres">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)} %</span>` +
       ` · <span title="Croyance">✝️ ${fmt(Math.round(G.faithOf(o)))}</span>`;
@@ -704,7 +704,7 @@ const UI = {
     // toute l'armée sur le maximum (ex. « 150 / 300 »), puis ce qui n'est pas disponible pour attaquer
     const rest = [st >= 1 ? `⛺ ${fmt(st)} aux avant-postes` : '',
       sea >= 1 ? `⛵ ${fmt(sea)} en mer` : ''].filter(Boolean);
-    $('troopText').textContent = `⚔️ ${fmt(G.armySize(h))} / ${fmt(max)}` + (rest.length ? ` · dont ${rest.join(', ')}` : '');
+    $('troopText').textContent = `${G.troopIcon(h.id)} ${fmt(G.armySize(h))} / ${fmt(max)}` + (rest.length ? ` · dont ${rest.join(', ')}` : '');
     // Pas de chiffre précis : juste l'état du recrutement
     let tip = 'recrutement normal';
     if (r >= 0.98) tip = 'armée pleine !';
@@ -785,8 +785,8 @@ const UI = {
       const pending = a.pending ? a.pending.reduce((s, r) => s + r.troops, 0) : 0;
       const defenders = (a.defenders || 0) + (a.garrison || 0), coming = G.defendersOnTheWay(a);
       // Assaut ennemi contre nous : juste ses soldats (la barre reste courte : « Écosse attaque · ⚔ 242 · Défendre »)
-      if (a.target === h.id && a.attacker !== h.id) { el.textContent = `⚔ ${fmt(a.troops)}`; continue; }
-      el.textContent = `⚔ ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
+      if (a.target === h.id && a.attacker !== h.id) { el.textContent = `${G.troopIcon(a.attacker)} ${fmt(a.troops)}`; continue; }
+      el.textContent = `${G.troopIcon(a.attacker)} ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
         (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (coming >= 1 ? ` (🛡 +${fmt(coming)} en route)` : '') +
         (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
         // (garnison du château visé : elle attend derrière sa muraille, et n'entre en jeu qu'au siège)
