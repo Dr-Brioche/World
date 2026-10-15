@@ -340,8 +340,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Tes églises **prêchent chez tes voisins ennemis** (pas chez tes alliés de pacte) : si tu as **plus de Croyance**
      qu'un voisin, tu **convertis lentement ses terres** collées aux tiennes, une case à la fois. C'est l'**écart** qui compte :
      avec 100 contre 80, ta Croyance vaut 20 face à lui. Plus l'écart est grand, plus ça va vite : environ une case
-     toutes les **30 s** avec 20 d'écart, toutes les **20 s** avec 50, toutes les **5 s** avec 100, et **une par seconde**
-     à partir de 200. Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
+     toutes les **30 s** avec 20 d'écart, toutes les **20 s** avec 50, toutes les **5 s** avec 100, **une par seconde**
+     avec 200, **2 par seconde** avec 500, et **5 par seconde** à partir de **1000** (le maximum). Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
      s'avancent dans le tien : les frontières deviennent plus nettes, et ses routes trop fines se referment.
      Si une conversion **coupe** son royaume, la coupe s'applique tout de suite (le morceau coupé est englobé).
      Ça marche dans les deux sens : un voisin plus croyant convertit **tes** terres ! Dans le classement, une **📖 bible verte**
@@ -504,6 +504,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.89.1** : ✝️ la conversion continue d'accélérer au-delà de 200 d'écart de Croyance : 2 cases par seconde à 500, 5 par seconde à 1000 (le maximum)
 - **v0.89** : ✝️ croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2000 pièces, et la Croyance du royaume monte de 1000 pendant 60 s ; les bots en lancent aussi quand un voisin les dépasse en Croyance
 - **v0.88.2** : 🏰🧱🏰 un mur peut relier deux de tes villes (vise l'autre ville : le mur va jusqu'à sa muraille) ; une fois debout, chacune gagne +50 soldats de garnison · 🤖 les bots relient aussi leurs villes · ⚡ un territoire désorganisé se prend 25 % plus vite
 - **v0.88.1** : ⚔️ l'icône des troupes montre le niveau des casernes de chaque royaume : deux épées médiévales croisées (sans caserne ou niveau 1), avec un casque (niveau 2), puis avec un bouclier (niveau 3), sur la carte, les armées, la fiche des royaumes et ta jauge

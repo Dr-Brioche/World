@@ -111,8 +111,8 @@ const CONFIG = {
   CRUSADE_TIME: 60,
   // Vitesse de la conversion selon l'écart de Croyance : [écart, secondes pour convertir une case].
   // (entre deux lignes, on passe en douceur de l'une à l'autre ; plus petit que 20 : encore plus lent ;
-  //  au-delà de 200 : une case par seconde au plus)
-  FAITH_PACE: [[20, 30], [100, 5], [200, 1]],
+  //  500 d'écart : 2 cases par seconde ; 1000 et plus : 5 cases par seconde, le maximum)
+  FAITH_PACE: [[20, 30], [100, 5], [200, 1], [500, 0.5], [1000, 0.2]],
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   // Distances minimum (de centre à centre, en cases) entre ses grands bâtiments : cercles rouges à la construction
