@@ -153,7 +153,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Tu peux relancer un nouvel assaut aussitôt.
    - **Prendre une église ou un port** (qui permet de construire autour de lui) te donne aussi **sa zone**
      et **les moulins et casernes construits grâce à lui**. Ce qui est dans la muraille d'un château reste au défenseur.
-   - **⚰️ Après-guerre et 🔥 galvanisation** : après un assaut réussi (château, église, port ou avant-poste pris),
+   - **⚰️ Après-guerre et 🔥 galvanisation** : après un assaut réussi (château, église, port ou avant-poste pris ;
+     détruire un avant-poste ne donne **pas** de malus d'après-guerre, mais son propriétaire est quand même galvanisé),
      pendant **30 s**, le vainqueur panse ses blessures (**−25 %** de soldats produits), et le perdant est galvanisé
      par la défaite (**+25 %**). **Ces effets s'additionnent** : chaque victoire ajoute −25 % pendant ses 30 s
      (jusqu'à −75 % : qui attaque trop le paie cher), chaque défaite ajoute +25 % (jusqu'à +100 % : qui est trop
@@ -415,6 +416,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.76.6** : ⛺ détruire un avant-poste ennemi ne donne plus de malus d'après-guerre (son propriétaire est toujours galvanisé)
 - **v0.76.5** : 🏔️ la montagne défend un peu moins : +180 % au lieu de +250 % (elle se prend aussi un peu plus vite et moins cher)
 - **v0.76.4** : 🔥 réussir une défense (repousser un assaut) galvanise ton peuple : +25 % de soldats produits pendant 15 s
 - **v0.76.3** : ⛺ un avant-poste en construction n'a pas de garnison : ses soldats sont des soldats affaiblis occupés à bâtir (« ⚔ affaiblis » sur la carte, comptés avec les avant-postes dans la jauge, et les bots ne les comptent plus comme une garnison)
