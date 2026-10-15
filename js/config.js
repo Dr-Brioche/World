@@ -77,6 +77,13 @@ const CONFIG = {
   BUILD_TIME: 3,             // secondes de chantier pour construire un bâtiment (il ne produit rien avant)
   UPGRADE_TIME: 5,           // secondes de travaux pour améliorer un bâtiment...
   UPGRADE_TIME_LEVEL3: 10,   // ...et 10 s pour passer au niveau 3
+  CASTLE_UPGRADE_TIME: [40, 60], // une ville (château) : 40 s pour passer au niveau 2, 60 s au niveau 3
+  // Murs : une ville de niveau 2 peut bâtir 1 mur, une citadelle (niveau 3) un 2e. Un mur va de la muraille de la
+  // ville jusqu'à l'endroit choisi, au plus WALL_MAX_REACH cases plus loin. Aucun assaut ne peut le franchir.
+  WALL_COSTS: [500, 1000],   // prix du 1er mur, puis du 2e
+  WALL_BUILD_TIME: 40,       // secondes de chantier
+  WALL_MAX_REACH: 15,
+  WALL_SNAP: 3,              // visé à moins de 3 cases d'un obstacle (lac, sommet, fleuve, autre mur) : le mur s'y accroche
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
   PORT_ROAD_DISTANCE: 30,    // un port à moins de 30 cases d'un de ses châteaux (sur la même terre) y est relié
   PORT_ROAD_BONUS: 0.3,      // par un chemin de terre : +30 % d'or produit par le port
