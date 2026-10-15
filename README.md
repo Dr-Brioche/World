@@ -205,7 +205,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
-   **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise) ; les châteaux pris à l'ennemi
+   **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise ; le bouton **Château** affiche le compte, ex. « 1/3 ») ; les châteaux pris à l'ennemi
    ne comptent pas dans cette limite, et une **église** améliorée en débloque d'autres.
    **Le terrain compte** : un moulin produit plus en plaine (+30 %) qu'en forêt (normal), colline (-10 %) ou montagne (-30 %) ;
    une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
@@ -426,6 +426,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.78.3** : 🐛 correction : les assauts contre un royaume avançaient beaucoup trop vite (à la vitesse des terres libres) depuis la v0.76 · 🏰 le bouton Château affiche un petit compteur « construits / maximum » (ex. 1/3), qui monte avec tes églises
 - **v0.78.2** : ✂️ la route d'un assaut vers un objectif n'est que visuelle tant que le combat n'est pas joué : elle ne coupe le royaume traversé que si l'assaut prend son objectif (s'il échoue, elle est rendue et rien n'est coupé) · ⏱️ plus de temps de trajet affiché à côté des armées en marche
 - **v0.78.1** : 🛡️ on ne peut envoyer des défenseurs contre un assaut qu'une fois qu'il est entré sur nos terres (fini les défenseurs qui partent l'attendre en terre ennemie pendant sa marche) ; les bots aussi
 - **v0.78** : ⛪ une église pas trop loin d'une route de port (10 cases) s'y relie par un petit chemin, et une église pas trop loin d'une ville (25 cases) est reliée à elle : reliée, elle rapporte +2 💰 toutes les 10 s (un port seul, sans ville, ne crée pas de chemin)
