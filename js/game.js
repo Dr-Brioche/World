@@ -438,7 +438,8 @@ const GameRules = {
     return next ? next.upgradeCost : null;
   },
 
-  // Lance l'amélioration d'un bâtiment : on paie tout de suite, les travaux durent UPGRADE_TIME secondes.
+  // Lance l'amélioration d'un bâtiment : on paie tout de suite, les travaux durent UPGRADE_TIME secondes
+  // (40 s pour passer au niveau 2, 60 s pour le niveau 3, quel que soit le bâtiment).
   // Renvoie un message d'erreur, ou null si les travaux commencent.
   upgradeBuilding(p, a) {
     if (!this.building[a] || this.owner[a] !== p.id) return 'Ce n\'est pas un de tes bâtiments.';
@@ -447,10 +448,8 @@ const GameRules = {
     if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
-    // (passer au niveau 3 prend plus longtemps ; une ville, encore plus : voir CASTLE_UPGRADE_TIME)
     const lvl3 = this.level[a] + 1 >= 3;
-    const secs = this.building[a] === B_CASTLE ? CONFIG.CASTLE_UPGRADE_TIME[lvl3 ? 1 : 0]
-      : lvl3 ? CONFIG.UPGRADE_TIME_LEVEL3 : CONFIG.UPGRADE_TIME;
+    const secs = CONFIG.UPGRADE_TIME[lvl3 ? 1 : 0];
     this.startWorks(p, a, 'up', secs, cost);
     return null;
   },

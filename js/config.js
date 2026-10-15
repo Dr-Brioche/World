@@ -76,9 +76,7 @@ const CONFIG = {
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type construit soi-même rend le suivant x1.5 plus cher
                              // (ceux pris à l'ennemi ne comptent pas)
   BUILD_TIME: 3,             // secondes de chantier pour construire un bâtiment (il ne produit rien avant)
-  UPGRADE_TIME: 5,           // secondes de travaux pour améliorer un bâtiment...
-  UPGRADE_TIME_LEVEL3: 10,   // ...et 10 s pour passer au niveau 3
-  CASTLE_UPGRADE_TIME: [40, 60], // une ville (château) : 40 s pour passer au niveau 2, 60 s au niveau 3
+  UPGRADE_TIME: [40, 60],    // améliorer un bâtiment (tous les bâtiments) : 40 s pour passer au niveau 2, 60 s au niveau 3
   // Murs : une ville de niveau 2 peut bâtir 1 mur, une citadelle (niveau 3) un 2e. Un mur va de la muraille de la
   // ville jusqu'à l'endroit choisi, au plus WALL_MAX_REACH cases plus loin. Aucun assaut ne peut le franchir.
   WALL_COSTS: [500, 1000],   // prix du 1er mur, puis du 2e

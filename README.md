@@ -220,7 +220,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
    **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : une **flèche ⬆️** pour l'améliorer
-   (travaux de **5 s**, ou **10 s** pour passer au niveau 3 ; pour une **ville (château)** : **40 s** pour le niveau 2, **60 s** pour le niveau 3) et **✖** rouge pour le détruire (travaux de **10 s**, après une confirmation). La fenêtre en haut à gauche explique
+   (travaux de **40 s** pour passer au niveau 2, **60 s** pour le niveau 3, pour tous les bâtiments) et **✖** rouge pour le détruire (travaux de **10 s**, après une confirmation). La fenêtre en haut à gauche explique
    ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Détruire une **ville**, une **église** ou un **port**
    fait aussi sauter les **moulins et casernes qui en dépendaient** (dans sa muraille, ou à une de ses places), sauf si une autre ville, église ou port les accueille. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
    recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
@@ -511,6 +511,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.90.8** : ⏳ tous les bâtiments s'améliorent au même rythme que les villes : 40 s pour passer au niveau 2, 60 s pour le niveau 3 (au lieu de 5 s et 10 s pour les autres)
 - **v0.90.7** : ⚓ un port fortifié (niveau 3) sert aussi de point de départ pour les armées (assauts et défenseurs), et de point de retour, comme une ville
 - **v0.90.6** : 🧱 deux villes qui bâtissent chacune un mur vers l'autre, et dont les murs se rejoignent, sont reliées aussi : +50 soldats de garnison pour chacune
 - **v0.90.5** : ⛰️ les assauts contre un royaume avancent un peu plus vite dans le relief : forêt +10 %, colline +16 %, montagne +19 % de vitesse (le relief ralentit 25 % moins qu'avant ; l'expansion en terre libre ne change pas)
