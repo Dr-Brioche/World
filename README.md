@@ -57,7 +57,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    porte ses armées, et accompagne les messages pour reconnaître tout de suite qui fait quoi.
 2. **Étends-toi** : clique sur une terre libre voisine pour t'en emparer.
    **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** (ou une de ses églises ⛪, ports ⚓ ou avant-postes ⛺, sans défense) : ton armée se fraie un chemin depuis ta
-   frontière en **contournant ses autres fortifications**, capture tout sur son passage, puis prend le château.
+   frontière en **contournant ses autres fortifications**, capture tout sur son passage jusqu'à la **muraille**
+   du château, puis l'assiège. L'armée **ne traverse pas la muraille** : si le château tombe, toute sa zone tombe avec lui.
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
    de la frontière. **Tant qu'un royaume a un château, une église, un port ou un avant-poste, tu ne peux viser que ceux-ci.**
@@ -68,6 +69,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    terres, ou en y bâtissant un château), **l'assaut s'arrête**. Attention, ça marche aussi contre toi !
    Quand il n'en a **plus aucun**, clique n'importe où sur ses terres : l'assaut se fait
    **de front, sur tout son territoire** (comme sur une terre libre).
+   Un territoire **désorganisé** (royaume sans château ni église, ou morceau coupé de ses châteaux) se prend **25 % plus vite**.
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
    sans pouvoir en place : chaque soldat ne compte que pour **0,8**.
 
@@ -126,8 +128,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **font
      demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus proche, comme les bateaux
      de renfort (on voit leur bannière ↩ revenir) : tu ne les récupères qu'à leur arrivée.
-   - **La garnison** : chaque château a ses propres défenseurs (beaucoup plus nombreux selon son niveau),
-     qui sortent le défendre seuls le temps que le royaume réagisse. **Au combat, chaque soldat de garnison
+   - **La garnison** : chaque château a ses propres défenseurs (beaucoup plus nombreux selon son niveau).
+     Ils attendent l'ennemi **derrière la muraille** et n'entrent en jeu qu'au **siège**, quand l'armée arrive au pied
+     du mur (la barre de l'assaut l'indique : « 🏰 10 derrière les murs ») ; avant, ce sont tes défenseurs qui l'arrêtent.
+     (La garnison d'un port royal ou d'un avant-poste, elle, sort dès que l'assaut entre sur tes terres.) **Au combat, chaque soldat de garnison
      en vaut 3.** Ils se reconstituent ensuite peu à peu.
    - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
      **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
@@ -137,9 +141,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      tue plus vite et perd moins de soldats par ennemi tué (jusqu'à **x5** pour un écrasement, comme 300 contre 4).
      Envoyer 2 ou 3 défenseurs à la fois ne suffit donc pas à bloquer une grosse armée !
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
-   - **🏰 Le siège** : quand ton armée arrive au pied d'un château, il ne tombe pas tout de suite. Elle doit
-     l'assiéger **5 s** (fort en bois), **10 s** (château) ou **15 s** (citadelle) : pendant ce temps,
-     le défenseur peut encore **envoyer des soldats** le défendre, qui se battent avec le bonus de ses murs.
+   - **🏰 Le siège** : quand ton armée arrive à la **muraille** d'un château, elle s'arrête au pied du mur
+     (elle ne la traverse pas, la muraille reste entière) et l'assiège : il ne tombe pas tout de suite. Elle doit
+     tenir **8 s** (fort en bois), **13 s** (château) ou **18 s** (citadelle) : pendant ce temps, sa garnison sort,
+     et le défenseur peut encore **envoyer des soldats** le défendre ; tous se battent avec le bonus de ses murs.
      Le compte à rebours s'affiche sur la bannière de l'assaut.
      **Deux armées ennemies** (pas alliées) qui assiègent **le même château** d'un troisième royaume s'affrontent
      d'abord entre elles, au pied des murs : le siège attend la fin de la bataille, et la gagnante le reprend.
@@ -408,6 +413,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.76** : 🏰 une armée ne traverse plus la muraille d'un château : elle s'arrête au pied du mur et l'assiège (la muraille reste entière ; si le château tombe, toute sa zone tombe) · ⏳ sièges plus longs : 8, 13 et 18 s selon le niveau · 🛡️ la garnison d'un château attend derrière sa muraille et n'entre en jeu qu'au siège · ⚡ un territoire désorganisé se prend 25 % plus vite
 - **v0.75** : 🥾 les défenseurs, et les armées d'assaut qui marchent jusqu'à la frontière, prennent le chemin le plus rapide de leurs terres (en pointillés sur la carte) : vite en plaine, lentement dans le relief, plus lentement s'ils sont nombreux, mais 60 % plus vite qu'un assaut en terre ennemie car ils sont chez eux (même chose pour les défenseurs qui rentrent)
 - **v0.74.1** : 🔍 la barre de résumé d'un royaume survolé ne suit plus la souris : elle s'affiche toujours au même endroit, juste sous ta barre d'infos en haut de l'écran
 - **v0.74** : 🎨 fini les emojis : toutes les icônes du jeu (menus, barre du haut, journal, classement, bâtiments et armées sur la carte…) sont maintenant de petits dessins médiévaux (épées croisées, bourse d'or, heaume, écu, nef, sceau, sablier…)
