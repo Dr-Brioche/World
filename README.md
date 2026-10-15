@@ -59,7 +59,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **Pour attaquer un royaume, clique sur un de ses châteaux 🏰** (ou une de ses églises ⛪, ports ⚓ ou avant-postes ⛺, sans défense) : ton armée se fraie un chemin depuis ta
    frontière en **contournant ses autres fortifications**, capture tout sur son passage jusqu'à la **muraille**
    du château, puis l'assiège. L'armée **ne traverse pas la muraille** : si le château tombe, toute sa zone tombe avec lui.
-   En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés). Si le château est en arrière-pays,
+   En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés), et en bas sa **défense globale** (terrain + murs). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
    de la frontière. **Tant qu'un royaume a un château, une église, un port ou un avant-poste, tu ne peux viser que ceux-ci.**
    **Exception — morceau coupé de ses châteaux** : si un morceau de son royaume n'a plus **aucun château** (il s'est fait
@@ -413,6 +413,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.76.1** : 🛡️ en survolant (ou en visant) un château ou un port fortifié ennemi, la fenêtre d'info en bas affiche juste sa défense globale (terrain + murs), sans les longues explications
 - **v0.76** : 🏰 une armée ne traverse plus la muraille d'un château : elle s'arrête au pied du mur et l'assiège (la muraille reste entière ; si le château tombe, toute sa zone tombe) · ⏳ sièges plus longs : 8, 13 et 18 s selon le niveau · 🛡️ la garnison d'un château attend derrière sa muraille et n'entre en jeu qu'au siège · ⚡ un territoire désorganisé se prend 25 % plus vite
 - **v0.75** : 🥾 les défenseurs, et les armées d'assaut qui marchent jusqu'à la frontière, prennent le chemin le plus rapide de leurs terres (en pointillés sur la carte) : vite en plaine, lentement dans le relief, plus lentement s'ils sont nombreux, mais 60 % plus vite qu'un assaut en terre ennemie car ils sont chez eux (même chose pour les défenseurs qui rentrent)
 - **v0.74.1** : 🔍 la barre de résumé d'un royaume survolé ne suit plus la souris : elle s'affiche toujours au même endroit, juste sous ta barre d'infos en haut de l'écran
