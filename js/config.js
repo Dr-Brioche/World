@@ -119,16 +119,18 @@ const CONFIG = {
   // --- Combat ---
   ATTACK_SPEED: 0.25,          // vitesse de conquête (plus petit = les armées avancent plus lentement sur la carte)
   MIN_ATTACK_SPEED: 0.25,      // vitesse minimum d'une petite armée (cases de plaine par tour)
-  ASSAULT_SPEED: 0.575,        // vitesse d'un assaut contre un royaume (cases de plaine par tour)... divisée par
+  ASSAULT_SPEED: 0.661,        // vitesse d'un assaut contre un royaume (cases de plaine par tour)... divisée par
   ASSAULT_HEAVY: 500,          // (1 + soldats / 500) : plus l'armée est grande, plus elle est lente
-                               // (100 soldats : ~4,8 cases/s · 500 : 2,9 · 1000 : 1,9 · 3000 : 0,8)
-  ASSAULT_MIN_SPEED: 0.046,     // vitesse minimum d'un assaut (cases de plaine par tour)
+                               // (100 soldats : ~5,5 cases/s · 500 : 3,3 · 1000 : 2,2 · 3000 : 0,9)
+  ASSAULT_MIN_SPEED: 0.053,     // vitesse minimum d'un assaut (cases de plaine par tour)
   DISORGANIZED_SPEED: 1.25,    // un territoire désorganisé (sans château, ou coupé de ses châteaux) se prend plus vite,
-                               // et d'autant plus vite que l'armée est grande (100 soldats : ~5 cases/s · 500 : 7 · 2000 : 11)
+                               // et d'autant plus vite que l'armée est grande (100 soldats : ~6 cases/s · 500 : 8 · 2000 : 13)
   // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,
   // par le chemin le plus rapide, comme les défenseurs (voir DEFENDER_SPEED_BONUS) : pendant ce temps,
   // tout le monde le voit venir
-  MARCH_SPEED: 5,              // (les renforts d'un assaut déjà chez l'ennemi marchent à 5 cases par seconde)
+  MARCH_SPEED: 5.75,           // (les renforts d'un assaut déjà chez l'ennemi marchent à 5,75 cases par seconde)
+  MARCH_OWN_LAND_BONUS: 1.6,   // sur ses propres terres (jusqu'à la frontière), une armée d'assaut marche 60 % plus vite
+                               // qu'en terre ennemie
   MARCH_MIN_TIME: 2,           // la marche jusqu'à la frontière dure au moins 2 secondes
                                // (on peut y ajouter des soldats tout de suite)
   ARROW_INSIDE: 4,             // la flèche d'un assaut part de 4 cases à l'intérieur de la frontière
@@ -146,11 +148,10 @@ const CONFIG = {
   RALLY_MAX: 1,        // au mieux +100 %
   ENCLAVE_LOG_MIN: 50,         // un message n'annonce un morceau englobé que s'il fait au moins 50 cases
   CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
-  DEFENDER_SPEED_BONUS: 1.6,   // les défenseurs partent du château le plus proche et marchent vers l'ennemi par le chemin
+  DEFENDER_SPEED_BONUS: 1.18,  // les défenseurs partent du château le plus proche et marchent vers l'ennemi par le chemin
                                // le plus rapide de leurs terres (comme un assaut : vite en plaine, lentement dans le
-                               // relief, et plus lentement s'ils sont nombreux), mais 60 % plus vite qu'un assaut
-                               // de même taille, car ils sont chez eux (même chose pour ceux qui rentrent, et pour
-                               // une armée d'assaut qui marche sur ses terres jusqu'à la frontière)
+                               // relief, et plus lentement s'ils sont nombreux), mais 18 % plus vite qu'un assaut
+                               // de même taille, car ils sont chez eux (même chose pour ceux qui rentrent)
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois de défenseurs contre un même assaut
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
   RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite

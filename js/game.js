@@ -1985,12 +1985,12 @@ const GameRules = {
   // traverse pas, elle l'assiège depuis là (voir step).
   // L'armée part de la ville (château) la plus proche de l'objectif (ou de son avant-poste) : le point d'entrée
   // chez l'ennemi est choisi en comptant aussi sa marche sur ses propres terres depuis cette ville (plus rapide,
-  // DEFENDER_SPEED_BONUS), et pas seulement le bout de frontière le plus proche de la cible.
+  // MARCH_OWN_LAND_BONUS), et pas seulement le bout de frontière le plus proche de la cible.
   castlePath(pid, c, source) {
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
     const h = this.sizeOf(this.building[c]) / 2;
     const dep = this.departurePoint(pid, c % this.W + h, ((c / this.W) | 0) + h, source), W = this.W;
-    const walk = i => Math.hypot(i % W + 0.5 - dep.x, ((i / W) | 0) + 0.5 - dep.y) / CONFIG.DEFENDER_SPEED_BONUS;
+    const walk = i => Math.hypot(i % W + 0.5 - dep.x, ((i / W) | 0) + 0.5 - dep.y) / CONFIG.MARCH_OWN_LAND_BONUS;
     const path = this.searchPath(pid, -1, foot, passable, this.owner[c], source, walk); // (-1 = on part de la frontière)
     if (path && this.building[c] === B_CASTLE) {
       const k = path.findIndex(i => this.inWalls(c, i));
@@ -2728,7 +2728,7 @@ const GameRules = {
     const c = a.targetCastle, h = c >= 0 ? this.sizeOf(this.building[c]) / 2 : 0;
     const ref = c >= 0 ? { x: c % W + h, y: ((c / W) | 0) + h } : to;
     const from = this.departurePoint(a.attacker, ref.x, ref.y, this.sourceOfAttack(a));
-    const march = this.walkRoute(a.attacker, from, to, troops);
+    const march = this.walkRoute(a.attacker, from, to, troops, CONFIG.MARCH_OWN_LAND_BONUS);
     march.arrive = Math.max(march.arrive, this.tick + Math.round(CONFIG.MARCH_MIN_TIME * TPS));
     a.march = march;
     a.marchFrom = from;
@@ -2975,9 +2975,9 @@ const GameRules = {
   // --- Marche à pied sur ses propres terres (défenseurs) ---
   // Vitesse d'un groupe de défenseurs (en « points de terrain » par tour) : comme un assaut de même taille
   // (plus ils sont nombreux, plus ils sont lents), mais DEFENDER_SPEED_BONUS fois plus vite, car ils sont chez eux.
-  // (c'est aussi la vitesse d'une armée d'assaut qui marche sur ses terres jusqu'à la frontière)
-  defenderSpeed(troops) {
-    return CONFIG.DEFENDER_SPEED_BONUS *
+  // (une armée d'assaut qui marche sur ses terres jusqu'à la frontière, elle, va MARCH_OWN_LAND_BONUS fois plus vite)
+  defenderSpeed(troops, bonus = CONFIG.DEFENDER_SPEED_BONUS) {
+    return bonus *
       Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + troops / CONFIG.ASSAULT_HEAVY));
   },
 
@@ -2985,7 +2985,7 @@ const GameRules = {
   // à travers leurs terres (une case de plaine coûte 1, une forêt 1.6, une colline 2.2, une montagne 2.8, un fleuve 4).
   // Renvoie { troops, from, pts, cum, start, arrive } : pts = les points du chemin, cum = le coût cumulé jusqu'à chacun.
   // (pas de chemin sur ses terres : ils vont tout droit, comme en plaine)
-  walkRoute(pid, from, to, troops) {
+  walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS) {
     const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x);
     const path = this.ownLandPath(pid, tile(from), tile(to));
     const pts = [from], cum = [0];
@@ -2997,7 +2997,7 @@ const GameRules = {
     };
     if (path) for (let k = 1; k < path.length - 1; k++) add({ x: path[k] % this.W + 0.5, y: ((path[k] / this.W) | 0) + 0.5 });
     add(to);
-    const ticks = Math.max(1, Math.round(cum[cum.length - 1] / this.defenderSpeed(troops)));
+    const ticks = Math.max(1, Math.round(cum[cum.length - 1] / this.defenderSpeed(troops, bonus)));
     return { troops, from, pts, cum, start: this.tick, arrive: this.tick + ticks };
   },
 
