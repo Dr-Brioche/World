@@ -2039,9 +2039,13 @@ const GameRules = {
   // Lance une traversée de fleuve vers la terre libre i. Renvoie un message d'erreur, ou null.
   // Traverser ne coûte aucun soldat : seulement du temps (CROSSING_TIME_FIRST / CROSSING_TIME_NEXT).
   launchCrossing(pid, i) {
+    const p = this.players[pid], TPS = CONFIG.TICKS_PER_SECOND;
+    // (une seule traversée toutes les CROSSING_COOLDOWN secondes)
+    const wait = p.lastCrossing === undefined ? 0 : (p.lastCrossing + CONFIG.CROSSING_COOLDOWN * TPS - this.tick) / TPS;
+    if (wait > 0) return `Tes soldats préparent la prochaine traversée : encore ${Math.ceil(wait)} s.`;
     const plan = this.planCrossing(pid, i);
     if (plan.error) return plan.error;
-    const TPS = CONFIG.TICKS_PER_SECOND;
+    p.lastCrossing = this.tick;
     this.crossings.push({ pid, target: i, path: plan.path, start: this.tick,
       arrive: this.tick + Math.max(1, Math.round(plan.time * TPS)) });
     return null;
@@ -2655,6 +2659,13 @@ const GameRules = {
   stepAttack(a) {
     this.arriveDefenders(a);
     if (this.stepRetreat(a)) return;
+    // La ville (l'église, le port…) visée a été prise par un autre royaume avant notre arrivée : demi-tour
+    if (a.targetCastle >= 0 && this.owner[a.targetCastle] !== a.target) {
+      const p = this.players[a.attacker], o = this.owner[a.targetCastle];
+      if (p.isHuman) UI.log(`↩️ ${this.targetLabel(a.targetCastle)[0].toUpperCase()}${this.targetLabel(a.targetCastle).slice(1)} ` +
+        `a été pris${o >= 0 ? ' par ' + this.players[o].name : ''} avant ton arrivée : ton armée fait demi-tour.`, 'warn');
+      return this.endAttack(a);
+    }
     if (this.isPreparing(a)) return;
     // Assaut sur un morceau coupé de ses châteaux : si son royaume l'a relié à un château entre-temps, il s'arrête
     if (a.unlinked && this.tick % CONFIG.TICKS_PER_SECOND === 0 && this.unlinkedRelinked(a)) {
@@ -2811,8 +2822,10 @@ const GameRules = {
   // Rappelle les soldats d'une attaque (seulement les siennes).
   // Annuler une attaque : c'est une retraite. Les soldats mettent RETREAT_TIME secondes à décrocher
   // (les défenseurs peuvent encore les attaquer), puis rentrent en perdant RETREAT_LOSS de leurs effectifs.
+  // (L'armée marche encore sur ses propres terres : elle rentre tout de suite, sans aucune perte.)
   cancelAttack(pid, attackId) {
     const a = this.attacks.find(a => a.id === attackId && a.attacker === pid && !a.done);
+    if (a && a.retreatEnd === undefined && this.isPreparing(a)) { a.calledBack = true; this.endAttack(a); return a; }
     if (a && a.retreatEnd === undefined) a.retreatEnd = this.tick + CONFIG.RETREAT_TIME * CONFIG.TICKS_PER_SECOND;
     return a;
   },
