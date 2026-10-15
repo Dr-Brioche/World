@@ -822,15 +822,12 @@ const GameRules = {
       const c = this.portRoadCastle(this.owner[a], a);
       if (c >= 0) links.set(a, { castle: c, bonus: CONFIG.PORT_ROAD_BONUS, road: 'dirt' });
     }
-    // Une église construite sur une de ces routes (tout près) produit un peu d'or (CHURCH_ROAD_GOLD)
-    this.roadChurches = new Map(); // église → port de la route
+    // Une église reliée par un chemin à une de ces routes, ou à une ville proche, produit un peu d'or (CHURCH_ROAD_GOLD)
+    this.roadChurches = new Map(); // église → son chemin (voir churchLink)
     for (const ch of this.buildingTiles) {
       if (this.building[ch] !== B_CHURCH || this.owner[ch] < 0) continue;
-      const h = this.sizeOf(B_CHURCH) / 2, x = ch % this.W + h, y = ((ch / this.W) | 0) + h;
-      for (const [a, link] of links) {
-        if (this.building[a] !== B_PORT || this.owner[a] !== this.owner[ch]) continue;
-        if (this.roadDistance(this.roadPoints(a, link.castle), x, y) <= CONFIG.CHURCH_ROAD_RANGE) { this.roadChurches.set(ch, a); break; }
-      }
+      const link = this.churchLink(this.owner[ch], ch, links);
+      if (link) this.roadChurches.set(ch, link);
     }
     this.roadsCache = links;
     this.roadsVersion = this.version;
@@ -859,25 +856,42 @@ const GameRules = {
     return [[x1, y1], a % 2 ? [x2, y1] : [x1, y2], [x2, y2]];
   },
 
-  // Distance (en cases) du point (x, y) à une route
-  roadDistance(pts, x, y) {
-    let best = Infinity;
+  // Point d'une route le plus proche du point (x, y) : { x, y, d } (d = distance, en cases)
+  roadNearest(pts, x, y) {
+    let best = { x: pts[0][0], y: pts[0][1], d: Infinity };
     for (let k = 0; k + 1 < pts.length; k++) {
       const [ax, ay] = pts[k], [bx, by] = pts[k + 1], dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
       const t = len ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / len)) : 0;
-      best = Math.min(best, Math.hypot(x - ax - t * dx, y - ay - t * dy));
+      const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(x - px, y - py);
+      if (d < best.d) best = { x: px, y: py, d };
     }
     return best;
   },
 
-  // Une église posée en a serait-elle sur une route port–ville de pid ? (pour l'aide à la construction)
-  churchOnRoad(pid, a) {
-    const h = this.sizeOf(B_CHURCH) / 2, x = a % this.W + h, y = ((a / this.W) | 0) + h;
-    for (const [b, link] of this.roads()) {
-      if (this.building[b] === B_PORT && this.owner[b] === pid
-        && this.roadDistance(this.roadPoints(b, link.castle), x, y) <= CONFIG.CHURCH_ROAD_RANGE) return true;
+  // Chemin d'une église (posée en a, au royaume pid) : { pts, port } si elle rejoint une route port–ville
+  // à moins de CHURCH_ROAD_DISTANCE cases, sinon { pts, castle } si une ville (château) est à moins de
+  // CHURCH_CITY_DISTANCE cases sur la même terre, sinon null. pts = le tracé du chemin (avec un coin à angle droit).
+  // (un port seul, sans ville, ne crée pas de chemin : il n'a pas de route)
+  churchLink(pid, a, links = this.roads()) {
+    const W = this.W, h = this.sizeOf(B_CHURCH) / 2, x = a % W + h, y = ((a / W) | 0) + h, land = this.landComp();
+    const corner = (x1, y1) => [[x1, y1], a % 2 ? [x, y1] : [x1, y], [x, y]];
+    let best = null, bestD = CONFIG.CHURCH_ROAD_DISTANCE;
+    for (const [b, link] of links) {
+      if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
+      const q = this.roadNearest(this.roadPoints(b, link.castle), x, y);
+      if (q.d > bestD || land[Math.floor(q.y) * W + Math.floor(q.x)] !== land[a]) continue; // (pas de l'autre côté de l'eau)
+      bestD = q.d;
+      best = { port: b, pts: corner(q.x, q.y) };
     }
-    return false;
+    if (best) return best;
+    bestD = CONFIG.CHURCH_CITY_DISTANCE;
+    const hc = this.sizeOf(B_CASTLE) / 2;
+    for (const c of this.castles) {
+      if (this.owner[c] !== pid || land[c] !== land[a]) continue;
+      const cx = c % W + hc, cy = ((c / W) | 0) + hc, d = Math.hypot(cx - x, cy - y);
+      if (d <= bestD) { bestD = d; best = { castle: c, pts: corner(cx, cy) }; }
+    }
+    return best;
   },
 
   maxTroops(p) {

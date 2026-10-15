@@ -505,7 +505,9 @@ const UI = {
       if (G.building[i] === B_CHURCH) {
         txt += ` · places prises : ${G.churchUsed(a)} sur ${info.slots} · ⚠️ sans défense : on peut l'attaquer directement`;
         G.roads();
-        if (G.roadChurches.has(a)) txt += ` · 🛤️ sur la route d'un port : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s`;
+        const link = G.roadChurches.get(a);
+        if (link) txt += ` · 🛤️ reliée ${link.port !== undefined ? 'à la route d\'un port' : 'à une ville'} : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s`;
+        else txt += ' · pas de chemin (ni route de port ni ville assez proche)';
       }
       const road = G.roads().get(a);
       if (road) txt += ` · ${road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
@@ -708,7 +710,9 @@ const UI = {
     const a = Render.anchorAt(Render.mouse.x, Render.mouse.y, t);
     if (a < 0) return '';
     if (t === B_CHURCH) {
-      return G.churchOnRoad(h.id, a) ? ` · 🛤️ sur la route d'un port : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` : '';
+      const link = G.churchLink(h.id, a);
+      return link ? ` · 🛤️ reliée ${link.port !== undefined ? 'à la route d\'un port' : 'à une ville'} par un chemin : +${CONFIG.CHURCH_ROAD_GOLD} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s`
+        : ' · trop loin d\'une ville ou d\'une route de port : pas de chemin';
     }
     if (!TERRAIN_PRODUCTION[t]) return '';
     let txt = ` · production ici : ${prodText(G.terrainFactor(a, t))}`;
