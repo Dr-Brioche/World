@@ -958,13 +958,14 @@ const GameRules = {
   warFactor(p) {
     return (1 - this.postWar(p)) * (1 + this.rallied(p));
   },
-  warEffects(a) {
+  // noMalus = pas de malus d'après-guerre pour le vainqueur (avant-poste détruit) : seul le perdant est galvanisé
+  warEffects(a, noMalus = false) {
     const end = this.tick + CONFIG.WAR_EFFECT_TIME * CONFIG.TICKS_PER_SECOND;
     const p = this.players[a.attacker], d = a.target >= 0 ? this.players[a.target] : null;
-    (p.postWarEnds = p.postWarEnds || []).push(end);
+    if (!noMalus) (p.postWarEnds = p.postWarEnds || []).push(end);
     if (d) (d.rallyEnds = d.rallyEnds || []).push(end);
     const secs = CONFIG.WAR_EFFECT_TIME;
-    if (p.isHuman) UI.log(`⚰️ Après-guerre : ton royaume panse ses blessures, −${Math.round(CONFIG.POST_WAR_MALUS * 100)} % de soldats produits pendant ${secs} s (en tout : −${Math.round(this.postWar(p) * 100)} %).`, 'warn');
+    if (p.isHuman && !noMalus) UI.log(`⚰️ Après-guerre : ton royaume panse ses blessures, −${Math.round(CONFIG.POST_WAR_MALUS * 100)} % de soldats produits pendant ${secs} s (en tout : −${Math.round(this.postWar(p) * 100)} %).`, 'warn');
     if (d && d.isHuman) UI.log(`🔥 Ton peuple est galvanisé par la défaite : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s (en tout : +${Math.round(this.rallied(d) * 100)} %) !`, 'good');
   },
 
@@ -2907,7 +2908,7 @@ const GameRules = {
   onTargetTaken(a, type, withZone) {
     a.won = true; // (objectif pris : la route reste à l'attaquant)
     const p = this.players[a.attacker], d = this.players[a.target];
-    this.warEffects(a);
+    this.warEffects(a, type === B_OUTPOST); // (détruire un avant-poste ne donne pas de malus d'après-guerre)
     const what = { [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
       [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'] }[type];
     const verb = type === B_OUTPOST ? 'détruit' : 'pris';
