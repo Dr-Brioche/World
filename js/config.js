@@ -133,8 +133,8 @@ const CONFIG = {
   ASSAULT_MIN_SPEED: 0.053,
   ASSAULT_TERRAIN_SLOWDOWN: 0.75, // en terrain difficile, un assaut contre un royaume ne ralentit que de 75 % de la normale
                                // (forêt x1,45 au lieu de x1,6 · colline x1,9 au lieu de x2,2 · montagne x2,35 au lieu de x2,8)     // vitesse minimum d'un assaut (cases de plaine par tour)
-  DISORGANIZED_SPEED: 1.5625,  // un territoire désorganisé (sans ville ni port fortifié, ou coupé d'eux) se prend plus vite,
-                               // et d'autant plus vite que l'armée est grande (100 soldats : ~7,5 cases/s · 500 : 10 · 2000 : 16)
+  DISORGANIZED_SPEED: 2.03,    // un territoire désorganisé (sans ville ni port fortifié, ou coupé d'eux) se prend plus vite,
+                               // et d'autant plus vite que l'armée est grande (100 soldats : ~9,5 cases/s · 500 : 13 · 2000 : 20)
   // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,
   // par le chemin le plus rapide, comme les défenseurs (voir DEFENDER_SPEED_BONUS) : pendant ce temps,
   // tout le monde le voit venir
