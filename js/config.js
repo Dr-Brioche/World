@@ -15,7 +15,8 @@ const CONFIG = {
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
-  ISLETS: [3, 8],          // nombre d'îlots ajoutés à la carte « Normale »
+  ISLETS: [3, 8],          // nombre de petits îlots ajoutés à la carte « Normale »
+  MEDIUM_ISLETS: [1, 3],   // ...et d'îlots moyens (avec un peu de relief)
   MIN_SPAWN_LAND: 200,     // une capitale se fonde sur une terre d'au moins 200 cases (pas sur un îlot)
   RIVERS_MIN: 3,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
   RIVERS_MAX: 12,          // (ils partent des montagnes et vont jusqu'à la mer)
@@ -89,12 +90,12 @@ const CONFIG = {
   // --- Combat ---
   ATTACK_SPEED: 0.25,          // vitesse de conquête (plus petit = les armées avancent plus lentement sur la carte)
   MIN_ATTACK_SPEED: 0.25,      // vitesse minimum d'une petite armée (cases de plaine par tour)
-  ASSAULT_SPEED: 0.5,          // vitesse d'un assaut contre un royaume (cases de plaine par tour)... divisée par
+  ASSAULT_SPEED: 0.575,        // vitesse d'un assaut contre un royaume (cases de plaine par tour)... divisée par
   ASSAULT_HEAVY: 500,          // (1 + soldats / 500) : plus l'armée est grande, plus elle est lente
-                               // (100 soldats : ~4 cases/s · 500 : 2,5 · 1000 : 1,7 · 3000 : 0,7)
-  ASSAULT_MIN_SPEED: 0.04,     // vitesse minimum d'un assaut (cases de plaine par tour)
+                               // (100 soldats : ~4,8 cases/s · 500 : 2,9 · 1000 : 1,9 · 3000 : 0,8)
+  ASSAULT_MIN_SPEED: 0.046,     // vitesse minimum d'un assaut (cases de plaine par tour)
   DISORGANIZED_SPEED: 1.25,    // un territoire désorganisé (sans château, ou coupé de ses châteaux) se prend plus vite,
-                               // et d'autant plus vite que l'armée est grande (100 soldats : ~4,5 cases/s · 500 : 6 · 2000 : 9)
+                               // et d'autant plus vite que l'armée est grande (100 soldats : ~5 cases/s · 500 : 7 · 2000 : 11)
   // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,
   // par le chemin le plus rapide, comme les défenseurs (voir DEFENDER_SPEED_BONUS) : pendant ce temps,
   // tout le monde le voit venir

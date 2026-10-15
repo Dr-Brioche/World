@@ -346,10 +346,19 @@ const UI = {
     box.innerHTML = `⛺ <b>Avant-poste</b> ${G.outpostReady(a) ? '' : '(en construction)'} · 🛡️ garnison ${fmt(G.garrison[a])}` +
       ` · ⚔ ${fmt(stationed)} soldats qui attendent` +
       `<div class="choices"><button data-re>${ICONS.ship} Renforts (${fmt(send)} soldats)</button>` +
-      `<button data-rp${stationed < 1 ? ' disabled' : ''}>${ICONS.anchor} Rapatrier</button><button data-no>Fermer</button></div>`;
+      `<button data-rp${stationed < 1 ? ' disabled' : ''}>${ICONS.anchor} Rapatrier</button>` +
+      `<button data-ab title="L'avant-poste disparaît (ses terres te restent) et tous ses soldats rentrent par la mer">🧨 Abandonner</button>` +
+      `<button data-no>Fermer</button></div>`;
     const closeBox = () => { box.remove(); if (this.upgradeBox === box) this.upgradeBox = null; };
     box.querySelector('[data-re]').addEventListener('click', () => { this.closeBuildingMenus(); reinforce(); });
     box.querySelector('[data-rp]').addEventListener('click', () => { this.closeBuildingMenus(); repatriate(); });
+    // Abandonner l'avant-poste : tous ses soldats (garnison comprise) rentrent automatiquement
+    box.querySelector('[data-ab]').addEventListener('click', () => {
+      this.closeBuildingMenus();
+      const got = G.abandonOutpost(h.id, a);
+      if (typeof got === 'string') this.log(got, 'warn');
+      else this.log(`🧨 Avant-poste abandonné : ${fmt(got)} soldats rentrent ${G.homePort(h.id, o.landing) === null ? 'au royaume' : 'par la mer vers ton port'}.`, 'good');
+    });
     box.querySelector('[data-no]').addEventListener('click', closeBox);
     $('log').prepend(box);
     setTimeout(closeBox, 15000);

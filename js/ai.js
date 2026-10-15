@@ -257,9 +257,22 @@ const AI = {
     if (forced) type = forced;
     if (p.gold < Game.buildCost(p, type)) return;
 
-    const tiles = [];
-    for (let i = 0; i < Game.N; i++) {
-      if (Game.owner[i] === p.id && Game.canPlace(p.id, i, type)) tiles.push(i);
+    // Où chercher (tester toutes les cases du royaume est trop long sur une grande carte) :
+    // un moulin ou une caserne ne se bâtit que dans la muraille d'un château ou la zone d'une église (ou d'un
+    // port) : on ne regarde que là ; pour les autres, on tire au hasard des cases du royaume.
+    let tiles = [];
+    if (type === B_MILL || type === B_BARRACKS) {
+      const zone = new Set();
+      for (const c of Game.castles) if (Game.owner[c] === p.id) for (const i of Game.castleZone(c, p.id)) zone.add(i);
+      for (const ch of Game.slotBuildings(p.id)) for (const i of Game.churchZone(ch)) zone.add(i);
+      for (const i of zone) if (Game.canPlace(p.id, i, type)) tiles.push(i);
+    } else {
+      const own = [];
+      for (let i = 0; i < Game.N; i++) if (Game.owner[i] === p.id) own.push(i);
+      for (let k = 0; k < 600 && tiles.length < 12 && own.length; k++) {
+        const i = own[(Math.random() * own.length) | 0];
+        if (Game.canPlace(p.id, i, type)) tiles.push(i);
+      }
     }
     if (!tiles.length) return;
     // parmi quelques emplacements tirés au hasard, le meilleur terrain pour produire (pas le désert, si possible)
