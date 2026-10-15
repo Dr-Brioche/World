@@ -550,23 +550,30 @@ const GameRules = {
       if (this.players[c.owner].isHuman) UI.log('✝️ Ta croisade religieuse est terminée : ta Croyance redescend.');
     }
     this.crusades = this.crusades.filter(c => !c.over);
-    const due = new Map(); // royaume converti → les royaumes qui lui prennent une case maintenant
+    // Chaque paire (prêcheur, converti) avance ; une conversion complète = une case. Avec un grand écart,
+    // il y en a plusieurs par seconde : on fait plusieurs tours (le k-ième tour ne garde que les paires qui
+    // ont au moins k + 1 cases à prendre cette seconde)
+    const counts = []; // [prêcheur, converti, cases à prendre]
     for (const p of this.players) {
       if (!p.alive || this.faithOf(p.id) <= 0) continue;
       for (const o of this.neighborStats(p.id).keys()) {
         if (o < 0) continue;
         const diff = this.faithEdge(p.id, o), key = p.id * 1000 + o;
         if (diff <= 0) { this.faithProgress.delete(key); continue; }
-        let prog = (this.faithProgress.get(key) || 0) + 1 / this.faithInterval(diff);
-        if (prog >= 1) {
-          prog -= 1;
-          if (!due.has(o)) due.set(o, new Set());
-          due.get(o).add(p.id);
-        }
-        this.faithProgress.set(key, Math.min(1, prog));
+        const prog = (this.faithProgress.get(key) || 0) + 1 / this.faithInterval(diff), n = Math.floor(prog);
+        this.faithProgress.set(key, prog - n);
+        if (n > 0) counts.push([p.id, o, n]);
       }
     }
-    if (due.size) this.preach(due);
+    for (let k = 0; counts.some(c => c[2] > k); k++) {
+      const due = new Map(); // royaume converti → les royaumes qui lui prennent une case à ce tour
+      for (const [pid, o, n] of counts) {
+        if (n <= k) continue;
+        if (!due.has(o)) due.set(o, new Set());
+        due.get(o).add(pid);
+      }
+      this.preach(due);
+    }
   },
 
   // Convertit une case pour chaque paire (prêcheur, converti) de due : une case du converti collée à une terre du
