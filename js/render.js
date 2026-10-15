@@ -1182,12 +1182,15 @@ const Render = {
     const dirt = new Path2D(), paved = new Path2D();
     for (const [a, link] of G.roads()) {
       if (link.onRoad) continue; // (moulin posé sur une route : pas de chemin en plus)
-      // (le tracé, avec son coin à angle droit, est le même que pour le jeu : voir Game.roadPoints)
-      const pts = G.roadPoints(a, link.castle).map(([x, y]) => [ox + x * s, oy + y * s]);
-      const path = link.road === 'paved' ? paved : dirt;
-      path.moveTo(pts[0][0], pts[0][1]);
-      path.lineTo(pts[1][0], pts[1][1]);
-      path.lineTo(pts[2][0], pts[2][1]);
+      // (une ou deux routes, vers une ou deux villes ; le tracé, avec son coin à angle droit, est le même que pour
+      //  le jeu : voir Game.roadPoints)
+      for (const [c, road] of G.linkRoads(link)) {
+        const pts = G.roadPoints(a, c).map(([x, y]) => [ox + x * s, oy + y * s]);
+        const path = road === 'paved' ? paved : dirt;
+        path.moveTo(pts[0][0], pts[0][1]);
+        path.lineTo(pts[1][0], pts[1][1]);
+        path.lineTo(pts[2][0], pts[2][1]);
+      }
     }
     // Chemins de terre des églises (vers une route de port ou une ville), voir Game.churchLink
     for (const [, link] of G.roadChurches || []) {

@@ -1180,24 +1180,22 @@ const GameRules = {
   roads() {
     if (this.roadsVersion === this.version) return this.roadsCache;
     const links = new Map();
-    for (const c of this.castles) {
-      const o = this.owner[c], info = this.castleInfo(c);
-      if (o < 0 || !info.road) continue;
-      for (const a of this.buildingTiles) {
-        const t = this.building[a];
-        if ((t !== B_MILL && t !== B_BARRACKS) || this.owner[a] !== o) continue;
-        const half = (this.sizeOf(t) - 1) / 2; // centre du bâtiment
-        if (!this.inCastleRange(c, a % this.W + half, ((a / this.W) | 0) + half, info.radius)) continue;
-        const best = links.get(a);
-        if (!best || info.roadBonus > best.bonus) links.set(a, { castle: c, bonus: info.roadBonus, road: info.road });
-      }
+    // Un moulin ou une caserne dans la muraille d'une ville de niveau 2 ou 3 : une route le relie à elle.
+    // Entre plusieurs villes (dans la muraille de chacune), il a une route par ville (ROAD_MAX_CITIES au plus) :
+    // les bonus s'additionnent.
+    for (const a of this.buildingTiles) {
+      const t = this.building[a], o = this.owner[a];
+      if ((t !== B_MILL && t !== B_BARRACKS) || o < 0) continue;
+      const list = this.cityRoads(o, a, t);
+      if (list.length) links.set(a, this.roadLink(list));
     }
     // Un port pas trop loin d'une ville (un château de son royaume, sur la même terre) : un chemin de terre
-    // les relie, et le port produit PORT_ROAD_BONUS d'or en plus
+    // les relie, et le port produit PORT_ROAD_BONUS d'or en plus. Avec plusieurs villes assez proches : un chemin
+    // par ville (ROAD_MAX_CITIES au plus), et autant de fois le bonus.
     for (const a of this.buildingTiles) {
       if (this.building[a] !== B_PORT || this.owner[a] < 0) continue;
-      const c = this.portRoadCastle(this.owner[a], a);
-      if (c >= 0) links.set(a, { castle: c, bonus: CONFIG.PORT_ROAD_BONUS, road: 'dirt' });
+      const list = this.portRoadCastles(this.owner[a], a).map(c => ({ castle: c, bonus: CONFIG.PORT_ROAD_BONUS, road: 'dirt' }));
+      if (list.length) links.set(a, this.roadLink(list));
     }
     // Une église reliée par un chemin à une de ces routes, ou à une ville proche, produit un peu d'or (CHURCH_ROAD_GOLD)
     this.roadChurches = new Map(); // église → son chemin (voir churchLink)
@@ -1225,8 +1223,8 @@ const GameRules = {
     if (cells.some(j => this.castleProtects(pid, j))) return false;
     const W = this.W, h = this.sizeOf(type) / 2, x = a % W + h, y = ((a / W) | 0) + h, D = CONFIG.MILL_ROAD_DISTANCE;
     for (const [b, link] of links) {
-      if (this.building[b] !== B_PORT || this.owner[b] !== pid || link.castle === undefined) continue;
-      if (this.roadNearest(this.roadPoints(b, link.castle), x, y).d <= D) return true;
+      if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
+      for (const [c] of this.linkRoads(link)) if (this.roadNearest(this.roadPoints(b, c), x, y).d <= D) return true;
     }
     for (const [ch, link] of this.roadChurches || []) {
       if (this.owner[ch] === pid && this.roadNearest(link.pts, x, y).d <= D) return true;
@@ -1234,18 +1232,47 @@ const GameRules = {
     return false;
   },
 
-  // Château (une « ville ») de pid auquel un port posé en a serait relié par un chemin de terre : le plus proche,
-  // à moins de PORT_ROAD_DISTANCE cases et sur la même terre. -1 s'il n'y en a pas.
-  portRoadCastle(pid, a) {
+  // Villes (châteaux de niveau 2 ou 3) de pid dont la muraille contient le centre d'un moulin (ou d'une caserne)
+  // posé en a : [{ castle, bonus, road }], la meilleure route d'abord
+  cityRoads(pid, a, type) {
+    const half = (this.sizeOf(type) - 1) / 2, x = a % this.W + half, y = ((a / this.W) | 0) + half, list = [];
+    for (const c of this.castles) {
+      const info = this.castleInfo(c);
+      if (this.owner[c] !== pid || !info.road || !this.inCastleRange(c, x, y, info.radius)) continue;
+      list.push({ castle: c, bonus: info.roadBonus, road: info.road });
+    }
+    return list.sort((p, q) => q.bonus - p.bonus);
+  },
+
+  // Les routes d'un bâtiment (une par ville, ROAD_MAX_CITIES au plus) : { castle, road, more, bonus }
+  // (castle et road : la meilleure route ; more : les autres [[ville, type de route]] ; bonus : tous additionnés)
+  roadLink(list) {
+    const [r1, ...rest] = list.slice(0, CONFIG.ROAD_MAX_CITIES);
+    return { castle: r1.castle, road: r1.road, more: rest.map(r => [r.castle, r.road]),
+      bonus: r1.bonus + rest.reduce((s, r) => s + r.bonus, 0) };
+  },
+
+  // Les routes d'un lien : [[ville, type de route]] (aucune pour un moulin posé au bord d'une route)
+  linkRoads(link) {
+    return link.castle === undefined ? [] : [[link.castle, link.road], ...(link.more || [])];
+  },
+
+  // Villes (châteaux) de pid auxquelles un port posé en a serait relié par un chemin de terre : les plus proches
+  // (ROAD_MAX_CITIES au plus), à moins de PORT_ROAD_DISTANCE cases et sur la même terre (la plus proche d'abord)
+  portRoadCastles(pid, a) {
     const land = this.landComp(), W = this.W, mid = (b, n) => [b % W + n / 2, ((b / W) | 0) + n / 2];
-    const [px, py] = mid(a, this.sizeOf(B_PORT));
-    let best = -1, bestD = CONFIG.PORT_ROAD_DISTANCE;
+    const [px, py] = mid(a, this.sizeOf(B_PORT)), list = [];
     for (const c of this.castles) {
       if (this.owner[c] !== pid || land[c] !== land[a]) continue;
       const [cx, cy] = mid(c, this.sizeOf(B_CASTLE)), d = Math.hypot(cx - px, cy - py);
-      if (d <= bestD) { bestD = d; best = c; }
+      if (d <= CONFIG.PORT_ROAD_DISTANCE) list.push([d, c]);
     }
-    return best;
+    return list.sort((p, q) => p[0] - q[0]).slice(0, CONFIG.ROAD_MAX_CITIES).map(([, c]) => c);
+  },
+  // La plus proche (-1 s'il n'y en a pas)
+  portRoadCastle(pid, a) {
+    const list = this.portRoadCastles(pid, a);
+    return list.length ? list[0] : -1;
   },
 
   // Tracé d'une route (en cases) : du centre du château au centre du bâtiment a, avec un coin à angle droit
@@ -1278,10 +1305,12 @@ const GameRules = {
     let best = null, bestD = CONFIG.CHURCH_ROAD_DISTANCE;
     for (const [b, link] of links) {
       if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
-      const q = this.roadNearest(this.roadPoints(b, link.castle), x, y);
-      if (q.d > bestD || land[Math.floor(q.y) * W + Math.floor(q.x)] !== land[a]) continue; // (pas de l'autre côté de l'eau)
-      bestD = q.d;
-      best = { port: b, pts: corner(q.x, q.y) };
+      for (const [c] of this.linkRoads(link)) {
+        const q = this.roadNearest(this.roadPoints(b, c), x, y);
+        if (q.d > bestD || land[Math.floor(q.y) * W + Math.floor(q.x)] !== land[a]) continue; // (pas de l'autre côté de l'eau)
+        bestD = q.d;
+        best = { port: b, pts: corner(q.x, q.y) };
+      }
     }
     if (best) return best;
     bestD = CONFIG.CHURCH_CITY_DISTANCE;

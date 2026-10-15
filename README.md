@@ -284,6 +284,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **Routes** : un château de niveau 2 trace des **chemins de terre** 🛤️ vers tes moulins et casernes
      qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, soldats des casernes).
      Au niveau 3, ce sont des **routes pavées** 🛣️ grises : **+50 %**.
+     **Entre plusieurs villes** : un moulin ou une caserne dans la muraille de **deux ou trois villes** (de niveau 2 ou 3)
+     a **une route vers chacune**, et les bonus **s'additionnent** (3 villes au plus : jamais plus que le triple).
+     Peu importe l'ordre : si la deuxième (ou troisième) ville est construite après, la route apparaît aussi.
 
      Exemple : une forêt (+60 %) protégée par une citadelle passe à +460 %.
 
@@ -346,7 +349,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      qu'**une** place : celle du port en priorité. Il **n'est pas défendu** :
      on peut l'attaquer directement, comme un château. **Toutes les 10 secondes**, il rapporte de l'or.
      🛤️ **Route du port** : si une de tes **villes** (un château, de n'importe quel niveau) est à **moins de 30 cases**
-     du port, sur la même terre, un **chemin de terre** les relie : le port produit **+30 % d'or**.
+     du port, sur la même terre, un **chemin de terre** les relie : le port produit **+30 % d'or**. Avec **deux** ou **trois
+     villes** assez proches, il a **un chemin vers chacune** : **+60 %** ou **+90 %** (3 villes au plus).
      Une **église** pas trop loin de ce chemin (à moins de **10 cases**) s'y relie par un **petit chemin** ; sinon, une église
      pas trop loin d'une **ville** (à moins de **25 cases**, sur la même terre) est reliée à elle. Reliée, l'église produit
      **un peu d'or** (+2 💰 toutes les 10 s). Mais une église près d'un **port seul** (sans ville proche, donc sans route)
@@ -487,6 +491,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.87.6** : 🛤️ un moulin, une caserne ou un port relié à plusieurs villes a une route vers chacune, et les bonus s'additionnent (double avec 2 villes, triple avec 3, jamais plus), que les villes soient bâties avant ou après lui
 - **v0.87.5** : 🌾 un moulin ou une caserne bâti hors des villes, sur une route (celle d'un port ou le chemin d'une église) ou juste à côté, produit +20 %
 - **v0.87.4** : ⚓ ports plus rentables : le grand port rapporte 50 % d'or de plus qu'avant (9 au lieu de 6) et le port royal 100 % de plus (20 au lieu de 10)
 - **v0.87.3** : 🌾 l'expansion en terre libre ne ralentit plus : les terres libres se prennent 3 fois plus vite toute la partie, et coûtent jusqu'à 3 fois moins de soldats quand l'élan de recrutement retombe (au bout de 5 minutes) : la conquête des terres vierges garde le rythme du début
