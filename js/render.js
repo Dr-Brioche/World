@@ -1226,6 +1226,68 @@ const Render = {
     ctx.lineJoin = 'round';
   },
 
+  // Pendant la pose d'un bâtiment : ses futures routes, en transparence (voir Game.roadPreview), pour voir où et
+  // comment elles seront tracées. Si aucune ville n'est assez proche, un trait rouge en pointillés vers la plus proche,
+  // avec la distance et la portée (« trop loin »). Recalculé seulement si l'emplacement ou la carte change.
+  drawRoadPreview(ox, oy, a, t, upgrading) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    const key = a + ':' + t + ':' + upgrading + ':' + G.version;
+    if (!this.roadPrev || this.roadPrev.key !== key) this.roadPrev = { key, ...G.roadPreview(G.human.id, a, t, upgrading) };
+    const { roads, far } = this.roadPrev, w = Math.max(2, s * 0.55);
+    if (roads.length) {
+      const dirt = new Path2D(), paved = new Path2D();
+      for (const r of roads) {
+        const path = r.road === 'paved' ? paved : dirt;
+        r.pts.forEach(([x, y], k) => (k ? path.lineTo : path.moveTo).call(path, ox + x * s, oy + y * s));
+      }
+      ctx.save();
+      ctx.globalAlpha = 0.6;
+      ctx.lineCap = 'square';
+      ctx.lineJoin = 'miter';
+      ctx.lineWidth = w + 2;
+      ctx.strokeStyle = 'rgba(95,68,36,0.8)';
+      ctx.stroke(dirt);
+      ctx.strokeStyle = 'rgba(60,58,54,0.9)';
+      ctx.stroke(paved);
+      ctx.lineWidth = w;
+      ctx.strokeStyle = '#d9ae6e';
+      ctx.stroke(dirt);
+      ctx.strokeStyle = '#d4d0c6';
+      ctx.stroke(paved);
+      // (pointillés clairs par-dessus : c'est une route à venir, pas encore bâtie)
+      ctx.globalAlpha = 0.9;
+      ctx.setLineDash([Math.max(4, w), Math.max(4, w)]);
+      ctx.lineWidth = Math.max(1, w * 0.3);
+      ctx.strokeStyle = '#fff6dc';
+      ctx.stroke(dirt);
+      ctx.stroke(paved);
+      ctx.restore();
+    }
+    if (far) {
+      const [[x1, y1], [x2, y2]] = far.pts.map(([x, y]) => [ox + x * s, oy + y * s]);
+      ctx.save();
+      ctx.setLineDash([8, 6]);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = 'rgba(230,70,60,0.85)';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Au milieu du trait : la distance et la portée de la ville
+      const label = `🛤️ trop loin : ${Math.round(far.d)} cases (${Math.floor(far.max)} max)`;
+      ctx.font = '600 13px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(20,12,4,0.8)';
+      ctx.fillStyle = '#ffb3a8';
+      Icons.text(ctx, label, (x1 + x2) / 2, (y1 + y2) / 2 - 10);
+      ctx.restore();
+    }
+  },
+
   // Survol d'un château ennemi : on montre le chemin de l'assaut (pointillés dorés),
   // ou une croix rouge si d'autres fortifications bloquent le passage.
   // Trace un chemin d'assaut (pointillés), case par case
@@ -1379,6 +1441,7 @@ const Render = {
         if (a >= 0) {
           const ok = upgrading ? G.upgradeCost(a) !== null : G.canPlace(G.human.id, a, t);
           const rx = ox + (a % G.W) * s, ry = oy + ((a / G.W) | 0) * s;
+          this.drawRoadPreview(ox, oy, a, t, upgrading);
           ctx.fillStyle = ok ? 'rgba(255,255,255,0.25)' : 'rgba(230,80,70,0.4)';
           ctx.fillRect(rx, ry, n * s, n * s);
           ctx.lineWidth = 2;

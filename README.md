@@ -386,6 +386,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      villes** assez proches, il a **un chemin vers chacune** : **+60 %** ou **+90 %** (3 villes au plus).
      Une **église** pas trop loin de ce chemin (à moins de **10 cases**) s'y relie par un **petit chemin**, et elle a aussi
      un chemin vers **chaque ville** proche (à moins de **25 cases**, sur la même terre) : **3 chemins au plus**.
+     👀 **Aperçu des routes** : pendant que tu poses un bâtiment (port, église, moulin, caserne, ville) ou que tu améliores
+     une ville, ses futures routes s'affichent **en transparence** (avec des pointillés clairs) : tu vois où et comment
+     elles seront tracées. Si aucune ville n'est assez proche, un **trait rouge en pointillés** part vers la plus proche
+     avec « trop loin : 34 cases (30 max) ».
      📏 **Une ville améliorée relie plus loin** : **+20 % de portée par niveau**. Les routes de port et les chemins d'église
      vers elle vont jusqu'à **30 / 25 cases** (niveau 1), **36 / 30 cases** (niveau 2) et **42 / 35 cases** (niveau 3). Une nouvelle
      ville bâtie près d'elle **ajoute** un chemin (elle ne remplace pas les autres). Chaque chemin rapporte **un peu d'or**
@@ -539,6 +543,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.19** : 👀 pendant la pose d'un bâtiment (ou l'amélioration d'une ville), ses futures routes s'affichent en transparence ; trop loin d'une ville, un trait rouge indique la distance et la portée
 - **v0.91.18** : 🐛 un avant-poste ne tombe plus avec ses soldats sans combattre : les renforts arrivés par la mer pendant l'assaut se battent aussi, ses soldats stationnés le défendent d'office au siège, et avec deux assauts en même temps la garnison défend contre celui qui est au pied des murs (vaut aussi pour les ports et les villes)
 - **v0.91.17** : 📏 une ville améliorée relie plus loin : +20 % de portée de ses routes par niveau (route d'un port : 30, 36 puis 42 cases ; chemin d'une église : 25, 30 puis 35 cases)
 - **v0.91.16** : 🐛 après avoir touché au curseur « Envoyer », les flèches et ZQSD déplacent de nouveau la caméra tout de suite (plus besoin de recliquer sur la carte), et les touches 1 à 5 marchent aussi

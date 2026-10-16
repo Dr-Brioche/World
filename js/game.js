@@ -1379,8 +1379,9 @@ const GameRules = {
   },
 
   // Portée des routes d'une ville (château c) : la distance de base, +ROAD_RANGE_PER_LEVEL par niveau au-dessus du 1er
-  roadReach(c, base) {
-    return base * (1 + CONFIG.ROAD_RANGE_PER_LEVEL * (Math.max(1, this.level[c]) - 1));
+  // (level : pour un aperçu, le niveau qu'aura la ville)
+  roadReach(c, base, level = this.level[c]) {
+    return base * (1 + CONFIG.ROAD_RANGE_PER_LEVEL * (Math.max(1, level) - 1));
   },
 
   // Villes (châteaux) de pid auxquelles un port posé en a serait relié par un chemin de terre : les plus proches
@@ -1403,8 +1404,9 @@ const GameRules = {
   },
 
   // Tracé d'une route (en cases) : du centre du château au centre du bâtiment a, avec un coin à angle droit
-  roadPoints(a, castle) {
-    const W = this.W, hc = this.sizeOf(B_CASTLE) / 2, hb = this.sizeOf(this.building[a]) / 2;
+  // (type : celui du bâtiment, s'il n'est pas encore bâti, pour un aperçu)
+  roadPoints(a, castle, type = this.building[a]) {
+    const W = this.W, hc = this.sizeOf(B_CASTLE) / 2, hb = this.sizeOf(type) / 2;
     const x1 = castle % W + hc, y1 = ((castle / W) | 0) + hc, x2 = a % W + hb, y2 = ((a / W) | 0) + hb;
     // d'abord à l'horizontale puis à la verticale (ou l'inverse, selon le bâtiment)
     return [[x1, y1], a % 2 ? [x2, y1] : [x1, y2], [x2, y2]];
@@ -1450,6 +1452,65 @@ const GameRules = {
       if (d <= this.roadReach(c, CONFIG.CHURCH_CITY_DISTANCE)) list.push({ castle: c, pts: corner(cx, cy), d });
     }
     return list.sort((p, q) => p.d - q.d).slice(0, CONFIG.ROAD_MAX_CITIES);
+  },
+
+  // Aperçu, avant de bâtir : les routes qu'aurait un bâtiment de type t posé par pid en a (ou le château a amélioré,
+  // si upgrading). Renvoie { roads: [{ pts, road }], far } : road = 'dirt' ou 'paved' ; far = la ville la plus proche
+  // quand elle est trop loin pour une route ({ pts, d, max } : distance et portée, en cases), sinon null.
+  // (même calcul que le jeu : voir roads, portRoadCastles, churchLinks, cityRoads)
+  roadPreview(pid, a, t, upgrading = false) {
+    const W = this.W, land = this.landComp(), roads = [];
+    const mid = (b, type) => { const h = this.sizeOf(type) / 2; return [b % W + h, ((b / W) | 0) + h]; };
+    const [x, y] = mid(a, t);
+    // La ville la plus proche sur la même terre, si aucune n'est assez près : trait rouge « trop loin »
+    const nearest = base => {
+      let best = null;
+      for (const c of this.castles) {
+        if (this.owner[c] !== pid || land[c] !== land[a]) continue;
+        const [cx, cy] = mid(c, B_CASTLE), d = Math.hypot(cx - x, cy - y);
+        if (!best || d < best.d) best = { pts: [[cx, cy], [x, y]], d, max: this.roadReach(c, base) };
+      }
+      return best;
+    };
+    let far = null;
+    if (t === B_PORT) {
+      for (const c of this.portRoadCastles(pid, a)) roads.push({ pts: this.roadPoints(a, c, t), road: 'dirt' });
+      if (!roads.length) far = nearest(CONFIG.PORT_ROAD_DISTANCE);
+    } else if (t === B_CHURCH) {
+      for (const link of this.churchLinks(pid, a)) roads.push({ pts: link.pts, road: 'dirt' });
+      if (!roads.length) far = nearest(CONFIG.CHURCH_CITY_DISTANCE);
+    } else if (t === B_MILL || t === B_BARRACKS) {
+      // Dans la muraille de villes de niveau 2 ou 3 : une route par ville ; sinon, au bord d'une route : un bout de chemin
+      for (const r of this.cityRoads(pid, a, t).slice(0, CONFIG.ROAD_MAX_CITIES)) {
+        roads.push({ pts: this.roadPoints(a, r.castle, t), road: r.road });
+      }
+      if (!roads.length && this.onRoad(pid, a, t)) {
+        let q = null;
+        const near = pts => { const p = this.roadNearest(pts, x, y); if (!q || p.d < q.d) q = p; };
+        for (const [b, link] of this.roads()) {
+          if (this.building[b] === B_PORT && this.owner[b] === pid) for (const [c] of this.linkRoads(link)) near(this.roadPoints(b, c));
+        }
+        for (const [ch, list] of this.roadChurches || []) if (this.owner[ch] === pid) for (const l of list) near(l.pts);
+        if (q) roads.push({ pts: [[x, y], [q.x, q.y]], road: 'dirt' });
+      }
+    } else if (t === B_CASTLE) {
+      // Une ville (nouvelle, ou améliorée : elle relie plus loin) : chemins vers ses ports et ses églises proches,
+      // et routes vers les moulins et casernes de sa muraille (dès le niveau 2)
+      const level = upgrading ? Math.min(3, this.level[a] + 1) : 1, info = CASTLE_LEVELS[level];
+      for (const b of this.buildingTiles) {
+        if (this.owner[b] !== pid || land[b] !== land[a]) continue;
+        const type = this.building[b], [bx, by] = mid(b, type), d = Math.hypot(bx - x, by - y);
+        if (type === B_PORT && d <= this.roadReach(a, CONFIG.PORT_ROAD_DISTANCE, level)) {
+          roads.push({ pts: this.roadPoints(b, a), road: 'dirt' });
+        } else if (type === B_CHURCH && d <= this.roadReach(a, CONFIG.CHURCH_CITY_DISTANCE, level)) {
+          roads.push({ pts: [[x, y], b % 2 ? [bx, y] : [x, by], [bx, by]], road: 'dirt' });
+        } else if ((type === B_MILL || type === B_BARRACKS) && info.road) {
+          const half = (this.sizeOf(type) - 1) / 2;
+          if (this.inCastleRange(a, b % W + half, ((b / W) | 0) + half, info.radius)) roads.push({ pts: this.roadPoints(b, a), road: info.road });
+        }
+      }
+    }
+    return { roads, far: far && far.d > far.max ? far : null };
   },
 
   maxTroops(p) {
