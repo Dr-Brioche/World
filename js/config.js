@@ -22,10 +22,8 @@ const CONFIG = {
   // ses armées en partent, ses défenseurs y vont. Plus petit, il reste isolé (ses villes tiennent seules).
   SPLIT_HEART_SHARE: 0.25,
   CAMERA_KEY_SPEED: 900,   // déplacement de la caméra au clavier (ZQSD / flèches), en pixels d'écran par seconde
-  // Courbes de niveau (discrètes) dans les collines et les montagnes : les niveaux tracés (0 = plaine,
-  // 1 = colline, 2 = montagne, 3 = sommet, relief lissé), et le zoom à partir duquel on les voit.
-  // (la courbe du pied des collines, elle, suit le bord des cases, comme la bordure des forêts : voir buildForests)
-  CONTOUR_LEVELS: [0.85, 1.35, 1.85, 2.45],
+  // Courbes de niveau (pied des collines, des montagnes, et bord des sommets) et bordures des terrains : le zoom
+  // à partir duquel on les voit (elles suivent le bord des cases : voir buildForests dans render.js)
   CONTOUR_MIN_ZOOM: 2.5,
   SMOOTH_MAP: true,          // coins des cases légèrement adoucis sur la carte (false : carrés nets, tout en pixels)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
