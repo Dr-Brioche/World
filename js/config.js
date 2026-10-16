@@ -27,7 +27,10 @@ const CONFIG = {
   CONTOUR_MIN_ZOOM: 2.5,
   SMOOTH_MAP: true,          // coins des cases adoucis sur la carte (false : carrés nets, tout en pixels)
   SMOOTH_FINE_MAX_TILES: 600000,
-  MAP_SHADE_SOFT: 1.5,       // force des petites variations de couleur du sol, une fois adoucies (0 = sol tout uni) // jusqu'à cette taille de carte (en cases), adoucissement plus fin (4 x 4 pixels par case)
+  MAP_SHADE_SOFT: 1.5,
+  HILLSHADE: 0.55,           // ombrage du relief (soleil en haut à gauche) : 0 = pas d'ombre, plus = relief plus marqué
+  WATER_DEPTH_SHADE: 0.3,
+  TERRAIN_GRAIN: 1.1,        // petites bosses du terrain (ombrées aussi), plus fortes en montagne    // la mer fonce au large (0 = mer d'une seule couleur)       // force des petites variations de couleur du sol, une fois adoucies (0 = sol tout uni) // jusqu'à cette taille de carte (en cases), adoucissement plus fin (4 x 4 pixels par case)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant
   FOREST_TREE_ZOOM: 4,
