@@ -26,6 +26,7 @@ const CONFIG = {
   // 1 = colline, 2 = montagne, 3 = sommet, relief lissé), et le zoom à partir duquel on les voit
   CONTOUR_LEVELS: [0.35, 0.85, 1.35, 1.85, 2.45],
   CONTOUR_MIN_ZOOM: 2.5,
+  SMOOTH_MAP: true,          // coins des cases légèrement adoucis sur la carte (false : carrés nets, tout en pixels)
   // Forêts : un léger contour autour d'elles (dès CONTOUR_MIN_ZOOM), et de petits sapins transparents en zoomant
   FOREST_TREE_ZOOM: 4,
   FOREST_TREE_SPACING: 3,  // un sapin toutes les 3 cases environ
@@ -220,6 +221,7 @@ const CONFIG = {
   // 🌉 Pont : clic droit sur un fleuve dont les deux rives (en face, en ligne droite) sont à toi. Ses soldats
   // passent alors ce fleuve comme une case de plaine, sans perdre de temps à gué.
   BRIDGE_COST: 700,
+  AI_BRIDGE_AFTER: 240,      // les bots bâtissent leurs 1 ou 2 ponts après 4 minutes de partie
   EXPEDITION_COOLDOWN: 5,    // une expédition maritime au plus toutes les 5 secondes
   REPATRIATE_SPEED: 5,       // vitesse minimum (cases/s) des bateaux qui rapatrient les soldats d'un avant-poste
   OUTPOST_BUILD_TIME: 20,    // secondes pour bâtir un avant-poste après le débarquement (sans bonus avant)

@@ -35,16 +35,20 @@ const Render = {
     this.canvas.height = this.vh * this.dpr;
   },
 
+  // La carte est une image : 2 x 2 pixels par case (voir smoothTile : les coins en escalier y sont adoucis)
   setupMap() {
     const G = Game;
     this.off = document.createElement('canvas');
-    this.off.width = G.W;
-    this.off.height = G.H;
+    this.off.width = G.W * 2;
+    this.off.height = G.H * 2;
     this.offCtx = this.off.getContext('2d');
-    this.img = this.offCtx.createImageData(G.W, G.H);
+    this.img = this.offCtx.createImageData(G.W * 2, G.H * 2);
+    this.tileCol = new Uint8ClampedArray(G.N * 3); // couleur de chaque case
+    this.tileKey = new Int32Array(G.N);            // « sorte » de case : royaume, terrain, frontière (voir paintTile)
     this.dirty = new Uint8Array(G.N);
     this.dirtyList = [];
     for (let i = 0; i < G.N; i++) this.paintTile(i);
+    for (let i = 0; i < G.N; i++) this.smoothTile(i);
     this.offCtx.putImageData(this.img, 0, 0);
     // Nouvelle partie : on oublie les dessins gardés en mémoire de la partie d'avant
     // (Game.version repart de 0 : sans ça, ils pourraient être repris tels quels)
@@ -124,17 +128,27 @@ const Render = {
       if (!p) map.set(key, p = new Path2D());
       return p;
     };
-    // Contour : chaque côté d'une case de forêt qui touche une case d'un autre terrain
+    // Contour : il suit le dessin de la carte, en demi-cases aux coins adoucis (voir smoothTile ; ici on compare
+    // seulement les terrains). m = forêt ou pas, pour chaque quart de case.
+    const W2 = W * 2, H2 = H * 2, m = new Uint8Array(W2 * H2), T = G.terrain;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      if (!raw[y * W + x]) continue;
       const i = y * W + x;
-      const up = y > 0 && !raw[i - W], down = y < H - 1 && !raw[i + W], left = x > 0 && !raw[i - 1], right = x < W - 1 && !raw[i + 1];
+      const up = y > 0 ? i - W : i, down = y < H - 1 ? i + W : i, left = x > 0 ? i - 1 : i, right = x < W - 1 ? i + 1 : i;
+      const A = T[up], B = T[right], Cc = T[left], D = T[down], sm = CONFIG.SMOOTH_MAP;
+      const q = [sm && Cc === A && Cc !== D && A !== B ? up : i, sm && A === B && A !== Cc && B !== D ? right : i,
+        sm && D === Cc && D !== B && Cc !== A ? left : i, sm && B === D && B !== A && D !== Cc ? down : i];
+      for (let k = 0; k < 4; k++) m[(y * 2 + (k >> 1)) * W2 + x * 2 + (k & 1)] = raw[q[k]];
+    }
+    for (let y = 0; y < H2; y++) for (let x = 0; x < W2; x++) {
+      const j = y * W2 + x;
+      if (!m[j]) continue;
+      const up = y > 0 && !m[j - W2], down = y < H2 - 1 && !m[j + W2], left = x > 0 && !m[j - 1], right = x < W2 - 1 && !m[j + 1];
       if (!(up || down || left || right)) continue;
-      const p = chunk(lines, x, y);
-      if (up) { p.moveTo(x, y); p.lineTo(x + 1, y); }
-      if (down) { p.moveTo(x, y + 1); p.lineTo(x + 1, y + 1); }
-      if (left) { p.moveTo(x, y); p.lineTo(x, y + 1); }
-      if (right) { p.moveTo(x + 1, y); p.lineTo(x + 1, y + 1); }
+      const p = chunk(lines, x >> 1, y >> 1), a = x / 2, b = y / 2;
+      if (up) { p.moveTo(a, b); p.lineTo(a + 0.5, b); }
+      if (down) { p.moveTo(a, b + 0.5); p.lineTo(a + 0.5, b + 0.5); }
+      if (left) { p.moveTo(a, b); p.lineTo(a, b + 0.5); }
+      if (right) { p.moveTo(a + 0.5, b); p.lineTo(a + 0.5, b + 0.5); }
     }
     // Sapins : sur une grille un peu décalée au hasard (toujours le même hasard pour une case donnée)
     const S = CONFIG.FOREST_TREE_SPACING;
@@ -244,14 +258,16 @@ const Render = {
     return border;
   },
 
+  // Couleur de la case i (et sa « sorte », pour adoucir les coins : voir smoothTile)
   paintTile(i) {
-    const G = Game, d = this.img.data, k = i * 4;
+    const G = Game, d = this.tileCol, k = i * 3;
     const base = TERRAIN_INFO[G.terrain[i]].color, sh = G.map.shade[i];
     let r = base[0] + sh, g = base[1] + sh, b = base[2] + sh;
-    const o = G.owner[i];
+    const o = G.owner[i], border = o >= 0 && this.isBorder(i, o);
+    this.tileKey[i] = (o + 1) * 64 + G.terrain[i] * 2 + (border ? 1 : 0);
     if (o >= 0) {
       const pc = G.players[o].color;
-      if (this.isBorder(i, o)) {
+      if (border) {
         r = pc[0] * 0.7; g = pc[1] * 0.7; b = pc[2] * 0.7;
       } else if (G.terrain[i] === TERRAIN.RIVER) {
         // un fleuve reste bien visible dans un royaume
@@ -263,21 +279,47 @@ const Render = {
         r = r * 0.4 + pc[0] * lum * 0.6; g = g * 0.4 + pc[1] * lum * 0.6; b = b * 0.4 + pc[2] * lum * 0.6;
       }
     }
-    d[k] = r; d[k + 1] = g; d[k + 2] = b; d[k + 3] = 255;
+    d[k] = r; d[k + 1] = g; d[k + 2] = b;
+  },
+
+  // Les 2 x 2 pixels de la case i, coins adoucis (méthode « Scale2x » du pixel art) : un quart de case prend la
+  // couleur de ses deux voisines (dessus et gauche, par exemple) quand elles sont de la même sorte entre elles et
+  // d'une autre sorte que les deux d'en face. Un escalier de cases devient ainsi une pente plus douce, sans flou.
+  smoothTile(i) {
+    const G = Game, W = G.W, H = G.H, x = i % W, y = (i / W) | 0, key = this.tileKey;
+    const up = y > 0 ? i - W : i, down = y < H - 1 ? i + W : i, left = x > 0 ? i - 1 : i, right = x < W - 1 ? i + 1 : i;
+    const A = key[up], B = key[right], C = key[left], D = key[down];
+    const smooth = CONFIG.SMOOTH_MAP;
+    // (quart haut-gauche, haut-droit, bas-gauche, bas-droit : la case dont il prend la couleur)
+    const q = [
+      smooth && C === A && C !== D && A !== B ? up : i,
+      smooth && A === B && A !== C && B !== D ? right : i,
+      smooth && D === C && D !== B && C !== A ? left : i,
+      smooth && B === D && B !== A && D !== C ? down : i,
+    ];
+    const d = this.img.data, col = this.tileCol, W2 = W * 2;
+    for (let k = 0; k < 4; k++) {
+      const p = ((y * 2 + (k >> 1)) * W2 + x * 2 + (k & 1)) * 4, c = q[k] * 3;
+      d[p] = col[c]; d[p + 1] = col[c + 1]; d[p + 2] = col[c + 2]; d[p + 3] = 255;
+    }
   },
 
   flush() {
     if (!this.dirtyList || !this.dirtyList.length) return;
     // (on ne recopie que le rectangle qui contient les cases changées : sur une grande carte, c'est bien plus rapide)
-    const W = Game.W;
-    let x0 = W, y0 = Game.H, x1 = -1, y1 = -1;
-    for (const i of this.dirtyList) {
-      this.paintTile(i); this.dirty[i] = 0;
+    const G = Game, W = G.W;
+    let x0 = W, y0 = G.H, x1 = -1, y1 = -1;
+    for (const i of this.dirtyList) this.paintTile(i);
+    // (les coins d'une case dépendent de ses voisines : on refait aussi ceux des voisines des cases changées)
+    const again = new Set();
+    for (const i of this.dirtyList) { again.add(i); G.forNeighbors(i, n => again.add(n)); this.dirty[i] = 0; }
+    for (const i of again) {
+      this.smoothTile(i);
       const x = i % W, y = (i / W) | 0;
       if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
     }
     this.dirtyList.length = 0;
-    this.offCtx.putImageData(this.img, 0, 0, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+    this.offCtx.putImageData(this.img, 0, 0, x0 * 2, y0 * 2, (x1 - x0 + 1) * 2, (y1 - y0 + 1) * 2);
   },
 
   // --- Murailles des châteaux (et des ports de niveau 3) ---
