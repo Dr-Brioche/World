@@ -501,7 +501,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **3 fois plus vite toute la partie**, et quand l'élan du recrutement retombe, elles coûtent **moins de soldats**
    (jusqu'à 3 fois moins) : l'expansion en terre vierge garde le même rythme qu'au début, toute la partie.
    Et elle va encore **30 % plus vite** (`FREE_LAND_BOOST`) : chaque armée avance plus vite et perd moins de soldats par case libre.
-6. **Gagne** en possédant 85 % des terres, ou en éliminant tous les autres royaumes.
+6. **Gagne** en possédant 70 % des terres, ou en éliminant tous les autres royaumes.
    **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
@@ -534,6 +534,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.15** : 🏆 la victoire arrive plus tôt : il suffit de posséder 70 % des terres (au lieu de 85 %)
 - **v0.91.14** : ✝️ un bouton « Croisade » apparaît dans la barre des constructions dès ta première cathédrale, pour lancer une croisade sans aller cliquer sur l'église · 📱 boutons de la barre un peu plus étroits sur téléphone
 - **v0.91.13** : 🎯 contre un royaume désorganisé, on peut toujours viser ses églises et ses ports (pour prendre leur zone d'un coup) ou l'attaquer de front en cliquant ailleurs ; avec une citadelle, les deux à la fois · 🤖 les bots font pareil
 - **v0.91.12** : 🛡️ une seule armée de défense par assaut : recliquer sur « Défendre » la renforce (les soldats la rejoignent en 3 s, en route ou au combat) au lieu de créer une nouvelle armée ; plus d'attente de 5 s entre deux envois

@@ -227,7 +227,7 @@ const CONFIG = {
   ALLY_GIFT_RATIO: 0.75,         // soldats envoyés à un allié : il n'en reçoit que 75 % (le voyage en coûte)
 
   // --- Victoire ---
-  WIN_RATIO: 0.85,         // posséder 85 % des terres = victoire
+  WIN_RATIO: 0.7,          // posséder 70 % des terres = victoire
 };
 
 const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6, PEAK: 7, DESERT: 8 };
