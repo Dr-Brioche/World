@@ -3264,19 +3264,25 @@ const GameRules = {
   // à travers leurs terres (une case de plaine coûte 1, une forêt 1.6, une colline 2.2, une montagne 2.8, un fleuve 4).
   // Renvoie { troops, from, pts, cum, start, arrive } : pts = les points du chemin, cum = le coût cumulé jusqu'à chacun.
   // (pas de chemin sur ses terres : ils vont tout droit, comme en plaine)
+  // Un fleuve qui coupe ses terres se passe à gué (voir ownLandPath) : FORD_TIME secondes par case de fleuve.
   walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS) {
-    const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x);
-    const path = this.ownLandPath(pid, tile(from), tile(to));
+    const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x), W = this.W;
+    const speed = this.defenderSpeed(troops, bonus), ford = this.fordCost(speed);
+    const path = this.ownLandPath(pid, tile(from), tile(to), ford);
     const pts = [from], cum = [0];
-    const add = q => {
+    const add = (q, extra = 0) => {
       const last = pts[pts.length - 1];
       const t = tile(q), cost = this.isLand(t) ? Math.min(4, TERRAIN_INFO[this.terrain[t]].cost) : 1;
       pts.push(q);
-      cum.push(cum[cum.length - 1] + Math.hypot(q.x - last.x, q.y - last.y) * cost);
+      cum.push(cum[cum.length - 1] + Math.hypot(q.x - last.x, q.y - last.y) * cost + extra);
     };
-    if (path) for (let k = 1; k < path.length - 1; k++) add({ x: path[k] % this.W + 0.5, y: ((path[k] / this.W) | 0) + 0.5 });
-    add(to);
-    const ticks = Math.max(1, Math.round(cum[cum.length - 1] / this.defenderSpeed(troops, bonus)));
+    // (deux cases du chemin qui ne se touchent pas : on passe un fleuve à gué entre les deux)
+    const fordBetween = (a, b) => Math.max(0, Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) - 1) * ford;
+    if (path) for (let k = 1; k < path.length - 1; k++) {
+      add({ x: path[k] % W + 0.5, y: ((path[k] / W) | 0) + 0.5 }, fordBetween(path[k - 1], path[k]));
+    }
+    add(to, path && path.length > 1 ? fordBetween(path[path.length - 2], path[path.length - 1]) : 0);
+    const ticks = Math.max(1, Math.round(cum[cum.length - 1] / speed));
     return { troops, from, pts, cum, start: this.tick, arrive: this.tick + ticks };
   },
 
@@ -3314,6 +3320,8 @@ const GameRules = {
     for (const c of cands) for (const j of this.footprint(c, this.building[c])) goal.set(j, c);
     if (!this.cityBuf || this.cityBuf.seen.length !== N) this.cityBuf = { dist: new Float64Array(N), seen: new Int32Array(N), stamp: 0 };
     const B = this.cityBuf, stamp = ++B.stamp, heap = new MinHeap(), slow = CONFIG.MARCH_OWN_LAND_BONUS;
+    this.riverTiles(); // (prépare riverSide)
+    const ford = this.fordCost(this.defenderSpeed(500)); // (pour une armée moyenne)
     B.seen[start] = stamp; B.dist[start] = 0;
     heap.push(0, start);
     let found = -1;
@@ -3331,6 +3339,12 @@ const GameRules = {
         const nd = d + cost;
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
       }
+      // (un fleuve qui coupe ses terres : on le passe à gué, voir fordAcross)
+      if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap) => {
+        if (B.seen[n] === -stamp) return;
+        const nd = d + gap * ford + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
+      });
     }
     this.cityCache.set(key, found);
     return found;
@@ -3339,8 +3353,11 @@ const GameRules = {
   // Chemin le plus rapide (Dijkstra) de la case from à la case to, en ne passant que par les terres de pid
   // (to elle-même peut être à l'ennemi : c'est le front). Renvoie la liste des cases, ou null.
   // (les tableaux sont gardés d'une fois sur l'autre : la carte peut être très grande)
-  ownLandPath(pid, from, to) {
+  // Un fleuve qui coupe ses terres se passe à gué : on saute d'une rive à l'autre (ses deux rives à pid), pour
+  // ford « points de terrain » par case de fleuve (voir fordCost).
+  ownLandPath(pid, from, to, ford = this.fordCost(this.defenderSpeed(500))) {
     const N = this.N, W = this.W, own = this.owner;
+    this.riverTiles(); // (prépare riverSide)
     if (from < 0 || from >= N || to < 0 || to >= N) return null;
     if (!this.walkBuf || this.walkBuf.seen.length !== N)
       this.walkBuf = { dist: new Float64Array(N), prev: new Int32Array(N), seen: new Int32Array(N), stamp: 0 };
@@ -3364,9 +3381,32 @@ const GameRules = {
         const nd = d + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; B.prev[n] = i; heap.push(nd, n); }
       }
+      if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap) => {
+        if (B.seen[n] === -stamp) return;
+        const nd = d + gap * ford + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; B.prev[n] = i; heap.push(nd, n); }
+      });
     }
     return null;
   },
+
+  // Gué : depuis la case i (au bord d'un fleuve), les cases de pid juste en face, de l'autre côté du fleuve
+  // (en ligne droite, comme acrossRiver) : fn(case d'en face, nombre de cases de fleuve à traverser)
+  fordAcross(i, pid, fn) {
+    const W = this.W, x0 = i % W, y0 = (i / W) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      for (let k = 1; k <= 4; k++) {
+        const x = x0 + dx * k, y = y0 + dy * k;
+        if (x < 0 || y < 0 || x >= W || y >= this.H) break;
+        const j = y * W + x;
+        if (this.terrain[j] === TERRAIN.RIVER) continue;
+        if (k > 1 && this.owner[j] === pid) fn(j, k - 1);
+        break;
+      }
+    }
+  },
+  // Coût d'une case de fleuve passée à gué, en « points de terrain » : FORD_TIME secondes à cette vitesse
+  fordCost(speed) { return CONFIG.FORD_TIME * CONFIG.TICKS_PER_SECOND * speed; },
 
   // L'avant-poste bâti dont la zone est attaquée (son morceau de territoire, pas encore relié au royaume), ou -1 :
   // ses soldats stationnés défendent tout ce morceau, tant qu'un château ne l'a pas fait entrer dans le royaume
