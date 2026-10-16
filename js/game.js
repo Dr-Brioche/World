@@ -4104,7 +4104,7 @@ const GameRules = {
       return;
     }
     const botsAlive = this.players.some(p => !p.isHuman && p.alive);
-    // Victoire : 85 % des terres (une seule fois, on peut ensuite continuer à jouer),
+    // Victoire : 70 % des terres (WIN_RATIO ; une seule fois, on peut ensuite continuer à jouer),
     // ou plus aucun royaume rival (fin de la partie)
     if (!botsAlive || (!this.victoryShown && h.tiles / this.landCount >= CONFIG.WIN_RATIO)) {
       this.victoryShown = true;
