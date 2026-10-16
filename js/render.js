@@ -113,59 +113,71 @@ const Render = {
     this.contours = { C, cw, chunks };
   },
 
-  // --- Forêts ---
-  // Leur contour (le bord des cases de forêt, comme le dessin de la carte) et des petits sapins posés un peu au
-  // hasard (un toutes les FOREST_TREE_SPACING cases environ). Calculé une fois par carte, rangé par paquets de
-  // 32 x 32 cases, en coordonnées de cases.
+  // --- Forêts, et bordures des terrains ---
+  // Une bordure fine autour des forêts, des plaines, des déserts et du relief (collines, montagnes, sommets : c'est
+  // la courbe de niveau du pied des collines). Elle suit le dessin de la carte, en demi-cases aux coins adoucis
+  // (voir smoothTile ; ici on compare seulement les terrains). Et des petits sapins dans les forêts, posés un peu
+  // au hasard (un toutes les FOREST_TREE_SPACING cases environ). Calculé une fois par carte, rangé par paquets
+  // de 32 x 32 cases, en coordonnées de cases.
   buildForests() {
-    const G = Game, W = G.W, H = G.H, N = G.N, C = 32, cw = Math.ceil(W / C);
-    const raw = new Uint8Array(N);
-    for (let i = 0; i < N; i++) raw[i] = G.terrain[i] === TERRAIN.FOREST ? 1 : 0;
-    const lines = new Map(), trees = new Map();
+    const G = Game, W = G.W, H = G.H, N = G.N, C = 32, cw = Math.ceil(W / C), T = G.terrain;
     const chunk = (map, x, y) => {
       const key = ((y / C) | 0) * cw + ((x / C) | 0);
       let p = map.get(key);
       if (!p) map.set(key, p = new Path2D());
       return p;
     };
-    // Contour : il suit le dessin de la carte, en demi-cases aux coins adoucis (voir smoothTile ; ici on compare
-    // seulement les terrains). m = forêt ou pas, pour chaque quart de case.
-    const W2 = W * 2, H2 = H * 2, m = new Uint8Array(W2 * H2), T = G.terrain;
+    // Pour chaque quart de case (2 x 2 par case) : la case dont il prend la couleur (coins adoucis)
+    const W2 = W * 2, H2 = H * 2, src = new Int32Array(W2 * H2);
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const i = y * W + x;
       const up = y > 0 ? i - W : i, down = y < H - 1 ? i + W : i, left = x > 0 ? i - 1 : i, right = x < W - 1 ? i + 1 : i;
       const A = T[up], B = T[right], Cc = T[left], D = T[down], sm = CONFIG.SMOOTH_MAP;
       const q = [sm && Cc === A && Cc !== D && A !== B ? up : i, sm && A === B && A !== Cc && B !== D ? right : i,
         sm && D === Cc && D !== B && Cc !== A ? left : i, sm && B === D && B !== A && D !== Cc ? down : i];
-      for (let k = 0; k < 4; k++) m[(y * 2 + (k >> 1)) * W2 + x * 2 + (k & 1)] = raw[q[k]];
+      for (let k = 0; k < 4; k++) src[(y * 2 + (k >> 1)) * W2 + x * 2 + (k & 1)] = q[k];
     }
-    for (let y = 0; y < H2; y++) for (let x = 0; x < W2; x++) {
-      const j = y * W2 + x;
-      if (!m[j]) continue;
-      const up = y > 0 && !m[j - W2], down = y < H2 - 1 && !m[j + W2], left = x > 0 && !m[j - 1], right = x < W2 - 1 && !m[j + 1];
-      if (!(up || down || left || right)) continue;
-      const p = chunk(lines, x >> 1, y >> 1), a = x / 2, b = y / 2;
-      if (up) { p.moveTo(a, b); p.lineTo(a + 0.5, b); }
-      if (down) { p.moveTo(a, b + 0.5); p.lineTo(a + 0.5, b + 0.5); }
-      if (left) { p.moveTo(a, b); p.lineTo(a, b + 0.5); }
-      if (right) { p.moveTo(a + 0.5, b); p.lineTo(a + 0.5, b + 0.5); }
-    }
+    // Bordure d'une sorte de terrain (inside(terrain) = vrai pour elle) : les côtés des quarts de case qui en sont,
+    // face à un quart qui n'en est pas
+    const outline = inside => {
+      const lines = new Map(), m = new Uint8Array(W2 * H2);
+      for (let j = 0; j < W2 * H2; j++) m[j] = inside(T[src[j]]) ? 1 : 0;
+      for (let y = 0; y < H2; y++) for (let x = 0; x < W2; x++) {
+        const j = y * W2 + x;
+        if (!m[j]) continue;
+        const up = y > 0 && !m[j - W2], down = y < H2 - 1 && !m[j + W2], left = x > 0 && !m[j - 1], right = x < W2 - 1 && !m[j + 1];
+        if (!(up || down || left || right)) continue;
+        const p = chunk(lines, x >> 1, y >> 1), a = x / 2, b = y / 2;
+        if (up) { p.moveTo(a, b); p.lineTo(a + 0.5, b); }
+        if (down) { p.moveTo(a, b + 0.5); p.lineTo(a + 0.5, b + 0.5); }
+        if (left) { p.moveTo(a, b); p.lineTo(a, b + 0.5); }
+        if (right) { p.moveTo(a + 0.5, b); p.lineTo(a + 0.5, b + 0.5); }
+      }
+      return lines;
+    };
+    const borders = {
+      plains: outline(t => t === TERRAIN.PLAINS),
+      desert: outline(t => t === TERRAIN.DESERT),
+      relief: outline(t => t === TERRAIN.HILLS || t === TERRAIN.MOUNTAIN || t === TERRAIN.PEAK),
+      forest: outline(t => t === TERRAIN.FOREST),
+    };
     // Sapins : sur une grille un peu décalée au hasard (toujours le même hasard pour une case donnée)
-    const S = CONFIG.FOREST_TREE_SPACING;
+    const trees = new Map(), S = CONFIG.FOREST_TREE_SPACING, forest = i => T[i] === TERRAIN.FOREST;
     const rnd = (x, y, k) => (((x * 73856093) ^ (y * 19349663) ^ (k * 83492791)) >>> 0) % 1000 / 1000;
     for (let gy = 0; gy < H; gy += S) for (let gx = 0; gx < W; gx += S) {
       const x = Math.min(W - 1, gx + Math.floor(rnd(gx, gy, 1) * S)), y = Math.min(H - 1, gy + Math.floor(rnd(gx, gy, 2) * S));
       // (le sapin dépasse vers le haut : la case au-dessus doit être en forêt aussi)
-      if (y < 1 || raw[y * W + x] !== 1 || raw[(y - 1) * W + x] !== 1) continue;
+      if (y < 1 || !forest(y * W + x) || !forest((y - 1) * W + x)) continue;
       const tx = x + 0.5, ty = y + 0.6, z = 0.85 + rnd(gx, gy, 3) * 0.3, p = chunk(trees, x, y);
       // deux étages de branches (triangles) et un petit tronc
       p.moveTo(tx, ty - 1.25 * z); p.lineTo(tx + 0.45 * z, ty - 0.45 * z); p.lineTo(tx - 0.45 * z, ty - 0.45 * z); p.closePath();
       p.moveTo(tx, ty - 0.8 * z); p.lineTo(tx + 0.65 * z, ty + 0.15 * z); p.lineTo(tx - 0.65 * z, ty + 0.15 * z); p.closePath();
       p.rect(tx - 0.1 * z, ty + 0.15 * z, 0.2 * z, 0.3 * z);
     }
-    this.forests = { C, cw, lines, trees };
+    this.forests = { C, cw, borders, trees };
   },
 
+  // Bordures des terrains (plaines, déserts, relief, puis forêts par-dessus) et sapins
   drawForests(ox, oy) {
     const s = this.cam.scale, k = this.forests;
     if (!k || s < CONFIG.CONTOUR_MIN_ZOOM) return;
@@ -173,17 +185,32 @@ const Render = {
     const x0 = Math.max(0, Math.floor(this.cam.x / C)), y0 = Math.max(0, Math.floor((this.cam.y - 2) / C));
     const x1 = Math.min(k.cw - 1, Math.floor((this.cam.x + this.vw / s) / C)), y1 = Math.floor((this.cam.y + this.vh / s + 2) / C);
     const trees = s >= CONFIG.FOREST_TREE_ZOOM;
+    // (le relief garde la couleur des courbes de niveau, voir drawContours)
+    const colors = {
+      plains: 'rgba(78,96,36,0.45)',
+      desert: 'rgba(130,98,48,0.5)',
+      relief: `rgba(45,30,15,${Math.min(0.42, 0.26 + (s - CONFIG.CONTOUR_MIN_ZOOM) * 0.025)})`,
+      forest: 'rgba(16,52,18,0.6)',
+    };
     ctx.save();
     ctx.translate(ox, oy);
     ctx.scale(s, s);
     ctx.lineWidth = 1.3 / s;
     ctx.lineCap = 'square';
-    ctx.strokeStyle = 'rgba(16,52,18,0.6)';
-    ctx.fillStyle = `rgba(14,52,18,${Math.min(0.32, 0.22 + (s - CONFIG.FOREST_TREE_ZOOM) * 0.015)})`;
-    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
-      const key = cy * k.cw + cx, line = k.lines.get(key), tree = trees && k.trees.get(key);
-      if (tree) ctx.fill(tree);
-      if (line) ctx.stroke(line);
+    for (const kind of ['plains', 'desert', 'relief', 'forest']) {
+      ctx.strokeStyle = colors[kind];
+      const map = k.borders[kind];
+      for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+        const line = map.get(cy * k.cw + cx);
+        if (line) ctx.stroke(line);
+      }
+    }
+    if (trees) {
+      ctx.fillStyle = `rgba(14,52,18,${Math.min(0.32, 0.22 + (s - CONFIG.FOREST_TREE_ZOOM) * 0.015)})`;
+      for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+        const tree = k.trees.get(cy * k.cw + cx);
+        if (tree) ctx.fill(tree);
+      }
     }
     ctx.restore();
   },
