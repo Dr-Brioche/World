@@ -896,7 +896,7 @@ const UI = {
     if (t === B_PORT) {
       const n = G.portRoadCastles(h.id, a).length;
       txt += n ? ` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(n * CONFIG.PORT_ROAD_BONUS * 100)} % d'or`
-        : ` · aucune ville à moins de ${CONFIG.PORT_ROAD_DISTANCE} cases (pas de chemin)`;
+        : ` · aucune ville assez proche (${CONFIG.PORT_ROAD_DISTANCE} cases, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)} % par niveau de la ville) : pas de chemin`;
     }
     return txt;
   },
