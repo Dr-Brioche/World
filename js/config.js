@@ -214,6 +214,9 @@ const CONFIG = {
   // Ses soldats (défenseurs, armées qui marchent vers la frontière, soldats qui rentrent) passent un fleuve qui coupe
   // ses terres à gué : ils suivent le vrai chemin et perdent 5 secondes par case de fleuve traversée
   FORD_TIME: 5,
+  // 🌉 Pont : clic droit sur un fleuve dont les deux rives (en face, en ligne droite) sont à toi. Ses soldats
+  // passent alors ce fleuve comme une case de plaine, sans perdre de temps à gué.
+  BRIDGE_COST: 700,
   EXPEDITION_COOLDOWN: 5,    // une expédition maritime au plus toutes les 5 secondes
   REPATRIATE_SPEED: 5,       // vitesse minimum (cases/s) des bateaux qui rapatrient les soldats d'un avant-poste
   OUTPOST_BUILD_TIME: 20,    // secondes pour bâtir un avant-poste après le débarquement (sans bonus avant)

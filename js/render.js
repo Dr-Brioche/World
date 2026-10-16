@@ -1365,6 +1365,36 @@ const Render = {
     }
   },
 
+  // Ponts : un tablier de bois d'une rive à l'autre, avec ses planches quand on zoome
+  drawBridges(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    for (const br of G.bridges) {
+      // du centre d'une rive au centre de l'autre (on déborde un peu sur la terre)
+      const ax = br.a % W + 0.5, ay = ((br.a / W) | 0) + 0.5, bx = br.b % W + 0.5, by = ((br.b / W) | 0) + 0.5;
+      const horiz = ay === by, half = 0.42;
+      const x0 = ox + (Math.min(ax, bx) - (horiz ? 0.1 : half)) * s, y0 = oy + (Math.min(ay, by) - (horiz ? half : 0.1)) * s;
+      const w = (horiz ? Math.abs(bx - ax) + 0.2 : half * 2) * s, h = (horiz ? half * 2 : Math.abs(by - ay) + 0.2) * s;
+      if (x0 > this.vw || y0 > this.vh || x0 + w < 0 || y0 + h < 0) continue;
+      ctx.fillStyle = '#9a6a38';
+      ctx.fillRect(x0, y0, w, h);
+      // planches en travers
+      if (s >= 5) {
+        ctx.strokeStyle = 'rgba(70,42,18,0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const step = Math.max(3, s * 0.3);
+        if (horiz) for (let x = x0 + step; x < x0 + w; x += step) { ctx.moveTo(x, y0); ctx.lineTo(x, y0 + h); }
+        else for (let y = y0 + step; y < y0 + h; y += step) { ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); }
+        ctx.stroke();
+      }
+      // garde-corps sombres sur les deux côtés
+      ctx.fillStyle = '#4a2e14';
+      const r = Math.max(1, s * 0.1);
+      if (horiz) { ctx.fillRect(x0, y0, w, r); ctx.fillRect(x0, y0 + h - r, w, r); }
+      else { ctx.fillRect(x0, y0, r, h); ctx.fillRect(x0 + w - r, y0, r, h); }
+    }
+  },
+
   // Survol d'un château ennemi : on montre le chemin de l'assaut (pointillés dorés),
   // ou une croix rouge si d'autres fortifications bloquent le passage.
   // Trace un chemin d'assaut (pointillés), case par case
@@ -1467,6 +1497,7 @@ const Render = {
     this.drawHoveredKingdom(ox, oy);
 
     this.drawRoads(ox, oy);
+    this.drawBridges(ox, oy);
     this.drawPactBorders(ox, oy);
     this.drawCastleZones(ox, oy);
     this.drawCityWalls(ox, oy);
