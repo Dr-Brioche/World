@@ -518,6 +518,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
+🎨 Les coins des cases sont **légèrement adoucis** sur la carte (un escalier de cases devient une pente plus douce, sans flou) :
+moins « pixel ». (Réglage `SMOOTH_MAP` dans `js/config.js`.)
 🌲 Les **forêts** sont entourées d'un fin contour vert foncé et, en zoomant, parsemées de petits **sapins** transparents.
 ⛰️ En zoomant, de fines **courbes de niveau** dessinent les collines et les montagnes : plus elles sont serrées, plus ça monte.
 
@@ -529,7 +531,8 @@ marchent vers la frontière et ses soldats qui rentrent passent le fleuve **à g
 **5 secondes par case de fleuve** traversée.
 🌉 **Ponts** : fais un **clic droit sur un fleuve** dont les deux rives, juste en face, sont à toi (à l'horizontale ou à la
 verticale, 3 cases de fleuve au plus) et choisis **Construire un pont** (💰 **700**). Tes armées, tes défenseurs et tes
-soldats qui rentrent le passent alors **sans s'arrêter**, comme une plaine. Le pont sert à celui qui tient ses deux rives. Il y a entre **3 et 12 fleuves** par partie, au hasard.
+soldats qui rentrent le passent alors **sans s'arrêter**, comme une plaine. Le pont sert à celui qui tient ses deux rives.
+Les **bots** bâtissent aussi **1 ou 2 ponts** par partie (après 4 minutes, près de leurs villes : ils mettent de l'or de côté pour ça). Il y a entre **3 et 12 fleuves** par partie, au hasard.
 Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer : un royaume des deux côtés
 d'un grand fleuve est **coupé**. Sa rive sans ville ni port fortifié est désorganisée, et aucun soldat ne passe.
@@ -554,6 +557,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.24** : 🎨 carte moins « pixel » : les coins en escalier sont légèrement adoucis (dessin 2 fois plus fin, sans flou) · 🌉 les bots bâtissent 1 ou 2 ponts par partie
 - **v0.91.23** : 🌲 forêts plus lisibles : un contour vert foncé autour d'elles et de petits sapins transparents en zoomant · 🔀 le second mur d'une citadelle peut partir d'un point du premier mur déjà bâti (clique d'abord sur ce point)
 - **v0.91.22** : 🌉 **ponts** : clic droit sur un fleuve dont les deux rives sont à toi → Construire un pont (💰 700), et tes soldats le passent sans perdre de temps à gué · 🖱️ le clic droit ne propose plus de construire des bâtiments (la barre du bas et les touches 1 à 5 suffisent)
 - **v0.91.21** : ⛰️ de fines courbes de niveau autour des collines et des montagnes (visibles en zoomant) · 📖 précision : un grand fleuve (infranchissable) coupe le royaume

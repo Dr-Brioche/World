@@ -9,6 +9,7 @@ const AI = {
     if (Math.random() < 0.4) this.tryBuild(p);
     if (Math.random() < 0.1) this.tryWall(p);
     if (Math.random() < 0.05 * (Game.difficulty.zeal || 1)) this.tryCrusade(p);
+    if (Math.random() < (p.bridgeSaving ? 0.3 : 0.05)) this.tryBridge(p);
     if (Math.random() < 0.05) this.tryExpedition(p);
     if (this.stuckOnIsland(p)) this.goToSea(p);
     if (Math.random() < 0.08) this.tryAlliance(p);
@@ -299,7 +300,37 @@ const AI = {
     return church !== undefined && !G.startCrusade(p, church);
   },
 
+  // 🌉 Un ou deux ponts par partie (tiré au hasard pour chaque bot), après les premières minutes : sur un fleuve
+  // qui coupe ses terres, le plus près possible d'une de ses villes (ses soldats y passent souvent), et pas à côté
+  // d'un de ses ponts. S'il n'a pas assez d'or, il en met de côté (voir tryBuild : bridgeSaving).
+  tryBridge(p) {
+    const G = Game, W = G.W;
+    p.bridgeSaving = false;
+    if (G.tick < CONFIG.AI_BRIDGE_AFTER * CONFIG.TICKS_PER_SECOND) return false;
+    if (p.bridgeGoal === undefined) p.bridgeGoal = Math.random() < 0.5 ? 1 : 2;
+    const mine = G.bridges.filter(b => b.owner === p.id);
+    if (mine.length >= p.bridgeGoal) return false;
+    const cities = G.castles.filter(c => G.owner[c] === p.id);
+    if (!cities.length) return false;
+    const dist = (a, b) => Math.hypot(a % W - b % W, ((a / W) | 0) - ((b / W) | 0));
+    let best = -1, bestD = Infinity;
+    for (const t of G.riverTiles()) {
+      // (seulement un fleuve qui touche nos terres)
+      let near = false;
+      G.forNeighbors(t, n => { if (G.owner[n] === p.id) near = true; });
+      if (!near) continue;
+      const d = Math.min(...cities.map(c => dist(c, t)));
+      if (d >= bestD || mine.some(b => dist(b.tiles[0], t) < 8) || G.planBridge(p.id, t).error) continue;
+      best = t; bestD = d;
+    }
+    if (best < 0) return false;
+    if (p.gold < CONFIG.BRIDGE_COST) { p.bridgeSaving = true; return false; } // (on économise pour le pont)
+    return !G.buildBridge(p, best);
+  },
+
   tryBuild(p, forced) {
+    // (il économise pour un pont : il ne dépense pas tout de suite, la plupart du temps)
+    if (!forced && p.bridgeSaving && p.gold < CONFIG.BRIDGE_COST && Math.random() < 0.7) return;
     // ✝️ Un voisin ennemi a plus de Croyance (il convertit nos terres) : on mise un peu plus sur les églises
     // (zeal : un peu en facile, plus en difficile)
     const zeal = Game.difficulty.zeal || 1;
