@@ -527,8 +527,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
-🎨 Les coins des cases sont **légèrement adoucis** sur la carte (un escalier de cases devient une pente plus douce, sans flou) :
-moins « pixel ». (Réglage `SMOOTH_MAP` dans `js/config.js`.)
+🎨 La carte est **adoucie** : les coins des cases sont arrondis deux fois de suite (un escalier de cases devient une
+courbe douce, sans flou), et les petites variations de couleur du sol sont fondues entre voisines (pas de damier).
+Sur les très grandes cartes (Europe), l'adoucissement est un peu moins fin, pour la mémoire.
+(Réglages `SMOOTH_MAP`, `SMOOTH_FINE_MAX_TILES` et `MAP_SHADE_SOFT` dans `js/config.js`.)
 🌲 Les **forêts** sont entourées d'un fin contour vert foncé et, en zoomant, parsemées de petits **sapins** transparents.
 ⛰️ En zoomant, de fines **courbes de niveau** dessinent le relief : une au pied des collines, une au pied des montagnes
 et une autour des sommets enneigés. Les **plaines**, les **déserts** et les forêts ont aussi une fine **bordure**.
@@ -568,6 +570,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.2** : 🎨 carte bien moins « pixel » : coins arrondis deux fois (4 x 4 pixels par case), sol sans damier, et image lissée de loin ; les bordures des terrains suivent ces nouvelles courbes
 - **v0.92.1** : ⛰️ les courbes de niveau suivent toutes le bord des cases (pied des collines, pied des montagnes, tour des sommets enneigés) : fini les lignes qui coupaient les cases en biais
 - **v0.92** : 🖌️ **éditeur de cartes** (lien « Dessiner une carte » dans le menu) : peins mer, plaines, forêts, collines, montagnes, sommets, déserts et fleuves au pinceau ou à l'outil remplir ; une carte enregistrée apparaît tout de suite dans la liste des cartes du jeu (✏️ Cartes dessinées), et on peut l'exporter dans un fichier
 - **v0.91.25** : 🗺️ la courbe de niveau du pied des collines suit le bord des cases (comme la bordure des forêts) ; plaines et déserts ont aussi leur fine bordure

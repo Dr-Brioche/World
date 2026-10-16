@@ -25,7 +25,9 @@ const CONFIG = {
   // Courbes de niveau (pied des collines, des montagnes, et bord des sommets) et bordures des terrains : le zoom
   // à partir duquel on les voit (elles suivent le bord des cases : voir buildForests dans render.js)
   CONTOUR_MIN_ZOOM: 2.5,
-  SMOOTH_MAP: true,          // coins des cases légèrement adoucis sur la carte (false : carrés nets, tout en pixels)
+  SMOOTH_MAP: true,          // coins des cases adoucis sur la carte (false : carrés nets, tout en pixels)
+  SMOOTH_FINE_MAX_TILES: 600000,
+  MAP_SHADE_SOFT: 1.5,       // force des petites variations de couleur du sol, une fois adoucies (0 = sol tout uni) // jusqu'à cette taille de carte (en cases), adoucissement plus fin (4 x 4 pixels par case)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant
   FOREST_TREE_ZOOM: 4,
