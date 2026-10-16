@@ -515,6 +515,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
+⛰️ En zoomant, de fines **courbes de niveau** dessinent les collines et les montagnes : plus elles sont serrées, plus ça monte.
 
 🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont de vraies **frontières naturelles**.
 **Personne ne peut les prendre** : ils restent bleus et neutres pour toujours, et ni l'expansion ni les assauts ne les franchissent.
@@ -523,7 +524,8 @@ reste un seul royaume (il n'est pas « coupé »), mais ses soldats ne volent pa
 marchent vers la frontière et ses soldats qui rentrent passent le fleuve **à gué**, par le vrai chemin, et perdent
 **5 secondes par case de fleuve** traversée. Il y a entre **3 et 12 fleuves** par partie, au hasard.
 Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
-un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer.
+un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer : un royaume des deux côtés
+d'un grand fleuve est **coupé**. Sa rive sans ville ni port fortifié est désorganisée, et aucun soldat ne passe.
 Certains fleuves forment aussi un **lac** en chemin.
 **🛶 Traverser un fleuve** : pour prendre des terres libres de l'autre côté, fais un **clic droit** sur la rive d'en face
 et choisis **🛶 Traverser le fleuve**. La traversée **ne coûte aucun soldat**, seulement du **temps**
@@ -545,6 +547,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.21** : ⛰️ de fines courbes de niveau autour des collines et des montagnes (visibles en zoomant) · 📖 précision : un grand fleuve (infranchissable) coupe le royaume
 - **v0.91.20** : 🐛 les défenseurs ne traversent plus les fleuves tout droit comme par magie : ils suivent le vrai chemin et passent à gué (5 s par case de fleuve) ; pareil pour les armées qui marchent vers la frontière et les soldats qui rentrent
 - **v0.91.19** : 👀 pendant la pose d'un bâtiment (ou l'amélioration d'une ville), ses futures routes s'affichent en transparence ; trop loin d'une ville, un trait rouge indique la distance et la portée
 - **v0.91.18** : 🐛 un avant-poste ne tombe plus avec ses soldats sans combattre : les renforts arrivés par la mer pendant l'assaut se battent aussi, ses soldats stationnés le défendent d'office au siège, et avec deux assauts en même temps la garnison défend contre celui qui est au pied des murs (vaut aussi pour les ports et les villes)
