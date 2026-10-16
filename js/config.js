@@ -26,6 +26,9 @@ const CONFIG = {
   // 1 = colline, 2 = montagne, 3 = sommet, relief lissé), et le zoom à partir duquel on les voit
   CONTOUR_LEVELS: [0.35, 0.85, 1.35, 1.85, 2.45],
   CONTOUR_MIN_ZOOM: 2.5,
+  // Forêts : un léger contour autour d'elles (dès CONTOUR_MIN_ZOOM), et de petits sapins transparents en zoomant
+  FOREST_TREE_ZOOM: 4,
+  FOREST_TREE_SPACING: 3,  // un sapin toutes les 3 cases environ
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)

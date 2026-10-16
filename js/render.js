@@ -52,6 +52,7 @@ const Render = {
     this.wallsVersion = -1; this.pactVersion = -1;
     this.previewKey = null; this.planKey = null; this.buildable = null;
     this.buildContours();
+    this.buildForests();
     this.fit();
   },
 
@@ -106,6 +107,71 @@ const Render = {
       }
     }
     this.contours = { C, cw, chunks };
+  },
+
+  // --- Forêts ---
+  // Leur contour (le bord des cases de forêt, comme le dessin de la carte) et des petits sapins posés un peu au
+  // hasard (un toutes les FOREST_TREE_SPACING cases environ). Calculé une fois par carte, rangé par paquets de
+  // 32 x 32 cases, en coordonnées de cases.
+  buildForests() {
+    const G = Game, W = G.W, H = G.H, N = G.N, C = 32, cw = Math.ceil(W / C);
+    const raw = new Uint8Array(N);
+    for (let i = 0; i < N; i++) raw[i] = G.terrain[i] === TERRAIN.FOREST ? 1 : 0;
+    const lines = new Map(), trees = new Map();
+    const chunk = (map, x, y) => {
+      const key = ((y / C) | 0) * cw + ((x / C) | 0);
+      let p = map.get(key);
+      if (!p) map.set(key, p = new Path2D());
+      return p;
+    };
+    // Contour : chaque côté d'une case de forêt qui touche une case d'un autre terrain
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!raw[y * W + x]) continue;
+      const i = y * W + x;
+      const up = y > 0 && !raw[i - W], down = y < H - 1 && !raw[i + W], left = x > 0 && !raw[i - 1], right = x < W - 1 && !raw[i + 1];
+      if (!(up || down || left || right)) continue;
+      const p = chunk(lines, x, y);
+      if (up) { p.moveTo(x, y); p.lineTo(x + 1, y); }
+      if (down) { p.moveTo(x, y + 1); p.lineTo(x + 1, y + 1); }
+      if (left) { p.moveTo(x, y); p.lineTo(x, y + 1); }
+      if (right) { p.moveTo(x + 1, y); p.lineTo(x + 1, y + 1); }
+    }
+    // Sapins : sur une grille un peu décalée au hasard (toujours le même hasard pour une case donnée)
+    const S = CONFIG.FOREST_TREE_SPACING;
+    const rnd = (x, y, k) => (((x * 73856093) ^ (y * 19349663) ^ (k * 83492791)) >>> 0) % 1000 / 1000;
+    for (let gy = 0; gy < H; gy += S) for (let gx = 0; gx < W; gx += S) {
+      const x = Math.min(W - 1, gx + Math.floor(rnd(gx, gy, 1) * S)), y = Math.min(H - 1, gy + Math.floor(rnd(gx, gy, 2) * S));
+      // (le sapin dépasse vers le haut : la case au-dessus doit être en forêt aussi)
+      if (y < 1 || raw[y * W + x] !== 1 || raw[(y - 1) * W + x] !== 1) continue;
+      const tx = x + 0.5, ty = y + 0.6, z = 0.85 + rnd(gx, gy, 3) * 0.3, p = chunk(trees, x, y);
+      // deux étages de branches (triangles) et un petit tronc
+      p.moveTo(tx, ty - 1.25 * z); p.lineTo(tx + 0.45 * z, ty - 0.45 * z); p.lineTo(tx - 0.45 * z, ty - 0.45 * z); p.closePath();
+      p.moveTo(tx, ty - 0.8 * z); p.lineTo(tx + 0.65 * z, ty + 0.15 * z); p.lineTo(tx - 0.65 * z, ty + 0.15 * z); p.closePath();
+      p.rect(tx - 0.1 * z, ty + 0.15 * z, 0.2 * z, 0.3 * z);
+    }
+    this.forests = { C, cw, lines, trees };
+  },
+
+  drawForests(ox, oy) {
+    const s = this.cam.scale, k = this.forests;
+    if (!k || s < CONFIG.CONTOUR_MIN_ZOOM) return;
+    const ctx = this.ctx, C = k.C;
+    const x0 = Math.max(0, Math.floor(this.cam.x / C)), y0 = Math.max(0, Math.floor((this.cam.y - 2) / C));
+    const x1 = Math.min(k.cw - 1, Math.floor((this.cam.x + this.vw / s) / C)), y1 = Math.floor((this.cam.y + this.vh / s + 2) / C);
+    const trees = s >= CONFIG.FOREST_TREE_ZOOM;
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(s, s);
+    ctx.lineWidth = 1.3 / s;
+    ctx.lineCap = 'square';
+    ctx.strokeStyle = 'rgba(16,52,18,0.6)';
+    ctx.fillStyle = `rgba(14,52,18,${Math.min(0.32, 0.22 + (s - CONFIG.FOREST_TREE_ZOOM) * 0.015)})`;
+    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+      const key = cy * k.cw + cx, line = k.lines.get(key), tree = trees && k.trees.get(key);
+      if (tree) ctx.fill(tree);
+      if (line) ctx.stroke(line);
+    }
+    ctx.restore();
   },
 
   // Les courbes de niveau, fines et discrètes, sous les routes et les bâtiments (seulement en zoomant un peu)
@@ -350,16 +416,28 @@ const Render = {
     // Aperçu du mur qu'on pose (recalculé au plus toutes les 0,1 s) : vert s'il est possible, rouge sinon
     const c = UI.wallFor;
     if (c === undefined || c < 0 || this.hover < 0 || G.phase !== 'playing') return;
-    const now = performance.now();
-    if (!this.wallPlan || this.wallPlan.key !== c + ':' + this.hover || (this.wallPlan.version !== G.version && now - this.wallPlan.time > 100)) {
-      this.wallPlan = Object.assign(G.planWall(G.human.id, c, this.hover), { key: c + ':' + this.hover, version: G.version, time: now });
+    const from = UI.wallFrom >= 0 ? UI.wallFrom : -1;
+    // Point de départ du second mur : un rond doré sur le premier mur (celui qu'on survole, ou celui choisi)
+    const ring = (t, color) => {
+      ctx.beginPath();
+      ctx.arc(ox + (t % W + 0.5) * s, oy + (((t / W) | 0) + 0.5) * s, Math.max(5, s * 0.8), 0, Math.PI * 2);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = color;
+      ctx.stroke();
+    };
+    if (from >= 0) ring(from, '#ffd34d');
+    else if (UI.onFirstWall(c, this.hover)) return ring(this.hover, 'rgba(255,211,77,0.9)');
+    const now = performance.now(), key = c + ':' + this.hover + ':' + from;
+    if (!this.wallPlan || this.wallPlan.key !== key || (this.wallPlan.version !== G.version && now - this.wallPlan.time > 100)) {
+      this.wallPlan = Object.assign(G.planWall(G.human.id, c, this.hover, from), { key, version: G.version, time: now });
     }
     const plan = this.wallPlan, h = G.sizeOf(B_CASTLE) / 2;
     if (plan.error) {
-      // (une ligne rouge pointillée de la ville jusqu'à la souris)
+      // (une ligne rouge pointillée de la ville, ou du point de départ, jusqu'à la souris)
       ctx.setLineDash([6, 5]);
       ctx.beginPath();
-      ctx.moveTo(ox + (c % W + h) * s, oy + (((c / W) | 0) + h) * s);
+      if (from >= 0) ctx.moveTo(ox + (from % W + 0.5) * s, oy + (((from / W) | 0) + 0.5) * s);
+      else ctx.moveTo(ox + (c % W + h) * s, oy + (((c / W) | 0) + h) * s);
       ctx.lineTo(ox + (this.hover % W + 0.5) * s, oy + (((this.hover / W) | 0) + 0.5) * s);
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = 'rgba(200,50,40,0.9)';
@@ -1494,6 +1572,7 @@ const Render = {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
     this.drawContours(ox, oy);
+    this.drawForests(ox, oy);
     this.drawHoveredKingdom(ox, oy);
 
     this.drawRoads(ox, oy);
