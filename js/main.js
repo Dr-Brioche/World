@@ -16,6 +16,9 @@ const UI = {
 
   init() {
     $('ratio').addEventListener('input', e => { this.ratio = e.target.value / 100; this.refresh(); });
+    // (curseur lâché : il rend la main au clavier, pour que les flèches et ZQSD déplacent de nouveau la caméra)
+    $('ratio').addEventListener('change', e => e.target.blur());
+    $('ratio').addEventListener('pointerup', e => e.target.blur());
 
     const builds = $('builds');
     for (let t = 1; t < BUILDINGS.length; t++) {
@@ -112,8 +115,10 @@ const UI = {
     const PAN = { KeyW: [0, -1], ArrowUp: [0, -1], KeyS: [0, 1], ArrowDown: [0, 1],
       KeyA: [-1, 0], ArrowLeft: [-1, 0], KeyD: [1, 0], ArrowRight: [1, 0] };
     this.panKeys = new Set();
+    // Le joueur écrit-il dans un champ ? (le curseur « Envoyer » n'en est pas un : les touches restent au jeu)
+    const typing = el => /SELECT|TEXTAREA/.test(el.tagName) || (el.tagName === 'INPUT' && el.type !== 'range');
     window.addEventListener('keydown', e => {
-      if (!PAN[e.code] || Game.phase === undefined || !$('menu').classList.contains('hidden') || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+      if (!PAN[e.code] || Game.phase === undefined || !$('menu').classList.contains('hidden') || typing(e.target)) return;
       this.panKeys.add(e.code);
       e.preventDefault(); // (les flèches ne font pas défiler la page)
     });
@@ -129,7 +134,7 @@ const UI = {
     };
 
     window.addEventListener('keydown', e => {
-      if (Game.phase !== 'playing' || e.target.tagName === 'INPUT') return;
+      if (Game.phase !== 'playing' || typing(e.target)) return;
       // Touche 1, 2 ou 3 : le bâtiment suit la souris, un clic le pose (même touche = annuler)
       // On regarde la touche physique (e.code) : sur un clavier AZERTY, la touche « 1 » du haut
       // donne « & » sans Maj, « 2 » donne « é », « 3 » donne « " ». Le pavé numérique marche aussi.

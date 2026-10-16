@@ -534,6 +534,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.16** : 🐛 après avoir touché au curseur « Envoyer », les flèches et ZQSD déplacent de nouveau la caméra tout de suite (plus besoin de recliquer sur la carte), et les touches 1 à 5 marchent aussi
 - **v0.91.15** : 🏆 la victoire arrive plus tôt : il suffit de posséder 70 % des terres (au lieu de 85 %)
 - **v0.91.14** : ✝️ un bouton « Croisade » apparaît dans la barre des constructions dès ta première cathédrale, pour lancer une croisade sans aller cliquer sur l'église · 📱 boutons de la barre un peu plus étroits sur téléphone
 - **v0.91.13** : 🎯 contre un royaume désorganisé, on peut toujours viser ses églises et ses ports (pour prendre leur zone d'un coup) ou l'attaquer de front en cliquant ailleurs ; avec une citadelle, les deux à la fois · 🤖 les bots font pareil
