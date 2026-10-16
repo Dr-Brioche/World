@@ -1228,20 +1228,31 @@ const UI = {
     this.selectBuild(0);
     this.cancelPlan();
     this.wallFor = c;
+    this.wallFrom = -1; // (point de départ choisi sur le premier mur, pour le second : voir onMapClick)
     document.body.style.cursor = 'crosshair';
   },
+
+  // La case i est-elle sur un mur déjà bâti de la ville c ? (le second mur peut en partir)
+  onFirstWall(c, i) { return Game.walls.some(w => w.castle === c && w.done && w.tiles.includes(i)); },
 
   cancelWall() {
     if (this.wallFor === undefined || this.wallFor < 0) return;
     this.wallFor = -1;
+    this.wallFrom = -1;
     document.body.style.cursor = '';
   },
 
   wallHint() {
     const G = Game, c = this.wallFor, cost = G.wallCost(c);
+    if (this.wallFrom >= 0) {
+      return `🧱 Second mur (💰 ${fmt(cost)}) : il part du point choisi sur ton premier mur ; clique où il doit aller ` +
+        `(${CONFIG.WALL_MAX_REACH} cases au plus) · Échap ou clic droit pour annuler`;
+    }
+    const second = G.walls.some(w => w.castle === c && w.done)
+      ? ' · pour le second mur, tu peux aussi cliquer d\'abord sur un point de ton premier mur : il partira de là' : '';
     return `🧱 Mur (💰 ${fmt(cost)}, ${CONFIG.WALL_BUILD_TIME} s) : clique sur tes terres, à ${CONFIG.WALL_MAX_REACH} cases au plus de la muraille de la ville ` +
       `: le mur ira tout droit de la ville jusque-là (près d'un lac, d'un sommet, d'un fleuve ou d'un autre mur, il s'y accroche tout seul ; ` +
-      `vise une autre de tes villes pour les relier : +${CONFIG.WALL_LINK_GARRISON} de garnison pour chacune) · Échap ou clic droit pour annuler`;
+      `vise une autre de tes villes pour les relier : +${CONFIG.WALL_LINK_GARRISON} de garnison pour chacune)${second} · Échap ou clic droit pour annuler`;
   },
 
   closeActionMenu() {
@@ -1278,7 +1289,12 @@ const UI = {
     if (this.wallFor >= 0) {
       const c = this.wallFor;
       if (G.building[c] !== B_CASTLE || G.owner[c] !== h.id) { this.cancelWall(); return; }
-      const cost = G.wallCost(c), err = G.buildWall(h, c, i);
+      // Second mur : un 1er clic sur le premier mur choisit le point de départ
+      if (this.wallFrom < 0 && this.onFirstWall(c, i)) {
+        this.wallFrom = i;
+        return this.log('🧱 Point de départ choisi sur ton premier mur : clique maintenant où le second mur doit aller.', 'good');
+      }
+      const cost = G.wallCost(c), err = G.buildWall(h, c, i, this.wallFrom);
       if (err) return this.log(err, 'warn');
       this.cancelWall();
       this.log(`🧱 Chantier du mur lancé (💰 ${fmt(cost)}) : il sera debout dans ${CONFIG.WALL_BUILD_TIME} s.`, 'good');

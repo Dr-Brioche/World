@@ -676,7 +676,9 @@ const GameRules = {
   // Il part de la muraille de la ville et va tout droit jusqu'à la case visée (ou jusqu'à l'obstacle tout proche :
   // voir wallSnap, sealed = il s'y accroche) ; il ne passe que sur les terres du royaume (là où il croise un
   // obstacle infranchissable, il n'y a pas besoin de mur : il le laisse).
-  planWall(pid, c, target) {
+  // from = une case d'un mur déjà bâti de la ville (pour le second mur) : il part de là, au lieu de la muraille,
+  // et va au plus à WALL_MAX_REACH cases de ce point.
+  planWall(pid, c, target, from = -1) {
     if (this.building[c] !== B_CASTLE || this.owner[c] !== pid) return { error: 'Ce n\'est pas une de tes villes.' };
     if (this.wallsOf(c).length >= this.wallMax(c)) {
       return { error: this.level[c] < 2 ? 'Il faut une ville de niveau 2 pour bâtir un mur.'
@@ -699,11 +701,23 @@ const GameRules = {
     const snap = city >= 0 ? -1 : this.wallSnap(target), sealed = city >= 0 || snap >= 0;
     if (snap >= 0) target = snap;
     const tx = target % W + 0.5, ty = ((target / W) | 0) + 0.5, R = this.castleInfo(c).radius;
-    const dist = Math.hypot(tx - cx, ty - cy), reach = dist - Rcity; // (jusqu'à la muraille de l'autre ville)
-    if (reach < R + 2) return { error: city >= 0 ? 'Ces deux villes se touchent déjà : pas besoin de mur entre elles.' : 'Vise un endroit hors de la muraille de la ville.' };
-    if (reach > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.` };
-    // le mur part du bord de la muraille de la ville, vers la case visée (tracé case par case, sans trou)
-    const sx = Math.floor(cx + (tx - cx) / dist * (R - 0.5)), sy = Math.floor(cy + (ty - cy) / dist * (R - 0.5));
+    let sx, sy;
+    if (from >= 0) {
+      // Second mur, depuis un point du premier (déjà bâti)
+      if (!this.walls.some(w => w.castle === c && w.done && w.tiles.includes(from))) {
+        return { error: 'Le mur doit partir de la muraille de la ville, ou d\'un point de son premier mur déjà bâti.' };
+      }
+      sx = from % W; sy = (from / W) | 0;
+      const reach = Math.hypot(tx - sx - 0.5, ty - sy - 0.5) - Rcity;
+      if (reach < 2) return { error: 'Vise un endroit plus loin de ton mur.' };
+      if (reach > CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de son point de départ.` };
+    } else {
+      const dist = Math.hypot(tx - cx, ty - cy), reach = dist - Rcity; // (jusqu'à la muraille de l'autre ville)
+      if (reach < R + 2) return { error: city >= 0 ? 'Ces deux villes se touchent déjà : pas besoin de mur entre elles.' : 'Vise un endroit hors de la muraille de la ville.' };
+      if (reach > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.` };
+      // le mur part du bord de la muraille de la ville, vers la case visée (tracé case par case, sans trou)
+      sx = Math.floor(cx + (tx - cx) / dist * (R - 0.5)); sy = Math.floor(cy + (ty - cy) / dist * (R - 0.5));
+    }
     const tiles = [], ex = target % W, ey = (target / W) | 0;
     let x = sx, y = sy;
     const dx = Math.abs(ex - x), dy = -Math.abs(ey - y), stx = x < ex ? 1 : -1, sty = y < ey ? 1 : -1;
@@ -726,9 +740,10 @@ const GameRules = {
     return { tiles, end: city >= 0 ? tiles[tiles.length - 1] : target, sealed, city };
   },
 
-  // Bâtir un mur de la ville c jusqu'à la case visée. Renvoie un message d'erreur, ou null.
-  buildWall(p, c, target) {
-    const plan = this.planWall(p.id, c, target);
+  // Bâtir un mur de la ville c jusqu'à la case visée (depuis la case from d'un de ses murs, si elle est donnée).
+  // Renvoie un message d'erreur, ou null.
+  buildWall(p, c, target, from = -1) {
+    const plan = this.planWall(p.id, c, target, from);
     if (plan.error) return plan.error;
     const cost = this.wallCost(c);
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;

@@ -315,6 +315,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ville et va **tout droit** jusque-là (aperçu **vert** s'il est possible, ligne **rouge** sinon ; il ne passe que sur tes
      terres, sans bâtiment sur le chemin). **🧲 Aimant** : vise à moins de **3 cases** d'un obstacle (mer, lac, fleuve, sommet
      ou un autre mur) et le mur va s'y accrocher tout seul (petit rond vert), pour **fermer le passage** sans laisser de trou.
+     🔀 **Second mur depuis le premier** : pour le second mur d'une citadelle, clique d'abord sur **un point de ton premier
+     mur déjà bâti** (rond doré), puis sur l'endroit où il doit aller (12 cases au plus) : il part de là, en embranchement.
      🏰🧱🏰 **Relier deux villes** : vise une **autre de tes villes** (dans sa muraille, ou à moins de 3 cases) et le mur va
      jusqu'à sa muraille (ou bien chaque ville bâtit un mur vers l'autre, et les **deux murs se rejoignent** : l'aimant
      accroche le second au premier). Une fois debout, il **relie les deux villes** : **+50 soldats de garnison pour chacune** (en survolant
@@ -516,6 +518,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
+🌲 Les **forêts** sont entourées d'un fin contour vert foncé et, en zoomant, parsemées de petits **sapins** transparents.
 ⛰️ En zoomant, de fines **courbes de niveau** dessinent les collines et les montagnes : plus elles sont serrées, plus ça monte.
 
 🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont de vraies **frontières naturelles**.
@@ -551,6 +554,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.23** : 🌲 forêts plus lisibles : un contour vert foncé autour d'elles et de petits sapins transparents en zoomant · 🔀 le second mur d'une citadelle peut partir d'un point du premier mur déjà bâti (clique d'abord sur ce point)
 - **v0.91.22** : 🌉 **ponts** : clic droit sur un fleuve dont les deux rives sont à toi → Construire un pont (💰 700), et tes soldats le passent sans perdre de temps à gué · 🖱️ le clic droit ne propose plus de construire des bâtiments (la barre du bas et les touches 1 à 5 suffisent)
 - **v0.91.21** : ⛰️ de fines courbes de niveau autour des collines et des montagnes (visibles en zoomant) · 📖 précision : un grand fleuve (infranchissable) coupe le royaume
 - **v0.91.20** : 🐛 les défenseurs ne traversent plus les fleuves tout droit comme par magie : ils suivent le vrai chemin et passent à gué (5 s par case de fleuve) ; pareil pour les armées qui marchent vers la frontière et les soldats qui rentrent
