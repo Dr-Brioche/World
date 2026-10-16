@@ -66,6 +66,7 @@ const Render = {
       }
       this.shade[y * W + x] = Math.round(sum / n * CONFIG.MAP_SHADE_SOFT);
     }
+    this.buildLight();
     for (let i = 0; i < G.N; i++) this.paintTile(i);
     for (let i = 0; i < G.N; i++) this.smoothQuarters(i);
     for (let i = 0; i < G.N; i++) this.writeTile(i);
@@ -259,6 +260,67 @@ const Render = {
     d[k] = r; d[k + 1] = g; d[k + 2] = b;
   },
 
+  // --- Ombrage du relief et profondeur de la mer (pour un rendu « carte ») ---
+  // Une « altitude » par case : 0 en plaine (ou forêt, désert), 1 en colline, 2 en montagne, 3 au sommet, lissée, avec
+  // un peu de bruit (plus fort en montagne) pour le grain du terrain. Le soleil vient d'en haut à gauche : une pente
+  // tournée vers lui est éclairée, l'autre est dans l'ombre (light[i] = facteur de clarté de la case, autour de 1).
+  // En mer, plus on est loin de la côte, plus l'eau est foncée (profonde).
+  buildLight() {
+    const G = Game, W = G.W, H = G.H, N = G.N, T = G.terrain;
+    const level = t => t === TERRAIN.PEAK ? 3 : t === TERRAIN.MOUNTAIN ? 2 : t === TERRAIN.HILLS ? 1 : 0;
+    const noise = makeValueNoise(mulberry32((Math.random() * 1e9) | 0));
+    let e = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const x = i % W, y = (i / W) | 0, l = level(T[i]);
+      e[i] = l + (fbm(noise, x / 6, y / 6, 4) - 0.5) * (CONFIG.TERRAIN_GRAIN + l * 0.5);
+    }
+    // lissage (moyenne avec les voisines, deux fois) : des pentes douces
+    for (let pass = 0; pass < 2; pass++) {
+      const out = new Float32Array(N);
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        let sum = 0, n = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const xx = x + dx, yy = y + dy;
+          if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+          sum += e[yy * W + xx]; n++;
+        }
+        out[y * W + x] = sum / n;
+      }
+      e = out;
+    }
+    // Profondeur de la mer : distance à la terre (en cases, au plus DEPTH)
+    const DEPTH = 14, depth = new Uint8Array(N).fill(255), queue = [];
+    for (let i = 0; i < N; i++) if (T[i] !== TERRAIN.WATER) { depth[i] = 0; queue.push(i); }
+    for (let q = 0; q < queue.length; q++) {
+      const i = queue[q];
+      if (depth[i] >= DEPTH) continue;
+      G.forNeighbors(i, n => { if (depth[n] === 255) { depth[n] = depth[i] + 1; queue.push(n); } });
+    }
+    const light = new Float32Array(N), K = CONFIG.HILLSHADE, D = CONFIG.WATER_DEPTH_SHADE;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (T[i] === TERRAIN.WATER) {
+        // près de la côte un peu plus clair, au large plus foncé
+        light[i] = 1.06 - D * Math.min(DEPTH, depth[i] === 255 ? DEPTH : depth[i]) / DEPTH;
+        continue;
+      }
+      // pente : terrain qui monte vers la droite et vers le bas = face tournée vers le soleil (en haut à gauche)
+      const ex = e[y * W + Math.min(W - 1, x + 1)] - e[y * W + Math.max(0, x - 1)];
+      const ey = e[Math.min(H - 1, y + 1) * W + x] - e[Math.max(0, y - 1) * W + x];
+      light[i] = 1 + Math.max(-0.4, Math.min(0.4, (ex + ey) * K));
+    }
+    this.light = light;
+  },
+
+  // Clarté au point (u, v) de la carte (en cases) : mélange des 4 cases autour, pour que l'ombrage soit doux
+  lightAt(u, v) {
+    const G = Game, W = G.W, H = G.H, L = this.light;
+    const x0 = Math.max(0, Math.min(W - 2, Math.floor(u - 0.5))), y0 = Math.max(0, Math.min(H - 2, Math.floor(v - 0.5)));
+    const fx = Math.max(0, Math.min(1, u - 0.5 - x0)), fy = Math.max(0, Math.min(1, v - 0.5 - y0)), i = y0 * W + x0;
+    const top = L[i] + (L[i + 1] - L[i]) * fx, bottom = L[i + W] + (L[i + W + 1] - L[i + W]) * fx;
+    return top + (bottom - top) * fy;
+  },
+
   // --- Coins adoucis (méthode « Scale2x » du pixel art) ---
   // Une cellule c d'une grille w x h est coupée en 4 quarts. Un quart prend la couleur de ses deux voisines (dessus
   // et gauche, par exemple) quand elles sont de la même sorte entre elles et d'une autre sorte que les deux d'en
@@ -286,9 +348,10 @@ const Render = {
   writeTile(i) {
     const G = Game, W2 = G.W * 2, H2 = G.H * 2, x = i % G.W, y = (i / G.W) | 0, F = this.F;
     const d = this.img.data, col = this.tileCol, sub = this.sub, q2 = this.q2, WF = G.W * F;
+    // (chaque pixel prend la couleur de sa case, éclairée par l'ombrage du relief à cet endroit : voir buildLight)
     const put = (px, py, tile) => {
-      const p = (py * WF + px) * 4, c = tile * 3;
-      d[p] = col[c]; d[p + 1] = col[c + 1]; d[p + 2] = col[c + 2]; d[p + 3] = 255;
+      const p = (py * WF + px) * 4, c = tile * 3, l = this.lightAt((px + 0.5) / F, (py + 0.5) / F);
+      d[p] = col[c] * l; d[p + 1] = col[c + 1] * l; d[p + 2] = col[c + 2] * l; d[p + 3] = 255;
     };
     for (let k = 0; k < 4; k++) {
       const cx = x * 2 + (k & 1), cy = y * 2 + (k >> 1), c = cy * W2 + cx;
@@ -1604,7 +1667,9 @@ const Render = {
   draw() {
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    ctx.fillStyle = 'rgb(52, 92, 130)';
+    // (hors de la carte : la couleur de la mer du large, pour qu'on ne voie pas le bord, voir buildLight)
+    const deep = TERRAIN_INFO[TERRAIN.WATER].color.map(v => Math.round(v * (1.06 - CONFIG.WATER_DEPTH_SHADE)));
+    ctx.fillStyle = `rgb(${deep})`;
     ctx.fillRect(0, 0, this.vw, this.vh);
     if (!this.off) return;
 
