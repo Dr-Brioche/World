@@ -519,7 +519,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont de vraies **frontières naturelles**.
 **Personne ne peut les prendre** : ils restent bleus et neutres pour toujours, et ni l'expansion ni les assauts ne les franchissent.
 **Le seul moyen de passer, c'est la traversée à gué** (ci-dessous). Un royaume présent des deux côtés d'un fleuve
-reste un seul royaume (il n'est pas « coupé »). Il y a entre **3 et 12 fleuves** par partie, au hasard.
+reste un seul royaume (il n'est pas « coupé »), mais ses soldats ne volent pas : ses **défenseurs**, ses armées qui
+marchent vers la frontière et ses soldats qui rentrent passent le fleuve **à gué**, par le vrai chemin, et perdent
+**5 secondes par case de fleuve** traversée. Il y a entre **3 et 12 fleuves** par partie, au hasard.
 Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer.
 Certains fleuves forment aussi un **lac** en chemin.
@@ -543,6 +545,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.20** : 🐛 les défenseurs ne traversent plus les fleuves tout droit comme par magie : ils suivent le vrai chemin et passent à gué (5 s par case de fleuve) ; pareil pour les armées qui marchent vers la frontière et les soldats qui rentrent
 - **v0.91.19** : 👀 pendant la pose d'un bâtiment (ou l'amélioration d'une ville), ses futures routes s'affichent en transparence ; trop loin d'une ville, un trait rouge indique la distance et la portée
 - **v0.91.18** : 🐛 un avant-poste ne tombe plus avec ses soldats sans combattre : les renforts arrivés par la mer pendant l'assaut se battent aussi, ses soldats stationnés le défendent d'office au siège, et avec deux assauts en même temps la garnison défend contre celui qui est au pied des murs (vaut aussi pour les ports et les villes)
 - **v0.91.17** : 📏 une ville améliorée relie plus loin : +20 % de portée de ses routes par niveau (route d'un port : 30, 36 puis 42 cases ; chemin d'une église : 25, 30 puis 35 cases)
