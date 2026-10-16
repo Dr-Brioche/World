@@ -522,6 +522,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 moins « pixel ». (Réglage `SMOOTH_MAP` dans `js/config.js`.)
 🌲 Les **forêts** sont entourées d'un fin contour vert foncé et, en zoomant, parsemées de petits **sapins** transparents.
 ⛰️ En zoomant, de fines **courbes de niveau** dessinent les collines et les montagnes : plus elles sont serrées, plus ça monte.
+Le pied des collines, les **plaines**, les **déserts** et les forêts ont une fine **bordure** qui suit le bord des cases.
 
 🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont de vraies **frontières naturelles**.
 **Personne ne peut les prendre** : ils restent bleus et neutres pour toujours, et ni l'expansion ni les assauts ne les franchissent.
@@ -557,6 +558,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.25** : 🗺️ la courbe de niveau du pied des collines suit le bord des cases (comme la bordure des forêts) ; plaines et déserts ont aussi leur fine bordure
 - **v0.91.24** : 🎨 carte moins « pixel » : les coins en escalier sont légèrement adoucis (dessin 2 fois plus fin, sans flou) · 🌉 les bots bâtissent 1 ou 2 ponts par partie
 - **v0.91.23** : 🌲 forêts plus lisibles : un contour vert foncé autour d'elles et de petits sapins transparents en zoomant · 🔀 le second mur d'une citadelle peut partir d'un point du premier mur déjà bâti (clique d'abord sur ce point)
 - **v0.91.22** : 🌉 **ponts** : clic droit sur un fleuve dont les deux rives sont à toi → Construire un pont (💰 700), et tes soldats le passent sans perdre de temps à gué · 🖱️ le clic droit ne propose plus de construire des bâtiments (la barre du bas et les touches 1 à 5 suffisent)
