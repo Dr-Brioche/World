@@ -26,12 +26,13 @@ const CONFIG = {
   // à partir duquel on les voit (elles suivent le bord des cases : voir buildForests dans render.js)
   CONTOUR_MIN_ZOOM: 2.5,
   SMOOTH_MAP: true,          // coins des cases adoucis sur la carte (false : carrés nets, tout en pixels)
-  SMOOTH_FINE_MAX_TILES: 600000,
-  MAP_SHADE_SOFT: 1.5,
-  HILLSHADE: 0.55,           // ombrage du relief (soleil en haut à gauche) : 0 = pas d'ombre, plus = relief plus marqué
-  WATER_DEPTH_SHADE: 0.3,
-  TERRAIN_GRAIN: 1.1,
-  EDGE_SHADE: 0.09,          // ombres qui suivent les formes de la carte (bord éclairé d'un relief, ombre à son pied)        // petites bosses du terrain (ombrées aussi), plus fortes en montagne    // la mer fonce au large (0 = mer d'une seule couleur)       // force des petites variations de couleur du sol, une fois adoucies (0 = sol tout uni) // jusqu'à cette taille de carte (en cases), adoucissement plus fin (4 x 4 pixels par case)
+  SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), adoucissement plus fin (4 x 4 pixels par case)
+  MAP_SHADE_SOFT: 1,         // petites variations de couleur du sol, adoucies entre voisines (0 = sol tout uni)...
+  MAP_SHADE_RAW: 0.5,        // ...et le grain propre à chaque case (plus = damier plus visible)
+  HILLSHADE: 0.5,            // ombrage du relief (soleil en haut à gauche) : 0 = pas d'ombre, plus = relief plus marqué
+  WATER_DEPTH_SHADE: 0.3,    // la mer fonce au large (0 = mer d'une seule couleur)
+  TERRAIN_GRAIN: 0.35,       // petites bosses des plaines (ombrées aussi) ; en montagne, ce sont des crêtes et des pics
+  EDGE_SHADE: 0.09,          // ombres qui suivent les formes de la carte (bord éclairé d'un relief, ombre à son pied)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant
   FOREST_TREE_ZOOM: 4,
@@ -152,9 +153,9 @@ const CONFIG = {
   ASSAULT_SLOWDOWN: 1000,      // (1 + soldats / 1000) : plus l'armée est grande, plus elle est lente (assauts, marches,
                                // défenseurs) (100 soldats : ~6,9 cases/s · 500 : 5,1 · 1000 : 3,8 · 3000 : 1,9)
   ASSAULT_HEAVY: 500,          // (contre un territoire désorganisé, au contraire, une grosse armée va plus vite : voir plus bas)
-  ASSAULT_MIN_SPEED: 0.061,
+  ASSAULT_MIN_SPEED: 0.061,    // vitesse minimum d'un assaut (cases de plaine par tour)
   ASSAULT_TERRAIN_SLOWDOWN: 0.75, // en terrain difficile, un assaut contre un royaume ne ralentit que de 75 % de la normale
-                               // (forêt x1,45 au lieu de x1,6 · colline x1,9 au lieu de x2,2 · montagne x2,35 au lieu de x2,8)     // vitesse minimum d'un assaut (cases de plaine par tour)
+                               // (forêt x1,45 au lieu de x1,6 · colline x1,9 au lieu de x2,2 · montagne x2,35 au lieu de x2,8)
   DISORGANIZED_SPEED: 2.03,    // un territoire désorganisé (sans ville ni port fortifié, ou coupé d'eux) se prend plus vite,
                                // et d'autant plus vite que l'armée est grande (100 soldats : ~11 cases/s · 500 : 15 · 2000 : 23)
   // Un assaut contre un royaume part de la cité la plus proche et marche sur ses terres jusqu'à la frontière,

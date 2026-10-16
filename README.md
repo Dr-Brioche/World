@@ -532,10 +532,11 @@ courbe douce, sans flou), et les petites variations de couleur du sol sont fondu
 Sur les très grandes cartes (Europe), l'adoucissement est un peu moins fin, pour la mémoire.
 🏔️ **Ombrage du relief**, comme sur une vraie carte : le soleil vient d'en haut à gauche, les pentes tournées vers lui
 sont éclairées et les autres dans l'ombre. On reconnaît ainsi les collines, les massifs et les sommets, même sous les
-couleurs d'un royaume. Le terrain a aussi de petites bosses (plus marquées en montagne), et la **mer fonce au large**.
+couleurs d'un royaume. Les montagnes ont de vraies **arêtes et pics rocheux** (un versant éclairé, l'autre dans l'ombre),
+les plaines de petites bosses, et la **mer fonce au large**. Le sol garde un léger grain de cases.
 Les ombres suivent aussi **les formes dessinées** : le bord d'une colline, d'une montagne, d'un sommet, d'une forêt ou
 d'une côte est éclairé du côté du soleil, et une ombre est portée à son pied de l'autre côté, comme un relief gravé.
-(Réglages `SMOOTH_MAP`, `SMOOTH_FINE_MAX_TILES`, `MAP_SHADE_SOFT`, `HILLSHADE`, `TERRAIN_GRAIN`, `EDGE_SHADE` et
+(Réglages `SMOOTH_MAP`, `SMOOTH_FINE_MAX_TILES`, `MAP_SHADE_SOFT`, `MAP_SHADE_RAW`, `HILLSHADE`, `TERRAIN_GRAIN`, `EDGE_SHADE` et
 `WATER_DEPTH_SHADE` dans `js/config.js`.)
 🌲 Les **forêts** sont entourées d'un fin contour vert foncé et, en zoomant, parsemées de petits **sapins** transparents.
 ⛰️ En zoomant, de fines **courbes de niveau** dessinent le relief : une au pied des collines, une au pied des montagnes
@@ -576,6 +577,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.5** : ⛰️ montagnes aux arêtes et pics rocheux (fini l'effet « gâteau » à étages arrondis) · 🟫 un léger grain de cases revient sur le sol (moins lisse)
 - **v0.92.4** : 🏔️ les ombres suivent les formes de la carte : bord éclairé côté soleil et ombre portée au pied des collines, montagnes, sommets, forêts et côtes
 - **v0.92.3** : 🏔️ ombrage du relief (soleil en haut à gauche : les montagnes et les sommets ressortent, aussi sous les royaumes), petites bosses du terrain, et la mer fonce au large
 - **v0.92.2** : 🎨 carte bien moins « pixel » : coins arrondis deux fois (4 x 4 pixels par case), sol sans damier, et image lissée de loin ; les bordures des terrains suivent ces nouvelles courbes
