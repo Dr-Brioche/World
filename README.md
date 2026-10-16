@@ -385,7 +385,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      du port, sur la même terre, un **chemin de terre** les relie : le port produit **+30 % d'or**. Avec **deux** ou **trois
      villes** assez proches, il a **un chemin vers chacune** : **+60 %** ou **+90 %** (3 villes au plus).
      Une **église** pas trop loin de ce chemin (à moins de **10 cases**) s'y relie par un **petit chemin**, et elle a aussi
-     un chemin vers **chaque ville** proche (à moins de **25 cases**, sur la même terre) : **3 chemins au plus**. Une nouvelle
+     un chemin vers **chaque ville** proche (à moins de **25 cases**, sur la même terre) : **3 chemins au plus**.
+     📏 **Une ville améliorée relie plus loin** : **+20 % de portée par niveau**. Les routes de port et les chemins d'église
+     vers elle vont jusqu'à **30 / 25 cases** (niveau 1), **36 / 30 cases** (niveau 2) et **42 / 35 cases** (niveau 3). Une nouvelle
      ville bâtie près d'elle **ajoute** un chemin (elle ne remplace pas les autres). Chaque chemin rapporte **un peu d'or**
      (+2 💰 toutes les 10 s) et **+50 % de Croyance** : les bonus s'additionnent. Mais une église près d'un **port seul**
      (sans ville proche, donc sans route) ne crée pas de chemin.
@@ -534,6 +536,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.17** : 📏 une ville améliorée relie plus loin : +20 % de portée de ses routes par niveau (route d'un port : 30, 36 puis 42 cases ; chemin d'une église : 25, 30 puis 35 cases)
 - **v0.91.16** : 🐛 après avoir touché au curseur « Envoyer », les flèches et ZQSD déplacent de nouveau la caméra tout de suite (plus besoin de recliquer sur la carte), et les touches 1 à 5 marchent aussi
 - **v0.91.15** : 🏆 la victoire arrive plus tôt : il suffit de posséder 70 % des terres (au lieu de 85 %)
 - **v0.91.14** : ✝️ un bouton « Croisade » apparaît dans la barre des constructions dès ta première cathédrale, pour lancer une croisade sans aller cliquer sur l'église · 📱 boutons de la barre un peu plus étroits sur téléphone

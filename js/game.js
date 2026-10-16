@@ -1378,15 +1378,21 @@ const GameRules = {
     return link.castle === undefined ? [] : [[link.castle, link.road], ...(link.more || [])];
   },
 
+  // Portée des routes d'une ville (château c) : la distance de base, +ROAD_RANGE_PER_LEVEL par niveau au-dessus du 1er
+  roadReach(c, base) {
+    return base * (1 + CONFIG.ROAD_RANGE_PER_LEVEL * (Math.max(1, this.level[c]) - 1));
+  },
+
   // Villes (châteaux) de pid auxquelles un port posé en a serait relié par un chemin de terre : les plus proches
-  // (ROAD_MAX_CITIES au plus), à moins de PORT_ROAD_DISTANCE cases et sur la même terre (la plus proche d'abord)
+  // (ROAD_MAX_CITIES au plus), à moins de PORT_ROAD_DISTANCE cases (plus loin pour une ville améliorée, voir roadReach)
+  // et sur la même terre (la plus proche d'abord)
   portRoadCastles(pid, a) {
     const land = this.landComp(), W = this.W, mid = (b, n) => [b % W + n / 2, ((b / W) | 0) + n / 2];
     const [px, py] = mid(a, this.sizeOf(B_PORT)), list = [];
     for (const c of this.castles) {
       if (this.owner[c] !== pid || land[c] !== land[a]) continue;
       const [cx, cy] = mid(c, this.sizeOf(B_CASTLE)), d = Math.hypot(cx - px, cy - py);
-      if (d <= CONFIG.PORT_ROAD_DISTANCE) list.push([d, c]);
+      if (d <= this.roadReach(c, CONFIG.PORT_ROAD_DISTANCE)) list.push([d, c]);
     }
     return list.sort((p, q) => p[0] - q[0]).slice(0, CONFIG.ROAD_MAX_CITIES).map(([, c]) => c);
   },
@@ -1418,7 +1424,8 @@ const GameRules = {
 
   // Chemins d'une église (posée en a, au royaume pid) : un chemin vers la route port–ville la plus proche (à moins
   // de CHURCH_ROAD_DISTANCE cases) : { pts, port } ; et un chemin vers chaque ville (château) à moins de
-  // CHURCH_CITY_DISTANCE cases sur la même terre : { pts, castle } (sauf celles où mène déjà cette route).
+  // CHURCH_CITY_DISTANCE cases (plus loin pour une ville améliorée, voir roadReach) sur la même terre :
+  // { pts, castle } (sauf celles où mène déjà cette route).
   // ROAD_MAX_CITIES chemins au plus, les plus proches d'abord ; [] si aucun. pts = le tracé (coin à angle droit).
   // (un port seul, sans ville, ne crée pas de chemin : il n'a pas de route)
   // Une nouvelle ville bâtie près de l'église ajoute un chemin : elle ne remplace pas ceux qui existent.
@@ -1440,7 +1447,7 @@ const GameRules = {
     for (const c of this.castles) {
       if (this.owner[c] !== pid || land[c] !== land[a] || served.includes(c)) continue;
       const cx = c % W + hc, cy = ((c / W) | 0) + hc, d = Math.hypot(cx - x, cy - y);
-      if (d <= CONFIG.CHURCH_CITY_DISTANCE) list.push({ castle: c, pts: corner(cx, cy), d });
+      if (d <= this.roadReach(c, CONFIG.CHURCH_CITY_DISTANCE)) list.push({ castle: c, pts: corner(cx, cy), d });
     }
     return list.sort((p, q) => p.d - q.d).slice(0, CONFIG.ROAD_MAX_CITIES);
   },
