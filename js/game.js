@@ -3090,6 +3090,36 @@ const GameRules = {
     }
   },
 
+  // Les soldats qui sont dans le bâtiment visé par l'assaut a le défendent, même arrivés en cours de route
+  // (avant, ils restaient dedans sans se battre, et mouraient avec lui à la fin du siège) :
+  // - garnison déjà sortie se battre : ceux qui la rejoignent ensuite (renforts par la mer d'un avant-poste…)
+  //   sortent aussi ;
+  // - au siège d'un avant-poste : ses soldats stationnés (sur place) le défendent d'office ;
+  // - au siège, sans plus personne pour défendre : la garnison qui se bat contre un autre assaut du même royaume
+  //   sur le même bâtiment revient aux murs (elle défend contre l'armée qui est au pied des murs).
+  rallyGarrison(a) {
+    const c = a.targetCastle;
+    if (c < 0 || this.owner[c] !== a.target) return;
+    if (a.garrisonOut && this.garrison[c] >= 1) {
+      a.garrison = (a.garrison || 0) + this.garrison[c];
+      this.garrison[c] = 0;
+    }
+    if (!a.siege) return;
+    const o = this.building[c] === B_OUTPOST ? this.outposts.get(c) : null;
+    if (o && o.stationed >= 1) {
+      a.defenders += o.stationed;
+      a.defSource = c; // (à la fin de l'assaut, les survivants y retournent)
+      o.stationed = 0;
+    }
+    if (a.defenders + (a.garrison || 0) >= 1) return;
+    for (const b of this.attacks) {
+      if (b === a || b.done || b.target !== a.target || b.targetCastle !== c || !(b.garrison >= 1)) continue;
+      a.garrison = (a.garrison || 0) + b.garrison;
+      b.garrison = 0;
+      a.garrisonOut = true;
+    }
+  },
+
   // Garnison qui défendra contre l'assaut a : celle qui se bat déjà, ou celle qui attend derrière la muraille
   // du château visé (elle n'entre en jeu qu'au siège). Pour les bots, qui calculent combien de défenseurs envoyer.
   garrisonFor(a) { return (a.garrison || 0) + this.garrisonWaiting(a); },
@@ -3515,6 +3545,8 @@ const GameRules = {
       }
       a.allyPending = a.allyPending.filter(r => r.tick > this.tick);
     }
+    // Les soldats du bâtiment visé se battent tous, même ceux arrivés après le début de l'assaut :
+    this.rallyGarrison(a);
     // Tant que des défenseurs (garnison ou renforts) tiennent la position, l'assaut se bat au lieu d'avancer
     if (a.defenders + (a.garrison || 0) >= 1) return this.fight(a);
     // Siège : l'armée est au pied des murs. Le château ne tombe qu'à la fin du siège ;

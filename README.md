@@ -446,7 +446,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - On ne peut **pas bâtir de château à moins de 12 cases d'un avant-poste** (cercle rouge) : il faut d'abord
      conquérir des terres autour de lui.
    - Les ennemis peuvent **viser l'avant-poste** pour le détruire (après un **siège de 10 s**, pendant lequel
-     ses soldats stationnés et des renforts peuvent encore le défendre). Détruit, il emporte **toute sa zone** avec lui :
+     ses soldats stationnés et des renforts peuvent encore le défendre). **Tous les soldats qui sont dans l'avant-poste
+     se battent** avant qu'il tombe : ceux qui le bâtissent, la garnison, les renforts arrivés par la mer pendant
+     l'assaut, et, au siège, les soldats stationnés (d'office, même si tu n'as pas cliqué sur « Défendre »).
+     Avec deux assauts en même temps, la garnison défend contre l'armée qui est au pied des murs. Détruit, il emporte **toute sa zone** avec lui :
      les terres qu'il avait prises passent **d'un coup** à celui qui l'a détruit (sauf si cette zone est déjà reliée au
      royaume, ou tenue par une ville ou un port fortifié).
    - Un royaume qui a **perdu tous ses ports** perd aussi **tous ses avant-postes** : plus aucun bateau ne peut les rejoindre.
@@ -536,6 +539,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.18** : 🐛 un avant-poste ne tombe plus avec ses soldats sans combattre : les renforts arrivés par la mer pendant l'assaut se battent aussi, ses soldats stationnés le défendent d'office au siège, et avec deux assauts en même temps la garnison défend contre celui qui est au pied des murs (vaut aussi pour les ports et les villes)
 - **v0.91.17** : 📏 une ville améliorée relie plus loin : +20 % de portée de ses routes par niveau (route d'un port : 30, 36 puis 42 cases ; chemin d'une église : 25, 30 puis 35 cases)
 - **v0.91.16** : 🐛 après avoir touché au curseur « Envoyer », les flèches et ZQSD déplacent de nouveau la caméra tout de suite (plus besoin de recliquer sur la carte), et les touches 1 à 5 marchent aussi
 - **v0.91.15** : 🏆 la victoire arrive plus tôt : il suffit de posséder 70 % des terres (au lieu de 85 %)
