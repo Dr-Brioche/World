@@ -30,7 +30,8 @@ const CONFIG = {
   MAP_SHADE_SOFT: 1.5,
   HILLSHADE: 0.55,           // ombrage du relief (soleil en haut à gauche) : 0 = pas d'ombre, plus = relief plus marqué
   WATER_DEPTH_SHADE: 0.3,
-  TERRAIN_GRAIN: 1.1,        // petites bosses du terrain (ombrées aussi), plus fortes en montagne    // la mer fonce au large (0 = mer d'une seule couleur)       // force des petites variations de couleur du sol, une fois adoucies (0 = sol tout uni) // jusqu'à cette taille de carte (en cases), adoucissement plus fin (4 x 4 pixels par case)
+  TERRAIN_GRAIN: 1.1,
+  EDGE_SHADE: 0.09,          // ombres qui suivent les formes de la carte (bord éclairé d'un relief, ombre à son pied)        // petites bosses du terrain (ombrées aussi), plus fortes en montagne    // la mer fonce au large (0 = mer d'une seule couleur)       // force des petites variations de couleur du sol, une fois adoucies (0 = sol tout uni) // jusqu'à cette taille de carte (en cases), adoucissement plus fin (4 x 4 pixels par case)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant
   FOREST_TREE_ZOOM: 4,

@@ -533,8 +533,10 @@ Sur les très grandes cartes (Europe), l'adoucissement est un peu moins fin, pou
 🏔️ **Ombrage du relief**, comme sur une vraie carte : le soleil vient d'en haut à gauche, les pentes tournées vers lui
 sont éclairées et les autres dans l'ombre. On reconnaît ainsi les collines, les massifs et les sommets, même sous les
 couleurs d'un royaume. Le terrain a aussi de petites bosses (plus marquées en montagne), et la **mer fonce au large**.
-(Réglages `SMOOTH_MAP`, `SMOOTH_FINE_MAX_TILES`, `MAP_SHADE_SOFT`, `HILLSHADE`, `TERRAIN_GRAIN` et `WATER_DEPTH_SHADE`
-dans `js/config.js`.)
+Les ombres suivent aussi **les formes dessinées** : le bord d'une colline, d'une montagne, d'un sommet, d'une forêt ou
+d'une côte est éclairé du côté du soleil, et une ombre est portée à son pied de l'autre côté, comme un relief gravé.
+(Réglages `SMOOTH_MAP`, `SMOOTH_FINE_MAX_TILES`, `MAP_SHADE_SOFT`, `HILLSHADE`, `TERRAIN_GRAIN`, `EDGE_SHADE` et
+`WATER_DEPTH_SHADE` dans `js/config.js`.)
 🌲 Les **forêts** sont entourées d'un fin contour vert foncé et, en zoomant, parsemées de petits **sapins** transparents.
 ⛰️ En zoomant, de fines **courbes de niveau** dessinent le relief : une au pied des collines, une au pied des montagnes
 et une autour des sommets enneigés. Les **plaines**, les **déserts** et les forêts ont aussi une fine **bordure**.
@@ -574,6 +576,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.4** : 🏔️ les ombres suivent les formes de la carte : bord éclairé côté soleil et ombre portée au pied des collines, montagnes, sommets, forêts et côtes
 - **v0.92.3** : 🏔️ ombrage du relief (soleil en haut à gauche : les montagnes et les sommets ressortent, aussi sous les royaumes), petites bosses du terrain, et la mer fonce au large
 - **v0.92.2** : 🎨 carte bien moins « pixel » : coins arrondis deux fois (4 x 4 pixels par case), sol sans damier, et image lissée de loin ; les bordures des terrains suivent ces nouvelles courbes
 - **v0.92.1** : ⛰️ les courbes de niveau suivent toutes le bord des cases (pied des collines, pied des montagnes, tour des sommets enneigés) : fini les lignes qui coupaient les cases en biais
