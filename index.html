@@ -70,8 +70,10 @@
             <option value="world">Monde (la vraie carte du monde, très grande)</option>
             <option value="europe">Europe (l'Europe en détail, immense)</option>
           </optgroup>
+          <optgroup id="customMaps" label="✏️ Cartes dessinées"></optgroup>
         </select>
       </label>
+      <a class="editorLink" href="editeur.html">🖌️ Dessiner une carte (éditeur de cartes)</a>
       <label>Taille de la carte
         <select id="mapSize">
           <option value="petit">Petite (300 x 169)</option>
@@ -115,6 +117,7 @@
       <details class="rulesBox">
         <summary>📜 Règles du jeu <small>(clique pour dérouler)</small></summary>
         <ul class="rules">
+          <li>🖌️ <b>Cartes dessinées</b> : le lien « Dessiner une carte » ouvre l'éditeur ; une carte enregistrée apparaît dans la liste des cartes (✏️ Cartes dessinées).</li>
           <li>👑 <b>Départ</b> : les royaumes rivaux sont déjà installés. Regarde qui est où, puis clique sur une terre libre pour fonder ta capitale.</li>
           <li>⏩ <b>Partie accélérée</b> (dans le menu) : tout va 2 fois plus vite, pour des parties plus courtes.</li>
           <li>🖱️ <b>S'étendre</b> : clique deux fois de suite sur une terre libre voisine (le curseur « Envoyer » choisit le % de soldats). Les terres libres se prennent vite toute la partie, et au début ton royaume recrute plus vite.</li>
@@ -154,6 +157,7 @@
   <script src="js/map.js"></script>
   <script src="js/worldmap.js"></script>
   <script src="js/europemap.js"></script>
+  <script src="js/custommaps.js"></script>
   <script src="js/game.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/render.js"></script>

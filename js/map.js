@@ -54,6 +54,12 @@ const EDGE_MARGIN = 14;
 function generateMap(seed, type = 'normal', size = 'moyen') {
   if (type === 'world') return generateWorldMap(seed); // la carte du monde (voir worldmap.js)
   if (type === 'europe') return generateEuropeMap(seed); // la carte d'Europe (voir europemap.js)
+  // une carte dessinée avec l'éditeur (voir custommaps.js) ; si elle n'existe plus, une carte normale
+  if (type.startsWith('custom:')) {
+    const m = CustomMaps.find(type.slice(7));
+    if (m) return CustomMaps.toGameMap(m, seed);
+    type = 'normal';
+  }
   const [W, H] = CONFIG.MAP_SIZES[size] || CONFIG.MAP_SIZES.moyen, N = W * H;
   // Une plus grande carte a plus d'îlots, de fleuves et de lacs (voir mapCount ; référence : 500 x 281 cases)
   mapScale = Math.sqrt((W * H) / (500 * 281));
@@ -165,7 +171,7 @@ function addRivers(terrain, elev, W, H, rand) {
   };
   // 1. Pour chaque case, la direction de l'eau qui coule vers la mer. On « remplit » la carte depuis
   //    la mer en montant toujours par le point le plus bas : l'eau ne reste jamais coincée dans un creux.
-  //    (MinHeap est défini dans game.js)
+  //    (MinHeap est défini plus bas)
   const down = new Int32Array(N).fill(-1), done = new Uint8Array(N), heap = new MinHeap();
   for (let i = 0; i < N; i++) if (terrain[i] === TERRAIN.WATER) { done[i] = 1; heap.push(-1, i); }
   while (heap.size) {
@@ -391,5 +397,39 @@ function addIslets(terrain, W, H, rand, count, rMin, rMax, margin) {
       }
     }
     made++;
+  }
+}
+
+// Petite file de priorité (tas binaire) pour chercher le chemin le plus court
+// (la carte s'en sert pour tracer les fleuves, et le jeu pour les chemins des armées)
+class MinHeap {
+  constructor() { this.keys = []; this.vals = []; }
+  get size() { return this.keys.length; }
+  push(k, v) {
+    const K = this.keys, V = this.vals;
+    let i = K.length;
+    K.push(k); V.push(v);
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (K[p] <= k) break;
+      K[i] = K[p]; V[i] = V[p]; i = p;
+    }
+    K[i] = k; V[i] = v;
+  }
+  pop() {
+    const K = this.keys, V = this.vals, top = [K[0], V[0]];
+    const k = K.pop(), v = V.pop();
+    if (K.length) {
+      let i = 0;
+      for (;;) {
+        let c = 2 * i + 1;
+        if (c >= K.length) break;
+        if (c + 1 < K.length && K[c + 1] < K[c]) c++;
+        if (K[c] >= k) break;
+        K[i] = K[c]; V[i] = V[c]; i = c;
+      }
+      K[i] = k; V[i] = v;
+    }
+    return top;
   }
 }

@@ -58,6 +58,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Le Danube (après Belgrade), le Dniepr (après Kiev) et le Don inférieur sont de grands fleuves infranchissables ;
      le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie.
      ⚠️ C'est une très grande carte : la partie est longue, et le jeu peut ralentir un peu sur un ordinateur modeste.
+   🖌️ **Dessine tes cartes** : sous le choix de la carte, le lien **« Dessiner une carte »** ouvre l'**éditeur de cartes**
+   (`editeur.html`). Pars d'une carte toute en mer, toute en terre, ou d'une carte au hasard, puis peins les terrains
+   (mer, plaine, forêt, colline, montagne, sommet, désert, fleuve, grand fleuve) au **pinceau** (taille réglable) ou
+   avec l'outil **remplir**. Clic droit (ou Espace + glisser) pour déplacer la carte, molette pour zoomer, touches 1 à 9
+   pour les terrains, Ctrl + Z pour annuler. Donne-lui un nom et clique sur **💾 Enregistrer** : elle apparaît tout de
+   suite dans la liste des cartes du jeu (**✏️ Cartes dessinées**) ; **▶️ Jouer** la lance directement.
+   Les cartes sont gardées **dans ton navigateur** : **📤 Exporter** les enregistre dans un fichier (pour les garder,
+   les partager ou les ajouter au jeu pour tout le monde dans `js/custommaps.js`), **📥 Importer** les rouvre.
+   Il faut au moins une terre de 600 cases pour fonder des royaumes.
    Les cartes prédéfinies ont leur propre taille. **Toutes les cartes ont les mêmes règles** : une plus grande carte
    demande juste plus de temps.
    Chaque royaume a sa bannière : elle s'affiche à côté de son nom (carte, classement, barre du haut),
@@ -558,6 +567,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92** : 🖌️ **éditeur de cartes** (lien « Dessiner une carte » dans le menu) : peins mer, plaines, forêts, collines, montagnes, sommets, déserts et fleuves au pinceau ou à l'outil remplir ; une carte enregistrée apparaît tout de suite dans la liste des cartes du jeu (✏️ Cartes dessinées), et on peut l'exporter dans un fichier
 - **v0.91.25** : 🗺️ la courbe de niveau du pied des collines suit le bord des cases (comme la bordure des forêts) ; plaines et déserts ont aussi leur fine bordure
 - **v0.91.24** : 🎨 carte moins « pixel » : les coins en escalier sont légèrement adoucis (dessin 2 fois plus fin, sans flou) · 🌉 les bots bâtissent 1 ou 2 ponts par partie
 - **v0.91.23** : 🌲 forêts plus lisibles : un contour vert foncé autour d'elles et de petits sapins transparents en zoomant · 🔀 le second mur d'une citadelle peut partir d'un point du premier mur déjà bâti (clique d'abord sur ce point)
@@ -798,6 +808,8 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `style.css` | Le style « parchemin » |
 | `js/config.js` | Tous les réglages du jeu |
 | `js/map.js` | Génération aléatoire de la carte |
+| `js/custommaps.js` | Les cartes dessinées avec l'éditeur (celles du navigateur, et la liste `CUSTOM_MAPS` des cartes ajoutées au jeu) |
+| `editeur.html`, `js/editor.js` | L'éditeur de cartes |
 | `js/game.js` | Règles : économie, attaques, victoire |
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/icons.js` | Les icônes médiévales dessinées (elles remplacent les emojis partout) |

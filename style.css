@@ -330,6 +330,8 @@ button:hover { background: #e8d6a8; }
   background: #fffaf0;
 }
 .card select { max-width: 62%; }
+/* lien vers l'éditeur de cartes, sous le choix de la carte */
+.editorLink { display: block; margin: -4px 0 8px; font-size: 13px; color: var(--wood); }
 .big {
   font-family: Cinzel, Georgia, serif;
   font-size: 18px;
