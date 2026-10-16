@@ -5,6 +5,12 @@
 // Zoom (en pixels par case) à partir duquel l'image des bâtiments apparaît
 const CASTLE_IMG_ZOOM = 7;
 
+// Hauteur de chaque terrain pour les ombres qui suivent les formes (voir Render.writeTile), en dixièmes :
+// la mer et les fleuves sont plus bas que la terre, les forêts un peu plus hautes, puis collines, montagnes, sommets
+const FINE_LEVEL = new Int8Array(16);
+FINE_LEVEL[TERRAIN.WATER] = -6; FINE_LEVEL[TERRAIN.GREAT_RIVER] = -5; FINE_LEVEL[TERRAIN.RIVER] = -3;
+FINE_LEVEL[TERRAIN.FOREST] = 4; FINE_LEVEL[TERRAIN.HILLS] = 10; FINE_LEVEL[TERRAIN.MOUNTAIN] = 20; FINE_LEVEL[TERRAIN.PEAK] = 30;
+
 const Render = {
   cam: { x: 0, y: 0, scale: 4 },
   hover: -1,
@@ -69,6 +75,9 @@ const Render = {
     this.buildLight();
     for (let i = 0; i < G.N; i++) this.paintTile(i);
     for (let i = 0; i < G.N; i++) this.smoothQuarters(i);
+    // hauteur de chaque petit carré de l'image (pour les ombres qui suivent les formes : voir fineTile)
+    this.fineLv = new Int8Array(G.N * F * F);
+    for (let i = 0; i < G.N; i++) this.fineTile(i);
     for (let i = 0; i < G.N; i++) this.writeTile(i);
     this.offCtx.putImageData(this.img, 0, 0);
     // Nouvelle partie : on oublie les dessins gardés en mémoire de la partie d'avant
@@ -345,20 +354,42 @@ const Render = {
   },
 
   // Les pixels de la case i : ses 4 quarts (2 x 2), ou, avec le 2e passage, chaque quart recoupé en 4 (4 x 4)
-  writeTile(i) {
-    const G = Game, W2 = G.W * 2, H2 = G.H * 2, x = i % G.W, y = (i / G.W) | 0, F = this.F;
-    const d = this.img.data, col = this.tileCol, sub = this.sub, q2 = this.q2, WF = G.W * F;
-    // (chaque pixel prend la couleur de sa case, éclairée par l'ombrage du relief à cet endroit : voir buildLight)
-    const put = (px, py, tile) => {
-      const p = (py * WF + px) * 4, c = tile * 3, l = this.lightAt((px + 0.5) / F, (py + 0.5) / F);
-      d[p] = col[c] * l; d[p + 1] = col[c + 1] * l; d[p + 2] = col[c + 2] * l; d[p + 3] = 255;
-    };
+  // Pour chaque pixel de la case i (ses quarts, recoupés en 4 au 2e passage) : fn(px, py, case qui le colore)
+  eachPixel(i, fn) {
+    const G = Game, W2 = G.W * 2, H2 = G.H * 2, x = i % G.W, y = (i / G.W) | 0, sub = this.sub, q2 = this.q2;
     for (let k = 0; k < 4; k++) {
       const cx = x * 2 + (k & 1), cy = y * 2 + (k >> 1), c = cy * W2 + cx;
-      if (F === 2) { put(cx, cy, sub[c]); continue; }
+      if (this.F === 2) { fn(cx, cy, sub[c]); continue; }
       this.scale2x(c, W2, H2, this.key2, q2);
-      for (let m = 0; m < 4; m++) put(cx * 2 + (m & 1), cy * 2 + (m >> 1), sub[q2[m]]);
+      for (let m = 0; m < 4; m++) fn(cx * 2 + (m & 1), cy * 2 + (m >> 1), sub[q2[m]]);
     }
+  },
+
+  // Hauteur des pixels de la case i, d'après le terrain dessiné à cet endroit (mer, fleuve, plaine, forêt,
+  // colline, montagne, sommet : voir FINE_LEVEL)
+  fineTile(i) {
+    const WF = Game.W * this.F, T = Game.terrain, fl = this.fineLv;
+    this.eachPixel(i, (px, py, tile) => { fl[py * WF + px] = FINE_LEVEL[T[tile]]; });
+  },
+
+  // Les pixels de la case i : la couleur de leur case, éclairée par l'ombrage doux du relief (voir buildLight) et
+  // par les ombres qui suivent les formes dessinées : un pixel plus haut que ses voisins du dessus et de gauche
+  // (le bord d'un relief tourné vers le soleil) est éclairé ; plus bas qu'eux (au pied d'un relief, côté ombre),
+  // il est dans l'ombre. Comme un relief gravé, qui suit exactement les bords de la carte.
+  writeTile(i) {
+    const F = this.F, WF = Game.W * F, d = this.img.data, col = this.tileCol, fl = this.fineLv;
+    const R = F === 4 ? 2 : 1, K = CONFIG.EDGE_SHADE / 10 / R;
+    this.eachPixel(i, (px, py, tile) => {
+      const j = py * WF + px, lv = fl[j];
+      let e = 0;
+      for (let k = 1; k <= R; k++) {
+        if (px >= k) e += lv - fl[j - k];
+        if (py >= k) e += lv - fl[j - k * WF];
+      }
+      const edge = Math.max(-0.35, Math.min(0.35, e * K));
+      const p = j * 4, c = tile * 3, l = this.lightAt((px + 0.5) / F, (py + 0.5) / F) * (1 + edge);
+      d[p] = col[c] * l; d[p + 1] = col[c + 1] * l; d[p + 2] = col[c + 2] * l; d[p + 3] = 255;
+    });
   },
 
   flush() {
@@ -374,6 +405,7 @@ const Render = {
     for (const i of near) this.smoothQuarters(i);
     const again = new Set(near);
     for (const i of near) G.forNeighbors(i, n => again.add(n));
+    for (const i of again) this.fineTile(i);
     for (const i of again) {
       this.writeTile(i);
       const x = i % W, y = (i / W) | 0;
