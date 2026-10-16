@@ -51,7 +51,84 @@ const Render = {
     this.hlCanvas = null; this.hlKey = null;
     this.wallsVersion = -1; this.pactVersion = -1;
     this.previewKey = null; this.planKey = null; this.buildable = null;
+    this.buildContours();
     this.fit();
+  },
+
+  // --- Courbes de niveau ---
+  // Une « altitude » par case : 0 en plaine (ou forêt, désert, eau), 1 en colline, 2 en montagne, 3 au sommet,
+  // lissée (moyenne des cases voisines, deux fois) pour que les lignes soient arrondies. On trace ensuite les lignes
+  // où elle passe chaque niveau de CONTOUR_LEVELS (méthode des « carrés qui marchent » : dans chaque carré de 4 cases
+  // voisines, la ligne passe entre celles qui sont au-dessus et celles qui sont en dessous).
+  // Calculé une fois par carte, rangé par paquets de 32 x 32 cases (on ne dessine que ceux qui sont à l'écran).
+  buildContours() {
+    const G = Game, W = G.W, H = G.H, N = G.N, levels = CONFIG.CONTOUR_LEVELS;
+    let h = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const t = G.terrain[i];
+      h[i] = t === TERRAIN.PEAK ? 3 : t === TERRAIN.MOUNTAIN ? 2 : t === TERRAIN.HILLS ? 1 : 0;
+    }
+    for (let pass = 0; pass < 2; pass++) {
+      const out = new Float32Array(N);
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        let sum = 0, n = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const xx = x + dx, yy = y + dy;
+          if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+          sum += h[yy * W + xx]; n++;
+        }
+        out[y * W + x] = sum / n;
+      }
+      h = out;
+    }
+    const C = 32, cw = Math.ceil(W / C), chunks = new Map();
+    for (let y = 0; y < H - 1; y++) for (let x = 0; x < W - 1; x++) {
+      // les 4 coins du carré (centres des cases) : haut-gauche, haut-droite, bas-droite, bas-gauche
+      const a = h[y * W + x], b = h[y * W + x + 1], c = h[(y + 1) * W + x + 1], d = h[(y + 1) * W + x];
+      const lo = Math.min(a, b, c, d), hi = Math.max(a, b, c, d);
+      if (hi === lo) continue;
+      for (const L of levels) {
+        if (L <= lo || L > hi) continue;
+        // points où la ligne coupe les côtés du carré (interpolés entre les deux coins)
+        const cx = x + 0.5, cy = y + 0.5, pts = [];
+        const cut = (v1, v2, x1, y1, x2, y2) => {
+          if ((v1 < L) === (v2 < L)) return;
+          const f = (L - v1) / (v2 - v1);
+          pts.push(cx + x1 + (x2 - x1) * f, cy + y1 + (y2 - y1) * f);
+        };
+        cut(a, b, 0, 0, 1, 0); cut(b, c, 1, 0, 1, 1); cut(c, d, 1, 1, 0, 1); cut(d, a, 0, 1, 0, 0);
+        if (pts.length < 4) continue;
+        const key = ((y / C) | 0) * cw + ((x / C) | 0);
+        let p = chunks.get(key);
+        if (!p) chunks.set(key, p = new Path2D());
+        p.moveTo(pts[0], pts[1]); p.lineTo(pts[2], pts[3]);
+        if (pts.length === 8) { p.moveTo(pts[4], pts[5]); p.lineTo(pts[6], pts[7]); } // (col : deux lignes)
+      }
+    }
+    this.contours = { C, cw, chunks };
+  },
+
+  // Les courbes de niveau, fines et discrètes, sous les routes et les bâtiments (seulement en zoomant un peu)
+  drawContours(ox, oy) {
+    const s = this.cam.scale, k = this.contours;
+    if (!k || s < CONFIG.CONTOUR_MIN_ZOOM) return;
+    const ctx = this.ctx, C = k.C;
+    // paquets visibles à l'écran
+    const x0 = Math.floor(this.cam.x / C), y0 = Math.floor(this.cam.y / C);
+    const x1 = Math.floor((this.cam.x + this.vw / s) / C), y1 = Math.floor((this.cam.y + this.vh / s) / C);
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(s, s);
+    ctx.lineWidth = 1 / s; // (1 pixel d'écran, quel que soit le zoom)
+    // (plus présentes quand on zoome, sans jamais gêner)
+    ctx.strokeStyle = `rgba(45,30,15,${Math.min(0.36, 0.2 + (s - CONFIG.CONTOUR_MIN_ZOOM) * 0.025)})`;
+    for (let cy = Math.max(0, y0); cy <= y1; cy++) {
+      for (let cx = Math.max(0, x0); cx <= Math.min(k.cw - 1, x1); cx++) {
+        const p = k.chunks.get(cy * k.cw + cx);
+        if (p) ctx.stroke(p);
+      }
+    }
+    ctx.restore();
   },
 
   fit() {
@@ -1386,6 +1463,7 @@ const Render = {
     const ox = -this.cam.x * s, oy = -this.cam.y * s;
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
+    this.drawContours(ox, oy);
     this.drawHoveredKingdom(ox, oy);
 
     this.drawRoads(ox, oy);

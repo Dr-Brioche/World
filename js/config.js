@@ -21,7 +21,11 @@ const CONFIG = {
   // une ville (ou un port fortifié) et assez grand (au moins 25 % du plus grand) est aussi un cœur, à part entière :
   // ses armées en partent, ses défenseurs y vont. Plus petit, il reste isolé (ses villes tiennent seules).
   SPLIT_HEART_SHARE: 0.25,
-  CAMERA_KEY_SPEED: 900,   // déplacement de la caméra au clavier (ZQSD / flèches), en pixels d'écran par seconde        // au moins 3 royaumes rivaux (on en choisit le nombre dans le menu, jusqu'à 11)
+  CAMERA_KEY_SPEED: 900,   // déplacement de la caméra au clavier (ZQSD / flèches), en pixels d'écran par seconde
+  // Courbes de niveau (discrètes) autour des collines et des montagnes : les niveaux tracés (0 = plaine,
+  // 1 = colline, 2 = montagne, 3 = sommet, relief lissé), et le zoom à partir duquel on les voit
+  CONTOUR_LEVELS: [0.35, 0.85, 1.35, 1.85, 2.45],
+  CONTOUR_MIN_ZOOM: 2.5,
   WATER_RATIO: 0.50,       // part de mer sur la carte (0.5 = 50 %) ; la carte « Base navale » en a plus
   NAVAL_WATER_RATIO: 0.62, // part de mer de la carte « Base navale » (plusieurs grandes îles)
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
