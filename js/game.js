@@ -33,6 +33,8 @@ const GameRules = {
     this.crusades = []; // croisades religieuses en cours : { church, owner, end } (voir startCrusade)
     this.wallAt = new Uint8Array(this.N); // 1 = case d'un mur fini (aucun assaut ne la franchit)
     this.crossings = [];   // armées qui traversent un fleuve à gué
+    this.bridges = [];     // ponts : { tiles (cases de fleuve), a, b (cases des deux rives), owner } (voir buildBridge)
+    this.bridgeAt = new Uint8Array(this.N); // 1 = case de fleuve couverte par un pont
     this.returning = [];   // défenseurs qui rentrent à pied (l'assaut qu'ils allaient contrer est fini)
     this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
     this.colonies = new Map(); // château bâti ou pris dans la zone d'un avant-poste → son royaume
@@ -3277,7 +3279,11 @@ const GameRules = {
       cum.push(cum[cum.length - 1] + Math.hypot(q.x - last.x, q.y - last.y) * cost + extra);
     };
     // (deux cases du chemin qui ne se touchent pas : on passe un fleuve à gué entre les deux)
-    const fordBetween = (a, b) => Math.max(0, Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) - 1) * ford;
+    // (sur un pont : chaque case de fleuve compte comme une plaine)
+    const fordBetween = (a, b) => {
+      const gap = Math.max(0, Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) - 1);
+      return gap && this.bridgedBetween(a, b) ? gap : gap * ford;
+    };
     if (path) for (let k = 1; k < path.length - 1; k++) {
       add({ x: path[k] % W + 0.5, y: ((path[k] / W) | 0) + 0.5 }, fordBetween(path[k - 1], path[k]));
     }
@@ -3340,9 +3346,9 @@ const GameRules = {
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
       }
       // (un fleuve qui coupe ses terres : on le passe à gué, voir fordAcross)
-      if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap) => {
+      if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap, bridged) => {
         if (B.seen[n] === -stamp) return;
-        const nd = d + gap * ford + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        const nd = d + (bridged ? gap : gap * ford) + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
       });
     }
@@ -3381,9 +3387,9 @@ const GameRules = {
         const nd = d + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; B.prev[n] = i; heap.push(nd, n); }
       }
-      if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap) => {
+      if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap, bridged) => {
         if (B.seen[n] === -stamp) return;
-        const nd = d + gap * ford + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        const nd = d + (bridged ? gap : gap * ford) + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; B.prev[n] = i; heap.push(nd, n); }
       });
     }
@@ -3391,19 +3397,75 @@ const GameRules = {
   },
 
   // Gué : depuis la case i (au bord d'un fleuve), les cases de pid juste en face, de l'autre côté du fleuve
-  // (en ligne droite, comme acrossRiver) : fn(case d'en face, nombre de cases de fleuve à traverser)
+  // (en ligne droite, comme acrossRiver) : fn(case d'en face, nombre de cases de fleuve à traverser, un pont ?)
+  // (sur un pont, on passe sans s'arrêter : chaque case de fleuve compte comme une plaine)
   fordAcross(i, pid, fn) {
     const W = this.W, x0 = i % W, y0 = (i / W) | 0;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      let bridged = true;
       for (let k = 1; k <= 4; k++) {
         const x = x0 + dx * k, y = y0 + dy * k;
         if (x < 0 || y < 0 || x >= W || y >= this.H) break;
         const j = y * W + x;
-        if (this.terrain[j] === TERRAIN.RIVER) continue;
-        if (k > 1 && this.owner[j] === pid) fn(j, k - 1);
+        if (this.terrain[j] === TERRAIN.RIVER) { if (!this.bridgeAt[j]) bridged = false; continue; }
+        if (k > 1 && this.owner[j] === pid) fn(j, k - 1, bridged);
         break;
       }
     }
+  },
+
+  // Les cases de fleuve entre deux cases en ligne droite sont-elles toutes couvertes par un pont ?
+  bridgedBetween(a, b) {
+    const W = this.W, dx = Math.sign(b % W - a % W), dy = Math.sign(((b / W) | 0) - ((a / W) | 0));
+    for (let j = a + dx + dy * W; j !== b; j += dx + dy * W) if (!this.bridgeAt[j]) return false;
+    return true;
+  },
+
+  // --- Ponts ---
+  // Un pont sur la case de fleuve i : il va tout droit d'une rive à l'autre (à l'horizontale ou à la verticale,
+  // le plus court), et les deux rives doivent être à pid. Renvoie { tiles, a, b } (cases de fleuve, et les deux
+  // rives), ou { error }.
+  planBridge(pid, i) {
+    const W = this.W, H = this.H;
+    if (i < 0 || this.terrain[i] !== TERRAIN.RIVER) return { error: 'Un pont se construit sur un fleuve (pas sur un grand fleuve, infranchissable).' };
+    if (this.bridgeAt[i]) return { error: 'Il y a déjà un pont ici.' };
+    let best = null, why = 'Les deux rives, juste en face, doivent être à toi.';
+    for (const [dx, dy] of [[1, 0], [0, 1]]) {
+      // on part de la case cliquée dans les deux sens, jusqu'à la terre
+      const tiles = [i], ends = [];
+      for (const s of [1, -1]) {
+        let x = i % W, y = (i / W) | 0, end = -1;
+        for (let k = 0; k < 4; k++) {
+          x += dx * s; y += dy * s;
+          if (x < 0 || y < 0 || x >= W || y >= H) break;
+          const j = y * W + x;
+          if (this.terrain[j] === TERRAIN.RIVER) { tiles.push(j); continue; }
+          end = j;
+          break;
+        }
+        ends.push(end);
+      }
+      const [a, b] = ends;
+      if (a < 0 || b < 0 || tiles.length > 3) continue; // (pas de rive en face, ou fleuve trop large)
+      if (!this.isLand(a) || !this.isLand(b)) continue;
+      if (this.owner[a] !== pid || this.owner[b] !== pid) continue;
+      if (tiles.some(j => this.bridgeAt[j])) { why = 'Il y a déjà un pont ici.'; continue; }
+      if (!best || tiles.length < best.tiles.length) best = { tiles, a, b };
+    }
+    return best || { error: why };
+  },
+
+  // Construire un pont (BRIDGE_COST pièces) : ses soldats passent ce fleuve sans perdre de temps à gué.
+  // (un pont sert à tout royaume qui tient ses deux rives : s'il les perd, le nouveau maître s'en sert)
+  buildBridge(p, i) {
+    const plan = this.planBridge(p.id, i);
+    if (plan.error) return plan.error;
+    if (p.gold < CONFIG.BRIDGE_COST) return `Pas assez d'or : il faut 💰 ${fmt(CONFIG.BRIDGE_COST)}.`;
+    p.gold -= CONFIG.BRIDGE_COST;
+    this.bridges.push({ tiles: plan.tiles, a: plan.a, b: plan.b, owner: p.id });
+    for (const j of plan.tiles) this.bridgeAt[j] = 1;
+    this.version++;
+    return null;
   },
   // Coût d'une case de fleuve passée à gué, en « points de terrain » : FORD_TIME secondes à cette vitesse
   fordCost(speed) { return CONFIG.FORD_TIME * CONFIG.TICKS_PER_SECOND * speed; },

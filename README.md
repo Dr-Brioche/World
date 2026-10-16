@@ -465,7 +465,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - Une expédition en mer **ne peut pas être interceptée** : tu es prévenu quand elle vise ta côte
      (une petite zone rouge marque l'endroit du débarquement), et tu l'attaques quand elle accoste.
 
-   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · 🏗️ Construire · ⛵ Attaque navale · 🛶 Traverser le fleuve).
+   **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · ⛵ Attaque navale · 🛶 Traverser le fleuve · 🌉 Construire un pont).
+   Pour construire un bâtiment, utilise la barre du bas (ou les touches 1 à 5).
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
    **75 %**, le reste se perd en route, et sans dépasser son armée maximum.
    Si cet allié **se fait attaquer**, le menu propose aussi **🛡️ Aider [allié] contre [attaquant]** : tes soldats
@@ -522,7 +523,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 **Le seul moyen de passer, c'est la traversée à gué** (ci-dessous). Un royaume présent des deux côtés d'un fleuve
 reste un seul royaume (il n'est pas « coupé »), mais ses soldats ne volent pas : ses **défenseurs**, ses armées qui
 marchent vers la frontière et ses soldats qui rentrent passent le fleuve **à gué**, par le vrai chemin, et perdent
-**5 secondes par case de fleuve** traversée. Il y a entre **3 et 12 fleuves** par partie, au hasard.
+**5 secondes par case de fleuve** traversée.
+🌉 **Ponts** : fais un **clic droit sur un fleuve** dont les deux rives, juste en face, sont à toi (à l'horizontale ou à la
+verticale, 3 cases de fleuve au plus) et choisis **Construire un pont** (💰 **700**). Tes armées, tes défenseurs et tes
+soldats qui rentrent le passent alors **sans s'arrêter**, comme une plaine. Le pont sert à celui qui tient ses deux rives. Il y a entre **3 et 12 fleuves** par partie, au hasard.
 Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer : un royaume des deux côtés
 d'un grand fleuve est **coupé**. Sa rive sans ville ni port fortifié est désorganisée, et aucun soldat ne passe.
@@ -547,6 +551,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.91.22** : 🌉 **ponts** : clic droit sur un fleuve dont les deux rives sont à toi → Construire un pont (💰 700), et tes soldats le passent sans perdre de temps à gué · 🖱️ le clic droit ne propose plus de construire des bâtiments (la barre du bas et les touches 1 à 5 suffisent)
 - **v0.91.21** : ⛰️ de fines courbes de niveau autour des collines et des montagnes (visibles en zoomant) · 📖 précision : un grand fleuve (infranchissable) coupe le royaume
 - **v0.91.20** : 🐛 les défenseurs ne traversent plus les fleuves tout droit comme par magie : ils suivent le vrai chemin et passent à gué (5 s par case de fleuve) ; pareil pour les armées qui marchent vers la frontière et les soldats qui rentrent
 - **v0.91.19** : 👀 pendant la pose d'un bâtiment (ou l'amélioration d'une ville), ses futures routes s'affichent en transparence ; trop loin d'une ville, un trait rouge indique la distance et la portée

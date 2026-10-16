@@ -677,6 +677,9 @@ const UI = {
     if (G.isCoastal(i) && G.landable(G.human.id, i) && G.expeditionPorts(G.human.id).length) {
       txt += ' · ⛵ côte : clic droit → Débarquer';
     }
+    // Fleuve : un pont, ou la possibilité d'en bâtir un (les deux rives à nous)
+    if (G.bridgeAt[i]) txt += ' · 🌉 pont : on passe ce fleuve sans s\'arrêter';
+    else if (G.terrain[i] === TERRAIN.RIVER && !G.planBridge(G.human.id, i).error) txt += ` · 🌉 clic droit → Construire un pont (💰 ${fmt(CONFIG.BRIDGE_COST)})`;
     return txt;
   },
 
@@ -1065,15 +1068,17 @@ const UI = {
         else this.log(`🚢 ${fmt(n)} soldats rembarquent vers ton port.`, 'good');
       } });
     }
-    if (own) {
-      for (let t = 1; t < BUILDINGS.length; t++) {
-        const b = BUILDINGS[t];
-        if (b.hidden) continue;
-        items.push({ label: `🏗️ ${b.icon} ${b.name} (💰 ${fmt(G.buildCost(h, t))})`, run: () => {
-          const err = G.tryBuild(h, Render.anchorAt(sx, sy, t), t);
-          if (err) this.log(err, 'warn');
-        } });
-      }
+    // Sur un fleuve dont les deux rives sont à nous : construire un pont
+    if (G.terrain[i] === TERRAIN.RIVER) {
+      const plan = G.planBridge(h.id, i);
+      const label = `🌉 Construire un pont (💰 ${fmt(CONFIG.BRIDGE_COST)})`;
+      if (plan.error) items.push({ label, disabled: plan.error });
+      else if (h.gold < CONFIG.BRIDGE_COST) items.push({ label, disabled: `Pas assez d'or : il faut 💰 ${fmt(CONFIG.BRIDGE_COST)}.` });
+      else items.push({ label: `${label} : tes soldats passent ce fleuve sans perdre de temps à gué`, run: () => {
+        const err = G.buildBridge(h, i);
+        if (err) this.log(err, 'warn');
+        else this.log('🌉 Pont construit : tes soldats passent maintenant ce fleuve sans s\'arrêter !', 'good');
+      } });
     }
     // Terre libre de l'autre côté d'un fleuve : la traverser à gué
     if (G.owner[i] === -1 && G.isLand(i) && G.terrain[i] !== TERRAIN.RIVER) {
