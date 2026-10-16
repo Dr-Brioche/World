@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Éditeur de cartes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Mise en page de l'éditeur (le reste du style vient de style.css) */
+    #ed { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+    #tools { top: 10px; left: 10px; width: 210px; max-height: calc(100% - 20px); overflow-y: auto; font-size: 13px; }
+    #tools h2 { font-family: Cinzel, Georgia, serif; font-size: 17px; margin: 4px 0 8px; text-align: center; }
+    #tools h3 { font-size: 13px; margin: 10px 0 4px; }
+    #tools label { display: block; margin: 4px 0; }
+    #tools input[type=text], #tools select { width: 100%; font-family: inherit; }
+    #palette { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    #palette button { display: flex; align-items: center; gap: 5px; font-size: 12px; padding: 3px 5px; text-align: left; }
+    #palette button.active, .toolBtn.active { background: var(--gold); box-shadow: 0 0 0 2px var(--ink) inset; }
+    #palette i { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--ink); flex: none; }
+    .row { display: flex; gap: 4px; flex-wrap: wrap; }
+    .row button { flex: 1; font-size: 12px; padding: 4px 5px; }
+    #status { bottom: 10px; left: 230px; right: 10px; font-size: 13px; }
+    #msg { top: 10px; left: 50%; transform: translateX(-50%); font-size: 14px; max-width: 60%; }
+    #msg.bad { color: var(--danger); }
+    #msg.good { color: var(--good); }
+    small.help { display: block; color: #6b5233; margin-top: 6px; line-height: 1.35; }
+  </style>
+</head>
+<body>
+  <canvas id="ed"></canvas>
+
+  <div id="tools" class="panel">
+    <h2>🖌️ Éditeur de cartes</h2>
+    <label>Nom de la carte <input id="name" type="text" maxlength="30" placeholder="Ma carte"></label>
+    <div class="row">
+      <button id="saveBtn" title="Enregistrer : la carte apparaît dans la liste des cartes du jeu">💾 Enregistrer</button>
+      <button id="playBtn" title="Enregistrer, puis jouer sur cette carte">▶️ Jouer</button>
+    </div>
+
+    <h3>Terrain (touches 1 à 9)</h3>
+    <div id="palette"></div>
+
+    <h3>Outil</h3>
+    <div class="row">
+      <button class="toolBtn" data-tool="paint" title="Pinceau (B)">🖌️ Pinceau</button>
+      <button class="toolBtn" data-tool="fill" title="Remplir une zone du même terrain (F)">🪣 Remplir</button>
+    </div>
+    <label>Taille du pinceau : <b id="sizeVal"></b>
+      <input id="size" type="range" min="1" max="40" value="8">
+    </label>
+    <div class="row">
+      <button id="undoBtn" title="Annuler (Ctrl + Z)">↩️ Annuler</button>
+      <button id="redoBtn" title="Refaire (Ctrl + Y)">↪️ Refaire</button>
+    </div>
+
+    <h3>Nouvelle carte</h3>
+    <label>Taille
+      <select id="newSize">
+        <option value="petit">Petite (300 x 169)</option>
+        <option value="moyen" selected>Moyenne (650 x 366)</option>
+        <option value="grand">Grande (1000 x 562)</option>
+      </select>
+    </label>
+    <div class="row">
+      <button data-new="sea" title="Une carte toute en mer : dessine tes continents">🌊 Mer</button>
+      <button data-new="land" title="Une carte toute en plaine (entourée de mer)">🌾 Terre</button>
+      <button data-new="random" title="Une carte aléatoire, à retoucher">🎲 Hasard</button>
+    </div>
+
+    <h3>Mes cartes</h3>
+    <select id="saved"></select>
+    <div class="row" style="margin-top:4px">
+      <button id="openBtn">📂 Ouvrir</button>
+      <button id="deleteBtn">🗑️ Supprimer</button>
+    </div>
+    <div class="row" style="margin-top:4px">
+      <button id="exportBtn" title="Télécharger la carte dans un fichier (pour la garder ou la partager)">📤 Exporter</button>
+      <button id="importBtn" title="Ouvrir un fichier de carte exporté">📥 Importer</button>
+    </div>
+    <input id="importFile" type="file" accept=".json,application/json" class="hidden">
+    <p style="margin:10px 0 0"><a href="index.html">⚔️ Retour au jeu</a></p>
+    <small class="help">Clic gauche : dessiner · clic droit (ou Espace + glisser) : déplacer · molette : zoom ·
+      [ et ] : taille du pinceau. Un fleuve fait toujours 1 case de large (passe deux fois pour un fleuve double) ;
+      le grand fleuve (infranchissable) 3 cases au plus. Il faut au moins une terre de 600 cases pour fonder des royaumes.</small>
+  </div>
+
+  <div id="msg" class="panel hidden"></div>
+  <div id="status" class="panel"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/custommaps.js"></script>
+  <script src="js/editor.js"></script>
+</body>
+</html>

@@ -46,8 +46,19 @@ const UI = {
     builds.appendChild(cb);
     this.crusadeBar = cb;
 
-    // Taille de la carte : seulement pour les cartes aléatoires (Monde et Europe ont leur propre taille)
-    const sizeForType = () => { $('mapSize').disabled = ['world', 'europe'].includes($('mapType').value); };
+    // Cartes dessinées avec l'éditeur (voir custommaps.js) : dans la liste des cartes. Revenu de l'éditeur avec
+    // « Jouer cette carte » (index.html?carte=Nom) : elle est déjà choisie.
+    const drawn = CustomMaps.all();
+    $('customMaps').innerHTML = drawn.map(m =>
+      `<option value="custom:${escapeHtml(m.name)}">${escapeHtml(m.name)} (${m.W} x ${m.H})</option>`).join('');
+    if (!drawn.length) $('customMaps').remove();
+    const wanted = new URLSearchParams(location.search).get('carte');
+    if (wanted && drawn.some(m => m.name === wanted)) $('mapType').value = 'custom:' + wanted;
+    // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe et les cartes dessinées ont leur taille)
+    const sizeForType = () => {
+      const t = $('mapType').value;
+      $('mapSize').disabled = ['world', 'europe'].includes(t) || t.startsWith('custom:');
+    };
     $('mapType').addEventListener('change', sizeForType);
     sizeForType();
 

@@ -4374,35 +4374,4 @@ function fmt(n) {
   return String(n);
 }
 
-// Petite file de priorité (tas binaire) pour chercher le chemin le plus court
-class MinHeap {
-  constructor() { this.keys = []; this.vals = []; }
-  get size() { return this.keys.length; }
-  push(k, v) {
-    const K = this.keys, V = this.vals;
-    let i = K.length;
-    K.push(k); V.push(v);
-    while (i > 0) {
-      const p = (i - 1) >> 1;
-      if (K[p] <= k) break;
-      K[i] = K[p]; V[i] = V[p]; i = p;
-    }
-    K[i] = k; V[i] = v;
-  }
-  pop() {
-    const K = this.keys, V = this.vals, top = [K[0], V[0]];
-    const k = K.pop(), v = V.pop();
-    if (K.length) {
-      let i = 0;
-      for (;;) {
-        let c = 2 * i + 1;
-        if (c >= K.length) break;
-        if (c + 1 < K.length && K[c + 1] < K[c]) c++;
-        if (K[c] >= k) break;
-        K[i] = K[c]; V[i] = V[c]; i = c;
-      }
-      K[i] = k; V[i] = v;
-    }
-    return top;
-  }
-}
+// (MinHeap, la petite file de priorité des chemins les plus courts, est dans map.js : la carte s'en sert aussi)
