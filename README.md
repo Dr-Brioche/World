@@ -536,6 +536,10 @@ plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pou
 `TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `EDGE_SHADE`,
 `WATER_DEPTH_SHADE`, `WATER_NOISE`, `MAP_SHADE_SOFT` et `MAP_SHADE_RAW`.)
 🌲 En zoomant, les **forêts** sont parsemées de petits **sapins** transparents.
+📜 **Vue parchemin** : au dernier cran de dézoom (molette vers l'arrière, au-delà de « toute la carte »), la carte devient
+une **vieille carte sur parchemin**, encadrée : terres beiges ombrées par le relief, côtes soulignées à l'encre, mer
+gris-vert, et les royaumes en couleurs légères. Elle apparaît en fondu, et on revient à la carte normale en zoomant.
+(Réglage `PARCHMENT_ZOOM` dans `js/config.js`.)
 ⛰️ Avec le réglage `TERRAIN_BORDERS: true`, de fines **courbes de niveau** dessinent aussi le relief (une au pied des
 collines, une au pied des montagnes, une autour des sommets enneigés), et les plaines, les déserts et les forêts ont une
 fine **bordure**.
@@ -574,6 +578,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.7** : 📜 vue parchemin : au dernier cran de dézoom, la carte devient une vieille carte sur parchemin encadrée (terres beiges ombrées, côtes à l'encre, mer gris-vert, royaumes en couleurs légères)
 - **v0.92.6** : 🎨 carte en pixel art : pixels carrés (plus d'arrondis), terrains qui s'entremêlent sur leurs bords, petites bosses ombrées sur toutes les terres, grandes nuances dans la mer ; les bordures dessinées autour des terrains sont retirées (réglage `TERRAIN_BORDERS` pour les remettre)
 - **v0.92.5** : ⛰️ montagnes aux arêtes et pics rocheux (fini l'effet « gâteau » à étages arrondis) · 🟫 un léger grain de cases revient sur le sol (moins lisse)
 - **v0.92.4** : 🏔️ les ombres suivent les formes de la carte : bord éclairé côté soleil et ombre portée au pied des collines, montagnes, sommets, forêts et côtes

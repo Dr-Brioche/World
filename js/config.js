@@ -25,6 +25,9 @@ const CONFIG = {
   // Courbes de niveau (pied des collines, des montagnes, et bord des sommets) et bordures des terrains : le zoom
   // à partir duquel on les voit (elles suivent le bord des cases : voir buildForests dans render.js)
   CONTOUR_MIN_ZOOM: 2.5,
+  // Vue de très loin : au dernier cran de dézoom, la carte devient une carte parchemin. Elle commence à apparaître en
+  // dessous de 60 % du zoom « toute la carte », et elle est complète au dézoom maximum (45 %)
+  PARCHMENT_ZOOM: [0.6, 0.45],
   SMOOTH_MAP: false,         // coins des cases arrondis sur la carte (false : des pixels carrés, comme une carte en pixel art)
   SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
   RAGGED_EDGES: 0.35,        // bords « effilochés » entre terrains : au bord d'une case, part des pixels pris par le terrain voisin

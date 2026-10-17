@@ -88,7 +88,58 @@ const Render = {
     this.wallsVersion = -1; this.pactVersion = -1;
     this.previewKey = null; this.planKey = null; this.buildable = null;
     this.buildForests();
+    this.buildParchment();
     this.fit();
+  },
+
+  // --- Carte parchemin (vue de très loin) ---
+  // Quand on dézoome au maximum, la carte devient une vieille carte sur parchemin : terres beiges ombrées par le
+  // relief, côtes soulignées à l'encre, mer gris-vert, fleuves foncés, et les royaumes en couleurs légères.
+  // Une image d'un pixel par case, tenue à jour comme la carte (voir flush).
+  buildParchment() {
+    const G = Game;
+    this.parch = document.createElement('canvas');
+    this.parch.width = G.W; this.parch.height = G.H;
+    this.parchCtx = this.parch.getContext('2d');
+    this.parchImg = this.parchCtx.createImageData(G.W, G.H);
+    for (let i = 0; i < G.N; i++) this.paintParchment(i);
+    this.parchCtx.putImageData(this.parchImg, 0, 0);
+  },
+
+  paintParchment(i) {
+    const G = Game, W = G.W, t = G.terrain[i], o = G.owner[i], x = i % W, y = (i / W) | 0, d = this.parchImg.data, k = i * 4;
+    const l = this.lightAt(x + 0.5, y + 0.5), grain = this.shade[i] * 0.6;
+    let r, g, b;
+    if (t === TERRAIN.WATER || t === TERRAIN.GREAT_RIVER) {
+      // (la profondeur de la mer, adoucie : sur le parchemin, juste une nuance)
+      const lw = 1 + (l - 1) * 0.45;
+      [r, g, b] = [150, 160, 140].map(v => v * lw + grain);
+    } else if (t === TERRAIN.RIVER) {
+      [r, g, b] = [112, 118, 100];
+    } else {
+      // le relief bien marqué (comme les hachures d'une vieille carte), les sommets plus clairs
+      const relief = 1 + Math.max(-0.45, Math.min(0.45, (l - 1) * 1.8));
+      const base = t === TERRAIN.PEAK ? [238, 228, 205] : t === TERRAIN.FOREST ? [200, 186, 140] : [222, 202, 156];
+      [r, g, b] = base.map(v => v * relief + grain);
+      // la côte, soulignée à l'encre
+      if (G.hasNeighbor(i, n => G.terrain[n] === TERRAIN.WATER)) { r *= 0.7; g *= 0.68; b *= 0.62; }
+    }
+    // les royaumes : une teinte légère de leur couleur, et leur frontière bien nette
+    if (o >= 0) {
+      const pc = G.players[o].color, border = this.isBorder(i, o), a = border ? 0.75 : 0.3;
+      r = r * (1 - a) + pc[0] * (border ? 0.8 : 1) * a;
+      g = g * (1 - a) + pc[1] * (border ? 0.8 : 1) * a;
+      b = b * (1 - a) + pc[2] * (border ? 0.8 : 1) * a;
+    }
+    d[k] = r; d[k + 1] = g; d[k + 2] = b; d[k + 3] = 255;
+  },
+
+  // Part de la carte parchemin à l'écran (0 à 1) : elle apparaît au dernier cran de dézoom (PARCHMENT_ZOOM :
+  // de quel zoom elle commence à apparaître, et où elle est complète, en fractions du zoom « toute la carte »)
+  parchmentAlpha() {
+    const [from, full] = CONFIG.PARCHMENT_ZOOM, s = this.cam.scale / (this.fitScale || 1);
+    const start = from, end = Math.max(full, from - 0.08);
+    return Math.max(0, Math.min(1, (start - s) / (start - end)));
   },
 
   // --- Forêts, et bordures des terrains ---
@@ -202,10 +253,13 @@ const Render = {
     ctx.restore();
   },
 
+  // Zoom : de très près (maxScale) jusqu'à toute la carte, et un cran de plus en arrière, où elle devient une
+  // carte parchemin (voir parchmentAlpha)
   fit() {
     const s = Math.min(this.vw / Game.W, this.vh / Game.H) * 0.95;
     this.cam.scale = s;
-    this.minScale = s * 0.6;
+    this.fitScale = s;
+    this.minScale = s * CONFIG.PARCHMENT_ZOOM[1];
     this.maxScale = 40;
     this.cam.x = Game.W / 2 - this.vw / 2 / s;
     this.cam.y = Game.H / 2 - this.vh / 2 / s;
@@ -470,6 +524,9 @@ const Render = {
     }
     this.dirtyList.length = 0;
     this.offCtx.putImageData(this.img, 0, 0, x0 * F, y0 * F, (x1 - x0 + 1) * F, (y1 - y0 + 1) * F);
+    // (et la carte parchemin, vue de très loin : voir buildParchment)
+    for (const i of near) this.paintParchment(i);
+    this.parchCtx.putImageData(this.parchImg, 0, 0, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
   },
 
   // --- Murailles des châteaux (et des ports de niveau 3) ---
@@ -1766,6 +1823,18 @@ const Render = {
     // (de loin, l'image est réduite : on la lisse un peu pour éviter le scintillement ; de près, pixels nets)
     ctx.imageSmoothingEnabled = s < this.F;
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
+    // Dernier cran de dézoom : la carte parchemin (voir buildParchment)
+    const pa = this.parch ? this.parchmentAlpha() : 0;
+    if (pa > 0) {
+      ctx.globalAlpha = pa;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(this.parch, ox, oy, G.W * s, G.H * s);
+      // un cadre sombre autour de la carte, comme une vieille carte encadrée
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#3b2a17';
+      ctx.strokeRect(ox - 2, oy - 2, G.W * s + 4, G.H * s + 4);
+      ctx.globalAlpha = 1;
+    }
     ctx.imageSmoothingEnabled = false;
     this.drawForests(ox, oy);
     this.drawHoveredKingdom(ox, oy);
