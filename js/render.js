@@ -1601,14 +1601,23 @@ const Render = {
         for (let k = 1; k < pts.length; k++) dirt.lineTo(pts[k][0], pts[k][1]);
       }
     }
-    // Routes commerciales (vers les villes des alliés) : grises, voir Game.buildTrade
-    const trade = new Path2D();
+    // Routes commerciales (vers les villes des alliés) : grises, voir Game.buildTrade ; à l'arrêt (pacte rompu), pâles
+    const trade = new Path2D(), idle = new Path2D();
     for (const r of G.tradeRoutes) {
-      r.pts.forEach(([x, y], k) => (k ? trade.lineTo : trade.moveTo).call(trade, ox + x * s, oy + y * s));
+      const path = r.active ? trade : idle;
+      r.pts.forEach(([x, y], k) => (k ? path.lineTo : path.moveTo).call(path, ox + x * s, oy + y * s));
     }
     ctx.lineCap = 'square';
     ctx.lineJoin = 'miter';
     if (G.tradeRoutes.length) {
+      ctx.globalAlpha = 0.4;
+      ctx.lineWidth = w + 2;
+      ctx.strokeStyle = 'rgba(40,40,42,0.8)';
+      ctx.stroke(idle);
+      ctx.lineWidth = w;
+      ctx.strokeStyle = '#9b9a97';
+      ctx.stroke(idle);
+      ctx.globalAlpha = 1;
       ctx.lineWidth = w + 2;
       ctx.strokeStyle = 'rgba(40,40,42,0.8)';
       ctx.stroke(trade);

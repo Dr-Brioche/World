@@ -398,7 +398,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      villes** assez proches, il a **un chemin vers chacune** : **+60 %** ou **+90 %** (3 villes au plus).
      Une **église** pas trop loin de ce chemin (à moins de **10 cases**) s'y relie par un **petit chemin**, et elle a aussi
      un chemin vers **chaque ville** proche (à moins de **25 cases**, sur la même terre) : **3 chemins au plus**.
-     🌊 **Les routes et chemins ne passent jamais sur la mer, un lac ou un fleuve** (sauf sur un **pont**) : si l'eau
+     🌊 **Les routes et chemins ne passent jamais sur la mer, un lac, un sommet ou un fleuve** (sauf sur un **pont**) : si l'eau
      coupe le tracé direct, la route fait un **détour** par la terre ; si le détour est bien trop long (ou impossible),
      **il n'y a pas de route** (et donc pas de bonus).
      👀 **Aperçu des routes** : pendant que tu poses un bâtiment (port, église, moulin, caserne, ville) ou que tu améliores
@@ -502,12 +502,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    et les autres royaumes en profitent pour l'attaquer !
    🛒 **Routes commerciales** : dans le menu d'une de tes **villes de niveau 2 ou plus** (à côté du mur), le bouton
    **Route commerciale** la relie à une **ville de niveau 2 ou plus d'un allié de ton pacte** : clique sur la ville
-   alliée (en la survolant, tu vois le tracé, le prix et le revenu). La route est **grise** et passe par la terre
-   (jamais sur la mer ni sur un fleuve, sauf sur un pont). Elle coûte **1 000 d'or** jusqu'à 40 cases, puis 30 de plus
+   alliée (en la survolant, tu vois le tracé, le prix et le revenu). La route est **grise** et passe par la terre :
+   jamais sur la mer, un lac ou un sommet infranchissable, ni à travers un fleuve, **sauf sur un pont** (un pont bâti
+   ouvre un passage). Elle coûte **1 000 d'or** jusqu'à 40 cases, puis 30 de plus
    par case (**5 000 au plus**), et rapporte **+0,5 d'or par case de route toutes les 10 secondes** (une route de 100
    cases : +50) ; ton allié en touche aussi **la moitié**. Plus elle est longue, plus elle rapporte : elle se rembourse
-   en 8 à 10 minutes environ. **Une route par ville**, 250 cases au plus. Elle disparaît si une des deux villes change de
-   mains ou si l'alliance est rompue. Dans une partie **sans pactes**, le bouton reste grisé.
+   en 8 à 10 minutes environ. **Une route par ville**, 250 cases au plus. **Si le pacte est rompu, la route reste mais
+   ne rapporte plus rien** (elle devient pâle) ; elle **reprend** dès que les royaumes qui tiennent ses deux villes sont
+   de nouveau alliés, même si ce sont d'autres royaumes qui les ont prises entre-temps (l'or va alors à eux). Elle ne
+   disparaît que si une de ses villes est détruite. Dans une partie **sans pactes**, le bouton reste grisé.
 5. **Gère ton armée et ton or** : tu commences petit, puis ton royaume grandit peu à peu.
    Tu as deux sortes de revenus : un **revenu de base**, continu, qui grandit avec ton territoire,
    et la **production de tes moulins et casernes**, versée toutes les 10 secondes.
@@ -599,6 +602,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.28** : 🛒 une route commerciale n'est plus perdue quand le pacte est rompu : elle s'arrête (pâle) et reprend dès que les royaumes qui tiennent ses deux villes sont de nouveau alliés (même d'autres royaumes) · 🛤️ les routes ne passent plus sur les sommets infranchissables
 - **v0.92.27** : 🛒 routes commerciales : relie une de tes villes (niveau 2+) à celle d'un allié de ton pacte par une route grise ; elle coûte de 1 000 à 5 000 d'or selon sa longueur et rapporte d'autant plus d'or qu'elle est longue (la moitié aussi pour ton allié)
 - **v0.92.26** : 🐛 un assaut vers un objectif ne s'annule plus tout seul en chemin (par exemple en longeant la mer, quand des terres changent de mains autour de lui) : il reprend sa route ; et s'il ne peut vraiment plus avancer, un message explique pourquoi il rentre
 - **v0.92.25** : 🛤️ les routes et chemins ne passent plus sur la mer, les lacs ou les fleuves (sauf sur un pont) : ils font un détour par la terre, ou ne se créent pas si le détour est trop long
