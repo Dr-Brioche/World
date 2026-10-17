@@ -1445,7 +1445,8 @@ const GameRules = {
   },
   tradeIncome(len) { return Math.round(len * CONFIG.TRADE_GOLD_PER_TILE); },
   // La route commerciale qui part de la ville a (ou null)
-  tradeOf(a) { return this.tradeRoutes.find(r => r.from === a) || null; },
+  // Les routes commerciales de la ville a (qu'elle les ait ouvertes ou qu'elles y arrivent)
+  tradesOf(a) { return this.tradeRoutes.filter(r => r.from === a || r.to === a); },
   // Les alliés de pid (dans son pacte) qui ont une ville de niveau 2 ou plus
   tradePartners(pid) {
     return this.players.filter(o => o.alive && o.id !== pid && this.areAllied(pid, o.id) &&
@@ -1455,7 +1456,7 @@ const GameRules = {
   tradeBlocker(pid, a) {
     if (!this.pactsAllowed) return 'Pas de pactes dans cette partie : pas de route commerciale.';
     if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return 'Il faut une de tes villes de niveau 2 ou plus.';
-    if (this.tradeOf(a)) return 'Cette ville a déjà sa route commerciale.';
+    if (this.tradesOf(a).length >= CONFIG.TRADE_MAX_PER_CITY) return `Cette ville a déjà ${CONFIG.TRADE_MAX_PER_CITY} routes commerciales (le maximum).`;
     if (!this.tradePartners(pid).length) return 'Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.';
     return null;
   },
@@ -1469,9 +1470,12 @@ const GameRules = {
     const o = this.owner[b];
     if (o < 0 || o === pid || !this.areAllied(pid, o)) return { error: 'Une route commerciale relie une de tes villes à une ville d\'un allié de ton pacte.' };
     if (this.level[b] < 2) return { error: 'La ville de ton allié doit être de niveau 2 ou plus.' };
-    // (on ne relie pas deux fois les mêmes villes : si ton allié a déjà ouvert cette route, elle existe déjà)
+    // (on ne relie pas deux fois les mêmes villes, même si c'est ton allié qui a ouvert la route)
     if (this.tradeRoutes.some(r => (r.from === b && r.to === a) || (r.from === a && r.to === b))) {
-      return { error: 'Ces deux villes sont déjà reliées par une route commerciale (ouverte par ton allié) : on ne les relie pas deux fois.' };
+      return { error: 'Ces deux villes sont déjà reliées par une route commerciale : on ne les relie pas deux fois.' };
+    }
+    if (this.tradesOf(b).length >= CONFIG.TRADE_MAX_PER_CITY) {
+      return { error: `Cette ville alliée a déjà ${CONFIG.TRADE_MAX_PER_CITY} routes commerciales (le maximum).` };
     }
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, tooFar = `Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.`;
     // (à vol d'oiseau déjà trop loin : inutile de chercher un tracé)
