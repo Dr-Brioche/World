@@ -1469,7 +1469,10 @@ const GameRules = {
     const o = this.owner[b];
     if (o < 0 || o === pid || !this.areAllied(pid, o)) return { error: 'Une route commerciale relie une de tes villes à une ville d\'un allié de ton pacte.' };
     if (this.level[b] < 2) return { error: 'La ville de ton allié doit être de niveau 2 ou plus.' };
-    if (this.tradeRoutes.some(r => r.from === b && r.to === a)) return { error: 'Ces deux villes sont déjà reliées par une route commerciale.' };
+    // (on ne relie pas deux fois les mêmes villes : si ton allié a déjà ouvert cette route, elle existe déjà)
+    if (this.tradeRoutes.some(r => (r.from === b && r.to === a) || (r.from === a && r.to === b))) {
+      return { error: 'Ces deux villes sont déjà reliées par une route commerciale (ouverte par ton allié) : on ne les relie pas deux fois.' };
+    }
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, tooFar = `Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.`;
     // (à vol d'oiseau déjà trop loin : inutile de chercher un tracé)
     if (Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) > CONFIG.TRADE_MAX_LENGTH * 1.2) return { error: tooFar };
