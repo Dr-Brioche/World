@@ -45,7 +45,7 @@ const CONFIG = {
   TERRAIN_GRAIN: 0.6,        // douces ondulations des terres basses (plaine, forêt, désert) ; en montagne, des crêtes et des pics
   MOUNTAIN_ROUGHNESS: 0.3,   // arêtes des massifs un peu tordues (0 = versants tout droits, comme des pyramides)
   MOUNTAIN_TONE_STEP: 0.1,   // écart entre les tons des versants (plus grand = moins de tons, plus tranchés ; 0 = dégradé)
-  HILL_BUMPS: 1.6,          // bosses des collines (plus douces que les montagnes) : 0 = collines lisses
+  HILL_BUMPS: 1.5,          // bosses des collines (plus douces que les montagnes) : 0 = collines lisses
   EDGE_SHADE: 0.09,          // ombres qui suivent les formes de la carte (bord éclairé d'un relief, ombre à son pied)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant

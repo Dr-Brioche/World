@@ -370,7 +370,7 @@ const Render = {
       const l = level(T[i]);
       if (!l) { e[i] = (fbm(noise, x / 8, y / 8, 2) - 0.5) * CONFIG.TERRAIN_GRAIN; continue; }
       // collines (boisées ou non) : une pente plus douce, et des bosses arrondies (moins tranchées que la montagne)
-      if (l === 1) { e[i] = dist[i] * 0.2 + (fbm(noise, x / 4, y / 4, 3) - 0.5) * CONFIG.HILL_BUMPS; continue; }
+      if (l === 1) { e[i] = Math.min(dist[i], 6) * 0.15 + (fbm(noise, x / 7, y / 7, 2) - 0.5) * CONFIG.HILL_BUMPS; continue; }
       // (de grandes ondulations, très douces, tordent un peu les arêtes pour qu'elles ne soient pas trop parfaites)
       e[i] = dist[i] * 0.28 + (fbm(noise, x / 14, y / 14, 2) - 0.5) * CONFIG.MOUNTAIN_ROUGHNESS * 6;
     }
@@ -399,7 +399,7 @@ const Render = {
       if (l) {
         // montagnes : quelques tons bien tranchés (versant éclairé / versant sombre) ; collines : des nuances douces
         const step = CONFIG.MOUNTAIN_TONE_STEP;
-        if (l === 1) shade *= 0.9;
+        if (l === 1) shade *= 0.75;
         else if (step > 0) shade = Math.round(shade / step) * step;
       }
       light[i] = 1 + shade;
