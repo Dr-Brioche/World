@@ -588,6 +588,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.24** : 🌉 le pont a sa propre icône médiévale (arche de pierre au-dessus de l'eau) au lieu de l'emoji
 - **v0.92.23** : 🎨 bords entre terrains adoucis : coins coupés en biais au lieu des petits carrés pointus, et les lignes entre terrains suivent ce nouveau bord
 - **v0.92.22** : 🖊️ les lignes entre les terrains suivent exactement les carrés de la carte (plus de ligne qui coupe un carré), aussi dans les royaumes
 - **v0.92.21** : 🖊️ une fine ligne discrète délimite de nouveau chaque zone de terrain (en zoomant), en suivant les bords en gros pixels
