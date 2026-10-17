@@ -588,6 +588,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.22** : 🖊️ les lignes entre les terrains suivent exactement les carrés de la carte (plus de ligne qui coupe un carré), aussi dans les royaumes
 - **v0.92.21** : 🖊️ une fine ligne discrète délimite de nouveau chaque zone de terrain (en zoomant), en suivant les bords en gros pixels
 - **v0.92.20** : 🌋 îlots volcaniques : plus de petits îlots inutiles (terres de moins de 150 cases retirées), des îlots plus grands avec un sommet enneigé au milieu, et chaque petite île devient un volcan sorti de la mer
 - **v0.92.19** : 📜 vue parchemin : collines adoucies (fini l'effet « papier froissé »), seules les montagnes restent bien marquées
