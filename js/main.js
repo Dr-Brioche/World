@@ -1262,13 +1262,16 @@ const UI = {
   // déjà sa route, ou sans assez d'or. text = bouton de la fenêtre d'info (avec son texte), sinon petite icône.
   updateTradeButton(btn, a, text) {
     const G = Game, h = G.human, r = G.tradeOf(a);
-    const why = r ? `Cette ville a déjà sa route commerciale (vers ${G.players[r.ally].name} : +${fmt(r.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s)`
+    const to = r ? G.players[G.owner[r.to === a ? r.from : r.to]] : null;
+    const why = r ? (r.active ? `Cette ville a déjà sa route commerciale (avec ${to.name} : +${fmt(r.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s)`
+      : `Cette ville a déjà sa route commerciale, à l'arrêt : elle reprendra si ${to ? to.name : 'l\'autre ville'} redevient ton allié`)
       : G.tradeBlocker(h.id, a) || (h.gold < CONFIG.TRADE_COST_MIN ? `Pas assez d'or : une route commerciale coûte au moins 💰 ${fmt(CONFIG.TRADE_COST_MIN)}` : '');
     btn.disabled = !!why;
     btn.title = why || `Route commerciale vers une ville d'un allié de ton pacte (💰 ${fmt(CONFIG.TRADE_COST_MIN)} à ${fmt(CONFIG.TRADE_COST_MAX)} ` +
       'selon la longueur) : plus elle est longue, plus elle rapporte d\'or';
     if (text) {
-      const html = r ? `🛒 Route commerciale : +${fmt(r.income)}` : `🛒 Route commerciale (💰 ${fmt(CONFIG.TRADE_COST_MIN)}+)`;
+      const html = r ? (r.active ? `🛒 Route commerciale : +${fmt(r.income)}` : '🛒 Route commerciale (à l\'arrêt)')
+        : `🛒 Route commerciale (💰 ${fmt(CONFIG.TRADE_COST_MIN)}+)`;
       if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
     }
   },
