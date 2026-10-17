@@ -11,6 +11,11 @@ const CONFIG = {
     moyen: [650, 366],
     grand: [1000, 562],
   },
+  // Relief et forêts des cartes aléatoires (un décor de Moyen Âge : beaucoup de forêts, moins de montagnes) :
+  // plus le seuil est haut, plus le terrain est rare (forêt : plus il est bas, plus il y a de forêts)
+  MOUNTAIN_LEVEL: 0.77,
+  HILLS_LEVEL: 0.7,
+  FOREST_LEVEL: 0.44,
   DESERT_RATIO: 0.15,      // part des plaines et forêts en désert sur les cartes aléatoires (production -20 %)
   WORLD_MAP_WIDTH: 1080,   // taille de la carte « Monde » (bien plus grande : on dézoome beaucoup)
   WORLD_MAP_HEIGHT: 408,
@@ -25,12 +30,12 @@ const CONFIG = {
   // Courbes de niveau (pied des collines, des montagnes, et bord des sommets) et bordures des terrains : le zoom
   // à partir duquel on les voit (elles suivent le bord des cases : voir buildForests dans render.js)
   CONTOUR_MIN_ZOOM: 2.5,
-  // Vue de très loin : au dernier cran de dézoom, la carte devient une carte parchemin. Elle commence à apparaître en
-  // dessous de 60 % du zoom « toute la carte », et elle est complète au dézoom maximum (45 %)
-  PARCHMENT_ZOOM: [0.6, 0.45],
+  // Vue de très loin : en dézoomant presque au maximum, la carte devient une carte parchemin. Elle commence à apparaître
+  // en dessous de 85 % du zoom « toute la carte », elle est complète à 60 % ; on peut dézoomer jusqu'à 45 %
+  PARCHMENT_ZOOM: [0.85, 0.6, 0.45],
   SMOOTH_MAP: false,         // coins des cases arrondis sur la carte (false : des pixels carrés, comme une carte en pixel art)
   SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
-  RAGGED_EDGES: 0.35,        // bords « effilochés » entre terrains : au bord d'une case, part des pixels pris par le terrain voisin
+  RAGGED_EDGES: 0.3,         // bords « effilochés » entre terrains : au bord d'une case, part des demi-cases prises par le terrain voisin
   TERRAIN_BORDERS: false,    // fine bordure dessinée autour des forêts, plaines, déserts et du relief (true pour la remettre)
   MAP_SHADE_SOFT: 1,         // petites variations de couleur du sol, adoucies entre voisines (0 = sol tout uni)...
   MAP_SHADE_RAW: 0.8,        // ...et le grain propre à chaque case (plus = damier plus visible)

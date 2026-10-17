@@ -120,9 +120,9 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
       else {
         const r = relief[i];
         if (r > peakLvl) terrain[i] = TERRAIN.PEAK; // le cœur des montagnes : infranchissable
-        else if (r > 0.72) terrain[i] = TERRAIN.MOUNTAIN;
-        else if (r > 0.64) terrain[i] = TERRAIN.HILLS;
-        else if (fbm(forestNoise, x / (14 * fs), y / (14 * fs), 3) > 0.56) terrain[i] = TERRAIN.FOREST;
+        else if (r > CONFIG.MOUNTAIN_LEVEL) terrain[i] = TERRAIN.MOUNTAIN;
+        else if (r > CONFIG.HILLS_LEVEL) terrain[i] = TERRAIN.HILLS;
+        else if (fbm(forestNoise, x / (14 * fs), y / (14 * fs), 3) > CONFIG.FOREST_LEVEL) terrain[i] = TERRAIN.FOREST;
         else terrain[i] = TERRAIN.PLAINS;
       }
     }

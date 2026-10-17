@@ -134,12 +134,11 @@ const Render = {
     d[k] = r; d[k + 1] = g; d[k + 2] = b; d[k + 3] = 255;
   },
 
-  // Part de la carte parchemin à l'écran (0 à 1) : elle apparaît au dernier cran de dézoom (PARCHMENT_ZOOM :
+  // Part de la carte parchemin à l'écran (0 à 1) : elle apparaît quand on dézoome presque au maximum (PARCHMENT_ZOOM :
   // de quel zoom elle commence à apparaître, et où elle est complète, en fractions du zoom « toute la carte »)
   parchmentAlpha() {
     const [from, full] = CONFIG.PARCHMENT_ZOOM, s = this.cam.scale / (this.fitScale || 1);
-    const start = from, end = Math.max(full, from - 0.08);
-    return Math.max(0, Math.min(1, (start - s) / (start - end)));
+    return Math.max(0, Math.min(1, (from - s) / (from - full)));
   },
 
   // --- Forêts, et bordures des terrains ---
@@ -259,7 +258,7 @@ const Render = {
     const s = Math.min(this.vw / Game.W, this.vh / Game.H) * 0.95;
     this.cam.scale = s;
     this.fitScale = s;
-    this.minScale = s * CONFIG.PARCHMENT_ZOOM[1];
+    this.minScale = s * CONFIG.PARCHMENT_ZOOM[2];
     this.maxScale = 40;
     this.cam.x = Game.W / 2 - this.vw / 2 / s;
     this.cam.y = Game.H / 2 - this.vh / 2 / s;
@@ -372,10 +371,11 @@ const Render = {
       return sum / norm;
     };
     // L'altitude, par demi-case
+    // (sur les terres basses, juste leurs petites bosses : le relief des montagnes voisines ne déborde pas sur elles)
     const W2 = W * 2, H2 = H * 2, e = new Float32Array(W2 * H2);
     for (let y = 0; y < H2; y++) for (let x = 0; x < W2; x++) {
-      const u = (x + 0.5) / 2, v = (y + 0.5) / 2;
-      e[y * W2 + x] = at(base, u, v) + ridged(u, v) * at(amp, u, v);
+      const u = (x + 0.5) / 2, v = (y + 0.5) / 2, low = level(T[(y >> 1) * W + (x >> 1)]) === 0;
+      e[y * W2 + x] = low ? ridged(u, v) * ridgeAmp[0] : at(base, u, v) + ridged(u, v) * at(amp, u, v);
     }
     // Profondeur de la mer : distance à la terre (en cases, au plus DEPTH)
     const DEPTH = 14, depth = new Uint8Array(N).fill(255), queue = [];
@@ -452,17 +452,14 @@ const Render = {
     const sameLand = n => n >= 0 && key[n] !== key[i] && (key[n] >> 6) === (key[i] >> 6) && (key[n] & 1) === (key[i] & 1)
       && !river(T[n]) && !river(T[i]);
     const left = x > 0 ? i - 1 : -1, right = x < W - 1 ? i + 1 : -1, up = y > 0 ? i - W : -1, down = y < G.H - 1 ? i + W : -1;
-    const rnd = (px, py) => (((px * 73856093) ^ (py * 19349663)) >>> 0) % 1000 / 1000;
+    const rnd = (bx, by) => (((bx * 73856093) ^ (by * 19349663)) >>> 0) % 1000 / 1000;
+    // (par blocs de 2 x 2 pixels, des demi-cases : des « gros pixels », pas un bruit fin)
     const ragged = (px, py, tile) => {
       if (!R || this.F !== 4 || tile !== i) return tile;
-      const lx = px & 3, ly = py & 3, r = rnd(px, py);
-      // (au bord de la case : souvent ; un pixel plus loin : plus rarement)
-      const n = lx === 0 ? left : lx === 3 ? right : -1, m = ly === 0 ? up : ly === 3 ? down : -1;
-      if (n >= 0 && r < R && sameLand(n)) return n;
-      if (m >= 0 && r > 1 - R && sameLand(m)) return m;
-      const n2 = lx === 1 ? left : lx === 2 ? right : -1, m2 = ly === 1 ? up : ly === 2 ? down : -1;
-      if (n2 >= 0 && r < R / 3 && sameLand(n2)) return n2;
-      if (m2 >= 0 && r > 1 - R / 3 && sameLand(m2)) return m2;
+      const bx = px >> 1, by = py >> 1, r = rnd(bx, by);
+      const n = (bx & 1) === 0 ? left : right, m = (by & 1) === 0 ? up : down;
+      if (r < R && n >= 0 && sameLand(n)) return n;
+      if (r > 1 - R && m >= 0 && sameLand(m)) return m;
       return tile;
     };
     for (let k = 0; k < 4; k++) {
@@ -1722,6 +1719,52 @@ const Render = {
     }
   },
 
+  // Direction du royaume p (en radians) : celle où il est le plus allongé (calculée avec ses cases, voir setOwner),
+  // entre -70° et +70° pour que le nom se lise bien. Un royaume presque rond penche juste un peu (à droite ou à
+  // gauche selon le royaume). Elle change en douceur quand le royaume grandit.
+  kingdomAxis(p) {
+    const n = p.tiles, mx = p.sumX / n, my = p.sumY / n;
+    const cxx = p.sumXX / n - mx * mx, cyy = p.sumYY / n - my * my, cxy = p.sumXY / n - mx * my;
+    let a = 0.5 * Math.atan2(2 * cxy, cxx - cyy);
+    // allongement : rapport entre la plus grande et la plus petite largeur
+    const d = Math.sqrt(((cxx - cyy) / 2) ** 2 + cxy * cxy), l1 = (cxx + cyy) / 2 + d, l2 = Math.max(0.01, (cxx + cyy) / 2 - d);
+    const long = Math.min(1, (Math.sqrt(l1 / l2) - 1) / 0.6); // 0 = rond, 1 = bien allongé
+    const lean = (p.id % 2 ? 1 : -1) * 0.22;                   // (un royaume rond penche un peu)
+    a = Math.max(-1.22, Math.min(1.22, a * long + lean * (1 - long)));
+    p.labelAngle = p.labelAngle === undefined ? a : p.labelAngle + (a - p.labelAngle) * 0.05;
+    return p.labelAngle;
+  },
+
+  // Écrit le nom en lettres espacées le long d'un arc très ouvert (il bombe un peu vers le haut), centré sur (cx, cy)
+  // et tourné dans le sens du royaume. Renvoie l'angle utilisé.
+  drawCurvedName(p, name, cx, cy, size) {
+    const ctx = this.ctx, chars = [...name.toUpperCase()], gap = size * 0.28;
+    const widths = chars.map(c => ctx.measureText(c).width);
+    const total = widths.reduce((a, w) => a + w, 0) + gap * (chars.length - 1);
+    const R = Math.max(total * 1.8, size * 6); // (rayon de l'arc : plus il est grand, moins le nom est courbé)
+    const angle = this.kingdomAxis(p);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // deux passages : d'abord le contour de toutes les lettres, puis leur couleur (pour qu'elles ne se chevauchent pas)
+    for (const pass of [0, 1]) {
+      let x = -total / 2;
+      chars.forEach((c, k) => {
+        const mid = x + widths[k] / 2, phi = mid / R;
+        ctx.save();
+        ctx.translate(R * Math.sin(phi), R - R * Math.cos(phi));
+        ctx.rotate(phi);
+        if (pass === 0) ctx.strokeText(c, 0, 0); else ctx.fillText(c, 0, 0);
+        ctx.restore();
+        x += widths[k] + gap;
+      });
+    }
+    ctx.restore();
+    return angle;
+  },
+
   // Survol d'un château ennemi : on montre le chemin de l'assaut (pointillés dorés),
   // ou une croix rouge si d'autres fortifications bloquent le passage.
   // Trace un chemin d'assaut (pointillés), case par case
@@ -1907,7 +1950,9 @@ const Render = {
     }
 
 
-    // Noms des royaumes
+    // Noms des royaumes : en lettres espacées, dans le sens du royaume (en oblique) et un peu courbés, comme sur
+    // une vieille carte ; en dessous, sa bannière et ses soldats. Sur la carte parchemin, ils sont écrits à l'encre.
+    const ink = this.parch ? this.parchmentAlpha() > 0.5 : false;
     for (const p of G.players) {
       if (!p.alive || p.tiles === 0) continue;
       let size = Math.sqrt(p.tiles) * s * 0.2;
@@ -1916,18 +1961,22 @@ const Render = {
       size = Math.min(size, 42);
       const cx = ox + (p.sumX / p.tiles + 0.5) * s, cy = oy + (p.sumY / p.tiles + 0.5) * s;
       ctx.lineJoin = 'round';
-      ctx.font = `700 ${size}px Cinzel, Georgia, serif`;
-      ctx.lineWidth = Math.max(2, size / 5);
-      ctx.strokeStyle = 'rgba(20,12,4,0.75)';
-      ctx.fillStyle = p.isHuman ? '#ffe9a8' : '#fff';
-      let label = !p.isHuman && G.areAllied(p.id, G.human.id) ? '🤝 ' + p.name : p.name;
-      if (G.isTraitor(p)) label = '🗡️ ' + label;
-      Icons.text(ctx, label, cx, cy - size * 0.45);
-      // La bannière du royaume, à gauche de son nom
-      const tw = ctx.measureText(label).width;
-      this.drawBannerImage(p, cx - tw / 2 - size * 0.55, cy + size * 0.6, size * 1.9);
-      ctx.font = `600 ${size * 0.75}px Georgia, serif`;
-      Icons.text(ctx, G.troopIcon(p.id) + ' ' + fmt(p.troops), cx, cy + size * 0.55);
+      ctx.font = `${size * 0.9}px 'IM Fell English SC', Cinzel, Georgia, serif`;
+      ctx.lineWidth = Math.max(2, size / 6);
+      ctx.strokeStyle = ink ? 'rgba(240,226,190,0.8)' : 'rgba(20,12,4,0.7)';
+      ctx.fillStyle = ink ? '#3b2a17' : p.isHuman ? '#ffe9a8' : '#fff';
+      const a = this.drawCurvedName(p, p.name, cx, cy - size * 0.3, size);
+      // « Sous » le nom (perpendiculairement à lui, pour ne pas le chevaucher) : ses soldats (avec 🤝 s'il est notre
+      // allié, 🗡️ si c'est un traître), et sa bannière à gauche
+      const tx = cx - Math.sin(a) * size * 1.05, ty = cy - size * 0.3 + Math.cos(a) * size * 1.05;
+      ctx.font = `600 ${size * 0.7}px Georgia, serif`;
+      ctx.fillStyle = ink ? '#3b2a17' : p.isHuman ? '#ffe9a8' : '#fff';
+      let troops = G.troopIcon(p.id) + ' ' + fmt(p.troops);
+      if (!p.isHuman && G.areAllied(p.id, G.human.id)) troops = '🤝 ' + troops;
+      if (G.isTraitor(p)) troops = '🗡️ ' + troops;
+      const tw = ctx.measureText(troops).width;
+      this.drawBannerImage(p, tx - tw / 2 - size * 0.45, ty + size * 0.05, size * 1.5);
+      Icons.text(ctx, troops, tx, ty);
     }
 
     this.drawCastleAssaultPreview(ox, oy);
