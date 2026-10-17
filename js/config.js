@@ -35,7 +35,7 @@ const CONFIG = {
   PARCHMENT_ZOOM: [0.85, 0.6, 0.45],
   SMOOTH_MAP: false,         // coins des cases arrondis sur la carte (false : des pixels carrés, comme une carte en pixel art)
   SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
-  RAGGED_EDGES: 0.3,         // bords « effilochés » entre terrains : au bord d'une case, part des demi-cases prises par le terrain voisin
+  RAGGED_EDGES: 0.15,        // bords « effilochés » entre terrains : au bord d'une case, part des demi-cases prises par le terrain voisin
   TERRAIN_BORDERS: false,    // fine bordure dessinée autour des forêts, plaines, déserts et du relief (true pour la remettre)
   MAP_SHADE_SOFT: 1,         // petites variations de couleur du sol, adoucies entre voisines (0 = sol tout uni)...
   MAP_SHADE_RAW: 0.8,        // ...et le grain propre à chaque case (plus = damier plus visible)
