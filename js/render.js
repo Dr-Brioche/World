@@ -341,36 +341,35 @@ const Render = {
     const G = Game, W = G.W, H = G.H, N = G.N, T = G.terrain;
     const level = t => t === TERRAIN.PEAK ? 3 : t === TERRAIN.MOUNTAIN ? 2 : t === TERRAIN.HILLS ? 1 : 0;
     const noise = makeValueNoise(mulberry32((Math.random() * 1e9) | 0));
-    // Distance au bord du massif (en cases), pour les cases de relief
-    const dist = new Uint8Array(N).fill(255), queue = [];
-    for (let i = 0; i < N; i++) if (level(T[i]) === 0) { dist[i] = 0; queue.push(i); }
-    for (let q = 0; q < queue.length; q++) {
-      const i = queue[q];
-      if (dist[i] >= 40) continue;
-      G.forNeighbors(i, n => { if (dist[n] === 255) { dist[n] = dist[i] + 1; queue.push(n); } });
-    }
-    let e = new Float32Array(N);
-    for (let i = 0; i < N; i++) {
-      const x = i % W, y = (i / W) | 0, l = level(T[i]);
-      if (!l) {
-        e[i] = (fbm(noise, x / 8, y / 8, 2) - 0.5) * CONFIG.TERRAIN_GRAIN;
-        continue;
-      }
-      const d = dist[i] === 255 ? 40 : dist[i];
-      e[i] = Math.sqrt(d) * (0.5 + 0.35 * l) + (fbm(noise, x / 6, y / 6, 3) - 0.5) * CONFIG.MOUNTAIN_ROUGHNESS * l;
-    }
-    // un léger lissage (avec les voisines), pour des versants réguliers
-    const out = new Float32Array(N);
+    // Distance au bord du massif (en cases, en ligne droite), pour les cases de relief : la hauteur monte tout droit
+    // depuis le pied du massif jusqu'à sa crête. Ça fait des versants plats (des « facettes ») qui se rejoignent
+    // en arêtes nettes, comme des montagnes dessinées en pixel art.
+    const dist = new Float32Array(N), R2 = Math.SQRT2;
+    for (let i = 0; i < N; i++) dist[i] = level(T[i]) ? 40 : 0;
+    // (deux passages, à l'aller puis au retour : chaque case garde la plus petite distance venue de ses voisines)
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      let sum = 0, n = 0;
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-        const xx = x + dx, yy = y + dy;
-        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
-        sum += e[yy * W + xx] * (dx || dy ? 1 : 2); n += dx || dy ? 1 : 2;
-      }
-      out[y * W + x] = sum / n;
+      const i = y * W + x;
+      if (!dist[i]) continue;
+      let v = dist[i];
+      if (x > 0) v = Math.min(v, dist[i - 1] + 1);
+      if (y > 0) v = Math.min(v, dist[i - W] + 1, x > 0 ? dist[i - W - 1] + R2 : 99, x < W - 1 ? dist[i - W + 1] + R2 : 99);
+      dist[i] = v;
     }
-    e = out;
+    for (let y = H - 1; y >= 0; y--) for (let x = W - 1; x >= 0; x--) {
+      const i = y * W + x;
+      if (!dist[i]) continue;
+      let v = dist[i];
+      if (x < W - 1) v = Math.min(v, dist[i + 1] + 1);
+      if (y < H - 1) v = Math.min(v, dist[i + W] + 1, x < W - 1 ? dist[i + W + 1] + R2 : 99, x > 0 ? dist[i + W - 1] + R2 : 99);
+      dist[i] = v;
+    }
+    const e = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const x = i % W, y = (i / W) | 0;
+      if (!level(T[i])) { e[i] = (fbm(noise, x / 8, y / 8, 2) - 0.5) * CONFIG.TERRAIN_GRAIN; continue; }
+      // (de grandes ondulations, très douces, tordent un peu les arêtes pour qu'elles ne soient pas trop parfaites)
+      e[i] = dist[i] * 0.35 + (fbm(noise, x / 14, y / 14, 2) - 0.5) * CONFIG.MOUNTAIN_ROUGHNESS * 6;
+    }
     // Profondeur de la mer : distance à la terre (en cases, au plus DEPTH)
     const DEPTH = 14, depth = new Uint8Array(N).fill(255), q2 = [];
     for (let i = 0; i < N; i++) if (T[i] !== TERRAIN.WATER) { depth[i] = 0; q2.push(i); }
@@ -391,7 +390,15 @@ const Render = {
       // pente : terrain qui monte vers la droite et vers le bas = face tournée vers le soleil (en haut à gauche)
       const ex = e[y * W + Math.min(W - 1, x + 1)] - e[y * W + Math.max(0, x - 1)];
       const ey = e[Math.min(H - 1, y + 1) * W + x] - e[Math.max(0, y - 1) * W + x];
-      light[i] = 1 + Math.max(-0.45, Math.min(0.45, (ex + ey) * K));
+      let shade = Math.max(-0.45, Math.min(0.45, (ex + ey) * K));
+      const l = level(T[i]);
+      if (l) {
+        // relief : quelques tons bien tranchés (versant éclairé / versant sombre), plus doux sur les collines
+        const step = CONFIG.MOUNTAIN_TONE_STEP;
+        if (step > 0) shade = Math.round(shade / step) * step;
+        if (l === 1) shade *= 0.6;
+      }
+      light[i] = 1 + shade;
     }
     this.light = light;
   },

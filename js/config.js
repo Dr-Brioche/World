@@ -43,7 +43,8 @@ const CONFIG = {
   WATER_DEPTH_SHADE: 0.3,    // la mer fonce au large (0 = mer d'une seule couleur)
   WATER_NOISE: 0.1,          // grandes nuances claires et foncées dans la mer (comme des fonds marins)
   TERRAIN_GRAIN: 0.6,        // douces ondulations des terres basses (plaine, forêt, désert) ; en montagne, des crêtes et des pics
-  MOUNTAIN_ROUGHNESS: 0.6,   // vallées et épaulements dans les massifs (0 = versants tout lisses)
+  MOUNTAIN_ROUGHNESS: 0.3,   // arêtes des massifs un peu tordues (0 = versants tout droits, comme des pyramides)
+  MOUNTAIN_TONE_STEP: 0.15,  // écart entre les tons des versants (plus grand = moins de tons, plus tranchés ; 0 = dégradé)
   EDGE_SHADE: 0.09,          // ombres qui suivent les formes de la carte (bord éclairé d'un relief, ombre à son pied)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant

@@ -531,11 +531,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 🎨 **Une carte en pixel art** : chaque case est dessinée en petits pixels carrés. Là où deux terrains se touchent,
 leurs pixels **s'entremêlent** (bords « effilochés »), comme sur une vraie carte ; les fleuves, eux, restent continus.
 🏔️ **Ombrage du relief**, comme sur une vraie carte : le soleil vient d'en haut à gauche, les pentes tournées vers lui
-sont éclairées et les autres dans l'ombre. Les montagnes s'élèvent vers le cœur de leur massif, avec un **versant éclairé**
-et un **versant sombre** peints en **nuances de ton, case par case** (comme du pixel art, sans bruit), et les plaines, forêts
+sont éclairées et les autres dans l'ombre. Les montagnes montent tout droit vers les crêtes de leur massif : des **versants plats
+aux tons bien tranchés** (éclairé ou sombre) qui se rejoignent en **arêtes nettes**, case par case comme du pixel art, et les plaines, forêts
 et déserts de **douces ondulations** (un peu plus fines en forêt), même sous les couleurs d'un royaume. La **mer fonce au large**, avec de grandes nuances
 plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pour des coins arrondis, `RAGGED_EDGES`,
-`TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `MOUNTAIN_ROUGHNESS`, `EDGE_SHADE`,
+`TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `MOUNTAIN_ROUGHNESS`, `MOUNTAIN_TONE_STEP`, `EDGE_SHADE`,
 `WATER_DEPTH_SHADE`, `WATER_NOISE`, `MAP_SHADE_SOFT` et `MAP_SHADE_RAW`.)
 🌲 En zoomant, les **forêts** sont parsemées de petits **sapins** transparents.
 📜 **Vue parchemin** : en dézoomant presque au maximum (molette vers l'arrière, au-delà de « toute la carte »), la carte
@@ -585,6 +585,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.12** : ⛰️ montagnes plus abruptes : versants plats aux tons tranchés et arêtes nettes, au lieu de bosses
 - **v0.92.11** : 🏷️ le nom de chaque royaume reste toujours dans son territoire, là où il a le plus de place : plus de noms qui se chevauchent ; celui d'un royaume petit ou très fin n'apparaît qu'en zoomant
 - **v0.92.10** : ⛰️ montagnes ombrées en nuances de ton par case (un versant éclairé, un versant sombre, plus haut au cœur du massif), sans effet de bruit
 - **v0.92.9** : 🌾 plaines, forêts et déserts : de douces ondulations au lieu d'un relief qui ressemblait à des montagnes (surtout sur le parchemin, où ils restent presque plats)
