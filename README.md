@@ -591,6 +591,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.26** : 🐛 un assaut vers un objectif ne s'annule plus tout seul en chemin (par exemple en longeant la mer, quand des terres changent de mains autour de lui) : il reprend sa route ; et s'il ne peut vraiment plus avancer, un message explique pourquoi il rentre
 - **v0.92.25** : 🛤️ les routes et chemins ne passent plus sur la mer, les lacs ou les fleuves (sauf sur un pont) : ils font un détour par la terre, ou ne se créent pas si le détour est trop long
 - **v0.92.24** : 🌉 le pont a sa propre icône médiévale (arche de pierre au-dessus de l'eau) au lieu de l'emoji
 - **v0.92.23** : 🎨 bords entre terrains adoucis : coins coupés en biais au lieu des petits carrés pointus, et les lignes entre terrains suivent ce nouveau bord
