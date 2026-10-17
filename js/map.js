@@ -121,9 +121,12 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
         const r = relief[i];
         if (r > peakLvl) terrain[i] = TERRAIN.PEAK; // le cœur des montagnes : infranchissable
         else if (r > CONFIG.MOUNTAIN_LEVEL) terrain[i] = TERRAIN.MOUNTAIN;
-        else if (r > CONFIG.HILLS_LEVEL) terrain[i] = TERRAIN.HILLS;
-        else if (fbm(forestNoise, x / (14 * fs), y / (14 * fs), 3) > CONFIG.FOREST_LEVEL) terrain[i] = TERRAIN.FOREST;
-        else terrain[i] = TERRAIN.PLAINS;
+        else {
+          // (la forêt pousse aussi sur les collines : ça fait des collines boisées)
+          const forest = fbm(forestNoise, x / (14 * fs), y / (14 * fs), 3) > CONFIG.FOREST_LEVEL;
+          if (r > CONFIG.HILLS_LEVEL) terrain[i] = forest ? TERRAIN.WOODED_HILLS : TERRAIN.HILLS;
+          else terrain[i] = forest ? TERRAIN.FOREST : TERRAIN.PLAINS;
+        }
       }
     }
   }

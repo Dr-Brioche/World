@@ -14,7 +14,7 @@ const CONFIG = {
   // Relief et forêts des cartes aléatoires (un décor de Moyen Âge : beaucoup de forêts, moins de montagnes) :
   // plus le seuil est haut, plus le terrain est rare (forêt : plus il est bas, plus il y a de forêts)
   MOUNTAIN_LEVEL: 0.77,
-  HILLS_LEVEL: 0.7,
+  HILLS_LEVEL: 0.66,
   FOREST_LEVEL: 0.44,
   DESERT_RATIO: 0.15,      // part des plaines et forêts en désert sur les cartes aléatoires (production -20 %)
   WORLD_MAP_WIDTH: 1080,   // taille de la carte « Monde » (bien plus grande : on dézoome beaucoup)
@@ -45,6 +45,7 @@ const CONFIG = {
   TERRAIN_GRAIN: 0.6,        // douces ondulations des terres basses (plaine, forêt, désert) ; en montagne, des crêtes et des pics
   MOUNTAIN_ROUGHNESS: 0.3,   // arêtes des massifs un peu tordues (0 = versants tout droits, comme des pyramides)
   MOUNTAIN_TONE_STEP: 0.1,   // écart entre les tons des versants (plus grand = moins de tons, plus tranchés ; 0 = dégradé)
+  HILL_BUMPS: 1.6,          // bosses des collines (plus douces que les montagnes) : 0 = collines lisses
   EDGE_SHADE: 0.09,          // ombres qui suivent les formes de la carte (bord éclairé d'un relief, ombre à son pied)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant
@@ -268,7 +269,8 @@ const CONFIG = {
   WIN_RATIO: 0.7,          // posséder 70 % des terres = victoire
 };
 
-const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6, PEAK: 7, DESERT: 8 };
+const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6, PEAK: 7, DESERT: 8,
+  WOODED_HILLS: 9 };
 
 const TERRAIN_INFO = [
   { name: 'Mer',      color: [52, 92, 130],   cost: Infinity },
@@ -284,6 +286,8 @@ const TERRAIN_INFO = [
   { name: 'Sommet', color: [226, 228, 232], cost: Infinity },
   // Désert : aucune défense en plus (comme une plaine), mais les bâtiments posés dessus produisent moins
   { name: 'Désert', color: [222, 198, 134], cost: 1 },
+  // Colline boisée : une colline couverte de forêt, les deux bonus s'ajoutent (forêt +60 % et colline +120 %)
+  { name: 'Colline boisée', color: [122, 124, 70], cost: 2.8 },
 ];
 // cost = défense de la case (et temps pour la traverser) : 1 en plaine, plus ailleurs.
 // On ne peut rien construire sur un fleuve.

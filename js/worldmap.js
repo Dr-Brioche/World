@@ -510,7 +510,9 @@ function buildGeoMap(seed, W, H, geo) {
       const spot = fbm(reliefNoise, x / (2.5 * k) + 30, y / (2.5 * k) + 70, 2); // des massifs, pas une bande toute lisse
       if (peaks && r < 0.3 && fbm(reliefNoise, x / (7 * k) + 90, y / (7 * k), 2) > 0.42) terrain[i] = TERRAIN.PEAK;
       else if (r < 0.55 && spot > 0.32) terrain[i] = TERRAIN.MOUNTAIN;
-      else if (r < 0.95 && terrain[i] !== TERRAIN.MOUNTAIN && terrain[i] !== TERRAIN.PEAK) terrain[i] = TERRAIN.HILLS;
+      else if (r < 0.95 && terrain[i] !== TERRAIN.MOUNTAIN && terrain[i] !== TERRAIN.PEAK) {
+        terrain[i] = terrain[i] === TERRAIN.FOREST ? TERRAIN.WOODED_HILLS : TERRAIN.HILLS; // (forêt sur colline)
+      }
     });
   }
 
