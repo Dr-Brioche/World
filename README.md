@@ -585,6 +585,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.15** : ⛰️ collines bien plus étendues sur les cartes aléatoires (environ un tiers des terres, collines boisées comprises), un peu moins de plaines et de forêts
 - **v0.92.14** : 🌳⛰️ nouveau terrain : la **colline boisée** (forêt sur colline, bonus cumulés : +180 %), vert olive bosselé avec des sapins · ⛰️ collines plus étendues et en bosses douces (moins tranchées que les montagnes)
 - **v0.92.13** : ⛰️ montagnes un peu moins abruptes (pentes plus douces et plus de nuances entre les versants)
 - **v0.92.12** : ⛰️ montagnes plus abruptes : versants plats aux tons tranchés et arêtes nettes, au lieu de bosses
