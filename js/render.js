@@ -420,7 +420,7 @@ const Render = {
   // pour qu'il reste continu.)
   eachPixel(i, fn) {
     const G = Game, W = G.W, W2 = W * 2, H2 = G.H * 2, x = i % W, y = (i / W) | 0, sub = this.sub, q2 = this.q2;
-    const smooth = CONFIG.SMOOTH_MAP, R = CONFIG.RAGGED_EDGES, key = this.tileKey, T = G.terrain;
+    const smooth = CONFIG.SMOOTH_MAP >= 2, R = CONFIG.RAGGED_EDGES, key = this.tileKey, T = G.terrain;
     const river = t => t === TERRAIN.RIVER || t === TERRAIN.GREAT_RIVER;
     // (la voisine n'a qu'un autre terrain : même royaume et même bord de frontière, voir paintTile)
     const sameLand = n => n >= 0 && key[n] !== key[i] && (key[n] >> 6) === (key[i] >> 6) && (key[n] & 1) === (key[i] & 1)

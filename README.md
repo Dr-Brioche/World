@@ -534,7 +534,7 @@ leurs pixels **s'entremêlent** (bords « effilochés »), comme sur une vraie c
 sont éclairées et les autres dans l'ombre. Les montagnes montent tout droit vers les crêtes de leur massif : des **versants plats
 aux tons bien tranchés** (éclairé ou sombre) qui se rejoignent en **arêtes nettes**, case par case comme du pixel art, et les plaines, forêts
 et déserts de **douces ondulations** (un peu plus fines en forêt), même sous les couleurs d'un royaume. La **mer fonce au large**, avec de grandes nuances
-plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pour des coins arrondis, `RAGGED_EDGES`,
+plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pour la forme des bords entre terrains (escalier, coins coupés en biais ou arrondis), `RAGGED_EDGES` pour des bords granuleux,
 `TERRAIN_BORDERS` pour les lignes entre les terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `MOUNTAIN_ROUGHNESS`, `MOUNTAIN_TONE_STEP`, `HILL_BUMPS`, `EDGE_SHADE`,
 `WATER_DEPTH_SHADE`, `WATER_NOISE`, `MAP_SHADE_SOFT` et `MAP_SHADE_RAW`.)
 🌲 En zoomant, les **forêts** sont parsemées de petits **sapins** transparents.
@@ -588,6 +588,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.23** : 🎨 bords entre terrains adoucis : coins coupés en biais au lieu des petits carrés pointus, et les lignes entre terrains suivent ce nouveau bord
 - **v0.92.22** : 🖊️ les lignes entre les terrains suivent exactement les carrés de la carte (plus de ligne qui coupe un carré), aussi dans les royaumes
 - **v0.92.21** : 🖊️ une fine ligne discrète délimite de nouveau chaque zone de terrain (en zoomant), en suivant les bords en gros pixels
 - **v0.92.20** : 🌋 îlots volcaniques : plus de petits îlots inutiles (terres de moins de 150 cases retirées), des îlots plus grands avec un sommet enneigé au milieu, et chaque petite île devient un volcan sorti de la mer

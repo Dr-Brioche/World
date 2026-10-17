@@ -36,9 +36,9 @@ const CONFIG = {
   // Décor autour de la carte (une vieille carte marine) : on le voit en dézoomant ; la vue ne va jamais plus loin
   DECOR_IMAGE: 'img/decor_mer.webp',
   DECOR_SIZE: 2.6,           // largeur du décor, en largeurs de carte (la carte est au milieu)
-  SMOOTH_MAP: false,         // coins des cases arrondis sur la carte (false : des pixels carrés, comme une carte en pixel art)
+  SMOOTH_MAP: 1,             // bords entre terrains : 0 = carrés en escalier, 1 = coins coupés en biais (adouci), 2 = arrondis
   SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
-  RAGGED_EDGES: 0.15,        // bords « effilochés » entre terrains : au bord d'une case, part des demi-cases prises par le terrain voisin
+  RAGGED_EDGES: 0,           // bords « effilochés » : part des demi-cases prises par le terrain voisin (0 = aucune ; plus = plus de grain)
   TERRAIN_BORDERS: true,     // fine ligne discrète entre deux terrains différents (false pour l'enlever)
   TERRAIN_BORDER_ALPHA: 0.32, // ...et sa force (0 = invisible, 1 = noire)
   MAP_SHADE_SOFT: 1,         // petites variations de couleur du sol, adoucies entre voisines (0 = sol tout uni)...
