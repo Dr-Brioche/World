@@ -117,8 +117,10 @@ const Render = {
     } else if (t === TERRAIN.RIVER) {
       [r, g, b] = [112, 118, 100];
     } else {
-      // le relief bien marqué (comme les hachures d'une vieille carte), les sommets plus clairs
-      const relief = 1 + Math.max(-0.45, Math.min(0.45, (l - 1) * 1.8));
+      // le relief bien marqué (comme les hachures d'une vieille carte), les sommets plus clairs ; les terres basses
+      // (plaine, forêt, désert) restent presque plates
+      const high = t === TERRAIN.HILLS || t === TERRAIN.MOUNTAIN || t === TERRAIN.PEAK;
+      const relief = 1 + Math.max(-0.45, Math.min(0.45, (l - 1) * (high ? 1.8 : 0.5)));
       const base = t === TERRAIN.PEAK ? [238, 228, 205] : t === TERRAIN.FOREST ? [200, 186, 140] : [222, 202, 156];
       [r, g, b] = base.map(v => v * relief + grain);
       // la côte, soulignée à l'encre
@@ -371,11 +373,13 @@ const Render = {
       return sum / norm;
     };
     // L'altitude, par demi-case
-    // (sur les terres basses, juste leurs petites bosses : le relief des montagnes voisines ne déborde pas sur elles)
+    // Sur les terres basses (plaine, forêt, désert), pas d'arêtes : de douces ondulations arrondies (un bruit lisse),
+    // un peu plus fines en forêt (les cimes des arbres). Le relief des montagnes voisines ne déborde pas sur elles.
+    const soft = (u, v, forest) => (fbm(noise, u / 8, v / 8, 2) - 0.5) + (forest ? (noise(u * 0.9, v * 0.9) - 0.5) * 0.35 : 0);
     const W2 = W * 2, H2 = H * 2, e = new Float32Array(W2 * H2);
     for (let y = 0; y < H2; y++) for (let x = 0; x < W2; x++) {
-      const u = (x + 0.5) / 2, v = (y + 0.5) / 2, low = level(T[(y >> 1) * W + (x >> 1)]) === 0;
-      e[y * W2 + x] = low ? ridged(u, v) * ridgeAmp[0] : at(base, u, v) + ridged(u, v) * at(amp, u, v);
+      const u = (x + 0.5) / 2, v = (y + 0.5) / 2, t = T[(y >> 1) * W + (x >> 1)], low = level(t) === 0;
+      e[y * W2 + x] = low ? soft(u, v, t === TERRAIN.FOREST) * ridgeAmp[0] : at(base, u, v) + ridged(u, v) * at(amp, u, v);
     }
     // Profondeur de la mer : distance à la terre (en cases, au plus DEPTH)
     const DEPTH = 14, depth = new Uint8Array(N).fill(255), queue = [];

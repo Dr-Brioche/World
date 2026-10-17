@@ -531,8 +531,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 🎨 **Une carte en pixel art** : chaque case est dessinée en petits pixels carrés. Là où deux terrains se touchent,
 leurs pixels **s'entremêlent** (bords « effilochés »), comme sur une vraie carte ; les fleuves, eux, restent continus.
 🏔️ **Ombrage du relief**, comme sur une vraie carte : le soleil vient d'en haut à gauche, les pentes tournées vers lui
-sont éclairées et les autres dans l'ombre. Les montagnes ont de vraies **arêtes et pics rocheux**, et toutes les terres
-ont de petites bosses ombrées, même sous les couleurs d'un royaume. La **mer fonce au large**, avec de grandes nuances
+sont éclairées et les autres dans l'ombre. Les montagnes ont de vraies **arêtes et pics rocheux**, et les plaines, forêts
+et déserts de **douces ondulations** (un peu plus fines en forêt), même sous les couleurs d'un royaume. La **mer fonce au large**, avec de grandes nuances
 plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pour des coins arrondis, `RAGGED_EDGES`,
 `TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `EDGE_SHADE`,
 `WATER_DEPTH_SHADE`, `WATER_NOISE`, `MAP_SHADE_SOFT` et `MAP_SHADE_RAW`.)
@@ -581,6 +581,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.9** : 🌾 plaines, forêts et déserts : de douces ondulations au lieu d'un relief qui ressemblait à des montagnes (surtout sur le parchemin, où ils restent presque plats)
 - **v0.92.8** : 🌲 cartes aléatoires plus médiévales : environ 40 % de forêts, moins de montagnes et de plaines · 🎨 bords entre terrains en plus gros pixels (moins de bruit) · ⛰️ l'ombrage des montagnes ne déborde plus sur les plaines · 📜 la vue parchemin arrive dès qu'on dézoome presque au maximum · 🏷️ noms des royaumes en oblique, dans le sens du royaume, un peu courbés, en lettres anciennes espacées
 - **v0.92.7** : 📜 vue parchemin : au dernier cran de dézoom, la carte devient une vieille carte sur parchemin encadrée (terres beiges ombrées, côtes à l'encre, mer gris-vert, royaumes en couleurs légères)
 - **v0.92.6** : 🎨 carte en pixel art : pixels carrés (plus d'arrondis), terrains qui s'entremêlent sur leurs bords, petites bosses ombrées sur toutes les terres, grandes nuances dans la mer ; les bordures dessinées autour des terrains sont retirées (réglage `TERRAIN_BORDERS` pour les remettre)

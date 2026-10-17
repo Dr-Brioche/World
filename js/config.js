@@ -42,7 +42,7 @@ const CONFIG = {
   HILLSHADE: 0.5,            // ombrage du relief (soleil en haut à gauche) : 0 = pas d'ombre, plus = relief plus marqué
   WATER_DEPTH_SHADE: 0.3,    // la mer fonce au large (0 = mer d'une seule couleur)
   WATER_NOISE: 0.1,          // grandes nuances claires et foncées dans la mer (comme des fonds marins)
-  TERRAIN_GRAIN: 0.8,        // petites bosses des terres basses (ombrées aussi) ; en montagne, ce sont des crêtes et des pics
+  TERRAIN_GRAIN: 0.6,        // douces ondulations des terres basses (plaine, forêt, désert) ; en montagne, des crêtes et des pics
   EDGE_SHADE: 0.09,          // ombres qui suivent les formes de la carte (bord éclairé d'un relief, ombre à son pied)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant
