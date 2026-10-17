@@ -275,7 +275,7 @@ button:hover { background: #e8d6a8; }
   border-left-color: var(--gold);
   font-size: 14px;
 }
-.msg.request .choices { display: flex; gap: 6px; margin-top: 6px; }
+.msg.request .choices { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .msg.request button:first-child { background: #b9d7a4; }
 .msg.request button:last-child { background: #e9b5a8; }
 .msg.betray { border-left-color: var(--danger); }

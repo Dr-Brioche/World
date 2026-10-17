@@ -35,6 +35,7 @@ const GameRules = {
     this.crossings = [];   // armées qui traversent un fleuve à gué
     this.bridges = [];     // ponts : { tiles (cases de fleuve), a, b (cases des deux rives), owner } (voir buildBridge)
     this.bridgeAt = new Uint8Array(this.N); // 1 = case de fleuve couverte par un pont
+    this.tradeRoutes = []; // routes commerciales : { from, to (villes), owner, ally, pts, len, income } (voir buildTrade)
     this.returning = [];   // défenseurs qui rentrent à pied (l'assaut qu'ils allaient contrer est fini)
     this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
     this.colonies = new Map(); // château bâti ou pris dans la zone d'un avant-poste → son royaume
@@ -1428,6 +1429,91 @@ const GameRules = {
   roadPoints(a, castle, type = this.building[a]) {
     const W = this.W, hc = this.sizeOf(B_CASTLE) / 2, hb = this.sizeOf(type) / 2;
     return this.roadRoute(castle % W + hc, ((castle / W) | 0) + hc, a % W + hb, ((a / W) | 0) + hb, a % 2);
+  },
+
+  // --- Routes commerciales (entre une de ses villes et celle d'un allié du pacte : voir TRADE_* dans config.js) ---
+  // Longueur d'un tracé (en cases)
+  tradeLength(pts) {
+    let len = 0;
+    for (let k = 0; k + 1 < pts.length; k++) len += Math.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]);
+    return len;
+  },
+  // Prix et revenu (à chaque versement) d'une route commerciale de cette longueur
+  tradeCost(len) {
+    return Math.round(Math.min(CONFIG.TRADE_COST_MAX,
+      CONFIG.TRADE_COST_MIN + Math.max(0, len - CONFIG.TRADE_COST_FREE_LENGTH) * CONFIG.TRADE_COST_PER_TILE));
+  },
+  tradeIncome(len) { return Math.round(len * CONFIG.TRADE_GOLD_PER_TILE); },
+  // La route commerciale qui part de la ville a (ou null)
+  tradeOf(a) { return this.tradeRoutes.find(r => r.from === a) || null; },
+  // Les alliés de pid (dans son pacte) qui ont une ville de niveau 2 ou plus
+  tradePartners(pid) {
+    return this.players.filter(o => o.alive && o.id !== pid && this.areAllied(pid, o.id) &&
+      this.castles.some(c => this.owner[c] === o.id && this.level[c] >= 2));
+  },
+  // Pourquoi la ville a de pid ne peut pas (encore) avoir de route commerciale, ou null si elle le peut
+  tradeBlocker(pid, a) {
+    if (!this.pactsAllowed) return 'Pas de pactes dans cette partie : pas de route commerciale.';
+    if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return 'Il faut une de tes villes de niveau 2 ou plus.';
+    if (this.tradeOf(a)) return 'Cette ville a déjà sa route commerciale.';
+    if (!this.tradePartners(pid).length) return 'Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.';
+    return null;
+  },
+  // Plan d'une route commerciale de la ville a (au royaume pid) vers la ville visée en b :
+  // { to, pts, len, cost, income } ou { error }
+  planTrade(pid, a, b) {
+    const why = this.tradeBlocker(pid, a);
+    if (why) return { error: why };
+    if (b < 0 || this.building[b] !== B_CASTLE) return { error: 'Clique sur une ville (un château) d\'un allié de ton pacte.' };
+    b = this.anchor[b];
+    const o = this.owner[b];
+    if (o < 0 || o === pid || !this.areAllied(pid, o)) return { error: 'Une route commerciale relie une de tes villes à une ville d\'un allié de ton pacte.' };
+    if (this.level[b] < 2) return { error: 'La ville de ton allié doit être de niveau 2 ou plus.' };
+    if (this.tradeRoutes.some(r => r.from === b && r.to === a)) return { error: 'Ces deux villes sont déjà reliées par une route commerciale.' };
+    const W = this.W, h = this.sizeOf(B_CASTLE) / 2;
+    const pts = this.roadRoute(a % W + h, ((a / W) | 0) + h, b % W + h, ((b / W) | 0) + h, a % 2);
+    if (!pts) return { error: 'Pas de chemin par la terre entre ces deux villes (la mer ou un fleuve les sépare).' };
+    const len = this.tradeLength(pts);
+    if (len > CONFIG.TRADE_MAX_LENGTH) return { error: `Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.` };
+    return { to: b, pts, len, cost: this.tradeCost(len), income: this.tradeIncome(len) };
+  },
+  // Construit la route commerciale de la ville a vers la ville visée en b. Renvoie un message d'erreur, ou null.
+  buildTrade(p, a, b) {
+    const plan = this.planTrade(p.id, a, b);
+    if (plan.error) return plan.error;
+    if (p.gold < plan.cost) return `Pas assez d'or : cette route commerciale coûte 💰 ${fmt(plan.cost)}.`;
+    p.gold -= plan.cost;
+    this.tradeRoutes.push({ from: a, to: plan.to, owner: p.id, ally: this.owner[plan.to], pts: plan.pts, len: plan.len, income: plan.income });
+    this.version++;
+    return null;
+  },
+  // Chaque seconde : une route commerciale dont une ville a changé de mains, ou dont les royaumes ne sont plus
+  // alliés, disparaît
+  checkTrades() {
+    for (const r of this.tradeRoutes.slice()) {
+      const ok = this.building[r.from] === B_CASTLE && this.owner[r.from] === r.owner &&
+        this.building[r.to] === B_CASTLE && this.owner[r.to] === r.ally && this.areAllied(r.owner, r.ally);
+      if (ok) continue;
+      this.tradeRoutes.splice(this.tradeRoutes.indexOf(r), 1);
+      this.version++;
+      const p = this.players[r.owner], q = this.players[r.ally];
+      if (p.isHuman || q.isHuman) UI.log(`🛒 La route commerciale entre ${p.name} et ${q.name} est coupée ` +
+        `(${this.areAllied(r.owner, r.ally) ? 'une des deux villes a changé de mains' : 'l\'alliance est rompue'}).`, 'warn');
+    }
+  },
+  // Versement de l'or des routes commerciales (comme les moulins : toutes les PRODUCTION_INTERVAL secondes)
+  produceTrades() {
+    const period = CONFIG.PRODUCTION_INTERVAL * CONFIG.TICKS_PER_SECOND;
+    for (const r of this.tradeRoutes) {
+      if ((this.tick + r.from * 7) % period !== 0) continue;
+      for (const [pid, share, c] of [[r.owner, 1, r.from], [r.ally, CONFIG.TRADE_ALLY_SHARE, r.to]]) {
+        const p = this.players[pid];
+        if (!p.alive) continue;
+        const amount = r.income * share * this.upkeepFactor(p);
+        p.gold += amount;
+        if (p.isHuman && amount >= 0.5) Render.floatText(c, B_CASTLE, `+${Math.round(amount)} 💰`);
+      }
+    }
   },
 
   // Une route ne passe jamais sur la mer, un lac ou un fleuve (sauf sur un pont) : une case où elle peut passer
@@ -4383,6 +4469,10 @@ const GameRules = {
       p.gold += this.goldRate(p) / TPS;
     }
     this.produce();
+    if (this.tradeRoutes.length) {
+      if (this.tick % TPS === 0) this.checkTrades();
+      this.produceTrades();
+    }
 
     // Les garnisons des châteaux se reconstituent (sauf celle qui est en train de combattre)
     // (elles ne comptent pas dans l'armée du royaume : son maximum ne les freine pas)
