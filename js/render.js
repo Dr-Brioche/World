@@ -1709,7 +1709,7 @@ const Render = {
 
   // Direction du royaume p (en radians) : celle où il est le plus allongé (calculée avec ses cases, voir setOwner),
   // entre -70° et +70° pour que le nom se lise bien. Un royaume presque rond penche juste un peu (à droite ou à
-  // gauche selon le royaume). Elle change en douceur quand le royaume grandit.
+  // gauche selon le royaume).
   kingdomAxis(p) {
     const n = p.tiles, mx = p.sumX / n, my = p.sumY / n;
     const cxx = p.sumXX / n - mx * mx, cyy = p.sumYY / n - my * my, cxy = p.sumXY / n - mx * my;
@@ -1718,19 +1718,152 @@ const Render = {
     const d = Math.sqrt(((cxx - cyy) / 2) ** 2 + cxy * cxy), l1 = (cxx + cyy) / 2 + d, l2 = Math.max(0.01, (cxx + cyy) / 2 - d);
     const long = Math.min(1, (Math.sqrt(l1 / l2) - 1) / 0.6); // 0 = rond, 1 = bien allongé
     const lean = (p.id % 2 ? 1 : -1) * 0.22;                   // (un royaume rond penche un peu)
-    a = Math.max(-1.22, Math.min(1.22, a * long + lean * (1 - long)));
-    p.labelAngle = p.labelAngle === undefined ? a : p.labelAngle + (a - p.labelAngle) * 0.05;
-    return p.labelAngle;
+    return Math.max(-1.22, Math.min(1.22, a * long + lean * (1 - long)));
+  },
+
+  // Texte des soldats écrit sous le nom d'un royaume (avec 🤝 s'il est notre allié, 🗡️ si c'est un traître)
+  troopsLabel(p) {
+    const G = Game;
+    let troops = G.troopIcon(p.id) + ' ' + fmt(p.troops);
+    if (!p.isHuman && G.areAllied(p.id, G.human.id)) troops = '🤝 ' + troops;
+    if (G.isTraitor(p)) troops = '🗡️ ' + troops;
+    return troops;
+  },
+
+  // 🏷️ OÙ ÉCRIRE LE NOM DE CHAQUE ROYAUME
+  // Le nom, avec dessous sa bannière et ses soldats, doit tenir TOUT ENTIER dans le royaume : comme ça, deux noms ne
+  // se chevauchent jamais. Toutes les secondes, on mesure la place dans les royaumes (labelSpace), puis, à chaque
+  // image, on cherche pour un royaume l'endroit (et le sens) où ce bloc peut être le plus grand (placeLabel).
+  // Un royaume trop petit ou trop fin a un nom minuscule : il n'apparaît qu'en zoomant (et on peut toujours le
+  // survoler pour voir ses infos).
+  updateLabels() {
+    const G = Game, now = performance.now();
+    if (this.labelPlayers !== G.players) { // nouvelle partie : tout de suite pour tout le monde
+      this.labelPlayers = G.players;
+      this.labelTime = now;
+      this.labelSpace();
+      G.players.forEach(p => this.placeLabel(p));
+      this.labelQueue = [];
+    } else if (now - this.labelTime > 1000) {
+      this.labelTime = now;
+      this.labelSpace();
+      this.labelQueue = G.players.slice();
+    } else {
+      if (this.labelQueue.length) this.placeLabel(this.labelQueue.shift());
+    }
+  },
+
+  // Pour chaque case : sa distance (en cases) à la plus proche case qui n'est pas au même royaume (autre royaume,
+  // terre libre, mer ou bord de la carte). Et, pour chaque royaume, ses cases les plus loin de ses frontières.
+  labelSpace() {
+    const G = Game, W = G.W, H = G.H, N = G.N, own = G.owner, D = Math.SQRT2;
+    if (!this.labelDist || this.labelDist.length !== N) this.labelDist = new Float32Array(N);
+    const d = this.labelDist;
+    for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
+      const o = own[i];
+      if (o < 0) d[i] = 0;
+      else if (x === 0 || y === 0 || x === W - 1 || y === H - 1) d[i] = 1;
+      else d[i] = own[i - 1] !== o || own[i + 1] !== o || own[i - W] !== o || own[i + W] !== o ||
+        own[i - W - 1] !== o || own[i - W + 1] !== o || own[i + W - 1] !== o || own[i + W + 1] !== o ? 1 : 1e9;
+    }
+    // (deux passages, à l'aller puis au retour : chaque case garde la plus petite distance venue de ses voisines)
+    for (let y = 1; y < H - 1; y++) for (let x = 1, i = y * W + 1; x < W - 1; x++, i++) {
+      let v = d[i];
+      if (v <= 1) continue;
+      let t = d[i - 1] + 1; if (t < v) v = t;
+      t = d[i - W] + 1; if (t < v) v = t;
+      t = d[i - W - 1] + D; if (t < v) v = t;
+      t = d[i - W + 1] + D; if (t < v) v = t;
+      d[i] = v;
+    }
+    for (let y = H - 2; y >= 1; y--) for (let x = W - 2, i = y * W + x; x >= 1; x--, i--) {
+      let v = d[i];
+      if (v <= 1) continue;
+      let t = d[i + 1] + 1; if (t < v) v = t;
+      t = d[i + W] + 1; if (t < v) v = t;
+      t = d[i + W + 1] + D; if (t < v) v = t;
+      t = d[i + W - 1] + D; if (t < v) v = t;
+      d[i] = v;
+    }
+    const maxD = this.labelMaxD = new Float32Array(G.players.length), cands = this.labelCands = G.players.map(() => []);
+    for (let i = 0; i < N; i++) { const o = own[i]; if (o >= 0 && d[i] > maxD[o]) maxD[o] = d[i]; }
+    for (let i = 0; i < N; i++) { const o = own[i]; if (o >= 0 && d[i] >= 2 && d[i] >= maxD[o] * 0.6) cands[o].push(i); }
+  },
+
+  // La place et le sens où le bloc du nom du royaume p est le plus grand : p.label = { x, y, a, S } (en cases)
+  placeLabel(p) {
+    const W = Game.W, ctx = this.ctx, list = this.labelCands[p.id], maxD = this.labelMaxD;
+    if (!p.alive || !list || !list.length) { p.label = null; return; }
+    ctx.save();
+    // largeur du nom et de la ligne des soldats (+ bannière), pour une taille de lettres de 1
+    const chars = [...p.name.toUpperCase()];
+    ctx.font = `90px 'IM Fell English SC', Cinzel, Georgia, serif`;
+    const nameW = chars.reduce((a, c) => a + ctx.measureText(c).width, 0) / 100 + 0.28 * (chars.length - 1);
+    ctx.font = '600 70px Georgia, serif';
+    const troopW = ctx.measureText(this.troopsLabel(p)).width / 100;
+    const a0 = this.kingdomAxis(p);
+    const angles = [a0, Math.max(-1.22, a0 - 0.4), Math.min(1.22, a0 + 0.4)];
+    let best = null;
+    const step = Math.max(1, Math.ceil(list.length / 150)); // (150 endroits essayés au plus)
+    for (let k = 0; k < list.length; k += step) {
+      const x = list[k] % W + 0.5, y = ((list[k] / W) | 0) + 0.5;
+      angles.forEach((a, n) => {
+        const S = this.labelFit(p.id, x, y, a, nameW, troopW, maxD[p.id]);
+        const score = S * (n === 0 ? 1 : 0.85); // (on préfère le sens du royaume)
+        if (!best || score > best.score) best = { x, y, a, S, score };
+      });
+    }
+    // On garde l'ancienne place si elle est presque aussi bonne (le nom ne saute pas sans arrêt)
+    const old = p.label;
+    if (old && best) {
+      const S = this.labelFit(p.id, old.x, old.y, old.a, nameW, troopW, maxD[p.id]);
+      if (S >= best.S * 0.85 && S > 0) best = { x: old.x, y: old.y, a: old.a, S };
+    }
+    p.label = best && best.S > 0 ? best : null;
+    ctx.restore();
+  },
+
+  // Plus grande taille de lettres S (en cases) pour que le bloc du nom, centré en (x, y) et tourné de l'angle a,
+  // tienne dans le royaume id. Le bloc = le nom (tourné) + la ligne des soldats et la bannière (droites) dessous.
+  labelFit(id, x, y, a, nameW, troopW, maxS) {
+    const G = Game, W = G.W, H = G.H, own = G.owner, d = this.labelDist;
+    const ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux; // (le long du nom, et vers le bas du nom)
+    const bow = nameW / 14; // (le nom est un peu courbé)
+    // les deux rectangles : centre (décalage depuis (x, y), pour S = 1), largeur, hauteur, et s'ils sont tournés
+    const boxes = [
+      { cx: -0.5 * vx, cy: -0.5 * vy, w: nameW + 0.3, h: 1 + bow, rot: true },
+      { cx: 0.55 * vx, cy: 0.55 * vy - 0.52, w: troopW + 1.9, h: 1.9, rot: false },
+    ];
+    const fits = S => {
+      for (const b of boxes) {
+        // on découpe le rectangle en petits carrés : le centre de chacun doit être assez loin des frontières
+        const ch = b.h / 2, cols = Math.max(1, Math.ceil(b.w / ch)), cw = b.w / cols;
+        const need = Math.hypot(cw, ch) * S / 2 + 1;
+        const bx = x + b.cx * S, by = y + b.cy * S;
+        const ax = b.rot ? ux : 1, ay = b.rot ? uy : 0, px = b.rot ? vx : 0, py = b.rot ? vy : 1;
+        for (let r = 0; r < 2; r++) for (let c = 0; c < cols; c++) {
+          const u = (-b.w / 2 + (c + 0.5) * cw) * S, v = (-b.h / 2 + (r + 0.5) * ch) * S;
+          const tx = Math.floor(bx + u * ax + v * px), ty = Math.floor(by + u * ay + v * py);
+          if (tx < 0 || ty < 0 || tx >= W || ty >= H) return false;
+          const i = ty * W + tx;
+          if (own[i] !== id || d[i] < need) return false;
+        }
+      }
+      return true;
+    };
+    if (!fits(0.3)) return 0;
+    let lo = 0.3, hi = Math.max(0.3, maxS);
+    for (let k = 0; k < 10; k++) { const m = (lo + hi) / 2; if (fits(m)) lo = m; else hi = m; }
+    return lo;
   },
 
   // Écrit le nom en lettres espacées le long d'un arc très ouvert (il bombe un peu vers le haut), centré sur (cx, cy)
-  // et tourné dans le sens du royaume. Renvoie l'angle utilisé.
-  drawCurvedName(p, name, cx, cy, size) {
+  // et tourné de l'angle donné (le sens du royaume).
+  drawCurvedName(name, cx, cy, size, angle) {
     const ctx = this.ctx, chars = [...name.toUpperCase()], gap = size * 0.28;
     const widths = chars.map(c => ctx.measureText(c).width);
     const total = widths.reduce((a, w) => a + w, 0) + gap * (chars.length - 1);
     const R = Math.max(total * 1.8, size * 6); // (rayon de l'arc : plus il est grand, moins le nom est courbé)
-    const angle = this.kingdomAxis(p);
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(angle);
@@ -1750,7 +1883,6 @@ const Render = {
       });
     }
     ctx.restore();
-    return angle;
   },
 
   // Survol d'un château ennemi : on montre le chemin de l'assaut (pointillés dorés),
@@ -1940,28 +2072,27 @@ const Render = {
 
     // Noms des royaumes : en lettres espacées, dans le sens du royaume (en oblique) et un peu courbés, comme sur
     // une vieille carte ; en dessous, sa bannière et ses soldats. Sur la carte parchemin, ils sont écrits à l'encre.
+    // Ils restent toujours dans leur royaume (voir updateLabels) : trop petits, ils n'apparaissent qu'en zoomant.
+    this.updateLabels();
     const ink = this.parch ? this.parchmentAlpha() > 0.5 : false;
     for (const p of G.players) {
-      if (!p.alive || p.tiles === 0) continue;
-      let size = Math.sqrt(p.tiles) * s * 0.2;
-      if (G.phase === 'spawn') size = Math.max(size, 13); // avant de fonder sa capitale : on voit bien qui est où
+      const L = p.label;
+      if (!p.alive || p.tiles === 0 || !L) continue;
+      let size = Math.min(L.S, Math.sqrt(p.tiles) * 0.2) * s; // (jamais plus grand que la place dans le royaume)
       if (size < 8) continue;
       size = Math.min(size, 42);
-      const cx = ox + (p.sumX / p.tiles + 0.5) * s, cy = oy + (p.sumY / p.tiles + 0.5) * s;
+      const a = L.a, cx = ox + L.x * s + Math.sin(a) * size * 0.5, cy = oy + L.y * s - Math.cos(a) * size * 0.5;
       ctx.lineJoin = 'round';
       ctx.font = `${size * 0.9}px 'IM Fell English SC', Cinzel, Georgia, serif`;
       ctx.lineWidth = Math.max(2, size / 6);
       ctx.strokeStyle = ink ? 'rgba(240,226,190,0.8)' : 'rgba(20,12,4,0.7)';
       ctx.fillStyle = ink ? '#3b2a17' : p.isHuman ? '#ffe9a8' : '#fff';
-      const a = this.drawCurvedName(p, p.name, cx, cy - size * 0.3, size);
-      // « Sous » le nom (perpendiculairement à lui, pour ne pas le chevaucher) : ses soldats (avec 🤝 s'il est notre
-      // allié, 🗡️ si c'est un traître), et sa bannière à gauche
-      const tx = cx - Math.sin(a) * size * 1.05, ty = cy - size * 0.3 + Math.cos(a) * size * 1.05;
+      this.drawCurvedName(p.name, cx, cy, size, a);
+      // « Sous » le nom (perpendiculairement à lui, pour ne pas le chevaucher) : ses soldats, et sa bannière à gauche
+      const tx = cx - Math.sin(a) * size * 1.05, ty = cy + Math.cos(a) * size * 1.05;
       ctx.font = `600 ${size * 0.7}px Georgia, serif`;
       ctx.fillStyle = ink ? '#3b2a17' : p.isHuman ? '#ffe9a8' : '#fff';
-      let troops = G.troopIcon(p.id) + ' ' + fmt(p.troops);
-      if (!p.isHuman && G.areAllied(p.id, G.human.id)) troops = '🤝 ' + troops;
-      if (G.isTraitor(p)) troops = '🗡️ ' + troops;
+      const troops = this.troopsLabel(p);
       const tw = ctx.measureText(troops).width;
       this.drawBannerImage(p, tx - tw / 2 - size * 0.45, ty + size * 0.05, size * 1.5);
       Icons.text(ctx, troops, tx, ty);
