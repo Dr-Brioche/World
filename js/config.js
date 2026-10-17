@@ -33,6 +33,9 @@ const CONFIG = {
   // Vue de très loin : en dézoomant presque au maximum, la carte devient une carte parchemin. Elle commence à apparaître
   // en dessous de 85 % du zoom « toute la carte », elle est complète à 60 % ; on peut dézoomer jusqu'à 45 %
   PARCHMENT_ZOOM: [0.85, 0.6, 0.45],
+  // Décor autour de la carte (une vieille carte marine) : on le voit en dézoomant ; la vue ne va jamais plus loin
+  DECOR_IMAGE: 'img/decor_mer.webp',
+  DECOR_SIZE: 2.6,           // largeur du décor, en largeurs de carte (la carte est au milieu)
   SMOOTH_MAP: false,         // coins des cases arrondis sur la carte (false : des pixels carrés, comme une carte en pixel art)
   SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
   RAGGED_EDGES: 0.15,        // bords « effilochés » entre terrains : au bord d'une case, part des demi-cases prises par le terrain voisin
