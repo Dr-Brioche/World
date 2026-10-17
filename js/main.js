@@ -279,6 +279,7 @@ const UI = {
     if (type === B_CASTLE) {
       return [`Défense des murs ${pct(info.bonus)}`, places(info.slots),
         info.road && `${info.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(info.roadBonus)}`,
+        info.trades && `Routes commerciales : ${info.trades}`,
         ...(info.imperial ? this.imperialPerks() : [])].filter(Boolean);
     }
     if (type === B_CHURCH) {
@@ -304,6 +305,7 @@ const UI = {
       return ['Muraille plus grande', places, `Défense des murs ${pct(next.bonus - cur.bonus)}`, `Garnison ${fmt(cur.garrison)} → ${fmt(next.garrison)}`,
         walls(lvl) > walls(lvl - 1) && `Murs : ${walls(lvl - 1)} → ${walls(lvl)}`,
         next.road && `${next.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(next.roadBonus)}`,
+        next.trades > (cur.trades || 0) && `Routes commerciales : ${cur.trades || 0} → ${next.trades}`,
         ...(next.imperial ? this.imperialPerks() : [])].filter(Boolean);
     }
     if (type === B_CHURCH) {
@@ -317,7 +319,7 @@ const UI = {
 
   // Ce qu'apporte en plus la cité impériale (château de niveau 4 : voir IMPERIAL)
   imperialPerks() {
-    return [`Force des troupes ${pct(IMPERIAL.troopPower)}`, `Routes commerciales ${pct(IMPERIAL.tradeBonus)}`,
+    return [`Force des troupes ${pct(IMPERIAL.troopPower)}`, `Revenus du commerce ${pct(IMPERIAL.tradeBonus)}`,
       `Ports et églises reliés : routes de pierre, bonus x${IMPERIAL.roadFactor}`, `Bâtiments au bord : bonus x${IMPERIAL.roadFactor}`,
       'Une seule par partie'];
   },
@@ -1266,10 +1268,10 @@ const UI = {
 
   // --- Route commerciale d'une ville (château de niveau 2 ou plus) vers la ville d'un allié du pacte ---
   // Bouton « Route commerciale » : grisé sans allié dans son pacte (ou dans une partie sans pactes), si la ville a
-  // déjà toutes ses routes (TRADE_MAX_PER_CITY), ou sans assez d'or. text = bouton de la fenêtre d'info (avec son
+  // déjà toutes ses routes (selon son niveau : voir Game.tradeMax), ou sans assez d'or. text = bouton de la fenêtre d'info (avec son
   // texte), sinon petite icône.
   updateTradeButton(btn, a, text) {
-    const G = Game, h = G.human, list = G.tradesOf(a), max = CONFIG.TRADE_MAX_PER_CITY;
+    const G = Game, h = G.human, list = G.tradesOf(a), max = G.tradeMax(a);
     // ses routes : avec qui, et ce qu'elles rapportent (ou « à l'arrêt » si le pacte est rompu)
     const mine = list.map(r => {
       const o = G.players[G.owner[r.from === a ? r.to : r.from]];
