@@ -368,7 +368,7 @@ const Render = {
       const x = i % W, y = (i / W) | 0;
       if (!level(T[i])) { e[i] = (fbm(noise, x / 8, y / 8, 2) - 0.5) * CONFIG.TERRAIN_GRAIN; continue; }
       // (de grandes ondulations, très douces, tordent un peu les arêtes pour qu'elles ne soient pas trop parfaites)
-      e[i] = dist[i] * 0.35 + (fbm(noise, x / 14, y / 14, 2) - 0.5) * CONFIG.MOUNTAIN_ROUGHNESS * 6;
+      e[i] = dist[i] * 0.28 + (fbm(noise, x / 14, y / 14, 2) - 0.5) * CONFIG.MOUNTAIN_ROUGHNESS * 6;
     }
     // Profondeur de la mer : distance à la terre (en cases, au plus DEPTH)
     const DEPTH = 14, depth = new Uint8Array(N).fill(255), q2 = [];

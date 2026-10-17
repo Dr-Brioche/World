@@ -585,6 +585,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.13** : ⛰️ montagnes un peu moins abruptes (pentes plus douces et plus de nuances entre les versants)
 - **v0.92.12** : ⛰️ montagnes plus abruptes : versants plats aux tons tranchés et arêtes nettes, au lieu de bosses
 - **v0.92.11** : 🏷️ le nom de chaque royaume reste toujours dans son territoire, là où il a le plus de place : plus de noms qui se chevauchent ; celui d'un royaume petit ou très fin n'apparaît qu'en zoomant
 - **v0.92.10** : ⛰️ montagnes ombrées en nuances de ton par case (un versant éclairé, un versant sombre, plus haut au cœur du massif), sans effet de bruit
