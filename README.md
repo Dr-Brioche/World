@@ -527,21 +527,18 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
-🎨 La carte est **adoucie** : les coins des cases sont arrondis deux fois de suite (un escalier de cases devient une
-courbe douce, sans flou), et les petites variations de couleur du sol sont fondues entre voisines (pas de damier).
-Sur les très grandes cartes (Europe), l'adoucissement est un peu moins fin, pour la mémoire.
+🎨 **Une carte en pixel art** : chaque case est dessinée en petits pixels carrés. Là où deux terrains se touchent,
+leurs pixels **s'entremêlent** (bords « effilochés »), comme sur une vraie carte ; les fleuves, eux, restent continus.
 🏔️ **Ombrage du relief**, comme sur une vraie carte : le soleil vient d'en haut à gauche, les pentes tournées vers lui
-sont éclairées et les autres dans l'ombre. On reconnaît ainsi les collines, les massifs et les sommets, même sous les
-couleurs d'un royaume. Les montagnes ont de vraies **arêtes et pics rocheux** (un versant éclairé, l'autre dans l'ombre),
-les plaines de petites bosses, et la **mer fonce au large**. Le sol garde un léger grain de cases.
-Les ombres suivent aussi **les formes dessinées** : le bord d'une colline, d'une montagne, d'un sommet, d'une forêt ou
-d'une côte est éclairé du côté du soleil, et une ombre est portée à son pied de l'autre côté, comme un relief gravé.
-(Réglages `SMOOTH_MAP`, `SMOOTH_FINE_MAX_TILES`, `MAP_SHADE_SOFT`, `MAP_SHADE_RAW`, `HILLSHADE`, `TERRAIN_GRAIN`, `EDGE_SHADE` et
-`WATER_DEPTH_SHADE` dans `js/config.js`.)
-🌲 Les **forêts** sont entourées d'un fin contour vert foncé et, en zoomant, parsemées de petits **sapins** transparents.
-⛰️ En zoomant, de fines **courbes de niveau** dessinent le relief : une au pied des collines, une au pied des montagnes
-et une autour des sommets enneigés. Les **plaines**, les **déserts** et les forêts ont aussi une fine **bordure**.
-Toutes suivent le bord des cases (aux coins adoucis).
+sont éclairées et les autres dans l'ombre. Les montagnes ont de vraies **arêtes et pics rocheux**, et toutes les terres
+ont de petites bosses ombrées, même sous les couleurs d'un royaume. La **mer fonce au large**, avec de grandes nuances
+plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pour des coins arrondis, `RAGGED_EDGES`,
+`TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `EDGE_SHADE`,
+`WATER_DEPTH_SHADE`, `WATER_NOISE`, `MAP_SHADE_SOFT` et `MAP_SHADE_RAW`.)
+🌲 En zoomant, les **forêts** sont parsemées de petits **sapins** transparents.
+⛰️ Avec le réglage `TERRAIN_BORDERS: true`, de fines **courbes de niveau** dessinent aussi le relief (une au pied des
+collines, une au pied des montagnes, une autour des sommets enneigés), et les plaines, les déserts et les forêts ont une
+fine **bordure**.
 
 🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont de vraies **frontières naturelles**.
 **Personne ne peut les prendre** : ils restent bleus et neutres pour toujours, et ni l'expansion ni les assauts ne les franchissent.
@@ -577,6 +574,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.6** : 🎨 carte en pixel art : pixels carrés (plus d'arrondis), terrains qui s'entremêlent sur leurs bords, petites bosses ombrées sur toutes les terres, grandes nuances dans la mer ; les bordures dessinées autour des terrains sont retirées (réglage `TERRAIN_BORDERS` pour les remettre)
 - **v0.92.5** : ⛰️ montagnes aux arêtes et pics rocheux (fini l'effet « gâteau » à étages arrondis) · 🟫 un léger grain de cases revient sur le sol (moins lisse)
 - **v0.92.4** : 🏔️ les ombres suivent les formes de la carte : bord éclairé côté soleil et ombre portée au pied des collines, montagnes, sommets, forêts et côtes
 - **v0.92.3** : 🏔️ ombrage du relief (soleil en haut à gauche : les montagnes et les sommets ressortent, aussi sous les royaumes), petites bosses du terrain, et la mer fonce au large

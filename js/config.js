@@ -25,13 +25,16 @@ const CONFIG = {
   // Courbes de niveau (pied des collines, des montagnes, et bord des sommets) et bordures des terrains : le zoom
   // à partir duquel on les voit (elles suivent le bord des cases : voir buildForests dans render.js)
   CONTOUR_MIN_ZOOM: 2.5,
-  SMOOTH_MAP: true,          // coins des cases adoucis sur la carte (false : carrés nets, tout en pixels)
-  SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), adoucissement plus fin (4 x 4 pixels par case)
+  SMOOTH_MAP: false,         // coins des cases arrondis sur la carte (false : des pixels carrés, comme une carte en pixel art)
+  SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
+  RAGGED_EDGES: 0.35,        // bords « effilochés » entre terrains : au bord d'une case, part des pixels pris par le terrain voisin
+  TERRAIN_BORDERS: false,    // fine bordure dessinée autour des forêts, plaines, déserts et du relief (true pour la remettre)
   MAP_SHADE_SOFT: 1,         // petites variations de couleur du sol, adoucies entre voisines (0 = sol tout uni)...
-  MAP_SHADE_RAW: 0.5,        // ...et le grain propre à chaque case (plus = damier plus visible)
+  MAP_SHADE_RAW: 0.8,        // ...et le grain propre à chaque case (plus = damier plus visible)
   HILLSHADE: 0.5,            // ombrage du relief (soleil en haut à gauche) : 0 = pas d'ombre, plus = relief plus marqué
   WATER_DEPTH_SHADE: 0.3,    // la mer fonce au large (0 = mer d'une seule couleur)
-  TERRAIN_GRAIN: 0.35,       // petites bosses des plaines (ombrées aussi) ; en montagne, ce sont des crêtes et des pics
+  WATER_NOISE: 0.1,          // grandes nuances claires et foncées dans la mer (comme des fonds marins)
+  TERRAIN_GRAIN: 0.8,        // petites bosses des terres basses (ombrées aussi) ; en montagne, ce sont des crêtes et des pics
   EDGE_SHADE: 0.09,          // ombres qui suivent les formes de la carte (bord éclairé d'un relief, ombre à son pied)
   // Forêts, plaines, déserts et relief : une fine bordure autour d'eux (dès CONTOUR_MIN_ZOOM) ;
   // et dans les forêts, de petits sapins transparents en zoomant
