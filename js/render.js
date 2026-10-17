@@ -79,6 +79,8 @@ const Render = {
     for (let i = 0; i < G.N; i++) this.smoothQuarters(i);
     // hauteur de chaque petit carré de l'image (pour les ombres qui suivent les formes : voir fineTile)
     this.fineLv = new Int8Array(G.N * F * F);
+    this.pixT = new Uint8Array(G.N * F * F); // (et son terrain, pour les lignes entre les terrains : voir borderChunk)
+    this.forests = null;
     for (let i = 0; i < G.N; i++) this.fineTile(i);
     for (let i = 0; i < G.N; i++) this.writeTile(i);
     this.offCtx.putImageData(this.img, 0, 0);
@@ -145,11 +147,9 @@ const Render = {
   },
 
   // --- Forêts, et bordures des terrains ---
-  // Une bordure fine autour des forêts, des plaines, des déserts, et les courbes de niveau du relief : une ligne au
-  // pied des collines, une au pied des montagnes et une autour des sommets enneigés. Elle suit le dessin de la carte, en demi-cases aux coins adoucis
-  // (voir writeTile ; ici on compare seulement les terrains). Et des petits sapins dans les forêts, posés un peu
-  // au hasard (un toutes les FOREST_TREE_SPACING cases environ). Calculé une fois par carte, rangé par paquets
-  // de 32 x 32 cases, en coordonnées de cases.
+  // Une fine ligne entre deux terrains différents, qui suit les carrés de la carte dessinée (voir borderChunk). Et
+  // des petits sapins dans les forêts, posés un peu au hasard (un toutes les FOREST_TREE_SPACING cases environ).
+  // Rangés par paquets de 32 x 32 cases, en coordonnées de cases.
   buildForests() {
     const G = Game, W = G.W, H = G.H, N = G.N, C = 32, cw = Math.ceil(W / C), T = G.terrain;
     const chunk = (map, x, y) => {
@@ -158,55 +158,8 @@ const Render = {
       if (!p) map.set(key, p = new Path2D());
       return p;
     };
-    // Pour chaque petit carré de la carte dessinée (F x F par case, coins adoucis comme elle : voir writeTile) :
-    // la case dont il prend la couleur. Ici on compare seulement les terrains.
-    const F = this.F, W2 = W * 2, H2 = H * 2, WF = W * F, HF = H * F, sub = new Int32Array(W2 * H2), q = [0, 0, 0, 0];
-    const t1 = n => T[n], t2 = n => T[sub[n]];
-    for (let i = 0; i < N; i++) {
-      const x = i % W, y = (i / W) | 0;
-      if (CONFIG.SMOOTH_MAP) this.scale2x(i, W, H, t1, q); else q.fill(i);
-      for (let k = 0; k < 4; k++) sub[(y * 2 + (k >> 1)) * W2 + x * 2 + (k & 1)] = q[k];
-    }
-    let src = sub;
-    if (F === 4) {
-      src = new Int32Array(WF * HF);
-      for (let c = 0; c < W2 * H2; c++) {
-        const cx = c % W2, cy = (c / W2) | 0;
-        if (CONFIG.SMOOTH_MAP) this.scale2x(c, W2, H2, t2, q); else q.fill(c);
-        for (let m = 0; m < 4; m++) src[(cy * 2 + (m >> 1)) * WF + cx * 2 + (m & 1)] = sub[q[m]];
-      }
-    }
-    // Les bords « effilochés » des terrains (RAGGED_EDGES), comme sur la carte dessinée (voir eachPixel) : la
-    // bordure suit les mêmes demi-cases
-    const R = CONFIG.RAGGED_EDGES, river = t => t === TERRAIN.RIVER || t === TERRAIN.GREAT_RIVER;
-    if (F === 4 && R) {
-      const rnd = (bx, by) => (((bx * 73856093) ^ (by * 19349663)) >>> 0) % 1000 / 1000, out = src.slice();
-      for (let py = 0; py < HF; py++) for (let px = 0; px < WF; px++) {
-        const i = src[py * WF + px], x = i % W, y = (i / W) | 0, bx = px >> 1, by = py >> 1, r = rnd(bx, by);
-        const n = (bx & 1) === 0 ? (x > 0 ? i - 1 : -1) : (x < W - 1 ? i + 1 : -1);
-        const m = (by & 1) === 0 ? (y > 0 ? i - W : -1) : (y < H - 1 ? i + W : -1);
-        const other = j => j >= 0 && T[j] !== T[i] && !river(T[j]) && !river(T[i]);
-        if (r < R && other(n)) out[py * WF + px] = n;
-        else if (r > 1 - R && other(m)) out[py * WF + px] = m;
-      }
-      src = out;
-    }
-    // Bordures : une fine ligne là où deux terrains différents se touchent (plaine, forêt, colline, colline boisée,
-    // montagne, sommet, désert ; pas le long de la mer ni des fleuves, déjà bien visibles), en un seul passage
-    const borders = { terrain: new Map() }, u = 1 / F;
-    const line = (a, b) => a !== b && a !== TERRAIN.WATER && b !== TERRAIN.WATER && !river(a) && !river(b);
-    // (bordures désactivées : rien à tracer, voir TERRAIN_BORDERS)
-    if (CONFIG.TERRAIN_BORDERS) for (let y = 0; y < HF; y++) for (let x = 0; x < WF; x++) {
-      const j = y * WF + x, a = T[src[j]];
-      if (x < WF - 1 && line(a, T[src[j + 1]])) {
-        const p = chunk(borders.terrain, (x / F) | 0, (y / F) | 0);
-        p.moveTo((x + 1) * u, y * u); p.lineTo((x + 1) * u, (y + 1) * u);
-      }
-      if (y < HF - 1 && line(a, T[src[j + WF]])) {
-        const p = chunk(borders.terrain, (x / F) | 0, (y / F) | 0);
-        p.moveTo(x * u, (y + 1) * u); p.lineTo((x + 1) * u, (y + 1) * u);
-      }
-    }
+    // Bordures entre les terrains : préparées paquet par paquet au moment de les dessiner (voir borderChunk)
+    const borders = { terrain: new Map() };
     // Sapins : sur une grille un peu décalée au hasard (toujours le même hasard pour une case donnée)
     const trees = new Map(), S = CONFIG.FOREST_TREE_SPACING, forest = i => T[i] === TERRAIN.FOREST || T[i] === TERRAIN.WOODED_HILLS;
     const rnd = (x, y, k) => (((x * 73856093) ^ (y * 19349663) ^ (k * 83492791)) >>> 0) % 1000 / 1000;
@@ -229,7 +182,7 @@ const Render = {
     if (!k || s < CONFIG.CONTOUR_MIN_ZOOM) return;
     const ctx = this.ctx, C = k.C;
     const x0 = Math.max(0, Math.floor(this.cam.x / C)), y0 = Math.max(0, Math.floor((this.cam.y - 2) / C));
-    const x1 = Math.min(k.cw - 1, Math.floor((this.cam.x + this.vw / s) / C)), y1 = Math.floor((this.cam.y + this.vh / s + 2) / C);
+    const x1 = Math.min(k.cw - 1, Math.floor((this.cam.x + this.vw / s) / C)), y1 = Math.min(Math.ceil(Game.H / C) - 1, Math.floor((this.cam.y + this.vh / s + 2) / C));
     const trees = s >= CONFIG.FOREST_TREE_ZOOM;
     ctx.save();
     ctx.translate(ox, oy);
@@ -241,8 +194,8 @@ const Render = {
     if (CONFIG.TERRAIN_BORDERS) {
       ctx.strokeStyle = `rgba(40,28,14,${Math.min(CONFIG.TERRAIN_BORDER_ALPHA, 0.16 + (s - CONFIG.CONTOUR_MIN_ZOOM) * 0.03)})`;
       for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
-        const line = k.borders.terrain.get(cy * k.cw + cx);
-        if (line) ctx.stroke(line);
+        const key = cy * k.cw + cx;
+        ctx.stroke(k.borders.terrain.get(key) || this.borderChunk(key));
       }
     }
     if (trees) {
@@ -497,8 +450,34 @@ const Render = {
   // Hauteur des pixels de la case i, d'après le terrain dessiné à cet endroit (mer, fleuve, plaine, forêt,
   // colline, montagne, sommet : voir FINE_LEVEL)
   fineTile(i) {
-    const WF = Game.W * this.F, T = Game.terrain, fl = this.fineLv;
-    this.eachPixel(i, (px, py, tile) => { fl[py * WF + px] = FINE_LEVEL[T[tile]]; });
+    const WF = Game.W * this.F, T = Game.terrain, fl = this.fineLv, pt = this.pixT;
+    this.eachPixel(i, (px, py, tile) => { fl[py * WF + px] = FINE_LEVEL[T[tile]]; pt[py * WF + px] = T[tile]; });
+    // (les lignes entre les terrains de ce coin sont à refaire : voir borderChunk)
+    const k = this.forests;
+    if (k) {
+      const W = Game.W, x = i % W, y = (i / W) | 0;
+      for (const yy of [y - 1, y]) for (const xx of [x - 1, x]) {
+        if (xx >= 0 && yy >= 0) k.borders.terrain.delete(((yy / k.C) | 0) * k.cw + ((xx / k.C) | 0));
+      }
+    }
+  },
+
+  // Lignes entre les terrains d'un paquet de 32 x 32 cases : sur chaque côté de petit carré dessiné (voir pixT)
+  // qui sépare deux terrains de terre différents (pas le long de la mer ni des fleuves, déjà bien visibles).
+  // Elles suivent exactement les carrés de la carte dessinée.
+  borderChunk(key) {
+    const k = this.forests, F = this.F, W = Game.W, H = Game.H, WF = W * F, HF = H * F, pt = this.pixT, u = 1 / F;
+    const cx = key % k.cw, cy = (key / k.cw) | 0, p = new Path2D();
+    const x0 = cx * k.C * F, y0 = cy * k.C * F, x1 = Math.min(WF, x0 + k.C * F), y1 = Math.min(HF, y0 + k.C * F);
+    const land = t => t !== TERRAIN.WATER && t !== TERRAIN.RIVER && t !== TERRAIN.GREAT_RIVER;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const j = y * WF + x, a = pt[j];
+      if (!land(a)) continue;
+      if (x < WF - 1 && pt[j + 1] !== a && land(pt[j + 1])) { p.moveTo((x + 1) * u, y * u); p.lineTo((x + 1) * u, (y + 1) * u); }
+      if (y < HF - 1 && pt[j + WF] !== a && land(pt[j + WF])) { p.moveTo(x * u, (y + 1) * u); p.lineTo((x + 1) * u, (y + 1) * u); }
+    }
+    k.borders.terrain.set(key, p);
+    return p;
   },
 
   // Les pixels de la case i : la couleur de leur case, éclairée par l'ombrage doux du relief (voir buildLight) et
