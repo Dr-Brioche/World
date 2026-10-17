@@ -269,6 +269,19 @@ const CONFIG = {
   ALLIANCE_REQUEST_TIMEOUT: 15,  // secondes pour répondre à une demande d'alliance
   ALLY_GIFT_RATIO: 0.75,         // soldats envoyés à un allié : il n'en reçoit que 75 % (le voyage en coûte)
 
+  // --- Routes commerciales ---
+  // Une de tes villes de niveau 2 ou plus peut être reliée par une route commerciale (grise) à une ville de niveau 2
+  // ou plus d'un allié de ton pacte. Elle coûte cher, mais rapporte de l'or toutes les PRODUCTION_INTERVAL secondes,
+  // d'autant plus que la route est longue. (Une route par ville ; elle disparaît si une des deux villes change de
+  // mains ou si l'alliance est rompue.)
+  TRADE_COST_MIN: 1000,          // prix d'une route commerciale...
+  TRADE_COST_FREE_LENGTH: 40,    // ...jusqu'à cette longueur (en cases)...
+  TRADE_COST_PER_TILE: 30,       // ...puis tant d'or par case en plus...
+  TRADE_COST_MAX: 5000,          // ...et au plus
+  TRADE_GOLD_PER_TILE: 0.5,      // or rapporté à chaque versement, par case de longueur (une route de 100 cases : +50)
+  TRADE_ALLY_SHARE: 0.5,         // l'allié touche en plus la moitié de ce revenu (le commerce enrichit les deux villes)
+  TRADE_MAX_LENGTH: 250,         // longueur maximum d'une route commerciale (en cases)
+
   // --- Victoire ---
   WIN_RATIO: 0.7,          // posséder 70 % des terres = victoire
 };

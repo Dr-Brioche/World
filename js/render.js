@@ -1462,9 +1462,9 @@ const Render = {
   },
 
   drawSelectable(ox, oy) {
-    const G = Game, a = UI.wallFor >= 0 ? -1 : this.selectableAt(this.hover);
+    const G = Game, a = UI.wallFor >= 0 || UI.tradeFor >= 0 ? -1 : this.selectableAt(this.hover);
     // épée sur une cible attaquable, main médiévale ailleurs ; pendant une construction, le curseur de pose (voir UI)
-    const cursor = UI.selectedBuild || UI.wallFor >= 0 ? '' : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
+    const cursor = UI.selectedBuild || UI.wallFor >= 0 || UI.tradeFor >= 0 ? '' : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
     // (on garde le dernier curseur choisi : le navigateur réécrit l'adresse de l'image à sa façon)
     if (this.curCursor !== cursor) { this.curCursor = cursor; this.canvas.style.cursor = cursor; }
     if (a < 0) return;
@@ -1601,8 +1601,28 @@ const Render = {
         for (let k = 1; k < pts.length; k++) dirt.lineTo(pts[k][0], pts[k][1]);
       }
     }
+    // Routes commerciales (vers les villes des alliés) : grises, voir Game.buildTrade
+    const trade = new Path2D();
+    for (const r of G.tradeRoutes) {
+      r.pts.forEach(([x, y], k) => (k ? trade.lineTo : trade.moveTo).call(trade, ox + x * s, oy + y * s));
+    }
     ctx.lineCap = 'square';
     ctx.lineJoin = 'miter';
+    if (G.tradeRoutes.length) {
+      ctx.lineWidth = w + 2;
+      ctx.strokeStyle = 'rgba(40,40,42,0.8)';
+      ctx.stroke(trade);
+      ctx.lineWidth = w;
+      ctx.strokeStyle = '#9b9a97';
+      ctx.stroke(trade);
+      if (s >= 4) { // (une ligne claire au milieu, comme une chaussée)
+        ctx.setLineDash([w * 0.9, w * 0.7]);
+        ctx.lineWidth = Math.max(1, w * 0.25);
+        ctx.strokeStyle = '#d6d4cf';
+        ctx.stroke(trade);
+        ctx.setLineDash([]);
+      }
+    }
     // 1. Contours sombres de toutes les routes
     ctx.lineWidth = w + 2;
     ctx.strokeStyle = 'rgba(95,68,36,0.7)';
@@ -2131,7 +2151,46 @@ const Render = {
     this.drawReturning(ox, oy);
     this.drawAttackArrows(ox, oy);
     this.drawArmyTarget();
+    this.drawTradePreview(ox, oy);
     this.drawCastleTip();
+  },
+
+  // Pendant le choix de la ville alliée d'une route commerciale (voir UI.startTrade) : en survolant une ville, la
+  // route en transparence (grise si on peut la bâtir, trait rouge sinon), et une bulle avec son prix et son revenu
+  drawTradePreview(ox, oy) {
+    const G = Game, a = UI.tradeFor;
+    if (a === undefined || a < 0 || this.hover < 0 || !this.mouse || G.phase !== 'playing') return;
+    if (G.owner[a] !== G.human.id || G.building[a] !== B_CASTLE) return UI.cancelTrade();
+    const b = G.building[this.hover] === B_CASTLE ? G.anchor[this.hover] : -1;
+    if (b < 0 || b === a) return;
+    const key = a + ':' + b + ':' + G.version;
+    if (!this.tradePrev || this.tradePrev.key !== key) this.tradePrev = { key, ...G.planTrade(G.human.id, a, b) };
+    const plan = this.tradePrev, ctx = this.ctx, s = this.cam.scale, W = G.W, h = G.sizeOf(B_CASTLE) / 2;
+    ctx.beginPath();
+    if (plan.error) {
+      ctx.moveTo(ox + (a % W + h) * s, oy + (((a / W) | 0) + h) * s);
+      ctx.lineTo(ox + (b % W + h) * s, oy + (((b / W) | 0) + h) * s);
+      ctx.setLineDash([6, 5]);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = 'rgba(200,50,40,0.9)';
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      plan.pts.forEach(([x, y], k) => (k ? ctx.lineTo : ctx.moveTo).call(ctx, ox + x * s, oy + y * s));
+      ctx.lineJoin = 'miter';
+      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = Math.max(2, s * 0.55) + 2;
+      ctx.strokeStyle = 'rgba(40,40,42,0.9)';
+      ctx.stroke();
+      ctx.lineWidth = Math.max(2, s * 0.55);
+      ctx.strokeStyle = '#b9b8b4';
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.lineJoin = 'round';
+    }
+    this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: plan.error ||
+      `🛒 ${Math.round(plan.len)} cases · 💰 ${fmt(plan.cost)} · +${fmt(plan.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
+      (G.human.gold < plan.cost ? ' (pas assez d\'or)' : '') };
   },
 
   // Bulle d'info pendant la pose (ou l'amélioration) d'un château : la défense totale de sa muraille

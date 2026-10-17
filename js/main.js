@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 
 // Petites icônes dessinées pour les menus (voir icons.js) : un style médiéval, pas des emojis
 const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall'), cross: iconSVG('cross'),
-  boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut') };
+  boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut'), cart: iconSVG('cart') };
 
 const UI = {
   selectedBuild: 0,
@@ -154,7 +154,7 @@ const UI = {
       if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden) {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
-      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.closeBuildingMenus(); this.freeArm = 0; }
+      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.closeBuildingMenus(); this.freeArm = 0; }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
     // Les emojis de la page deviennent des icônes médiévales dessinées (voir icons.js)
@@ -358,6 +358,12 @@ const UI = {
       el.querySelector('.choices').prepend(btn);
       this.updateWallButton(btn, a, true);
       btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.startWall(a); });
+      // ... et « Route commerciale » (vers une ville d'un allié du pacte)
+      const trade = document.createElement('button');
+      trade.dataset.trade = '';
+      btn.after(trade);
+      this.updateTradeButton(trade, a, true);
+      trade.addEventListener('click', () => { close(); this.closeActionMenu(); this.startTrade(a); });
     }
     // Cathédrale (église de niveau 3) : bouton « Croisade »
     if (type === B_CHURCH && G.level[a] >= 3) {
@@ -391,7 +397,8 @@ const UI = {
     el.buildingAnchor = a; // (pour le garder à jour : voir refreshBuildingMenu)
     // (la flèche est dessinée en SVG, de la couleur du texte : pas d'emoji)
     el.innerHTML = `<button data-up class="up"${canUp ? '' : ' disabled'} title="Améliorer">${ICONS.up}</button>` +
-      (G.building[a] === B_CASTLE && G.level[a] >= 2 ? `<button data-wall class="wall">${ICONS.wall}</button>` : '') +
+      (G.building[a] === B_CASTLE && G.level[a] >= 2 ? `<button data-wall class="wall">${ICONS.wall}</button>` +
+        `<button data-trade class="wall">${ICONS.cart}</button>` : '') +
       (G.building[a] === B_CHURCH && G.level[a] >= 3 ? `<button data-crusade class="up">${ICONS.cross}</button>` : '') +
       `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>`;
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
@@ -407,6 +414,11 @@ const UI = {
     if (wallBtn) {
       this.updateWallButton(wallBtn, a, false);
       wallBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.startWall(a); });
+    }
+    const tradeBtn = el.querySelector('[data-trade]');
+    if (tradeBtn) {
+      this.updateTradeButton(tradeBtn, a, false);
+      tradeBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.startTrade(a); });
     }
     const crusadeBtn = el.querySelector('[data-crusade]');
     if (crusadeBtn) {
@@ -767,7 +779,7 @@ const UI = {
 
     if (G.phase === 'playing') {
       const freeArm = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
-      $('hint').textContent = this.wallFor >= 0 ? this.wallHint() : this.plan ? this.planHint()
+      $('hint').textContent = this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
         : freeArm ? `🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`
         : this.selectedBuild
         ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`
@@ -1156,6 +1168,8 @@ const UI = {
       if (btn) this.updateWallButton(btn, box.buildingAnchor, text);
       const cb = box && box.buildingAnchor !== undefined && box.querySelector('[data-crusade]');
       if (cb) this.updateCrusadeButton(cb, box.buildingAnchor, text);
+      const tb = box && box.buildingAnchor !== undefined && box.querySelector('[data-trade]');
+      if (tb) this.updateTradeButton(tb, box.buildingAnchor, text);
     }
   },
 
@@ -1243,6 +1257,46 @@ const UI = {
     document.body.style.cursor = 'crosshair';
   },
 
+  // --- Route commerciale d'une ville (château de niveau 2 ou plus) vers la ville d'un allié du pacte ---
+  // Bouton « Route commerciale » : grisé sans allié dans son pacte (ou dans une partie sans pactes), si la ville a
+  // déjà sa route, ou sans assez d'or. text = bouton de la fenêtre d'info (avec son texte), sinon petite icône.
+  updateTradeButton(btn, a, text) {
+    const G = Game, h = G.human, r = G.tradeOf(a);
+    const why = r ? `Cette ville a déjà sa route commerciale (vers ${G.players[r.ally].name} : +${fmt(r.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s)`
+      : G.tradeBlocker(h.id, a) || (h.gold < CONFIG.TRADE_COST_MIN ? `Pas assez d'or : une route commerciale coûte au moins 💰 ${fmt(CONFIG.TRADE_COST_MIN)}` : '');
+    btn.disabled = !!why;
+    btn.title = why || `Route commerciale vers une ville d'un allié de ton pacte (💰 ${fmt(CONFIG.TRADE_COST_MIN)} à ${fmt(CONFIG.TRADE_COST_MAX)} ` +
+      'selon la longueur) : plus elle est longue, plus elle rapporte d\'or';
+    if (text) {
+      const html = r ? `🛒 Route commerciale : +${fmt(r.income)}` : `🛒 Route commerciale (💰 ${fmt(CONFIG.TRADE_COST_MIN)}+)`;
+      if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
+    }
+  },
+
+  // Choix de la ville alliée : la souris montre la route (et son prix), un clic sur la ville la construit
+  startTrade(a) {
+    const G = Game, why = G.tradeBlocker(G.human.id, a);
+    if (why) return this.log(why, 'warn');
+    this.selectBuild(0);
+    this.cancelPlan();
+    this.cancelWall();
+    this.tradeFor = a;
+    document.body.style.cursor = 'crosshair';
+  },
+
+  cancelTrade() {
+    if (this.tradeFor === undefined || this.tradeFor < 0) return;
+    this.tradeFor = -1;
+    document.body.style.cursor = '';
+  },
+
+  tradeHint() {
+    return `🛒 Route commerciale : clique sur une ville (niveau 2 ou plus) d'un allié de ton pacte. Elle coûte ` +
+      `💰 ${fmt(CONFIG.TRADE_COST_MIN)} jusqu'à ${CONFIG.TRADE_COST_FREE_LENGTH} cases, puis plus cher avec la distance ` +
+      `(💰 ${fmt(CONFIG.TRADE_COST_MAX)} au plus), et rapporte +${CONFIG.TRADE_GOLD_PER_TILE} 💰 par case de route ` +
+      `toutes les ${CONFIG.PRODUCTION_INTERVAL} s (ton allié en touche aussi la moitié) · Échap ou clic droit pour annuler`;
+  },
+
   // La case i est-elle sur un mur déjà bâti de la ville c ? (le second mur peut en partir)
   onFirstWall(c, i) { return Game.walls.some(w => w.castle === c && w.done && w.tiles.includes(i)); },
 
@@ -1309,6 +1363,16 @@ const UI = {
       if (err) return this.log(err, 'warn');
       this.cancelWall();
       this.log(`🧱 Chantier du mur lancé (💰 ${fmt(cost)}) : il sera debout dans ${CONFIG.WALL_BUILD_TIME} s.`, 'good');
+      return;
+    }
+    // Route commerciale : le clic choisit la ville alliée
+    if (this.tradeFor >= 0) {
+      const a = this.tradeFor, plan = G.planTrade(h.id, a, i);
+      const err = plan.error || G.buildTrade(h, a, i);
+      if (err) return this.log(err, 'warn');
+      this.cancelTrade();
+      this.log(`🛒 Route commerciale ouverte vers ${G.players[G.owner[plan.to]].name} (${Math.round(plan.len)} cases, 💰 ${fmt(plan.cost)}) : ` +
+        `+${fmt(plan.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s pour toi, et la moitié pour ton allié !`, 'good');
       return;
     }
     const t = G.building[i];
@@ -1380,7 +1444,7 @@ function setupInput(canvas) {
   // Clic droit : annule une construction ou un assaut en préparation, sinon ouvre le menu d'actions
   canvas.addEventListener('contextmenu', e => {
     e.preventDefault();
-    if (UI.selectedBuild || UI.plan || UI.wallFor >= 0) { UI.selectBuild(0); UI.cancelPlan(); UI.cancelWall(); return; }
+    if (UI.selectedBuild || UI.plan || UI.wallFor >= 0 || UI.tradeFor >= 0) { UI.selectBuild(0); UI.cancelPlan(); UI.cancelWall(); UI.cancelTrade(); return; }
     UI.openActionMenu(e.clientX, e.clientY);
   });
 
