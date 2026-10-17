@@ -49,6 +49,7 @@ const GameRules = {
     // (calculs gardés en mémoire d'une partie à l'autre : on les oublie)
     this.regionsCache = null; this.regionsVersion = -1; this.nbStatsVersion = -1; this.nbStatsTick = undefined; this.assaultPlans = new Map();
     this.roadsVersion = -1; this.walledPortsVersion = -1; this.slotVersion = -1; this.slotCache = null;
+    this.routeCache = new Map(); // tracés des routes déjà calculés (voir roadRoute)
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
 
@@ -1378,6 +1379,7 @@ const GameRules = {
     for (const c of this.castles) {
       const info = this.castleInfo(c);
       if (this.owner[c] !== pid || !info.road || !this.inCastleRange(c, x, y, info.radius)) continue;
+      if (!this.roadPoints(a, c, type)) continue; // (l'eau coupe le chemin : pas de route)
       list.push({ castle: c, bonus: info.roadBonus, road: info.road });
     }
     return list.sort((p, q) => q.bonus - p.bonus);
@@ -1411,7 +1413,7 @@ const GameRules = {
     for (const c of this.castles) {
       if (this.owner[c] !== pid || land[c] !== land[a]) continue;
       const [cx, cy] = mid(c, this.sizeOf(B_CASTLE)), d = Math.hypot(cx - px, cy - py);
-      if (d <= this.roadReach(c, CONFIG.PORT_ROAD_DISTANCE)) list.push([d, c]);
+      if (d <= this.roadReach(c, CONFIG.PORT_ROAD_DISTANCE) && this.roadPoints(a, c, B_PORT)) list.push([d, c]);
     }
     return list.sort((p, q) => p[0] - q[0]).slice(0, CONFIG.ROAD_MAX_CITIES).map(([, c]) => c);
   },
@@ -1421,13 +1423,90 @@ const GameRules = {
     return list.length ? list[0] : -1;
   },
 
-  // Tracé d'une route (en cases) : du centre du château au centre du bâtiment a, avec un coin à angle droit
-  // (type : celui du bâtiment, s'il n'est pas encore bâti, pour un aperçu)
+  // Tracé d'une route (en cases) : du centre du château au centre du bâtiment a (voir roadRoute), ou null si l'eau
+  // l'empêche (type : celui du bâtiment, s'il n'est pas encore bâti, pour un aperçu)
   roadPoints(a, castle, type = this.building[a]) {
     const W = this.W, hc = this.sizeOf(B_CASTLE) / 2, hb = this.sizeOf(type) / 2;
-    const x1 = castle % W + hc, y1 = ((castle / W) | 0) + hc, x2 = a % W + hb, y2 = ((a / W) | 0) + hb;
-    // d'abord à l'horizontale puis à la verticale (ou l'inverse, selon le bâtiment)
-    return [[x1, y1], a % 2 ? [x2, y1] : [x1, y2], [x2, y2]];
+    return this.roadRoute(castle % W + hc, ((castle / W) | 0) + hc, a % W + hb, ((a / W) | 0) + hb, a % 2);
+  },
+
+  // Une route ne passe jamais sur la mer, un lac ou un fleuve (sauf sur un pont) : une case où elle peut passer
+  roadTile(i) {
+    const t = this.terrain[i];
+    return t !== TERRAIN.WATER && t !== TERRAIN.GREAT_RIVER && (t !== TERRAIN.RIVER || this.bridgeAt[i] === 1);
+  },
+
+  // Tracé d'une route de (x1, y1) à (x2, y2) (en cases) : une liste de points, ou null s'il n'y a pas de passage.
+  // D'abord un simple coin à angle droit (à l'horizontale puis à la verticale si first vaut 1, sinon l'inverse), ou
+  // l'autre coin, ou un tracé en « Z ». Si l'eau les coupe tous, la route fait un détour par la terre (le plus court,
+  // avec le moins de virages) ; et s'il est bien trop long (ou impossible), pas de route du tout.
+  // (gardé en mémoire : le même tracé est demandé très souvent ; un nouveau pont peut ouvrir un passage)
+  roadRoute(x1, y1, x2, y2, first) {
+    const key = `${x1},${y1},${x2},${y2},${first ? 1 : 0},${this.bridges.length}`;
+    if (this.routeCache.has(key)) return this.routeCache.get(key);
+    if (this.routeCache.size > 20000) this.routeCache.clear();
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const tries = [
+      [[x1, y1], [x2, y1], [x2, y2]], [[x1, y1], [x1, y2], [x2, y2]],                   // les deux coins
+      [[x1, y1], [mx, y1], [mx, y2], [x2, y2]], [[x1, y1], [x1, my], [x2, my], [x2, y2]], // les deux « Z »
+    ];
+    if (!first) [tries[0], tries[1]] = [tries[1], tries[0]];
+    let pts = tries.find(p => this.roadClear(p)) || this.roadDetour(x1, y1, x2, y2);
+    this.routeCache.set(key, pts);
+    return pts;
+  },
+
+  // Le tracé pts ne passe-t-il que sur des cases où une route peut passer ? (on regarde tous les quarts de case)
+  roadClear(pts) {
+    const W = this.W, H = this.H;
+    for (let k = 0; k + 1 < pts.length; k++) {
+      const [ax, ay] = pts[k], [bx, by] = pts[k + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) * 4));
+      for (let s = 0; s <= n; s++) {
+        const x = Math.floor(ax + (bx - ax) * s / n), y = Math.floor(ay + (by - ay) * s / n);
+        if (x < 0 || y < 0 || x >= W || y >= H || !this.roadTile(y * W + x)) return false;
+      }
+    }
+    return true;
+  },
+
+  // Détour d'une route par la terre : le chemin le plus court de case en case (en comptant un peu chaque virage, pour
+  // une route bien droite), pas trop loin du trajet direct. null s'il n'y en a pas, ou s'il est bien trop long.
+  roadDetour(x1, y1, x2, y2) {
+    const W = this.W, H = this.H, sx = Math.floor(x1), sy = Math.floor(y1), ex = Math.floor(x2), ey = Math.floor(y2);
+    const M = 15, bx0 = Math.max(0, Math.min(sx, ex) - M), by0 = Math.max(0, Math.min(sy, ey) - M);
+    const bx1 = Math.min(W - 1, Math.max(sx, ex) + M), by1 = Math.min(H - 1, Math.max(sy, ey) + M);
+    const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1, maxCost = (Math.abs(ex - sx) + Math.abs(ey - sy)) * 1.8 + 8;
+    const DX = [1, -1, 0, 0], DY = [0, 0, 1, -1], TURN = 0.4;
+    // (une « position » = une case de la zone et la direction d'arrivée)
+    const cost = new Float32Array(bw * bh * 4).fill(Infinity), from = new Int32Array(bw * bh * 4).fill(-1);
+    const heap = new MinHeap(), start = ((sy - by0) * bw + (sx - bx0)) * 4;
+    for (let d = 0; d < 4; d++) { cost[start + d] = 0; heap.push(0, start + d); }
+    let end = -1;
+    while (heap.size) {
+      const [c, s] = heap.pop();
+      if (c > maxCost) break;
+      if (c > cost[s]) continue;
+      const cell = s >> 2, dir = s & 3, x = cell % bw, y = (cell / bw) | 0;
+      if (x + bx0 === ex && y + by0 === ey) { end = s; break; }
+      for (let d = 0; d < 4; d++) {
+        const nx = x + DX[d], ny = y + DY[d];
+        if (nx < 0 || ny < 0 || nx >= bw || ny >= bh || !this.roadTile((ny + by0) * W + nx + bx0)) continue;
+        const n = ((ny * bw + nx) << 2) | d, nc = c + 1 + (d !== dir ? TURN : 0);
+        if (nc < cost[n]) { cost[n] = nc; from[n] = s; heap.push(nc, n); }
+      }
+    }
+    if (end < 0) return null;
+    // les cases du chemin, puis seulement ses virages
+    const cells = [];
+    for (let s = end; s >= 0; s = from[s]) cells.push(s >> 2);
+    cells.reverse();
+    const pts = [[x1, y1]];
+    for (let k = 1; k + 1 < cells.length; k++) {
+      const a = cells[k - 1], b = cells[k], c = cells[k + 1];
+      if (b - a !== c - b) pts.push([b % bw + bx0 + 0.5, ((b / bw) | 0) + by0 + 0.5]);
+    }
+    pts.push([x2, y2]);
+    return pts;
   },
 
   // Point d'une route le plus proche du point (x, y) : { x, y, d } (d = distance, en cases)
@@ -1451,15 +1530,17 @@ const GameRules = {
   // Une nouvelle ville bâtie près de l'église ajoute un chemin : elle ne remplace pas ceux qui existent.
   churchLinks(pid, a, links = this.roads()) {
     const W = this.W, h = this.sizeOf(B_CHURCH) / 2, x = a % W + h, y = ((a / W) | 0) + h, land = this.landComp();
-    const corner = (x1, y1) => [[x1, y1], a % 2 ? [x, y1] : [x1, y], [x, y]];
+    const corner = (x1, y1) => this.roadRoute(x1, y1, x, y, a % 2); // (null si l'eau coupe le chemin)
     let road = null, bestD = CONFIG.CHURCH_ROAD_DISTANCE, served = [];
     for (const [b, link] of links) {
       if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
       for (const [c] of this.linkRoads(link)) {
         const q = this.roadNearest(this.roadPoints(b, c), x, y);
         if (q.d > bestD || land[Math.floor(q.y) * W + Math.floor(q.x)] !== land[a]) continue; // (pas de l'autre côté de l'eau)
+        const pts = corner(q.x, q.y);
+        if (!pts) continue;
         bestD = q.d;
-        road = { port: b, pts: corner(q.x, q.y), d: q.d };
+        road = { port: b, pts, d: q.d };
         served = this.linkRoads(link).map(([v]) => v);
       }
     }
@@ -1467,7 +1548,9 @@ const GameRules = {
     for (const c of this.castles) {
       if (this.owner[c] !== pid || land[c] !== land[a] || served.includes(c)) continue;
       const cx = c % W + hc, cy = ((c / W) | 0) + hc, d = Math.hypot(cx - x, cy - y);
-      if (d <= this.roadReach(c, CONFIG.CHURCH_CITY_DISTANCE)) list.push({ castle: c, pts: corner(cx, cy), d });
+      if (d > this.roadReach(c, CONFIG.CHURCH_CITY_DISTANCE)) continue;
+      const pts = corner(cx, cy);
+      if (pts) list.push({ castle: c, pts, d });
     }
     return list.sort((p, q) => p.d - q.d).slice(0, CONFIG.ROAD_MAX_CITIES);
   },
@@ -1518,14 +1601,16 @@ const GameRules = {
       for (const b of this.buildingTiles) {
         if (this.owner[b] !== pid || land[b] !== land[a]) continue;
         const type = this.building[b], [bx, by] = mid(b, type), d = Math.hypot(bx - x, by - y);
+        let pts = null, road = 'dirt';
         if (type === B_PORT && d <= this.roadReach(a, CONFIG.PORT_ROAD_DISTANCE, level)) {
-          roads.push({ pts: this.roadPoints(b, a), road: 'dirt' });
+          pts = this.roadPoints(b, a);
         } else if (type === B_CHURCH && d <= this.roadReach(a, CONFIG.CHURCH_CITY_DISTANCE, level)) {
-          roads.push({ pts: [[x, y], b % 2 ? [bx, y] : [x, by], [bx, by]], road: 'dirt' });
+          pts = this.roadRoute(x, y, bx, by, b % 2);
         } else if ((type === B_MILL || type === B_BARRACKS) && info.road) {
           const half = (this.sizeOf(type) - 1) / 2;
-          if (this.inCastleRange(a, b % W + half, ((b / W) | 0) + half, info.radius)) roads.push({ pts: this.roadPoints(b, a), road: info.road });
+          if (this.inCastleRange(a, b % W + half, ((b / W) | 0) + half, info.radius)) { pts = this.roadPoints(b, a); road = info.road; }
         }
+        if (pts) roads.push({ pts, road }); // (pas de route là où l'eau coupe le chemin)
       }
     }
     return { roads, far: far && far.d > far.max ? far : null };

@@ -398,6 +398,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      villes** assez proches, il a **un chemin vers chacune** : **+60 %** ou **+90 %** (3 villes au plus).
      Une **église** pas trop loin de ce chemin (à moins de **10 cases**) s'y relie par un **petit chemin**, et elle a aussi
      un chemin vers **chaque ville** proche (à moins de **25 cases**, sur la même terre) : **3 chemins au plus**.
+     🌊 **Les routes et chemins ne passent jamais sur la mer, un lac ou un fleuve** (sauf sur un **pont**) : si l'eau
+     coupe le tracé direct, la route fait un **détour** par la terre ; si le détour est bien trop long (ou impossible),
+     **il n'y a pas de route** (et donc pas de bonus).
      👀 **Aperçu des routes** : pendant que tu poses un bâtiment (port, église, moulin, caserne, ville) ou que tu améliores
      une ville, ses futures routes s'affichent **en transparence** (avec des pointillés clairs) : tu vois où et comment
      elles seront tracées. Si aucune ville n'est assez proche, un **trait rouge en pointillés** part vers la plus proche
@@ -588,6 +591,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.25** : 🛤️ les routes et chemins ne passent plus sur la mer, les lacs ou les fleuves (sauf sur un pont) : ils font un détour par la terre, ou ne se créent pas si le détour est trop long
 - **v0.92.24** : 🌉 le pont a sa propre icône médiévale (arche de pierre au-dessus de l'eau) au lieu de l'emoji
 - **v0.92.23** : 🎨 bords entre terrains adoucis : coins coupés en biais au lieu des petits carrés pointus, et les lignes entre terrains suivent ce nouveau bord
 - **v0.92.22** : 🖊️ les lignes entre les terrains suivent exactement les carrés de la carte (plus de ligne qui coupe un carré), aussi dans les royaumes
