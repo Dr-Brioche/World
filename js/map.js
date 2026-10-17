@@ -131,14 +131,12 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
     }
   }
 
-  // 3. On garde toutes les terres sauf les miettes ; la carte « Normale » reçoit quelques îlots,
+  // 3. On garde toutes les terres sauf les trop petites ; la carte « Normale » reçoit quelques îlots volcaniques,
   //    la carte continentale de grands lacs (où finiront ses fleuves).
-  const minLand = 12;
+  const minLand = CONFIG.MIN_ISLAND;
   keepMainland(terrain, W, H, minLand);
-  if (type === 'normal') {
-    addIslets(terrain, W, H, rand, mapCount(CONFIG.MEDIUM_ISLETS), 7, 12, 8);  // îlots moyens (avec un peu de relief)
-    addIslets(terrain, W, H, rand, mapCount(CONFIG.ISLETS), 3, 5.5, 4);        // petits îlots
-  }
+  if (type === 'normal') addIslets(terrain, W, H, rand, mapCount(CONFIG.ISLETS), 9, 13, 8);
+  addVolcanoes(terrain, W, H);
   if (cont) addLakes(terrain, elev, W, H, rand);
 
   // 3 bis. Quelques déserts : là où le « bruit de sécheresse » est le plus fort (environ DESERT_RATIO des plaines
@@ -370,36 +368,85 @@ function islandCenters(W, H, rand) {
   return centers;
 }
 
-// Quelques îlots au large de la carte « Normale » : des taches de terre en pleine mer.
+// Quelques îlots volcaniques au large de la carte « Normale » : le sommet d'un volcan qui sort de la mer.
 // count = [min, max] îlots, de rayon rMin à rMax cases, à au moins `margin` cases de toute autre terre.
-// (rayon d'au moins 3 : un îlot plus petit serait retiré comme une « miette », voir keepMainland)
-// Les plus grands ont un peu de relief : des collines au centre, des forêts autour.
+// Au milieu un sommet (infranchissable), puis des montagnes, des collines, et des forêts et plaines sur la côte.
+// (rayon d'au plus 13 : l'îlot reste trop petit pour y fonder une capitale, voir MIN_SPAWN_LAND)
 function addIslets(terrain, W, H, rand, count, rMin, rMax, margin) {
   const want = count[0] + Math.floor(rand() * (count[1] - count[0] + 1));
-  const pad = Math.ceil(rMax + margin + 2);
+  const pad = Math.ceil(rMax * 1.3 + margin + 2);
   if (W < pad * 2 + 4 || H < pad * 2 + 4) return;
   let made = 0;
   for (let tries = 0; tries < 400 && made < want; tries++) {
     const cx = pad + Math.floor(rand() * (W - pad * 2)), cy = pad + Math.floor(rand() * (H - pad * 2));
     const r = rMin + rand() * (rMax - rMin);
-    // en pleine mer : pas de terre à moins de r + margin cases
+    // en pleine mer : pas de terre à moins de r + margin cases (r x 1,3 : la côte irrégulière dépasse un peu)
     let free = true;
-    for (let y = Math.floor(cy - r - margin); y <= cy + r + margin && free; y++) {
-      for (let x = Math.floor(cx - r - margin); x <= cx + r + margin; x++) {
+    const R = r * 1.3 + margin;
+    for (let y = Math.floor(cy - R); y <= cy + R && free; y++) {
+      for (let x = Math.floor(cx - R); x <= cx + R; x++) {
         if (terrain[y * W + x] !== TERRAIN.WATER) { free = false; break; }
       }
     }
     if (!free) continue;
-    for (let y = Math.floor(cy - r - 1); y <= cy + r + 1; y++) {
-      for (let x = Math.floor(cx - r - 1); x <= cx + r + 1; x++) {
-        const d = Math.hypot(x - cx, y - cy);
-        if (d > r + (rand() - 0.5) * 1.5) continue;
-        // un îlot moyen a des collines en son cœur
-        terrain[y * W + x] = r >= 6 && d < r * 0.35 && rand() < 0.7 ? TERRAIN.HILLS
-          : rand() < 0.3 ? TERRAIN.FOREST : TERRAIN.PLAINS;
+    // (une côte irrégulière : le rayon change un peu selon la direction)
+    const p1 = rand() * 6.3, p2 = rand() * 6.3, forest = rand() < 0.5;
+    for (let y = Math.floor(cy - r * 1.3 - 1); y <= cy + r * 1.3 + 1; y++) {
+      for (let x = Math.floor(cx - r * 1.3 - 1); x <= cx + r * 1.3 + 1; x++) {
+        const a = Math.atan2(y - cy, x - cx), re = r * (1 + 0.16 * Math.sin(3 * a + p1) + 0.1 * Math.sin(5 * a + p2));
+        const f = Math.hypot(x - cx, y - cy) / re; // (0 au centre, 1 sur la côte)
+        if (f > 1 + (rand() - 0.5) * 0.12) continue;
+        terrain[y * W + x] = f < 0.2 ? TERRAIN.PEAK : f < 0.42 ? TERRAIN.MOUNTAIN
+          : f < 0.65 ? (forest && rand() < 0.6 ? TERRAIN.WOODED_HILLS : TERRAIN.HILLS)
+          : rand() < (forest ? 0.6 : 0.25) ? TERRAIN.FOREST : TERRAIN.PLAINS;
       }
     }
     made++;
+  }
+}
+
+// Les petites îles (trop petites pour y fonder une capitale) sans sommet deviennent des volcans sortis de la mer :
+// un sommet en leur cœur, entouré de montagnes puis de collines (la forêt y reste : des collines boisées)
+function addVolcanoes(terrain, W, H) {
+  const N = W * H, isLand = i => terrain[i] !== TERRAIN.WATER && terrain[i] !== TERRAIN.GREAT_RIVER;
+  const seen = new Uint8Array(N), islands = [];
+  for (let s = 0; s < N; s++) {
+    if (!isLand(s) || seen[s]) continue;
+    const tiles = [s];
+    seen[s] = 1;
+    for (let q = 0; q < tiles.length; q++) {
+      const i = tiles[q], x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
+        if (n >= 0 && n < N && isLand(n) && !seen[n]) { seen[n] = 1; tiles.push(n); }
+      }
+    }
+    islands.push(tiles);
+  }
+  for (const tiles of islands) {
+    if (tiles.length >= CONFIG.MIN_SPAWN_LAND || tiles.some(i => terrain[i] === TERRAIN.PEAK)) continue;
+    // distance de chaque case à la mer (en cases), en partant de la côte
+    const dist = new Map(), queue = [];
+    for (const i of tiles) {
+      const x = i % W;
+      if ([x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W].some(n => n < 0 || n >= N || !isLand(n))) { dist.set(i, 1); queue.push(i); }
+    }
+    for (let q = 0; q < queue.length; q++) {
+      const i = queue[q], x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
+        if (n >= 0 && n < N && isLand(n) && !dist.has(n)) { dist.set(n, dist.get(i) + 1); queue.push(n); }
+      }
+    }
+    const far = Math.max(...dist.values());
+    if (far < 4) continue; // (une île trop fine : pas de volcan)
+    for (const [i, d] of dist) {
+      const f = d / far, t = terrain[i];
+      if (t === TERRAIN.RIVER) continue;
+      if (f >= 0.8) terrain[i] = TERRAIN.PEAK;
+      else if (f >= 0.55) terrain[i] = TERRAIN.MOUNTAIN;
+      else if (f >= 0.3 && t !== TERRAIN.HILLS && t !== TERRAIN.WOODED_HILLS && t !== TERRAIN.MOUNTAIN) {
+        terrain[i] = t === TERRAIN.FOREST ? TERRAIN.WOODED_HILLS : TERRAIN.HILLS;
+      }
+    }
   }
 }
 

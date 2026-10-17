@@ -39,7 +39,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
    🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
    montagnes ; réglages `FOREST_LEVEL`, `HILLS_LEVEL` et `MOUNTAIN_LEVEL` dans `js/config.js`) :
-   - **Normale** : un grand continent entouré d'océan, avec quelques petits îlots et un à trois îlots moyens au large.
+   - **Normale** : un grand continent entouré d'océan, avec quelques îlots volcaniques au large (un sommet enneigé au milieu, des montagnes et des collines autour, des forêts et des plaines sur la côte). Les petites îles sont toujours des volcans, et les miettes de terre de moins de 150 cases sont retirées.
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
    - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
@@ -588,6 +588,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.20** : 🌋 îlots volcaniques : plus de petits îlots inutiles (terres de moins de 150 cases retirées), des îlots plus grands avec un sommet enneigé au milieu, et chaque petite île devient un volcan sorti de la mer
 - **v0.92.19** : 📜 vue parchemin : collines adoucies (fini l'effet « papier froissé »), seules les montagnes restent bien marquées
 - **v0.92.18** : 🌊 décor autour de la carte : une vieille carte marine dessinée remplace le fond bleu uni, la carte est encadrée dessus, et la vue ne va jamais plus loin que le décor
 - **v0.92.17** : 🎨 bords entre terrains deux fois moins granuleux (moins de petits grains d'un terrain mêlés aux autres)
