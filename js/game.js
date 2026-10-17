@@ -3842,7 +3842,18 @@ const GameRules = {
     a.move = Math.min((a.move || 0) + speed, Math.max(speed * 2, MAX_LAND_COST));
     while (!a.done) {
       const t = this.pickFrontier(a);
-      if (t < 0) return this.endAttack(a);
+      if (t < 0) {
+        // Plus aucune case à prendre devant l'armée : un assaut vers un objectif reprend sa route (voir resumeAssault)
+        if (this.resumeAssault(a)) continue;
+        const p = this.players[a.attacker];
+        if (p.isHuman && a.target >= 0 && this.players[a.target].alive) {
+          const c = a.targetCastle;
+          UI.log(c >= 0 && this.owner[c] === a.target
+            ? `🚫 Ton armée ne trouve plus de passage vers ${this.targetLabel(c)} : elle rentre.`
+            : `↩️ Ton assaut contre ${this.players[a.target].name} s'arrête : il n'y a plus rien à prendre de ce côté.`, 'warn', this.players[a.target]);
+        }
+        return this.endAttack(a);
+      }
       if (a.troops < this.tileCost(a, t)) return this.endAttack(a); // plus assez de soldats
       // Arrivée au pied d'un château : le siège commence (il ne tombe pas tout de suite)
       if (a.target >= 0 && this.building[t] === B_CASTLE) return this.startSiege(a, this.anchor[t]);
@@ -3891,6 +3902,29 @@ const GameRules = {
         }
       });
     }
+  },
+
+  // Un assaut vers un objectif n'a plus de case à prendre devant lui (des terres ont changé de mains autour de son
+  // front…) : il ne s'arrête pas pour autant. On refait la liste des cases ennemies de son couloir qui touchent ses
+  // terres ; s'il n'y en a plus, il cherche un nouveau chemin vers l'objectif, qui doit partir près de son front.
+  // Renvoie false si l'objectif est vraiment hors d'atteinte. (une fois par tour au plus)
+  resumeAssault(a) {
+    const c = a.targetCastle;
+    if (c < 0 || a.castleTaken || a.siege || this.owner[c] !== a.target || a.resumeTick === this.tick) return false;
+    a.resumeTick = this.tick;
+    const src = this.sourceOfAttack(a);
+    let list = this.buildFrontier(a.attacker, a.target, src).filter(t => !this.wallAt[t] && (!a.limitZone || a.limitZone.has(t)));
+    if (!list.length) {
+      const path = this.castlePath(a.attacker, c, src), f = a.frontTile, W = this.W;
+      // (le nouveau chemin doit partir près de là où se trouve l'armée : elle ne se téléporte pas)
+      if (!path || (f >= 0 && Math.hypot(path[0] % W - f % W, ((path[0] / W) | 0) - ((f / W) | 0)) > 8)) return false;
+      a.pathTiles = path;
+      a.limitZone = this.corridor(c, path);
+      list = [path[0]];
+    }
+    a.list = list;
+    a.set = new Set(list);
+    return true;
   },
 
   // Rappelle les soldats d'une attaque (seulement les siennes).
