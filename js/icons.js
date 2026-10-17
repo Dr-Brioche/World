@@ -54,10 +54,13 @@ const ICON_DEFS = {
   boatOut: [{ d: 'M4.5 4.5h14M15.3 1.5l3.2 3-3.2 3', s: 'c', w: 2 },
     { d: 'M12 9v8.5', s: 'c', w: 1.4 }, { d: 'M12.6 9.6l4.4 6.4h-4.4z', f: 'c' }, { d: 'M11.4 10.4l-4 5.6h4z', f: 'c', o: 0.55 },
     { d: 'M3.5 17.5h17l-2.8 4.2H6.3z', f: 'c' }],
-  // Charrette de marchand (route commerciale) : sa caisse chargée de ballots, son timon et ses deux roues
-  cart: [{ d: 'M5 7.5V5h4.5v2.5M10.5 7.5V3.5h5v4', s: 'c', w: 1.3 }, { d: 'M2 7.5h16l-1.8 8H3.8z', f: 'c' },
-    { d: 'M18 9.5l2.2-3.5H23', s: 'c', w: 1.7 }, { d: 'M7 16.8a2.4 2.4 0 1 1-.01 0zM14 16.8a2.4 2.4 0 1 1-.01 0z', f: 'c' },
-    { d: 'M7 18.6a.6.6 0 1 1-.01 0zM14 18.6a.6.6 0 1 1-.01 0z', f: '#f3e3bf' }],
+  // Charrette de marchand (route commerciale) : une bâche bombée sur son chargement, son plateau, son brancard
+  // et une grande roue à rayons
+  cart: [{ d: 'M3.5 11.2V8.6C3.5 5.6 5.6 3.8 9 3.8h4.2c3.4 0 5.5 1.8 5.5 4.8v2.6z', f: 'c' },
+    { d: 'M7.6 4.4v6.8M11.1 3.8v7.4M14.6 4.4v6.8', s: '#f3e3bf', w: 0.9, o: 0.55 },
+    { d: 'M2 11.2h18v2.4H2z', f: 'c' }, { d: 'M19.5 12.4l3.6 3.4', s: 'c', w: 1.6 },
+    { d: 'M9 13.4a4.2 4.2 0 1 1-.01 0z', f: '#f3e3bf', s: 'c', w: 1.7 },
+    { d: 'M9 13.4v8.4M4.8 17.6h8.4M6 14.6l6 6M12 14.6l-6 6', s: 'c', w: 1 }, { d: 'M9 16.5a1.1 1.1 0 1 1-.01 0z', f: 'c' }],
   // Pont de pierre : une arche au-dessus de l'eau, avec son garde-corps
   bridge: [{ d: 'M2 9h20v10h-3.2a6.8 6.8 0 0 0-13.6 0H2z', f: 'c' },
     { d: 'M2.5 5.5h19M4.5 5.5V9M9.5 5.5V9M14.5 5.5V9M19.5 5.5V9', s: 'c', w: 1.5 },

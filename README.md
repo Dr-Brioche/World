@@ -507,7 +507,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    ouvre un passage). Elle coûte **1 000 d'or** jusqu'à 40 cases, puis 30 de plus
    par case (**5 000 au plus**), et rapporte **+0,5 d'or par case de route toutes les 10 secondes** (une route de 100
    cases : +50) ; ton allié en touche aussi **la moitié**. Plus elle est longue, plus elle rapporte : elle se rembourse
-   en 8 à 10 minutes environ. **Une route par ville**, 250 cases au plus. **Si le pacte est rompu, la route reste mais
+   en 8 à 10 minutes environ. **Une route par ville**, 250 cases au plus, et **deux villes ne se relient qu'une fois** (si ton allié a déjà ouvert la route entre elles, tu ne peux pas la refaire). **Si le pacte est rompu, la route reste mais
    ne rapporte plus rien** (elle devient pâle) ; elle **reprend** dès que les royaumes qui tiennent ses deux villes sont
    de nouveau alliés, même si ce sont d'autres royaumes qui les ont prises entre-temps (l'or va alors à eux). Elle ne
    disparaît que si une de ses villes est détruite. Dans une partie **sans pactes**, le bouton reste grisé.
@@ -602,6 +602,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.29** : 🛒 deux villes ne se relient qu'une fois par une route commerciale (même si c'est ton allié qui l'a ouverte) · nouvelle icône : une charrette de marchand bâchée
 - **v0.92.28** : 🛒 une route commerciale n'est plus perdue quand le pacte est rompu : elle s'arrête (pâle) et reprend dès que les royaumes qui tiennent ses deux villes sont de nouveau alliés (même d'autres royaumes) · 🛤️ les routes ne passent plus sur les sommets infranchissables
 - **v0.92.27** : 🛒 routes commerciales : relie une de tes villes (niveau 2+) à celle d'un allié de ton pacte par une route grise ; elle coûte de 1 000 à 5 000 d'or selon sa longueur et rapporte d'autant plus d'or qu'elle est longue (la moitié aussi pour ton allié)
 - **v0.92.26** : 🐛 un assaut vers un objectif ne s'annule plus tout seul en chemin (par exemple en longeant la mer, quand des terres changent de mains autour de lui) : il reprend sa route ; et s'il ne peut vraiment plus avancer, un message explique pourquoi il rentre
