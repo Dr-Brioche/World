@@ -46,7 +46,7 @@ const Render = {
   // La carte est une image : F x F pixels par case (4 x 4, ou 2 x 2 sur une très grande carte, pour la mémoire),
   // où les coins en escalier sont adoucis (voir scale2x)
   setupMap() {
-    const G = Game, F = CONFIG.SMOOTH_MAP && G.N <= CONFIG.SMOOTH_FINE_MAX_TILES ? 4 : 2;
+    const G = Game, F = G.N <= CONFIG.SMOOTH_FINE_MAX_TILES ? 4 : 2;
     this.F = F;
     this.off = document.createElement('canvas');
     this.off.width = G.W * F;
@@ -119,7 +119,7 @@ const Render = {
       src = new Int32Array(WF * HF);
       for (let c = 0; c < W2 * H2; c++) {
         const cx = c % W2, cy = (c / W2) | 0;
-        this.scale2x(c, W2, H2, t2, q);
+        if (CONFIG.SMOOTH_MAP) this.scale2x(c, W2, H2, t2, q); else q.fill(c);
         for (let m = 0; m < 4; m++) src[(cy * 2 + (m >> 1)) * WF + cx * 2 + (m & 1)] = sub[q[m]];
       }
     }
@@ -130,7 +130,7 @@ const Render = {
       plains: [TERRAIN.PLAINS], desert: [TERRAIN.DESERT], forest: [TERRAIN.FOREST],
       relief: [TERRAIN.HILLS, TERRAIN.MOUNTAIN, TERRAIN.PEAK], mountain: [TERRAIN.MOUNTAIN, TERRAIN.PEAK], peak: [TERRAIN.PEAK],
     };
-    const names = Object.keys(KINDS), bits = new Uint8Array(16), borders = {};
+    const names = CONFIG.TERRAIN_BORDERS ? Object.keys(KINDS) : [], bits = new Uint8Array(16), borders = {};
     names.forEach((k, b) => { borders[k] = new Map(); for (const t of KINDS[k]) bits[t] |= 1 << b; });
     const u = 1 / F;
     const side = (diff, x, y, x1, y1, x2, y2) => {
@@ -140,7 +140,8 @@ const Render = {
         p.moveTo(x1, y1); p.lineTo(x2, y2);
       }
     };
-    for (let y = 0; y < HF; y++) for (let x = 0; x < WF; x++) {
+    // (bordures désactivées : rien à tracer, voir TERRAIN_BORDERS)
+    if (names.length) for (let y = 0; y < HF; y++) for (let x = 0; x < WF; x++) {
       const j = y * WF + x, a = T[src[j]];
       if (x < WF - 1) { const r = T[src[j + 1]]; if (r !== a && bits[a] !== bits[r]) side(bits[a] ^ bits[r], x, y, (x + 1) * u, y * u, (x + 1) * u, (y + 1) * u); }
       if (y < HF - 1) { const d = T[src[j + WF]]; if (d !== a && bits[a] !== bits[d]) side(bits[a] ^ bits[d], x, y, x * u, (y + 1) * u, (x + 1) * u, (y + 1) * u); }
@@ -182,7 +183,8 @@ const Render = {
     ctx.scale(s, s);
     ctx.lineWidth = 1.3 / s;
     ctx.lineCap = 'square';
-    for (const kind of ['plains', 'desert', 'relief', 'mountain', 'peak', 'forest']) {
+    // (bordures dessinées autour des terrains : seulement si TERRAIN_BORDERS ; les sapins, eux, sont toujours là)
+    for (const kind of CONFIG.TERRAIN_BORDERS ? ['plains', 'desert', 'relief', 'mountain', 'peak', 'forest'] : []) {
       ctx.strokeStyle = colors[kind];
       const map = k.borders[kind];
       for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
@@ -330,11 +332,16 @@ const Render = {
       G.forNeighbors(i, n => { if (depth[n] === 255) { depth[n] = depth[i] + 1; queue.push(n); } });
     }
     const light = new Float32Array(W2 * H2), K = CONFIG.HILLSHADE, D = CONFIG.WATER_DEPTH_SHADE;
+    // grandes nuances de la mer (une valeur par case suffit : elles sont très larges)
+    const nuance = new Float32Array(N);
+    if (CONFIG.WATER_NOISE) for (let i = 0; i < N; i++) {
+      if (T[i] === TERRAIN.WATER) nuance[i] = (fbm(noise, (i % W) / 20, ((i / W) | 0) / 20, 3) - 0.5) * 2 * CONFIG.WATER_NOISE;
+    }
     for (let y = 0; y < H2; y++) for (let x = 0; x < W2; x++) {
       const t = (y >> 1) * W + (x >> 1), j = y * W2 + x;
       if (T[t] === TERRAIN.WATER) {
-        // près de la côte un peu plus clair, au large plus foncé
-        light[j] = 1.06 - D * Math.min(DEPTH, depth[t] === 255 ? DEPTH : depth[t]) / DEPTH;
+        // près de la côte un peu plus clair, au large plus foncé, avec de grandes nuances (comme des fonds marins)
+        light[j] = (1.06 - D * Math.min(DEPTH, depth[t] === 255 ? DEPTH : depth[t]) / DEPTH) * (1 + nuance[t]);
         continue;
       }
       // pente : terrain qui monte vers la droite et vers le bas = face tournée vers le soleil (en haut à gauche)
@@ -379,13 +386,39 @@ const Render = {
 
   // Les pixels de la case i : ses 4 quarts (2 x 2), ou, avec le 2e passage, chaque quart recoupé en 4 (4 x 4)
   // Pour chaque pixel de la case i (ses quarts, recoupés en 4 au 2e passage) : fn(px, py, case qui le colore)
+  // Bords « effilochés » (RAGGED_EDGES) : au bord d'une case, un pixel prend parfois la couleur de la case voisine
+  // quand elle n'a qu'un autre terrain (même royaume) : les terrains s'entremêlent en petits pixels, comme sur une
+  // vraie carte, au lieu d'un bord bien droit. (Toujours le même hasard pour un pixel donné ; jamais sur un fleuve,
+  // pour qu'il reste continu.)
   eachPixel(i, fn) {
-    const G = Game, W2 = G.W * 2, H2 = G.H * 2, x = i % G.W, y = (i / G.W) | 0, sub = this.sub, q2 = this.q2;
+    const G = Game, W = G.W, W2 = W * 2, H2 = G.H * 2, x = i % W, y = (i / W) | 0, sub = this.sub, q2 = this.q2;
+    const smooth = CONFIG.SMOOTH_MAP, R = CONFIG.RAGGED_EDGES, key = this.tileKey, T = G.terrain;
+    const river = t => t === TERRAIN.RIVER || t === TERRAIN.GREAT_RIVER;
+    // (la voisine n'a qu'un autre terrain : même royaume et même bord de frontière, voir paintTile)
+    const sameLand = n => n >= 0 && key[n] !== key[i] && (key[n] >> 6) === (key[i] >> 6) && (key[n] & 1) === (key[i] & 1)
+      && !river(T[n]) && !river(T[i]);
+    const left = x > 0 ? i - 1 : -1, right = x < W - 1 ? i + 1 : -1, up = y > 0 ? i - W : -1, down = y < G.H - 1 ? i + W : -1;
+    const rnd = (px, py) => (((px * 73856093) ^ (py * 19349663)) >>> 0) % 1000 / 1000;
+    const ragged = (px, py, tile) => {
+      if (!R || this.F !== 4 || tile !== i) return tile;
+      const lx = px & 3, ly = py & 3, r = rnd(px, py);
+      // (au bord de la case : souvent ; un pixel plus loin : plus rarement)
+      const n = lx === 0 ? left : lx === 3 ? right : -1, m = ly === 0 ? up : ly === 3 ? down : -1;
+      if (n >= 0 && r < R && sameLand(n)) return n;
+      if (m >= 0 && r > 1 - R && sameLand(m)) return m;
+      const n2 = lx === 1 ? left : lx === 2 ? right : -1, m2 = ly === 1 ? up : ly === 2 ? down : -1;
+      if (n2 >= 0 && r < R / 3 && sameLand(n2)) return n2;
+      if (m2 >= 0 && r > 1 - R / 3 && sameLand(m2)) return m2;
+      return tile;
+    };
     for (let k = 0; k < 4; k++) {
       const cx = x * 2 + (k & 1), cy = y * 2 + (k >> 1), c = cy * W2 + cx;
       if (this.F === 2) { fn(cx, cy, sub[c]); continue; }
-      this.scale2x(c, W2, H2, this.key2, q2);
-      for (let m = 0; m < 4; m++) fn(cx * 2 + (m & 1), cy * 2 + (m >> 1), sub[q2[m]]);
+      if (smooth) this.scale2x(c, W2, H2, this.key2, q2); else q2.fill(c);
+      for (let m = 0; m < 4; m++) {
+        const px = cx * 2 + (m & 1), py = cy * 2 + (m >> 1);
+        fn(px, py, ragged(px, py, sub[q2[m]]));
+      }
     }
   },
 
