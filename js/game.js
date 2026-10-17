@@ -452,13 +452,34 @@ const GameRules = {
     if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
     const cost = this.upgradeCost(a);
     if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
+    const why = this.upgradeBlocker(p, a);
+    if (why) return why;
     if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
     p.gold -= cost;
-    const lvl3 = this.level[a] + 1 >= 3;
-    const secs = CONFIG.UPGRADE_TIME[lvl3 ? 1 : 0];
+    const T = CONFIG.UPGRADE_TIME, secs = T[Math.min(T.length - 1, this.level[a] - 1)];
     this.startWorks(p, a, 'up', secs, cost);
     return null;
   },
+
+  // Pourquoi on ne peut pas améliorer le bâtiment a (même avec assez d'or), ou null. La cité impériale (château de
+  // niveau 4) demande au moins un bâtiment de chaque type au niveau maximum, et on n'en bâtit qu'une par partie.
+  upgradeBlocker(p, a) {
+    const levels = BUILDING_LEVELS[this.building[a]], next = levels && levels[this.level[a] + 1];
+    if (!next || !next.imperial) return null;
+    const building = [...this.works].some(([b, w]) => w.pid === p.id && w.kind === 'up' && this.building[b] === B_CASTLE && this.level[b] >= 3);
+    if (p.imperialBuilt || building) return 'Tu as déjà ta cité impériale : une seule par partie.';
+    const top = t => BUILDING_LEVELS[t].length - 1; // (le niveau maximum de ce type de bâtiment)
+    const missing = [B_MILL, B_BARRACKS, B_CHURCH, B_PORT].filter(t =>
+      !this.buildingTiles.some(b => this.building[b] === t && this.owner[b] === p.id && this.level[b] >= top(t)));
+    if (missing.length) {
+      return 'Il faut un bâtiment de chaque type au niveau maximum. Il manque : ' +
+        missing.map(t => `${BUILDINGS[t].name} niveau ${top(t)}`).join(', ') + '.';
+    }
+    return null;
+  },
+
+  // Le royaume pid a-t-il une cité impériale (château de niveau 4) ?
+  hasImperial(pid) { return this.castles.some(c => this.owner[c] === pid && this.castleInfo(c).imperial); },
 
   // Lance la démolition d'un de ses bâtiments (DEMOLISH_TIME secondes). Renvoie un message d'erreur, ou null.
   demolishBuilding(p, a) {
@@ -685,7 +706,9 @@ const GameRules = {
     if (this.building[c] !== B_CASTLE || this.owner[c] !== pid) return { error: 'Ce n\'est pas une de tes villes.' };
     if (this.wallsOf(c).length >= this.wallMax(c)) {
       return { error: this.level[c] < 2 ? 'Il faut une ville de niveau 2 pour bâtir un mur.'
-        : this.level[c] < 3 ? 'Cette ville a déjà son mur (une citadelle peut en bâtir un second).' : 'Cette ville a déjà ses deux murs.' };
+        : this.level[c] < 3 ? 'Cette ville a déjà son mur (une citadelle peut en bâtir un second).'
+        : this.level[c] < 4 ? 'Cette ville a déjà ses deux murs (une cité impériale peut en bâtir un troisième).'
+        : `Cette ville a déjà ses ${this.wallMax(c)} murs.` };
     }
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
     // Visé dans (ou tout près de) la muraille d'une autre de ses villes : le mur va jusqu'à elle, et les relie
@@ -915,9 +938,14 @@ const GameRules = {
       const type = this.building[a], icon = BUILDINGS[type].icon;
       if (w.kind === 'build') continue; // chantier fini : le bâtiment fonctionne
       if (w.kind === 'up') {
-        this.level[a]++;
+        if (BUILDING_LEVELS[type][this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
         this.version++;
-        if (p.isHuman) UI.log(`${icon} Amélioration terminée : ${this.buildingInfo(a).name} !`, 'good');
+        if (type === B_CASTLE && this.castleInfo(a).imperial) {
+          p.imperialBuilt = true; // (une seule par partie)
+          this.garrison[a] = this.garrisonMax(a);
+          if (p.isHuman) UI.log('👑 Ta cité impériale est bâtie : murs immenses, garnison de 300, troupes plus fortes, routes de pierre !', 'good');
+          else UI.log(`👑 ${p.name} a bâti sa cité impériale !`, 'warn', p);
+        } else if (p.isHuman) UI.log(`${icon} Amélioration terminée : ${this.buildingInfo(a).name} !`, 'good');
       } else {
         // Les soldats de la garnison rejoignent l'armée
         p.troops += this.garrison[a] || 0;
@@ -1262,7 +1290,10 @@ const GameRules = {
   buildingOutput(a) {
     const t = this.building[a], info = this.buildingInfo(a);
     const owner = this.players[this.owner[a]];
-    if (t === B_CHURCH) { this.roads(); return CONFIG.CHURCH_ROAD_GOLD * (this.roadChurches.get(a) || []).length; } // (par chemin)
+    if (t === B_CHURCH) { // (par chemin ; une route de pierre, vers une cité impériale, rapporte plus)
+      this.roads();
+      return (this.roadChurches.get(a) || []).reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0);
+    }
     const eff = !owner ? 1 : t === B_BARRACKS ? this.barracksEfficiency(owner) : this.goldEfficiency(owner);
     const v = (t === B_MILL || t === B_PORT ? info.gold : info.troops) * eff;
     const road = this.roads().get(a);
@@ -1335,7 +1366,9 @@ const GameRules = {
     // par ville (ROAD_MAX_CITIES au plus), et autant de fois le bonus.
     for (const a of this.buildingTiles) {
       if (this.building[a] !== B_PORT || this.owner[a] < 0) continue;
-      const list = this.portRoadCastles(this.owner[a], a).map(c => ({ castle: c, bonus: CONFIG.PORT_ROAD_BONUS, road: 'dirt' }));
+      const list = this.portRoadCastles(this.owner[a], a).map(c => this.castleInfo(c).imperial
+        ? { castle: c, bonus: CONFIG.PORT_ROAD_BONUS * IMPERIAL.roadFactor, road: 'paved' } // (route de pierre)
+        : { castle: c, bonus: CONFIG.PORT_ROAD_BONUS, road: 'dirt' });
       if (list.length) links.set(a, this.roadLink(list));
     }
     // Une église reliée par un chemin à une de ces routes, ou à une ville proche, produit un peu d'or (CHURCH_ROAD_GOLD)
@@ -1349,7 +1382,8 @@ const GameRules = {
     for (const a of this.buildingTiles) {
       const t = this.building[a], o = this.owner[a];
       if ((t !== B_MILL && t !== B_BARRACKS) || o < 0 || links.has(a)) continue;
-      if (this.onRoad(o, a, t, links)) links.set(a, { bonus: CONFIG.MILL_ROAD_BONUS, road: 'dirt', onRoad: true });
+      const on = this.onRoad(o, a, t, links);
+      if (on) links.set(a, { bonus: CONFIG.MILL_ROAD_BONUS * (on === 2 ? IMPERIAL.roadFactor : 1), road: on === 2 ? 'paved' : 'dirt', onRoad: true });
     }
     this.roadsCache = links;
     this.roadsVersion = this.version;
@@ -1359,18 +1393,24 @@ const GameRules = {
   // Un moulin (ou une caserne) de pid posé en a est-il sur une route, hors des villes ? Les routes : celles des ports
   // (vers une ville) et les chemins des églises, à moins de MILL_ROAD_DISTANCE cases de son centre.
   // (dans la muraille d'une ville, ce sont les routes de la ville qui comptent : voir roads)
+  // Renvoie 0 (pas de route), 1 (au bord d'un chemin de terre) ou 2 (au bord d'une route de pierre, vers une cité
+  // impériale : bonus plus fort, voir IMPERIAL).
   onRoad(pid, a, type, links = this.roads()) {
     const cells = this.footprint(a, type);
-    if (cells.some(j => this.castleProtects(pid, j))) return false;
+    if (cells.some(j => this.castleProtects(pid, j))) return 0;
     const W = this.W, h = this.sizeOf(type) / 2, x = a % W + h, y = ((a / W) | 0) + h, D = CONFIG.MILL_ROAD_DISTANCE;
+    let best = 0;
     for (const [b, link] of links) {
       if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
-      for (const [c] of this.linkRoads(link)) if (this.roadNearest(this.roadPoints(b, c), x, y).d <= D) return true;
+      for (const [c, kind] of this.linkRoads(link)) {
+        if (this.roadNearest(this.roadPoints(b, c), x, y).d <= D) best = Math.max(best, kind === 'paved' ? 2 : 1);
+      }
     }
     for (const [ch, list] of this.roadChurches || []) {
-      if (this.owner[ch] === pid && list.some(link => this.roadNearest(link.pts, x, y).d <= D)) return true;
+      if (this.owner[ch] !== pid) continue;
+      for (const link of list) if (this.roadNearest(link.pts, x, y).d <= D) best = Math.max(best, link.stone ? 2 : 1);
     }
-    return false;
+    return best;
   },
 
   // Villes (châteaux de niveau 2 ou 3) de pid dont la muraille contient le centre d'un moulin (ou d'une caserne)
@@ -1531,10 +1571,12 @@ const GameRules = {
     const period = CONFIG.PRODUCTION_INTERVAL * CONFIG.TICKS_PER_SECOND;
     for (const r of this.tradeRoutes) {
       if (!r.active || (this.tick + r.from * 7) % period !== 0) continue;
+      // (une route qui touche une cité impériale rapporte plus)
+      const bonus = this.castleInfo(r.from).imperial || this.castleInfo(r.to).imperial ? 1 + IMPERIAL.tradeBonus : 1;
       for (const [share, c] of [[1, r.from], [CONFIG.TRADE_ALLY_SHARE, r.to]]) {
         const p = this.players[this.owner[c]];
         if (!p || !p.alive) continue;
-        const amount = r.income * share * this.upkeepFactor(p);
+        const amount = r.income * bonus * share * this.upkeepFactor(p);
         p.gold += amount;
         if (p.isHuman && amount >= 0.5) Render.floatText(c, B_CASTLE, `+${Math.round(amount)} 💰`);
       }
@@ -1646,13 +1688,13 @@ const GameRules = {
     let road = null, bestD = CONFIG.CHURCH_ROAD_DISTANCE, served = [];
     for (const [b, link] of links) {
       if (this.building[b] !== B_PORT || this.owner[b] !== pid) continue;
-      for (const [c] of this.linkRoads(link)) {
+      for (const [c, kind] of this.linkRoads(link)) {
         const q = this.roadNearest(this.roadPoints(b, c), x, y);
         if (q.d > bestD || land[Math.floor(q.y) * W + Math.floor(q.x)] !== land[a]) continue; // (pas de l'autre côté de l'eau)
         const pts = corner(q.x, q.y);
         if (!pts) continue;
         bestD = q.d;
-        road = { port: b, pts, d: q.d };
+        road = { port: b, pts, d: q.d, stone: kind === 'paved' }; // (branché sur une route de pierre : voir roads)
         served = this.linkRoads(link).map(([v]) => v);
       }
     }
@@ -1662,7 +1704,7 @@ const GameRules = {
       const cx = c % W + hc, cy = ((c / W) | 0) + hc, d = Math.hypot(cx - x, cy - y);
       if (d > this.roadReach(c, CONFIG.CHURCH_CITY_DISTANCE)) continue;
       const pts = corner(cx, cy);
-      if (pts) list.push({ castle: c, pts, d });
+      if (pts) list.push({ castle: c, pts, d, stone: !!this.castleInfo(c).imperial });
     }
     return list.sort((p, q) => p.d - q.d).slice(0, CONFIG.ROAD_MAX_CITIES);
   },
@@ -1687,10 +1729,10 @@ const GameRules = {
     };
     let far = null;
     if (t === B_PORT) {
-      for (const c of this.portRoadCastles(pid, a)) roads.push({ pts: this.roadPoints(a, c, t), road: 'dirt' });
+      for (const c of this.portRoadCastles(pid, a)) roads.push({ pts: this.roadPoints(a, c, t), road: this.castleInfo(c).imperial ? 'paved' : 'dirt' });
       if (!roads.length) far = nearest(CONFIG.PORT_ROAD_DISTANCE);
     } else if (t === B_CHURCH) {
-      for (const link of this.churchLinks(pid, a)) roads.push({ pts: link.pts, road: 'dirt' });
+      for (const link of this.churchLinks(pid, a)) roads.push({ pts: link.pts, road: link.stone ? 'paved' : 'dirt' });
       if (!roads.length) far = nearest(CONFIG.CHURCH_CITY_DISTANCE);
     } else if (t === B_MILL || t === B_BARRACKS) {
       // Dans la muraille de villes de niveau 2 ou 3 : une route par ville ; sinon, au bord d'une route : un bout de chemin
@@ -1709,11 +1751,11 @@ const GameRules = {
     } else if (t === B_CASTLE) {
       // Une ville (nouvelle, ou améliorée : elle relie plus loin) : chemins vers ses ports et ses églises proches,
       // et routes vers les moulins et casernes de sa muraille (dès le niveau 2)
-      const level = upgrading ? Math.min(3, this.level[a] + 1) : 1, info = CASTLE_LEVELS[level];
+      const level = upgrading ? Math.min(CASTLE_LEVELS.length - 1, this.level[a] + 1) : 1, info = CASTLE_LEVELS[level];
       for (const b of this.buildingTiles) {
         if (this.owner[b] !== pid || land[b] !== land[a]) continue;
         const type = this.building[b], [bx, by] = mid(b, type), d = Math.hypot(bx - x, by - y);
-        let pts = null, road = 'dirt';
+        let pts = null, road = info.imperial && (type === B_PORT || type === B_CHURCH) ? 'paved' : 'dirt'; // (routes de pierre)
         if (type === B_PORT && d <= this.roadReach(a, CONFIG.PORT_ROAD_DISTANCE, level)) {
           pts = this.roadPoints(b, a);
         } else if (type === B_CHURCH && d <= this.roadReach(a, CONFIG.CHURCH_CITY_DISTANCE, level)) {
@@ -3274,7 +3316,8 @@ const GameRules = {
     for (const a of this.buildingTiles) {
       if (this.building[a] === B_BARRACKS && this.owner[a] === pid) best = Math.max(best, this.buildingInfo(a).power);
     }
-    return best;
+    // (une cité impériale rend toutes les troupes du royaume plus fortes)
+    return pid >= 0 && this.hasImperial(pid) ? best * (1 + IMPERIAL.troopPower) : best;
   },
 
   // Combien d'attaquants tombent pour chaque défenseur tué : la défense de l'endroit,

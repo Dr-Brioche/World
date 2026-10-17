@@ -278,7 +278,8 @@ const UI = {
     }
     if (type === B_CASTLE) {
       return [`Défense des murs ${pct(info.bonus)}`, places(info.slots),
-        info.road && `${info.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(info.roadBonus)}`].filter(Boolean);
+        info.road && `${info.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(info.roadBonus)}`,
+        ...(info.imperial ? this.imperialPerks() : [])].filter(Boolean);
     }
     if (type === B_CHURCH) {
       return [`Croyance +${info.faith}`, places(info.slots), info.castles && `Châteaux +${info.castles}`].filter(Boolean);
@@ -299,8 +300,11 @@ const UI = {
         next.garrison && !cur.garrison && 'Petite garnison', next.bonus && `Petite muraille ${pct(next.bonus)}`].filter(Boolean);
     }
     if (type === B_CASTLE) {
-      return ['Muraille plus grande', places, `Défense des murs ${pct(next.bonus - cur.bonus)}`, `Garnison ${pct(next.garrison / cur.garrison - 1)}`,
-        next.road && `${next.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(next.roadBonus)}`].filter(Boolean);
+      const lvl = CASTLE_LEVELS.indexOf(next), walls = n => Math.max(0, n - 1); // (murs à bâtir : voir Game.wallMax)
+      return ['Muraille plus grande', places, `Défense des murs ${pct(next.bonus - cur.bonus)}`, `Garnison ${fmt(cur.garrison)} → ${fmt(next.garrison)}`,
+        walls(lvl) > walls(lvl - 1) && `Murs : ${walls(lvl - 1)} → ${walls(lvl)}`,
+        next.road && `${next.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(next.roadBonus)}`,
+        ...(next.imperial ? this.imperialPerks() : [])].filter(Boolean);
     }
     if (type === B_CHURCH) {
       return [`Croyance +${cur.faith} → +${next.faith}`, 'Zone plus grande', places, `Châteaux +${next.castles}`];
@@ -309,6 +313,13 @@ const UI = {
       return [`Soldats ${pct(next.troops / cur.troops - 1)}`, `Armée max ${pct(next.maxTroops / cur.maxTroops - 1)}`, `Force ${pct(next.power - 1)}`];
     }
     return [`Or ${pct(next.gold / cur.gold - 1)}`];
+  },
+
+  // Ce qu'apporte en plus la cité impériale (château de niveau 4 : voir IMPERIAL)
+  imperialPerks() {
+    return [`Force des troupes ${pct(IMPERIAL.troopPower)}`, `Routes commerciales ${pct(IMPERIAL.tradeBonus)}`,
+      `Ports et églises reliés : routes de pierre, bonus x${IMPERIAL.roadFactor}`, `Bâtiments au bord : bonus x${IMPERIAL.roadFactor}`,
+      'Une seule par partie'];
   },
 
   // Une liste d'avantages en HTML : un par ligne, avec un tiret
@@ -328,11 +339,12 @@ const UI = {
       el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : niveau maximum` + this.perksHTML(this.levelPerks(type, cur)) +
         `<div class="choices"><button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>OK</button></div>`;
     } else {
-      const next = BUILDING_LEVELS[type][G.level[a] + 1];
+      const next = BUILDING_LEVELS[type][G.level[a] + 1], why = G.upgradeBlocker(G.human, a);
       el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
         (next.img ? `<img src="${next.img}" alt="">` : '') +
         this.perksHTML(this.upgradePerks(type, cur, next)) +
-        `<div class="choices"><button data-yes${G.human.gold >= cost ? '' : ' disabled'}>Améliorer (💰 ${fmt(cost)})</button>` +
+        (why ? `<div class="need">⚠️ ${why}</div>` : '') + // (ce qu'il manque pour la cité impériale)
+        `<div class="choices"><button data-yes${G.human.gold >= cost && !why ? '' : ' disabled'}>Améliorer (💰 ${fmt(cost)})</button>` +
         `<button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>Fermer</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
         const err = G.upgradeBuilding(G.human, a);
@@ -380,7 +392,7 @@ const UI = {
     const G = Game, h = G.human, cost = G.upgradeCost(a), work = G.works.get(a);
     this.closeActionMenu();
     this.showUpgrade(a);
-    const canUp = !work && cost !== null && h.gold >= cost;
+    const canUp = !work && cost !== null && h.gold >= cost && !G.upgradeBlocker(h, a);
     const el = document.createElement('div');
     el.className = 'panel actionMenu quickMenu';
     el.buildingAnchor = a; // (pour le garder à jour : voir refreshBuildingMenu)
@@ -896,7 +908,8 @@ const UI = {
     if (a < 0) return '';
     if (t === B_CHURCH) {
       const list = G.churchLinks(h.id, a);
-      return list.length ? ` · 🛤️ ${this.churchLinksText(list)} : +${CONFIG.CHURCH_ROAD_GOLD * list.length} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
+      const gold = list.reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0);
+      return list.length ? ` · 🛤️ ${this.churchLinksText(list)} : +${gold} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
           `, Croyance +${Math.round(CONFIG.FAITH_ROAD_BONUS * list.length * 100)} %`
         : ' · trop loin d\'une ville ou d\'une route de port : pas de chemin';
     }
@@ -906,11 +919,15 @@ const UI = {
       // (dans la muraille de villes de niveau 2 ou 3 : une route par ville, 3 au plus ; sinon, au bord d'une route)
       const list = G.cityRoads(h.id, a, t).slice(0, CONFIG.ROAD_MAX_CITIES), sum = list.reduce((s, r) => s + r.bonus, 0);
       if (list.length) txt += ` · 🛤️ ${list.length > 1 ? `${list.length} routes (vers ${list.length} villes)` : 'route vers la ville'} : +${Math.round(sum * 100)} %`;
-      else if (G.onRoad(h.id, a, t)) txt += ` · 🛤️ au bord d'une route : +${Math.round(CONFIG.MILL_ROAD_BONUS * 100)} %`;
+      else {
+        const on = G.onRoad(h.id, a, t);
+        if (on) txt += ` · 🛤️ au bord d'une route${on === 2 ? ' de pierre' : ''} : +${Math.round(CONFIG.MILL_ROAD_BONUS * (on === 2 ? IMPERIAL.roadFactor : 1) * 100)} %`;
+      }
     }
     if (t === B_PORT) {
-      const n = G.portRoadCastles(h.id, a).length;
-      txt += n ? ` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(n * CONFIG.PORT_ROAD_BONUS * 100)} % d'or`
+      const list = G.portRoadCastles(h.id, a), n = list.length;
+      const sum = list.reduce((s, c) => s + CONFIG.PORT_ROAD_BONUS * (G.castleInfo(c).imperial ? IMPERIAL.roadFactor : 1), 0);
+      txt += n ? ` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or`
         : ` · aucune ville assez proche (${CONFIG.PORT_ROAD_DISTANCE} cases, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)} % par niveau de la ville) : pas de chemin`;
     }
     return txt;
@@ -1147,10 +1164,10 @@ const UI = {
       if (!box || box.buildingAnchor === undefined) continue;
       const a = box.buildingAnchor, btn = box.querySelector(sel);
       if (!btn) continue;
-      const cost = G.upgradeCost(a);
-      btn.disabled = !(G.owner[a] === h.id && !G.works.get(a) && cost !== null && h.gold >= cost);
-      btn.title = cost === null ? 'Déjà au niveau maximum'
-        : h.gold >= cost ? `Améliorer (💰 ${fmt(cost)})` : `Pas assez d'or : il faut 💰 ${fmt(cost)}`;
+      const cost = G.upgradeCost(a), why = cost !== null && G.owner[a] === h.id ? G.upgradeBlocker(h, a) : null;
+      btn.disabled = !(G.owner[a] === h.id && !G.works.get(a) && cost !== null && h.gold >= cost && !why);
+      btn.title = cost === null ? 'Déjà au niveau maximum' : why ||
+        (h.gold >= cost ? `Améliorer (💰 ${fmt(cost)})` : `Pas assez d'or : il faut 💰 ${fmt(cost)}`);
     }
     for (const [box, text] of [[this.actionMenu, false], [this.upgradeBox, true]]) {
       const btn = box && box.buildingAnchor !== undefined && box.querySelector('[data-wall]');
@@ -1223,7 +1240,8 @@ const UI = {
     const G = Game, h = G.human, n = G.wallsOf(a).length, max = G.wallMax(a);
     const cost = n < max ? G.wallCost(a) : null;
     const why = G.owner[a] !== h.id ? 'Cette ville n\'est plus à toi'
-      : cost === null ? (max < 2 ? 'Cette ville a déjà son mur (une citadelle, niveau 3, peut en bâtir un second)' : 'Cette ville a déjà ses deux murs')
+      : cost === null ? (max < 2 ? 'Cette ville a déjà son mur (une citadelle, niveau 3, peut en bâtir un second)'
+        : max < 3 ? 'Cette ville a déjà ses deux murs (une cité impériale, niveau 4, peut en bâtir un troisième)' : `Cette ville a déjà ses ${max} murs`)
       : G.works.get(a) ? 'Des travaux sont en cours sur cette ville'
       : h.gold < cost ? `Pas assez d'or : il faut 💰 ${fmt(cost)}` : '';
     btn.disabled = !!why;

@@ -299,20 +299,32 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Seules les cases à l'intérieur de la muraille sont renforcées : le bonus s'ajoute à la défense du terrain.
      Pendant que tu le poses (ou l'améliores), une **petite bulle** près de la souris montre la **défense totale**
      de sa muraille à cet endroit (terrain + murs, en moyenne) : en forêt ou en colline, elle est bien plus forte.
-     **Clique sur un de tes châteaux pour l'améliorer** (menu rapide) (3 niveaux) :
+     **Clique sur un de tes châteaux pour l'améliorer** (menu rapide) (4 niveaux) :
 
      | Niveau | Défense des murs | Muraille | Moulins et casernes dedans | Garnison | Prix |
      |---|---|---|---|---|---|
      | 1. Fort en bois | +100 % | petite | 4 | quelques soldats | 💰 100 (puis plus cher à chaque château) |
      | 2. Château | +200 % | moyenne | 6 | x5 | 💰 500 |
      | 3. Citadelle | +400 % | grande | 9 | x3 | 💰 3000 |
+     | 4. Cité impériale | +600 % | immense | 12 | 300 soldats | 💰 15 000 |
 
      Chaque soldat de garnison **vaut 3 soldats** au combat. **Une citadelle** permet aussi de mener
      **2 assauts en même temps** contre un même royaume (sur deux de ses cibles différentes).
 
+     👑 **La cité impériale** (niveau 4) : **une seule par partie**, et il faut d'abord avoir **au moins un bâtiment de chaque
+     type au niveau maximum** (un grand moulin, une caserne niveau 3, une église niveau 3, un port niveau 3, et la citadelle
+     elle-même) ; la fenêtre de la ville dit ce qu'il manque. Pour **15 000 d'or** (90 s de travaux), elle apporte :
+     - muraille immense, défense des murs **+600 %**, **12** places, garnison de **300** ;
+     - un **3e mur** (💰 2000) ;
+     - routes internes à **+100 %** ;
+     - **toutes les troupes du royaume +25 %** plus fortes au combat ;
+     - ses **routes commerciales +50 %** ;
+     - ses chemins vers les **ports et les églises** deviennent des **routes de pierre** : leurs bonus **x2** (port +60 %,
+       église 2 fois plus d'or), et les moulins et casernes au bord de ces routes aussi (+40 %).
+
      **Routes** : un château de niveau 2 trace des **chemins de terre** 🛤️ vers tes moulins et casernes
      qui sont dans sa muraille : ils produisent **+20 %** (or des moulins, soldats des casernes).
-     Au niveau 3, ce sont des **routes pavées** 🛣️ grises : **+50 %**.
+     Au niveau 3, ce sont des **routes pavées** 🛣️ grises : **+50 %** (et **+100 %** pour une cité impériale).
      **Entre plusieurs villes** : un moulin ou une caserne dans la muraille de **deux ou trois villes** (de niveau 2 ou 3)
      a **une route vers chacune**, et les bonus **s'additionnent** (3 villes au plus : jamais plus que le triple).
      Peu importe l'ordre : si la deuxième (ou troisième) ville est construite après, la route apparaît aussi.
@@ -602,6 +614,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.32** : 👑 **cité impériale** : un 4e niveau de ville (une seule par partie, 15 000 d'or, un bâtiment de chaque type au niveau maximum) : murs immenses (+600 %), garnison de 300, 3e mur, routes internes +100 %, troupes +25 %, routes commerciales +50 %, routes de pierre vers ses ports et églises (bonus x2)
 - **v0.92.31** : 💬 fenêtres des bâtiments plus simples : les avantages en liste courte (« – Garnison +200 % », « – Places : 6 → 9 »…) ; aides du mur et de la route commerciale raccourcies
 - **v0.92.30** : 🛒 jusqu'à 3 routes commerciales par ville (vers des villes alliées différentes) ; le bouton affiche combien elle en a
 - **v0.92.29** : 🛒 deux villes ne se relient qu'une fois par une route commerciale (même si c'est ton allié qui l'a ouverte) · nouvelle icône : une charrette de marchand bâchée

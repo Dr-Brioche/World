@@ -115,10 +115,10 @@ const CONFIG = {
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type construit soi-même rend le suivant x1.5 plus cher
                              // (ceux pris à l'ennemi ne comptent pas)
   BUILD_TIME: 3,             // secondes de chantier pour construire un bâtiment (il ne produit rien avant)
-  UPGRADE_TIME: [40, 60],    // améliorer un bâtiment (tous les bâtiments) : 40 s pour passer au niveau 2, 60 s au niveau 3
+  UPGRADE_TIME: [40, 60, 90], // améliorer un bâtiment : 40 s pour passer au niveau 2, 60 s au niveau 3, 90 s au niveau 4
   // Murs : une ville de niveau 2 peut bâtir 1 mur, une citadelle (niveau 3) un 2e. Un mur va de la muraille de la
   // ville jusqu'à l'endroit choisi, au plus WALL_MAX_REACH cases plus loin. Aucun assaut ne peut le franchir.
-  WALL_COSTS: [500, 1000],   // prix du 1er mur, puis du 2e
+  WALL_COSTS: [500, 1000, 2000], // prix du 1er mur, du 2e (citadelle), puis du 3e (cité impériale)
   WALL_BUILD_TIME: 40,       // secondes de chantier
   WALL_MAX_REACH: 12,
   WALL_RETREAT_LOSS: 0.5,    // une armée en retraite qui doit franchir un mur (bâti dans son dos) y perd 50 % de ses soldats, par mur
@@ -342,7 +342,17 @@ const CASTLE_LEVELS = [
   { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
   { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500 },
   { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000 },
+  // Niveau 4 : la cité impériale, une seule par royaume et par partie (voir IMPERIAL plus bas)
+  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau3.webp', size: 6.6, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true },
 ];
+// Cité impériale (château de niveau 4) : il faut au moins un bâtiment de chaque type au niveau maximum (moulin,
+// caserne, église, port et la citadelle elle-même), et on n'en bâtit qu'une par partie. En plus de ses murs :
+const IMPERIAL = {
+  troopPower: 0.25,   // tous les soldats du royaume +25 % plus forts au combat (en plus de la meilleure caserne)
+  tradeBonus: 0.5,    // ses routes commerciales rapportent +50 %
+  roadFactor: 2,      // ses chemins vers les ports et les églises deviennent des routes de pierre : leurs bonus x2
+                      // (ports +60 %, églises 2 fois plus d'or), et les moulins et casernes au bord aussi (+40 %)
+};
 // slots = moulins et casernes qu'on peut bâtir dans sa muraille (4, 6 puis 9) ;
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
 // le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.

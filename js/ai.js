@@ -338,7 +338,7 @@ const AI = {
     // Parfois, améliorer un château ou un moulin plutôt que construire
     if (Math.random() < 0.3) {
       const mine = Game.buildingTiles.filter(a => Game.owner[a] === p.id && !Game.works.has(a)
-        && Game.upgradeCost(a) !== null && p.gold >= Game.upgradeCost(a));
+        && Game.upgradeCost(a) !== null && p.gold >= Game.upgradeCost(a) && !Game.upgradeBlocker(p, a));
       // (en retard de Croyance : une église d'abord, s'il y en a une à améliorer)
       const church = behind && Math.random() < 0.4 * zeal ? mine.find(a => Game.building[a] === B_CHURCH) : undefined;
       if (church !== undefined) { Game.upgradeBuilding(p, church); return; }
