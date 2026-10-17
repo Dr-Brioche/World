@@ -54,6 +54,10 @@ const ICON_DEFS = {
   boatOut: [{ d: 'M4.5 4.5h14M15.3 1.5l3.2 3-3.2 3', s: 'c', w: 2 },
     { d: 'M12 9v8.5', s: 'c', w: 1.4 }, { d: 'M12.6 9.6l4.4 6.4h-4.4z', f: 'c' }, { d: 'M11.4 10.4l-4 5.6h4z', f: 'c', o: 0.55 },
     { d: 'M3.5 17.5h17l-2.8 4.2H6.3z', f: 'c' }],
+  // Pont de pierre : une arche au-dessus de l'eau, avec son garde-corps
+  bridge: [{ d: 'M2 9h20v10h-3.2a6.8 6.8 0 0 0-13.6 0H2z', f: 'c' },
+    { d: 'M2.5 5.5h19M4.5 5.5V9M9.5 5.5V9M14.5 5.5V9M19.5 5.5V9', s: 'c', w: 1.5 },
+    { d: 'M7.3 21.8c1.6-1 3.1-1 4.7 0s3.1 1 4.7 0', s: '#2f6f9e', w: 1.6 }],
   raft: [{ d: 'M3 15h18l-2 4H5z', f: 'c' }, { d: 'M8 13l9-9', s: 'c', w: 1.6 }, { d: 'M16.5 3l2.5 2.5-1.5 1.5L15 4.5z', f: 'c' }],
   waves: [{ d: 'M2 8c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0M2 13c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0M2 18c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0', s: '#2f6f9e', w: 1.8 }],
   // --- Signes ---
@@ -109,7 +113,7 @@ const ICON_DEFS = {
 const EMOJI_ICONS = {
   '🏰': 'castle', '⛪': 'church', '🌾': 'mill', '⚔': 'swords', '⛺': 'tent', '⚓': 'anchor',
   '💰': 'gold', '👥': 'spears', '🛡': 'shield', '📜': 'scroll', '🗺': 'map',
-  '⛵': 'ship', '🚢': 'anchor', '🛶': 'raft', '🌊': 'waves',
+  '⛵': 'ship', '🚢': 'anchor', '🛶': 'raft', '🌊': 'waves', '🌉': 'bridge',
   '⬆': 'up', '✖': 'x', '🚩': 'pennant', '🏳': 'whiteflag', '⚠': 'warning', '🎯': 'target', '✂': 'axe',
   '🤝': 'seal', '💔': 'brokenseal', '⏳': 'hourglass', '⏱': 'hourglass', '🔥': 'flame', '⚰': 'tomb',
   '🏗': 'hammer', '🧨': 'pick', '🏚': 'pick', '🔎': 'lens', '🔍': 'lens', '↩': 'back', '🛤': 'road', '🛣': 'road',
