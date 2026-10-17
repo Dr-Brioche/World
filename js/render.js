@@ -117,10 +117,10 @@ const Render = {
     } else if (t === TERRAIN.RIVER) {
       [r, g, b] = [112, 118, 100];
     } else {
-      // le relief bien marqué (comme les hachures d'une vieille carte), les sommets plus clairs ; les terres basses
-      // (plaine, forêt, désert) restent presque plates
-      const high = t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS || t === TERRAIN.MOUNTAIN || t === TERRAIN.PEAK;
-      const relief = 1 + Math.max(-0.45, Math.min(0.45, (l - 1) * (high ? 1.8 : 0.5)));
+      // les montagnes bien marquées (comme les hachures d'une vieille carte), les sommets plus clairs ; les collines
+      // juste un peu (pour ne pas faire « papier froissé ») ; les terres basses (plaine, forêt, désert) presque plates
+      const high = t === TERRAIN.MOUNTAIN || t === TERRAIN.PEAK, hill = t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS;
+      const relief = 1 + Math.max(-0.45, Math.min(0.45, (l - 1) * (high ? 1.8 : hill ? 0.8 : 0.5)));
       const woods = t === TERRAIN.FOREST || t === TERRAIN.WOODED_HILLS;
       const base = t === TERRAIN.PEAK ? [238, 228, 205] : woods ? [200, 186, 140] : [222, 202, 156];
       [r, g, b] = base.map(v => v * relief + grain);

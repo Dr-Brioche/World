@@ -588,6 +588,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.19** : 📜 vue parchemin : collines adoucies (fini l'effet « papier froissé »), seules les montagnes restent bien marquées
 - **v0.92.18** : 🌊 décor autour de la carte : une vieille carte marine dessinée remplace le fond bleu uni, la carte est encadrée dessus, et la vue ne va jamais plus loin que le décor
 - **v0.92.17** : 🎨 bords entre terrains deux fois moins granuleux (moins de petits grains d'un terrain mêlés aux autres)
 - **v0.92.16** : ⛰️ collines adoucies : de grandes ondulations douces au lieu de petites pointes
