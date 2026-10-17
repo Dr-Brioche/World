@@ -37,7 +37,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    haut affiche le temps de jeu, suivi de « (x2) » : les durées du jeu (« 40 s de chantier ») défilent 2 fois plus vite. Sur la carte, **les royaumes rivaux
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
-   🎲 **Cartes aléatoires** (différentes à chaque partie) :
+   🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
+   montagnes ; réglages `FOREST_LEVEL`, `HILLS_LEVEL` et `MOUNTAIN_LEVEL` dans `js/config.js`) :
    - **Normale** : un grand continent entouré d'océan, avec quelques petits îlots et un à trois îlots moyens au large.
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
@@ -536,10 +537,12 @@ plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pou
 `TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `EDGE_SHADE`,
 `WATER_DEPTH_SHADE`, `WATER_NOISE`, `MAP_SHADE_SOFT` et `MAP_SHADE_RAW`.)
 🌲 En zoomant, les **forêts** sont parsemées de petits **sapins** transparents.
-📜 **Vue parchemin** : au dernier cran de dézoom (molette vers l'arrière, au-delà de « toute la carte »), la carte devient
-une **vieille carte sur parchemin**, encadrée : terres beiges ombrées par le relief, côtes soulignées à l'encre, mer
+📜 **Vue parchemin** : en dézoomant presque au maximum (molette vers l'arrière, au-delà de « toute la carte »), la carte
+devient une **vieille carte sur parchemin**, encadrée : terres beiges ombrées par le relief, côtes soulignées à l'encre, mer
 gris-vert, et les royaumes en couleurs légères. Elle apparaît en fondu, et on revient à la carte normale en zoomant.
 (Réglage `PARCHMENT_ZOOM` dans `js/config.js`.)
+🏷️ **Noms des royaumes** : écrits comme sur une vieille carte, en lettres espacées d'une police ancienne, **en oblique dans
+le sens du royaume** (s'il est allongé) et légèrement courbés ; sa bannière et ses soldats sont juste en dessous.
 ⛰️ Avec le réglage `TERRAIN_BORDERS: true`, de fines **courbes de niveau** dessinent aussi le relief (une au pied des
 collines, une au pied des montagnes, une autour des sommets enneigés), et les plaines, les déserts et les forêts ont une
 fine **bordure**.
@@ -578,6 +581,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.8** : 🌲 cartes aléatoires plus médiévales : environ 40 % de forêts, moins de montagnes et de plaines · 🎨 bords entre terrains en plus gros pixels (moins de bruit) · ⛰️ l'ombrage des montagnes ne déborde plus sur les plaines · 📜 la vue parchemin arrive dès qu'on dézoome presque au maximum · 🏷️ noms des royaumes en oblique, dans le sens du royaume, un peu courbés, en lettres anciennes espacées
 - **v0.92.7** : 📜 vue parchemin : au dernier cran de dézoom, la carte devient une vieille carte sur parchemin encadrée (terres beiges ombrées, côtes à l'encre, mer gris-vert, royaumes en couleurs légères)
 - **v0.92.6** : 🎨 carte en pixel art : pixels carrés (plus d'arrondis), terrains qui s'entremêlent sur leurs bords, petites bosses ombrées sur toutes les terres, grandes nuances dans la mer ; les bordures dessinées autour des terrains sont retirées (réglage `TERRAIN_BORDERS` pour les remettre)
 - **v0.92.5** : ⛰️ montagnes aux arêtes et pics rocheux (fini l'effet « gâteau » à étages arrondis) · 🟫 un léger grain de cases revient sur le sol (moins lisse)

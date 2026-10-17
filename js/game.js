@@ -76,6 +76,7 @@ const GameRules = {
       color: BANNERS[banner].color,  // la couleur du royaume vient de sa bannière
       alive: true, troops: CONFIG.START_TROOPS, gold: CONFIG.START_GOLD,
       tiles: 0, sumX: 0, sumY: 0, maxTiles: 0, kills: 0,
+      sumXX: 0, sumYY: 0, sumXY: 0, // (pour l'allongement et la direction du royaume : voir Render.kingdomAxis)
       bCount: [0, 0, 0, 0, 0, 0, 0],
       traitorUntil: 0,
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
@@ -139,7 +140,7 @@ const GameRules = {
     if (b) this.garrison[i] = 0; // château (ou avant-poste) pris : sa garnison est perdue
     if (old >= 0) {
       const o = this.players[old];
-      o.tiles--; o.sumX -= x; o.sumY -= y;
+      o.tiles--; o.sumX -= x; o.sumY -= y; o.sumXX -= x * x; o.sumYY -= y * y; o.sumXY -= x * y;
       if (b) o.bCount[b]--;
     }
     this.owner[i] = pid;
@@ -148,7 +149,7 @@ const GameRules = {
     if (this.walls.length) for (const w of this.walls) if (w.tiles.includes(i)) { this.removeWall(w); break; }
     if (pid >= 0) {
       const p = this.players[pid];
-      p.tiles++; p.sumX += x; p.sumY += y;
+      p.tiles++; p.sumX += x; p.sumY += y; p.sumXX += x * x; p.sumYY += y * y; p.sumXY += x * y;
       if (b) p.bCount[b]++;
       if (p.tiles > p.maxTiles) p.maxTiles = p.tiles;
     }
