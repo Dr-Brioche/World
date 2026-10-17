@@ -1485,6 +1485,14 @@ const GameRules = {
   },
   tradeIncome(len) { return Math.round(len * CONFIG.TRADE_GOLD_PER_TILE); },
   // La route commerciale qui part de la ville a (ou null)
+  // Routes commerciales au plus de la ville c, selon son niveau (1 au niveau 2, 2 au niveau 3, 3 au niveau 4)
+  tradeMax(c) { return this.castleInfo(c).trades || 0; },
+  // Message : la ville c (« Cette ville »…) a déjà toutes ses routes
+  tradeFull(c, who) {
+    const n = this.tradeMax(c), next = CASTLE_LEVELS[this.level[c] + 1];
+    return `${who} a déjà ${n > 1 ? `ses ${n} routes commerciales` : 'sa route commerciale'}` +
+      (next ? ` (en l'améliorant en ${next.name}, elle en aura ${next.trades}).` : ' (le maximum).');
+  },
   // Les routes commerciales de la ville a (qu'elle les ait ouvertes ou qu'elles y arrivent)
   tradesOf(a) { return this.tradeRoutes.filter(r => r.from === a || r.to === a); },
   // Les alliés de pid (dans son pacte) qui ont une ville de niveau 2 ou plus
@@ -1496,7 +1504,7 @@ const GameRules = {
   tradeBlocker(pid, a) {
     if (!this.pactsAllowed) return 'Pas de pactes dans cette partie : pas de route commerciale.';
     if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return 'Il faut une de tes villes de niveau 2 ou plus.';
-    if (this.tradesOf(a).length >= CONFIG.TRADE_MAX_PER_CITY) return `Cette ville a déjà ${CONFIG.TRADE_MAX_PER_CITY} routes commerciales (le maximum).`;
+    if (this.tradesOf(a).length >= this.tradeMax(a)) return this.tradeFull(a, 'Cette ville');
     if (!this.tradePartners(pid).length) return 'Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.';
     return null;
   },
@@ -1514,9 +1522,7 @@ const GameRules = {
     if (this.tradeRoutes.some(r => (r.from === b && r.to === a) || (r.from === a && r.to === b))) {
       return { error: 'Ces deux villes sont déjà reliées par une route commerciale : on ne les relie pas deux fois.' };
     }
-    if (this.tradesOf(b).length >= CONFIG.TRADE_MAX_PER_CITY) {
-      return { error: `Cette ville alliée a déjà ${CONFIG.TRADE_MAX_PER_CITY} routes commerciales (le maximum).` };
-    }
+    if (this.tradesOf(b).length >= this.tradeMax(b)) return { error: this.tradeFull(b, 'Cette ville alliée') };
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, tooFar = `Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.`;
     // (à vol d'oiseau déjà trop loin : inutile de chercher un tracé)
     if (Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) > CONFIG.TRADE_MAX_LENGTH * 1.2) return { error: tooFar };

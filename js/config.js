@@ -272,7 +272,7 @@ const CONFIG = {
   // --- Routes commerciales ---
   // Une de tes villes de niveau 2 ou plus peut être reliée par une route commerciale (grise) à une ville de niveau 2
   // ou plus d'un allié de ton pacte. Elle coûte cher, mais rapporte de l'or toutes les PRODUCTION_INTERVAL secondes,
-  // d'autant plus que la route est longue. (TRADE_MAX_PER_CITY routes par ville au plus, et deux villes ne se relient
+  // d'autant plus que la route est longue. (selon son niveau, une ville a 1, 2 ou 3 routes au plus : voir trades dans CASTLE_LEVELS, et deux villes ne se relient
   // qu'une fois ; si le pacte est rompu, la route s'arrête, et elle reprend quand ses deux villes sont de nouveau alliées.)
   TRADE_COST_MIN: 1000,          // prix d'une route commerciale...
   TRADE_COST_FREE_LENGTH: 40,    // ...jusqu'à cette longueur (en cases)...
@@ -281,7 +281,6 @@ const CONFIG = {
   TRADE_GOLD_PER_TILE: 0.5,      // or rapporté à chaque versement, par case de longueur (une route de 100 cases : +50)
   TRADE_ALLY_SHARE: 0.5,         // l'allié touche en plus la moitié de ce revenu (le commerce enrichit les deux villes)
   TRADE_MAX_LENGTH: 250,         // longueur maximum d'une route commerciale (en cases)
-  TRADE_MAX_PER_CITY: 3,         // routes commerciales par ville au plus (qu'elle les ait ouvertes ou non)
 
   // --- Victoire ---
   WIN_RATIO: 0.7,          // posséder 70 % des terres = victoire
@@ -339,11 +338,11 @@ const BARRACKS_LEVELS = [
 // (le défenseur peut encore envoyer des soldats pendant ce temps).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000 },
+  { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0, trades: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
   // Niveau 4 : la cité impériale, une seule par royaume et par partie (voir IMPERIAL plus bas)
-  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau3.webp', size: 6.6, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true },
+  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau3.webp', size: 6.6, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
 ];
 // Cité impériale (château de niveau 4) : il faut au moins un bâtiment de chaque type au niveau maximum (moulin,
 // caserne, église, port et la citadelle elle-même), et on n'en bâtit qu'une par partie. En plus de ses murs :
@@ -353,7 +352,8 @@ const IMPERIAL = {
   roadFactor: 2,      // ses chemins vers les ports et les églises deviennent des routes de pierre : leurs bonus x2
                       // (ports +60 %, églises 2 fois plus d'or), et les moulins et casernes au bord aussi (+40 %)
 };
-// slots = moulins et casernes qu'on peut bâtir dans sa muraille (4, 6 puis 9) ;
+// slots = moulins et casernes qu'on peut bâtir dans sa muraille (4, 6, 9 puis 12) ;
+// trades = routes commerciales au plus vers des villes alliées (1 au niveau 2, 2 au niveau 3, 3 au niveau 4) ;
 // garrison = garnison : soldats du château qui le défendent seuls quand un assaut le vise,
 // le temps que le royaume envoie des renforts. Elle se reconstitue avec le temps.
 // size = largeur de l'image en cases, quand on zoome assez pour la voir

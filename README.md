@@ -519,7 +519,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    ouvre un passage). Elle coûte **1 000 d'or** jusqu'à 40 cases, puis 30 de plus
    par case (**5 000 au plus**), et rapporte **+0,5 d'or par case de route toutes les 10 secondes** (une route de 100
    cases : +50) ; ton allié en touche aussi **la moitié**. Plus elle est longue, plus elle rapporte : elle se rembourse
-   en 8 à 10 minutes environ. **Jusqu'à 3 routes par ville** (celles qu'elle a ouvertes et celles qui y arrivent : le bouton affiche « 1/3 », « 2/3 »…), 250 cases au plus. Une ville déjà reliée peut s'ouvrir vers **une autre** ville alliée, mais **deux villes ne se relient qu'une fois** (si ton allié a déjà ouvert la route entre elles, tu ne peux pas la refaire). **Si le pacte est rompu, la route reste mais
+   en 8 à 10 minutes environ. **Le nombre de routes d'une ville dépend de son niveau** : **1** pour un château (niveau 2), **2** pour une citadelle, **3** pour la cité impériale (celles qu'elle a ouvertes et celles qui y arrivent : le bouton affiche « 0/1 », « 1/2 »…), 250 cases au plus. Une ville déjà reliée peut s'ouvrir vers **une autre** ville alliée, mais **deux villes ne se relient qu'une fois** (si ton allié a déjà ouvert la route entre elles, tu ne peux pas la refaire). **Si le pacte est rompu, la route reste mais
    ne rapporte plus rien** (elle devient pâle) ; elle **reprend** dès que les royaumes qui tiennent ses deux villes sont
    de nouveau alliés, même si ce sont d'autres royaumes qui les ont prises entre-temps (l'or va alors à eux). Elle ne
    disparaît que si une de ses villes est détruite. Dans une partie **sans pactes**, le bouton reste grisé.
@@ -614,6 +614,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.33** : 🛒 routes commerciales selon le niveau de la ville : 1 pour un château, 2 pour une citadelle, 3 pour la cité impériale
 - **v0.92.32** : 👑 **cité impériale** : un 4e niveau de ville (une seule par partie, 15 000 d'or, un bâtiment de chaque type au niveau maximum) : murs immenses (+600 %), garnison de 300, 3e mur, routes internes +100 %, troupes +25 %, routes commerciales +50 %, routes de pierre vers ses ports et églises (bonus x2)
 - **v0.92.31** : 💬 fenêtres des bâtiments plus simples : les avantages en liste courte (« – Garnison +200 % », « – Places : 6 → 9 »…) ; aides du mur et de la route commerciale raccourcies
 - **v0.92.30** : 🛒 jusqu'à 3 routes commerciales par ville (vers des villes alliées différentes) ; le bouton affiche combien elle en a
