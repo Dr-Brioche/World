@@ -283,6 +283,9 @@ button:hover { background: #e8d6a8; }
 .msg.betray button:last-child { background: var(--parchment-dark); }
 #traitor { color: var(--danger); font-weight: bold; }
 .msg.upgrade img { display: block; width: 120px; margin: 4px auto; }
+/* avantages d'un bâtiment : un par ligne, avec un tiret */
+.perks { list-style: none; margin: 4px 0 0; padding: 0; font-weight: bold; }
+.perks li::before { content: '– '; }
 .msg.request.upgrade button[data-del] { background: #e9b5a8; }
 .msg.request.upgrade button[data-no] { background: var(--parchment-dark); }
 

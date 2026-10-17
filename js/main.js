@@ -269,61 +269,50 @@ const UI = {
     else if (res !== 'accepted') this.log(res, 'warn');
   },
 
-  // Ce que rapporte un niveau de bâtiment, en quelques mots.
-  // On ne montre pas de chiffres précis : seulement des pourcentages.
-  levelEffect(type, info) {
+  // Ce que fait un bâtiment à son niveau : une liste de petits avantages (« Défense des murs +200 % »…)
+  levelPerks(type, info) {
+    const every = `/ ${CONFIG.PRODUCTION_INTERVAL} s`, places = n => `Places : ${n} moulin${n > 1 ? 's' : ''} ou caserne${n > 1 ? 's' : ''}`;
     if (type === B_PORT) {
-      return `or toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
-        (info.boatSpeed ? `, expéditions maritimes${info.landingCost < 1 ? ' moins chères et plus rapides' : ''}` : '') +
-        (info.slots ? `, ${info.slots} ${info.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} autour de lui` : '') +
-        (info.garrison ? ', petite garnison' : '') + (info.bonus ? `, petite muraille (défense ${pct(info.bonus)})` : '');
+      return [`Or +${info.gold} ${every}`, info.boatSpeed && 'Expéditions maritimes', info.slots && places(info.slots),
+        info.garrison && 'Petite garnison', info.bonus && `Petite muraille ${pct(info.bonus)}`].filter(Boolean);
     }
     if (type === B_CASTLE) {
-      const road = info.road === 'paved' ? 'routes pavées' : 'chemins de terre';
-      return `défense des murs ${pct(info.bonus)}, ${info.slots} moulins ou casernes dans sa muraille` +
-        (info.road ? `, ${road} : production des bâtiments reliés ${pct(info.roadBonus)}` : '');
+      return [`Défense des murs ${pct(info.bonus)}`, places(info.slots),
+        info.road && `${info.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(info.roadBonus)}`].filter(Boolean);
     }
     if (type === B_CHURCH) {
-      return `Croyance +${info.faith} (+${CONFIG.FAITH_ROAD_BONUS * 100} % si reliée à une route), ` +
-        `${info.slots} ${info.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} autour d'elle` +
-        (info.castles ? `, ${info.castles} château${info.castles > 1 ? 'x' : ''} de plus dans le royaume` : '');
+      return [`Croyance +${info.faith}`, places(info.slots), info.castles && `Châteaux +${info.castles}`].filter(Boolean);
     }
     if (type === B_BARRACKS) {
-      return `soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande` +
-        (info.power > 1 ? `, tous tes soldats ${pct(info.power - 1)} plus forts` : '');
+      return [`Soldats +${info.troops} ${every}`, `Armée max +${info.maxTroops}`, info.power > 1 && `Force ${pct(info.power - 1)}`].filter(Boolean);
     }
-    return `or toutes les ${CONFIG.PRODUCTION_INTERVAL} s`;
+    return [`Or +${info.gold} ${every}`];
   },
 
-  // Ce que change une amélioration, en pourcentages par rapport au niveau actuel
-  upgradeEffect(type, cur, next) {
+  // Ce que change une amélioration (par rapport au niveau actuel) : une liste de petits avantages
+  upgradePerks(type, cur, next) {
+    const places = `Places : ${cur.slots} → ${next.slots}`;
     if (type === B_PORT) {
-      return `or produit ${pct(next.gold / cur.gold - 1)}, ${next.slots} ${next.slots > 1 ? 'moulins ou casernes' : 'moulin ou caserne'} ` +
-        'autour de lui, ' + (cur.boatSpeed
-        ? `débarquements ${pct(next.landingCost / cur.landingCost - 1)} moins chers, bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)} plus rapides` +
-          (next.garrison ? `, et une petite garnison et une petite muraille (défense ${pct(next.bonus)}) pour le défendre` : '')
-        : 'débloque les expéditions maritimes (clic droit sur une côte → ⛵ Débarquer)');
+      return [`Or ${pct(next.gold / cur.gold - 1)}`, next.slots && places,
+        ...(cur.boatSpeed ? [`Débarquements ${pct(next.landingCost / cur.landingCost - 1)}`, `Bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)}`]
+          : ['Débloque les expéditions maritimes']),
+        next.garrison && !cur.garrison && 'Petite garnison', next.bonus && `Petite muraille ${pct(next.bonus)}`].filter(Boolean);
     }
     if (type === B_CASTLE) {
-      let txt = `muraille plus grande, ${next.slots} moulins ou casernes dedans (au lieu de ${cur.slots}), défense des murs ${pct(next.bonus - cur.bonus)}, ` +
-        `garnison ${pct(next.garrison / cur.garrison - 1)}`;
-      if (next.road) {
-        const road = next.road === 'paved' ? 'routes pavées' : 'chemins de terre';
-        txt += `, ${road} vers les moulins et casernes de la muraille : leur production ${pct(next.roadBonus)}`;
-      }
-      return txt;
+      return ['Muraille plus grande', places, `Défense des murs ${pct(next.bonus - cur.bonus)}`, `Garnison ${pct(next.garrison / cur.garrison - 1)}`,
+        next.road && `${next.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(next.roadBonus)}`].filter(Boolean);
     }
     if (type === B_CHURCH) {
-      return `Croyance +${next.faith} (au lieu de +${cur.faith}), zone plus grande, ${next.slots} moulins ou casernes autour d'elle (au lieu de ${cur.slots}), ` +
-        `${next.castles} château${next.castles > 1 ? 'x' : ''} de plus à construire dans le royaume ` +
-        '(seule ta meilleure église compte pour les châteaux)';
+      return [`Croyance +${cur.faith} → +${next.faith}`, 'Zone plus grande', places, `Châteaux +${next.castles}`];
     }
     if (type === B_BARRACKS) {
-      return `soldats produits ${pct(next.troops / cur.troops - 1)}, bonus d'armée max ${pct(next.maxTroops / cur.maxTroops - 1)}, ` +
-        `et tous les soldats du royaume ${pct(next.power - 1)} plus forts au combat (la meilleure caserne compte, ça ne s'additionne pas)`;
+      return [`Soldats ${pct(next.troops / cur.troops - 1)}`, `Armée max ${pct(next.maxTroops / cur.maxTroops - 1)}`, `Force ${pct(next.power - 1)}`];
     }
-    return `or produit ${pct(next.gold / cur.gold - 1)}`;
+    return [`Or ${pct(next.gold / cur.gold - 1)}`];
   },
+
+  // Une liste d'avantages en HTML : un par ligne, avec un tiret
+  perksHTML(list) { return `<ul class="perks">${list.map(p => `<li>${p}</li>`).join('')}</ul>`; },
 
   // Fenêtre explicative d'un de ses bâtiments (en haut à gauche) : ce qu'apporterait son amélioration
   showUpgrade(a) {
@@ -336,13 +325,13 @@ const UI = {
     const cur = G.buildingInfo(a), cost = G.upgradeCost(a);
     const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
     if (cost === null) {
-      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : déjà au maximum ! ` +
-        `${this.levelEffect(type, cur)}.<div class="choices"><button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>OK</button></div>`;
+      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : niveau maximum` + this.perksHTML(this.levelPerks(type, cur)) +
+        `<div class="choices"><button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>OK</button></div>`;
     } else {
       const next = BUILDING_LEVELS[type][G.level[a] + 1];
       el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
         (next.img ? `<img src="${next.img}" alt="">` : '') +
-        `<b>${this.upgradeEffect(type, cur, next)}</b>` +
+        this.perksHTML(this.upgradePerks(type, cur, next)) +
         `<div class="choices"><button data-yes${G.human.gold >= cost ? '' : ' disabled'}>Améliorer (💰 ${fmt(cost)})</button>` +
         `<button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>Fermer</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
@@ -617,7 +606,7 @@ const UI = {
     const info = G.building[i] ? G.buildingInfo(G.anchor[i]) : null;
     if (info) {
       const a = G.anchor[i];
-      txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]}, ${this.levelEffect(G.building[i], info)})`;
+      txt += ` · ${BUILDINGS[G.building[i]].icon} ${info.name} (niv. ${G.level[a]} : ${this.levelPerks(G.building[i], info).join(', ')})`;
       if (G.building[i] === B_CASTLE) {
         const links = G.wallLinked(a).size;
         txt += ` · 🛡️ garnison ${Math.round(G.garrison[a] / G.garrisonMax(a) * 100)} %` +
@@ -1238,7 +1227,7 @@ const UI = {
       : G.works.get(a) ? 'Des travaux sont en cours sur cette ville'
       : h.gold < cost ? `Pas assez d'or : il faut 💰 ${fmt(cost)}` : '';
     btn.disabled = !!why;
-    btn.title = why || `Bâtir un mur (💰 ${fmt(cost)}, ${CONFIG.WALL_BUILD_TIME} s) : il ferme un passage, aucun assaut ne le franchit`;
+    btn.title = why || `Bâtir un mur (💰 ${fmt(cost)}) : aucun assaut ne le franchit`;
     if (text) {
       const html = `🧱 Mur ${n}/${max}` + (cost !== null ? ` (💰 ${fmt(cost)})` : '');
       if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
@@ -1270,8 +1259,8 @@ const UI = {
     }).join(', ');
     const why = G.tradeBlocker(h.id, a) || (h.gold < CONFIG.TRADE_COST_MIN ? `Pas assez d'or : une route commerciale coûte au moins 💰 ${fmt(CONFIG.TRADE_COST_MIN)}` : '');
     btn.disabled = !!why;
-    btn.title = (why || `Route commerciale vers une ville d'un allié de ton pacte (💰 ${fmt(CONFIG.TRADE_COST_MIN)} à ${fmt(CONFIG.TRADE_COST_MAX)} ` +
-      'selon la longueur) : plus elle est longue, plus elle rapporte d\'or') + (mine ? ` · Routes de cette ville : ${mine}` : '');
+    btn.title = (why || `Route commerciale vers une ville alliée (💰 ${fmt(CONFIG.TRADE_COST_MIN)} à ${fmt(CONFIG.TRADE_COST_MAX)})`) +
+      (mine ? ` · Routes : ${mine}` : '');
     if (text) {
       const html = `🛒 Route commerciale ${list.length}/${max}` + (list.length < max ? ` (💰 ${fmt(CONFIG.TRADE_COST_MIN)}+)` : '');
       if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
@@ -1296,10 +1285,8 @@ const UI = {
   },
 
   tradeHint() {
-    return `🛒 Route commerciale : clique sur une ville (niveau 2 ou plus) d'un allié de ton pacte. Elle coûte ` +
-      `💰 ${fmt(CONFIG.TRADE_COST_MIN)} jusqu'à ${CONFIG.TRADE_COST_FREE_LENGTH} cases, puis plus cher avec la distance ` +
-      `(💰 ${fmt(CONFIG.TRADE_COST_MAX)} au plus), et rapporte +${CONFIG.TRADE_GOLD_PER_TILE} 💰 par case de route ` +
-      `toutes les ${CONFIG.PRODUCTION_INTERVAL} s (ton allié en touche aussi la moitié) · Échap ou clic droit pour annuler`;
+    return `🛒 Clique sur une ville alliée (niv. 2+) · 💰 ${fmt(CONFIG.TRADE_COST_MIN)} à ${fmt(CONFIG.TRADE_COST_MAX)} · ` +
+      `plus elle est longue, plus elle rapporte · Échap : annuler`;
   },
 
   // La case i est-elle sur un mur déjà bâti de la ville c ? (le second mur peut en partir)
@@ -1315,14 +1302,11 @@ const UI = {
   wallHint() {
     const G = Game, c = this.wallFor, cost = G.wallCost(c);
     if (this.wallFrom >= 0) {
-      return `🧱 Second mur (💰 ${fmt(cost)}) : il part du point choisi sur ton premier mur ; clique où il doit aller ` +
-        `(${CONFIG.WALL_MAX_REACH} cases au plus) · Échap ou clic droit pour annuler`;
+      return `🧱 Second mur (💰 ${fmt(cost)}) : clique où il doit aller (${CONFIG.WALL_MAX_REACH} cases au plus) · Échap : annuler`;
     }
-    const second = G.walls.some(w => w.castle === c && w.done)
-      ? ' · pour le second mur, tu peux aussi cliquer d\'abord sur un point de ton premier mur : il partira de là' : '';
-    return `🧱 Mur (💰 ${fmt(cost)}, ${CONFIG.WALL_BUILD_TIME} s) : clique sur tes terres, à ${CONFIG.WALL_MAX_REACH} cases au plus de la muraille de la ville ` +
-      `: le mur ira tout droit de la ville jusque-là (près d'un lac, d'un sommet, d'un fleuve ou d'un autre mur, il s'y accroche tout seul ; ` +
-      `vise une autre de tes villes pour les relier : +${CONFIG.WALL_LINK_GARRISON} de garnison pour chacune)${second} · Échap ou clic droit pour annuler`;
+    const second = G.walls.some(w => w.castle === c && w.done); // (le second mur peut partir du premier)
+    return `🧱 Mur (💰 ${fmt(cost)}) : clique sur tes terres (${CONFIG.WALL_MAX_REACH} cases au plus) · il s'accroche aux obstacles · ` +
+      `relier deux villes : garnison +${CONFIG.WALL_LINK_GARRISON}${second ? ' · second mur : clique d\'abord sur le premier' : ''} · Échap : annuler`;
   },
 
   closeActionMenu() {

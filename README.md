@@ -602,6 +602,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.31** : 💬 fenêtres des bâtiments plus simples : les avantages en liste courte (« – Garnison +200 % », « – Places : 6 → 9 »…) ; aides du mur et de la route commerciale raccourcies
 - **v0.92.30** : 🛒 jusqu'à 3 routes commerciales par ville (vers des villes alliées différentes) ; le bouton affiche combien elle en a
 - **v0.92.29** : 🛒 deux villes ne se relient qu'une fois par une route commerciale (même si c'est ton allié qui l'a ouverte) · nouvelle icône : une charrette de marchand bâchée
 - **v0.92.28** : 🛒 une route commerciale n'est plus perdue quand le pacte est rompu : elle s'arrête (pâle) et reprend dès que les royaumes qui tiennent ses deux villes sont de nouveau alliés (même d'autres royaumes) · 🛤️ les routes ne passent plus sur les sommets infranchissables
