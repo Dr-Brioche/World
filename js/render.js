@@ -329,94 +329,78 @@ const Render = {
   },
 
   // --- Ombrage du relief et profondeur de la mer (pour un rendu « carte ») ---
-  // Une « altitude » par demi-case (plus fin que les cases, pour des crêtes nettes) :
-  //  - le fond : 0 en plaine (ou forêt, désert), 1 en colline, 2 en montagne, 3 au sommet, un peu lissé ;
-  //  - des crêtes : un bruit « en arêtes » (1 - |2 x bruit - 1|, au carré : des lignes de crête pointues), faible en
-  //    plaine (de petites bosses), fort en montagne et au sommet (des pics et des arêtes vives).
+  // Une « altitude » par case, puis une nuance de clarté par case (comme sur une carte en pixel art : chaque pixel
+  // de la carte est un peu plus clair ou plus foncé selon sa pente, sans bruit fin par-dessus) :
+  //  - dans un massif (collines, montagnes, sommets), l'altitude monte de son bord vers son cœur (distance au bord),
+  //    plus haut pour les montagnes et les sommets : une ligne de crête au milieu, un versant de chaque côté ;
+  //    un léger relief irrégulier (un bruit lisse et large) dessine des vallées et des épaulements ;
+  //  - en plaine, forêt ou désert : de douces ondulations (TERRAIN_GRAIN).
   // Le soleil vient d'en haut à gauche : une pente tournée vers lui est éclairée, l'autre est dans l'ombre
-  // (light = facteur de clarté, autour de 1). En mer, plus on est loin de la côte, plus l'eau est foncée.
+  // (light = facteur de clarté de la case, autour de 1). En mer, plus on est loin de la côte, plus l'eau est foncée.
   buildLight() {
     const G = Game, W = G.W, H = G.H, N = G.N, T = G.terrain;
     const level = t => t === TERRAIN.PEAK ? 3 : t === TERRAIN.MOUNTAIN ? 2 : t === TERRAIN.HILLS ? 1 : 0;
-    // force des crêtes selon le terrain (plaine, colline, montagne, sommet)
-    const ridgeAmp = [CONFIG.TERRAIN_GRAIN, 1.2, 3.2, 3.6];
-    const blur = f => {
-      const out = new Float32Array(N);
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        let sum = 0, n = 0;
-        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-          const xx = x + dx, yy = y + dy;
-          if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
-          sum += f[yy * W + xx]; n++;
-        }
-        out[y * W + x] = sum / n;
-      }
-      return out;
-    };
-    let base = new Float32Array(N), amp = new Float32Array(N);
-    for (let i = 0; i < N; i++) { const l = level(T[i]); base[i] = l; amp[i] = ridgeAmp[l]; }
-    base = blur(base); amp = blur(blur(amp));
-    // (valeur d'un champ par case au point (u, v), mélangée entre les 4 cases autour)
-    const at = (f, u, v) => {
-      const x0 = Math.max(0, Math.min(W - 2, Math.floor(u - 0.5))), y0 = Math.max(0, Math.min(H - 2, Math.floor(v - 0.5)));
-      const fx = Math.max(0, Math.min(1, u - 0.5 - x0)), fy = Math.max(0, Math.min(1, v - 0.5 - y0)), i = y0 * W + x0;
-      const top = f[i] + (f[i + 1] - f[i]) * fx, bottom = f[i + W] + (f[i + W + 1] - f[i + W]) * fx;
-      return top + (bottom - top) * fy;
-    };
-    const noise = makeValueNoise(mulberry32((Math.random() * 1e9) | 0)), octaves = N > 600000 ? 2 : 3;
-    const ridged = (u, v) => {
-      let sum = 0, a = 1, f = 1 / 9, norm = 0;
-      for (let o = 0; o < octaves; o++) {
-        const r = 1 - Math.abs(2 * noise(u * f, v * f) - 1);
-        sum += r * r * a; norm += a; a *= 0.4; f *= 2.2;
-      }
-      return sum / norm;
-    };
-    // L'altitude, par demi-case
-    // Sur les terres basses (plaine, forêt, désert), pas d'arêtes : de douces ondulations arrondies (un bruit lisse),
-    // un peu plus fines en forêt (les cimes des arbres). Le relief des montagnes voisines ne déborde pas sur elles.
-    const soft = (u, v, forest) => (fbm(noise, u / 8, v / 8, 2) - 0.5) + (forest ? (noise(u * 0.9, v * 0.9) - 0.5) * 0.35 : 0);
-    const W2 = W * 2, H2 = H * 2, e = new Float32Array(W2 * H2);
-    for (let y = 0; y < H2; y++) for (let x = 0; x < W2; x++) {
-      const u = (x + 0.5) / 2, v = (y + 0.5) / 2, t = T[(y >> 1) * W + (x >> 1)], low = level(t) === 0;
-      e[y * W2 + x] = low ? soft(u, v, t === TERRAIN.FOREST) * ridgeAmp[0] : at(base, u, v) + ridged(u, v) * at(amp, u, v);
-    }
-    // Profondeur de la mer : distance à la terre (en cases, au plus DEPTH)
-    const DEPTH = 14, depth = new Uint8Array(N).fill(255), queue = [];
-    for (let i = 0; i < N; i++) if (T[i] !== TERRAIN.WATER) { depth[i] = 0; queue.push(i); }
+    const noise = makeValueNoise(mulberry32((Math.random() * 1e9) | 0));
+    // Distance au bord du massif (en cases), pour les cases de relief
+    const dist = new Uint8Array(N).fill(255), queue = [];
+    for (let i = 0; i < N; i++) if (level(T[i]) === 0) { dist[i] = 0; queue.push(i); }
     for (let q = 0; q < queue.length; q++) {
       const i = queue[q];
+      if (dist[i] >= 40) continue;
+      G.forNeighbors(i, n => { if (dist[n] === 255) { dist[n] = dist[i] + 1; queue.push(n); } });
+    }
+    let e = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const x = i % W, y = (i / W) | 0, l = level(T[i]);
+      if (!l) {
+        e[i] = (fbm(noise, x / 8, y / 8, 2) - 0.5) * CONFIG.TERRAIN_GRAIN;
+        continue;
+      }
+      const d = dist[i] === 255 ? 40 : dist[i];
+      e[i] = Math.sqrt(d) * (0.5 + 0.35 * l) + (fbm(noise, x / 6, y / 6, 3) - 0.5) * CONFIG.MOUNTAIN_ROUGHNESS * l;
+    }
+    // un léger lissage (avec les voisines), pour des versants réguliers
+    const out = new Float32Array(N);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      let sum = 0, n = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+        sum += e[yy * W + xx] * (dx || dy ? 1 : 2); n += dx || dy ? 1 : 2;
+      }
+      out[y * W + x] = sum / n;
+    }
+    e = out;
+    // Profondeur de la mer : distance à la terre (en cases, au plus DEPTH)
+    const DEPTH = 14, depth = new Uint8Array(N).fill(255), q2 = [];
+    for (let i = 0; i < N; i++) if (T[i] !== TERRAIN.WATER) { depth[i] = 0; q2.push(i); }
+    for (let q = 0; q < q2.length; q++) {
+      const i = q2[q];
       if (depth[i] >= DEPTH) continue;
-      G.forNeighbors(i, n => { if (depth[n] === 255) { depth[n] = depth[i] + 1; queue.push(n); } });
+      G.forNeighbors(i, n => { if (depth[n] === 255) { depth[n] = depth[i] + 1; q2.push(n); } });
     }
-    const light = new Float32Array(W2 * H2), K = CONFIG.HILLSHADE, D = CONFIG.WATER_DEPTH_SHADE;
-    // grandes nuances de la mer (une valeur par case suffit : elles sont très larges)
-    const nuance = new Float32Array(N);
-    if (CONFIG.WATER_NOISE) for (let i = 0; i < N; i++) {
-      if (T[i] === TERRAIN.WATER) nuance[i] = (fbm(noise, (i % W) / 20, ((i / W) | 0) / 20, 3) - 0.5) * 2 * CONFIG.WATER_NOISE;
-    }
-    for (let y = 0; y < H2; y++) for (let x = 0; x < W2; x++) {
-      const t = (y >> 1) * W + (x >> 1), j = y * W2 + x;
-      if (T[t] === TERRAIN.WATER) {
+    const light = new Float32Array(N), K = CONFIG.HILLSHADE, D = CONFIG.WATER_DEPTH_SHADE;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (T[i] === TERRAIN.WATER) {
         // près de la côte un peu plus clair, au large plus foncé, avec de grandes nuances (comme des fonds marins)
-        light[j] = (1.06 - D * Math.min(DEPTH, depth[t] === 255 ? DEPTH : depth[t]) / DEPTH) * (1 + nuance[t]);
+        const nuance = CONFIG.WATER_NOISE ? (fbm(noise, x / 20, y / 20, 3) - 0.5) * 2 * CONFIG.WATER_NOISE : 0;
+        light[i] = (1.06 - D * Math.min(DEPTH, depth[i] === 255 ? DEPTH : depth[i]) / DEPTH) * (1 + nuance);
         continue;
       }
       // pente : terrain qui monte vers la droite et vers le bas = face tournée vers le soleil (en haut à gauche)
-      const ex = e[y * W2 + Math.min(W2 - 1, x + 1)] - e[y * W2 + Math.max(0, x - 1)];
-      const ey = e[Math.min(H2 - 1, y + 1) * W2 + x] - e[Math.max(0, y - 1) * W2 + x];
-      light[j] = 1 + Math.max(-0.5, Math.min(0.5, (ex + ey) * K));
+      const ex = e[y * W + Math.min(W - 1, x + 1)] - e[y * W + Math.max(0, x - 1)];
+      const ey = e[Math.min(H - 1, y + 1) * W + x] - e[Math.max(0, y - 1) * W + x];
+      light[i] = 1 + Math.max(-0.45, Math.min(0.45, (ex + ey) * K));
     }
     this.light = light;
   },
 
-  // Clarté au point (u, v) de la carte (en cases) : mélange des 4 demi-cases autour
+  // Clarté de la case qui contient le point (u, v) de la carte (en cases) : une nuance par case, sans mélange
   lightAt(u, v) {
-    const W2 = Game.W * 2, H2 = Game.H * 2, L = this.light, uu = u * 2, vv = v * 2;
-    const x0 = Math.max(0, Math.min(W2 - 2, Math.floor(uu - 0.5))), y0 = Math.max(0, Math.min(H2 - 2, Math.floor(vv - 0.5)));
-    const fx = Math.max(0, Math.min(1, uu - 0.5 - x0)), fy = Math.max(0, Math.min(1, vv - 0.5 - y0)), i = y0 * W2 + x0;
-    const top = L[i] + (L[i + 1] - L[i]) * fx, bottom = L[i + W2] + (L[i + W2 + 1] - L[i + W2]) * fx;
-    return top + (bottom - top) * fy;
+    const W = Game.W, H = Game.H;
+    const x = Math.max(0, Math.min(W - 1, Math.floor(u))), y = Math.max(0, Math.min(H - 1, Math.floor(v)));
+    return this.light[y * W + x];
   },
 
   // --- Coins adoucis (méthode « Scale2x » du pixel art) ---
