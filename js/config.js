@@ -14,7 +14,7 @@ const CONFIG = {
   // Relief et forêts des cartes aléatoires (un décor de Moyen Âge : beaucoup de forêts, moins de montagnes) :
   // plus le seuil est haut, plus le terrain est rare (forêt : plus il est bas, plus il y a de forêts)
   MOUNTAIN_LEVEL: 0.77,
-  HILLS_LEVEL: 0.66,
+  HILLS_LEVEL: 0.62,
   FOREST_LEVEL: 0.44,
   DESERT_RATIO: 0.15,      // part des plaines et forêts en désert sur les cartes aléatoires (production -20 %)
   WORLD_MAP_WIDTH: 1080,   // taille de la carte « Monde » (bien plus grande : on dézoome beaucoup)
