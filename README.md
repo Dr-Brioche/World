@@ -535,7 +535,7 @@ sont éclairées et les autres dans l'ombre. Les montagnes montent tout droit ve
 aux tons bien tranchés** (éclairé ou sombre) qui se rejoignent en **arêtes nettes**, case par case comme du pixel art, et les plaines, forêts
 et déserts de **douces ondulations** (un peu plus fines en forêt), même sous les couleurs d'un royaume. La **mer fonce au large**, avec de grandes nuances
 plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pour des coins arrondis, `RAGGED_EDGES`,
-`TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `MOUNTAIN_ROUGHNESS`, `MOUNTAIN_TONE_STEP`, `HILL_BUMPS`, `EDGE_SHADE`,
+`TERRAIN_BORDERS` pour les lignes entre les terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `MOUNTAIN_ROUGHNESS`, `MOUNTAIN_TONE_STEP`, `HILL_BUMPS`, `EDGE_SHADE`,
 `WATER_DEPTH_SHADE`, `WATER_NOISE`, `MAP_SHADE_SOFT` et `MAP_SHADE_RAW`.)
 🌲 En zoomant, les **forêts** sont parsemées de petits **sapins** transparents.
 📜 **Vue parchemin** : en dézoomant presque au maximum (molette vers l'arrière, au-delà de « toute la carte »), la carte
@@ -550,9 +550,9 @@ le sens du royaume** (s'il est allongé) et légèrement courbés ; sa bannière
 Le nom (avec sa bannière et ses soldats) **reste toujours à l'intérieur de son royaume**, à l'endroit où il a le plus de
 place : deux noms ne se chevauchent donc jamais. Le nom d'un royaume petit ou très fin n'apparaît qu'en **zoomant** (en
 survolant le royaume, la barre du haut donne de toute façon son nom et ses infos).
-⛰️ Avec le réglage `TERRAIN_BORDERS: true`, de fines **courbes de niveau** dessinent aussi le relief (une au pied des
-collines, une au pied des montagnes, une autour des sommets enneigés), et les plaines, les déserts et les forêts ont une
-fine **bordure**.
+🖊️ En zoomant, une **fine ligne brune, discrète**, délimite chaque zone de terrain (plaine, forêt, colline, colline
+boisée, montagne, sommet, désert) : on voit bien où commence chaque terrain. (Réglages `TERRAIN_BORDERS` pour l'enlever
+et `TERRAIN_BORDER_ALPHA` pour sa force, dans `js/config.js`.)
 
 🌊 **Les fleuves** naissent dans les montagnes et descendent jusqu'à la mer : ce sont de vraies **frontières naturelles**.
 **Personne ne peut les prendre** : ils restent bleus et neutres pour toujours, et ni l'expansion ni les assauts ne les franchissent.
@@ -588,6 +588,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.21** : 🖊️ une fine ligne discrète délimite de nouveau chaque zone de terrain (en zoomant), en suivant les bords en gros pixels
 - **v0.92.20** : 🌋 îlots volcaniques : plus de petits îlots inutiles (terres de moins de 150 cases retirées), des îlots plus grands avec un sommet enneigé au milieu, et chaque petite île devient un volcan sorti de la mer
 - **v0.92.19** : 📜 vue parchemin : collines adoucies (fini l'effet « papier froissé »), seules les montagnes restent bien marquées
 - **v0.92.18** : 🌊 décor autour de la carte : une vieille carte marine dessinée remplace le fond bleu uni, la carte est encadrée dessus, et la vue ne va jamais plus loin que le décor

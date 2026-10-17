@@ -29,7 +29,7 @@ const CONFIG = {
   CAMERA_KEY_SPEED: 900,   // déplacement de la caméra au clavier (ZQSD / flèches), en pixels d'écran par seconde
   // Courbes de niveau (pied des collines, des montagnes, et bord des sommets) et bordures des terrains : le zoom
   // à partir duquel on les voit (elles suivent le bord des cases : voir buildForests dans render.js)
-  CONTOUR_MIN_ZOOM: 2.5,
+  CONTOUR_MIN_ZOOM: 2,
   // Vue de très loin : en dézoomant presque au maximum, la carte devient une carte parchemin. Elle commence à apparaître
   // en dessous de 85 % du zoom « toute la carte », elle est complète à 60 % ; on peut dézoomer jusqu'à 45 %
   PARCHMENT_ZOOM: [0.85, 0.6, 0.45],
@@ -39,7 +39,8 @@ const CONFIG = {
   SMOOTH_MAP: false,         // coins des cases arrondis sur la carte (false : des pixels carrés, comme une carte en pixel art)
   SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
   RAGGED_EDGES: 0.15,        // bords « effilochés » entre terrains : au bord d'une case, part des demi-cases prises par le terrain voisin
-  TERRAIN_BORDERS: false,    // fine bordure dessinée autour des forêts, plaines, déserts et du relief (true pour la remettre)
+  TERRAIN_BORDERS: true,     // fine ligne discrète entre deux terrains différents (false pour l'enlever)
+  TERRAIN_BORDER_ALPHA: 0.32, // ...et sa force (0 = invisible, 1 = noire)
   MAP_SHADE_SOFT: 1,         // petites variations de couleur du sol, adoucies entre voisines (0 = sol tout uni)...
   MAP_SHADE_RAW: 0.8,        // ...et le grain propre à chaque case (plus = damier plus visible)
   HILLSHADE: 0.5,            // ombrage du relief (soleil en haut à gauche) : 0 = pas d'ombre, plus = relief plus marqué
