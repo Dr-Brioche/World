@@ -5,9 +5,9 @@
 
 const $ = id => document.getElementById(id);
 
-// Les terrains de la palette, dans l'ordre des touches 1 à 9
+// Les terrains de la palette, dans l'ordre des touches 1 à 9, puis 0
 const PALETTE = [TERRAIN.WATER, TERRAIN.PLAINS, TERRAIN.FOREST, TERRAIN.HILLS, TERRAIN.MOUNTAIN,
-  TERRAIN.PEAK, TERRAIN.DESERT, TERRAIN.RIVER, TERRAIN.GREAT_RIVER];
+  TERRAIN.PEAK, TERRAIN.DESERT, TERRAIN.RIVER, TERRAIN.GREAT_RIVER, TERRAIN.WOODED_HILLS];
 
 const Ed = {
   W: 0, H: 0, terrain: null,
@@ -25,7 +25,8 @@ const Ed = {
     // Palette des terrains
     $('palette').innerHTML = PALETTE.map((t, k) => {
       const c = TERRAIN_INFO[t].color;
-      return `<button data-t="${t}" title="${TERRAIN_INFO[t].name} (touche ${k + 1})"><i style="background:rgb(${c})"></i>${k + 1}. ${TERRAIN_INFO[t].name}</button>`;
+      const key = (k + 1) % 10; // (le 10e terrain : touche 0)
+      return `<button data-t="${t}" title="${TERRAIN_INFO[t].name} (touche ${key})"><i style="background:rgb(${c})"></i>${key}. ${TERRAIN_INFO[t].name}</button>`;
     }).join('');
     $('palette').addEventListener('click', e => { const b = e.target.closest('button'); if (b) this.setBrush(+b.dataset.t); });
     document.querySelectorAll('.toolBtn').forEach(b => b.addEventListener('click', () => this.setTool(b.dataset.tool)));
@@ -398,8 +399,8 @@ const Ed = {
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); return e.shiftKey ? this.doRedo() : this.doUndo(); }
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') { e.preventDefault(); return this.doRedo(); }
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') { e.preventDefault(); return this.save(); }
-      const m = /^(Digit|Numpad)([1-9])$/.exec(e.code);
-      if (m) return this.setBrush(PALETTE[+m[2] - 1]);
+      const m = /^(Digit|Numpad)([0-9])$/.exec(e.code);
+      if (m) return this.setBrush(PALETTE[m[2] === '0' ? 9 : +m[2] - 1]);
       if (e.code === 'KeyB') this.setTool('paint');
       if (e.code === 'KeyF') this.setTool('fill');
       if (e.key === '[') this.setSize(this.size - 1);

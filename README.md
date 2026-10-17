@@ -61,9 +61,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ⚠️ C'est une très grande carte : la partie est longue, et le jeu peut ralentir un peu sur un ordinateur modeste.
    🖌️ **Dessine tes cartes** : sous le choix de la carte, le lien **« Dessiner une carte »** ouvre l'**éditeur de cartes**
    (`editeur.html`). Pars d'une carte toute en mer, toute en terre, ou d'une carte au hasard, puis peins les terrains
-   (mer, plaine, forêt, colline, montagne, sommet, désert, fleuve, grand fleuve) au **pinceau** (taille réglable) ou
+   (mer, plaine, forêt, colline, montagne, sommet, désert, fleuve, grand fleuve, colline boisée) au **pinceau** (taille réglable) ou
    avec l'outil **remplir**. Clic droit (ou Espace + glisser) pour déplacer la carte, molette pour zoomer, touches 1 à 9
-   pour les terrains, Ctrl + Z pour annuler. Donne-lui un nom et clique sur **💾 Enregistrer** : elle apparaît tout de
+   puis 0 pour les terrains, Ctrl + Z pour annuler. Donne-lui un nom et clique sur **💾 Enregistrer** : elle apparaît tout de
    suite dans la liste des cartes du jeu (**✏️ Cartes dessinées**) ; **▶️ Jouer** la lance directement.
    Les cartes sont gardées **dans ton navigateur** : **📤 Exporter** les enregistre dans un fichier (pour les garder,
    les partager ou les ajouter au jeu pour tout le monde dans `js/custommaps.js`), **📥 Importer** les rouvre.
@@ -168,7 +168,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      en vaut 3.** Ils se reconstituent ensuite peu à peu.
    - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
      **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
-     où se bat l'assaut (forêt +60 %, colline +120 %, montagne +180 %, + bonus du château dans sa muraille).
+     où se bat l'assaut (forêt +60 %, colline +120 %, colline boisée ou montagne +180 %, + bonus du château dans sa muraille).
      L'assaut choisit donc un chemin qui passe le plus possible par les plaines.
    - **La supériorité en nombre** compte : un camp qui a **plus de 2 fois plus de soldats** que l'autre
      tue plus vite et perd moins de soldats par ennemi tué (jusqu'à **x5** pour un écrasement, comme 300 contre 4).
@@ -527,7 +527,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
-🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
+🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. La forêt pousse aussi sur les collines : une **colline boisée** cumule les deux bonus (+180 %, comme une montagne) ; on la reconnaît à son vert olive bosselé, parsemé de sapins. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 🎨 **Une carte en pixel art** : chaque case est dessinée en petits pixels carrés. Là où deux terrains se touchent,
 leurs pixels **s'entremêlent** (bords « effilochés »), comme sur une vraie carte ; les fleuves, eux, restent continus.
 🏔️ **Ombrage du relief**, comme sur une vraie carte : le soleil vient d'en haut à gauche, les pentes tournées vers lui
@@ -535,7 +535,7 @@ sont éclairées et les autres dans l'ombre. Les montagnes montent tout droit ve
 aux tons bien tranchés** (éclairé ou sombre) qui se rejoignent en **arêtes nettes**, case par case comme du pixel art, et les plaines, forêts
 et déserts de **douces ondulations** (un peu plus fines en forêt), même sous les couleurs d'un royaume. La **mer fonce au large**, avec de grandes nuances
 plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pour des coins arrondis, `RAGGED_EDGES`,
-`TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `MOUNTAIN_ROUGHNESS`, `MOUNTAIN_TONE_STEP`, `EDGE_SHADE`,
+`TERRAIN_BORDERS` pour des bordures dessinées autour des terrains, `HILLSHADE`, `TERRAIN_GRAIN`, `MOUNTAIN_ROUGHNESS`, `MOUNTAIN_TONE_STEP`, `HILL_BUMPS`, `EDGE_SHADE`,
 `WATER_DEPTH_SHADE`, `WATER_NOISE`, `MAP_SHADE_SOFT` et `MAP_SHADE_RAW`.)
 🌲 En zoomant, les **forêts** sont parsemées de petits **sapins** transparents.
 📜 **Vue parchemin** : en dézoomant presque au maximum (molette vers l'arrière, au-delà de « toute la carte »), la carte
@@ -585,6 +585,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.14** : 🌳⛰️ nouveau terrain : la **colline boisée** (forêt sur colline, bonus cumulés : +180 %), vert olive bosselé avec des sapins · ⛰️ collines plus étendues et en bosses douces (moins tranchées que les montagnes)
 - **v0.92.13** : ⛰️ montagnes un peu moins abruptes (pentes plus douces et plus de nuances entre les versants)
 - **v0.92.12** : ⛰️ montagnes plus abruptes : versants plats aux tons tranchés et arêtes nettes, au lieu de bosses
 - **v0.92.11** : 🏷️ le nom de chaque royaume reste toujours dans son territoire, là où il a le plus de place : plus de noms qui se chevauchent ; celui d'un royaume petit ou très fin n'apparaît qu'en zoomant

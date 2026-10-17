@@ -11,7 +11,7 @@ const FINE_LEVEL = new Int8Array(16);
 FINE_LEVEL[TERRAIN.WATER] = -6; FINE_LEVEL[TERRAIN.GREAT_RIVER] = -5; FINE_LEVEL[TERRAIN.RIVER] = -3;
 // (les marches entre collines, montagnes et sommets restent faibles : ce sont les crêtes, voir buildLight, qui
 //  font le relief ; sinon on aurait des étages arrondis, comme un gâteau)
-FINE_LEVEL[TERRAIN.FOREST] = 4; FINE_LEVEL[TERRAIN.HILLS] = 4; FINE_LEVEL[TERRAIN.MOUNTAIN] = 6; FINE_LEVEL[TERRAIN.PEAK] = 8;
+FINE_LEVEL[TERRAIN.FOREST] = 4; FINE_LEVEL[TERRAIN.HILLS] = 4; FINE_LEVEL[TERRAIN.WOODED_HILLS] = 4; FINE_LEVEL[TERRAIN.MOUNTAIN] = 6; FINE_LEVEL[TERRAIN.PEAK] = 8;
 
 const Render = {
   cam: { x: 0, y: 0, scale: 4 },
@@ -119,9 +119,10 @@ const Render = {
     } else {
       // le relief bien marqué (comme les hachures d'une vieille carte), les sommets plus clairs ; les terres basses
       // (plaine, forêt, désert) restent presque plates
-      const high = t === TERRAIN.HILLS || t === TERRAIN.MOUNTAIN || t === TERRAIN.PEAK;
+      const high = t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS || t === TERRAIN.MOUNTAIN || t === TERRAIN.PEAK;
       const relief = 1 + Math.max(-0.45, Math.min(0.45, (l - 1) * (high ? 1.8 : 0.5)));
-      const base = t === TERRAIN.PEAK ? [238, 228, 205] : t === TERRAIN.FOREST ? [200, 186, 140] : [222, 202, 156];
+      const woods = t === TERRAIN.FOREST || t === TERRAIN.WOODED_HILLS;
+      const base = t === TERRAIN.PEAK ? [238, 228, 205] : woods ? [200, 186, 140] : [222, 202, 156];
       [r, g, b] = base.map(v => v * relief + grain);
       // la côte, soulignée à l'encre
       if (G.hasNeighbor(i, n => G.terrain[n] === TERRAIN.WATER)) { r *= 0.7; g *= 0.68; b *= 0.62; }
@@ -179,8 +180,8 @@ const Render = {
     // mountain = montagnes et sommets…). Là où deux petits carrés voisins ont des terrains différents, on trace
     // leur côté commun dans chaque bordure qui entoure l'un mais pas l'autre (un seul passage sur la grille).
     const KINDS = {
-      plains: [TERRAIN.PLAINS], desert: [TERRAIN.DESERT], forest: [TERRAIN.FOREST],
-      relief: [TERRAIN.HILLS, TERRAIN.MOUNTAIN, TERRAIN.PEAK], mountain: [TERRAIN.MOUNTAIN, TERRAIN.PEAK], peak: [TERRAIN.PEAK],
+      plains: [TERRAIN.PLAINS], desert: [TERRAIN.DESERT], forest: [TERRAIN.FOREST, TERRAIN.WOODED_HILLS],
+      relief: [TERRAIN.HILLS, TERRAIN.WOODED_HILLS, TERRAIN.MOUNTAIN, TERRAIN.PEAK], mountain: [TERRAIN.MOUNTAIN, TERRAIN.PEAK], peak: [TERRAIN.PEAK],
     };
     const names = CONFIG.TERRAIN_BORDERS ? Object.keys(KINDS) : [], bits = new Uint8Array(16), borders = {};
     names.forEach((k, b) => { borders[k] = new Map(); for (const t of KINDS[k]) bits[t] |= 1 << b; });
@@ -199,7 +200,7 @@ const Render = {
       if (y < HF - 1) { const d = T[src[j + WF]]; if (d !== a && bits[a] !== bits[d]) side(bits[a] ^ bits[d], x, y, x * u, (y + 1) * u, (x + 1) * u, (y + 1) * u); }
     }
     // Sapins : sur une grille un peu décalée au hasard (toujours le même hasard pour une case donnée)
-    const trees = new Map(), S = CONFIG.FOREST_TREE_SPACING, forest = i => T[i] === TERRAIN.FOREST;
+    const trees = new Map(), S = CONFIG.FOREST_TREE_SPACING, forest = i => T[i] === TERRAIN.FOREST || T[i] === TERRAIN.WOODED_HILLS;
     const rnd = (x, y, k) => (((x * 73856093) ^ (y * 19349663) ^ (k * 83492791)) >>> 0) % 1000 / 1000;
     for (let gy = 0; gy < H; gy += S) for (let gx = 0; gx < W; gx += S) {
       const x = Math.min(W - 1, gx + Math.floor(rnd(gx, gy, 1) * S)), y = Math.min(H - 1, gy + Math.floor(rnd(gx, gy, 2) * S));
@@ -339,7 +340,7 @@ const Render = {
   // (light = facteur de clarté de la case, autour de 1). En mer, plus on est loin de la côte, plus l'eau est foncée.
   buildLight() {
     const G = Game, W = G.W, H = G.H, N = G.N, T = G.terrain;
-    const level = t => t === TERRAIN.PEAK ? 3 : t === TERRAIN.MOUNTAIN ? 2 : t === TERRAIN.HILLS ? 1 : 0;
+    const level = t => t === TERRAIN.PEAK ? 3 : t === TERRAIN.MOUNTAIN ? 2 : t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS ? 1 : 0;
     const noise = makeValueNoise(mulberry32((Math.random() * 1e9) | 0));
     // Distance au bord du massif (en cases, en ligne droite), pour les cases de relief : la hauteur monte tout droit
     // depuis le pied du massif jusqu'à sa crête. Ça fait des versants plats (des « facettes ») qui se rejoignent
@@ -366,7 +367,10 @@ const Render = {
     const e = new Float32Array(N);
     for (let i = 0; i < N; i++) {
       const x = i % W, y = (i / W) | 0;
-      if (!level(T[i])) { e[i] = (fbm(noise, x / 8, y / 8, 2) - 0.5) * CONFIG.TERRAIN_GRAIN; continue; }
+      const l = level(T[i]);
+      if (!l) { e[i] = (fbm(noise, x / 8, y / 8, 2) - 0.5) * CONFIG.TERRAIN_GRAIN; continue; }
+      // collines (boisées ou non) : une pente plus douce, et des bosses arrondies (moins tranchées que la montagne)
+      if (l === 1) { e[i] = dist[i] * 0.2 + (fbm(noise, x / 4, y / 4, 3) - 0.5) * CONFIG.HILL_BUMPS; continue; }
       // (de grandes ondulations, très douces, tordent un peu les arêtes pour qu'elles ne soient pas trop parfaites)
       e[i] = dist[i] * 0.28 + (fbm(noise, x / 14, y / 14, 2) - 0.5) * CONFIG.MOUNTAIN_ROUGHNESS * 6;
     }
@@ -393,10 +397,10 @@ const Render = {
       let shade = Math.max(-0.45, Math.min(0.45, (ex + ey) * K));
       const l = level(T[i]);
       if (l) {
-        // relief : quelques tons bien tranchés (versant éclairé / versant sombre), plus doux sur les collines
+        // montagnes : quelques tons bien tranchés (versant éclairé / versant sombre) ; collines : des nuances douces
         const step = CONFIG.MOUNTAIN_TONE_STEP;
-        if (step > 0) shade = Math.round(shade / step) * step;
-        if (l === 1) shade *= 0.6;
+        if (l === 1) shade *= 0.9;
+        else if (step > 0) shade = Math.round(shade / step) * step;
       }
       light[i] = 1 + shade;
     }
