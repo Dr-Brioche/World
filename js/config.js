@@ -59,8 +59,8 @@ const CONFIG = {
   ISLANDS: [4, 6],         // nombre de grandes îles de la carte « Base navale » (entre ces deux valeurs)
   // Les nombres d'îlots, de fleuves et de lacs ci-dessous sont pour une carte de 500 x 281 cases ; les autres en ont
   // plus ou moins (multipliés par la racine carrée du rapport de surface : x0,6 « Petite », x1,3 « Moyenne », x2 « Grande »)
-  ISLETS: [4, 10],         // nombre de petits îlots ajoutés à la carte « Normale »
-  MEDIUM_ISLETS: [1, 3],   // ...et d'îlots moyens (avec un peu de relief)
+  ISLETS: [2, 4],          // nombre d'îlots volcaniques ajoutés à la carte « Normale » (un sommet au milieu)
+  MIN_ISLAND: 150,         // une terre de moins de 150 cases est retirée (plus de petits îlots inutiles)
   MIN_SPAWN_LAND: 600,     // une capitale se fonde sur une terre d'au moins 600 cases (pas sur un îlot)
   RIVERS_MIN: 5,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
   RIVERS_MAX: 18,          // (ils partent des montagnes et vont jusqu'à la mer)
