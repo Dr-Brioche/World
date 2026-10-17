@@ -544,6 +544,9 @@ gris-vert, et les royaumes en couleurs légères. Elle apparaît en fondu, et on
 (Réglage `PARCHMENT_ZOOM` dans `js/config.js`.)
 🏷️ **Noms des royaumes** : écrits comme sur une vieille carte, en lettres espacées d'une police ancienne, **en oblique dans
 le sens du royaume** (s'il est allongé) et légèrement courbés ; sa bannière et ses soldats sont juste en dessous.
+Le nom (avec sa bannière et ses soldats) **reste toujours à l'intérieur de son royaume**, à l'endroit où il a le plus de
+place : deux noms ne se chevauchent donc jamais. Le nom d'un royaume petit ou très fin n'apparaît qu'en **zoomant** (en
+survolant le royaume, la barre du haut donne de toute façon son nom et ses infos).
 ⛰️ Avec le réglage `TERRAIN_BORDERS: true`, de fines **courbes de niveau** dessinent aussi le relief (une au pied des
 collines, une au pied des montagnes, une autour des sommets enneigés), et les plaines, les déserts et les forêts ont une
 fine **bordure**.
@@ -582,6 +585,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.11** : 🏷️ le nom de chaque royaume reste toujours dans son territoire, là où il a le plus de place : plus de noms qui se chevauchent ; celui d'un royaume petit ou très fin n'apparaît qu'en zoomant
 - **v0.92.10** : ⛰️ montagnes ombrées en nuances de ton par case (un versant éclairé, un versant sombre, plus haut au cœur du massif), sans effet de bruit
 - **v0.92.9** : 🌾 plaines, forêts et déserts : de douces ondulations au lieu d'un relief qui ressemblait à des montagnes (surtout sur le parchemin, où ils restent presque plats)
 - **v0.92.8** : 🌲 cartes aléatoires plus médiévales : environ 40 % de forêts, moins de montagnes et de plaines · 🎨 bords entre terrains en plus gros pixels (moins de bruit) · ⛰️ l'ombrage des montagnes ne déborde plus sur les plaines · 📜 la vue parchemin arrive dès qu'on dézoome presque au maximum · 🏷️ noms des royaumes en oblique, dans le sens du royaume, un peu courbés, en lettres anciennes espacées
