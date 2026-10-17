@@ -733,7 +733,7 @@ const Render = {
       const h = upgrading ? G.anchor[this.hover] : this.anchorAt(this.mouse.x, this.mouse.y, B_CASTLE);
       if (h < 0) return;
       const ok = upgrading ? G.upgradeCost(h) !== null : G.canPlace(G.human.id, h, B_CASTLE);
-      const level = upgrading ? Math.min(3, G.level[h] + 1) : 1;
+      const level = upgrading ? Math.min(CASTLE_LEVELS.length - 1, G.level[h] + 1) : 1;
       const zone = G.castleZone(h, G.human.id, level);
       if (!zone.length) return;
       const set = new Set(zone);
@@ -1593,12 +1593,13 @@ const Render = {
         for (let k = 1; k < pts.length; k++) path.lineTo(pts[k][0], pts[k][1]);
       }
     }
-    // Chemins de terre des églises (vers une route de port ou des villes), voir Game.churchLinks
+    // Chemins des églises (vers une route de port ou des villes), voir Game.churchLinks : de terre, ou de pierre
+    // (pavés) vers une cité impériale
     for (const [, list] of G.roadChurches || []) {
       for (const link of list) {
-        const pts = link.pts.map(([x, y]) => [ox + x * s, oy + y * s]);
-        dirt.moveTo(pts[0][0], pts[0][1]);
-        for (let k = 1; k < pts.length; k++) dirt.lineTo(pts[k][0], pts[k][1]);
+        const pts = link.pts.map(([x, y]) => [ox + x * s, oy + y * s]), path = link.stone ? paved : dirt;
+        path.moveTo(pts[0][0], pts[0][1]);
+        for (let k = 1; k < pts.length; k++) path.lineTo(pts[k][0], pts[k][1]);
       }
     }
     // Routes commerciales (vers les villes des alliés) : grises, voir Game.buildTrade ; à l'arrêt (pacte rompu), pâles
