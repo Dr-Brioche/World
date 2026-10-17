@@ -255,13 +255,35 @@ const Render = {
     ctx.restore();
   },
 
+  // Le décor autour de la carte (CONFIG.DECOR_IMAGE) : une image chargée une seule fois
+  decorImage: (() => { const img = new Image(); img.src = CONFIG.DECOR_IMAGE; return img; })(),
+
+  // Où est le décor (en cases) : centré sur la carte, DECOR_SIZE fois plus large qu'elle, assez haut pour la
+  // dépasser aussi en haut et en bas, et assez grand pour remplir l'écran au plus fort dézoom (écran haut ou large)
+  decorRect() {
+    const W = Game.W, H = Game.H, img = this.decorImage;
+    const a = img.naturalWidth ? img.naturalWidth / img.naturalHeight : 16 / 9; // (largeur / hauteur de l'image)
+    const far = (this.fitScale || 1) * CONFIG.PARCHMENT_ZOOM[2];                  // (le plus fort dézoom)
+    const w = Math.max(Math.max(W, H * a) * CONFIG.DECOR_SIZE, this.vw / far, this.vh / far * a), h = w / a;
+    return { x: (W - w) / 2, y: (H - h) / 2, w, h };
+  },
+
+  // La caméra ne montre jamais plus loin que le décor : pas trop de dézoom, et pas trop loin sur les côtés
+  clampCam() {
+    const c = this.cam, d = this.decorRect();
+    c.scale = Math.max(c.scale, this.vw / d.w, this.vh / d.h);
+    c.x = Math.max(d.x, Math.min(d.x + d.w - this.vw / c.scale, c.x));
+    c.y = Math.max(d.y, Math.min(d.y + d.h - this.vh / c.scale, c.y));
+  },
+
   // Zoom : de très près (maxScale) jusqu'à toute la carte, et un cran de plus en arrière, où elle devient une
   // carte parchemin (voir parchmentAlpha)
   fit() {
     const s = Math.min(this.vw / Game.W, this.vh / Game.H) * 0.95;
     this.cam.scale = s;
     this.fitScale = s;
-    this.minScale = s * CONFIG.PARCHMENT_ZOOM[2];
+    const d = this.decorRect(); // (après fitScale : le décor en dépend)
+    this.minScale = Math.max(s * CONFIG.PARCHMENT_ZOOM[2], this.vw / d.w, this.vh / d.h);
     this.maxScale = 40;
     this.cam.x = Game.W / 2 - this.vw / 2 / s;
     this.cam.y = Game.H / 2 - this.vh / 2 / s;
@@ -1985,15 +2007,23 @@ const Render = {
   },
 
   draw() {
+    if (this.off) this.clampCam(); // (la vue ne sort jamais du décor)
     const ctx = this.ctx, G = Game, s = this.cam.scale;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    // (hors de la carte : la couleur de la mer du large, pour qu'on ne voie pas le bord, voir buildLight)
+    // (en attendant le décor : la couleur de la mer du large, voir buildLight)
     const deep = TERRAIN_INFO[TERRAIN.WATER].color.map(v => Math.round(v * (1.06 - CONFIG.WATER_DEPTH_SHADE)));
     ctx.fillStyle = `rgb(${deep})`;
     ctx.fillRect(0, 0, this.vw, this.vh);
     if (!this.off) return;
 
     const ox = -this.cam.x * s, oy = -this.cam.y * s;
+    // Le décor autour de la carte (une vieille carte marine)
+    const decor = this.decorImage;
+    if (decor.complete && decor.naturalWidth) {
+      const d = this.decorRect();
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(decor, ox + d.x * s, oy + d.y * s, d.w * s, d.h * s);
+    }
     // (de loin, l'image est réduite : on la lisse un peu pour éviter le scintillement ; de près, pixels nets)
     ctx.imageSmoothingEnabled = s < this.F;
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
@@ -2003,12 +2033,12 @@ const Render = {
       ctx.globalAlpha = pa;
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(this.parch, ox, oy, G.W * s, G.H * s);
-      // un cadre sombre autour de la carte, comme une vieille carte encadrée
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = '#3b2a17';
-      ctx.strokeRect(ox - 2, oy - 2, G.W * s + 4, G.H * s + 4);
       ctx.globalAlpha = 1;
     }
+    // un cadre sombre autour de la carte, posée sur le décor comme une vieille carte encadrée
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#3b2a17';
+    ctx.strokeRect(ox - 2, oy - 2, G.W * s + 4, G.H * s + 4);
     ctx.imageSmoothingEnabled = false;
     this.drawForests(ox, oy);
     this.drawHoveredKingdom(ox, oy);

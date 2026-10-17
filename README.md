@@ -542,6 +542,9 @@ plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pou
 devient une **vieille carte sur parchemin**, encadrée : terres beiges ombrées par le relief, côtes soulignées à l'encre, mer
 gris-vert, et les royaumes en couleurs légères. Elle apparaît en fondu, et on revient à la carte normale en zoomant.
 (Réglage `PARCHMENT_ZOOM` dans `js/config.js`.)
+🌊 **Le décor autour de la carte** : la carte est encadrée et posée sur une vieille carte marine dessinée (îles rocheuses,
+navires, monstres marins), qu'on découvre en dézoomant. La vue ne va jamais plus loin que ce décor : on ne peut pas
+dézoomer ni se déplacer au-delà. (Réglages `DECOR_IMAGE` et `DECOR_SIZE` dans `js/config.js`.)
 🏷️ **Noms des royaumes** : écrits comme sur une vieille carte, en lettres espacées d'une police ancienne, **en oblique dans
 le sens du royaume** (s'il est allongé) et légèrement courbés ; sa bannière et ses soldats sont juste en dessous.
 Le nom (avec sa bannière et ses soldats) **reste toujours à l'intérieur de son royaume**, à l'endroit où il a le plus de
@@ -585,6 +588,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.18** : 🌊 décor autour de la carte : une vieille carte marine dessinée remplace le fond bleu uni, la carte est encadrée dessus, et la vue ne va jamais plus loin que le décor
 - **v0.92.17** : 🎨 bords entre terrains deux fois moins granuleux (moins de petits grains d'un terrain mêlés aux autres)
 - **v0.92.16** : ⛰️ collines adoucies : de grandes ondulations douces au lieu de petites pointes
 - **v0.92.15** : ⛰️ collines bien plus étendues sur les cartes aléatoires (environ un tiers des terres, collines boisées comprises), un peu moins de plaines et de forêts
