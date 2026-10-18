@@ -2173,8 +2173,11 @@ const Render = {
     if (G.owner[a] !== G.human.id || G.building[a] !== B_CASTLE) return UI.cancelTrade();
     const b = G.building[this.hover] === B_CASTLE ? G.anchor[this.hover] : -1;
     if (b < 0 || b === a) return;
-    const key = a + ':' + b + ':' + G.version;
-    if (!this.tradePrev || this.tradePrev.key !== key) this.tradePrev = { key, ...G.planTrade(G.human.id, a, b) };
+    // (recalculé au plus toutes les 0,5 s : chercher le tracé par les deux territoires coûte cher)
+    const key = a + ':' + b, now = performance.now();
+    if (!this.tradePrev || this.tradePrev.key !== key || now - this.tradePrev.time > 500) {
+      this.tradePrev = { key, time: now, ...G.planTrade(G.human.id, a, b) };
+    }
     const plan = this.tradePrev, ctx = this.ctx, s = this.cam.scale, W = G.W, h = G.sizeOf(B_CASTLE) / 2;
     ctx.beginPath();
     if (plan.error) {
