@@ -1526,8 +1526,8 @@ const GameRules = {
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, tooFar = `Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.`;
     // (à vol d'oiseau déjà trop loin : inutile de chercher un tracé)
     if (Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) > CONFIG.TRADE_MAX_LENGTH * 1.2) return { error: tooFar };
-    const pts = this.roadRoute(a % W + h, ((a / W) | 0) + h, b % W + h, ((b / W) | 0) + h, a % 2);
-    if (!pts) return { error: 'Pas de chemin par la terre entre ces deux villes : la mer, un sommet ou un fleuve sans pont les sépare.' };
+    const pts = this.tradePath(a % W + h, ((a / W) | 0) + h, b % W + h, ((b / W) | 0) + h, a % 2, pid, o);
+    if (!pts) return { error: 'Pas de chemin entre ces deux villes en restant sur vos deux territoires (sans mer, sommet, ni fleuve sans pont).' };
     const len = this.tradeLength(pts);
     if (len > CONFIG.TRADE_MAX_LENGTH) return { error: tooFar };
     return { to: b, pts, len, cost: this.tradeCost(len), income: this.tradeIncome(len) };
@@ -1538,16 +1538,34 @@ const GameRules = {
     if (plan.error) return plan.error;
     if (p.gold < plan.cost) return `Pas assez d'or : cette route commerciale coûte 💰 ${fmt(plan.cost)}.`;
     p.gold -= plan.cost;
-    this.tradeRoutes.push({ from: a, to: plan.to, active: true, pts: plan.pts, len: plan.len, income: plan.income });
+    this.tradeRoutes.push({ from: a, to: plan.to, active: true, pts: plan.pts, tiles: this.routeTiles(plan.pts), len: plan.len, income: plan.income });
     this.version++;
     return null;
   },
-  // Une route commerciale rapporte tant que les royaumes qui tiennent ses deux villes sont alliés (dans un même
-  // pacte) : ceux qui l'ont bâtie, ou d'autres qui ont pris ces villes depuis
-  tradeActive(r) {
-    const o = this.owner[r.from], q = this.owner[r.to];
-    return o >= 0 && q >= 0 && o !== q && this.areAllied(o, q);
+  // Une case où peut passer une route commerciale entre les royaumes o et q : une case où une route peut passer, sur
+  // le territoire de l'un des deux (ou un fleuve, sous un pont)
+  tradeTile(i, o, q) {
+    return this.roadTile(i) && (this.owner[i] === o || this.owner[i] === q || this.terrain[i] === TERRAIN.RIVER);
   },
+  // Tracé d'une route commerciale entre les royaumes o et q (comme roadRoute, mais seulement sur leurs deux
+  // territoires, avec un détour plus large si besoin), ou null
+  tradePath(x1, y1, x2, y2, first, o, q) {
+    const ok = i => this.tradeTile(i, o, q), mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const tries = [[[x1, y1], [x2, y1], [x2, y2]], [[x1, y1], [x1, y2], [x2, y2]],
+      [[x1, y1], [mx, y1], [mx, y2], [x2, y2]], [[x1, y1], [x1, my], [x2, my], [x2, y2]]];
+    if (!first) [tries[0], tries[1]] = [tries[1], tries[0]];
+    return tries.find(p => this.roadClear(p, ok)) || this.roadDetour(x1, y1, x2, y2, ok, 40, 3);
+  },
+  // Pourquoi la route commerciale r ne rapporte rien, ou null si elle marche : ses deux villes doivent être à deux
+  // royaumes alliés (dans un même pacte : ceux qui l'ont bâtie, ou d'autres qui ont pris ces villes depuis), et
+  // toute la route doit rester sur leurs deux territoires (si une case de son passage est prise, elle est coupée)
+  tradeProblem(r) {
+    const o = this.owner[r.from], q = this.owner[r.to];
+    if (o < 0 || q < 0 || o === q || !this.areAllied(o, q)) return 'ally';
+    if (!(r.tiles || []).every(i => this.tradeTile(i, o, q))) return 'cut';
+    return null;
+  },
+  tradeActive(r) { return !this.tradeProblem(r); },
   // Chaque seconde : une route commerciale s'arrête si le pacte est rompu (ou si une de ses villes passe à un royaume
   // qui n'est pas allié avec l'autre) ; elle reprend dès que les royaumes de ses deux villes sont de nouveau alliés.
   // Elle ne disparaît que si une de ses villes est détruite.
@@ -1560,13 +1578,15 @@ const GameRules = {
         if ((p && p.isHuman) || (q && q.isHuman)) UI.log('🛒 Une route commerciale disparaît : une de ses villes a été détruite.', 'warn');
         continue;
       }
-      const active = this.tradeActive(r);
+      const problem = this.tradeProblem(r), active = !problem;
       if (active === r.active) continue;
       r.active = active;
       this.version++;
       if (!(p && p.isHuman) && !(q && q.isHuman)) continue;
       const names = `${p ? p.name : '?'} et ${q ? q.name : '?'}`;
-      if (active) UI.log(`🛒 La route commerciale entre ${names} reprend : ils sont alliés, elle rapporte de nouveau de l'or !`, 'good');
+      if (active) UI.log(`🛒 La route commerciale entre ${names} reprend : elle rapporte de nouveau de l'or !`, 'good');
+      else if (problem === 'cut') UI.log(`🛒 La route commerciale entre ${names} est coupée : des terres sur son passage ont été prises. ` +
+        'Elle reprendra quand tout son passage sera de nouveau à vous deux.', 'warn');
       else UI.log(`🛒 La route commerciale entre ${names} s'arrête : ils ne sont pas alliés. Elle reprendra si les royaumes ` +
         'de ses deux villes forment un pacte.', 'warn');
     }
@@ -1616,26 +1636,35 @@ const GameRules = {
     return pts;
   },
 
-  // Le tracé pts ne passe-t-il que sur des cases où une route peut passer ? (on regarde tous les quarts de case)
-  roadClear(pts) {
-    const W = this.W, H = this.H;
+  // Les cases sur lesquelles passe le tracé pts (on regarde tous les quarts de case), ou null s'il sort de la carte
+  routeTiles(pts) {
+    const W = this.W, H = this.H, tiles = new Set();
     for (let k = 0; k + 1 < pts.length; k++) {
       const [ax, ay] = pts[k], [bx, by] = pts[k + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) * 4));
       for (let s = 0; s <= n; s++) {
         const x = Math.floor(ax + (bx - ax) * s / n), y = Math.floor(ay + (by - ay) * s / n);
-        if (x < 0 || y < 0 || x >= W || y >= H || !this.roadTile(y * W + x)) return false;
+        if (x < 0 || y < 0 || x >= W || y >= H) return null;
+        tiles.add(y * W + x);
       }
     }
-    return true;
+    return [...tiles];
+  },
+
+  // Le tracé pts ne passe-t-il que sur des cases où une route peut passer ? (ok : la règle des cases, roadTile sinon)
+  roadClear(pts, ok = i => this.roadTile(i)) {
+    const tiles = this.routeTiles(pts);
+    return !!tiles && tiles.every(ok);
   },
 
   // Détour d'une route par la terre : le chemin le plus court de case en case (en comptant un peu chaque virage, pour
   // une route bien droite), pas trop loin du trajet direct. null s'il n'y en a pas, ou s'il est bien trop long.
-  roadDetour(x1, y1, x2, y2) {
+  // (ok : la règle des cases, roadTile sinon ; M : de combien le détour peut s'écarter ; long : combien de fois le
+  //  trajet direct il peut faire au plus)
+  roadDetour(x1, y1, x2, y2, ok = i => this.roadTile(i), M = 15, long = 1.8) {
     const W = this.W, H = this.H, sx = Math.floor(x1), sy = Math.floor(y1), ex = Math.floor(x2), ey = Math.floor(y2);
-    const M = 15, bx0 = Math.max(0, Math.min(sx, ex) - M), by0 = Math.max(0, Math.min(sy, ey) - M);
+    const bx0 = Math.max(0, Math.min(sx, ex) - M), by0 = Math.max(0, Math.min(sy, ey) - M);
     const bx1 = Math.min(W - 1, Math.max(sx, ex) + M), by1 = Math.min(H - 1, Math.max(sy, ey) + M);
-    const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1, maxCost = (Math.abs(ex - sx) + Math.abs(ey - sy)) * 1.8 + 8;
+    const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1, maxCost = (Math.abs(ex - sx) + Math.abs(ey - sy)) * long + 8;
     const DX = [1, -1, 0, 0], DY = [0, 0, 1, -1], TURN = 0.4;
     // (une « position » = une case de la zone et la direction d'arrivée)
     const cost = new Float32Array(bw * bh * 4).fill(Infinity), from = new Int32Array(bw * bh * 4).fill(-1);
@@ -1650,7 +1679,7 @@ const GameRules = {
       if (x + bx0 === ex && y + by0 === ey) { end = s; break; }
       for (let d = 0; d < 4; d++) {
         const nx = x + DX[d], ny = y + DY[d];
-        if (nx < 0 || ny < 0 || nx >= bw || ny >= bh || !this.roadTile((ny + by0) * W + nx + bx0)) continue;
+        if (nx < 0 || ny < 0 || nx >= bw || ny >= bh || !ok((ny + by0) * W + nx + bx0)) continue;
         const n = ((ny * bw + nx) << 2) | d, nc = c + 1 + (d !== dir ? TURN : 0);
         if (nc < cost[n]) { cost[n] = nc; from[n] = s; heap.push(nc, n); }
       }

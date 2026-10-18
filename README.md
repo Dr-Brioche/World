@@ -514,9 +514,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    et les autres royaumes en profitent pour l'attaquer !
    🛒 **Routes commerciales** : dans le menu d'une de tes **villes de niveau 2 ou plus** (à côté du mur), le bouton
    **Route commerciale** la relie à une **ville de niveau 2 ou plus d'un allié de ton pacte** : clique sur la ville
-   alliée (en la survolant, tu vois le tracé, le prix et le revenu). La route est **grise** et passe par la terre :
-   jamais sur la mer, un lac ou un sommet infranchissable, ni à travers un fleuve, **sauf sur un pont** (un pont bâti
-   ouvre un passage). Elle coûte **1 000 d'or** jusqu'à 40 cases, puis 30 de plus
+   alliée (en la survolant, tu vois le tracé, le prix et le revenu). La route est **grise** et passe **uniquement sur vos
+   deux territoires** (le tien et celui de ton allié) : jamais sur la mer, un lac ou un sommet infranchissable, ni à
+   travers un fleuve, **sauf sur un pont** (un pont bâti ouvre un passage). **Si une case de son passage est prise par un
+   autre royaume, la route est coupée** : le commerce s'arrête jusqu'à ce que tout son passage soit de nouveau à vous deux. Elle coûte **1 000 d'or** jusqu'à 40 cases, puis 30 de plus
    par case (**5 000 au plus**), et rapporte **+0,5 d'or par case de route toutes les 10 secondes** (une route de 100
    cases : +50) ; ton allié en touche aussi **la moitié**. Plus elle est longue, plus elle rapporte : elle se rembourse
    en 8 à 10 minutes environ. **Le nombre de routes d'une ville dépend de son niveau** : **1** pour un château (niveau 2), **2** pour une citadelle, **3** pour la cité impériale (celles qu'elle a ouvertes et celles qui y arrivent : le bouton affiche « 0/1 », « 1/2 »…), 250 cases au plus. Une ville déjà reliée peut s'ouvrir vers **une autre** ville alliée, mais **deux villes ne se relient qu'une fois** (si ton allié a déjà ouvert la route entre elles, tu ne peux pas la refaire). **Si le pacte est rompu, la route reste mais
@@ -614,6 +615,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.34** : 🛒 une route commerciale ne passe que sur les territoires des deux royaumes qu'elle relie ; si une case de son passage est prise, le commerce s'arrête jusqu'à ce qu'elle soit reprise
 - **v0.92.33** : 🛒 routes commerciales selon le niveau de la ville : 1 pour un château, 2 pour une citadelle, 3 pour la cité impériale
 - **v0.92.32** : 👑 **cité impériale** : un 4e niveau de ville (une seule par partie, 15 000 d'or, un bâtiment de chaque type au niveau maximum) : murs immenses (+600 %), garnison de 300, 3e mur, routes internes +100 %, troupes +25 %, routes commerciales +50 %, routes de pierre vers ses ports et églises (bonus x2)
 - **v0.92.31** : 💬 fenêtres des bâtiments plus simples : les avantages en liste courte (« – Garnison +200 % », « – Places : 6 → 9 »…) ; aides du mur et de la route commerciale raccourcies
