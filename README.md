@@ -88,6 +88,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    🏛️ **La règle du pouvoir** : c'est une **muraille avec sa garnison** qui maintient le pouvoir dans une zone, c'est-à-dire une
    **ville (château)** ou un **port fortifié** (niveau 3). Chacun tient sa région, même isolé.
    Quand un royaume n'a **plus aucune ville ni port fortifié**, c'est l'**anarchie** : il est **désorganisé**, même s'il lui reste des églises ou des petits ports :
+   un petit **drapeau blanc** 🏳️ flotte sur ses terres (et sur chaque morceau de royaume coupé de ses villes) ;
    clique n'importe où sur ses terres, l'assaut se fait **de front, sur tout son territoire** (comme sur une terre libre),
    sans devoir prendre ses bâtiments un par un. Tu peux **quand même viser** une de ses **églises** ou un de ses **ports**
    (ou un avant-poste) pour foncer droit dessus et **prendre toute sa zone d'un coup**. Avec une **citadelle** (château niveau 3),
@@ -147,7 +148,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      que sur les terres libres, et encore moins dans le relief (forêt, colline, montagne, fleuve).
    - **Où est l'attaque ?** Un royaume qui t'attaque a son nom qui **clignote en rouge** dans le classement, en haut
      à droite : **clique sur son nom**, la caméra va directement voir son armée (s'il a plusieurs assauts contre toi,
-     chaque clic montre le suivant).
+     chaque clic montre le suivant). **Clique sur le nom de n'importe quel royaume** du classement : la caméra va sur
+     ses terres (il clignote un instant), pratique pour retrouver un petit royaume perdu et l'achever pour la prime.
    - **Défendre** : quand un assaut te vise, une barre courte s'affiche en bas de l'écran : « Écosse attaque · ⚔ 242 · 🛡️ Défendre »
      (les soldats de l'assaut). Le reste (réserve de l'attaquant…) se voit sur la carte, sous son nom.
      Dès que l'armée **entre sur tes terres** (pas avant : pendant sa marche chez elle, tes défenseurs n'iront jamais
@@ -178,7 +180,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (elle ne la traverse pas, la muraille reste entière) et l'assiège : il ne tombe pas tout de suite. Elle doit
      tenir **8 s** (fort en bois), **13 s** (château) ou **18 s** (citadelle) : pendant ce temps, sa garnison sort,
      et le défenseur peut encore **envoyer des soldats** le défendre ; tous se battent avec le bonus de ses murs.
-     Le compte à rebours s'affiche sur la bannière de l'assaut.
+     Une **jauge ronde**, à la couleur de l'assaillant, se remplit autour de la ville assiégée : quand le cercle est plein, elle tombe.
+     ⚓ Un **port fortifié** (niveau 3) se défend pareil, comme une petite ville : l'armée s'arrête à sa petite muraille
+     et l'assiège **10 s**, le temps que ses défenseurs arrivent.
      **Deux armées ennemies** (pas alliées) qui assiègent **le même château** d'un troisième royaume s'affrontent
      d'abord entre elles, au pied des murs : le siège attend la fin de la bataille, et la gagnante le reprend.
    - **Prendre un château** te donne d'un coup **toute sa zone de défense** (dans sa muraille) et
@@ -245,10 +249,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise ; le bouton **Château** affiche le compte, ex. « 1/3 ») ; les châteaux pris à l'ennemi
    ne comptent pas dans cette limite, et ta meilleure **église** améliorée en débloque d'autres.
    **Le terrain compte** : un moulin produit plus en plaine (+30 %) qu'en forêt (normal), colline (-10 %) ou montagne (-30 %) ;
-   une caserne produit plus en forêt ou colline (+30 %) qu'en plaine (normal) ou montagne (-10 %).
+   une caserne produit plus en forêt ou colline (+30 %), et encore plus sur une **colline boisée** (+40 %), qu'en plaine (normal) ou montagne (-10 %) ;
+   une **église** (sa Croyance et son or) rayonne mieux en hauteur : **+30 %** sur une colline, une colline boisée ou une montagne,
+   **-20 %** en forêt, normale en plaine.
    Dans le **désert** 🏜️, tout bâtiment (moulin, caserne, port) produit **20 % de moins**.
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
-   **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher**.
+   **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher** (et **2 fois plus cher**
+   pour les **églises** et les **ports**).
    Les bâtiments que tu **prends à l'ennemi** ne comptent pas (et un bâtiment perdu ne compte plus).
    **Les moulins et casernes se construisent dans l'enceinte d'une de tes villes** (dans sa muraille),
    **ou près d'une de tes églises** (ou d'un port amélioré), qui a encore de la place, pas ailleurs dans l'arrière-pays.
@@ -367,7 +374,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Croyance ✝️ | Moulins ou casernes autour d'elle | Châteaux en plus dans le royaume | Prix |
      |---|---|---|---|---|
-     | 1. Église | +10 | 1 | aucun | 💰 50 (puis plus cher à chaque église) |
+     | 1. Église | +10 | 1 | aucun | 💰 50 (puis 2 fois plus cher à chaque église) |
      | 2. Grande église | +30 | 2 | +1 | 💰 800 |
      | 3. Cathédrale | +50 | 5 | +2 | 💰 2000 |
 
@@ -384,7 +391,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **7 par seconde** avec 2000, **8,5** avec 3000, et **10 par seconde** à partir de **5000** (le maximum). Plusieurs
      croisades en même temps (une par cathédrale) servent donc encore. Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
      s'avancent dans le tien : les frontières deviennent plus nettes, et ses routes trop fines se referment.
-     Si une conversion **coupe** son royaume, la coupe s'applique tout de suite (le morceau coupé est englobé).
+     La foi avance **en courbes**, pas en ligne droite : comme elle gagne les villages, elle s'étire en pointe vers les
+     **églises** et les **petits ports** voisins (à moins de 30 cases), et son front ondule doucement.
+     Si une conversion **coupe** son royaume, la coupe s'applique tout de suite (le morceau coupé est englobé), sauf
+     les **zones de muraille** des villes et des ports fortifiés : la Croyance ne les détruit jamais.
      Un royaume **désorganisé** (sans ville ni port fortifié) se fait convertir **2 fois plus vite**.
      Ça marche dans les deux sens : un voisin plus croyant convertit **tes** terres ! Dans le classement, une **📖 bible verte**
      à côté d'un voisin veut dire que tu convertis ses terres, une **bible rouge** que c'est lui qui convertit les tiennes.
@@ -422,6 +432,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ville bâtie près d'elle **ajoute** un chemin (elle ne remplace pas les autres). Chaque chemin rapporte **un peu d'or**
      (+2 💰 toutes les 10 s) et **+50 % de Croyance** : les bonus s'additionnent. Mais une église près d'un **port seul**
      (sans ville proche, donc sans route) ne crée pas de chemin.
+     🌾 **Le port exporte le grain** : de base, un port rapporte autant qu'un moulin. Chaque **moulin relié par une route** à une
+     des villes du port lui rapporte **+15 %** d'or en plus (**6 moulins** au plus : +90 %). La barre d'aide l'indique en survolant le port.
      🌾 **Au bord d'une route** : un **moulin** ou une **caserne** bâti **hors des villes** (près d'une église ou d'un port),
      **sur** une de ces routes ou juste à côté (à moins de **2 cases** de son centre), produit **+20 %**. En le posant,
      la barre d'aide en bas l'indique (« 🛤️ au bord d'une route »).
@@ -430,7 +442,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Or produit | Moulins ou casernes autour | Expéditions maritimes | Prix |
      |---|---|---|---|---|
-     | 1. Port | un peu | aucun | non | 💰 60 (puis plus cher à chaque port) |
+     | 1. Port | comme un moulin | aucun | non | 💰 60 (puis 2 fois plus cher à chaque port) |
      | 2. Grand port | +200 % | 1 | **oui** | 💰 500 |
      | 3. Port royal | +122 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 2000 |
 
@@ -445,6 +457,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    d'un port fortifié, ni sur un mur : la côte d'une ville se prend en l'assiégeant). L'expédition coûte un peu d'or
    (un peu plus à chaque avant-poste) et emmène **le % de soldats choisi** avec le curseur « Envoyer » :
    choisis bien avant de partir ! Une petite partie se perd en mer (1 % par seconde de traversée, 25 % au plus).
+   **2 assauts maritimes au plus** contre un même royaume : avec 2 bateaux en route vers lui (ou 2 avant-postes déjà sur ses terres),
+   impossible d'en envoyer un 3e.
    Il faut emmener **au moins de quoi remplir la garnison** de l'avant-poste (5 soldats, pertes en mer comprises).
    - Pendant la construction, tous les soldats débarqués sont sur place. Une fois l'avant-poste bâti,
      **5 restent en garnison** (fixe : ils ne bougent jamais) et **les autres stationnent** à l'avant-poste.
@@ -495,17 +509,20 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · ⛵ Attaque navale · 🛶 Traverser le fleuve · 🌉 Construire un pont).
    Pour construire un bâtiment, utilise la barre du bas (ou les touches 1 à 5).
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
-   **75 %**, le reste se perd en route, et sans dépasser son armée maximum.
+   **75 %**, le reste se perd en route, et sans dépasser son armée maximum. Et **💰 Envoyer de l'or** (le même %
+   de ton trésor) : lui le reçoit **en entier**, tout de suite.
    Si cet allié **se fait attaquer**, le menu propose aussi **🛡️ Aider [allié] contre [attaquant]** : tes soldats
    arrivent en **5 s** et se battent avec ses défenseurs ; à la fin de l'assaut, les survivants rentrent chez toi.
    Les royaumes rivaux aident aussi leurs alliés.
 4. **Forme des pactes** (ils sont **interdits par défaut** : chacun pour soi ; autorise-les dans le menu de départ pour jouer avec) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
    pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
+   **Seul le fondateur** du pacte (celui qui l'a proposé) accepte les nouveaux membres : une demande pour rejoindre le pacte
+   va à lui, et les autres membres ne peuvent pas inviter (s'il quitte le pacte, un autre membre prend sa place).
    **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
    Les membres d'un pacte ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer un pacte : accepte ou refuse.
-   **Qui est allié avec qui ?** Chaque pacte est entouré d'une **grande frontière dorée**, visible par tous,
-   qui fait le tour de tous ses membres. Dans le **classement**, les membres d'un pacte sont **regroupés dans un cadre**,
+   **Qui est allié avec qui ?** Chaque pacte est entouré d'une **frontière en pointillés**, **or** et **couleur de son fondateur**,
+   visible par tous, qui fait le tour de tous ses membres (plus fine quand on dézoome). Dans le **classement**, les membres d'un pacte sont **regroupés dans un cadre**,
    avec le nom du pacte et sa **part des terres** (tous ses membres ensemble) ; les pactes et les royaumes seuls sont classés ensemble.
    Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée,
    et tu quittes le pacte.
@@ -568,6 +585,9 @@ plus claires et plus foncées. (Réglages dans `js/config.js` : `SMOOTH_MAP` pou
 📜 **Vue parchemin** : en dézoomant presque au maximum (molette vers l'arrière, au-delà de « toute la carte »), la carte
 devient une **vieille carte sur parchemin**, encadrée : terres beiges ombrées par le relief, côtes soulignées à l'encre, mer
 gris-vert, et les royaumes en couleurs légères. Elle apparaît en fondu, et on revient à la carte normale en zoomant.
+Plus de détails (routes, murailles, moulins…) : chaque **ville** est un petit dessin à l'encre (des tours aux toits pointus,
+plus nombreuses selon son niveau, avec le fanion de son royaume ; une couronne pour la cité impériale), et seules les
+**cathédrales** ⛪ et les **grandes casernes** ⛺ (niveau 3) sont dessinées aussi.
 (Réglage `PARCHMENT_ZOOM` dans `js/config.js`.)
 🌊 **Le décor autour de la carte** : la carte est encadrée et posée sur une vieille carte marine dessinée (îles rocheuses,
 navires, monstres marins), qu'on découvre en dézoomant. La vue ne va jamais plus loin que ce décor : on ne peut pas
@@ -615,6 +635,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.35** : ✝️ la Croyance ne détruit plus les zones de muraille des villes, et elle avance en courbes vers les églises et les ports voisins · 📜 vue parchemin : villes dessinées à l'encre, seules les cathédrales et les grandes casernes en plus · 🤝 frontières de pacte en pointillés or + couleur du fondateur, plus fines dézoomé ; seul le fondateur accepte les nouveaux membres ; 💰 envoyer de l'or à un allié · ⚓ port : revenu de base d'un moulin, +15 % par moulin relié à ses villes ; port fortifié assiégé 10 s à sa muraille · 💰 l'or ne s'arrondit plus vers le haut · 💸 églises et ports 2 fois plus chers à chaque construction · ⛵ 2 assauts maritimes au plus contre un même royaume · 🎯 clic sur un nom du classement : la caméra va sur ce royaume · 👑 icône des troupes avec une couronne pour la cité impériale · ⏳ sièges : jauge ronde autour de la cible · ⛰️ églises +30 % en hauteur, -20 % en forêt ; casernes +40 % sur colline boisée · 🏰 placement de la capitale : la défense de la zone dans la barre d'info · 🏳️ drapeau blanc sur les terres désorganisées · 🏠 bâtiments 30 % plus grands sur la carte
 - **v0.92.34** : 🛒 une route commerciale ne passe que sur les territoires des deux royaumes qu'elle relie ; si une case de son passage est prise, le commerce s'arrête jusqu'à ce qu'elle soit reprise
 - **v0.92.33** : 🛒 routes commerciales selon le niveau de la ville : 1 pour un château, 2 pour une citadelle, 3 pour la cité impériale
 - **v0.92.32** : 👑 **cité impériale** : un 4e niveau de ville (une seule par partie, 15 000 d'or, un bâtiment de chaque type au niveau maximum) : murs immenses (+600 %), garnison de 300, 3e mur, routes internes +100 %, troupes +25 %, routes commerciales +50 %, routes de pierre vers ses ports et églises (bonus x2)
@@ -871,7 +892,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 💡 Idées pour la suite
 
-- 🤝 Plus de diplomatie : tributs en or, demandes d'aide aux membres du pacte
+- 🤝 Plus de diplomatie : demandes d'aide aux membres du pacte
 - 🗼 Nouveaux bâtiments : tours de guet
 - 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
 - 👑 Héros ou rois avec des pouvoirs spéciaux

@@ -507,8 +507,9 @@ const GameRules = {
       if (this.building[a] !== B_CHURCH || o < 0) continue;
       const w = this.works.get(a);
       if (w && w.kind === 'build') continue; // (encore en chantier)
-      // (+FAITH_ROAD_BONUS par chemin : une église reliée à deux villes a deux fois le bonus)
-      f[o] += this.buildingInfo(a).faith * (1 + CONFIG.FAITH_ROAD_BONUS * this.churchLinks(o, a, links).length);
+      // (+FAITH_ROAD_BONUS par chemin : une église reliée à deux villes a deux fois le bonus ; et selon son terrain :
+      //  plus forte sur les hauteurs, moins en forêt, voir TERRAIN_PRODUCTION)
+      f[o] += this.buildingInfo(a).faith * (1 + CONFIG.FAITH_ROAD_BONUS * this.churchLinks(o, a, links).length) * this.terrainFactor(a, B_CHURCH);
     }
     // Croisades en cours : +CRUSADE_FAITH chacune (tant que la cathédrale est au royaume)
     for (const c of this.crusades) if (this.tick < c.end && this.owner[c.church] === c.owner) f[c.owner] += CONFIG.CRUSADE_FAITH;
@@ -614,6 +615,15 @@ const GameRules = {
         && ((r.heart[k] && !this.pieceUnlinked(r, k)) || r.colony[k]);
     };
     const best = new Map(); // prêcheur * 1000 + converti → les meilleures cases [{ t, score, pid, o }], la meilleure d'abord
+    // Ce qui attire la Croyance chez chaque converti : ses églises et ses petits ports (le centre de chacun)
+    const lures = new Map();
+    for (const a of this.buildingTiles) {
+      const b = this.building[a], o = own[a];
+      if ((b !== B_CHURCH && b !== B_PORT) || o < 0 || !due.has(o) || this.holdsAlone(a)) continue;
+      const h = this.sizeOf(b) / 2;
+      (lures.get(o) || lures.set(o, []).get(o)).push([a % W + h, ((a / W) | 0) + h]);
+    }
+    const R = CONFIG.FAITH_LURE_RANGE;
     for (let i = 0; i < N; i++) {
       const o = own[i];
       if (o < 0 || !due.has(o)) continue;
@@ -634,7 +644,16 @@ const GameRules = {
         if (q === pid) mine++;
         else if (q === o && (!dx || !dy)) theirs++;
       }
-      const score = mine + (4 - theirs) * 2 + Math.random();
+      // La foi gagne les villages : elle avance en pointe vers l'église ou le port le plus proche (s'il n'est pas
+      // trop loin), et son front ondule doucement (deux vagues, différentes pour chaque prêcheur) : des courbes,
+      // pas des lignes droites.
+      let lure = 0;
+      for (const [lx, ly] of lures.get(o) || []) {
+        const d = Math.hypot(lx - x, ly - y);
+        if (d < R) lure = Math.max(lure, 1 - d / R);
+      }
+      const wave = Math.sin(x * 0.19 + Math.sin(y * 0.11 + pid) * 2.5) + Math.sin(y * 0.17 + Math.sin(x * 0.13 + pid * 2) * 2.5);
+      const score = mine + (4 - theirs) * 2 + lure * CONFIG.FAITH_LURE + wave * CONFIG.FAITH_WAVE / 2 + Math.random();
       const key = pid * 1000 + o, n = preachers.get(pid);
       let list = best.get(key);
       if (list && list.length >= n && list[list.length - 1].score >= score) continue;
@@ -1292,12 +1311,14 @@ const GameRules = {
     const owner = this.players[this.owner[a]];
     if (t === B_CHURCH) { // (par chemin ; une route de pierre, vers une cité impériale, rapporte plus)
       this.roads();
-      return (this.roadChurches.get(a) || []).reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0);
+      return (this.roadChurches.get(a) || []).reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0)
+        * this.terrainFactor(a, B_CHURCH);
     }
     const eff = !owner ? 1 : t === B_BARRACKS ? this.barracksEfficiency(owner) : this.goldEfficiency(owner);
     const v = (t === B_MILL || t === B_PORT ? info.gold : info.troops) * eff;
     const road = this.roads().get(a);
-    return v * (1 + (road ? road.bonus : 0)) * this.terrainFactor(a, t);
+    const mills = road && road.mills ? road.mills * CONFIG.PORT_MILL_BONUS : 0; // (port : les moulins de ses villes)
+    return v * (1 + (road ? road.bonus : 0) + mills) * this.terrainFactor(a, t);
   },
 
   // Rendement des casernes d'un royaume : plus il en a, moins chacune produit (voir BARRACKS_DIMINISHING)
@@ -1370,6 +1391,17 @@ const GameRules = {
         ? { castle: c, bonus: CONFIG.PORT_ROAD_BONUS * IMPERIAL.roadFactor, road: 'paved' } // (route de pierre)
         : { castle: c, bonus: CONFIG.PORT_ROAD_BONUS, road: 'dirt' });
       if (list.length) links.set(a, this.roadLink(list));
+    }
+    // Le port exporte le grain des moulins de ses villes : chaque moulin relié par une route à une ville du port
+    // lui rapporte PORT_MILL_BONUS d'or en plus (PORT_MILL_MAX moulins au plus)
+    for (const [a, link] of links) {
+      if (this.building[a] !== B_PORT) continue;
+      const cities = new Set(this.linkRoads(link).map(([c]) => c));
+      let mills = 0;
+      for (const [m, ml] of links) {
+        if (this.building[m] === B_MILL && this.owner[m] === this.owner[a] && this.linkRoads(ml).some(([c]) => cities.has(c))) mills++;
+      }
+      link.mills = Math.min(mills, CONFIG.PORT_MILL_MAX);
     }
     // Une église reliée par un chemin à une de ces routes, ou à une ville proche, produit un peu d'or (CHURCH_ROAD_GOLD)
     this.roadChurches = new Map(); // église → ses chemins (voir churchLinks)
@@ -1948,7 +1980,9 @@ const GameRules = {
   },
 
   buildCost(p, type) {
-    return Math.round(BUILDINGS[type].baseCost * Math.pow(CONFIG.BUILDING_COST_GROWTH, this.builtCount(p, type)));
+    // (les églises et les ports montent 2 fois plus vite : on n'en bâtit pas trop)
+    const growth = type === B_CHURCH || type === B_PORT ? CONFIG.RARE_COST_GROWTH : CONFIG.BUILDING_COST_GROWTH;
+    return Math.round(BUILDINGS[type].baseCost * Math.pow(growth, this.builtCount(p, type)));
   },
 
   // Bâtiments de ce type que le royaume a construits lui-même et possède encore : ce sont eux (et eux seuls)
@@ -2135,6 +2169,37 @@ const GameRules = {
     }
     return any;
   },
+  // Où planter un drapeau blanc (le signe d'un territoire désorganisé, sans pouvoir en place) : renvoie des cases.
+  // - au milieu de chaque morceau désorganisé assez grand : un royaume sans ville ni port fortifié, ou un morceau
+  //   coupé de ses villes (sans avant-poste) ;
+  // - à côté des villes d'un royaume dont toutes les villes sont isolées (leurs troupes défendent désorganisées).
+  // (recalculé seulement quand la carte change)
+  disorganizedSpots() {
+    if (this.whiteFlagsVersion === this.version) return this.whiteFlags;
+    this.whiteFlagsVersion = this.version;
+    const r = this.regions(), spots = [], W = this.W;
+    for (let k = 0; k < r.size.length; k++) {
+      const o = r.owner[k];
+      if (r.size[k] < CONFIG.WHITE_FLAG_MIN_TILES || r.anyOutpost[k] || r.colony[k] || r.held[k]) continue;
+      if (this.isProtected(o) && !this.pieceUnlinked(r, k)) continue;
+      // (la case du morceau la plus proche de son centre : le drapeau tombe toujours sur ses terres)
+      let sx = 0, sy = 0;
+      for (let q = r.start[k]; q < r.start[k] + r.size[k]; q++) { sx += r.order[q] % W; sy += (r.order[q] / W) | 0; }
+      sx /= r.size[k]; sy /= r.size[k];
+      let best = -1, bd = Infinity;
+      for (let q = r.start[k]; q < r.start[k] + r.size[k]; q++) {
+        const t = r.order[q], d = (t % W - sx) ** 2 + (((t / W) | 0) - sy) ** 2;
+        if (d < bd) { bd = d; best = t; }
+      }
+      spots.push(best);
+    }
+    for (const p of this.players) {
+      if (!p.alive || !this.troopsInCastles(p.id)) continue;
+      for (const c of this.castles.concat(this.walledPorts())) if (this.owner[c] === p.id) spots.push(c);
+    }
+    this.whiteFlags = spots;
+    return spots;
+  },
   isUnlinked(i) {
     if (this.owner[i] < 0) return false;
     const r = this.regionsAt(i);
@@ -2294,7 +2359,9 @@ const GameRules = {
     for (const tiles of pieces) {
       // Les châteaux et ports de niveau 3 du morceau, et les terres de leur zone, restent au royaume
       const keep = tiles.filter(i => this.anchor[i] === i && this.building[i] && this.holdsAlone(i));
-      const kept = i => keep.some(c => this.building[c] === B_CASTLE
+      // (et aussi toute case dans la muraille d'un de ses châteaux, même si le château est dans un autre morceau :
+      //  la zone d'une ville ne tombe qu'avec elle, jamais coupée ou convertie par la Croyance)
+      const kept = i => this.castleProtects(target, i) || keep.some(c => this.building[c] === B_CASTLE
         ? this.inCastleRange(c, i % this.W, (i / this.W) | 0, this.castleInfo(c).radius)
         : this.inChurchRange(c, i, this.buildingInfo(c).radius)); // (zone du port, celle de sa muraille)
       // Les royaumes qui touchent ce morceau (pas les alliés de target), avec la longueur de leur frontière
@@ -2506,6 +2573,11 @@ const GameRules = {
     const path = this.searchPath(pid, -1, foot, passable, this.owner[c], source, walk); // (-1 = on part de la frontière)
     if (path && this.building[c] === B_CASTLE) {
       const k = path.findIndex(i => this.inWalls(c, i));
+      if (k >= 0) path.length = k + 1;
+    }
+    // (de même à la petite muraille d'un port fortifié : on l'assiège depuis là)
+    if (path && this.walledPort(c)) {
+      const k = path.findIndex(i => this.inPortWalls(c, i));
       if (k >= 0) path.length = k + 1;
     }
     return path;
@@ -2880,6 +2952,11 @@ const GameRules = {
       return { error: 'On débarque sur une côte (au bord de la mer ou d\'un fleuve) qui n\'est ni à toi ni à un allié, à côté des bâtiments.' };
     }
     if (this.expeditions.some(e => e.pid === pid && e.landing === i && e.home === undefined)) return { error: 'Une expédition est déjà en route vers cette côte.' };
+    // Pas plus de MAX_SEA_ASSAULTS débarquements à la fois chez un même royaume (en mer ou avant-postes déjà plantés)
+    const o = this.owner[i];
+    if (o >= 0 && this.seaAssaultsOn(pid, o) >= CONFIG.MAX_SEA_ASSAULTS) {
+      return { error: `Tu as déjà ${CONFIG.MAX_SEA_ASSAULTS} débarquements chez ${this.players[o].name} (en mer ou avant-postes) : pas plus à la fois.` };
+    }
     const zone = this.landingZone(pid, i);
     if (zone.anchor < 0) return { error: 'Pas assez de place sur cette côte pour un avant-poste.' };
     // Le port le plus rapide pour y aller
@@ -2971,7 +3048,7 @@ const GameRules = {
     p.troops -= troops;
     p.lastExpedition = this.tick;
     const TPS = CONFIG.TICKS_PER_SECOND;
-    this.expeditions.push({ id: this.nextAttackId++, pid, landing: i, path: plan.path, cost: plan.cost, sent: troops,
+    this.expeditions.push({ id: this.nextAttackId++, pid, landing: i, victim: this.owner[i], path: plan.path, cost: plan.cost, sent: troops,
       troops: troops * (1 - this.seaLoss(plan.time)), // ceux qui arriveront
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(plan.time * TPS)) });
     // Prévenir les royaumes dont la côte est visée
@@ -2980,6 +3057,14 @@ const GameRules = {
       UI.log(`⛵ ${p.name} envoie une expédition vers ta côte ! Tiens-toi prêt à attaquer son avant-poste quand elle accostera.`, 'warn', p);
     }
     return null;
+  },
+
+  // Débarquements de pid chez le royaume o : ses expéditions en mer vers lui, et ses avant-postes plantés chez lui
+  seaAssaultsOn(pid, o) {
+    let n = 0;
+    for (const e of this.expeditions) if (!e.done && e.pid === pid && e.home === undefined && !e.reinforce && e.victim === o) n++;
+    for (const [a, op] of this.outposts) if (this.owner[a] === pid && op.victim === o) n++;
+    return n;
   },
 
   // Faire rentrer une de ses expéditions en mer (débarquement ou renforts) : comme une retraite, le bateau fait
@@ -3146,7 +3231,7 @@ const GameRules = {
       this.placeBuilding(zone.anchor, B_OUTPOST);
       this.garrison[zone.anchor] = e.troops; // tous les soldats débarqués défendent l'avant-poste
       this.outposts.set(zone.anchor, { ready: this.tick + CONFIG.OUTPOST_BUILD_TIME * CONFIG.TICKS_PER_SECOND,
-        landing: e.landing, stationed: 0 });
+        landing: e.landing, stationed: 0, victim: e.victim === undefined ? -1 : e.victim }); // (chez qui il est planté)
       if (p.isHuman) {
         UI.log(`⛺ Débarquement réussi ! ${fmt(e.troops)} soldats bâtissent ton avant-poste (affaiblis tant qu'il n'est pas bâti) ` +
           `(${fmt(e.sent - e.troops)} perdus en mer). Il sera bâti dans ${CONFIG.OUTPOST_BUILD_TIME} s.`, 'good');
@@ -3342,6 +3427,8 @@ const GameRules = {
   },
   troopIcon(pid) {
     const l = pid >= 0 ? this.troopLevel(pid) : 0;
+    // (avec une cité impériale : une petite couronne sur le casque, au-dessus du bouclier)
+    if (pid >= 0 && this.hasImperial(pid)) return '🏅';
     return l >= 3 ? '🎖' : l === 2 ? '🪖' : '⚔';
   },
 
@@ -4008,9 +4095,10 @@ const GameRules = {
     if (a.siege) {
       if (this.owner[a.siege.tile] !== a.target) return this.endAttack(a); // le château a changé de mains
       const sb = this.building[a.siege.tile];
-      if (sb !== B_CASTLE && sb !== B_OUTPOST) return this.endAttack(a); // (il n'existe plus)
+      if (sb !== B_CASTLE && sb !== B_OUTPOST && sb !== B_PORT) return this.endAttack(a); // (il n'existe plus)
       if (this.tick < a.siege.end) return;
-      return this.building[a.siege.tile] === B_OUTPOST ? this.takeOutpost(a, a.siege.tile) : this.takeCastle(a, a.siege.tile);
+      return sb === B_OUTPOST ? this.takeOutpost(a, a.siege.tile) : sb === B_PORT ? this.takePort(a, this.anchor[a.siege.tile])
+        : this.takeCastle(a, a.siege.tile);
     }
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
     // (plaine 1, forêt 1.6, colline 2.2, montagne 2.8, fleuve 4). On avance donc vite en plaine
@@ -4055,6 +4143,10 @@ const GameRules = {
       }
       // (un avant-poste visé s'assiège aussi : il ne tombe pas tout de suite)
       if (this.building[t] === B_OUTPOST && this.anchor[t] === a.targetCastle) return this.startSiege(a, t);
+      // (un port fortifié aussi, comme une petite ville : l'armée s'arrête à sa petite muraille)
+      if (a.target >= 0 && tc >= 0 && this.walledPort(tc) && this.owner[tc] === a.target && this.inPortWalls(tc, t)) {
+        return this.startSiege(a, tc);
+      }
       // (un assaut contre un royaume avance un peu plus vite que la normale dans le relief : ASSAULT_TERRAIN_SLOWDOWN)
       const raw = TERRAIN_INFO[this.terrain[t]].cost;
       const steps = a.target >= 0 ? 1 + (raw - 1) * CONFIG.ASSAULT_TERRAIN_SLOWDOWN : raw;
@@ -4169,9 +4261,9 @@ const GameRules = {
 
   // L'armée arrive au pied du château (case t) : le siège dure quelques secondes selon son niveau
   startSiege(a, t) {
-    const outpost = this.building[t] === B_OUTPOST;
-    const secs = outpost ? CONFIG.OUTPOST_SIEGE : this.castleInfo(this.anchor[t]).siege;
-    a.siege = { tile: t, end: this.tick + secs * CONFIG.TICKS_PER_SECOND };
+    const outpost = this.building[t] === B_OUTPOST, port = this.building[t] === B_PORT;
+    const secs = outpost ? CONFIG.OUTPOST_SIEGE : port ? CONFIG.PORT_SIEGE : this.castleInfo(this.anchor[t]).siege;
+    a.siege = { tile: t, start: this.tick, end: this.tick + secs * CONFIG.TICKS_PER_SECOND }; // (start : pour la jauge)
     a.frontTile = t; // on se bat au pied des murs (avec leur bonus de défense)
     // L'ennemi est à la muraille : la garnison du château entre enfin en jeu (elle n'en sort pas avant)
     if (!outpost && t === a.targetCastle && !a.garrisonOut) {
@@ -4180,9 +4272,23 @@ const GameRules = {
       a.garrisonOut = true;
     }
     const p = this.players[a.attacker], d = this.players[a.target];
-    const what = outpost ? ['un avant-poste', 'ton avant-poste', '⛺'] : ['un château', 'ton château', '🏰'];
+    const what = outpost ? ['un avant-poste', 'ton avant-poste', '⛺'] : port ? ['un port fortifié', 'ton port fortifié', '⚓']
+      : ['un château', 'ton château', '🏰'];
     if (p.isHuman) UI.log(`${what[2]} Ton armée assiège ${what[0]} ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`, 'good', d);
     else if (d.isHuman) UI.log(`${what[2]} ${p.name} assiège ${what[1]} ! Il tombe dans ${secs} s : envoie vite des défenseurs !`, 'warn', p);
+  },
+
+  // Port fortifié (niveau 3) : il a une petite muraille autour de sa zone, qu'un assaut assiège comme une petite ville
+  walledPort(c) { return this.building[c] === B_PORT && this.level[c] >= 3; },
+  inPortWalls(c, i) { return this.inChurchRange(c, i, this.buildingInfo(c).radius); },
+
+  // Fin du siège d'un port fortifié : il est pris, avec sa zone et les bâtiments bâtis grâce à lui
+  takePort(a, c) {
+    const linked = this.hasSlots(c) ? this.churchZone(c) : null;
+    for (const j of this.footprint(c, B_PORT)) this.setOwner(j, a.attacker);
+    if (linked) this.takeLinked(a, linked);
+    this.onTargetTaken(a, B_PORT, !!linked);
+    return this.endAttack(a);
   },
 
   // Fin du siège d'un avant-poste : il est détruit, et l'assaut s'arrête. Toute la zone qu'il avait prise (son
@@ -4498,13 +4604,38 @@ const GameRules = {
     if (block) return block;
     const wait = (from.refusedUntil[toId] || 0) - this.tick;
     if (wait > 0) return `${to.name} a refusé récemment. Réessaie dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`;
-    if (to.isHuman) return UI.askAlliance(from) ? 'pending' : 'refused';
-    if (this.wouldAccept(to, from)) {
+    // Seul le fondateur d'un pacte (celui qui l'a proposé) y fait entrer de nouveaux membres : un autre membre ne
+    // peut pas inviter, et une demande pour rejoindre le pacte va à son fondateur
+    if (from.pact >= 0 && to.pact < 0) {
+      const f = this.pactFounder(from.pact);
+      if (f && f.id !== fromId) {
+        return `Seul ${f.name}, fondateur du ${this.pactName(from)}, peut faire entrer de nouveaux membres.`;
+      }
+    }
+    const judge = to.pact >= 0 && from.pact < 0 ? this.pactFounder(to.pact) || to : to;
+    if (judge.isHuman) return UI.askAlliance(from) ? 'pending' : 'refused';
+    if (this.wouldAccept(judge, from)) {
       this.makeAlliance(fromId, toId);
+      if (judge !== to && from.isHuman) UI.log(`🤝 ${judge.name}, fondateur du pacte, a accepté ta demande.`, 'good', judge);
       return 'accepted';
     }
     this.refuseAlliance(fromId, toId);
+    if (judge !== to && from.isHuman) UI.log(`🤝 ${judge.name}, fondateur du ${this.pactName(to)}, a refusé ta demande.`, 'warn', judge);
     return 'refused';
+  },
+
+  // Le fondateur du pacte id (celui qui l'a proposé) : lui seul accepte de nouveaux membres. S'il l'a quitté (ou
+  // s'il est tombé), un autre membre prend sa place.
+  pactFounder(id) {
+    const pact = this.pacts.get(id);
+    if (!pact) return null;
+    const members = this.pactMembers(id);
+    let f = this.players[pact.founder];
+    if (!f || !members.includes(f)) {
+      f = members[0] || null;
+      if (f) pact.founder = f.id;
+    }
+    return f;
   },
 
   refuseAlliance(fromId, toId) {
@@ -4517,7 +4648,7 @@ const GameRules = {
     if (this.areAllied(a, b) || this.pactBlock(a, b)) return;
     if (pa.pact < 0 && pb.pact < 0) {
       const id = this.nextPactId++;
-      this.pacts.set(id, { name: `Pacte ${this.deName(pa.name)}` });
+      this.pacts.set(id, { name: `Pacte ${this.deName(pa.name)}`, founder: pa.id }); // (a : celui qui l'a proposé)
       pa.pact = pb.pact = id;
       UI.log(`🤝 ${pa.name} et ${pb.name} forment le ${this.pacts.get(id).name} !`, 'good', [pa, pb]);
     } else {
@@ -4547,6 +4678,18 @@ const GameRules = {
     q.troops += got;
     if (q.isHuman) UI.log(`🎁 ${p.name} t'envoie ${fmt(got)} soldats !`, 'good', p);
     return got;
+  },
+
+  // Envoyer de l'or à un allié du pacte (il le reçoit tout de suite, en entier). Renvoie un message d'erreur, ou null.
+  sendGoldToAlly(pid, ally, gold) {
+    const p = this.players[pid], q = this.players[ally];
+    if (!q || !q.alive || !this.areAllied(pid, ally)) return 'On ne peut envoyer de l\'or qu\'à un allié de son pacte.';
+    gold = Math.floor(Math.min(gold, p.gold));
+    if (gold < 1) return 'Pas assez d\'or !';
+    p.gold -= gold;
+    q.gold += gold;
+    if (q.isHuman) UI.log(`💰 ${p.name} t'envoie ${fmt(gold)} d'or !`, 'good', p);
+    return null;
   },
 
   // Un traître a sa défense affaiblie pendant TRAITOR_DURATION secondes
@@ -4680,11 +4823,12 @@ const GameRules = {
 // La partie en cours : elle utilise toutes les règles de GameRules (Game.update(), Game.launchAttack()…)
 const Game = Object.create(GameRules);
 
+// (toujours arrondi vers le bas : 1 999 s'écrit « 1.9k », jamais « 2.0k » avant d'avoir vraiment 2 000)
 function fmt(n) {
   n = Math.floor(n);
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e4) return Math.round(n / 1000) + 'k';
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  if (n >= 1e6) return (Math.floor(n / 1e5) / 10).toFixed(1) + 'M';
+  if (n >= 1e4) return Math.floor(n / 1000) + 'k';
+  if (n >= 1000) return (Math.floor(n / 100) / 10).toFixed(1) + 'k';
   return String(n);
 }
 

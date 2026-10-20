@@ -115,9 +115,12 @@ const UI = {
     $('lb').addEventListener('pointerdown', e => {
       const btn = e.target.closest('button[data-ally]');
       if (btn) return this.onAllyButton(+btn.dataset.ally);
-      // Clic sur le nom d'un royaume qui nous attaque (en rouge) : la caméra va voir son attaque
+      // Clic sur le nom d'un royaume qui nous attaque (en rouge) : la caméra va voir son attaque ;
+      // sur un autre royaume : la caméra va sur ses terres (même un petit bout de territoire perdu)
       const li = e.target.closest('li.attacker');
-      if (li) this.showAttackBy(+li.dataset.pid);
+      if (li) return this.showAttackBy(+li.dataset.pid);
+      const any = e.target.closest('li[data-pid]');
+      if (any) this.showKingdom(+any.dataset.pid);
     });
 
     // Déplacer la caméra au clavier : ZQSD (sur un clavier AZERTY ; WASD sur un QWERTY) ou les flèches.
@@ -658,6 +661,8 @@ const UI = {
         const n = G.linkRoads(road).length;
         txt += ` · ${road.onRoad ? '🛤️ au bord d\'une route' : n > 1 ? `🛤️ ${n} routes (vers ${n} villes)`
           : road.road === 'paved' ? '🛣️ route pavée' : '🛤️ chemin'} : +${Math.round(road.bonus * 100)} %`;
+        if (road.mills) txt += ` · 🌾 ${road.mills} moulin${road.mills > 1 ? 's' : ''} de ses villes : +${Math.round(road.mills * CONFIG.PORT_MILL_BONUS * 100)} %`;
+        else if (G.building[a] === B_PORT) txt += ` · 🌾 aucun moulin relié à ses villes (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin)`;
       }
       if (G.works.has(a)) txt += { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[G.works.get(a).kind];
       else if (o === G.human.id && BUILDING_LEVELS[G.building[i]] && !(G.holdsAlone(a) && G.isIsolated(a))) txt += ` · clique pour l'améliorer ou le détruire`;
@@ -787,6 +792,8 @@ const UI = {
         : this.selectedBuild
         ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`
         : UI.describeTile(Render.hover) || 'Clique sur une terre voisine pour attaquer · molette = zoom · glisser, ZQSD ou flèches = déplacer';
+    } else if (G.phase === 'spawn') {
+      $('hint').textContent = this.spawnHint(Render.hover);
     } else if (G.phase === 'over') {
       $('hint').textContent = '';
     }
@@ -891,7 +898,7 @@ const UI = {
         (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
         // (garnison du château visé : elle attend derrière sa muraille, et n'entre en jeu qu'au siège)
         (G.garrisonWaiting(a) >= 1 ? ` · 🏰 ${fmt(G.garrisonWaiting(a))} derrière les murs` : '') +
-        (a.siege ? ` · 🏰 siège ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s` : '') +
+        (a.siege ? ` · 🏰 siège ${Math.round(Math.max(0, Math.min(1, (G.tick - (a.siege.start || G.tick)) / Math.max(1, a.siege.end - (a.siege.start || G.tick)))) * 100)} %` : '') +
         (a.target === G.human.id && G.defendWait(a) > 0 ? ` · ⏳ renforts dans ${Math.ceil(G.defendWait(a))} s` : '');
     }
   },
@@ -910,10 +917,12 @@ const UI = {
     if (a < 0) return '';
     if (t === B_CHURCH) {
       const list = G.churchLinks(h.id, a);
-      const gold = list.reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0);
-      return list.length ? ` · 🛤️ ${this.churchLinksText(list)} : +${gold} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
+      // (le terrain compte aussi : plus forte sur les hauteurs, moins en forêt)
+      const k = G.terrainFactor(a, B_CHURCH), here = ` · terrain : ${prodText(k)}`;
+      const gold = Math.round(list.reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0) * k);
+      return here + (list.length ? ` · 🛤️ ${this.churchLinksText(list)} : +${gold} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
           `, Croyance +${Math.round(CONFIG.FAITH_ROAD_BONUS * list.length * 100)} %`
-        : ' · trop loin d\'une ville ou d\'une route de port : pas de chemin';
+        : ' · trop loin d\'une ville ou d\'une route de port : pas de chemin');
     }
     if (!TERRAIN_PRODUCTION[t]) return '';
     let txt = ` · production ici : ${prodText(G.terrainFactor(a, t))}`;
@@ -929,7 +938,7 @@ const UI = {
     if (t === B_PORT) {
       const list = G.portRoadCastles(h.id, a), n = list.length;
       const sum = list.reduce((s, c) => s + CONFIG.PORT_ROAD_BONUS * (G.castleInfo(c).imperial ? IMPERIAL.roadFactor : 1), 0);
-      txt += n ? ` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or`
+      txt += n ? ` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or, et +${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin relié à ces villes`
         : ` · aucune ville assez proche (${CONFIG.PORT_ROAD_DISTANCE} cases, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)} % par niveau de la ville) : pas de chemin`;
     }
     return txt;
@@ -954,6 +963,43 @@ const UI = {
     // en marche sur ses terres : là où est son armée ; sinon, le front de l'assaut
     const pos = G.isPreparing(a) && a.marchFrom ? G.marchPosition(a) : G.attackFront(a);
     Render.centerOn(pos.x, pos.y);
+  },
+
+  // Avant de fonder sa capitale : en survolant, le terrain et la défense qu'aurait la zone de sa première ville
+  // (terrain + murs du fort en bois, en moyenne dans sa muraille), ou pourquoi on ne peut pas la fonder là
+  spawnHint(i) {
+    const G = Game, base = '👑 Clique sur une terre libre pour fonder ta capitale';
+    if (i < 0 || !G.isLand(i)) return base;
+    const err = G.spawnError(i);
+    if (err) return `${base} · ⚠️ ${err}`;
+    const W = G.W, R = CASTLE_LEVELS[1].radius, x = i % W, y = (i / W) | 0, zone = [];
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= W || yy >= G.H || dx * dx + dy * dy > R * R) continue;
+      if (G.claimable(yy * W + xx)) zone.push(yy * W + xx);
+    }
+    const t = TERRAIN_INFO[G.terrain[i]];
+    return `${base} · ${t.name}${t.cost > 1 ? ` (défense ${pct(t.cost - 1)})` : ''} · 🛡️ défense de ta capitale ici : ` +
+      `${pct(G.castleZoneDefense(zone, 1) - 1)} (terrain + murs)`;
+  },
+
+  // La caméra va sur les terres du royaume pid (clic sur son nom dans le classement) : sur son plus grand morceau,
+  // assez près pour le voir en entier (pratique pour trouver un petit bout de territoire perdu et l'achever)
+  showKingdom(pid) {
+    const G = Game, W = G.W, r = G.regions(), p = G.players[pid];
+    if (!p || !p.alive || !p.tiles) return;
+    const k = r.main[pid];
+    if (k === undefined || k < 0) return;
+    let x0 = W, y0 = G.H, x1 = 0, y1 = 0;
+    for (const i of r.order.subarray(r.start[k], r.start[k] + r.size[k])) {
+      const x = i % W, y = (i / W) | 0;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    const c = Render.cam, s = Math.min(Render.vw / (x1 - x0 + 12), Render.vh / (y1 - y0 + 12)) * 0.8;
+    c.scale = Math.max(Render.fitScale, Math.min(12, s));
+    c.x = (x0 + x1 + 1) / 2 - Render.vw / 2 / c.scale;
+    c.y = (y0 + y1 + 1) / 2 - Render.vh / 2 / c.scale;
+    Render.flashKingdom = { pid, until: performance.now() + 1500 }; // (il clignote un instant, voir Render)
   },
 
   // Envoyer des soldats (selon le curseur « Envoyer ») contre un assaut ennemi
@@ -1073,6 +1119,13 @@ const UI = {
           const got = G.sendTroopsToAlly(h.id, o, n);
           if (typeof got === 'string') this.log(got, 'warn');
           else this.log(`🎁 ${fmt(got)} soldats arrivent chez ${G.players[o].name} (${Math.round((1 - CONFIG.ALLY_GIFT_RATIO) * 100)} % se sont perdus en route).`, 'good', G.players[o]);
+        } });
+        // ... ou de l'or (la même part de son trésor que le curseur « Envoyer »)
+        const g = Math.floor(h.gold * this.ratio);
+        if (g >= 1) items.push({ label: `💰 Envoyer ${fmt(g)} d'or à ${name}`, run: () => {
+          const err = G.sendGoldToAlly(h.id, o, g);
+          if (err) this.log(err, 'warn');
+          else this.log(`💰 ${fmt(g)} d'or envoyés à ${G.players[o].name} !`, 'good', G.players[o]);
         } });
         // L'allié se fait attaquer : on peut envoyer une armée l'aider à se défendre
         const n2 = Math.floor(h.troops * this.ratio);

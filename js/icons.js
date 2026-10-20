@@ -27,6 +27,14 @@ const ICON_DEFS = {
     { d: 'M7.4 10.4V6.3a4.6 4.6 0 0 1 9.2 0v4.1z', f: '#c3cad0', s: '#22262a', w: 1 }, { d: 'M8.4 7.4h7.2M12 7.4v3', s: '#22262a', w: 1.3 },
     { d: 'M12 11.4l6.2 2v3.6c0 3.6-2.7 5.7-6.2 6.8-3.5-1.1-6.2-3.2-6.2-6.8v-3.6z', f: '#c0392b', s: '#2a1a0c', w: 1 },
     { d: 'M12 13.8v7.6M9.2 16.6h5.6', s: '#f0c94a', w: 1.6 }],
+  // ... et une petite couronne d'or sur le casque : avec une cité impériale (troupes encore plus fortes)
+  troops4: [...[{ d: 'M7 7l13.5 13.5M17 7L3.5 20.5', s: 'c', w: 2.2 },
+    { d: 'M4.5 9.5l5-5M19.5 9.5l-5-5', s: 'c', w: 2 }, { d: 'M3.6 3.6l2.8 2.8M20.4 3.6l-2.8 2.8', s: 'c', w: 2.5 },
+    { d: 'M2.9 1.6a1.3 1.3 0 1 1-.01 0zM21.1 1.6a1.3 1.3 0 1 1-.01 0z', f: 'c' }],
+    { d: 'M7.4 10.4V6.8a4.6 4.6 0 0 1 9.2 0v3.6z', f: '#c3cad0', s: '#22262a', w: 1 }, { d: 'M8.4 7.8h7.2M12 7.8v2.6', s: '#22262a', w: 1.3 },
+    { d: 'M8.3 4.6L7.9 0.9l2.1 1.8L12 0.2l2 2.5 2.1-1.8-.4 3.7z', f: '#f0c94a', s: '#6b4a12', w: 0.7 },
+    { d: 'M12 11.4l6.2 2v3.6c0 3.6-2.7 5.7-6.2 6.8-3.5-1.1-6.2-3.2-6.2-6.8v-3.6z', f: '#c0392b', s: '#2a1a0c', w: 1 },
+    { d: 'M12 13.8v7.6M9.2 16.6h5.6', s: '#f0c94a', w: 1.6 }],
   tent: [{ d: 'M12 4L2 21h20z', f: 'c' }, { d: 'M12 11l-3.2 10h6.4z', f: '#f3e3bf', o: 0.9 }, { d: 'M12 4V1.5l3 1-3 1', s: 'c', w: 1.2 }],
   // --- Ressources et armée ---
   gold: [{ d: 'M15.5 9.5a6 6 0 1 1-.01 0z', f: '#d9a520', s: '#6b4a12', w: 1.2 },
@@ -126,7 +134,7 @@ const EMOJI_ICONS = {
   '🏗': 'hammer', '🧨': 'pick', '🏚': 'pick', '🔎': 'lens', '🔍': 'lens', '↩': 'back', '🛤': 'road', '🛣': 'road',
   '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
-  '🪖': 'troops2', '🎖': 'troops3', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
+  '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 

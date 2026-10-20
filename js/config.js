@@ -114,6 +114,8 @@ const CONFIG = {
   PRODUCTION_INTERVAL: 10,   // moulins et casernes produisent toutes les 10 secondes
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type construit soi-même rend le suivant x1.5 plus cher
                              // (ceux pris à l'ennemi ne comptent pas)
+  BUILDING_DRAW_SCALE: 1.3, // taille des bâtiments dessinés sur la carte (icônes et images) : 1.3 = 30 % plus grands
+  RARE_COST_GROWTH: 2,       // ...et x2 pour les églises et les ports (une hausse 2 fois plus forte : +100 % au lieu de +50 %)
   BUILD_TIME: 3,             // secondes de chantier pour construire un bâtiment (il ne produit rien avant)
   UPGRADE_TIME: [40, 60, 90], // améliorer un bâtiment : 40 s pour passer au niveau 2, 60 s au niveau 3, 90 s au niveau 4
   // Murs : une ville de niveau 2 peut bâtir 1 mur, une citadelle (niveau 3) un 2e. Un mur va de la muraille de la
@@ -127,6 +129,8 @@ const CONFIG = {
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
   PORT_ROAD_DISTANCE: 30,    // un port à moins de 30 cases d'un de ses châteaux (sur la même terre) y est relié
   PORT_ROAD_BONUS: 0.3,      // par un chemin de terre : +30 % d'or produit par le port
+  PORT_MILL_BONUS: 0.15,     // chaque moulin relié par une route à la même ville que le port : +15 % d'or pour le port
+  PORT_MILL_MAX: 6,          // (6 moulins au plus comptent : +90 % au maximum)
   // Une église pas trop loin d'une de ces routes port–ville (à moins de 10 cases) y est reliée par un petit chemin ;
   // sinon, une église pas trop loin d'une ville (à moins de 25 cases, sur la même terre) est reliée à elle.
   // Reliée, elle produit 2 pièces d'or toutes les PRODUCTION_INTERVAL secondes. (Un port seul, sans ville, ne suffit pas.)
@@ -144,6 +148,9 @@ const CONFIG = {
   // ✝️ Croyance : chaque église en apporte (voir faith dans CHURCH_LEVELS), +50 % si elle est reliée à une route.
   // Un royaume qui a plus de Croyance qu'un voisin ennemi convertit peu à peu ses terres frontalières.
   FAITH_ROAD_BONUS: 0.5,
+  FAITH_LURE: 6,             // la Croyance avance en courbes vers les églises et les ports voisins (comme la foi
+  FAITH_LURE_RANGE: 30,      //   qui gagne les villages) : attirée par ceux à moins de 30 cases...
+  FAITH_WAVE: 2,             // ...et son front ondule un peu (au lieu d'avancer en ligne droite)
   FAITH_DISORGANIZED: 2,     // un royaume désorganisé (sans ville ni port fortifié) se fait convertir 2 fois plus vite
   // Croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2000 pièces :
   // +1000 de Croyance pour le royaume pendant 60 s (une croisade à la fois par cathédrale)
@@ -228,6 +235,7 @@ const CONFIG = {
   // Un royaume sans château (ville) peut être attaqué de front : toutes ses troupes défendent d'office,
   // mais désorganisées (sans pouvoir en place), chaque soldat ne compte que pour 0.8.
   LEADERLESS_DEFENSE: 0.8,
+  WHITE_FLAG_MIN_TILES: 12,     // drapeau blanc (territoire désorganisé) : seulement sur les morceaux d'au moins 12 cases
   // Expéditions maritimes : en débarquant, on prend les terres libres autour du point de débarquement
   LANDING_RADIUS: 4,
   // Les soldats embarqués défendent l'avant-poste ; pendant la traversée, une petite partie se perd :
@@ -248,11 +256,13 @@ const CONFIG = {
   BRIDGE_COST: 700,
   AI_BRIDGE_AFTER: 240,      // les bots bâtissent leurs 1 ou 2 ponts après 4 minutes de partie
   EXPEDITION_COOLDOWN: 5,    // une expédition maritime au plus toutes les 5 secondes
+  MAX_SEA_ASSAULTS: 2,        // débarquements à la fois chez un même royaume au plus (en mer, ou avant-postes chez lui)
   REPATRIATE_SPEED: 5,       // vitesse minimum (cases/s) des bateaux qui rapatrient les soldats d'un avant-poste
   OUTPOST_BUILD_TIME: 20,    // secondes pour bâtir un avant-poste après le débarquement (sans bonus avant)
   OUTPOST_DEFENSE: 1,        // une fois bâti, bonus de défense autour de lui (comme un fort en bois)
   OUTPOST_BUILDING_MALUS: 0.2, // pendant sa construction, ses défenseurs sont occupés à bâtir : défense -0.2
   OUTPOST_SIEGE: 10,         // secondes de siège pour prendre un avant-poste (le défenseur peut encore le renforcer)
+  PORT_SIEGE: 10,            // secondes de siège d'un port fortifié (niveau 3) : l'armée s'arrête à sa petite muraille
   OUTPOST_CASTLE_DISTANCE: 12, // pas de château à moins de 12 cases d'un de ses avant-postes (il faut conquérir avant)
   OUTPOST_GARRISON: 5,       // une fois bâti : soldats en garnison (fixe) ; les autres stationnent et peuvent attaquer
   // Encerclement : un royaume coupé en morceaux ne garde que le plus grand ; les autres vont à celui qui l'a coupé.
@@ -380,22 +390,26 @@ const CHURCH_LEVELS = [
 // landingCost = prix d'un débarquement (x1 = normal, x0.5 = moitié prix).
 const PORT_LEVELS = [
   null,
-  { name: 'Port',       gold: 3,  boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
-  { name: 'Grand port', gold: 9,  boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.4, upgradeCost: 500 },
-  { name: 'Port royal', gold: 20, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 2000, garrison: 10, bonus: 1 },
+  { name: 'Port',       gold: 1.5, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
+  { name: 'Grand port', gold: 4.5, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.4, upgradeCost: 500 },
+  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 3.8, upgradeCost: 2000, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
 // bonus = défense en plus dans sa petite muraille (sa zone), comme un fort en bois
 
-// Production des moulins, casernes et ports selon le terrain où ils sont construits
-// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve, sommet, désert.
-// Dans le désert, tout bâtiment produit DESERT_PRODUCTION (0.8 = -20 %).
+// Production des moulins, casernes, églises et ports selon le terrain où ils sont construits
+// (moyenne des cases qu'ils occupent). Ordre : mer, plaine, forêt, colline, montagne, fleuve, grand fleuve, sommet,
+// désert, colline boisée. Dans le désert, tout bâtiment produit DESERT_PRODUCTION (0.8 = -20 %).
 const DESERT_PRODUCTION = 0.8;
 const TERRAIN_PRODUCTION = {
-  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0, 0, DESERT_PRODUCTION], // les moulins aiment les plaines
-  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0, 0, DESERT_PRODUCTION], // les casernes, les forêts et les collines
-  [B_PORT]:     [0, 1.0, 1.0, 1.0, 1.0, 0, 0, 0, DESERT_PRODUCTION], // le port : seul le désert compte
+  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0, 0, DESERT_PRODUCTION, 0.9], // les moulins aiment les plaines
+  // les casernes, les forêts et les collines (colline boisée : les deux à la fois, +40 %)
+  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0, 0, DESERT_PRODUCTION, 1.4],
+  // les églises (or de leurs chemins et Croyance), les hauteurs : +30 % sur colline, colline boisée et montagne ;
+  // neutre en plaine, et -20 % en forêt
+  [B_CHURCH]:   [0, 1.0, 0.8, 1.3, 1.3, 0, 0, 0, DESERT_PRODUCTION, 1.3],
+  [B_PORT]:     [0, 1.0, 1.0, 1.0, 1.0, 0, 0, 0, DESERT_PRODUCTION, 1.0], // le port : seul le désert compte
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
