@@ -658,7 +658,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
-- **v0.92.41** : 🧵 cadre brodé : là où il est rallongé, des nuages brodés dans le style de la tapisserie remplissent ses colonnes (au lieu de copies en miroir des dessins)
+- **v0.92.41** : 🧵 cadre brodé : là où il est rallongé, des nuages brodés dans le style de la tapisserie remplissent ses colonnes (au lieu de copies en miroir des dessins), en teintes sombres et discrètes
 - **v0.92.40** : 🧵 un cadre brodé (une tapisserie médiévale) entoure la carte, par-dessus le décor marin ; il s'adapte à toutes les formes de carte
 - **v0.92.39** : 🏝️ carte « Normale » : 1 à 3 vraies îles moyennes habitables au large, moins d'îlots volcaniques, des criques et des baies sur la côte, et souvent un ou deux grands golfes qui coupent presque le continent en morceaux
 - **v0.92.38** : ⛰️ chaînes de montagnes plus naturelles : une suite de sommets de tailles et de formes différentes, avec des contreforts sur les côtés et des cols entre deux sommets (fini le trait de pinceau)
