@@ -98,14 +98,14 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
   const waterLvl = sorted[Math.floor(N * (cont ? 0.05 : type === 'naval' ? CONFIG.NAVAL_WATER_RATIO : CONFIG.WATER_RATIO))];
 
   // Le relief suit son propre bruit : des chaînes de montagnes éparpillées.
-  // Les sommets (infranchissables) sont les points les plus hauts : environ 3 % des terres.
+  // Les sommets (infranchissables) sont les points les plus hauts : environ PEAK_BLOB_RATIO des terres (plus les chaînes, plus bas).
   const relief = new Float32Array(N);
   for (let i = 0; i < N; i++) {
     const x = i % W, y = (i / W) | 0;
     relief[i] = fbm(reliefNoise, x / (22 * fs), y / (22 * fs), 4) + (elev[i] - waterLvl) * 0.5;
   }
   const landRelief = Array.from(relief).filter((r, i) => cont || elev[i] >= waterLvl).sort((a, b) => a - b);
-  const peakLvl = Math.max(0.8, landRelief[Math.floor(landRelief.length * 0.97)]);
+  const peakLvl = Math.max(0.8, landRelief[Math.floor(landRelief.length * (1 - CONFIG.PEAK_BLOB_RATIO))]);
 
   const terrain = new Uint8Array(N);
   for (let y = 0; y < H; y++) {
@@ -130,6 +130,9 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
       }
     }
   }
+
+  // 2 bis. Des chaînes de montagnes : de longues crêtes de sommets, avec des cols (voir addMountainChains)
+  addMountainChains(terrain, relief, W, H, rand, fs);
 
   // 3. On garde toutes les terres sauf les trop petites ; la carte « Normale » reçoit quelques îlots volcaniques,
   //    la carte continentale de grands lacs (où finiront ses fleuves).
@@ -156,6 +159,65 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
   for (let i = 0; i < N; i++) shade[i] = Math.round((rand() - 0.5) * 12);
 
   return { W, H, N, terrain, shade };
+}
+
+// Chaînes de montagnes : chacune part d'un massif (une colline ou une montagne) et avance en serpentant doucement,
+// jusqu'à sa longueur ou jusqu'à la mer. Sa crête est faite de sommets (infranchissables) larges de 3 cases environ, bordés de
+// montagnes puis de collines. De temps en temps, un col (des montagnes seulement) laisse passer les armées : la chaîne
+// est un mur, mais pas un mur fermé (sinon des terres seraient coupées de tout).
+function addMountainChains(terrain, relief, W, H, rand, fs) {
+  const between = ([lo, hi]) => lo + rand() * (hi - lo);
+  const [cMin, cMax] = mapCount(CONFIG.MOUNTAIN_CHAINS);
+  const wanted = cMin + Math.floor(rand() * (cMax - cMin + 1));
+  const isLand = (x, y) => x >= 2 && y >= 2 && x < W - 2 && y < H - 2 && terrain[(y | 0) * W + (x | 0)] !== TERRAIN.WATER;
+  // (un cran plus haut sur l'échelle du relief : plaine → colline, forêt → colline boisée, colline → montagne)
+  const raise = (i, to) => {
+    const t = terrain[i];
+    if (t === TERRAIN.WATER || t === TERRAIN.PEAK) return;
+    if (to === TERRAIN.PEAK || to === TERRAIN.MOUNTAIN) {
+      if (to === TERRAIN.PEAK || t !== TERRAIN.MOUNTAIN) terrain[i] = to;
+    } else if (t === TERRAIN.PLAINS) terrain[i] = TERRAIN.HILLS;
+    else if (t === TERRAIN.FOREST) terrain[i] = TERRAIN.WOODED_HILLS;
+  };
+  const stamp = (cx, cy, r, to) => {
+    for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) {
+      for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) {
+        if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) continue;
+        if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r) raise(y * W + x, to);
+      }
+    }
+  };
+  const starts = [];
+  for (let tries = 0, made = 0; tries < 400 && made < wanted; tries++) {
+    // Départ : dans un massif (relief déjà haut), loin des autres chaînes
+    const x0 = 4 + rand() * (W - 8), y0 = 4 + rand() * (H - 8), i0 = (y0 | 0) * W + (x0 | 0);
+    if (!isLand(x0, y0) || relief[i0] < CONFIG.HILLS_LEVEL) continue;
+    if (starts.some(([x, y]) => Math.hypot(x - x0, y - y0) < 35 * fs)) continue;
+    starts.push([x0, y0]);
+    made++;
+    const len = between(CONFIG.CHAIN_LENGTH) * Math.sqrt(fs);
+    let x = x0, y = y0, a = rand() * Math.PI * 2, turn = 0;
+    let nextPass = between(CONFIG.CHAIN_PASS_EVERY) * 0.6, passLeft = 0;
+    for (let k = 0; k < len; k++) {
+      // elle serpente : son virage change doucement (jamais de demi-tour brusque)
+      turn = turn * 0.9 + (rand() - 0.5) * 0.05;
+      a += turn;
+      x += Math.cos(a) * 0.8;
+      y += Math.sin(a) * 0.8;
+      if (!isLand(x, y)) break; // (elle s'arrête à la mer)
+      // un col de temps en temps
+      if (passLeft <= 0 && --nextPass <= 0) {
+        passLeft = between(CONFIG.CHAIN_PASS_WIDTH) / 0.8;
+        nextPass = between(CONFIG.CHAIN_PASS_EVERY) / 0.8;
+      }
+      // (des bords irréguliers : chaque tampon est un peu décalé, et plus ou moins gros)
+      const j = () => (rand() - 0.5) * 1.6;
+      stamp(x + j(), y + j(), 4.5 + rand() * 1.5, TERRAIN.HILLS);
+      stamp(x + j(), y + j(), 2.8 + rand() * 1.4, TERRAIN.MOUNTAIN);
+      if (passLeft > 0) passLeft--;
+      else stamp(x + j() * 0.4, y + j() * 0.4, 1.2 + rand() * 0.6, TERRAIN.PEAK);
+    }
+  }
 }
 
 // Trace entre CONFIG.RIVERS_MIN et CONFIG.RIVERS_MAX fleuves (au hasard). Un fleuve naît dans une montagne et suit la pente jusqu'à la mer

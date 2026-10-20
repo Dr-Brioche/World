@@ -623,6 +623,10 @@ On ne peut lancer qu'**une traversée toutes les 10 s**.
 (Le grand fleuve, lui, ne se traverse pas.)
 Les royaumes rivaux savent aussi traverser les fleuves quand une rive libre les attend en face.
 
+⛰️ **Chaînes de montagnes** : sur les cartes aléatoires, de longues crêtes de sommets serpentent à travers les terres, bordées
+de montagnes et de collines. Ce sont de **vrais murs** : on ne passe que par leurs **cols** (des passages de montagne, tous les
+20 à 30 cases environ), ou en les contournant. De quoi bâtir sa défense derrière une chaîne et se battre pour les cols !
+(Réglages `MOUNTAIN_CHAINS`, `CHAIN_LENGTH`, `CHAIN_PASS_EVERY` et `CHAIN_PASS_WIDTH` dans `js/config.js`.)
 🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
 il faut les contourner.
 
@@ -635,6 +639,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.36** : ⛰️ chaînes de montagnes : de longues crêtes de sommets infranchissables, avec des cols pour passer, de vrais murs qui rendent la carte plus stratégique (moins de sommets isolés en tas)
 - **v0.92.35** : ✝️ la Croyance ne détruit plus les zones de muraille des villes, et elle avance en courbes vers les églises et les ports voisins · 📜 vue parchemin : villes dessinées à l'encre, seules les cathédrales et les grandes casernes en plus · 🤝 frontières de pacte en pointillés or + couleur du fondateur, plus fines dézoomé ; seul le fondateur accepte les nouveaux membres ; 💰 envoyer de l'or à un allié · ⚓ port : revenu de base d'un moulin, +15 % par moulin relié à ses villes ; port fortifié assiégé 10 s à sa muraille · 💰 l'or ne s'arrondit plus vers le haut · 💸 églises et ports 2 fois plus chers à chaque construction · ⛵ 2 assauts maritimes au plus contre un même royaume · 🎯 clic sur un nom du classement : la caméra va sur ce royaume · 👑 icône des troupes avec une couronne pour la cité impériale · ⏳ sièges : jauge ronde autour de la cible · ⛰️ églises +30 % en hauteur, -20 % en forêt ; casernes +40 % sur colline boisée · 🏰 placement de la capitale : la défense de la zone dans la barre d'info · 🏳️ drapeau blanc sur les terres désorganisées · 🏠 bâtiments 30 % plus grands sur la carte
 - **v0.92.34** : 🛒 une route commerciale ne passe que sur les territoires des deux royaumes qu'elle relie ; si une case de son passage est prise, le commerce s'arrête jusqu'à ce qu'elle soit reprise
 - **v0.92.33** : 🛒 routes commerciales selon le niveau de la ville : 1 pour un château, 2 pour une citadelle, 3 pour la cité impériale
