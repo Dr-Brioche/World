@@ -669,6 +669,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.46** : ⚔️ nouvelles images pour les 3 niveaux de la caserne : la petite caserne de bois (palissade et toits de chaume), la caserne de pierre et de bois (colombages, enceinte de pierre) et la grande bâtisse de la guilde des guerriers (tours, remparts et cour d'entraînement)
 - **v0.92.45** : 🐉 carte **Azeroth** refaite : 700 x 550, telle qu'au temps du Norfendre (Kalimdor, les Royaumes de l'Est et le Norfendre, sans les îles venues après), aux côtes bien plus détaillées
 - **v0.92.44** : 🐉 nouvelle carte prédéfinie **Azeroth** (600 x 600) : Kalimdor, les Royaumes de l'Est, le Norfendre, la Pandarie, les Îles Brisées, Kul Tiras, Zandalar et les Îles aux Dragons, avec leurs montagnes, déserts, lacs et fleuves
 - **v0.92.43** : 🌊 côtes et lacs plus naturels : les criques, les baies, les golfes et les lacs ne sont plus faits de ronds réguliers, leurs bords sont déformés et découpés (anses, pointes, formes allongées)
