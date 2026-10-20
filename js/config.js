@@ -36,6 +36,11 @@ const CONFIG = {
   // Décor autour de la carte (une vieille carte marine) : on le voit en dézoomant ; la vue ne va jamais plus loin
   DECOR_IMAGE: 'img/decor_mer.webp',
   DECOR_SIZE: 2.6,           // largeur du décor, en largeurs de carte (la carte est au milieu)
+  // Le cadre brodé autour de la carte (une tapisserie médiévale, posée par-dessus le décor marin) :
+  FRAME_IMAGE: 'img/cadre.webp',
+  FRAME_INNER: [165, 232, 1507, 716], // le rectangle de toile au milieu de l'image, où se pose la carte (en pixels)
+  FRAME_SPLIT: [600, 515],   // où rallonger le cadre si la carte n'a pas la même forme (x pour l'élargir, y pour l'allonger)
+  FRAME_BAND: 90,            // (en recopiant, en miroir, des bandes de 90 pixels au plus : rien n'est étiré)
   SMOOTH_MAP: 1,             // bords entre terrains : 0 = carrés en escalier, 1 = coins coupés en biais (adouci), 2 = arrondis
   SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
   RAGGED_EDGES: 0,           // bords « effilochés » : part des demi-cases prises par le terrain voisin (0 = aucune ; plus = plus de grain)
