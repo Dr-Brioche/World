@@ -1850,7 +1850,8 @@ const Render = {
         for (let k = 1; k < pts.length; k++) path.lineTo(pts[k][0], pts[k][1]);
       }
     }
-    // Routes commerciales (vers les villes des alliés) : grises, voir Game.buildTrade ; à l'arrêt (pacte rompu), pâles
+    // Routes commerciales (vers les villes des alliés) : de grandes voies pavées de pierre grise, comme les vieilles
+    // routes marchandes, voir Game.buildTrade ; à l'arrêt (pacte rompu), pâles
     const trade = new Path2D(), idle = new Path2D();
     for (const r of G.tradeRoutes) {
       const path = r.active ? trade : idle;
@@ -1859,27 +1860,27 @@ const Render = {
     ctx.lineCap = 'square';
     ctx.lineJoin = 'miter';
     if (G.tradeRoutes.length) {
-      ctx.globalAlpha = 0.4;
-      ctx.lineWidth = w + 2;
-      ctx.strokeStyle = 'rgba(40,40,42,0.8)';
-      ctx.stroke(idle);
-      ctx.lineWidth = w;
-      ctx.strokeStyle = '#9b9a97';
-      ctx.stroke(idle);
-      ctx.globalAlpha = 1;
-      ctx.lineWidth = w + 2;
-      ctx.strokeStyle = 'rgba(40,40,42,0.8)';
-      ctx.stroke(trade);
-      ctx.lineWidth = w;
-      ctx.strokeStyle = '#9b9a97';
-      ctx.stroke(trade);
-      if (s >= 4) { // (une ligne claire au milieu, comme une chaussée)
-        ctx.setLineDash([w * 0.9, w * 0.7]);
-        ctx.lineWidth = Math.max(1, w * 0.25);
-        ctx.strokeStyle = '#d6d4cf';
-        ctx.stroke(trade);
+      const tw = w * 1.4;
+      for (const [path, alpha] of [[idle, 0.4], [trade, 1]]) {
+        ctx.globalAlpha = alpha;
+        // les bas-côtés de terre battue, usés par les charrettes
+        ctx.lineWidth = tw + Math.max(3, tw * 0.6);
+        ctx.strokeStyle = 'rgba(120,88,50,0.75)';
+        ctx.stroke(path);
+        // le lit de la voie (les joints entre les dalles, sombres)
+        ctx.lineWidth = tw;
+        ctx.strokeStyle = '#6e5d45';
+        ctx.stroke(path);
+        // les dalles de pierre, de longueurs inégales, sur toute la largeur (de loin : une voie de pierre unie)
+        ctx.lineWidth = tw * 0.86;
+        ctx.lineCap = 'butt'; // (avec des bouts carrés, chaque dalle déborderait sur les joints)
+        if (s >= 4) ctx.setLineDash([tw * 0.9, tw * 0.1, tw * 0.6, tw * 0.1, tw * 1.1, tw * 0.1, tw * 0.75, tw * 0.1]);
+        ctx.strokeStyle = '#b3a587';
+        ctx.stroke(path);
         ctx.setLineDash([]);
+        ctx.lineCap = 'square';
       }
+      ctx.globalAlpha = 1;
     }
     // 1. Contours sombres de toutes les routes
     ctx.lineWidth = w + 2;

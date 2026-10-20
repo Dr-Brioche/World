@@ -1559,7 +1559,7 @@ const GameRules = {
     // (à vol d'oiseau déjà trop loin : inutile de chercher un tracé)
     if (Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) > CONFIG.TRADE_MAX_LENGTH * 1.2) return { error: tooFar };
     const pts = this.tradePath(a % W + h, ((a / W) | 0) + h, b % W + h, ((b / W) | 0) + h, a % 2, pid, o);
-    if (!pts) return { error: 'Pas de chemin entre ces deux villes en restant sur vos deux territoires (sans mer, sommet, ni fleuve sans pont).' };
+    if (!pts) return { error: this.tradeBlockReason(a % W + h, ((a / W) | 0) + h, b % W + h, ((b / W) | 0) + h, pid, o) };
     const len = this.tradeLength(pts);
     if (len > CONFIG.TRADE_MAX_LENGTH) return { error: tooFar };
     return { to: b, pts, len, cost: this.tradeCost(len), income: this.tradeIncome(len) };
@@ -1573,6 +1573,17 @@ const GameRules = {
     this.tradeRoutes.push({ from: a, to: plan.to, active: true, pts: plan.pts, tiles: this.routeTiles(plan.pts), len: plan.len, income: plan.income });
     this.version++;
     return null;
+  },
+  // Pourquoi aucune route commerciale ne passe entre ces deux villes (de pid et de son allié o) : on cherche le tracé
+  // sans tenir compte des territoires. S'il existe, ce sont des terres d'un autre (ou des terres libres) qui bloquent ;
+  // sinon, c'est l'eau (mer, lac, fleuve sans pont) ou un sommet.
+  tradeBlockReason(x1, y1, x2, y2, pid, o) {
+    const free = this.roadDetour(x1, y1, x2, y2, i => this.roadTile(i), 40, 3);
+    if (!free) return 'Pas de passage assez court par la terre : la mer, un lac, un sommet ou un fleuve sans pont ' +
+      'coupe le chemin (un pont ouvre un passage).';
+    const other = this.routeTiles(free).find(i => this.owner[i] !== pid && this.owner[i] !== o && this.terrain[i] !== TERRAIN.RIVER);
+    const who = other === undefined ? null : this.owner[other] < 0 ? 'des terres libres' : `les terres ${this.deName(this.players[this.owner[other]].name)}`;
+    return 'La route commerciale doit rester sur vos deux territoires' + (who ? ` : ici, elle passerait par ${who}. Prends-les d'abord.` : '.');
   },
   // Une case où peut passer une route commerciale entre les royaumes o et q : une case où une route peut passer, sur
   // le territoire de l'un des deux (ou un fleuve, sous un pont)
@@ -1699,7 +1710,9 @@ const GameRules = {
     const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1, maxCost = (Math.abs(ex - sx) + Math.abs(ey - sy)) * long + 8;
     const DX = [1, -1, 0, 0], DY = [0, 0, 1, -1], TURN = 0.4;
     // (une « position » = une case de la zone et la direction d'arrivée)
-    const cost = new Float32Array(bw * bh * 4).fill(Infinity), from = new Int32Array(bw * bh * 4).fill(-1);
+    // (Float64Array, pas Float32Array : les coûts doivent être exactement ceux du tas, sinon « c > cost[s] » rejette à tort
+    //  toute position atteinte par un virage, et le détour échoue dès qu'il doit tourner)
+    const cost = new Float64Array(bw * bh * 4).fill(Infinity), from = new Int32Array(bw * bh * 4).fill(-1);
     const heap = new MinHeap(), start = ((sy - by0) * bw + (sx - bx0)) * 4;
     for (let d = 0; d < 4; d++) { cost[start + d] = 0; heap.push(0, start + d); }
     let end = -1;
@@ -2434,7 +2447,9 @@ const GameRules = {
     }
     if (troops < 1) return 'Pas assez de soldats !';
     const frontier = this.buildFrontier(pid, target, source);
-    if (frontier.length === 0) {
+    // (pas de frontière directe, mais on vise un de ses bâtiments : l'armée peut l'atteindre en passant un fleuve à gué)
+    const aimsBuilding = target >= 0 && aimTile !== undefined && TARGET_TYPES.includes(this.building[aimTile]) && this.owner[aimTile] === target;
+    if (frontier.length === 0 && !aimsBuilding) {
       // (un avant-poste en construction ne sert pas encore de base : ses soldats bâtissent)
       const building = [...this.outposts.keys()].some(a => this.owner[a] === pid && !this.outpostReady(a));
       if (this.hasUnlinked(pid)) {
@@ -2482,9 +2497,11 @@ const GameRules = {
       const name = this.players[target].name;
       path = this.castlePath(pid, castle, source);
       if (!path) {
-        return `Impossible d'atteindre ${this.targetLabel(castle)} : ` +
-          `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`;
+        return frontier.length ? `Impossible d'atteindre ${this.targetLabel(castle)} : ` +
+          `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`
+          : `Impossible d'atteindre ${this.targetLabel(castle)} : tu n'as pas de frontière avec ${name} (ni de fleuve à passer à gué jusqu'à lui).`;
       }
+      if (!front.length) front = [path[0]]; // (de l'autre côté d'un fleuve : l'armée commence par sa rive)
     }
     // Assaut déjà sur les terres ennemies : les renforts partent de sa cité et marchent jusqu'au front (reinforceTicks)
     // (pendant sa marche sur nos terres, les soldats en plus le rejoignent tout de suite, plus bas)
@@ -2569,8 +2586,15 @@ const GameRules = {
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
     const h = this.sizeOf(this.building[c]) / 2;
     const dep = this.departurePoint(pid, c % this.W + h, ((c / this.W) | 0) + h, source), W = this.W;
-    const walk = i => Math.hypot(i % W + 0.5 - dep.x, ((i / W) | 0) + 0.5 - dep.y) / CONFIG.MARCH_OWN_LAND_BONUS;
-    const path = this.searchPath(pid, -1, foot, passable, this.owner[c], source, walk); // (-1 = on part de la frontière)
+    // La marche jusqu'au point d'entrée compte le VRAI chemin sur nos terres depuis la ville de départ (relief, fleuves,
+    // détours autour d'un lac ou des terres ennemies), pas la distance à vol d'oiseau : sinon l'armée pourrait choisir
+    // une entrée « proche » sur la carte, mais qu'elle n'atteint qu'en faisant tout le tour. (Une case qu'on ne peut
+    // pas rejoindre à pied compte 3 fois sa distance à vol d'oiseau.)
+    const field = this.ownLandField(pid, Math.floor(dep.y) * W + Math.floor(dep.x));
+    const walk = i => (field(i) < Infinity ? field(i) : 3 * Math.hypot(i % W + 0.5 - dep.x, ((i / W) | 0) + 0.5 - dep.y))
+      / CONFIG.MARCH_OWN_LAND_BONUS;
+    // (-1 = on part de la frontière ; true : on peut passer un fleuve à gué pour l'atteindre)
+    const path = this.searchPath(pid, -1, foot, passable, this.owner[c], source, walk, true);
     if (path && this.building[c] === B_CASTLE) {
       const k = path.findIndex(i => this.inWalls(c, i));
       if (k >= 0) path.length = k + 1;
@@ -2589,7 +2613,7 @@ const GameRules = {
   // Recherche du chemin le plus facile (algorithme de Dijkstra) depuis la case from
   // (ou depuis toute la frontière de pid si from = -1) jusqu'à une case de goal.
   // walk (facultatif) : coût de la marche sur nos terres jusqu'à la case de départ i (voir castlePath)
-  searchPath(pid, from, goal, passable, target, source, walk) {
+  searchPath(pid, from, goal, passable, target, source, walk, allowFord = false) {
     const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
     const done = new Uint8Array(this.N); // cases déjà traitées (chacune une seule fois)
     const heap = new MinHeap();
@@ -2601,6 +2625,7 @@ const GameRules = {
     else {
       // départ : les cases passables qui touchent nos terres (on part de nos cases, bien moins nombreuses que la carte)
       const W = this.W, N = this.N, own = this.owner;
+      if (allowFord) this.riverTiles(); // (prépare riverSide)
       for (let i = 0; i < N; i++) {
         if (own[i] !== pid) continue;
         const x = i % W;
@@ -2610,6 +2635,14 @@ const GameRules = {
           if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
           if (!ok) break;
           start(n, walk ? walk(i) : 0);
+        }
+        // (un fleuve entre nos terres et les siennes : l'armée le passe à gué, lentement ; ça « coûte » FORD_PATH_COST
+        //  par case de fleuve, pour préférer un passage par la terre ou un pont quand il y en a un)
+        if (allowFord && this.riverSide[i]) {
+          this.fordAcross(i, pid, (n, gap, bridged) => {
+            if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
+            if (ok) start(n, (walk ? walk(i) : 0) + (bridged ? gap : gap * CONFIG.FORD_PATH_COST));
+          }, n => own[n] !== pid && passable(n));
         }
       }
     }
@@ -3285,10 +3318,21 @@ const GameRules = {
   // La case de nos terres d'où l'armée entrera sur le chemin path (sa première case chez l'ennemi)
   entryFromPath(a, path, source) {
     let entry = -1;
+    const base = n => (source >= 0 ? this.sourceOf(n) === source : this.isBase(n));
     this.forNeighbors(path[0], n => {
       if (entry >= 0 || this.owner[n] !== a.attacker) return;
-      if (source >= 0 ? this.sourceOf(n) === source : this.isBase(n)) entry = n;
+      if (base(n)) entry = n;
     });
+    // (pas de terre à nous juste à côté : le chemin commence de l'autre côté d'un fleuve, qu'on passe à gué)
+    a.fordTime = 0;
+    if (entry < 0) {
+      this.riverTiles();
+      this.fordAcross(path[0], a.attacker, (n, gap, bridged) => {
+        if (entry >= 0 || !base(n)) return;
+        entry = n;
+        a.fordTime = bridged ? 0 : CONFIG.CROSSING_TIME_FIRST + (gap - 1) * CONFIG.CROSSING_TIME_NEXT;
+      });
+    }
     if (entry < 0) return;
     a.startTile = entry;
     a.fromX = entry % this.W + 0.5;
@@ -3329,6 +3373,8 @@ const GameRules = {
     const from = this.departurePoint(a.attacker, ref.x, ref.y, this.sourceOfAttack(a));
     const march = this.walkRoute(a.attacker, from, to, troops, CONFIG.MARCH_OWN_LAND_BONUS);
     march.arrive = Math.max(march.arrive, this.tick + Math.round(CONFIG.MARCH_MIN_TIME * TPS));
+    // (un fleuve à passer à gué avant d'entrer chez l'ennemi : l'armée l'attend sur sa rive, c'est long)
+    if (a.fordTime) march.arrive += Math.round(a.fordTime * TPS);
     a.march = march;
     a.marchFrom = from;
     a.startTick = march.arrive;
@@ -3366,7 +3412,9 @@ const GameRules = {
     for (let k = 0; k < 4 && a.list.length > 0; k++) {
       const idx = (Math.random() * a.list.length) | 0;
       const t = a.list[idx];
-      const around = this.countFriendNeighbors(t, a.attacker);
+      let around = this.countFriendNeighbors(t, a.attacker);
+      // (un assaut vers un objectif peut commencer de l'autre côté d'un fleuve, passé à gué : sa rive compte)
+      if (!around && a.targetCastle >= 0 && this.riverSide[t]) this.fordAcross(t, a.attacker, () => { around = 1; });
       const score = around / TERRAIN_INFO[this.terrain[t]].cost;
       // Un assaut vers un objectif ne sort pas de son couloir (limitZone)
       const outside = a.limitZone && !a.limitZone.has(t);
@@ -3734,6 +3782,40 @@ const GameRules = {
     return found;
   },
 
+  // Distances de marche (Dijkstra) depuis la case from, sur les terres de pid (fleuves passés à gué) : renvoie une
+  // fonction case → distance (Infinity si on ne l'atteint pas à pied). Gardé en mémoire tant que la carte ne change pas
+  // (l'aperçu du chemin d'assaut le demande souvent).
+  ownLandField(pid, from) {
+    const N = this.N, W = this.W, own = this.owner;
+    if (!this.fieldBuf || this.fieldBuf.seen.length !== N) this.fieldBuf = { dist: new Float64Array(N), seen: new Int32Array(N), stamp: 0, key: '' };
+    const B = this.fieldBuf, key = pid + ':' + from + ':' + this.version;
+    if (B.key !== key) {
+      B.key = key;
+      const stamp = ++B.stamp, heap = new MinHeap(), ford = this.fordCost(this.defenderSpeed(500));
+      this.riverTiles(); // (prépare riverSide)
+      if (from >= 0 && from < N && own[from] === pid) { B.seen[from] = stamp; B.dist[from] = 0; heap.push(0, from); }
+      // (seen[i] = stamp : case déjà vue ; seen[i] = -stamp : distance définitive)
+      const visit = (n, nd) => {
+        if (B.seen[n] === -stamp) return;
+        if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
+      };
+      while (heap.size) {
+        const [d, i] = heap.pop();
+        if (B.seen[i] === -stamp) continue;
+        B.seen[i] = -stamp;
+        const x = i % W;
+        for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+          if (n >= 0 && own[n] === pid && this.isLand(n)) visit(n, d + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost));
+        }
+        if (this.riverSide[i]) this.fordAcross(i, pid, (n, gap, bridged) => {
+          visit(n, d + (bridged ? gap : gap * ford) + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost));
+        });
+      }
+    }
+    const stamp = B.stamp;
+    return i => (B.seen[i] === -stamp ? B.dist[i] : Infinity);
+  },
+
   // Chemin le plus rapide (Dijkstra) de la case from à la case to, en ne passant que par les terres de pid
   // (to elle-même peut être à l'ennemi : c'est le front). Renvoie la liste des cases, ou null.
   // (les tableaux sont gardés d'une fois sur l'autre : la carte peut être très grande)
@@ -3777,7 +3859,8 @@ const GameRules = {
   // Gué : depuis la case i (au bord d'un fleuve), les cases de pid juste en face, de l'autre côté du fleuve
   // (en ligne droite, comme acrossRiver) : fn(case d'en face, nombre de cases de fleuve à traverser, un pont ?)
   // (sur un pont, on passe sans s'arrêter : chaque case de fleuve compte comme une plaine)
-  fordAcross(i, pid, fn) {
+  // (want : quelles cases d'en face on cherche ; par défaut, celles de pid)
+  fordAcross(i, pid, fn, want = j => this.owner[j] === pid) {
     const W = this.W, x0 = i % W, y0 = (i / W) | 0;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       let bridged = true;
@@ -3786,7 +3869,7 @@ const GameRules = {
         if (x < 0 || y < 0 || x >= W || y >= this.H) break;
         const j = y * W + x;
         if (this.terrain[j] === TERRAIN.RIVER) { if (!this.bridgeAt[j]) bridged = false; continue; }
-        if (k > 1 && this.owner[j] === pid) fn(j, k - 1, bridged);
+        if (k > 1 && want(j)) fn(j, k - 1, bridged);
         break;
       }
     }
@@ -3807,7 +3890,10 @@ const GameRules = {
     const W = this.W, H = this.H;
     if (i < 0 || this.terrain[i] !== TERRAIN.RIVER) return { error: 'Un pont se construit sur un fleuve (pas sur un grand fleuve, infranchissable).' };
     if (this.bridgeAt[i]) return { error: 'Il y a déjà un pont ici.' };
-    let best = null, why = 'Les deux rives, juste en face, doivent être à toi.';
+    let best = null, why = 'Les deux rives, juste en face, doivent être à toi (ou l\'une à toi, l\'autre à un allié de ton pacte).';
+    // (une rive à toi, l'autre à toi ou à un allié de ton pacte : un pont relie aussi deux royaumes alliés,
+    //  par exemple pour faire passer une route commerciale)
+    const mineOrAlly = j => this.owner[j] === pid || (this.owner[j] >= 0 && this.areAllied(pid, this.owner[j]));
     for (const [dx, dy] of [[1, 0], [0, 1]]) {
       // on part de la case cliquée dans les deux sens, jusqu'à la terre
       const tiles = [i], ends = [];
@@ -3826,7 +3912,7 @@ const GameRules = {
       const [a, b] = ends;
       if (a < 0 || b < 0 || tiles.length > 3) continue; // (pas de rive en face, ou fleuve trop large)
       if (!this.isLand(a) || !this.isLand(b)) continue;
-      if (this.owner[a] !== pid || this.owner[b] !== pid) continue;
+      if (!mineOrAlly(a) || !mineOrAlly(b) || (this.owner[a] !== pid && this.owner[b] !== pid)) continue;
       if (tiles.some(j => this.bridgeAt[j])) { why = 'Il y a déjà un pont ici.'; continue; }
       if (!best || tiles.length < best.tiles.length) best = { tiles, a, b };
     }

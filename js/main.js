@@ -1152,7 +1152,7 @@ const UI = {
         else this.log(`🚢 ${fmt(n)} soldats rembarquent vers ton port.`, 'good');
       } });
     }
-    // Sur un fleuve dont les deux rives sont à nous : construire un pont
+    // Sur un fleuve dont les deux rives sont à nous (ou une à nous, l'autre à un allié) : construire un pont
     if (G.terrain[i] === TERRAIN.RIVER) {
       const plan = G.planBridge(h.id, i);
       const label = `🌉 Construire un pont (💰 ${fmt(CONFIG.BRIDGE_COST)})`;

@@ -131,7 +131,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      en face, les terres menacées **scintillent à ta couleur**, et le bâtiment visé est entouré d'un **halo** qui pulse.
      Pendant la marche, reclique sur la cible pour **ajouter des soldats tout de suite** : c'est ce qui fixe l'ampleur de l'assaut.
      L'armée entre chez l'ennemi là où commence son chemin (en pointillés dorés) : c'est de là que part la
-     **flèche rouge en pointillés** qui la montre jusqu'à sa cible.
+     **flèche rouge en pointillés** qui la montre jusqu'à sa cible. Le point d'entrée est choisi selon le **vrai trajet**
+     depuis sa ville de départ (relief, fleuves, détours autour d'un lac ou des terres ennemies) : l'armée ne fait pas
+     tout le tour d'un royaume pour une entrée qui n'est proche que sur la carte.
+     🌊 **De l'autre côté d'un fleuve** : si un fleuve sépare tes terres des siennes (même sans autre frontière), tu peux
+     quand même viser ses villes, églises, ports et avant-postes : l'armée **passe le fleuve à gué**, lentement
+     (10 s pour la 1re case de fleuve, 6 s pour les suivantes, rien sur un pont), puis prend pied sur l'autre rive.
    - **L'assaut entre chez l'ennemi** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
      mais ils partent de la cité d'où l'assaut est parti et **marchent jusqu'au front** (au moins 3 s) :
      plus ton armée s'est enfoncée loin de sa cité, plus ils mettent de temps à arriver.
@@ -531,8 +536,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    et les autres royaumes en profitent pour l'attaquer !
    🛒 **Routes commerciales** : dans le menu d'une de tes **villes de niveau 2 ou plus** (à côté du mur), le bouton
    **Route commerciale** la relie à une **ville de niveau 2 ou plus d'un allié de ton pacte** : clique sur la ville
-   alliée (en la survolant, tu vois le tracé, le prix et le revenu). La route est **grise** et passe **uniquement sur vos
-   deux territoires** (le tien et celui de ton allié) : jamais sur la mer, un lac ou un sommet infranchissable, ni à
+   alliée (en la survolant, tu vois le tracé, le prix et le revenu). La route est une **grande voie pavée** de pierres grises,
+   comme les vieilles routes marchandes, et passe **uniquement sur vos
+   deux territoires** (le tien et celui de ton allié ; si elle ne peut pas, la bulle dit ce qui bloque : des terres libres
+   ou d'un autre royaume sur le passage, ou l'eau) : jamais sur la mer, un lac ou un sommet infranchissable, ni à
    travers un fleuve, **sauf sur un pont** (un pont bâti ouvre un passage). **Si une case de son passage est prise par un
    autre royaume, la route est coupée** : le commerce s'arrête jusqu'à ce que tout son passage soit de nouveau à vous deux. Elle coûte **1 000 d'or** jusqu'à 40 cases, puis 30 de plus
    par case (**5 000 au plus**), et rapporte **+0,5 d'or par case de route toutes les 10 secondes** (une route de 100
@@ -610,6 +617,8 @@ marchent vers la frontière et ses soldats qui rentrent passent le fleuve **à g
 🌉 **Ponts** : fais un **clic droit sur un fleuve** dont les deux rives, juste en face, sont à toi (à l'horizontale ou à la
 verticale, 3 cases de fleuve au plus) et choisis **Construire un pont** (💰 **700**). Tes armées, tes défenseurs et tes
 soldats qui rentrent le passent alors **sans s'arrêter**, comme une plaine. Le pont sert à celui qui tient ses deux rives.
+🤝 Un pont peut aussi relier **ton territoire à celui d'un allié de ton pacte** (une rive à toi, l'autre à lui) : les routes
+(et les **routes commerciales**) passent dessus.
 Les **bots** bâtissent aussi **1 ou 2 ponts** par partie (après 4 minutes, près de leurs villes : ils mettent de l'or de côté pour ça). Il y a entre **3 et 12 fleuves** par partie, au hasard.
 Quand deux fleuves se rejoignent, le fleuve **double de largeur** ; quand un troisième les rejoint, il devient
 un **grand fleuve** (3 cases de large, plus sombre) **infranchissable**, comme la mer : un royaume des deux côtés
@@ -623,6 +632,10 @@ On ne peut lancer qu'**une traversée toutes les 10 s**.
 (Le grand fleuve, lui, ne se traverse pas.)
 Les royaumes rivaux savent aussi traverser les fleuves quand une rive libre les attend en face.
 
+⛰️ **Chaînes de montagnes** : sur les cartes aléatoires, de longues crêtes de sommets serpentent à travers les terres, bordées
+de montagnes et de collines. Ce sont de **vrais murs** : on ne passe que par leurs **cols** (des passages de montagne, tous les
+20 à 30 cases environ), ou en les contournant. De quoi bâtir sa défense derrière une chaîne et se battre pour les cols !
+(Réglages `MOUNTAIN_CHAINS`, `CHAIN_LENGTH`, `CHAIN_PASS_EVERY` et `CHAIN_PASS_WIDTH` dans `js/config.js`.)
 🏔️ **Les sommets** (le cœur blanc et enneigé des plus hautes montagnes) sont **infranchissables**, comme la mer :
 il faut les contourner.
 
@@ -635,6 +648,8 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.37** : 🐛 les routes (routes commerciales, chemins des ports et des églises) qui devaient faire un détour avec un virage échouaient : une route commerciale ne passait pas sur un pont · 🌉 un pont peut relier ton territoire à celui d'un allié de ton pacte · 🌊 on peut viser une ville (église, port…) de l'autre côté d'un fleuve, même sans autre frontière : l'armée le passe à gué, lentement · 🐛 un assaut ne fait plus tout le tour d'un royaume : son point d'entrée suit le vrai trajet depuis sa ville de départ · 🛒 routes commerciales en grandes voies pavées médiévales (fini la « route nationale ») ; si on ne peut pas en bâtir une, la bulle dit ce qui bloque
+- **v0.92.36** : ⛰️ chaînes de montagnes : de longues crêtes de sommets infranchissables, avec des cols pour passer, de vrais murs qui rendent la carte plus stratégique (moins de sommets isolés en tas)
 - **v0.92.35** : ✝️ la Croyance ne détruit plus les zones de muraille des villes, et elle avance en courbes vers les églises et les ports voisins · 📜 vue parchemin : villes dessinées à l'encre, seules les cathédrales et les grandes casernes en plus · 🤝 frontières de pacte en pointillés or + couleur du fondateur, plus fines dézoomé ; seul le fondateur accepte les nouveaux membres ; 💰 envoyer de l'or à un allié · ⚓ port : revenu de base d'un moulin, +15 % par moulin relié à ses villes ; port fortifié assiégé 10 s à sa muraille · 💰 l'or ne s'arrondit plus vers le haut · 💸 églises et ports 2 fois plus chers à chaque construction · ⛵ 2 assauts maritimes au plus contre un même royaume · 🎯 clic sur un nom du classement : la caméra va sur ce royaume · 👑 icône des troupes avec une couronne pour la cité impériale · ⏳ sièges : jauge ronde autour de la cible · ⛰️ églises +30 % en hauteur, -20 % en forêt ; casernes +40 % sur colline boisée · 🏰 placement de la capitale : la défense de la zone dans la barre d'info · 🏳️ drapeau blanc sur les terres désorganisées · 🏠 bâtiments 30 % plus grands sur la carte
 - **v0.92.34** : 🛒 une route commerciale ne passe que sur les territoires des deux royaumes qu'elle relie ; si une case de son passage est prise, le commerce s'arrête jusqu'à ce qu'elle soit reprise
 - **v0.92.33** : 🛒 routes commerciales selon le niveau de la ville : 1 pour un château, 2 pour une citadelle, 3 pour la cité impériale

@@ -66,6 +66,13 @@ const CONFIG = {
   RIVERS_MIN: 5,           // nombre de fleuves, tiré au hasard entre ces deux valeurs
   RIVERS_MAX: 18,          // (ils partent des montagnes et vont jusqu'à la mer)
   LAKES_MAX: 4,            // lacs au plus (au milieu d'un fleuve)
+  // Chaînes de montagnes : de longues crêtes de sommets infranchissables (de vrais murs, qui rendent la carte plus
+  // stratégique), coupées de cols (des montagnes, franchissables) où les armées peuvent passer
+  MOUNTAIN_CHAINS: [6, 9],      // nombre de chaînes (entre ces deux valeurs)
+  CHAIN_LENGTH: [45, 90],       // longueur d'une chaîne, en cases (un peu plus sur une grande carte)
+  CHAIN_PASS_EVERY: [18, 30],   // un col toutes les 18 à 30 cases de crête...
+  CHAIN_PASS_WIDTH: [6, 8],     // ...large de 2 à 4 cases (les sommets voisins débordent un peu dessus)
+  PEAK_BLOB_RATIO: 0.02,        // en plus des chaînes, 2 % des terres en sommets isolés (le cœur des massifs)
 
   // --- Vitesse ---
   TICKS_PER_SECOND: 10,    // nombre de "tours" de jeu par seconde
@@ -251,6 +258,7 @@ const CONFIG = {
   // Ses soldats (défenseurs, armées qui marchent vers la frontière, soldats qui rentrent) passent un fleuve qui coupe
   // ses terres à gué : ils suivent le vrai chemin et perdent 5 secondes par case de fleuve traversée
   FORD_TIME: 5,
+  FORD_PATH_COST: 4,         // un assaut vers une ville de l'autre côté d'un fleuve le passe à gué (s'il n'a pas mieux)
   // 🌉 Pont : clic droit sur un fleuve dont les deux rives (en face, en ligne droite) sont à toi. Ses soldats
   // passent alors ce fleuve comme une case de plaine, sans perdre de temps à gué.
   BRIDGE_COST: 700,
