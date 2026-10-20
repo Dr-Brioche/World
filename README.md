@@ -669,6 +669,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.50** : 🎨 images des bâtiments retouchées : plus de taches blanches (trous du fond entre les poutres, les ailes et les arcs-boutants, liseré blanc sur les bords, halo et ombre du fortin et du fort), et tailles harmonisées (chaque niveau un peu plus grand que le précédent, les villes nettement au-dessus du reste)
 - **v0.92.49** : 🏰 nouvelles images pour les 4 niveaux de la ville : le petit fortin de bois, le fort de pierre et de bois, le château fortifié (entouré de douves) et la grande citadelle impériale (sa cathédrale et ses tours, qui a enfin sa propre image)
 - **v0.92.48** : ⛪ nouvelles images pour les 3 niveaux de l'église : la petite église en bois, l'église de pierre et la grande cathédrale (avec sa flèche)
 - **v0.92.47** : 🎨 nouvelles images : l'avant-poste (un camp de tentes dans une palissade ronde, avec tour de guet et feu de camp), les 2 niveaux du moulin (moulin à vent de bois, puis de pierre avec ses annexes) et les 3 niveaux du port (petit port de pêcheur, port de commerce de pierre, grand port de commerce médiéval avec son phare et son fort)
