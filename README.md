@@ -17,8 +17,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec **5 cartes** au choix : 3 cartes **aléatoires** (Normale, Continentale, Base navale) et 2 cartes **prédéfinies**
-  (**Monde** et **Europe**, les vraies cartes)
+  avec **6 cartes** au choix : 3 cartes **aléatoires** (Normale, Continentale, Base navale) et 3 cartes **prédéfinies**
+  (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
@@ -63,6 +63,16 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Le Danube (après Belgrade), le Dniepr (après Kiev) et le Don inférieur sont de grands fleuves infranchissables ;
      le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie.
      ⚠️ C'est une très grande carte : la partie est longue, et le jeu peut ralentir un peu sur un ordinateur modeste.
+   - **Azeroth** 🐉 (600 x 600 cases) : le monde de Warcraft, dessiné de mémoire (une carte de fan, aux formes
+     approximatives). **Kalimdor** à l'ouest (Teldrassil, la Sombrivage, l'Orneval, le mont Hyjal, Azshara et sa baie des
+     Tempêtes, Durotar, les Tarides, le marécage d'Âprefange et Theramore, les Mille-Pointes noyées, Féralas, Désolace,
+     Tanaris, le cratère d'Un'Goro, Silithus et Uldum), les **Royaumes de l'Est** à l'est (Quel'Thalas et Quel'Danas,
+     Tirisfal, les Pins-Argentés, la péninsule de Gilnéas, le lac Lordamere, Alterac, l'Arathi, les Hinterlands, la baie de
+     Baradin et Tol Barad, Khaz Modan, Hurlevent, la Marche de l'Ouest, Deuillevent, les Terres foudroyées, Strangleronce),
+     le **Norfendre** au nord (la Couronne de glace, infranchissable, les pics Foudroyés, Sholazar, les Grisonnes, le fjord
+     Hurlant), la **Pandarie** au sud (le sommet de Kun-Lai, l'Échine du Serpent, la forêt de Jade), et au milieu de la
+     Grande Mer les **Îles Brisées**, **Kul Tiras**, **Zandalar**, Kezan et les îles Perdues ; les **Îles aux Dragons** au
+     nord-est. Au pont de Thandol, les deux moitiés des Royaumes de l'Est ne tiennent que par un isthme étroit.
    🖌️ **Dessine tes cartes** : sous le choix de la carte, le lien **« Dessiner une carte »** ouvre l'**éditeur de cartes**
    (`editeur.html`). Pars d'une carte toute en mer, toute en terre, ou d'une carte au hasard, puis peins les terrains
    (mer, plaine, forêt, colline, montagne, sommet, désert, fleuve, grand fleuve, colline boisée) au **pinceau** (taille réglable) ou
@@ -659,6 +669,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.44** : 🐉 nouvelle carte prédéfinie **Azeroth** (600 x 600) : Kalimdor, les Royaumes de l'Est, le Norfendre, la Pandarie, les Îles Brisées, Kul Tiras, Zandalar et les Îles aux Dragons, avec leurs montagnes, déserts, lacs et fleuves
 - **v0.92.43** : 🌊 côtes et lacs plus naturels : les criques, les baies, les golfes et les lacs ne sont plus faits de ronds réguliers, leurs bords sont déformés et découpés (anses, pointes, formes allongées)
 - **v0.92.42** : 🧵 les nuages brodés du cadre sont entourés d'une bordure de fil d'or (un cordon torsadé) : une séparation assumée avec les dessins de la tapisserie
 - **v0.92.41** : 🧵 cadre brodé : là où il est rallongé, des nuages brodés dans le style de la tapisserie remplissent ses colonnes (au lieu de copies en miroir des dessins), en teintes sombres et discrètes
@@ -943,6 +954,7 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `style.css` | Le style « parchemin » |
 | `js/config.js` | Tous les réglages du jeu |
 | `js/map.js` | Génération aléatoire de la carte |
+| `js/worldmap.js`, `js/europemap.js`, `js/azerothmap.js` | Les cartes prédéfinies (Monde, Europe, Azeroth) |
 | `js/custommaps.js` | Les cartes dessinées avec l'éditeur (celles du navigateur, et la liste `CUSTOM_MAPS` des cartes ajoutées au jeu) |
 | `editeur.html`, `js/editor.js` | L'éditeur de cartes |
 | `js/game.js` | Règles : économie, attaques, victoire |
