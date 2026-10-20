@@ -401,9 +401,9 @@ const IMPERIAL = {
 // faith = Croyance apportée au royaume (les églises s'additionnent).
 const CHURCH_LEVELS = [
   null,
-  { name: 'Église',        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.6 },
-  { name: 'Grande église', slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3,   upgradeCost: 800 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 3.4, upgradeCost: 2000 },
+  { name: 'Église',        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.7 },
+  { name: 'Grande église', slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3.4,   upgradeCost: 800 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 4, upgradeCost: 2000 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu
