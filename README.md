@@ -256,7 +256,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        départ pour tes armées. Un message 🚩 te prévient quand ça arrive.
      - un territoire **désorganisé** (sans ville ni port fortifié pour le diriger, ni avant-poste) **ne peut rien construire
        d'autre qu'un château** : il lui faut d'abord un château pour diriger le royaume.
-3. **Construis** : appuie sur `1` à `5` (ou `&`, `é`, `"`, `'`, `(` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
+3. **Construis** : appuie sur `1` à `5` ou `7` pour la mine (ou `&`, `é`, `"`, `'`, `(`, `è` sur un clavier AZERTY, ou clique sur un bouton en bas) : le bâtiment apparaît
    **sous ta souris** (son image, sur un carré vert si l'emplacement est bon, rouge sinon), puis **clique** pour le poser. Rappuie sur la même touche ou `Échap` pour annuler.
    Un bâtiment posé est d'abord **en chantier pendant 3 s** (petite jauge verte) : il ne produit rien avant la fin.
    **Clique sur un de tes bâtiments** : un **menu rapide** s'ouvre juste à côté, avec deux icônes : une **flèche ⬆️** pour l'améliorer
@@ -429,6 +429,24 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      quand toutes tes cathédrales ont déjà leur croisade en cours. De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
      en retard de Croyance (un message te prévient si c'est un voisin).
 
+   - ⛏️ **Mine** (touche **7**, 💰 **400**, puis 💰 **1000** pour le niveau 2) : elle se bâtit seulement sur un **filon**, une
+     petite icône de minerai posée au hasard sur la carte : dans les **montagnes** (fer, or, diamant) ou les **collines**
+     (pierre). Il y en a environ 5 de fer, 5 d'or, 5 de pierre et 2 de diamant par carte. Une mine a **2 niveaux**, ne se
+     démolit pas, et rapporte **2 fois plus** si une **route** la relie à une de tes villes (une ville à moins de **30 cases**,
+     sur la même terre). Elle passe à qui prend ses terres, avec l'état de son filon.
+     - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
+       **3 mines au plus** (+48 % au maximum).
+     - 🪙 **Mine d'or** : **3 fois un moulin** (6 fois au niveau 2), doublé si reliée. Mais son filon **s'épuise** au bout de
+       **3 minutes** d'exploitation (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
+       **relance pour 3 minutes de plus**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
+     - 🪨 **Carrière de pierre** (en colline) : les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
+       (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
+     - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
+       plus rapide au niveau 2), avec une **jauge ronde** autour d'elle. À chaque **quart**, **1 000 pièces** ; à la fin,
+       **10 000 pièces** d'un coup, puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
+       chrono continue pour le nouveau maître, qui touche les versements suivants !
+     Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
+     cercle (vert si tu peux y bâtir) et la mine s'aimante sur le filon le plus proche de la souris.
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Comme l'église, il donne des
      places pour des moulins et casernes autour de lui ; un moulin dans les zones d'un port **et** d'une église n'occupe
@@ -665,10 +683,11 @@ mais **tout bâtiment posé dessus produit 20 % de moins** (moulins, casernes, p
 ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte **Monde**, ils sont à leur vraie place
 (Sahara, Arabie, Gobi, Kalahari, désert australien…), avec une bande fertile le long des fleuves qui les traversent (le Nil).
 
-**Contrôles** : 🎥 déplace la carte en la **glissant** à la souris, ou au clavier avec **ZQSD** (WASD sur un clavier anglais) ou les **flèches** · molette : zoom · en survolant un **autre royaume**, une barre fixe, juste sous ta barre d'infos en haut de l'écran, le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), il s'illumine (doré chez toi, rouge chez l'ennemi) · sur la carte, la souris est une petite **main médiévale** (gantelet), qui devient une **épée** sur une cible que tu peux vraiment attaquer (château, église, port ou avant-poste ennemi atteignable, terres ennemies sans défense organisée, armée ennemie qui t'attaque) · en survolant une **armée ennemie** qui t'attaque, un **cercle de ciblage** rouge l'entoure (clic = envoyer tes défenseurs) · molette = zoom · glisser = déplacer la carte · `1` à `5` (ou `&` `é` `"` `'` `(`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : 🎥 déplace la carte en la **glissant** à la souris, ou au clavier avec **ZQSD** (WASD sur un clavier anglais) ou les **flèches** · molette : zoom · en survolant un **autre royaume**, une barre fixe, juste sous ta barre d'infos en haut de l'écran, le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), il s'illumine (doré chez toi, rouge chez l'ennemi) · sur la carte, la souris est une petite **main médiévale** (gantelet), qui devient une **épée** sur une cible que tu peux vraiment attaquer (château, église, port ou avant-poste ennemi atteignable, terres ennemies sans défense organisée, armée ennemie qui t'attaque) · en survolant une **armée ennemie** qui t'attaque, un **cercle de ciblage** rouge l'entoure (clic = envoyer tes défenseurs) · molette = zoom · glisser = déplacer la carte · `1` à `5` et `7` (ou `&` `é` `"` `'` `(` `è`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.92.53** : ⛏️ nouveau bâtiment, la **mine** (touche 7) : sur des filons posés au hasard dans les montagnes (ou les collines pour la pierre), 4 sortes : ⚒️ fer (troupes plus fortes, 3 au plus), 🪙 or (beaucoup d'or, mais le filon s'épuise en 3 minutes ; le niveau 2 le relance), 🪨 pierre (améliorations, murs et ponts moins chers, 3 au plus) et 💎 diamant (20 minutes d'extraction : 1 000 pièces à chaque quart et 10 000 à la fin, puis épuisé pour tous) ; 2 niveaux, x2 si une route la relie à une ville ; les bots en bâtissent aussi
 - **v0.92.52** : 🏰 grands bâtiments agrandis sur la carte : ports niveaux 2 et 3, casernes niveaux 2 et 3, villes niveaux 2, 3 et 4
 - **v0.92.51** : 🏰 bâtiments plus grands sur la carte (+15 %), cathédrale nettement plus grande et moulins un peu plus petits ; de loin, l'icône d'un bâtiment grandit avec son niveau
 - **v0.92.50** : 🎨 images des bâtiments retouchées : plus de taches blanches (trous du fond entre les poutres, les ailes et les arcs-boutants, liseré blanc sur les bords, halo et ombre du fortin et du fort), et tailles harmonisées (chaque niveau un peu plus grand que le précédent, les villes nettement au-dessus du reste)
@@ -970,4 +989,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/icons.js` | Les icônes médiévales dessinées (elles remplacent les emojis partout) |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-| `img/` | Les images des bâtiments (4 niveaux de château, de caserne, d'église et de port, 2 de moulin, et l'avant-poste) , des bannières (`img/bannieres/`), le décor marin (`decor_mer.webp`) et le cadre brodé (`cadre.webp`) |
+| `img/` | Les images des bâtiments (2 niveaux de mine, 4 niveaux de château, de caserne, d'église et de port, 2 de moulin, et l'avant-poste) , des bannières (`img/bannieres/`), le décor marin (`decor_mer.webp`) et le cadre brodé (`cadre.webp`) |

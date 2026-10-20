@@ -324,13 +324,23 @@ const AI = {
       best = t; bestD = d;
     }
     if (best < 0) return false;
-    if (p.gold < CONFIG.BRIDGE_COST) { p.bridgeSaving = true; return false; } // (on économise pour le pont)
+    if (p.gold < Game.bridgeCost(p.id)) { p.bridgeSaving = true; return false; } // (on économise pour le pont)
     return !G.buildBridge(p, best);
+  },
+
+  // Bâtit une mine sur le meilleur filon libre de ses terres (diamant, or, fer, pierre), s'il y en a un.
+  // Renvoie true s'il en a bâti une.
+  tryMine(p) {
+    const G = Game, order = { diamond: 0, gold: 1, iron: 2, stone: 3 };
+    const spots = G.deposits.filter(d => G.canPlace(p.id, d.a, B_MINE)
+      && !(MINES[d.kind].max && G.minesOf(p.id, d.kind).length >= MINES[d.kind].max))
+      .sort((x, y) => order[x.kind] - order[y.kind]);
+    return spots.length > 0 && !G.tryBuild(p, spots[0].a, B_MINE);
   },
 
   tryBuild(p, forced) {
     // (il économise pour un pont : il ne dépense pas tout de suite, la plupart du temps)
-    if (!forced && p.bridgeSaving && p.gold < CONFIG.BRIDGE_COST && Math.random() < 0.7) return;
+    if (!forced && p.bridgeSaving && p.gold < Game.bridgeCost(p.id) && Math.random() < 0.7) return;
     // ✝️ Un voisin ennemi a plus de Croyance (il convertit nos terres) : on mise un peu plus sur les églises
     // (zeal : un peu en facile, plus en difficile)
     const zeal = Game.difficulty.zeal || 1;
@@ -344,6 +354,8 @@ const AI = {
       if (church !== undefined) { Game.upgradeBuilding(p, church); return; }
       if (mine.length) { Game.upgradeBuilding(p, mine[(Math.random() * mine.length) | 0]); return; }
     }
+    // ⛏️ Un filon libre sur nos terres : on y bâtit une mine (le diamant et l'or d'abord)
+    if (!forced && Math.random() < 0.7 && p.gold >= Game.buildCost(p, B_MINE) && this.tryMine(p)) return;
     const c = p.bCount;
     let type = B_MILL;
     if (c[B_BARRACKS] < c[B_MILL] / 2) type = B_BARRACKS;

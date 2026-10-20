@@ -95,6 +95,21 @@ const ICON_DEFS = {
   tomb: [{ d: 'M6 22V9a6 6 0 0 1 12 0v13z', f: 'c' }, { d: 'M12 8v8M9 11h6', s: '#f3e3bf', w: 1.8 }, { d: 'M3 22h18', s: 'c', w: 2 }],
   hammer: [{ d: 'M14 9L5 18l1.5 1.5L15.5 10.5', s: 'c', w: 2.2 }, { d: 'M12 4l6-1.5 3.5 3.5L20 12l-8-8z', f: 'c' }],
   pick: [{ d: 'M4 20L14 10', s: 'c', w: 2.2 }, { d: 'M6 6c5-3 10-3 14 1-3-1-6-1-8 1L10 6c-1 0-2.5 0-4 0z', f: 'c' }],
+  // --- Filons et mines (voir MINES) : un rocher gris, avec son minerai ---
+  // fer : des éclats de métal sombre, bleutés
+  ore_iron: [{ d: 'M1 22l3-12 6.5-7 7.5 2.5L23 13l-1 9z', f: '#8f8a7e', s: '#2e2010', w: 1.3 },
+    { d: 'M5 15l4-2.5 2.5 3.5-4 2.5zM12.5 18l4-2 2 3.5-4 1.5zM11 9.5l3.5-1.5 1.5 3-3.5 1.5z', f: '#3d4a5a', s: '#151a20', w: 1 },
+    { d: 'M5.8 14.8l2.2-1.4M13.2 17.7l2.2-1M11.8 9.3l1.8-.8', s: '#c9d6e3', w: 1.1 }],
+  // or : de grosses pépites jaunes
+  ore_gold: [{ d: 'M1 22l3-12 6.5-7 7.5 2.5L23 13l-1 9z', f: '#8f8a7e', s: '#2e2010', w: 1.3 },
+    { d: 'M8.5 14.5a3 3 0 1 1-.01 0zM16 16.5a2.6 2.6 0 1 1-.01 0zM13.5 8.5a2.2 2.2 0 1 1-.01 0z', f: '#ffcf33', s: '#7a5a0e', w: 1 },
+    { d: 'M7.4 13.6l1-.6M15.1 15.8l.9-.5M12.8 7.9l.8-.4', s: '#fff4c2', w: 1 }],
+  // pierre : des blocs taillés empilés
+  ore_stone: [{ d: 'M1 22v-7.5h10.5V22zM12.5 22v-7.5H23V22zM6.5 13.5V6h11v7.5z', f: '#e3d2ad', s: '#2e2010', w: 1.3 },
+    { d: 'M3.5 18.5h5M15 18.5h5M9 10h6', s: '#9c8a68', w: 1 }],
+  // diamant : une gemme bleue, taillée
+  ore_diamond: [{ d: 'M5.5 3h13L23 9 12 22 1 9z', f: '#8fe0f5', s: '#14465a', w: 1.3 },
+    { d: 'M1 9h22M8.5 3L6.5 9 12 22 17.5 9l-2-6', s: '#2f8fb3', w: 1 }, { d: 'M7.5 5.5l2-1.6', s: '#fff', w: 1.3 }],
   lens: [{ d: 'M10 3a7 7 0 1 1-.01 0z', s: 'c', w: 2.2 }, { d: 'M15 15l6 6', s: 'c', w: 3 }],
   back: [{ d: 'M9 5L4 10l5 5', s: 'c', w: 2.2 }, { d: 'M4.5 10H14a6 6 0 0 1 0 12h-3', s: 'c', w: 2.2 }],
   road: [{ d: 'M8 2L3 22M16 2l5 20', s: 'c', w: 1.8 }, { d: 'M12 3v3M12 9.5v3.5M12 16.5v4', s: '#d9a520', w: 2 }],
@@ -134,7 +149,7 @@ const EMOJI_ICONS = {
   '🏗': 'hammer', '🧨': 'pick', '🏚': 'pick', '🔎': 'lens', '🔍': 'lens', '↩': 'back', '🛤': 'road', '🛣': 'road',
   '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
-  '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
+  '⛏': 'pick', '⚒': 'ore_iron', '🪙': 'ore_gold', '🪨': 'ore_stone', '💎': 'ore_diamond', '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 
@@ -190,7 +205,7 @@ const Icons = {
   // Icône d'un type de bâtiment (d'après son emoji dans BUILDINGS)
   building(type) { return EMOJI_ICONS[BUILDINGS[type].icon.replace('\uFE0F', '')]; },
   // Petit médaillon (rond de parchemin) avec l'icône d'un bâtiment, pour la carte vue de loin
-  badge(ctx, type, x, y, size, ring = '#3a2512') {
+  badge(ctx, type, x, y, size, ring = '#3a2512', icon = this.building(type)) {
     ctx.beginPath();
     ctx.arc(x, y, size * 0.62, 0, Math.PI * 2);
     ctx.fillStyle = '#f3e3bf';
@@ -198,7 +213,7 @@ const Icons = {
     ctx.lineWidth = Math.max(1.5, size * 0.1);
     ctx.strokeStyle = ring;
     ctx.stroke();
-    this.draw(ctx, this.building(type), x, y, size * 0.85, '#3a2512');
+    this.draw(ctx, icon, x, y, size * 0.85, '#3a2512');
   },
 
   // --- Sur la carte (canvas) ---

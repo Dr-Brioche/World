@@ -22,6 +22,16 @@ const Render = {
   // Case en haut à gauche d'un bâtiment de ce type, centré sous la souris
   anchorAt(sx, sy, type) {
     const n = Game.sizeOf(type);
+    // (une mine s'aimante sur le filon le plus proche de la souris, à moins de 3 cases)
+    if (type === B_MINE) {
+      const mx = this.cam.x + sx / this.cam.scale, my = this.cam.y + sy / this.cam.scale;
+      let best = -1, bestD = 3;
+      for (const d of Game.deposits) {
+        const dd = Math.hypot(d.a % Game.W + 1 - mx, ((d.a / Game.W) | 0) + 1 - my);
+        if (dd < bestD) { bestD = dd; best = d.a; }
+      }
+      if (best >= 0) return best;
+    }
     const x = Math.floor(this.cam.x + sx / this.cam.scale - n / 2 + 0.5);
     const y = Math.floor(this.cam.y + sy / this.cam.scale - n / 2 + 0.5);
     if (x < 0 || y < 0 || x > Game.W - n || y > Game.H - n) return -1;
@@ -1699,6 +1709,11 @@ const Render = {
     else if (G.garrison[a] >= 1) parts.push('🛡️ ' + fmt(G.garrison[a]));
     if (o && G.outpostReady(a) && o.stationed >= 1) parts.push('⚔ ' + fmt(o.stationed));
     if (o && !G.outpostReady(a)) parts.push(`🏗️ ${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s`);
+    // (une mine : le temps qui reste au filon d'or, ce qui est extrait du diamant)
+    const dep = type === B_MINE ? G.depositAt.get(a) : null;
+    if (dep && G.mineSpent(a)) parts.push('épuisée');
+    else if (dep && dep.kind === 'gold') parts.push('⏳ ' + clock(dep.left / CONFIG.TICKS_PER_SECOND));
+    else if (dep && dep.kind === 'diamond') parts.push(`💎 ${Math.floor(dep.progress * 100)} %`);
     if (!parts.length) return;
     const f = ctx.font, txt = parts.join('  ');
     ctx.font = '700 12px Georgia, serif';
@@ -1892,7 +1907,9 @@ const Render = {
     if (imgAlpha < 1) {
       ctx.globalAlpha = 1 - imgAlpha;
       const grow = 1 + CONFIG.ICON_LEVEL_GROWTH * (lvl - 1); // (plus grande selon le niveau)
-      Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]) * grow);
+      // (une mine : l'icône de son minerai)
+      const icon = type === B_MINE && info.kind ? EMOJI_ICONS[MINES[info.kind].icon.replace('\uFE0F', '')] : undefined;
+      Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]) * grow, undefined, icon);
       if (lvl > 1 && s >= 5) {
         const f = Math.max(8, Math.min(14, s * 0.8));
         ctx.font = `700 ${f}px Georgia, serif`;
@@ -1913,6 +1930,73 @@ const Render = {
       ctx.drawImage(img, px - w / 2, py + s * (half + 0.1) - h, w, h);
       ctx.imageSmoothingEnabled = false;
       ctx.globalAlpha = 1;
+    }
+  },
+
+  // ⛏️ Les filons encore libres (sans mine) : une petite icône de leur minerai, dans un rond de parchemin. Pendant la
+  // pose d'une mine, ils s'entourent d'un cercle qui pulse (vert si on peut y bâtir, gris sinon).
+  drawDeposits(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, placing = UI.selectedBuild === B_MINE;
+    const size = Math.max(16, Math.min(32, s * 2.4)), pulse = 0.5 + 0.5 * Math.sin(performance.now() / 250);
+    for (const d of G.deposits) {
+      if (G.building[d.a] === B_MINE) continue;
+      const x = ox + (d.a % G.W + 1) * s, y = oy + (((d.a / G.W) | 0) + 1) * s;
+      if (x < -40 || y < -40 || x > this.vw + 40 || y > this.vh + 40) continue;
+      if (placing) {
+        const ok = G.canPlace(G.human.id, d.a, B_MINE);
+        ctx.beginPath();
+        ctx.arc(x, y, size * (0.9 + 0.15 * pulse), 0, Math.PI * 2);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = ok ? 'rgba(90,220,90,0.95)' : 'rgba(200,200,200,0.6)';
+        ctx.stroke();
+      }
+      Icons.badge(ctx, B_MINE, x, y, size, '#5a4a32', EMOJI_ICONS[MINES[d.kind].icon.replace('\uFE0F', '')]);
+    }
+  },
+
+  // Sur une mine : une croix si son filon est épuisé ; autour, une jauge ronde (le diamant extrait, l'or qui reste)
+  drawMineState(a, px, py) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, d = G.depositAt.get(a);
+    if (!d) return;
+    const r = Math.max(14, s * 1.9 * CONFIG.BUILDING_DRAW_SCALE);
+    if (G.mineSpent(a)) {
+      const k = r * 0.45;
+      ctx.lineCap = 'round';
+      for (const [w, col] of [[7, 'rgba(30,15,5,0.85)'], [4, '#c0392b']]) {
+        ctx.lineWidth = w;
+        ctx.strokeStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(px - k, py - k); ctx.lineTo(px + k, py + k);
+        ctx.moveTo(px + k, py - k); ctx.lineTo(px - k, py + k);
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+      return;
+    }
+    if (d.kind !== 'diamond' && d.kind !== 'gold') return;
+    // (diamant : ce qui est extrait, avec les 3 quarts marqués ; or : le temps qui reste, 3 minutes = plein)
+    const k = d.kind === 'diamond' ? d.progress : Math.min(1, d.left / (MINES.gold.time * CONFIG.TICKS_PER_SECOND));
+    const col = d.kind === 'diamond' ? '#7fdcf5' : '#f1c232', start = -Math.PI / 2;
+    ctx.lineWidth = Math.max(4, s * 0.3);
+    ctx.strokeStyle = 'rgba(20,12,4,0.55)';
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineWidth = Math.max(2.5, s * 0.2);
+    ctx.strokeStyle = col;
+    ctx.beginPath();
+    ctx.arc(px, py, r, start, start + Math.PI * 2 * k);
+    ctx.stroke();
+    if (d.kind === 'diamond') {
+      ctx.strokeStyle = 'rgba(20,12,4,0.9)';
+      ctx.lineWidth = 2;
+      for (let q = 1; q < 4; q++) {
+        const t = start + Math.PI / 2 * q, c = Math.cos(t), sn = Math.sin(t), w = Math.max(4, s * 0.3);
+        ctx.beginPath();
+        ctx.moveTo(px + c * (r - w), py + sn * (r - w));
+        ctx.lineTo(px + c * (r + w), py + sn * (r + w));
+        ctx.stroke();
+      }
     }
   },
 
@@ -2496,6 +2580,7 @@ const Render = {
     // Bâtiments : petites icônes de loin, vraies images quand on zoome
     const imgAlpha = Math.max(0, Math.min(1, (s - CASTLE_IMG_ZOOM) / 3));
     if (s >= 3 && !oldMap) {
+      this.drawDeposits(ox, oy);
       for (const i of G.buildingTiles) {
         // Centre du bâtiment = milieu de son carré ; icône à sa taille
         const type = G.building[i], half = G.sizeOf(type) / 2;
@@ -2504,6 +2589,7 @@ const Render = {
         ctx.font = `${Math.max(9, Math.min(20 * half, s * half * 2)) * CONFIG.BUILDING_DRAW_SCALE}px serif`;
         if (BUILDING_LEVELS[type]) this.drawLeveledBuilding(i, px, py, imgAlpha);
         else this.drawSimpleBuilding(type, px, py, imgAlpha);
+        if (type === B_MINE) this.drawMineState(i, px, py);
         // Un de nos châteaux (ou ports royaux) coupé de notre royaume : un petit fanion rouge au-dessus
         if (G.owner[i] === G.human.id && G.holdsAlone(i) && G.isIsolated(i)) this.drawIsolatedFlag(px - half * s - 4, py + 6);
         // Au-dessus du bâtiment : 🛡 sa garnison, ⚔ les soldats stationnés (avant-poste), 🏗️ la construction

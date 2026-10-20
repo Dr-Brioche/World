@@ -150,6 +150,9 @@ const CONFIG = {
   WALL_SNAP: 3,              // visé à moins de 3 cases d'un obstacle (lac, sommet, fleuve, autre mur) : le mur s'y accroche
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
   PORT_ROAD_DISTANCE: 30,    // un port à moins de 30 cases d'un de ses châteaux (sur la même terre) y est relié
+  MINE_ROAD_DISTANCE: 30,    // une mine à moins de 30 cases d'une de ses villes (sur la même terre) y est reliée par une route
+  MINE_ROAD_FACTOR: 2,       // ... et rapporte 2 fois plus (voir MINES)
+  MINE_SPACING: 14,          // deux filons sont à au moins 14 cases l'un de l'autre
   PORT_ROAD_BONUS: 0.3,      // par un chemin de terre : +30 % d'or produit par le port
   PORT_MILL_BONUS: 0.15,     // chaque moulin relié par une route à la même ville que le port : +15 % d'or pour le port
   PORT_MILL_MAX: 6,          // (6 moulins au plus comptent : +90 % au maximum)
@@ -344,7 +347,7 @@ const TERRAIN_INFO = [
 // Le terrain le plus long à traverser (une armée doit toujours pouvoir avancer d'une case)
 const MAX_LAND_COST = Math.max(...TERRAIN_INFO.filter(t => t.cost < Infinity).map(t => t.cost));
 
-const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTPOST = 6;
+const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTPOST = 6, B_MINE = 7;
 
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
@@ -436,7 +439,34 @@ const TERRAIN_PRODUCTION = {
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)
-const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS, CHURCH_LEVELS, PORT_LEVELS, null];
+// ⛏️ Les mines : elles se bâtissent seulement sur un filon (des taches de minerai posées au hasard sur la carte, dans les
+// montagnes, ou les collines pour la pierre). Une mine a 2 niveaux, et rapporte 2 fois plus si une route la relie à une
+// de ses villes (une ville à moins de MINE_ROAD_DISTANCE cases, sur la même terre). Elle ne se démolit pas.
+const MINE_LEVELS = [
+  null,
+  { name: 'Site minier',  img: 'img/mine1.webp', size: 3 },
+  { name: 'Grand site minier', img: 'img/mine2.webp', size: 3.8, upgradeCost: 1000 },
+];
+// Les 4 sortes de filons. count = combien sur une carte moyenne (au hasard entre les deux, un peu plus sur une grande
+// carte), max = combien un royaume peut en avoir au plus (les autres ne comptent pas), puis par niveau (1 et 2) :
+const MINES = {
+  // ⚒ fer : toutes les troupes du royaume sont plus fortes (+4 % / +8 % par mine, doublé si reliée : +48 % au plus)
+  iron: { name: 'Mine de fer', icon: '⚒️', terrain: 'mountain', count: [4, 6], max: 3, power: [0, 0.04, 0.08] },
+  // 🪙 or : 3 fois un moulin (6 fois au niveau 2), doublé si reliée ; mais le filon s'épuise au bout de 3 minutes
+  //   d'exploitation (son compteur, à lui, passe d'un royaume à l'autre) ; le niveau 2 le relance pour 3 minutes de plus
+  gold: { name: 'Mine d\'or', icon: '🪙', terrain: 'mountain', count: [4, 6], gold: [0, 4.5, 9], time: 180 },
+  // 🪨 pierre (une carrière, en colline) : les améliorations, les murs et les ponts coûtent moins cher
+  //   (−5 % / −10 % par carrière, doublé si reliée : −60 % au plus)
+  stone: { name: 'Carrière de pierre', icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },
+  // 💎 diamant : une longue extraction (20 minutes ; 2 fois plus lente sans route, 50 % plus rapide au niveau 2) ;
+  //   à chaque quart, 1 000 pièces, et 10 000 à la fin ; puis le filon est épuisé pour tout le monde.
+  //   (son compteur passe à celui qui prend la mine : il touche les versements suivants)
+  diamond: { name: 'Mine de diamant', icon: '💎', terrain: 'mountain', count: [1, 3], time: 1200, speed: [0, 1, 1.5],
+    pay: 1000, final: 10000 },
+};
+const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond'];
+
+const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS, CHURCH_LEVELS, PORT_LEVELS, null, MINE_LEVELS];
 
 // L'index dans ce tableau correspond au numéro du bâtiment (0 = aucun).
 // tiles = côté du carré occupé sur la carte (2 → 2x2 cases, 4 → 4x4 cases)
@@ -450,6 +480,7 @@ const BUILDINGS = [
   // L'avant-poste ne se construit pas : il apparaît quand on débarque (baseCost = prix de l'expédition)
   { name: 'Avant-poste', icon: '⛺', tiles: 2, baseCost: 20, hidden: true, desc: 'base d\'un débarquement',
     img: 'img/avantposte.webp', size: 3.8 }, // (un seul niveau : son image est ici)
+  { name: 'Mine', icon: '⛏️', tiles: 2, baseCost: 400, desc: 'sur un filon : fer (troupes plus fortes), or (beaucoup d\'or, mais il s\'épuise), pierre (améliorations moins chères) ou diamant (un trésor) (2 niveaux)' },
 ];
 
 // Bâtiments que l'on peut viser directement avec un assaut (un royaume qui en a ne s'attaque que comme ça)
