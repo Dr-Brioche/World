@@ -21,7 +21,8 @@ const CONFIG = {
   WORLD_MAP_HEIGHT: 408,
   EUROPE_MAP_WIDTH: 1000,  // taille de la carte « Europe »
   EUROPE_MAP_HEIGHT: 1000,
-  AZEROTH_MAP_SIZE: 600,   // taille de la carte « Azeroth » (600 x 600)
+  AZEROTH_MAP_WIDTH: 700,  // taille de la carte « Azeroth » (700 x 550)
+  AZEROTH_MAP_HEIGHT: 550,
   MIN_OPPONENTS: 3,
   // Royaume coupé en deux sur un même continent : son plus grand morceau est son cœur. Un autre morceau tenu par
   // une ville (ou un port fortifié) et assez grand (au moins 25 % du plus grand) est aussi un cœur, à part entière :
