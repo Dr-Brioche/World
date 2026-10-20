@@ -258,6 +258,7 @@ const CONFIG = {
   // Ses soldats (défenseurs, armées qui marchent vers la frontière, soldats qui rentrent) passent un fleuve qui coupe
   // ses terres à gué : ils suivent le vrai chemin et perdent 5 secondes par case de fleuve traversée
   FORD_TIME: 5,
+  FORD_PATH_COST: 4,         // un assaut vers une ville de l'autre côté d'un fleuve le passe à gué (s'il n'a pas mieux)
   // 🌉 Pont : clic droit sur un fleuve dont les deux rives (en face, en ligne droite) sont à toi. Ses soldats
   // passent alors ce fleuve comme une case de plaine, sans perdre de temps à gué.
   BRIDGE_COST: 700,

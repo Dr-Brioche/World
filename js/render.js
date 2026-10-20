@@ -1850,7 +1850,8 @@ const Render = {
         for (let k = 1; k < pts.length; k++) path.lineTo(pts[k][0], pts[k][1]);
       }
     }
-    // Routes commerciales (vers les villes des alliés) : grises, voir Game.buildTrade ; à l'arrêt (pacte rompu), pâles
+    // Routes commerciales (vers les villes des alliés) : de grandes voies pavées de pierre grise, comme les vieilles
+    // routes marchandes, voir Game.buildTrade ; à l'arrêt (pacte rompu), pâles
     const trade = new Path2D(), idle = new Path2D();
     for (const r of G.tradeRoutes) {
       const path = r.active ? trade : idle;
@@ -1859,27 +1860,32 @@ const Render = {
     ctx.lineCap = 'square';
     ctx.lineJoin = 'miter';
     if (G.tradeRoutes.length) {
-      ctx.globalAlpha = 0.4;
-      ctx.lineWidth = w + 2;
-      ctx.strokeStyle = 'rgba(40,40,42,0.8)';
-      ctx.stroke(idle);
-      ctx.lineWidth = w;
-      ctx.strokeStyle = '#9b9a97';
-      ctx.stroke(idle);
-      ctx.globalAlpha = 1;
-      ctx.lineWidth = w + 2;
-      ctx.strokeStyle = 'rgba(40,40,42,0.8)';
-      ctx.stroke(trade);
-      ctx.lineWidth = w;
-      ctx.strokeStyle = '#9b9a97';
-      ctx.stroke(trade);
-      if (s >= 4) { // (une ligne claire au milieu, comme une chaussée)
-        ctx.setLineDash([w * 0.9, w * 0.7]);
-        ctx.lineWidth = Math.max(1, w * 0.25);
-        ctx.strokeStyle = '#d6d4cf';
-        ctx.stroke(trade);
+      const tw = w * 1.15;
+      // (les pavés : des pierres de tailles inégales, sombres et claires, en quinconce ; seulement en zoomant)
+      const cobbles = path => {
+        ctx.lineWidth = tw * 0.8;
+        ctx.setLineDash([tw * 0.42, tw * 0.16, tw * 0.3, tw * 0.2]);
+        ctx.strokeStyle = '#8a7f6c';
+        ctx.stroke(path);
+        ctx.lineWidth = tw * 0.32;
+        ctx.setLineDash([tw * 0.22, tw * 0.5, tw * 0.3, tw * 0.4]);
+        ctx.lineDashOffset = tw * 0.25;
+        ctx.strokeStyle = '#c9bea6';
+        ctx.stroke(path);
         ctx.setLineDash([]);
+        ctx.lineDashOffset = 0;
+      };
+      for (const [path, alpha] of [[idle, 0.4], [trade, 1]]) {
+        ctx.globalAlpha = alpha;
+        ctx.lineWidth = tw + 2.5;
+        ctx.strokeStyle = 'rgba(58,44,26,0.85)'; // (bordure de terre battue)
+        ctx.stroke(path);
+        ctx.lineWidth = tw;
+        ctx.strokeStyle = '#a69b85';
+        ctx.stroke(path);
+        if (s >= 4) cobbles(path);
       }
+      ctx.globalAlpha = 1;
     }
     // 1. Contours sombres de toutes les routes
     ctx.lineWidth = w + 2;
