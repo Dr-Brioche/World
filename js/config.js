@@ -348,8 +348,8 @@ const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTP
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
   null,
-  { name: 'Moulin',       gold: 1.5, img: 'img/moulin1.webp', size: 2.5 },
-  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 3.1, upgradeCost: 150 },
+  { name: 'Moulin',       gold: 1.5, img: 'img/moulin1.webp', size: 2.3 },
+  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 2.8, upgradeCost: 150 },
 ];
 
 // Les 3 niveaux de la caserne : troops = soldats produits toutes les PRODUCTION_INTERVAL secondes,
@@ -358,9 +358,9 @@ const MILL_LEVELS = [
 // Ce bonus ne s'additionne pas : c'est la meilleure caserne du royaume qui compte.
 const BARRACKS_LEVELS = [
   null,
-  { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.3 },
+  { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.2 },
   { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 3.8, upgradeCost: 400 },
-  { name: 'Grande caserne',       troops: 9, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 4.5, upgradeCost: 2500 },
+  { name: 'Grande caserne',       troops: 9, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 4.6, upgradeCost: 2500 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
@@ -370,11 +370,11 @@ const BARRACKS_LEVELS = [
 // (le défenseur peut encore envoyer des soldats pendant ce temps).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.6, road: null,    roadBonus: 0, trades: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5.2,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
+  { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.8, road: null,    roadBonus: 0, trades: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5.5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 6.3, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
   // Niveau 4 : la cité impériale, une seule par royaume et par partie (voir IMPERIAL plus bas)
-  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau4.webp', size: 6.8, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
+  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau4.webp', size: 7, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
 ];
 // Cité impériale (château de niveau 4) : il faut au moins un bâtiment de chaque type au niveau maximum (moulin,
 // caserne, église, port et la citadelle elle-même), et on n'en bâtit qu'une par partie. En plus de ses murs :
@@ -401,9 +401,9 @@ const IMPERIAL = {
 // faith = Croyance apportée au royaume (les églises s'additionnent).
 const CHURCH_LEVELS = [
   null,
-  { name: 'Église',        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.7 },
-  { name: 'Grande église', slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3.4,   upgradeCost: 800 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 4, upgradeCost: 2000 },
+  { name: 'Église',        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.5 },
+  { name: 'Grande église', slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3.3,   upgradeCost: 800 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 4.3, upgradeCost: 2000 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu
@@ -412,9 +412,9 @@ const CHURCH_LEVELS = [
 // landingCost = prix d'un débarquement (x1 = normal, x0.5 = moitié prix).
 const PORT_LEVELS = [
   null,
-  { name: 'Port',       gold: 1.5, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3.1 },
+  { name: 'Port',       gold: 1.5, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
   { name: 'Grand port', gold: 4.5, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.8, upgradeCost: 500 },
-  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 4.7, upgradeCost: 2000, garrison: 10, bonus: 1 },
+  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 4.8, upgradeCost: 2000, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
@@ -448,7 +448,7 @@ const BUILDINGS = [
   { name: 'Port',    icon: '⚓', tiles: 2, baseCost: 60, desc: 'au bord de la mer ou d\'un fleuve, sans défense : produit de l\'or, et dès le niveau 2 les expéditions maritimes (3 niveaux)' },
   // L'avant-poste ne se construit pas : il apparaît quand on débarque (baseCost = prix de l'expédition)
   { name: 'Avant-poste', icon: '⛺', tiles: 2, baseCost: 20, hidden: true, desc: 'base d\'un débarquement',
-    img: 'img/avantposte.webp', size: 4.2 }, // (un seul niveau : son image est ici)
+    img: 'img/avantposte.webp', size: 3.8 }, // (un seul niveau : son image est ici)
 ];
 
 // Bâtiments que l'on peut viser directement avec un assaut (un royaume qui en a ne s'attaque que comme ça)
