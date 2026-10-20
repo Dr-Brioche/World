@@ -214,7 +214,7 @@ const UI = {
     const o = i >= 0 && m && (G.phase === 'playing' || G.phase === 'spawn') && !this.selectedBuild ? G.owner[i] : -1;
     if (o < 0 || !h || o === h.id) { tip.classList.add('hidden'); this.tipFor = -1; return; }
     const p = G.players[o];
-    const types = [B_CASTLE, B_CHURCH, B_PORT, B_MILL, B_BARRACKS, B_OUTPOST];
+    const types = [B_CASTLE, B_CHURCH, B_PORT, B_MILL, B_BARRACKS, B_MINE, B_OUTPOST];
     const html = `${this.bannerImg(p)}<b>${escapeHtml(p.name)}</b>${G.areAllied(o, h.id) ? ' 🤝' : ''}` +
       ` · <span title="Soldats (épées : sans caserne ou niveau 1 · casque : caserne niveau 2 · bouclier : niveau 3)">${G.troopIcon(o)} ${fmt(p.troops)}</span>` +
       types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
@@ -291,7 +291,17 @@ const UI = {
     if (type === B_BARRACKS) {
       return [`Soldats +${info.troops} ${every}`, `Armée max +${info.maxTroops}`, info.power > 1 && `Force ${pct(info.power - 1)}`].filter(Boolean);
     }
+    if (type === B_MINE) return this.minePerks(info);
     return [`Or +${info.gold} ${every}`];
+  },
+
+  // Ce que fait une mine à son niveau (info : voir Game.mineInfo) ; « x2 si reliée » : une route vers une de ses villes
+  minePerks(info) {
+    const m = MINES[info.kind], every = `/ ${CONFIG.PRODUCTION_INTERVAL} s`, x2 = CONFIG.MINE_ROAD_FACTOR;
+    if (info.kind === 'iron') return [`Force des troupes ${pct(info.power)} (${pct(info.power * x2)} si reliée à une ville)`, `${m.max} au plus`];
+    if (info.kind === 'gold') return [`Or +${info.gold} ${every} (x${x2} si reliée à une ville)`, `Filon : ${clock(m.time)} d'exploitation`];
+    if (info.kind === 'stone') return [`Améliorations, murs et ponts ${pct(-info.discount)} (${pct(-info.discount * x2)} si reliée à une ville)`, `${m.max} au plus`];
+    return [`💰 ${fmt(m.pay)} à chaque quart, ${fmt(m.final)} à la fin`, `Extraction : ${Math.round(m.time / 60 / info.speed)} min (2 fois plus lente sans route vers une ville)`];
   },
 
   // Ce que change une amélioration (par rapport au niveau actuel) : une liste de petits avantages
@@ -317,7 +327,26 @@ const UI = {
     if (type === B_BARRACKS) {
       return [`Soldats ${pct(next.troops / cur.troops - 1)}`, `Armée max ${pct(next.maxTroops / cur.maxTroops - 1)}`, `Force ${pct(next.power - 1)}`];
     }
+    if (type === B_MINE) {
+      const m = MINES[cur.kind];
+      if (cur.kind === 'iron') return [`Force des troupes ${pct(m.power[1])} → ${pct(m.power[2])}`];
+      if (cur.kind === 'gold') return [`Or +${m.gold[1]} → +${m.gold[2]} ${'/ ' + CONFIG.PRODUCTION_INTERVAL + ' s'}`, `Filon relancé : ${clock(m.time)} de plus`];
+      if (cur.kind === 'stone') return [`Réduction ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`];
+      return [`Extraction ${pct(m.speed[2] / m.speed[1] - 1)} plus rapide`];
+    }
     return [`Or ${pct(next.gold / cur.gold - 1)}`];
+  },
+
+  // L'état d'une mine, en bref : reliée ou non à une ville, et son filon (or qui reste, diamant extrait, épuisé)
+  mineState(a) {
+    const G = Game, d = G.depositAt.get(a);
+    if (!d) return '';
+    let txt = G.mineSpent(a) ? ' · ❌ filon épuisé' + (d.kind === 'gold' && G.level[a] < 2 ? ' (améliore-la pour le relancer)' : '')
+      : d.kind === 'gold' ? ` · ⏳ filon : ${clock(d.left / CONFIG.TICKS_PER_SECOND)} d'exploitation`
+      : d.kind === 'diamond' ? ` · 💎 extrait à ${Math.floor(d.progress * 100)} % (${d.paid}/4 versements)` : '';
+    if (!G.mineSpent(a)) txt += G.mineLinked(a) ? ` · 🛤️ reliée à une ville : x${CONFIG.MINE_ROAD_FACTOR}`
+      : ` · pas de route (aucune de tes villes à moins de ${CONFIG.MINE_ROAD_DISTANCE} cases) : x${CONFIG.MINE_ROAD_FACTOR} si elle était reliée`;
+    return txt;
   },
 
   // Ce qu'apporte en plus la cité impériale (château de niveau 4 : voir IMPERIAL)
@@ -340,17 +369,20 @@ const UI = {
     el.className = 'msg request upgrade';
     const cur = G.buildingInfo(a), cost = G.upgradeCost(a);
     const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
+    // (une mine ne se démolit pas)
+    const del = type === B_MINE ? '' : `<button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button>`;
+    const state = type === B_MINE ? this.mineState(a) : '';
     if (cost === null) {
-      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : niveau maximum` + this.perksHTML(this.levelPerks(type, cur)) +
-        `<div class="choices"><button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>OK</button></div>`;
+      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : niveau maximum${state}` + this.perksHTML(this.levelPerks(type, cur)) +
+        `<div class="choices">${del}<button data-no>OK</button></div>`;
     } else {
       const next = BUILDING_LEVELS[type][G.level[a] + 1], why = G.upgradeBlocker(G.human, a);
-      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${next.name}</b> (niveau ${G.level[a] + 1})<br>` +
+      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${type === B_MINE ? G.mineInfoAt(cur.kind, 2).name : next.name}</b> (niveau ${G.level[a] + 1})${state}<br>` +
         (next.img ? `<img src="${next.img}" alt="">` : '') +
         this.perksHTML(this.upgradePerks(type, cur, next)) +
         (why ? `<div class="need">⚠️ ${why}</div>` : '') + // (ce qu'il manque pour la cité impériale)
         `<div class="choices"><button data-yes${G.human.gold >= cost && !why ? '' : ' disabled'}>Améliorer (💰 ${fmt(cost)})</button>` +
-        `<button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button><button data-no>Fermer</button></div>`;
+        `${del}<button data-no>Fermer</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
         const err = G.upgradeBuilding(G.human, a);
         if (err) return this.log(err, 'warn');
@@ -380,7 +412,8 @@ const UI = {
       btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.crusade(a); });
     }
     // Détruire le bâtiment (DEMOLISH_TIME secondes de travaux)
-    el.querySelector('[data-del]').addEventListener('click', () => {
+    const delBtn = el.querySelector('[data-del]');
+    if (delBtn) delBtn.addEventListener('click', () => {
       close();
       this.closeActionMenu();
       this.confirmDemolish(a);
@@ -406,7 +439,7 @@ const UI = {
       (G.building[a] === B_CASTLE && G.level[a] >= 2 ? `<button data-wall class="wall">${ICONS.wall}</button>` +
         `<button data-trade class="wall">${ICONS.cart}</button>` : '') +
       (G.building[a] === B_CHURCH && G.level[a] >= 3 ? `<button data-crusade class="up">${ICONS.cross}</button>` : '') +
-      `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>`;
+      (G.building[a] !== B_MINE || work ? `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>` : '');
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
     el.addEventListener('pointerdown', e => e.stopPropagation());
@@ -431,7 +464,8 @@ const UI = {
       this.updateCrusadeButton(crusadeBtn, a, false);
       crusadeBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.crusade(a); });
     }
-    el.querySelector('[data-x]').addEventListener('click', () => {
+    const xBtn = el.querySelector('[data-x]');
+    if (xBtn) xBtn.addEventListener('click', () => {
       this.closeActionMenu();
       if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
       if (work) return G.cancelWorks(h, a);
@@ -664,7 +698,9 @@ const UI = {
         if (road.mills) txt += ` · 🌾 ${road.mills} moulin${road.mills > 1 ? 's' : ''} de ses villes : +${Math.round(road.mills * CONFIG.PORT_MILL_BONUS * 100)} %`;
         else if (G.building[a] === B_PORT) txt += ` · 🌾 aucun moulin relié à ses villes (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin)`;
       }
+      if (G.building[i] === B_MINE) txt += this.mineState(a);
       if (G.works.has(a)) txt += { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[G.works.get(a).kind];
+      else if (o === G.human.id && G.building[i] === B_MINE) txt += G.upgradeCost(a) !== null ? ' · clique pour l\'améliorer' : '';
       else if (o === G.human.id && BUILDING_LEVELS[G.building[i]] && !(G.holdsAlone(a) && G.isIsolated(a))) txt += ` · clique pour l'améliorer ou le détruire`;
     } else if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
@@ -679,6 +715,12 @@ const UI = {
         if (o && G.owner[a] === G.human.id) txt += ' · clique dessus pour envoyer des renforts par la mer';
         txt += ' · un château bâti ou pris dans sa zone en fait une vraie terre du royaume';
       }
+    }
+    // Un filon libre (sans mine) : ce qu'il donnerait
+    if (G.depositTile[i] && G.building[i] !== B_MINE) {
+      const d = G.deposits.find(d => [d.a, d.a + 1, d.a + G.W, d.a + G.W + 1].includes(i));
+      if (d) txt += ` · ${MINES[d.kind].icon} filon : ${MINES[d.kind].name} (${this.minePerks(G.mineInfoAt(d.kind, 1)).join(', ')})` +
+        (o === G.human.id ? ` · ⛏️ construis une mine dessus (touche ${B_MINE}, 💰 ${fmt(G.buildCost(G.human, B_MINE))})` : '');
     }
     if (o >= 0 && (G.castleProtects(o, i) || G.portBonus(o, i) > 0)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
     // Conseils d'attaque contre un royaume ennemi
@@ -710,7 +752,7 @@ const UI = {
     }
     // Fleuve : un pont, ou la possibilité d'en bâtir un (les deux rives à nous)
     if (G.bridgeAt[i]) txt += ' · 🌉 pont : on passe ce fleuve sans s\'arrêter';
-    else if (G.terrain[i] === TERRAIN.RIVER && !G.planBridge(G.human.id, i).error) txt += ` · 🌉 clic droit → Construire un pont (💰 ${fmt(CONFIG.BRIDGE_COST)})`;
+    else if (G.terrain[i] === TERRAIN.RIVER && !G.planBridge(G.human.id, i).error) txt += ` · 🌉 clic droit → Construire un pont (💰 ${fmt(G.bridgeCost(G.human.id))})`;
     return txt;
   },
 
@@ -1155,9 +1197,9 @@ const UI = {
     // Sur un fleuve dont les deux rives sont à nous (ou une à nous, l'autre à un allié) : construire un pont
     if (G.terrain[i] === TERRAIN.RIVER) {
       const plan = G.planBridge(h.id, i);
-      const label = `🌉 Construire un pont (💰 ${fmt(CONFIG.BRIDGE_COST)})`;
+      const label = `🌉 Construire un pont (💰 ${fmt(G.bridgeCost(h.id))})`;
       if (plan.error) items.push({ label, disabled: plan.error });
-      else if (h.gold < CONFIG.BRIDGE_COST) items.push({ label, disabled: `Pas assez d'or : il faut 💰 ${fmt(CONFIG.BRIDGE_COST)}.` });
+      else if (h.gold < G.bridgeCost(h.id)) items.push({ label, disabled: `Pas assez d'or : il faut 💰 ${fmt(G.bridgeCost(h.id))}.` });
       else items.push({ label: `${label} : tes soldats passent ce fleuve sans perdre de temps à gué`, run: () => {
         const err = G.buildBridge(h, i);
         if (err) this.log(err, 'warn');

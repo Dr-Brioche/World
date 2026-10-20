@@ -53,6 +53,7 @@ const GameRules = {
     this.routeCache = new Map(); // tracés des routes déjà calculés (voir roadRoute)
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
+    this.placeDeposits(); // ⛏️ les filons de minerai (voir MINES)
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
     this.speed = opts.speed > 1 ? opts.speed : 1; // partie accélérée (x2) : la boucle de jeu tourne plus vite (voir main.js)
@@ -79,7 +80,7 @@ const GameRules = {
       alive: true, troops: CONFIG.START_TROOPS, gold: CONFIG.START_GOLD,
       tiles: 0, sumX: 0, sumY: 0, maxTiles: 0, kills: 0,
       sumXX: 0, sumYY: 0, sumXY: 0, // (pour l'allongement et la direction du royaume : voir Render.kingdomAxis)
-      bCount: [0, 0, 0, 0, 0, 0, 0],
+      bCount: [0, 0, 0, 0, 0, 0, 0, 0],
       traitorUntil: 0,
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
       castlesBuilt: 0,  // châteaux construits dans la partie (capitale comprise), limité à MAX_CASTLES
@@ -179,6 +180,12 @@ const GameRules = {
   canPlace(pid, a, type) {
     const n = this.sizeOf(type);
     if (a < 0 || a % this.W > this.W - n || ((a / this.W) | 0) > this.H - n) return false;
+    // (une mine : seulement sur un filon, tout entier à nous ; les autres bâtiments ne se posent pas sur un filon)
+    if (type === B_MINE) {
+      return this.depositAt.has(a) && this.footprint(a, type).every(j => this.owner[j] === pid && !this.building[j])
+        && this.commanded(a, type);
+    }
+    if (this.footprint(a, type).some(j => this.depositTile[j])) return false;
     if (type === B_PORT && !this.footprint(a, type).some(j => this.isCoastal(j))) return false;
     return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]
       && this.terrain[j] !== TERRAIN.RIVER)
@@ -412,6 +419,7 @@ const GameRules = {
 
   placeBuilding(i, type) {
     this.version++;
+    if (type !== B_MINE) for (const j of this.footprint(i, type)) if (this.depositTile[j]) this.removeDeposit(j);
     this.regionsCache = null; // (le découpage dépend des bâtiments : à refaire)
     this.slotCache = null;    // (les places prises aussi : voir slotHosts)
     for (const j of this.footprint(i, type)) {
@@ -429,8 +437,131 @@ const GameRules = {
     }
   },
 
+  // --- ⛏️ Mines (voir MINES dans config.js) ---
+  // Pose les filons sur la carte, au hasard : un carré de 2x2 cases de montagne (de colline pour la pierre),
+  // loin des autres filons. Chaque filon garde son état (or qui reste, diamant extrait) d'un royaume à l'autre.
+  placeDeposits() {
+    this.deposits = [];
+    this.depositAt = new Map();          // case en haut à gauche → filon
+    this.depositTile = new Uint8Array(this.N); // 1 = case d'un filon
+    const W = this.W, H = this.H, T = this.terrain, scale = Math.sqrt(this.N / (650 * 366)), TPS = CONFIG.TICKS_PER_SECOND;
+    const fits = (kind, t) => MINES[kind].terrain === 'hills' ? t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS : t === TERRAIN.MOUNTAIN;
+    for (const kind of MINE_KINDS) {
+      const [lo, hi] = MINES[kind].count, want = Math.max(1, Math.round((lo + Math.floor(Math.random() * (hi - lo + 1))) * scale));
+      // les emplacements possibles : 4 cases de terre (pas de fleuve), dont au moins 3 du bon terrain
+      const spots = [];
+      for (let y = 1; y < H - 2; y++) {
+        for (let x = 1; x < W - 2; x++) {
+          const a = y * W + x, cells = [a, a + 1, a + W, a + W + 1];
+          if (cells.every(j => this.claimable(j)) && cells.filter(j => fits(kind, T[j])).length >= 3) spots.push(a);
+        }
+      }
+      for (let tries = 0, made = 0; made < want && tries < 400 && spots.length; tries++) {
+        const a = spots[(Math.random() * spots.length) | 0], x = a % W, y = (a / W) | 0;
+        if (this.deposits.some(d => Math.hypot(d.a % W - x, ((d.a / W) | 0) - y) < CONFIG.MINE_SPACING)) continue;
+        const d = { a, kind, left: (MINES.gold.time) * TPS, progress: 0, paid: 0 };
+        this.deposits.push(d);
+        this.depositAt.set(a, d);
+        for (const j of [a, a + 1, a + W, a + W + 1]) this.depositTile[j] = 1;
+        made++;
+      }
+    }
+  },
+  // Retire le filon qui couvre la case j (un château de départ posé dessus)
+  removeDeposit(j) {
+    const d = this.deposits.find(d => [d.a, d.a + 1, d.a + this.W, d.a + this.W + 1].includes(j));
+    if (!d) return;
+    this.deposits = this.deposits.filter(e => e !== d);
+    this.depositAt.delete(d.a);
+    for (const k of [d.a, d.a + 1, d.a + this.W, d.a + this.W + 1]) this.depositTile[k] = 0;
+  },
+  // Infos d'une mine : son niveau, et ce que fait sa sorte de filon à ce niveau
+  mineInfo(a) {
+    const d = this.depositAt.get(a), lvl = this.level[a] || 1, base = MINE_LEVELS[lvl];
+    if (!d) return base;
+    return this.mineInfoAt(d.kind, lvl);
+  },
+  // Les infos d'une mine de cette sorte, à ce niveau (sans mine posée : pour les aperçus)
+  mineInfoAt(kind, lvl) {
+    const m = MINES[kind], name = lvl > 1 ? 'Grande ' + m.name[0].toLowerCase() + m.name.slice(1) : m.name;
+    return { ...MINE_LEVELS[lvl], name, kind, power: m.power && m.power[lvl], gold: m.gold && m.gold[lvl],
+      discount: m.discount && m.discount[lvl], speed: m.speed && m.speed[lvl] };
+  },
+  // Le filon de la mine a est-il épuisé ? (or : plus de temps d'exploitation ; diamant : tout extrait)
+  mineSpent(a) {
+    const d = this.depositAt.get(a);
+    return !!d && (d.kind === 'gold' ? d.left <= 0 : d.kind === 'diamond' ? d.progress >= 1 : false);
+  },
+  // Une route relie-t-elle la mine a à une de ses villes ? (elle rapporte alors 2 fois plus)
+  mineLinked(a) { return this.roads().has(a); },
+  // La ville (château) de pid, la plus proche, à laquelle une route relierait une mine posée en a (-1 si aucune)
+  mineRoadCastle(pid, a) {
+    const land = this.landComp(), W = this.W, mid = (b, n) => [b % W + n / 2, ((b / W) | 0) + n / 2];
+    const [px, py] = mid(a, this.sizeOf(B_MINE));
+    let best = -1, bestD = Infinity;
+    for (const c of this.castles) {
+      if (this.owner[c] !== pid || land[c] !== land[a]) continue;
+      const [cx, cy] = mid(c, this.sizeOf(B_CASTLE)), d = Math.hypot(cx - px, cy - py);
+      if (d < bestD && d <= this.roadReach(c, CONFIG.MINE_ROAD_DISTANCE) && this.roadPoints(a, c, B_MINE)) { bestD = d; best = c; }
+    }
+    return best;
+  },
+  // Les mines de cette sorte que possède pid
+  minesOf(pid, kind) {
+    return this.buildingTiles.filter(a => this.building[a] === B_MINE && this.owner[a] === pid && this.depositAt.get(a)
+      && this.depositAt.get(a).kind === kind);
+  },
+  // Bonus des mines de fer (force des troupes) ou des carrières (réduction des prix) de pid : la somme de ses
+  // MINES[kind].max meilleures, chacune 2 fois plus si elle est reliée à une ville. (gardé en mémoire 1 s)
+  mineBonus(pid, kind) {
+    if (pid < 0) return 0;
+    const key = this.version + ':' + Math.floor(this.tick / CONFIG.TICKS_PER_SECOND);
+    if (this.mineBonusKey !== key) { this.mineBonusKey = key; this.mineBonusCache = new Map(); }
+    const ck = pid + kind;
+    if (this.mineBonusCache.has(ck)) return this.mineBonusCache.get(ck);
+    const field = kind === 'iron' ? 'power' : 'discount', m = MINES[kind];
+    const list = this.minesOf(pid, kind).filter(a => !this.underConstruction(a))
+      .map(a => m[field][this.level[a] || 1] * (this.mineLinked(a) ? CONFIG.MINE_ROAD_FACTOR : 1));
+    const v = list.sort((x, y) => y - x).slice(0, m.max).reduce((s, x) => s + x, 0);
+    this.mineBonusCache.set(ck, v);
+    return v;
+  },
+  // Chaque tour : les filons d'or s'épuisent pendant qu'on les exploite, et les mines de diamant avancent
+  stepMines() {
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    for (const d of this.deposits) {
+      const a = d.a;
+      if ((d.kind !== 'gold' && d.kind !== 'diamond') || this.building[a] !== B_MINE || this.owner[a] < 0) continue;
+      if (this.underConstruction(a) || this.mineSpent(a)) continue;
+      const p = this.players[this.owner[a]];
+      if (d.kind === 'gold') {
+        d.left--;
+        if (d.left <= 0) {
+          this.version++; // (sa route disparaît)
+          if (p.isHuman) UI.log('🪙 Ta mine d\'or est épuisée' + (this.level[a] < 2 ? ' : améliore-la pour la relancer 3 minutes de plus !' : ' pour de bon.'), 'warn');
+        }
+        continue;
+      }
+      // 💎 diamant : 2 fois plus lent sans route, plus rapide au niveau 2
+      const m = MINES.diamond, rate = m.speed[this.level[a] || 1] * (this.mineLinked(a) ? 1 : 0.5) / (m.time * TPS);
+      d.progress = Math.min(1, d.progress + rate);
+      while (d.paid < 3 && d.progress >= (d.paid + 1) / 4) {
+        d.paid++;
+        p.gold += m.pay;
+        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(m.pay)} 💰`); UI.log(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(m.pay)} pièces !`, 'good'); }
+      }
+      if (d.progress >= 1) {
+        p.gold += m.final;
+        this.version++;
+        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(m.final)} 💰`); UI.log(`💎 Ta mine de diamant est entièrement extraite : +${fmt(m.final)} pièces ! Le filon est épuisé.`, 'good'); }
+        else if (this.human && this.human.alive) UI.log(`💎 ${p.name} a fini d'extraire une mine de diamant : +${fmt(m.final)} pièces !`, 'warn', p);
+      }
+    }
+  },
+
   // Infos du niveau actuel d'un bâtiment (null s'il n'a pas de niveaux)
   buildingInfo(a) {
+    if (this.building[a] === B_MINE) return this.mineInfo(a);
     const levels = BUILDING_LEVELS[this.building[a]];
     return levels ? levels[this.level[a] || 1] : null;
   },
@@ -441,7 +572,10 @@ const GameRules = {
   upgradeCost(a) {
     const levels = BUILDING_LEVELS[this.building[a]];
     const next = levels && levels[this.level[a] + 1];
-    return next ? next.upgradeCost : null;
+    if (!next) return null;
+    if (this.building[a] === B_MINE && this.depositAt.get(a).kind === 'diamond' && this.mineSpent(a)) return null; // (épuisée)
+    // (🪨 les carrières de pierre du royaume font baisser le prix)
+    return Math.round(next.upgradeCost * (1 - this.mineBonus(this.owner[a], 'stone')));
   },
 
   // Lance l'amélioration d'un bâtiment : on paie tout de suite, les travaux durent UPGRADE_TIME secondes
@@ -484,6 +618,7 @@ const GameRules = {
   // Lance la démolition d'un de ses bâtiments (DEMOLISH_TIME secondes). Renvoie un message d'erreur, ou null.
   demolishBuilding(p, a) {
     if (!this.building[a] || this.owner[a] !== p.id || this.building[a] === B_OUTPOST) return 'Ce n\'est pas un de tes bâtiments.';
+    if (this.building[a] === B_MINE) return 'Une mine ne se démolit pas.';
     if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
     this.startWorks(p, a, 'down', CONFIG.DEMOLISH_TIME, 0);
     return null;
@@ -693,7 +828,10 @@ const GameRules = {
   wallMax(c) { return this.building[c] === B_CASTLE ? Math.max(0, (this.level[c] || 1) - 1) : 0; },
   wallsOf(c) { return this.walls.filter(w => w.castle === c); },
   // Prix du prochain mur de la ville c (le 1er, puis le 2e)
-  wallCost(c) { return CONFIG.WALL_COSTS[Math.min(CONFIG.WALL_COSTS.length - 1, this.wallsOf(c).length)]; },
+  wallCost(c) {
+    const base = CONFIG.WALL_COSTS[Math.min(CONFIG.WALL_COSTS.length - 1, this.wallsOf(c).length)];
+    return Math.round(base * (1 - this.mineBonus(this.owner[c], 'stone'))); // (🪨 moins cher avec des carrières)
+  },
 
   // Case infranchissable pour un assaut, où un mur peut s'accrocher : mer, lac, fleuve, sommet, ou un autre mur
   wallBarrier(i) {
@@ -959,6 +1097,9 @@ const GameRules = {
       if (w.kind === 'up') {
         if (BUILDING_LEVELS[type][this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
         this.version++;
+        // (🪙 une mine d'or améliorée : son filon repart pour 3 minutes de plus)
+        const dep = type === B_MINE ? this.depositAt.get(a) : null;
+        if (dep && dep.kind === 'gold') dep.left += MINES.gold.time * CONFIG.TICKS_PER_SECOND;
         if (type === B_CASTLE && this.castleInfo(a).imperial) {
           p.imperialBuilt = true; // (une seule par partie)
           this.garrison[a] = this.garrisonMax(a);
@@ -1309,6 +1450,10 @@ const GameRules = {
   buildingOutput(a) {
     const t = this.building[a], info = this.buildingInfo(a);
     const owner = this.players[this.owner[a]];
+    if (t === B_MINE) { // (🪙 une mine d'or, tant que son filon n'est pas épuisé ; 2 fois plus si elle est reliée)
+      if (info.kind !== 'gold' || this.mineSpent(a)) return 0;
+      return info.gold * (this.mineLinked(a) ? CONFIG.MINE_ROAD_FACTOR : 1);
+    }
     if (t === B_CHURCH) { // (par chemin ; une route de pierre, vers une cité impériale, rapporte plus)
       this.roads();
       return (this.roadChurches.get(a) || []).reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0)
@@ -1339,7 +1484,7 @@ const GameRules = {
     const period = CONFIG.PRODUCTION_INTERVAL * CONFIG.TICKS_PER_SECOND;
     for (const a of this.buildingTiles) {
       const t = this.building[a];
-      if (t !== B_MILL && t !== B_BARRACKS && t !== B_PORT && t !== B_CHURCH) continue;
+      if (t !== B_MILL && t !== B_BARRACKS && t !== B_PORT && t !== B_CHURCH && t !== B_MINE) continue;
       if (this.underConstruction(a)) continue; // en chantier : il ne produit pas encore
       if ((this.tick + a * 7) % period !== 0) continue;
       const p = this.players[this.owner[a]];
@@ -1402,6 +1547,12 @@ const GameRules = {
         if (this.building[m] === B_MILL && this.owner[m] === this.owner[a] && this.linkRoads(ml).some(([c]) => cities.has(c))) mills++;
       }
       link.mills = Math.min(mills, CONFIG.PORT_MILL_MAX);
+    }
+    // Une mine (qui n'est pas épuisée) à moins de MINE_ROAD_DISTANCE cases d'une de ses villes : une route les relie
+    for (const a of this.buildingTiles) {
+      if (this.building[a] !== B_MINE || this.owner[a] < 0 || this.mineSpent(a)) continue;
+      const c = this.mineRoadCastle(this.owner[a], a);
+      if (c >= 0) links.set(a, { castle: c, road: this.castleInfo(c).imperial ? 'paved' : 'dirt', more: [], bonus: 0, mine: true });
     }
     // Une église reliée par un chemin à une de ces routes, ou à une ville proche, produit un peu d'or (CHURCH_ROAD_GOLD)
     this.roadChurches = new Map(); // église → ses chemins (voir churchLinks)
@@ -1811,6 +1962,10 @@ const GameRules = {
     if (t === B_PORT) {
       for (const c of this.portRoadCastles(pid, a)) roads.push({ pts: this.roadPoints(a, c, t), road: this.castleInfo(c).imperial ? 'paved' : 'dirt' });
       if (!roads.length) far = nearest(CONFIG.PORT_ROAD_DISTANCE);
+    } else if (t === B_MINE) { // (une mine : une route vers sa ville la plus proche, si elle n'est pas trop loin)
+      const c = this.mineRoadCastle(pid, a);
+      if (c >= 0) roads.push({ pts: this.roadPoints(a, c, t), road: this.castleInfo(c).imperial ? 'paved' : 'dirt' });
+      else far = nearest(CONFIG.MINE_ROAD_DISTANCE);
     } else if (t === B_CHURCH) {
       for (const link of this.churchLinks(pid, a)) roads.push({ pts: link.pts, road: link.stone ? 'paved' : 'dirt' });
       if (!roads.length) far = nearest(CONFIG.CHURCH_CITY_DISTANCE);
@@ -1994,7 +2149,8 @@ const GameRules = {
 
   buildCost(p, type) {
     // (les églises et les ports montent 2 fois plus vite : on n'en bâtit pas trop)
-    const growth = type === B_CHURCH || type === B_PORT ? CONFIG.RARE_COST_GROWTH : CONFIG.BUILDING_COST_GROWTH;
+    // (une mine coûte toujours le même prix)
+    const growth = type === B_MINE ? 1 : type === B_CHURCH || type === B_PORT ? CONFIG.RARE_COST_GROWTH : CONFIG.BUILDING_COST_GROWTH;
     return Math.round(BUILDINGS[type].baseCost * Math.pow(growth, this.builtCount(p, type)));
   },
 
@@ -2013,6 +2169,17 @@ const GameRules = {
     if (type === B_CASTLE && p.castlesBuilt >= this.maxCastles(p)) {
       return `Tu as déjà construit ${this.maxCastles(p)} châteaux : c'est le maximum pour l'instant ` +
         '(prends-en à l\'ennemi, ou améliore une église pour en débloquer).';
+    }
+    if (type === B_MINE) {
+      const d = i >= 0 ? this.depositAt.get(i) : null;
+      if (!d) return 'Une mine se bâtit sur un filon : les petites icônes de minerai, dans les montagnes (ou les collines pour la pierre).';
+      const m = MINES[d.kind];
+      if (m.max && this.minesOf(p.id, d.kind).length >= m.max) return `Tu as déjà ${m.max} ${m.name.toLowerCase()}s : c'est le maximum.`;
+      if (!this.canPlace(p.id, i, type)) {
+        return i >= 0 && this.owner[i] === p.id && !this.commanded(i, type)
+          ? 'Ce territoire n\'a plus ni ville ni port fortifié pour le diriger : il ne peut rien construire d\'autre.'
+          : 'Ce filon doit être tout entier sur ton territoire.';
+      }
     }
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
@@ -3487,6 +3654,8 @@ const GameRules = {
       if (this.building[a] === B_BARRACKS && this.owner[a] === pid) best = Math.max(best, this.buildingInfo(a).power);
     }
     // (une cité impériale rend toutes les troupes du royaume plus fortes)
+    // (⚒ ses mines de fer aussi)
+    if (pid >= 0) best *= 1 + this.mineBonus(pid, 'iron');
     return pid >= 0 && this.hasImperial(pid) ? best * (1 + IMPERIAL.troopPower) : best;
   },
 
@@ -3924,13 +4093,16 @@ const GameRules = {
   buildBridge(p, i) {
     const plan = this.planBridge(p.id, i);
     if (plan.error) return plan.error;
-    if (p.gold < CONFIG.BRIDGE_COST) return `Pas assez d'or : il faut 💰 ${fmt(CONFIG.BRIDGE_COST)}.`;
-    p.gold -= CONFIG.BRIDGE_COST;
+    const cost = this.bridgeCost(p.id);
+    if (p.gold < cost) return `Pas assez d'or : il faut 💰 ${fmt(cost)}.`;
+    p.gold -= cost;
     this.bridges.push({ tiles: plan.tiles, a: plan.a, b: plan.b, owner: p.id });
     for (const j of plan.tiles) this.bridgeAt[j] = 1;
     this.version++;
     return null;
   },
+  // Prix d'un pont pour pid (🪨 moins cher avec des carrières de pierre)
+  bridgeCost(pid) { return Math.round(CONFIG.BRIDGE_COST * (1 - this.mineBonus(pid, 'stone'))); },
   // Coût d'une case de fleuve passée à gué, en « points de terrain » : FORD_TIME secondes à cette vitesse
   fordCost(speed) { return CONFIG.FORD_TIME * CONFIG.TICKS_PER_SECOND * speed; },
 
@@ -4829,6 +5001,7 @@ const GameRules = {
     this.stepCrossings();
     this.stepReturning();
     this.stepWorks();
+    this.stepMines();
     this.stepWalls();
     this.stepFaith();
     this.stepOutposts();
@@ -4916,6 +5089,12 @@ function fmt(n) {
   if (n >= 1e4) return Math.floor(n / 1000) + 'k';
   if (n >= 1000) return (Math.floor(n / 100) / 10).toFixed(1) + 'k';
   return String(n);
+}
+
+// Une durée en secondes, écrite « 2:05 »
+function clock(secs) {
+  secs = Math.max(0, Math.ceil(secs));
+  return Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
 }
 
 // (MinHeap, la petite file de priorité des chemins les plus courts, est dans map.js : la carte s'en sert aussi)
