@@ -211,6 +211,54 @@ const Render = {
   // Le décor autour de la carte (CONFIG.DECOR_IMAGE) : une image chargée une seule fois
   decorImage: (() => { const img = new Image(); img.src = CONFIG.DECOR_IMAGE; return img; })(),
 
+  // Le cadre brodé (CONFIG.FRAME_IMAGE) : une tapisserie dont le milieu (FRAME_INNER) reçoit la carte
+  frameImage: (() => { const img = new Image(); img.src = CONFIG.FRAME_IMAGE; return img; })(),
+
+  // Le cadre à la forme de la carte : l'image est plus large que la plupart des cartes ; on l'allonge (ou on l'élargit)
+  // en recopiant une bande de ses bords, alternativement à l'endroit et en miroir (les raccords ne se voient pas), sans
+  // jamais étirer ses dessins. Renvoie { canvas, x0, y0, iw } (iw : largeur du rectangle de la carte), ou null.
+  frameCanvas() {
+    const img = this.frameImage, G = Game;
+    if (!img.complete || !img.naturalWidth) return null;
+    const key = G.W + 'x' + G.H;
+    if (this.frame && this.frame.key === key) return this.frame;
+    const [x0, y0, x1, y1] = CONFIG.FRAME_INNER, [sx, sy] = CONFIG.FRAME_SPLIT, iw = x1 - x0, ih = y1 - y0, a = G.W / G.H;
+    const gx = a > iw / ih ? Math.round(ih * a - iw) : 0, gy = a < iw / ih ? Math.round(iw / a - ih) : 0;
+    // (rallonge src de gap pixels à la ligne at, le long d'un axe ; vertical : true = en hauteur)
+    const extend = (src, gap, at, vertical) => {
+      if (gap <= 0) return src;
+      const c = document.createElement('canvas'), w = src.width, h = src.height;
+      c.width = vertical ? w : w + gap; c.height = vertical ? h + gap : h;
+      const ctx = c.getContext('2d');
+      // (un morceau de src : de p à p + len le long de l'axe, posé en q, en miroir ou non)
+      const piece = (p, len, q, flip) => {
+        if (len <= 0) return;
+        ctx.save();
+        if (vertical) {
+          if (flip) { ctx.translate(0, q + len); ctx.scale(1, -1); ctx.drawImage(src, 0, p, w, len, 0, 0, w, len); }
+          else ctx.drawImage(src, 0, p, w, len, 0, q, w, len);
+        } else if (flip) { ctx.translate(q + len, 0); ctx.scale(-1, 1); ctx.drawImage(src, p, 0, len, h, 0, 0, len, h); }
+        else ctx.drawImage(src, p, 0, len, h, q, 0, len, h);
+        ctx.restore();
+      };
+      const size = vertical ? h : w;
+      piece(0, at, 0, false);                      // le début de l'image, jusqu'à la ligne at
+      const pairs = Math.ceil(gap / (2 * CONFIG.FRAME_BAND));
+      let q = at;
+      for (let k = 0; k < pairs; k++) {
+        // une bande juste avant at, en miroir puis à l'endroit : elle repart de la ligne at, et y revient
+        const b = Math.floor(gap / (2 * pairs)) + (k === pairs - 1 ? gap - 2 * pairs * Math.floor(gap / (2 * pairs)) : 0);
+        piece(at - b, b, q, true); q += b;
+        piece(at - b, b, q, false); q += b;
+      }
+      piece(at, size - at, at + gap, false);       // la suite de l'image
+      return c;
+    };
+    const canvas = extend(extend(img, gx, sx, false), gy, sy, true);
+    this.frame = { key, canvas, x0, y0, iw: iw + gx };
+    return this.frame;
+  },
+
   // Où est le décor (en cases) : centré sur la carte, DECOR_SIZE fois plus large qu'elle, assez haut pour la
   // dépasser aussi en haut et en bas, et assez grand pour remplir l'écran au plus fort dézoom (écran haut ou large)
   decorRect() {
@@ -2282,6 +2330,13 @@ const Render = {
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(decor, ox + d.x * s, oy + d.y * s, d.w * s, d.h * s);
     }
+    // Le cadre brodé autour de la carte, par-dessus le décor marin
+    const frame = this.frameCanvas();
+    if (frame) {
+      const k = G.W * s / frame.iw;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(frame.canvas, ox - frame.x0 * k, oy - frame.y0 * k, frame.canvas.width * k, frame.canvas.height * k);
+    }
     // (de loin, l'image est réduite : on la lisse un peu pour éviter le scintillement ; de près, pixels nets)
     ctx.imageSmoothingEnabled = s < this.F;
     ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
@@ -2293,10 +2348,10 @@ const Render = {
       ctx.drawImage(this.parch, ox, oy, G.W * s, G.H * s);
       ctx.globalAlpha = 1;
     }
-    // un cadre sombre autour de la carte, posée sur le décor comme une vieille carte encadrée
-    ctx.lineWidth = 4;
+    // un fin trait sombre autour de la carte (sans le cadre brodé : un cadre plus épais)
+    ctx.lineWidth = frame ? 1.5 : 4;
     ctx.strokeStyle = '#3b2a17';
-    ctx.strokeRect(ox - 2, oy - 2, G.W * s + 4, G.H * s + 4);
+    ctx.strokeRect(ox - 1, oy - 1, G.W * s + 2, G.H * s + 2);
     ctx.imageSmoothingEnabled = false;
     // (tout au fond du dézoom, la vieille carte : pas de détails, juste les villes dessinées à l'encre, voir drawMapSymbols)
     const oldMap = pa > 0.5;
