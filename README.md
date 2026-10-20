@@ -659,6 +659,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.43** : 🌊 côtes et lacs plus naturels : les criques, les baies, les golfes et les lacs ne sont plus faits de ronds réguliers, leurs bords sont déformés et découpés (anses, pointes, formes allongées)
 - **v0.92.42** : 🧵 les nuages brodés du cadre sont entourés d'une bordure de fil d'or (un cordon torsadé) : une séparation assumée avec les dessins de la tapisserie
 - **v0.92.41** : 🧵 cadre brodé : là où il est rallongé, des nuages brodés dans le style de la tapisserie remplissent ses colonnes (au lieu de copies en miroir des dessins), en teintes sombres et discrètes
 - **v0.92.40** : 🧵 un cadre brodé (une tapisserie médiévale) entoure la carte, par-dessus le décor marin ; il s'adapte à toutes les formes de carte

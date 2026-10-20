@@ -99,6 +99,7 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
 
   // 2 bis. Des côtes plus originales : quelques vraies îles habitables au large, des criques et des baies dans la côte,
   //    et parfois de grands golfes qui coupent presque le continent en morceaux (voir shapeCoasts)
+  coastNoise = lakeNoise = null; // (un nouveau bruit des côtes et des lacs pour chaque carte)
   if (type === 'normal') shapeCoasts(elev, W, H, waterLvl, rand, fs);
   else if (type === 'naval') addCoves(elev, W, H, waterLvl, rand, fs, mapCount(CONFIG.COVES).map(n => Math.ceil(n / 2)));
 
@@ -170,16 +171,23 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
 // On modifie l'altitude (elev) avant de choisir les terrains : les nouvelles terres auront leur relief, leurs forêts et
 // leurs fleuves comme le reste, et la mer creusée sera de la vraie mer.
 function shapeCoasts(elev, W, H, waterLvl, rand, fs) {
+  coastNoise = makeValueNoise(rand);
   addBigIslands(elev, W, H, waterLvl, rand, fs);
   if (rand() < CONFIG.GULF_CHANCE) addGulfs(elev, W, H, waterLvl, rand, rand() < 0.35 ? 2 : 1);
   addCoves(elev, W, H, waterLvl, rand, fs, mapCount(CONFIG.COVES));
 }
 
-// Creuse la mer dans un disque (la côte reste un peu irrégulière)
+// Bruit qui déforme les côtes creusées (voir sinkDisk), tiré au début de shapeCoasts (ou de addCoves)
+let coastNoise = null;
+
+// Creuse la mer autour de (cx, cy), sur un rayon r déformé par le bruit des côtes : pas un rond parfait, mais une
+// forme qui s'étire ici, se resserre là (et deux formes voisines se fondent en une côte naturelle)
 function sinkDisk(elev, W, H, waterLvl, cx, cy, r, rand) {
-  for (let y = Math.max(1, Math.floor(cy - r - 1)); y <= Math.min(H - 2, Math.ceil(cy + r + 1)); y++) {
-    for (let x = Math.max(1, Math.floor(cx - r - 1)); x <= Math.min(W - 2, Math.ceil(cx + r + 1)); x++) {
-      if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r + (rand() - 0.5) * 0.8) {
+  const R = r * 1.4 + 1;
+  for (let y = Math.max(1, Math.floor(cy - R)); y <= Math.min(H - 2, Math.ceil(cy + R)); y++) {
+    for (let x = Math.max(1, Math.floor(cx - R)); x <= Math.min(W - 2, Math.ceil(cx + R)); x++) {
+      const k = coastNoise ? 0.55 + 0.9 * fbm(coastNoise, x / 7, y / 7, 3) : 1;
+      if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r * k + (rand() - 0.5) * 0.8) {
         const i = y * W + x;
         elev[i] = Math.min(elev[i], waterLvl - 0.04);
       }
@@ -231,6 +239,7 @@ function addBigIslands(elev, W, H, waterLvl, rand, fs) {
 // Criques et baies : des entailles dans la côte du continent. Une baie s'ouvre large et se rétrécit vers l'intérieur ;
 // une crique a une entrée étroite qui s'ouvre sur un petit bassin rond.
 function addCoves(elev, W, H, waterLvl, rand, fs, [lo, hi]) {
+  if (!coastNoise) coastNoise = makeValueNoise(rand);
   const want = lo + Math.floor(rand() * (hi - lo + 1)), land = i => elev[i] >= waterLvl;
   const [mx, my] = landCenter(elev, W, H, waterLvl);
   for (let tries = 0, made = 0; tries < 600 && made < want; tries++) {
@@ -278,8 +287,9 @@ function addGulfs(elev, W, H, waterLvl, rand, count) {
       let x = ex, y = ey, a = a0;
       const r = (7 + rand() * 4) * Math.sqrt(L / 150), ph = rand() * 6.3, wob = 6 + rand() * 6;
       for (let d = 0; d < reach; d += 0.7) {
-        a = a0 + Math.sin(d / wob + ph) * 0.45;
-        const bulge = 1 + 0.35 * Math.sin(d / 7 + ph * 2);
+        // (il serpente et gonfle au gré du bruit, pas en vagues régulières)
+        a = a0 + (fbm(coastNoise, d / (wob * 3) + ph, ph) - 0.5) * 1.4;
+        const bulge = 0.6 + 0.8 * fbm(coastNoise, d / 9 + ph * 3, ph + 7, 2);
         sinkDisk(elev, W, H, waterLvl, x, y, Math.max(2.5, r * (1 - 0.55 * d / reach) * bulge), rand);
         x += Math.cos(a) * 0.7;
         y += Math.sin(a) * 0.7;
@@ -449,10 +459,13 @@ function addRivers(terrain, elev, W, H, rand) {
     if (lakes >= Math.round(CONFIG.LAKES_MAX * mapScale) || rand() > LAKE_CHANCE || path.length < 20) continue;
     const c = path[Math.floor(path.length * (0.35 + rand() * 0.35))];
     const cx = c % W, cy = (c / W) | 0, r = 2 + rand() * 2.5;
-    for (let y = Math.max(1, cy - 5); y <= Math.min(H - 2, cy + 5); y++) {
-      for (let x = Math.max(1, cx - 5); x <= Math.min(W - 2, cx + 5); x++) {
-        // un disque aux bords irréguliers
-        if (Math.hypot(x - cx, y - cy) <= r + (rand() - 0.5) * 1.6) terrain[y * W + x] = TERRAIN.WATER;
+    // (pas un rond : un lac allongé dans un sens au hasard, aux bords déformés par le bruit)
+    const noise = lakeNoise || (lakeNoise = makeValueNoise(rand)), rot = rand() * Math.PI, stretch = 1.3 + rand() * 0.9;
+    for (let y = Math.max(1, cy - 8); y <= Math.min(H - 2, cy + 8); y++) {
+      for (let x = Math.max(1, cx - 8); x <= Math.min(W - 2, cx + 8); x++) {
+        const dx = x - cx, dy = y - cy;
+        const u = (dx * Math.cos(rot) + dy * Math.sin(rot)) / stretch, v = -dx * Math.sin(rot) + dy * Math.cos(rot);
+        if (Math.hypot(u, v) <= r * (0.55 + 0.9 * fbm(noise, x / 4, y / 4, 2))) terrain[y * W + x] = TERRAIN.WATER;
       }
     }
     lakes++;
@@ -476,6 +489,7 @@ function addDeserts(terrain, W, H, dryNoise, fs = 1) {
 }
 
 // Lacs : au plus LAKES_MAX par carte (voir config.js), chaque fleuve a LAKE_CHANCE chances d'en avoir un
+let lakeNoise = null; // (le bruit qui déforme leurs bords, tiré pour chaque carte)
 const LAKE_CHANCE = 0.3;
 
 // Taille de la carte en cours de création, par rapport à une carte de 500 x 281 cases (0,6 = petite, 2 = grande)
@@ -560,12 +574,13 @@ function addLakes(terrain, elev, W, H, rand) {
     }
     if (!best) continue;
     lakes.push(best);
-    const [cx, cy] = best, r = 7 + rand() * 6;
-    for (let y = Math.floor(cy - r - 2); y <= cy + r + 2; y++) {
-      for (let x = Math.floor(cx - r - 2); x <= cx + r + 2; x++) {
-        // un lac aux bords irréguliers (un peu allongé)
-        const d = Math.hypot((x - cx) / 1.3, y - cy);
-        if (d <= r + (rand() - 0.5) * 2 && terrain[y * W + x] !== TERRAIN.PEAK) terrain[y * W + x] = TERRAIN.WATER;
+    const [cx, cy] = best, r = 7 + rand() * 6, noise = makeValueNoise(rand), rot = rand() * Math.PI, stretch = 1.2 + rand() * 0.6;
+    for (let y = Math.max(1, Math.floor(cy - r * 2.2)); y <= Math.min(H - 2, cy + r * 2.2); y++) {
+      for (let x = Math.max(1, Math.floor(cx - r * 2.2)); x <= Math.min(W - 2, cx + r * 2.2); x++) {
+        // un lac allongé dans un sens au hasard, aux bords découpés par le bruit (des anses, des pointes)
+        const dx = x - cx, dy = y - cy;
+        const d = Math.hypot((dx * Math.cos(rot) + dy * Math.sin(rot)) / stretch, -dx * Math.sin(rot) + dy * Math.cos(rot));
+        if (d <= r * (0.5 + 0.9 * fbm(noise, x / 9, y / 9, 3)) && terrain[y * W + x] !== TERRAIN.PEAK) terrain[y * W + x] = TERRAIN.WATER;
       }
     }
   }
