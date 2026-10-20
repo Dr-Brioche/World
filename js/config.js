@@ -360,8 +360,8 @@ const MILL_LEVELS = [
 const BARRACKS_LEVELS = [
   null,
   { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.2 },
-  { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 3.8, upgradeCost: 400 },
-  { name: 'Grande caserne',       troops: 9, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 4.6, upgradeCost: 2500 },
+  { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 4.6, upgradeCost: 400 },
+  { name: 'Grande caserne',       troops: 9, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 6.0, upgradeCost: 2500 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
@@ -372,10 +372,10 @@ const BARRACKS_LEVELS = [
 const CASTLE_LEVELS = [
   null,
   { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.8, road: null,    roadBonus: 0, trades: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5.5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 6.3, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
+  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 6.4,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 7.8, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
   // Niveau 4 : la cité impériale, une seule par royaume et par partie (voir IMPERIAL plus bas)
-  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau4.webp', size: 7, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
+  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau4.webp', size: 9.0, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
 ];
 // Cité impériale (château de niveau 4) : il faut au moins un bâtiment de chaque type au niveau maximum (moulin,
 // caserne, église, port et la citadelle elle-même), et on n'en bâtit qu'une par partie. En plus de ses murs :
@@ -414,8 +414,8 @@ const CHURCH_LEVELS = [
 const PORT_LEVELS = [
   null,
   { name: 'Port',       gold: 1.5, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
-  { name: 'Grand port', gold: 4.5, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 3.8, upgradeCost: 500 },
-  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 4.8, upgradeCost: 2000, garrison: 10, bonus: 1 },
+  { name: 'Grand port', gold: 4.5, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 4.6, upgradeCost: 500 },
+  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 6.2, upgradeCost: 2000, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
