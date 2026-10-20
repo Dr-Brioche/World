@@ -71,8 +71,8 @@ const CONFIG = {
   MOUNTAIN_CHAINS: [6, 9],      // nombre de chaînes (entre ces deux valeurs)
   CHAIN_LENGTH: [45, 90],       // longueur d'une chaîne, en cases (un peu plus sur une grande carte)
   CHAIN_PASS_EVERY: [18, 30],   // un col toutes les 18 à 30 cases de crête...
-  CHAIN_PASS_WIDTH: [6, 8],     // ...large de 2 à 4 cases (les sommets voisins débordent un peu dessus)
-  PEAK_BLOB_RATIO: 0.02,        // en plus des chaînes, 2 % des terres en sommets isolés (le cœur des massifs)
+  CHAIN_PASS_WIDTH: [2.5, 4.5], // ...large de 2 à 4 cases (entre deux sommets)
+  PEAK_BLOB_RATIO: 0.015,       // en plus des chaînes, 1,5 % des terres en sommets isolés (le cœur des massifs)
 
   // --- Vitesse ---
   TICKS_PER_SECOND: 10,    // nombre de "tours" de jeu par seconde
