@@ -1014,9 +1014,9 @@ const Render = {
           ctx.setLineDash([]);
           ctx.lineDashOffset = 0;
         }
-        // Siège en cours : compte à rebours avant la chute du château
-        const siege = a.retreatEnd !== undefined ? '🏳️ retraite · ' : a.clash !== undefined ? '⚔️ bataille · '
-          : a.siege ? `${G.building[a.siege.tile] === B_OUTPOST ? '⛺' : '🏰'} ${Math.max(0, Math.ceil((a.siege.end - G.tick) / CONFIG.TICKS_PER_SECOND))} s · ` : '';
+        // Siège en cours : une jauge ronde autour de la cible se remplit jusqu'à sa chute (voir drawSiegeRing)
+        if (a.siege) this.drawSiegeRing(ox, oy, a);
+        const siege = a.retreatEnd !== undefined ? '🏳️ retraite · ' : a.clash !== undefined ? '⚔️ bataille · ' : '';
         // Deux armées qui s'affrontent au pied du même château : leurs bannières se font face
         const shift = a.clash !== undefined ? (a.attacker < a.clash ? -30 : 30) : 0;
         this.drawArmyBanner(a, bx + shift, by, `${siege}${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
@@ -1039,6 +1039,29 @@ const Render = {
       const by = m ? oy + m.y * s : st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
       this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
     }
+  },
+
+  // Jauge du siège de l'assaut a : un anneau autour du bâtiment assiégé, qui se remplit (couleur de l'attaquant)
+  // à mesure que le siège avance ; plein, la cible tombe
+  drawSiegeRing(ox, oy, a) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, c = G.anchor[a.siege.tile], type = G.building[c];
+    if (!type) return;
+    const n = G.sizeOf(type), x = ox + (c % G.W + n / 2) * s, y = oy + (((c / G.W) | 0) + n / 2) * s;
+    const total = Math.max(1, a.siege.end - (a.siege.start === undefined ? a.siege.end - 1 : a.siege.start));
+    const k = Math.max(0, Math.min(1, 1 - (a.siege.end - G.tick) / total));
+    const r = Math.max(16, n * s * 0.75 * CONFIG.BUILDING_DRAW_SCALE + 4);
+    ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(5, s * 0.5);
+    ctx.strokeStyle = 'rgba(20,12,4,0.55)';
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineWidth = Math.max(3, s * 0.35);
+    ctx.strokeStyle = `rgb(${G.players[a.attacker].color.join(',')})`;
+    ctx.beginPath();
+    ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2);
+    ctx.stroke();
+    ctx.lineCap = 'butt';
   },
 
   // Trajet à pied (Game.walkRoute) : prépare le tracé du reste du chemin (à dessiner ensuite avec stroke)
@@ -1096,6 +1119,211 @@ const Render = {
     ctx.fill();
     ctx.lineWidth = 1;
     ctx.stroke();
+    ctx.restore();
+  },
+
+  // La vieille carte (tout au fond du dézoom) : chaque ville est un petit dessin à l'encre (des tours et leurs toits
+  // pointus, plus nombreuses selon son niveau, avec un fanion à la couleur du royaume). Les autres bâtiments ne sont pas
+  // dessinés, sauf les grandes églises et les grandes casernes (niveau 3), en petit croquis aussi.
+  drawMapSymbols(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    const u = Math.max(7, Math.min(11, s * 3)); // (taille d'un « trait » du dessin, en pixels)
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    for (const i of G.buildingTiles) {
+      const type = G.building[i], lvl = G.level[i] || 1, half = G.sizeOf(type) / 2;
+      if (type !== B_CASTLE && !((type === B_CHURCH || type === B_BARRACKS) && lvl >= 3)) continue;
+      const x = ox + (i % G.W + half) * s, y = oy + (((i / G.W) | 0) + half) * s;
+      if (x < -60 || y < -60 || x > this.vw + 60 || y > this.vh + 60) continue;
+      const color = G.owner[i] >= 0 ? `rgb(${G.players[G.owner[i]].color})` : '#7a6a50';
+      if (type === B_CASTLE) this.inkTown(x, y, u, lvl, color);
+      else if (type === B_CHURCH) this.inkChurch(x, y, u * 0.9);
+      else this.inkCamp(x, y, u * 0.9, color);
+    }
+    ctx.restore();
+  },
+  // (l'encre et le papier de la vieille carte)
+  inkStyle(fill = '#efe2c0') {
+    const ctx = this.ctx;
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = '#3b2a17';
+    ctx.lineWidth = 1.3;
+  },
+  // Une tour : un carré de mur et un toit pointu (x = son milieu, y = son pied)
+  inkTower(x, y, w, h) {
+    const ctx = this.ctx;
+    this.inkStyle();
+    ctx.beginPath();
+    ctx.rect(x - w / 2, y - h, w, h);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 - 1, y - h);
+    ctx.lineTo(x, y - h - w * 1.1);
+    ctx.lineTo(x + w / 2 + 1, y - h);
+    ctx.closePath();
+    ctx.fillStyle = '#b5523a';
+    ctx.fill(); ctx.stroke();
+    // (une petite fenêtre)
+    ctx.fillStyle = '#3b2a17';
+    ctx.fillRect(x - 0.8, y - h * 0.65, 1.6, h * 0.25);
+  },
+  // Une ville : un mur bas, et 2 à 4 tours selon son niveau (la plus haute au milieu, avec le fanion du royaume)
+  inkTown(x, y, u, lvl, color) {
+    const ctx = this.ctx, n = Math.min(4, lvl + 1), w = u * 0.8, gap = w * 1.05;
+    const bottom = y + u * 0.9;
+    // le mur, avec ses créneaux
+    const mw = (n - 1) * gap + w;
+    this.inkStyle();
+    ctx.beginPath();
+    ctx.rect(x - mw / 2, bottom - u * 0.7, mw, u * 0.7);
+    ctx.fill(); ctx.stroke();
+    // les tours, de gauche à droite (celles du milieu un peu plus hautes)
+    let top = Infinity, tx = x;
+    for (let k = 0; k < n; k++) {
+      const cx = x - (n - 1) * gap / 2 + k * gap;
+      const mid = 1 - Math.abs(k - (n - 1) / 2) / n;
+      const h = u * (1 + mid * (0.6 + lvl * 0.15));
+      this.inkTower(cx, bottom, w, h);
+      if (bottom - h < top) { top = bottom - h; tx = cx; }
+    }
+    // le fanion, au-dessus de la plus haute tour
+    const py = top - w * 1.1;
+    ctx.strokeStyle = '#3b2a17';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(tx, py);
+    ctx.lineTo(tx, py - u * 0.9);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tx, py - u * 0.9);
+    ctx.lineTo(tx + u * 0.8, py - u * 0.7);
+    ctx.lineTo(tx, py - u * 0.45);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    // (la ville impériale : une petite couronne dorée au-dessus)
+    if (lvl >= 4) {
+      const cy = py - u * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(tx - u * 0.5, cy);
+      ctx.lineTo(tx - u * 0.5, cy - u * 0.45);
+      ctx.lineTo(tx - u * 0.25, cy - u * 0.2);
+      ctx.lineTo(tx, cy - u * 0.55);
+      ctx.lineTo(tx + u * 0.25, cy - u * 0.2);
+      ctx.lineTo(tx + u * 0.5, cy - u * 0.45);
+      ctx.lineTo(tx + u * 0.5, cy);
+      ctx.closePath();
+      ctx.fillStyle = '#e2b53e';
+      ctx.fill();
+      ctx.stroke();
+    }
+  },
+  // Une grande église : sa nef au toit en pente, son clocher pointu et sa croix
+  inkChurch(x, y, u) {
+    const ctx = this.ctx, bottom = y + u * 0.6;
+    this.inkStyle();
+    // la nef
+    ctx.beginPath();
+    ctx.moveTo(x - u * 0.3, bottom);
+    ctx.lineTo(x + u * 1.3, bottom);
+    ctx.lineTo(x + u * 1.3, bottom - u * 0.8);
+    ctx.lineTo(x + u * 0.5, bottom - u * 1.3);
+    ctx.lineTo(x - u * 0.3, bottom - u * 0.8);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // le clocher
+    this.inkTower(x - u * 0.6, bottom, u * 0.7, u * 1.6);
+    // la croix, en haut du clocher
+    const ty = bottom - u * 1.6 - u * 0.7 * 1.1;
+    ctx.strokeStyle = '#3b2a17';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(x - u * 0.6, ty);
+    ctx.lineTo(x - u * 0.6, ty - u * 0.8);
+    ctx.moveTo(x - u * 0.9, ty - u * 0.55);
+    ctx.lineTo(x - u * 0.3, ty - u * 0.55);
+    ctx.stroke();
+    // (le portail)
+    ctx.fillStyle = '#3b2a17';
+    ctx.beginPath();
+    ctx.arc(x + u * 0.5, bottom, u * 0.25, Math.PI, 0);
+    ctx.fill();
+  },
+  // Une grande caserne : une tente de camp militaire, et sa bannière à la couleur du royaume
+  inkCamp(x, y, u, color) {
+    const ctx = this.ctx, bottom = y + u * 0.6;
+    this.inkStyle('#e4d3a8');
+    ctx.beginPath();
+    ctx.moveTo(x - u * 1.1, bottom);
+    ctx.quadraticCurveTo(x - u * 0.4, bottom - u * 0.6, x, bottom - u * 1.5);
+    ctx.quadraticCurveTo(x + u * 0.4, bottom - u * 0.6, x + u * 1.1, bottom);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // l'entrée de la tente
+    ctx.fillStyle = '#3b2a17';
+    ctx.beginPath();
+    ctx.moveTo(x - u * 0.3, bottom);
+    ctx.lineTo(x, bottom - u * 0.8);
+    ctx.lineTo(x + u * 0.3, bottom);
+    ctx.closePath();
+    ctx.fill();
+    // la bannière
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, bottom - u * 1.5);
+    ctx.lineTo(x, bottom - u * 2.3);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.rect(x, bottom - u * 2.3, u * 0.7, u * 0.45);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  },
+
+  // Drapeau blanc médiéval (mât, petite pointe dorée, drapeau qui ondule) : un territoire désorganisé
+  drawWhiteFlags(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale;
+    const spots = G.disorganizedSpots();
+    if (!spots.length) return;
+    const h = Math.max(20, Math.min(32, s * 2.6)), fw = h * 0.6, fh = h * 0.42;
+    ctx.save();
+    ctx.lineJoin = 'round';
+    for (const t of spots) {
+      // (une ville : le drapeau à côté de son image ; une terre : au milieu, sur la case)
+      const b = G.building[t], half = b ? G.sizeOf(b) / 2 : 0.5;
+      const x = ox + (t % G.W + half) * s + (b ? half * s * CONFIG.BUILDING_DRAW_SCALE + 4 : 0);
+      const y = oy + (((t / G.W) | 0) + half) * s + (b ? 0 : h / 2);
+      if (x < -50 || y < -50 || x > this.vw + 50 || y > this.vh + 50) continue;
+      // le mât
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#3a2412';
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y - h);
+      ctx.stroke();
+      // le drapeau blanc, qui ondule un peu
+      ctx.beginPath();
+      ctx.moveTo(x, y - h + 1);
+      ctx.bezierCurveTo(x + fw * 0.35, y - h - 3, x + fw * 0.65, y - h + 3, x + fw, y - h + 1);
+      ctx.lineTo(x + fw * 0.85, y - h + fh * 0.5); // (petite découpe en queue d'aronde)
+      ctx.lineTo(x + fw, y - h + fh);
+      ctx.bezierCurveTo(x + fw * 0.65, y - h + fh + 2, x + fw * 0.35, y - h + fh - 4, x, y - h + fh);
+      ctx.closePath();
+      ctx.fillStyle = '#f6f1e2';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(40,25,10,0.8)';
+      ctx.stroke();
+      // la pointe dorée en haut du mât
+      ctx.fillStyle = '#d9b44a';
+      ctx.beginPath();
+      ctx.arc(x, y - h - 1.5, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   },
 
@@ -1251,8 +1479,10 @@ const Render = {
   },
 
   drawHoveredKingdom(ox, oy) {
-    const G = Game, o = this.hoveredKingdom();
-    if (o < 0) return;
+    const G = Game, f = this.flashKingdom, flash = f && performance.now() < f.until ? f.pid : -1;
+    // (un royaume choisi dans le classement s'éclaire un instant, en clignotant : voir UI.showKingdom)
+    const o = flash >= 0 ? flash : this.hoveredKingdom();
+    if (o < 0 || (flash >= 0 && Math.floor(performance.now() / 250) % 2)) return;
     // Une petite image (1 pixel = 1 case) des terres de ce royaume, refaite si on survole un autre royaume,
     // ou au plus 3 fois par seconde si la carte a changé (sur une grande carte, c'est un gros calcul)
     const now = performance.now();
@@ -1322,7 +1552,7 @@ const Render = {
       ctx.globalAlpha = 1;
     }
     if (a > 0) {
-      const half = Game.sizeOf(type) / 2, w = BUILDINGS[type].size * s, h = w * img.naturalHeight / img.naturalWidth;
+      const half = Game.sizeOf(type) / 2, w = BUILDINGS[type].size * s * CONFIG.BUILDING_DRAW_SCALE, h = w * img.naturalHeight / img.naturalWidth;
       ctx.globalAlpha = a;
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(img, px - w / 2, py + s * (half + 0.1) - h, w, h);
@@ -1343,13 +1573,13 @@ const Render = {
     const alpha = ok ? 0.8 : 0.55;
     if (imgAlpha < 1) {
       ctx.globalAlpha = alpha * (1 - imgAlpha);
-      ctx.font = `${Math.max(16, Math.min(20 * half, s * half * 2))}px serif`;
+      ctx.font = `${Math.max(16, Math.min(20 * half, s * half * 2)) * CONFIG.BUILDING_DRAW_SCALE}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]));
     }
     if (imgAlpha > 0) {
-      const w = size * s, h = w * img.naturalHeight / img.naturalWidth;
+      const w = size * s * CONFIG.BUILDING_DRAW_SCALE, h = w * img.naturalHeight / img.naturalWidth;
       ctx.globalAlpha = alpha * imgAlpha;
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(img, px - w / 2, py + s * (half + 0.1) - h, w, h);
@@ -1500,14 +1730,15 @@ const Render = {
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgba(20,12,4,0.85)';
         ctx.fillStyle = '#ffe9a8';
-        const roman = ['', 'I', 'II', 'III'][lvl];
-        Icons.text(ctx, roman, px + s * half * 1.2, py - s * half * 0.8);
+        const roman = ['', 'I', 'II', 'III', 'IV'][lvl];
+        const k = CONFIG.BUILDING_DRAW_SCALE;
+        Icons.text(ctx, roman, px + s * half * 1.2 * k, py - s * half * 0.8 * k);
       }
       ctx.globalAlpha = 1;
     }
     // De près : la vraie image, posée sur son carré de cases
     if (imgAlpha > 0 && img.complete && img.naturalWidth) {
-      const w = info.size * s, h = w * img.naturalHeight / img.naturalWidth;
+      const w = info.size * s * CONFIG.BUILDING_DRAW_SCALE, h = w * img.naturalHeight / img.naturalWidth;
       ctx.globalAlpha = imgAlpha;
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(img, px - w / 2, py + s * (half + 0.1) - h, w, h);
@@ -1549,28 +1780,45 @@ const Render = {
     this.pactVersion = G.version;
     if (!G.pacts.size) { this.pactEdges = []; return; } // (aucun pacte : rien à chercher sur la carte)
     const pactOf = i => (G.owner[i] >= 0 ? G.players[G.owner[i]].pact : -1);
-    const tiles = [];
-    for (let i = 0; i < G.N; i++) if (pactOf(i) >= 0) tiles.push(i);
-    this.pactEdges = this.zoneEdges(tiles, (i, n) => pactOf(n) === pactOf(i));
+    const byPact = new Map();
+    for (let i = 0; i < G.N; i++) {
+      const k = pactOf(i);
+      if (k >= 0) (byPact.get(k) || byPact.set(k, []).get(k)).push(i);
+    }
+    // (un tracé par pacte : ses pointillés prennent la couleur de son fondateur, voir drawPactBorders)
+    this.pactEdges = [...byPact].map(([k, tiles]) => {
+      const f = G.pactFounder(k);
+      return { color: f ? `rgb(${f.color})` : '#f2c94c', edges: this.zoneEdges(tiles, (i, n) => pactOf(n) === pactOf(i)) };
+    });
   },
 
+  // Frontière d'un pacte : un fin trait sombre, et par-dessus des pointillés qui alternent l'or et la couleur du
+  // royaume qui a fondé le pacte. (Les pointillés suivent la grille : chaque bout de bord prend une couleur selon sa
+  // place, par tronçons de PACT_DASH cases.) Plus fins quand on dézoome, pour ne pas cacher la carte.
   drawPactBorders(ox, oy) {
     this.updatePactEdges();
     if (!this.pactEdges.length) return;
-    const ctx = this.ctx, s = this.cam.scale;
-    ctx.beginPath();
-    for (const [x1, y1, x2, y2] of this.pactEdges) {
-      ctx.moveTo(ox + x1 * s, oy + y1 * s);
-      ctx.lineTo(ox + x2 * s, oy + y2 * s);
-    }
-    ctx.lineCap = 'square';
-    ctx.lineWidth = Math.max(3, s * 0.35) + 2;
-    ctx.strokeStyle = 'rgba(60,40,5,0.75)';
-    ctx.stroke();
-    ctx.lineWidth = Math.max(3, s * 0.35);
-    ctx.strokeStyle = '#f2c94c';
-    ctx.stroke();
+    const ctx = this.ctx, s = this.cam.scale, D = 3; // (longueur d'un pointillé, en cases)
+    const w = Math.max(1.5, Math.min(4, s * 0.22));
     ctx.lineCap = 'butt';
+    for (const { color, edges } of this.pactEdges) {
+      const all = new Path2D(), gold = new Path2D(), mine = new Path2D();
+      for (const [x1, y1, x2, y2] of edges) {
+        const a = [ox + x1 * s, oy + y1 * s], b = [ox + x2 * s, oy + y2 * s];
+        all.moveTo(a[0], a[1]); all.lineTo(b[0], b[1]);
+        const along = y1 === y2 ? Math.min(x1, x2) : Math.min(y1, y2); // (position le long du bord)
+        const p = Math.floor(along / D) % 2 ? mine : gold;
+        p.moveTo(a[0], a[1]); p.lineTo(b[0], b[1]);
+      }
+      ctx.lineWidth = w + 1.5;
+      ctx.strokeStyle = 'rgba(40,26,4,0.6)';
+      ctx.stroke(all);
+      ctx.lineWidth = w;
+      ctx.strokeStyle = '#f2c94c';
+      ctx.stroke(gold);
+      ctx.strokeStyle = color;
+      ctx.stroke(mine);
+    }
   },
 
   // Routes des châteaux (niveau 2 : chemins de terre, niveau 3 : routes pavées)
@@ -2049,27 +2297,34 @@ const Render = {
     ctx.strokeStyle = '#3b2a17';
     ctx.strokeRect(ox - 2, oy - 2, G.W * s + 4, G.H * s + 4);
     ctx.imageSmoothingEnabled = false;
-    this.drawForests(ox, oy);
+    // (tout au fond du dézoom, la vieille carte : pas de détails, juste les villes dessinées à l'encre, voir drawMapSymbols)
+    const oldMap = pa > 0.5;
+    if (!oldMap) this.drawForests(ox, oy);
     this.drawHoveredKingdom(ox, oy);
 
-    this.drawRoads(ox, oy);
-    this.drawBridges(ox, oy);
+    if (!oldMap) {
+      this.drawRoads(ox, oy);
+      this.drawBridges(ox, oy);
+    }
     this.drawPactBorders(ox, oy);
-    this.drawCastleZones(ox, oy);
-    this.drawCityWalls(ox, oy);
+    if (oldMap) this.drawMapSymbols(ox, oy);
+    else {
+      this.drawCastleZones(ox, oy);
+      this.drawCityWalls(ox, oy);
+    }
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // Bâtiments : petites icônes de loin, vraies images quand on zoome
     const imgAlpha = Math.max(0, Math.min(1, (s - CASTLE_IMG_ZOOM) / 3));
-    if (s >= 3) {
+    if (s >= 3 && !oldMap) {
       for (const i of G.buildingTiles) {
         // Centre du bâtiment = milieu de son carré ; icône à sa taille
         const type = G.building[i], half = G.sizeOf(type) / 2;
         const px = ox + (i % G.W + half) * s, py = oy + (((i / G.W) | 0) + half) * s;
         if (px < -300 || py < -300 || px > this.vw + 300 || py > this.vh + 300) continue;
-        ctx.font = `${Math.max(9, Math.min(20 * half, s * half * 2))}px serif`;
+        ctx.font = `${Math.max(9, Math.min(20 * half, s * half * 2)) * CONFIG.BUILDING_DRAW_SCALE}px serif`;
         if (BUILDING_LEVELS[type]) this.drawLeveledBuilding(i, px, py, imgAlpha);
         else this.drawSimpleBuilding(type, px, py, imgAlpha);
         // Un de nos châteaux (ou ports royaux) coupé de notre royaume : un petit fanion rouge au-dessus
@@ -2078,10 +2333,11 @@ const Render = {
         if (s >= 4) {
           // (au-dessus de l'image quand on la voit, sinon au-dessus de l'icône)
           const info = BUILDING_LEVELS[type] ? BUILDING_LEVELS[type][G.level[i] || 1] : BUILDINGS[type];
-          const top = imgAlpha > 0.5 && info.size ? info.size * 0.8 : half;
+          const top = (imgAlpha > 0.5 && info.size ? info.size * 0.8 : half) * CONFIG.BUILDING_DRAW_SCALE;
           this.drawBuildingLabel(i, type, px, py - s * top - 8);
         }
       }
+      this.drawWhiteFlags(ox, oy);
     }
 
     // Case survolée (et aperçu de la capitale pendant le placement)
@@ -2148,11 +2404,13 @@ const Render = {
       Icons.text(ctx, troops, tx, ty);
     }
 
-    this.drawCastleAssaultPreview(ox, oy);
-    this.drawHoveredBuildings(ox, oy);
-    this.drawSelectable(ox, oy);
-    this.drawWorks(ox, oy);
-    this.drawFloaters(ox, oy);
+    if (!oldMap) {
+      this.drawCastleAssaultPreview(ox, oy);
+      this.drawHoveredBuildings(ox, oy);
+      this.drawSelectable(ox, oy);
+      this.drawWorks(ox, oy);
+      this.drawFloaters(ox, oy);
+    }
 
     // Par-dessus tout le reste, pour bien les voir
     this.drawLandingWarnings(ox, oy);
