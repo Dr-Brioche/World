@@ -370,11 +370,11 @@ const BARRACKS_LEVELS = [
 // (le défenseur peut encore envoyer des soldats pendant ce temps).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.4, road: null,    roadBonus: 0, trades: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 5.6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
+  { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.6, road: null,    roadBonus: 0, trades: 0 },
+  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 5.2,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
+  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 6, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
   // Niveau 4 : la cité impériale, une seule par royaume et par partie (voir IMPERIAL plus bas)
-  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau3.webp', size: 6.6, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
+  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau4.webp', size: 6.8, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
 ];
 // Cité impériale (château de niveau 4) : il faut au moins un bâtiment de chaque type au niveau maximum (moulin,
 // caserne, église, port et la citadelle elle-même), et on n'en bâtit qu'une par partie. En plus de ses murs :

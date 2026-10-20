@@ -669,6 +669,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.49** : 🏰 nouvelles images pour les 4 niveaux de la ville : le petit fortin de bois, le fort de pierre et de bois, le château fortifié (entouré de douves) et la grande citadelle impériale (sa cathédrale et ses tours, qui a enfin sa propre image)
 - **v0.92.48** : ⛪ nouvelles images pour les 3 niveaux de l'église : la petite église en bois, l'église de pierre et la grande cathédrale (avec sa flèche)
 - **v0.92.47** : 🎨 nouvelles images : l'avant-poste (un camp de tentes dans une palissade ronde, avec tour de guet et feu de camp), les 2 niveaux du moulin (moulin à vent de bois, puis de pierre avec ses annexes) et les 3 niveaux du port (petit port de pêcheur, port de commerce de pierre, grand port de commerce médiéval avec son phare et son fort)
 - **v0.92.46** : ⚔️ nouvelles images pour les 3 niveaux de la caserne : la petite caserne de bois (palissade et toits de chaume), la caserne de pierre et de bois (colombages, enceinte de pierre) et la grande bâtisse de la guilde des guerriers (tours, remparts et cour d'entraînement)
@@ -966,4 +967,4 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/icons.js` | Les icônes médiévales dessinées (elles remplacent les emojis partout) |
 | `js/render.js` | Le dessin de la carte |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
-| `img/` | Les images des bâtiments (3 niveaux de château, de caserne, d'église et de port, 2 de moulin, et l'avant-poste) , des bannières (`img/bannieres/`), le décor marin (`decor_mer.webp`) et le cadre brodé (`cadre.webp`) |
+| `img/` | Les images des bâtiments (4 niveaux de château, de caserne, d'église et de port, 2 de moulin, et l'avant-poste) , des bannières (`img/bannieres/`), le décor marin (`decor_mer.webp`) et le cadre brodé (`cadre.webp`) |
