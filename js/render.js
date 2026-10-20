@@ -276,10 +276,10 @@ const Render = {
     ctx.rect(x, y, w, h);
     ctx.clip();
     const sky = vertical ? ctx.createLinearGradient(0, y, 0, y + h) : ctx.createLinearGradient(x, 0, x + w, 0);
-    sky.addColorStop(0, '#59666e'); sky.addColorStop(0.5, '#6a767a'); sky.addColorStop(1, '#59666e');
+    sky.addColorStop(0, '#3e4749'); sky.addColorStop(0.5, '#4a5352'); sky.addColorStop(1, '#3e4749');
     ctx.fillStyle = sky;
     ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = 'rgba(160,170,160,0.35)';
+    ctx.strokeStyle = 'rgba(130,130,115,0.25)';
     ctx.lineWidth = 1;
     for (let yy = y + 3; yy < y + h; yy += 5 + rand() * 6) {
       const x1 = x + rand() * w * 0.6, x2 = x1 + 15 + rand() * w * 0.5;
@@ -302,19 +302,19 @@ const Render = {
       }
       path.quadraticCurveTo(cx, base + 4 + rand() * 3, left, base);
       path.closePath();
-      ctx.fillStyle = '#d9caa4';
+      ctx.fillStyle = '#8e856e';
       ctx.fill(path);
       // l'ombre du dessous, et le contour
       ctx.save();
       ctx.clip(path);
-      ctx.fillStyle = '#aa9a7b';
+      ctx.fillStyle = '#665e4d';
       ctx.fillRect(left - 2, base - 4, bw + 4, 10);
       ctx.restore();
-      ctx.strokeStyle = '#2d241a';
+      ctx.strokeStyle = '#211910';
       ctx.lineWidth = 1.4;
       ctx.stroke(path);
       // les coutures : un feston plus petit dans chaque bosse
-      ctx.strokeStyle = 'rgba(125,108,82,0.9)';
+      ctx.strokeStyle = 'rgba(70,62,48,0.9)';
       ctx.lineWidth = 1;
       for (const [ax, ay, rx, ry] of arcs) {
         if (rand() < 0.35) continue;
@@ -332,9 +332,9 @@ const Render = {
         if (rand() < 0.25) {
           const x1 = x + rand() * w * 0.4, x2 = x1 + w * (0.3 + rand() * 0.4);
           ctx.lineCap = 'round';
-          ctx.strokeStyle = '#2d241a'; ctx.lineWidth = 4.5;
+          ctx.strokeStyle = '#211910'; ctx.lineWidth = 4.5;
           ctx.beginPath(); ctx.moveTo(x1, yy); ctx.lineTo(x2, yy); ctx.stroke();
-          ctx.strokeStyle = '#d0c09b'; ctx.lineWidth = 2.5;
+          ctx.strokeStyle = '#7e7663'; ctx.lineWidth = 2.5;
           ctx.beginPath(); ctx.moveTo(x1, yy); ctx.lineTo(x2, yy); ctx.stroke();
           continue;
         }
@@ -354,8 +354,8 @@ const Render = {
     const img = this.frameImage, [ix, iy] = CONFIG.FRAME_INNER;
     ctx.save();
     zone();
-    ctx.globalCompositeOperation = 'overlay';
-    ctx.globalAlpha = 0.6;
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.globalAlpha = 0.8;
     for (let ty = y - over; ty < y + h + over; ty += 200) {
       for (let tx = x - over; tx < x + w + over; tx += 200) ctx.drawImage(img, ix + 300, iy + 60, 200, 200, tx, ty, 200, 200);
     }
