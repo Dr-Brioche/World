@@ -1891,7 +1891,8 @@ const Render = {
     // De loin : l'icône et le niveau en chiffres romains
     if (imgAlpha < 1) {
       ctx.globalAlpha = 1 - imgAlpha;
-      Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]));
+      const grow = 1 + CONFIG.ICON_LEVEL_GROWTH * (lvl - 1); // (plus grande selon le niveau)
+      Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]) * grow);
       if (lvl > 1 && s >= 5) {
         const f = Math.max(8, Math.min(14, s * 0.8));
         ctx.font = `700 ${f}px Georgia, serif`;

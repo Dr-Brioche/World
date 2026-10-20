@@ -135,7 +135,8 @@ const CONFIG = {
   PRODUCTION_INTERVAL: 10,   // moulins et casernes produisent toutes les 10 secondes
   BUILDING_COST_GROWTH: 1.5, // chaque bâtiment du même type construit soi-même rend le suivant x1.5 plus cher
                              // (ceux pris à l'ennemi ne comptent pas)
-  BUILDING_DRAW_SCALE: 1.3, // taille des bâtiments dessinés sur la carte (icônes et images) : 1.3 = 30 % plus grands
+  BUILDING_DRAW_SCALE: 1.5, // taille des bâtiments dessinés sur la carte (icônes et images) : 1.5 = 50 % plus grands
+  ICON_LEVEL_GROWTH: 0.18,  // de loin, l'icône d'un bâtiment grandit de 18 % par niveau (une cathédrale se voit mieux qu'une église)
   RARE_COST_GROWTH: 2,       // ...et x2 pour les églises et les ports (une hausse 2 fois plus forte : +100 % au lieu de +50 %)
   BUILD_TIME: 3,             // secondes de chantier pour construire un bâtiment (il ne produit rien avant)
   UPGRADE_TIME: [40, 60, 90], // améliorer un bâtiment : 40 s pour passer au niveau 2, 60 s au niveau 3, 90 s au niveau 4
@@ -348,8 +349,8 @@ const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTP
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
   null,
-  { name: 'Moulin',       gold: 1.5, img: 'img/moulin1.webp', size: 2.3 },
-  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 2.8, upgradeCost: 150 },
+  { name: 'Moulin',       gold: 1.5, img: 'img/moulin1.webp', size: 2.0 },
+  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 2.4, upgradeCost: 150 },
 ];
 
 // Les 3 niveaux de la caserne : troops = soldats produits toutes les PRODUCTION_INTERVAL secondes,
@@ -401,9 +402,9 @@ const IMPERIAL = {
 // faith = Croyance apportée au royaume (les églises s'additionnent).
 const CHURCH_LEVELS = [
   null,
-  { name: 'Église',        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.5 },
-  { name: 'Grande église', slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3.3,   upgradeCost: 800 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 4.3, upgradeCost: 2000 },
+  { name: 'Église',        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.7 },
+  { name: 'Grande église', slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3.6,   upgradeCost: 800 },
+  { name: 'Cathédrale',    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 5.0, upgradeCost: 2000 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu
