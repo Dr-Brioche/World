@@ -1579,8 +1579,8 @@ const GameRules = {
   // sinon, c'est l'eau (mer, lac, fleuve sans pont) ou un sommet.
   tradeBlockReason(x1, y1, x2, y2, pid, o) {
     const free = this.roadDetour(x1, y1, x2, y2, i => this.roadTile(i), 40, 3);
-    if (!free) return 'Pas de chemin entre ces deux villes : la mer, un lac, un sommet ou un fleuve sans pont coupe le passage ' +
-      '(bâtis un pont : clic droit sur le fleuve, ses deux rives doivent être à toi).';
+    if (!free) return 'Pas de passage assez court par la terre : la mer, un lac, un sommet ou un fleuve sans pont ' +
+      'coupe le chemin (un pont ouvre un passage).';
     const other = this.routeTiles(free).find(i => this.owner[i] !== pid && this.owner[i] !== o && this.terrain[i] !== TERRAIN.RIVER);
     const who = other === undefined ? null : this.owner[other] < 0 ? 'des terres libres' : `les terres ${this.deName(this.players[this.owner[other]].name)}`;
     return 'La route commerciale doit rester sur vos deux territoires' + (who ? ` : ici, elle passerait par ${who}. Prends-les d'abord.` : '.');
@@ -1710,7 +1710,9 @@ const GameRules = {
     const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1, maxCost = (Math.abs(ex - sx) + Math.abs(ey - sy)) * long + 8;
     const DX = [1, -1, 0, 0], DY = [0, 0, 1, -1], TURN = 0.4;
     // (une « position » = une case de la zone et la direction d'arrivée)
-    const cost = new Float32Array(bw * bh * 4).fill(Infinity), from = new Int32Array(bw * bh * 4).fill(-1);
+    // (Float64Array, pas Float32Array : les coûts doivent être exactement ceux du tas, sinon « c > cost[s] » rejette à tort
+    //  toute position atteinte par un virage, et le détour échoue dès qu'il doit tourner)
+    const cost = new Float64Array(bw * bh * 4).fill(Infinity), from = new Int32Array(bw * bh * 4).fill(-1);
     const heap = new MinHeap(), start = ((sy - by0) * bw + (sx - bx0)) * 4;
     for (let d = 0; d < 4; d++) { cost[start + d] = 0; heap.push(0, start + d); }
     let end = -1;
@@ -3888,7 +3890,10 @@ const GameRules = {
     const W = this.W, H = this.H;
     if (i < 0 || this.terrain[i] !== TERRAIN.RIVER) return { error: 'Un pont se construit sur un fleuve (pas sur un grand fleuve, infranchissable).' };
     if (this.bridgeAt[i]) return { error: 'Il y a déjà un pont ici.' };
-    let best = null, why = 'Les deux rives, juste en face, doivent être à toi.';
+    let best = null, why = 'Les deux rives, juste en face, doivent être à toi (ou l\'une à toi, l\'autre à un allié de ton pacte).';
+    // (une rive à toi, l'autre à toi ou à un allié de ton pacte : un pont relie aussi deux royaumes alliés,
+    //  par exemple pour faire passer une route commerciale)
+    const mineOrAlly = j => this.owner[j] === pid || (this.owner[j] >= 0 && this.areAllied(pid, this.owner[j]));
     for (const [dx, dy] of [[1, 0], [0, 1]]) {
       // on part de la case cliquée dans les deux sens, jusqu'à la terre
       const tiles = [i], ends = [];
@@ -3907,7 +3912,7 @@ const GameRules = {
       const [a, b] = ends;
       if (a < 0 || b < 0 || tiles.length > 3) continue; // (pas de rive en face, ou fleuve trop large)
       if (!this.isLand(a) || !this.isLand(b)) continue;
-      if (this.owner[a] !== pid || this.owner[b] !== pid) continue;
+      if (!mineOrAlly(a) || !mineOrAlly(b) || (this.owner[a] !== pid && this.owner[b] !== pid)) continue;
       if (tiles.some(j => this.bridgeAt[j])) { why = 'Il y a déjà un pont ici.'; continue; }
       if (!best || tiles.length < best.tiles.length) best = { tiles, a, b };
     }

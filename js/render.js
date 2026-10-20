@@ -1860,30 +1860,25 @@ const Render = {
     ctx.lineCap = 'square';
     ctx.lineJoin = 'miter';
     if (G.tradeRoutes.length) {
-      const tw = w * 1.15;
-      // (les pavés : des pierres de tailles inégales, sombres et claires, en quinconce ; seulement en zoomant)
-      const cobbles = path => {
-        ctx.lineWidth = tw * 0.8;
-        ctx.setLineDash([tw * 0.42, tw * 0.16, tw * 0.3, tw * 0.2]);
-        ctx.strokeStyle = '#8a7f6c';
-        ctx.stroke(path);
-        ctx.lineWidth = tw * 0.32;
-        ctx.setLineDash([tw * 0.22, tw * 0.5, tw * 0.3, tw * 0.4]);
-        ctx.lineDashOffset = tw * 0.25;
-        ctx.strokeStyle = '#c9bea6';
-        ctx.stroke(path);
-        ctx.setLineDash([]);
-        ctx.lineDashOffset = 0;
-      };
+      const tw = w * 1.4;
       for (const [path, alpha] of [[idle, 0.4], [trade, 1]]) {
         ctx.globalAlpha = alpha;
-        ctx.lineWidth = tw + 2.5;
-        ctx.strokeStyle = 'rgba(58,44,26,0.85)'; // (bordure de terre battue)
+        // les bas-côtés de terre battue, usés par les charrettes
+        ctx.lineWidth = tw + Math.max(3, tw * 0.6);
+        ctx.strokeStyle = 'rgba(120,88,50,0.75)';
         ctx.stroke(path);
+        // le lit de la voie (les joints entre les dalles, sombres)
         ctx.lineWidth = tw;
-        ctx.strokeStyle = '#a69b85';
+        ctx.strokeStyle = '#6e5d45';
         ctx.stroke(path);
-        if (s >= 4) cobbles(path);
+        // les dalles de pierre, de longueurs inégales, sur toute la largeur (de loin : une voie de pierre unie)
+        ctx.lineWidth = tw * 0.86;
+        ctx.lineCap = 'butt'; // (avec des bouts carrés, chaque dalle déborderait sur les joints)
+        if (s >= 4) ctx.setLineDash([tw * 0.9, tw * 0.1, tw * 0.6, tw * 0.1, tw * 1.1, tw * 0.1, tw * 0.75, tw * 0.1]);
+        ctx.strokeStyle = '#b3a587';
+        ctx.stroke(path);
+        ctx.setLineDash([]);
+        ctx.lineCap = 'square';
       }
       ctx.globalAlpha = 1;
     }
