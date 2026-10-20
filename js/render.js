@@ -255,8 +255,111 @@ const Render = {
       return c;
     };
     const canvas = extend(extend(img, gx, sx, false), gy, sy, true);
+    // L'intérieur des panneaux illustrés, dans la partie rallongée : des nuages brodés (plus discret qu'une copie)
+    const P = CONFIG.FRAME_PANELS, ctx = canvas.getContext('2d'), rand = mulberry32(7);
+    if (gy > 0) for (const [a, b] of [P.left, P.right]) this.embroideredClouds(ctx, a + gx * (a > sx), sy, b - a, gy, rand, true);
+    if (gx > 0) for (const [a, b] of [P.top, P.bottom]) this.embroideredClouds(ctx, sx, a + gy * (a > sy), gx, b - a, rand, false);
     this.frame = { key, canvas, x0, y0, iw: iw + gx };
     return this.frame;
+  },
+
+  // Des nuages brodés, dans le style de la tapisserie, dans le rectangle (x, y, w, h) : un ciel gris-bleu strié (le
+  // tissage), et des bancs de nuages allongés, comme sur les tapisseries : le dessous plat, le dessus en festons, un
+  // contour sombre, l'ombre en bas et quelques coutures ; puis le grain de la toile par-dessus. Aux raccords avec le dessin
+  // d'origine (vertical : en haut et en bas de la partie ajoutée), un banc de nuages sur toute la largeur cache la couture.
+  embroideredClouds(ctx, x, y, w, h, rand, vertical) {
+    const over = 12; // (de combien les nuages du raccord débordent sur le dessin d'origine)
+    const zone = () => { ctx.beginPath(); if (vertical) ctx.rect(x, y - over, w, h + over * 2); else ctx.rect(x - over, y, w + over * 2, h); ctx.clip(); };
+    // le ciel, seulement dans la partie ajoutée, avec de fines stries claires (le tissage)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    const sky = vertical ? ctx.createLinearGradient(0, y, 0, y + h) : ctx.createLinearGradient(x, 0, x + w, 0);
+    sky.addColorStop(0, '#59666e'); sky.addColorStop(0.5, '#6a767a'); sky.addColorStop(1, '#59666e');
+    ctx.fillStyle = sky;
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(160,170,160,0.35)';
+    ctx.lineWidth = 1;
+    for (let yy = y + 3; yy < y + h; yy += 5 + rand() * 6) {
+      const x1 = x + rand() * w * 0.6, x2 = x1 + 15 + rand() * w * 0.5;
+      ctx.beginPath(); ctx.moveTo(x1, yy); ctx.lineTo(x2, yy); ctx.stroke();
+    }
+    ctx.restore();
+    // un banc de nuages : centré en (cx, cy), large de bw ; le dessous plat (un peu ondulé), le dessus en festons
+    const bank = (cx, cy, bw) => {
+      const left = cx - bw / 2, base = cy, n = 2 + Math.floor(rand() * 4), bumps = [];
+      let total = 0;
+      for (let k = 0; k < n; k++) { const v = 0.6 + rand(); bumps.push(v); total += v; }
+      const path = new Path2D(), arcs = [];
+      path.moveTo(left, base);
+      let px = left;
+      for (const v of bumps) {
+        const bwk = bw * v / total, hk = bwk * (0.4 + rand() * 0.4) + 3;
+        path.ellipse(px + bwk / 2, base, bwk / 2, hk, 0, Math.PI, 0);
+        arcs.push([px + bwk / 2, base, bwk / 2, hk]);
+        px += bwk;
+      }
+      path.quadraticCurveTo(cx, base + 4 + rand() * 3, left, base);
+      path.closePath();
+      ctx.fillStyle = '#d9caa4';
+      ctx.fill(path);
+      // l'ombre du dessous, et le contour
+      ctx.save();
+      ctx.clip(path);
+      ctx.fillStyle = '#aa9a7b';
+      ctx.fillRect(left - 2, base - 4, bw + 4, 10);
+      ctx.restore();
+      ctx.strokeStyle = '#2d241a';
+      ctx.lineWidth = 1.4;
+      ctx.stroke(path);
+      // les coutures : un feston plus petit dans chaque bosse
+      ctx.strokeStyle = 'rgba(125,108,82,0.9)';
+      ctx.lineWidth = 1;
+      for (const [ax, ay, rx, ry] of arcs) {
+        if (rand() < 0.35) continue;
+        ctx.beginPath();
+        ctx.ellipse(ax, ay - 1, rx * 0.6, ry * 0.55, 0, Math.PI * 1.05, Math.PI * 1.85);
+        ctx.stroke();
+      }
+    };
+    ctx.save();
+    zone();
+    if (vertical) {
+      // des bancs empilés, décalés à gauche ou à droite (le bord de la colonne les coupe, comme sur la tapisserie)
+      for (let yy = y + 26 + rand() * 10; yy < y + h - 18; yy += 24 + rand() * 18) {
+        // (parfois juste un fin filet de nuage, comme une brume brodée)
+        if (rand() < 0.25) {
+          const x1 = x + rand() * w * 0.4, x2 = x1 + w * (0.3 + rand() * 0.4);
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = '#2d241a'; ctx.lineWidth = 4.5;
+          ctx.beginPath(); ctx.moveTo(x1, yy); ctx.lineTo(x2, yy); ctx.stroke();
+          ctx.strokeStyle = '#d0c09b'; ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.moveTo(x1, yy); ctx.lineTo(x2, yy); ctx.stroke();
+          continue;
+        }
+        const bw = w * (0.5 + rand() * 0.7), cx = rand() < 0.5 ? x + bw * (0.2 + rand() * 0.25) : x + w - bw * (0.2 + rand() * 0.25);
+        bank(cx, yy, bw);
+      }
+      // les raccords : un banc sur toute la largeur en haut et en bas
+      bank(x + w / 2, y + 6, w * 1.3);
+      bank(x + w / 2, y + h + 8, w * 1.3);
+    } else {
+      for (let yy = y + 20; yy < y + h; yy += 22 + rand() * 12) {
+        for (let xx = x - rand() * 40; xx < x + w + 40; xx += 70 + rand() * 50) bank(xx, yy, 60 + rand() * 50);
+      }
+    }
+    ctx.restore();
+    // le grain de la toile, par-dessus (le même que le fond de la tapisserie, pris au milieu de l'image)
+    const img = this.frameImage, [ix, iy] = CONFIG.FRAME_INNER;
+    ctx.save();
+    zone();
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.globalAlpha = 0.6;
+    for (let ty = y - over; ty < y + h + over; ty += 200) {
+      for (let tx = x - over; tx < x + w + over; tx += 200) ctx.drawImage(img, ix + 300, iy + 60, 200, 200, tx, ty, 200, 200);
+    }
+    ctx.restore();
   },
 
   // Où est le décor (en cases) : centré sur la carte, DECOR_SIZE fois plus large qu'elle, assez haut pour la

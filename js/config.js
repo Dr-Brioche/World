@@ -39,8 +39,11 @@ const CONFIG = {
   // Le cadre brodé autour de la carte (une tapisserie médiévale, posée par-dessus le décor marin) :
   FRAME_IMAGE: 'img/cadre.webp',
   FRAME_INNER: [165, 232, 1507, 716], // le rectangle de toile au milieu de l'image, où se pose la carte (en pixels)
-  FRAME_SPLIT: [600, 515],   // où rallonger le cadre si la carte n'a pas la même forme (x pour l'élargir, y pour l'allonger)
-  FRAME_BAND: 90,            // (en recopiant, en miroir, des bandes de 90 pixels au plus : rien n'est étiré)
+  FRAME_SPLIT: [600, 440],   // où rallonger le cadre si la carte n'a pas la même forme (x pour l'élargir, y pour l'allonger)
+  FRAME_BAND: 90,            // (les rubans des bords sont recopiés en miroir, par bandes de 90 pixels au plus...)
+  // ...et l'intérieur des panneaux illustrés, dans la partie rallongée, est rempli de nuages brodés :
+  // [début, fin] des panneaux de gauche et de droite (en x), du haut et du bas (en y), en pixels de l'image
+  FRAME_PANELS: { left: [22, 125], right: [1547, 1650], top: [15, 215], bottom: [733, 917] },
   SMOOTH_MAP: 1,             // bords entre terrains : 0 = carrés en escalier, 1 = coins coupés en biais (adouci), 2 = arrondis
   SMOOTH_FINE_MAX_TILES: 600000, // jusqu'à cette taille de carte (en cases), dessin plus fin (4 x 4 pixels par case)
   RAGGED_EDGES: 0,           // bords « effilochés » : part des demi-cases prises par le terrain voisin (0 = aucune ; plus = plus de grain)
