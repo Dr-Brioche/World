@@ -49,11 +49,13 @@ function fbm(noise, x, y, octaves) {
 const EDGE_MARGIN = 14;
 
 // type : 'normal' (un continent et quelques îlots), 'continental' (que de la terre, bordée de montagnes
-// infranchissables, avec de grands lacs), 'naval' (plusieurs grandes îles), 'world' (la carte du monde), 'europe' (la carte d'Europe)
+// infranchissables, avec de grands lacs), 'naval' (plusieurs grandes îles), 'world' (la carte du monde), 'europe' (la carte d'Europe),
+// 'azeroth' (le monde d'Azeroth)
 // size : 'petit', 'moyen' ou 'grand' (voir MAP_SIZES ; les cartes prédéfinies gardent leur propre taille)
 function generateMap(seed, type = 'normal', size = 'moyen') {
   if (type === 'world') return generateWorldMap(seed); // la carte du monde (voir worldmap.js)
   if (type === 'europe') return generateEuropeMap(seed); // la carte d'Europe (voir europemap.js)
+  if (type === 'azeroth') return generateAzerothMap(seed); // le monde d'Azeroth (voir azerothmap.js)
   // une carte dessinée avec l'éditeur (voir custommaps.js) ; si elle n'existe plus, une carte normale
   if (type.startsWith('custom:')) {
     const m = CustomMaps.find(type.slice(7));

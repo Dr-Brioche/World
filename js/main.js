@@ -54,10 +54,10 @@ const UI = {
     if (!drawn.length) $('customMaps').remove();
     const wanted = new URLSearchParams(location.search).get('carte');
     if (wanted && drawn.some(m => m.name === wanted)) $('mapType').value = 'custom:' + wanted;
-    // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe et les cartes dessinées ont leur taille)
+    // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe, Azeroth et les cartes dessinées ont leur taille)
     const sizeForType = () => {
       const t = $('mapType').value;
-      $('mapSize').disabled = ['world', 'europe'].includes(t) || t.startsWith('custom:');
+      $('mapSize').disabled = ['world', 'europe', 'azeroth'].includes(t) || t.startsWith('custom:');
     };
     $('mapType').addEventListener('change', sizeForType);
     sizeForType();
