@@ -603,7 +603,8 @@ plus nombreuses selon son niveau, avec le fanion de son royaume ; une couronne p
 🧵 **Le cadre brodé** : la carte est entourée d'une **tapisserie médiévale** (chasseurs, anges, guerriers, saints, drakkars,
 dragon…), posée par-dessus le décor marin. Quelle que soit la forme de la carte, le cadre s'y adapte sans jamais étirer ses
 dessins : ses rubans d'entrelacs sont prolongés, et ses panneaux illustrés se remplissent d'un ciel de **nuages brodés**
-dans le même style (dessous plat, dessus en festons, contour sombre et coutures, sur le grain de la toile). (Réglages
+dans le même style (dessous plat, dessus en festons, contour sombre et coutures, sur le grain de la toile), dans un cadre
+brodé de **fil d'or** qui les sépare franchement des dessins d'origine. (Réglages
 `FRAME_IMAGE`, `FRAME_INNER`, `FRAME_SPLIT`, `FRAME_BAND` et `FRAME_PANELS` dans `js/config.js`.)
 🌊 **Le décor autour de la carte** : la carte est encadrée et posée sur une vieille carte marine dessinée (îles rocheuses,
 navires, monstres marins), qu'on découvre en dézoomant. La vue ne va jamais plus loin que ce décor : on ne peut pas
@@ -658,6 +659,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.42** : 🧵 les nuages brodés du cadre sont entourés d'une bordure de fil d'or (un cordon torsadé) : une séparation assumée avec les dessins de la tapisserie
 - **v0.92.41** : 🧵 cadre brodé : là où il est rallongé, des nuages brodés dans le style de la tapisserie remplissent ses colonnes (au lieu de copies en miroir des dessins), en teintes sombres et discrètes
 - **v0.92.40** : 🧵 un cadre brodé (une tapisserie médiévale) entoure la carte, par-dessus le décor marin ; il s'adapte à toutes les formes de carte
 - **v0.92.39** : 🏝️ carte « Normale » : 1 à 3 vraies îles moyennes habitables au large, moins d'îlots volcaniques, des criques et des baies sur la côte, et souvent un ou deux grands golfes qui coupent presque le continent en morceaux

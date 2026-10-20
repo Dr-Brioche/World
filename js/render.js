@@ -265,10 +265,10 @@ const Render = {
 
   // Des nuages brodés, dans le style de la tapisserie, dans le rectangle (x, y, w, h) : un ciel gris-bleu strié (le
   // tissage), et des bancs de nuages allongés, comme sur les tapisseries : le dessous plat, le dessus en festons, un
-  // contour sombre, l'ombre en bas et quelques coutures ; puis le grain de la toile par-dessus. Aux raccords avec le dessin
-  // d'origine (vertical : en haut et en bas de la partie ajoutée), un banc de nuages sur toute la largeur cache la couture.
+  // contour sombre, l'ombre en bas et quelques coutures ; puis le grain de la toile par-dessus. Tout autour, une bordure
+  // brodée de fil d'or : une séparation assumée avec les dessins d'origine.
   embroideredClouds(ctx, x, y, w, h, rand, vertical) {
-    const over = 12; // (de combien les nuages du raccord débordent sur le dessin d'origine)
+    const over = 0; // (les nuages restent dans leur cadre de fil d'or)
     const zone = () => { ctx.beginPath(); if (vertical) ctx.rect(x, y - over, w, h + over * 2); else ctx.rect(x - over, y, w + over * 2, h); ctx.clip(); };
     // le ciel, seulement dans la partie ajoutée, avec de fines stries claires (le tissage)
     ctx.save();
@@ -341,9 +341,6 @@ const Render = {
         const bw = w * (0.5 + rand() * 0.7), cx = rand() < 0.5 ? x + bw * (0.2 + rand() * 0.25) : x + w - bw * (0.2 + rand() * 0.25);
         bank(cx, yy, bw);
       }
-      // les raccords : un banc sur toute la largeur en haut et en bas
-      bank(x + w / 2, y + 6, w * 1.3);
-      bank(x + w / 2, y + h + 8, w * 1.3);
     } else {
       for (let yy = y + 20; yy < y + h; yy += 22 + rand() * 12) {
         for (let xx = x - rand() * 40; xx < x + w + 40; xx += 70 + rand() * 50) bank(xx, yy, 60 + rand() * 50);
@@ -359,6 +356,26 @@ const Render = {
     for (let ty = y - over; ty < y + h + over; ty += 200) {
       for (let tx = x - over; tx < x + w + over; tx += 200) ctx.drawImage(img, ix + 300, iy + 60, 200, 200, tx, ty, 200, 200);
     }
+    ctx.restore();
+    // la bordure de fil d'or : un cordon torsadé (un trait sombre, l'or, puis de petits points de broderie en biais)
+    const cord = new Path2D();
+    cord.rect(x + 2.5, y + 2.5, w - 5, h - 5);
+    ctx.save();
+    ctx.lineJoin = 'miter';
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#24180b';
+    ctx.stroke(cord);
+    ctx.lineWidth = 3.6;
+    ctx.strokeStyle = '#b48a34';
+    ctx.stroke(cord);
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([2.2, 1.6]);
+    ctx.strokeStyle = '#e6c26a';
+    ctx.stroke(cord);
+    ctx.lineDashOffset = 1.9;
+    ctx.lineWidth = 0.9;
+    ctx.strokeStyle = '#6e4f1c';
+    ctx.stroke(cord);
     ctx.restore();
   },
 
