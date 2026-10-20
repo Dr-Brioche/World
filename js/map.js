@@ -162,9 +162,11 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
 }
 
 // Chaînes de montagnes : chacune part d'un massif (une colline ou une montagne) et avance en serpentant doucement,
-// jusqu'à sa longueur ou jusqu'à la mer. Sa crête est faite de sommets (infranchissables) larges de 3 cases environ, bordés de
-// montagnes puis de collines. De temps en temps, un col (des montagnes seulement) laisse passer les armées : la chaîne
-// est un mur, mais pas un mur fermé (sinon des terres seraient coupées de tout).
+// jusqu'à sa longueur ou jusqu'à la mer. Comme dans le vrai monde, elle est faite d'une suite de sommets (infranchissables)
+// de tailles et de formes différentes, serrés les uns contre les autres (ils se touchent : la chaîne est un mur), avec
+// parfois un gros sommet, et des contreforts qui partent sur les côtés. Tout autour : des montagnes, puis des collines.
+// De temps en temps, un col (un passage de montagnes, franchissable) sépare deux sommets : la chaîne est un mur, mais
+// pas un mur fermé (sinon des terres seraient coupées de tout).
 function addMountainChains(terrain, relief, W, H, rand, fs) {
   const between = ([lo, hi]) => lo + rand() * (hi - lo);
   const [cMin, cMax] = mapCount(CONFIG.MOUNTAIN_CHAINS);
@@ -179,14 +181,25 @@ function addMountainChains(terrain, relief, W, H, rand, fs) {
     } else if (t === TERRAIN.PLAINS) terrain[i] = TERRAIN.HILLS;
     else if (t === TERRAIN.FOREST) terrain[i] = TERRAIN.WOODED_HILLS;
   };
-  const stamp = (cx, cy, r, to) => {
-    for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) {
-      for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) {
+  // Une tache de forme irrégulière (pas un rond) : son rayon change avec la direction (quelques vagues au hasard)
+  const blob = (cx, cy, r, to) => {
+    const p1 = rand() * 6.3, p2 = rand() * 6.3, p3 = rand() * 6.3, R = r * 1.5;
+    for (let y = Math.floor(cy - R); y <= Math.ceil(cy + R); y++) {
+      for (let x = Math.floor(cx - R); x <= Math.ceil(cx + R); x++) {
         if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) continue;
-        if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r) raise(y * W + x, to);
+        const dx = x + 0.5 - cx, dy = y + 0.5 - cy, t = Math.atan2(dy, dx);
+        const f = 1 + 0.26 * Math.sin(2 * t + p1) + 0.16 * Math.sin(3 * t + p2) + 0.08 * Math.sin(5 * t + p3);
+        if (Math.hypot(dx, dy) <= r * f) raise(y * W + x, to);
       }
     }
   };
+  // Un sommet, ses montagnes et ses collines autour
+  const summit = (x, y, r) => {
+    blob(x, y, r + 3.8 + rand() * 1.5, TERRAIN.HILLS);
+    blob(x, y, r + 1.6 + rand() * 1.2, TERRAIN.MOUNTAIN);
+    blob(x, y, r, TERRAIN.PEAK);
+  };
+  const radius = () => (rand() < 0.15 ? 2.6 + rand() * 1.2 : 1.2 + rand() * 1.3); // (parfois un gros sommet)
   const starts = [];
   for (let tries = 0, made = 0; tries < 400 && made < wanted; tries++) {
     // Départ : dans un massif (relief déjà haut), loin des autres chaînes
@@ -196,26 +209,37 @@ function addMountainChains(terrain, relief, W, H, rand, fs) {
     starts.push([x0, y0]);
     made++;
     const len = between(CONFIG.CHAIN_LENGTH) * Math.sqrt(fs);
-    let x = x0, y = y0, a = rand() * Math.PI * 2, turn = 0;
-    let nextPass = between(CONFIG.CHAIN_PASS_EVERY) * 0.6, passLeft = 0;
-    for (let k = 0; k < len; k++) {
+    let x = x0, y = y0, a = rand() * Math.PI * 2, turn = 0, walked = 0;
+    let r = radius(), next = 0; // (rayon du prochain sommet, et distance à parcourir jusqu'à lui)
+    let nextPass = between(CONFIG.CHAIN_PASS_EVERY);
+    for (let k = 0; k < len / 0.8; k++) {
       // elle serpente : son virage change doucement (jamais de demi-tour brusque)
-      turn = turn * 0.9 + (rand() - 0.5) * 0.05;
+      turn = turn * 0.9 + (rand() - 0.5) * 0.06;
       a += turn;
       x += Math.cos(a) * 0.8;
       y += Math.sin(a) * 0.8;
+      walked += 0.8;
+      next -= 0.8;
       if (!isLand(x, y)) break; // (elle s'arrête à la mer)
-      // un col de temps en temps
-      if (passLeft <= 0 && --nextPass <= 0) {
-        passLeft = between(CONFIG.CHAIN_PASS_WIDTH) / 0.8;
-        nextPass = between(CONFIG.CHAIN_PASS_EVERY) / 0.8;
+      if (next > 0) continue;
+      // Le sommet, un peu décalé sur le côté (la crête n'est pas une ligne droite)
+      const side = (rand() - 0.5) * Math.min(1.6, r), nx = -Math.sin(a), ny = Math.cos(a);
+      summit(x + nx * side, y + ny * side, r);
+      // parfois un contrefort : un petit sommet sur le côté, relié à la crête par des montagnes
+      if (rand() < 0.2) {
+        const s = rand() < 0.5 ? 1 : -1, d = r + 1.5 + rand() * 2, sr = 0.9 + rand() * 0.8;
+        blob(x + nx * s * d / 2, y + ny * s * d / 2, 1.8, TERRAIN.MOUNTAIN);
+        summit(x + nx * s * d, y + ny * s * d, sr);
       }
-      // (des bords irréguliers : chaque tampon est un peu décalé, et plus ou moins gros)
-      const j = () => (rand() - 0.5) * 1.6;
-      stamp(x + j(), y + j(), 4.5 + rand() * 1.5, TERRAIN.HILLS);
-      stamp(x + j(), y + j(), 2.8 + rand() * 1.4, TERRAIN.MOUNTAIN);
-      if (passLeft > 0) passLeft--;
-      else stamp(x + j() * 0.4, y + j() * 0.4, 1.2 + rand() * 0.6, TERRAIN.PEAK);
+      // Le suivant : collé à celui-ci (les deux se touchent), ou plus loin s'il y a un col entre eux
+      const r2 = radius();
+      if (walked >= nextPass) {
+        next = r + r2 + between(CONFIG.CHAIN_PASS_WIDTH); // (le col : un passage de montagnes, entre deux sommets)
+        nextPass = walked + next + between(CONFIG.CHAIN_PASS_EVERY);
+        // (les montagnes du col, pour qu'on voie bien le passage entre les deux sommets)
+        for (let t = 0.3; t < 1; t += 0.2) blob(x + Math.cos(a) * next * t, y + Math.sin(a) * next * t, 1.8 + rand(), TERRAIN.MOUNTAIN);
+      } else next = (r + r2) * (0.55 + rand() * 0.25);
+      r = r2;
     }
   }
 }
