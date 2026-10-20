@@ -97,6 +97,11 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
   const sorted = Float32Array.from(elev).sort();
   const waterLvl = sorted[Math.floor(N * (cont ? 0.05 : type === 'naval' ? CONFIG.NAVAL_WATER_RATIO : CONFIG.WATER_RATIO))];
 
+  // 2 bis. Des côtes plus originales : quelques vraies îles habitables au large, des criques et des baies dans la côte,
+  //    et parfois de grands golfes qui coupent presque le continent en morceaux (voir shapeCoasts)
+  if (type === 'normal') shapeCoasts(elev, W, H, waterLvl, rand, fs);
+  else if (type === 'naval') addCoves(elev, W, H, waterLvl, rand, fs, mapCount(CONFIG.COVES).map(n => Math.ceil(n / 2)));
+
   // Le relief suit son propre bruit : des chaînes de montagnes éparpillées.
   // Les sommets (infranchissables) sont les points les plus hauts : environ PEAK_BLOB_RATIO des terres (plus les chaînes, plus bas).
   const relief = new Float32Array(N);
@@ -159,6 +164,129 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
   for (let i = 0; i < N; i++) shade[i] = Math.round((rand() - 0.5) * 12);
 
   return { W, H, N, terrain, shade };
+}
+
+// --- Côtes et îles (carte « Normale ») ---
+// On modifie l'altitude (elev) avant de choisir les terrains : les nouvelles terres auront leur relief, leurs forêts et
+// leurs fleuves comme le reste, et la mer creusée sera de la vraie mer.
+function shapeCoasts(elev, W, H, waterLvl, rand, fs) {
+  addBigIslands(elev, W, H, waterLvl, rand, fs);
+  if (rand() < CONFIG.GULF_CHANCE) addGulfs(elev, W, H, waterLvl, rand, rand() < 0.35 ? 2 : 1);
+  addCoves(elev, W, H, waterLvl, rand, fs, mapCount(CONFIG.COVES));
+}
+
+// Creuse la mer dans un disque (la côte reste un peu irrégulière)
+function sinkDisk(elev, W, H, waterLvl, cx, cy, r, rand) {
+  for (let y = Math.max(1, Math.floor(cy - r - 1)); y <= Math.min(H - 2, Math.ceil(cy + r + 1)); y++) {
+    for (let x = Math.max(1, Math.floor(cx - r - 1)); x <= Math.min(W - 2, Math.ceil(cx + r + 1)); x++) {
+      if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r + (rand() - 0.5) * 0.8) {
+        const i = y * W + x;
+        elev[i] = Math.min(elev[i], waterLvl - 0.04);
+      }
+    }
+  }
+}
+
+// Centre des terres (pour savoir où est « l'intérieur » du continent)
+function landCenter(elev, W, H, waterLvl) {
+  let sx = 0, sy = 0, n = 0;
+  for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if (elev[y * W + x] >= waterLvl) { sx += x; sy += y; n++; }
+  return n ? [sx / n, sy / n] : [W / 2, H / 2];
+}
+
+// De vraies îles moyennes au large (assez grandes pour y fonder une capitale : au moins MIN_SPAWN_LAND cases), à la côte
+// découpée par le bruit, loin du continent
+function addBigIslands(elev, W, H, waterLvl, rand, fs) {
+  const [lo, hi] = mapCount(CONFIG.BIG_ISLANDS), want = lo + Math.floor(rand() * (hi - lo + 1));
+  const noise = makeValueNoise(rand), land = i => elev[i] >= waterLvl;
+  for (let tries = 0, made = 0; tries < 300 && made < want; tries++) {
+    const R = (CONFIG.BIG_ISLAND_RADIUS[0] + rand() * (CONFIG.BIG_ISLAND_RADIUS[1] - CONFIG.BIG_ISLAND_RADIUS[0])) * Math.sqrt(fs / 1.5);
+    const pad = R * 1.4 + EDGE_MARGIN * 0.5;
+    if (W < pad * 2 + 4 || H < pad * 2 + 4) return;
+    const cx = pad + rand() * (W - pad * 2), cy = pad + rand() * (H - pad * 2);
+    // en pleine mer : aucune terre à moins de 1,4 rayon + 8 cases
+    const F = R * 1.4 + 8;
+    let free = true;
+    for (let y = Math.max(0, Math.floor(cy - F)); y <= Math.min(H - 1, cy + F) && free; y += 2) {
+      for (let x = Math.max(0, Math.floor(cx - F)); x <= Math.min(W - 1, cx + F); x += 2) {
+        if (Math.hypot(x - cx, y - cy) <= F && land(y * W + x)) { free = false; break; }
+      }
+    }
+    if (!free) continue;
+    // (une forme allongée et découpée : le rayon change avec la direction et avec le bruit)
+    const stretch = 0.7 + rand() * 0.6, rot = rand() * Math.PI, ox = rand() * 100, oy = rand() * 100;
+    for (let y = Math.max(1, Math.floor(cy - R * 1.5)); y <= Math.min(H - 2, cy + R * 1.5); y++) {
+      for (let x = Math.max(1, Math.floor(cx - R * 1.5)); x <= Math.min(W - 2, cx + R * 1.5); x++) {
+        const dx = x - cx, dy = y - cy;
+        const u = dx * Math.cos(rot) + dy * Math.sin(rot), v = (-dx * Math.sin(rot) + dy * Math.cos(rot)) / stretch;
+        const shape = 0.7 + 0.6 * fbm(noise, x / 9 + ox, y / 9 + oy, 3);
+        const f = Math.hypot(u, v) / (R * shape); // (0 au centre, 1 sur la côte)
+        if (f < 1) elev[y * W + x] = Math.max(elev[y * W + x], waterLvl + 0.02 + 0.3 * (1 - f));
+      }
+    }
+    made++;
+  }
+}
+
+// Criques et baies : des entailles dans la côte du continent. Une baie s'ouvre large et se rétrécit vers l'intérieur ;
+// une crique a une entrée étroite qui s'ouvre sur un petit bassin rond.
+function addCoves(elev, W, H, waterLvl, rand, fs, [lo, hi]) {
+  const want = lo + Math.floor(rand() * (hi - lo + 1)), land = i => elev[i] >= waterLvl;
+  const [mx, my] = landCenter(elev, W, H, waterLvl);
+  for (let tries = 0, made = 0; tries < 600 && made < want; tries++) {
+    // une case de côte (de la terre qui touche la mer), pas au bord de la carte
+    const x0 = EDGE_MARGIN + Math.floor(rand() * (W - EDGE_MARGIN * 2)), y0 = EDGE_MARGIN + Math.floor(rand() * (H - EDGE_MARGIN * 2));
+    const i0 = y0 * W + x0;
+    if (!land(i0) || (land(i0 - 1) && land(i0 + 1) && land(i0 - W) && land(i0 + W))) continue;
+    // vers l'intérieur des terres (un peu au hasard)
+    const a = Math.atan2(my - y0, mx - x0) + (rand() - 0.5) * 1.2, len = (5 + rand() * 11) * Math.sqrt(fs);
+    const cove = rand() < 0.45, r0 = cove ? 1.4 + rand() * 0.8 : 2.5 + rand() * 3;
+    let x = x0, y = y0;
+    for (let d = 0; d < len; d += 0.7) {
+      const t = d / len;
+      sinkDisk(elev, W, H, waterLvl, x, y, cove ? r0 : Math.max(1, r0 * (1 - t * 0.8)), rand);
+      x += Math.cos(a) * 0.7 + (rand() - 0.5) * 0.5;
+      y += Math.sin(a) * 0.7 + (rand() - 0.5) * 0.5;
+    }
+    // (le bassin de la crique : quelques ronds qui se chevauchent, pour une forme irrégulière)
+    if (cove) for (let k = 0; k < 4; k++) sinkDisk(elev, W, H, waterLvl, x + (rand() - 0.5) * 4, y + (rand() - 0.5) * 4, 1.8 + rand() * 1.8, rand);
+    made++;
+  }
+}
+
+// Grands golfes : deux bras de mer partent de côtes opposées et s'avancent l'un vers l'autre, en serpentant : il ne
+// reste entre eux qu'un isthme (une bande de terre étroite). Le continent est presque coupé en deux.
+function addGulfs(elev, W, H, waterLvl, rand, count) {
+  const land = (x, y) => x >= 0 && y >= 0 && x < W && y < H && elev[(y | 0) * W + (x | 0)] >= waterLvl;
+  const [mx, my] = landCenter(elev, W, H, waterLvl);
+  for (let g = 0, tries = 0; g < count && tries < 30; tries++) {
+    const th = rand() * Math.PI, cx = mx + (rand() - 0.5) * W * 0.3, cy = my + (rand() - 0.5) * H * 0.3;
+    if (!land(cx, cy)) continue;
+    // les deux côtes, de part et d'autre du point, sur cette ligne
+    const ends = [1, -1].map(s => {
+      let x = cx, y = cy;
+      while (land(x, y)) { x += Math.cos(th) * s; y += Math.sin(th) * s; }
+      return [x, y];
+    });
+    const L = Math.hypot(ends[0][0] - ends[1][0], ends[0][1] - ends[1][1]);
+    if (L < 70) continue; // (trop étroit : un golfe le couperait complètement)
+    const isthmus = Math.max(7, L * (0.1 + rand() * 0.08)); // (la bande de terre qui reste)
+    for (const [ex, ey] of ends) {
+      // le bras de mer part de la côte et va vers le point, en s'arrêtant à la moitié de l'isthme
+      const reach = L / 2 - isthmus / 2 + Math.hypot(ex - cx, ey - cy) - L / 2, a0 = Math.atan2(cy - ey, cx - ex);
+      // (large à l'entrée, plus étroit au fond, avec des renflements : pas un canal tout droit)
+      let x = ex, y = ey, a = a0;
+      const r = (7 + rand() * 4) * Math.sqrt(L / 150), ph = rand() * 6.3, wob = 6 + rand() * 6;
+      for (let d = 0; d < reach; d += 0.7) {
+        a = a0 + Math.sin(d / wob + ph) * 0.45;
+        const bulge = 1 + 0.35 * Math.sin(d / 7 + ph * 2);
+        sinkDisk(elev, W, H, waterLvl, x, y, Math.max(2.5, r * (1 - 0.55 * d / reach) * bulge), rand);
+        x += Math.cos(a) * 0.7;
+        y += Math.sin(a) * 0.7;
+      }
+    }
+    g++;
+  }
 }
 
 // Chaînes de montagnes : chacune part d'un massif (une colline ou une montagne) et avance en serpentant doucement,
