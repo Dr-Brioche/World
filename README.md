@@ -39,7 +39,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
    🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
    montagnes ; réglages `FOREST_LEVEL`, `HILLS_LEVEL` et `MOUNTAIN_LEVEL` dans `js/config.js`) :
-   - **Normale** : un grand continent entouré d'océan, avec quelques îlots volcaniques au large (un sommet enneigé au milieu, des montagnes et des collines autour, des forêts et des plaines sur la côte). Les petites îles sont toujours des volcans, et les miettes de terre de moins de 150 cases sont retirées.
+   - **Normale** : un grand continent entouré d'océan, à la côte découpée de **criques** (une entrée étroite sur un petit bassin)
+     et de **baies**, et souvent un ou deux grands **golfes** qui le coupent presque en morceaux (il ne reste qu'un isthme, une
+     bande de terre étroite, à défendre !). Au large, **1 à 3 vraies îles** moyennes, assez grandes pour y fonder une capitale,
+     et parfois un îlot volcanique (un sommet enneigé au milieu). Les petites îles sont toujours des volcans, et les miettes de
+     terre de moins de 250 cases sont retirées.
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
    - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
@@ -649,6 +653,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.39** : 🏝️ carte « Normale » : 1 à 3 vraies îles moyennes habitables au large, moins d'îlots volcaniques, des criques et des baies sur la côte, et souvent un ou deux grands golfes qui coupent presque le continent en morceaux
 - **v0.92.38** : ⛰️ chaînes de montagnes plus naturelles : une suite de sommets de tailles et de formes différentes, avec des contreforts sur les côtés et des cols entre deux sommets (fini le trait de pinceau)
 - **v0.92.37** : 🐛 les routes (routes commerciales, chemins des ports et des églises) qui devaient faire un détour avec un virage échouaient : une route commerciale ne passait pas sur un pont · 🌉 un pont peut relier ton territoire à celui d'un allié de ton pacte · 🌊 on peut viser une ville (église, port…) de l'autre côté d'un fleuve, même sans autre frontière : l'armée le passe à gué, lentement · 🐛 un assaut ne fait plus tout le tour d'un royaume : son point d'entrée suit le vrai trajet depuis sa ville de départ · 🛒 routes commerciales en grandes voies pavées médiévales (fini la « route nationale ») ; si on ne peut pas en bâtir une, la bulle dit ce qui bloque
 - **v0.92.36** : ⛰️ chaînes de montagnes : de longues crêtes de sommets infranchissables, avec des cols pour passer, de vrais murs qui rendent la carte plus stratégique (moins de sommets isolés en tas)
