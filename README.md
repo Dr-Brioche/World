@@ -94,7 +94,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    du château, puis l'assiège. L'armée **ne traverse pas la muraille** : si le château tombe, toute sa zone tombe avec lui.
    En survolant un château ennemi, tu vois le chemin prévu (pointillés dorés), et en bas sa **défense globale** (terrain + murs). Si le château est en arrière-pays,
    derrière d'autres zones de défense, il est **inaccessible** (croix rouge) : prends d'abord les châteaux
-   de la frontière. **Tant qu'un royaume a une ville (un château), tu ne peux viser que ses châteaux, églises, ports ou avant-postes.**
+   de la frontière. **Tant qu'un royaume a une ville (un château), tu ne peux viser que ses châteaux, églises, ports, mines ou avant-postes.**
    **Exception — morceau coupé de ses châteaux** : si un morceau de son royaume n'a plus **aucune ville ni port fortifié** (port de niveau 3) (il s'est fait
    isoler du reste, alors que son royaume a encore une ville ou un port fortifié ailleurs), personne ne le commande : tu peux
    **l'attaquer de front**, comme une terre **vide** (aucun défenseur ne peut venir). En le survolant, tu vois
@@ -150,7 +150,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      depuis sa ville de départ (relief, fleuves, détours autour d'un lac ou des terres ennemies) : l'armée ne fait pas
      tout le tour d'un royaume pour une entrée qui n'est proche que sur la carte.
      🌊 **De l'autre côté d'un fleuve** : si un fleuve sépare tes terres des siennes (même sans autre frontière), tu peux
-     quand même viser ses villes, églises, ports et avant-postes : l'armée **passe le fleuve à gué**, lentement
+     quand même viser ses villes, églises, ports, mines et avant-postes : l'armée **passe le fleuve à gué**, lentement
      (10 s pour la 1re case de fleuve, 6 s pour les suivantes, rien sur un pont), puis prend pied sur l'autre rive.
    - **L'assaut entre chez l'ennemi** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
      mais ils partent de la cité d'où l'assaut est parti et **marchent jusqu'au front** (au moins 3 s) :
@@ -434,7 +434,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      petite icône de minerai posée au hasard sur la carte : dans les **montagnes** (fer, or, diamant) ou les **collines**
      (pierre). Il y en a environ 5 de fer, 5 d'or, 5 de pierre et 2 de diamant par carte. Une mine a **2 niveaux**, ne se
      démolit pas, et rapporte **2 fois plus** si une **route** la relie à une de tes villes (une ville à moins de **30 cases**,
-     sur la même terre). Elle passe à qui prend ses terres, avec l'état de son filon.
+     sur la même terre). Elle passe à qui prend ses terres, avec l'état de son filon. 🎯 Une mine ennemie **se vise directement**,
+     comme une église ou un port (sauf si elle est dans la muraille d'une ville : il faut d'abord prendre la ville, et la mine part avec elle).
      - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
        **3 mines au plus** (+48 % au maximum).
      - 🪙 **Mine d'or** : **3 fois un moulin** (6 fois au niveau 2), doublé si reliée. Mais son filon **s'épuise** au bout de
@@ -685,10 +686,11 @@ mais **tout bâtiment posé dessus produit 20 % de moins** (moulins, casernes, p
 ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte **Monde**, ils sont à leur vraie place
 (Sahara, Arabie, Gobi, Kalahari, désert australien…), avec une bande fertile le long des fleuves qui les traversent (le Nil).
 
-**Contrôles** : 📜 le bouton **Règles**, en haut, met le jeu en pause et affiche les règles complètes (Échap ou « Reprendre la partie » pour revenir) · ⏩ le bouton de vitesse fait passer la partie à x1, x1,5, x2 ou x3 · 🎥 déplace la carte en la **glissant** à la souris, ou au clavier avec **ZQSD** (WASD sur un clavier anglais) ou les **flèches** · molette : zoom · en survolant un **autre royaume**, une barre fixe, juste sous ta barre d'infos en haut de l'écran, le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), il s'illumine (doré chez toi, rouge chez l'ennemi) · sur la carte, la souris est une petite **main médiévale** (gantelet), qui devient une **épée** sur une cible que tu peux vraiment attaquer (château, église, port ou avant-poste ennemi atteignable, terres ennemies sans défense organisée, armée ennemie qui t'attaque) · en survolant une **armée ennemie** qui t'attaque, un **cercle de ciblage** rouge l'entoure (clic = envoyer tes défenseurs) · molette = zoom · glisser = déplacer la carte · `1` à `5` et `7` (ou `&` `é` `"` `'` `(` `è`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : 📜 le bouton **Règles**, en haut, met le jeu en pause et affiche les règles complètes (Échap ou « Reprendre la partie » pour revenir) · ⏩ le bouton de vitesse fait passer la partie à x1, x1,5, x2 ou x3 · 🎥 déplace la carte en la **glissant** à la souris, ou au clavier avec **ZQSD** (WASD sur un clavier anglais) ou les **flèches** · molette : zoom · en survolant un **autre royaume**, une barre fixe, juste sous ta barre d'infos en haut de l'écran, le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), il s'illumine (doré chez toi, rouge chez l'ennemi) · sur la carte, la souris est une petite **main médiévale** (gantelet), qui devient une **épée** sur une cible que tu peux vraiment attaquer (château, église, port, mine ou avant-poste ennemi atteignable, terres ennemies sans défense organisée, armée ennemie qui t'attaque) · en survolant une **armée ennemie** qui t'attaque, un **cercle de ciblage** rouge l'entoure (clic = envoyer tes défenseurs) · molette = zoom · glisser = déplacer la carte · `1` à `5` et `7` (ou `&` `é` `"` `'` `(` `è`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.92.59** : 🎯 on peut viser directement les mines ennemies pour les attaquer (comme une église ou un port) ; dans la zone d'une ville ou d'une église prise, elles partent avec elle
 - **v0.92.58** : ⛏️ une petite bulle à côté de chaque mine (la tienne comme celles des autres) montre ce qui y est miné et où elle en est (Fer +8 %, Or 2:14, Pierre −10 %, Diamant 62 %, épuisée)
 - **v0.92.57** : ⏩ bouton de vitesse en jeu (x1, x1,5, x2, x3), à côté de Pause ; le choix « Partie accélérée » du menu de départ disparaît · 🎮 pause et vitesse réservées à celui qui héberge la partie (pour une future partie à plusieurs)
 - **v0.92.56** : 📜 bouton **Règles** en jeu (en haut) : le jeu se met en pause et affiche les règles complètes ; les règles expliquent maintenant chaque bâtiment point par point · 💬 survol d'un moulin, d'une caserne, d'une église, d'un port ou d'une mine : juste un résumé (son niveau et ce qu'il rapporte vraiment)

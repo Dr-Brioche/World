@@ -373,7 +373,7 @@ const GameRules = {
 
   // « ce château », « cette église »… pour les messages
   targetLabel(a) {
-    return ['', '', '', 'ce château', 'cette église', 'ce port', 'cet avant-poste'][this.building[a]] || 'cette cible';
+    return ['', '', '', 'ce château', 'cette église', 'ce port', 'cet avant-poste', 'cette mine'][this.building[a]] || 'cette cible';
   },
 
   // Retire un bâtiment de la carte (un avant-poste détruit)
@@ -2639,7 +2639,7 @@ const GameRules = {
       if (TARGET_TYPES.includes(b) && this.owner[aimTile] === target) castle = this.anchor[aimTile];
       else if (aimTile !== undefined && this.owner[aimTile] === target) unlinked = this.unlinkedPiece(aimTile);
       if (castle < 0 && !unlinked) {
-        return `${name} est protégé : clique sur un de ses châteaux, églises, ports ou avant-postes pour lancer un assaut ` +
+        return `${name} est protégé : clique sur un de ses châteaux, églises, ports, mines ou avant-postes pour lancer un assaut ` +
           '(ou sur un morceau de son royaume coupé de tous ses châteaux).';
       }
       // Ville, église ou port qui vient d'être conquis : on ne peut pas l'attaquer tout de suite
@@ -4635,7 +4635,7 @@ const GameRules = {
     for (const i of zone) {
       if (this.owner[i] !== a.target) continue; // (déjà pris avec un bâtiment)
       const b = this.building[i];
-      if (b && this.anchor[i] !== castle && TARGET_TYPES.includes(b)) continue;
+      if (b && b !== B_MINE && this.anchor[i] !== castle && TARGET_TYPES.includes(b)) continue;
       this.setOwner(i, a.attacker);
     }
     a.cut = true; // la zone prise peut couper le royaume du défenseur (voir captureEnclaves)
@@ -4651,7 +4651,7 @@ const GameRules = {
     for (const i of zone) {
       if (this.owner[i] !== a.target || this.castleProtects(a.target, i)) continue;
       const b = this.building[i];
-      if (b && TARGET_TYPES.includes(b)) continue;
+      if (b && b !== B_MINE && TARGET_TYPES.includes(b)) continue;
       if (b && this.footprint(this.anchor[i], b).some(j => this.castleProtects(a.target, j))) continue;
       this.setOwner(i, a.attacker);
     }
@@ -4666,7 +4666,7 @@ const GameRules = {
     const p = this.players[a.attacker], d = this.players[a.target];
     this.warEffects(a, type === B_OUTPOST); // (détruire un avant-poste ne donne pas de malus d'après-guerre)
     const what = { [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
-      [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'] }[type];
+      [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'], [B_MINE]: ['⛏️', 'une mine', 'une de tes mines'] }[type];
     const verb = type === B_OUTPOST ? 'détruit' : 'pris';
     const zone = withZone ? `, avec sa zone et les bâtiments construits grâce à ${type === B_CHURCH ? 'elle' : 'lui'}` : '';
     if (p.isHuman) UI.log(`${what[0]} Tu as ${verb} ${what[1]} ${this.deName(d.name)}${zone} !`, 'good', d);

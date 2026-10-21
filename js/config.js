@@ -485,7 +485,8 @@ const BUILDINGS = [
 ];
 
 // Bâtiments que l'on peut viser directement avec un assaut (un royaume qui en a ne s'attaque que comme ça)
-const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST];
+// (une mine aussi ; mais dans la zone d'une ville ou d'une église prise, elle part avec elle, comme un moulin)
+const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST, B_MINE];
 
 // Les bannières des royaumes (une par couleur) : la bannière choisie donne sa couleur au royaume.
 const BANNERS = [
