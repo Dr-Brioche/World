@@ -715,6 +715,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.77** : 🐉 carte Azeroth : le nord des Royaumes de l'Est retrouve ses prairies (Tirisfal, les Maleterres, Hautebrande, l'Arathi) entre les forêts des Pins-Argentés et des Hinterlands, et ses lacs (Lordamere, Darrowmere, le lac de Tirisfal, les lacs et la rivière des Hinterlands)
 - **v0.92.76** : ❄️ carte Azeroth : de la **neige** (blanc bleuté, comme une colline : seulement sur cette carte) au Norfendre, au Berceau-de-l'Hiver, à Dun Morogh et en Alterac · 🌊 lacs et rivières relevés sur les cartes du jeu (le Norfendre surtout), et 3 fleuves retracés en plus (l'Orneval, Féralas, Elwynn)
 - **v0.92.75** : 🐉 carte **Azeroth** redessinée d'après les vraies cartes du jeu de chaque continent (Kalimdor, les Royaumes de l'Est, le Norfendre) : côtes, lacs, et terrain de chaque région (forêts, prairies, déserts, roche, neige) bien plus fidèles
 - **v0.92.74** : 🏰 nouvelle image pour la ville de niveau 2 (le château) : un fort de pierre et de bois, avec ses tours et sa grande maison au centre
