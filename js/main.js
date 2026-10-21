@@ -635,13 +635,15 @@ const UI = {
     if (G.terrain[i] === TERRAIN.PEAK) return '🏔️ Sommet (infranchissable)';
     if (!G.isLand(i)) return '🌊 Mer';
     const o = G.owner[i];
-    // Château (ou port fortifié) ennemi : juste sa défense globale, en bref
-    const def = o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) ? this.fortDefense(G.anchor[i]) : null;
+    // Château (ou port fortifié), le nôtre comme celui des autres : juste sa défense globale, en bref
+    const def = o >= 0 ? this.fortDefense(G.anchor[i]) : null;
     if (def !== null) {
-      const b = G.building[i], info = G.buildingInfo(G.anchor[i]);
-      const truce = G.truceLeft(G.anchor[i]);
-      return `${BUILDINGS[b].icon} ${info.name} ${G.deName(G.players[o].name)} · 🛡️ défense globale ${pct(def)}` +
-        (truce ? ` · ⏳ vient de changer de mains : inattaquable encore ${Math.ceil(truce)} s` : '');
+      const a = G.anchor[i], b = G.building[i], info = G.buildingInfo(a), truce = G.truceLeft(a);
+      const mine = o === G.human.id, work = G.works.get(a);
+      return `${BUILDINGS[b].icon} ${info.name} ${mine ? '' : G.deName(G.players[o].name) + ' '}· 🛡️ défense globale ${pct(def)}` +
+        (truce ? ` · ⏳ inattaquable encore ${Math.ceil(truce)} s` : '') +
+        (work ? { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[work.kind]
+          : mine ? ' · clique pour ses options' : '');
     }
     let txt = t.cost > 1 ? `${t.name} (défense ${pct(t.cost - 1)})` : t.name;
     if (G.terrain[i] === TERRAIN.DESERT) txt = `🏜️ ${t.name} (bâtiments : production ${pct(DESERT_PRODUCTION - 1)})`;
