@@ -64,8 +64,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Le Danube (après Belgrade), le Dniepr (après Kiev) et le Don inférieur sont de grands fleuves infranchissables ;
      le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie.
      ⚠️ C'est une très grande carte : la partie est longue, et le jeu peut ralentir un peu sur un ordinateur modeste.
-   - **Azeroth** 🐉 (700 x 550 cases) : le monde de Warcraft **au temps du Norfendre** (Wrath of the Lich King), dessiné de
-     mémoire (une carte de fan, aux formes approchées), avec ses trois continents autour de la Grande Mer.
+   - **Azeroth** 🐉 (700 x 550 cases) : le monde de Warcraft **au temps du Norfendre** (Wrath of the Lich King), **relevé
+     case par case sur les cartes du jeu** (une par continent) : les côtes, les lacs et le terrain de chaque région d'après sa
+     couleur (forêts, prairies, sable et terres rouges, roche, neige), avec ses trois continents autour de la Grande Mer.
+     Le cœur des grands massifs (Hyjal, Dun Morogh, les pics Foudroyés…) et les glaciers du Norfendre sont infranchissables.
      **Kalimdor** à l'ouest (Teldrassil, Brume-azur et Brume-sang, la Sombrivage, l'Orneval, le mont Hyjal, Azshara et sa baie
      des Tempêtes, Durotar et les îles de l'Écho, les Tarides, le marécage d'Âprefange et Theramore, les Serres-Rocheuses,
      Désolace, Féralas, les Mille-Pointes, Tanaris, le cratère d'Un'Goro et Silithus), les **Royaumes de l'Est** à l'est
@@ -709,6 +711,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.75** : 🐉 carte **Azeroth** redessinée d'après les vraies cartes du jeu de chaque continent (Kalimdor, les Royaumes de l'Est, le Norfendre) : côtes, lacs, et terrain de chaque région (forêts, prairies, déserts, roche, neige) bien plus fidèles
 - **v0.92.74** : 🏰 nouvelle image pour la ville de niveau 2 (le château) : un fort de pierre et de bois, avec ses tours et sa grande maison au centre
 - **v0.92.73** : 🏘️ superposition des bâtiments : ceux plus bas sur la carte passent devant ceux du dessus (une caserne juste au-dessus d'une ville est cachée en partie par elle) ; garnisons et chantiers restent affichés par-dessus
 - **v0.92.72** : 🛤️ bonus des moulins et casernes au bord du chemin d'une église ou d'un port vers une ville : emplacements dorés pendant la pose, bonus affiché au survol, et il s'obtient jusqu'à 3 cases du chemin (au lieu de 2)
