@@ -23,7 +23,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
 - ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
-- 🤖 **3 à 11 royaumes rivaux** (tu choisis combien : Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
+- 🤖 **3 à 17 royaumes rivaux** (tu choisis combien, un par drapeau : Bourgogne, Aquitaine, Castille, Bohême…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile (en Difficile, les bots ont un petit avantage : **+25 % d'or**, recrutement **20 % plus rapide** et soldats **10 % plus forts**)
 - ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ (en haut) la fait passer à x1, x1,5, x2 ou x3, pour des parties plus courtes
@@ -32,7 +32,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 🕹️ Comment jouer
 
 1. **Fonde ta capitale** : choisis ta bannière, le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
-   **nombre de royaumes rivaux** (de 3 à 11) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
+   **nombre de royaumes rivaux** (de 3 à 17, autant que de drapeaux disponibles) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
    ou changer sa vitesse (en solo : toi). Sur la carte, **les royaumes rivaux
@@ -715,6 +715,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.79** : 🤖 jusqu'à **17 royaumes rivaux** (un par drapeau disponible), avec 6 nouveaux noms (Bohême, Navarre, Savoie, Hongrie, Pologne, Danemark) · 🏆 le classement montre toujours ton royaume, à son vrai rang, même hors des 10 premiers
 - **v0.92.78** : 🚩 18 nouveaux drapeaux pour les royaumes (épées, masse d'armes, soleil, marteau, canards, aigle, hallebardes, dragon, chêne, lion, château, fleurs de lys, croissant, poing, poissons, hache, main couronnée, croix) ; la couleur de chaque royaume suit le fond de son drapeau, accentuée pour que deux royaumes ne se ressemblent pas
 - **v0.92.77** : 🐉 carte Azeroth : le nord des Royaumes de l'Est retrouve ses prairies (Tirisfal, les Maleterres, Hautebrande, l'Arathi) entre les forêts des Pins-Argentés et des Hinterlands, et ses lacs (Lordamere, Darrowmere, le lac de Tirisfal, les lacs et la rivière des Hinterlands)
 - **v0.92.76** : ❄️ carte Azeroth : de la **neige** (blanc bleuté, comme une colline : seulement sur cette carte) au Norfendre, au Berceau-de-l'Hiver, à Dun Morogh et en Alterac · 🌊 lacs et rivières relevés sur les cartes du jeu (le Norfendre surtout), et 3 fleuves retracés en plus (l'Orneval, Féralas, Elwynn)

@@ -524,8 +524,9 @@ const BANNERS = [
 ];
 
 // Les noms des royaumes contrôlés par l'ordinateur (ils reçoivent une bannière au hasard).
+// (autant de noms que de drapeaux, moins celui du joueur : on peut jouer contre autant de rivaux que de drapeaux)
 const KINGDOMS = ['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence', 'Lotharingie',
-  'Saxe', 'Castille', 'Écosse', 'Flandre', 'Aragon'];
+  'Saxe', 'Castille', 'Écosse', 'Flandre', 'Aragon', 'Bohême', 'Navarre', 'Savoie', 'Hongrie', 'Pologne', 'Danemark'];
 
 // botBonus : petit avantage donné aux royaumes de l'ordinateur (pas au joueur), en multiplicateurs
 //   gold = or gagné (revenu des terres et des bâtiments), troops = recrutement, power = force des soldats

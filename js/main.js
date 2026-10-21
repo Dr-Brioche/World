@@ -62,6 +62,12 @@ const UI = {
     $('mapType').addEventListener('change', sizeForType);
     sizeForType();
 
+    // Nombre de royaumes rivaux : de MIN_OPPONENTS à un par drapeau (moins celui du joueur), 7 par défaut
+    const maxOpp = Math.min(BANNERS.length - 1, KINGDOMS.length);
+    for (let n = CONFIG.MIN_OPPONENTS; n <= maxOpp; n++) {
+      $('opponents').insertAdjacentHTML('beforeend', `<option value="${n}"${n === 7 ? ' selected' : ''}>${n} royaumes rivaux</option>`);
+    }
+
     // Choix de la bannière dans le menu (elle donne la couleur du royaume)
     this.banner = BANNERS.findIndex(b => b.name === 'Dragon');
     $('bannerPick').innerHTML = BANNERS.map((b, k) =>
@@ -874,7 +880,12 @@ const UI = {
     }
     const tilesOf = g => g.members.reduce((s, p) => s + p.tiles, 0);
     groups.sort((a, b) => tilesOf(b) - tilesOf(a));
-    $('lb').innerHTML = groups.slice(0, 10).map(g => {
+    // (les 10 premiers ; et toujours ton royaume, à son vrai rang, s'il n'en fait pas partie)
+    const top = groups.slice(0, 10), mineAt = groups.findIndex(g => g.members.includes(h));
+    if (mineAt >= 10) top.push(groups[mineAt]);
+    $('lb').innerHTML = top.map(g => {
+      const k = groups.indexOf(g);
+      if (k >= 10) return row(g.members[0]).replace('<li ', `<li value="${k + 1}" `);
       if (g.members.length < 2) return row(g.members[0]);
       const mine = g.members.includes(h);
       return `<li class="pactGroup${mine ? ' mine' : ''}"><div class="pactHead"><span>🤝 ${escapeHtml(G.pacts.get(g.pact).name)}</span>` +
