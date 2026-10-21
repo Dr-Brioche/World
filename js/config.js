@@ -499,9 +499,9 @@ const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST, B_MINE];
 // img = le drapeau entier, sur sa hampe (carte, menu) ; icon = juste son tissu (petites icônes du classement, des messages…)
 // (la couleur suit le fond du drapeau, accentuée pour que deux royaumes ne se ressemblent pas sur la carte)
 // Sur la carte : le pied du mât est à BANNER_FOOT de la largeur de l'image (le drapeau flotte à sa droite), et les
-// drapeaux sont dessinés BANNER_SCALE fois plus hauts que les anciennes bannières (la longue hampe prend de la place)
+// drapeaux sont dessinés BANNER_SCALE fois plus hauts que les anciennes bannières (la longue hampe prend de la place ; 1.8 : +20 %)
 const BANNER_FOOT = 0.28;
-const BANNER_SCALE = 1.5;
+const BANNER_SCALE = 1.8;
 const BANNERS = [
   { name: "Épées croisées", img: 'img/bannieres/b01.webp', icon: 'img/bannieres/b01s.webp', color: [200, 36, 28] },
   { name: "Masse d'armes", img: 'img/bannieres/b02.webp', icon: 'img/bannieres/b02s.webp', color: [240, 128, 130] },

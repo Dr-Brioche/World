@@ -62,7 +62,9 @@
       <p class="sub">Étends ton royaume, bâtis des châteaux, écrase tes rivaux.</p>
       <label>Nom de ton royaume <input id="name" maxlength="20" value="Mon Royaume"></label>
       <div class="pickTitle">Ta bannière : <b id="bannerName"></b> <small>(elle donne sa couleur à ton royaume)</small></div>
-      <div id="bannerPick"></div>
+      <!-- (une liste déroulante : le drapeau choisi, en grand ; un clic ouvre la liste de tous les drapeaux) -->
+      <button type="button" id="bannerBtn" title="Changer de bannière"><img id="bannerCur" alt=""><span>▾ changer</span></button>
+      <div id="bannerPick" class="hidden"></div>
       <label>Carte
         <select id="mapType">
           <optgroup label="🎲 Cartes aléatoires">
