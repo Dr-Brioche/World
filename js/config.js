@@ -257,6 +257,9 @@ const CONFIG = {
   GARRISON_REGEN: 0.05,        // la garnison d'un château se reconstitue de 5 % par seconde
   NEUTRAL_TILE_COST: 0.08,     // soldats perdus (au moins) pour prendre une case (libre ou ennemie)...
   TILE_LOSS_RATE: 0.001,       // ...ou 0,1 % de l'armée par case (x la défense du terrain) : une grosse armée perd plus d'hommes
+  // ...sauf en territoire désorganisé (personne n'y tient le terrain) : au-delà de DISORGANIZED_LOSS_FROM soldats, les
+  // pertes par case n'augmentent plus (une grosse armée y va plus vite, sans perdre plus d'hommes par case)
+  DISORGANIZED_LOSS_FROM: 500,
   REGIONS_REUSE: 5,            // (technique) tours de jeu pendant lesquels le découpage en morceaux peut servir tel quel
   // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
   // puis l'assaut s'arrête (les survivants rentrent).
