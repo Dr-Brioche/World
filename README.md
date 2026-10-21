@@ -65,8 +65,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie.
      ⚠️ C'est une très grande carte : la partie est longue, et le jeu peut ralentir un peu sur un ordinateur modeste.
    - **Azeroth** 🐉 (700 x 550 cases) : le monde de Warcraft **au temps du Norfendre** (Wrath of the Lich King), **relevé
-     case par case sur les cartes du jeu** (une par continent) : les côtes, les lacs et le terrain de chaque région d'après sa
-     couleur (forêts, prairies, sable et terres rouges, roche, neige), avec ses trois continents autour de la Grande Mer.
+     case par case sur les cartes du jeu** (une par continent) : les côtes, les lacs, les rivières et le terrain de chaque
+     région d'après sa couleur (forêts, prairies, sable et terres rouges, roche, neige), avec ses trois continents autour de
+     la Grande Mer, et quelques fleuves retracés à la main (la Fureur-du-Sud, l'Orneval, Féralas, le Thondroril, Elwynn).
+     ❄️ C'est la seule carte avec de la **neige** (le Norfendre, le Berceau-de-l'Hiver, Dun Morogh, Alterac) : un terrain
+     blanc bleuté qui se joue **comme une colline** (même défense, même lenteur, même production), différent des sommets
+     blancs infranchissables.
      Le cœur des grands massifs (Hyjal, Dun Morogh, les pics Foudroyés…) et les glaciers du Norfendre sont infranchissables.
      **Kalimdor** à l'ouest (Teldrassil, Brume-azur et Brume-sang, la Sombrivage, l'Orneval, le mont Hyjal, Azshara et sa baie
      des Tempêtes, Durotar et les îles de l'Écho, les Tarides, le marécage d'Âprefange et Theramore, les Serres-Rocheuses,
@@ -711,6 +715,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.76** : ❄️ carte Azeroth : de la **neige** (blanc bleuté, comme une colline : seulement sur cette carte) au Norfendre, au Berceau-de-l'Hiver, à Dun Morogh et en Alterac · 🌊 lacs et rivières relevés sur les cartes du jeu (le Norfendre surtout), et 3 fleuves retracés en plus (l'Orneval, Féralas, Elwynn)
 - **v0.92.75** : 🐉 carte **Azeroth** redessinée d'après les vraies cartes du jeu de chaque continent (Kalimdor, les Royaumes de l'Est, le Norfendre) : côtes, lacs, et terrain de chaque région (forêts, prairies, déserts, roche, neige) bien plus fidèles
 - **v0.92.74** : 🏰 nouvelle image pour la ville de niveau 2 (le château) : un fort de pierre et de bois, avec ses tours et sa grande maison au centre
 - **v0.92.73** : 🏘️ superposition des bâtiments : ceux plus bas sur la carte passent devant ceux du dessus (une caserne juste au-dessus d'une ville est cachée en partie par elle) ; garnisons et chantiers restent affichés par-dessus

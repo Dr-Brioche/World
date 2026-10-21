@@ -7,7 +7,7 @@ const $ = id => document.getElementById(id);
 
 // Les terrains de la palette, dans l'ordre des touches 1 à 9, puis 0
 const PALETTE = [TERRAIN.WATER, TERRAIN.PLAINS, TERRAIN.FOREST, TERRAIN.HILLS, TERRAIN.MOUNTAIN,
-  TERRAIN.PEAK, TERRAIN.DESERT, TERRAIN.RIVER, TERRAIN.GREAT_RIVER, TERRAIN.WOODED_HILLS];
+  TERRAIN.PEAK, TERRAIN.DESERT, TERRAIN.RIVER, TERRAIN.GREAT_RIVER, TERRAIN.WOODED_HILLS]; // (pas la neige : elle n'existe que sur la carte Azeroth)
 
 const Ed = {
   W: 0, H: 0, terrain: null,

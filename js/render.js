@@ -11,7 +11,7 @@ const FINE_LEVEL = new Int8Array(16);
 FINE_LEVEL[TERRAIN.WATER] = -6; FINE_LEVEL[TERRAIN.GREAT_RIVER] = -5; FINE_LEVEL[TERRAIN.RIVER] = -3;
 // (les marches entre collines, montagnes et sommets restent faibles : ce sont les crêtes, voir buildLight, qui
 //  font le relief ; sinon on aurait des étages arrondis, comme un gâteau)
-FINE_LEVEL[TERRAIN.FOREST] = 4; FINE_LEVEL[TERRAIN.HILLS] = 4; FINE_LEVEL[TERRAIN.WOODED_HILLS] = 4; FINE_LEVEL[TERRAIN.MOUNTAIN] = 6; FINE_LEVEL[TERRAIN.PEAK] = 8;
+FINE_LEVEL[TERRAIN.FOREST] = 4; FINE_LEVEL[TERRAIN.HILLS] = 4; FINE_LEVEL[TERRAIN.WOODED_HILLS] = 4; FINE_LEVEL[TERRAIN.SNOW] = 4; FINE_LEVEL[TERRAIN.MOUNTAIN] = 6; FINE_LEVEL[TERRAIN.PEAK] = 8;
 
 const Render = {
   cam: { x: 0, y: 0, scale: 4 },
@@ -131,10 +131,10 @@ const Render = {
     } else {
       // les montagnes bien marquées (comme les hachures d'une vieille carte), les sommets plus clairs ; les collines
       // juste un peu (pour ne pas faire « papier froissé ») ; les terres basses (plaine, forêt, désert) presque plates
-      const high = t === TERRAIN.MOUNTAIN || t === TERRAIN.PEAK, hill = t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS;
+      const high = t === TERRAIN.MOUNTAIN || t === TERRAIN.PEAK, hill = t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS || t === TERRAIN.SNOW;
       const relief = 1 + Math.max(-0.45, Math.min(0.45, (l - 1) * (high ? 1.8 : hill ? 0.8 : 0.5)));
       const woods = t === TERRAIN.FOREST || t === TERRAIN.WOODED_HILLS;
-      const base = t === TERRAIN.PEAK ? [238, 228, 205] : woods ? [200, 186, 140] : [222, 202, 156];
+      const base = t === TERRAIN.PEAK ? [238, 228, 205] : t === TERRAIN.SNOW ? [234, 228, 214] : woods ? [200, 186, 140] : [222, 202, 156];
       [r, g, b] = base.map(v => v * relief + grain);
       // la côte, soulignée à l'encre
       if (G.hasNeighbor(i, n => G.terrain[n] === TERRAIN.WATER)) { r *= 0.7; g *= 0.68; b *= 0.62; }
@@ -493,7 +493,7 @@ const Render = {
   // (light = facteur de clarté de la case, autour de 1). En mer, plus on est loin de la côte, plus l'eau est foncée.
   buildLight() {
     const G = Game, W = G.W, H = G.H, N = G.N, T = G.terrain;
-    const level = t => t === TERRAIN.PEAK ? 3 : t === TERRAIN.MOUNTAIN ? 2 : t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS ? 1 : 0;
+    const level = t => t === TERRAIN.PEAK ? 3 : t === TERRAIN.MOUNTAIN ? 2 : t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS || t === TERRAIN.SNOW ? 1 : 0;
     const noise = makeValueNoise(mulberry32((Math.random() * 1e9) | 0));
     // Distance au bord du massif (en cases, en ligne droite), pour les cases de relief : la hauteur monte tout droit
     // depuis le pied du massif jusqu'à sa crête. Ça fait des versants plats (des « facettes ») qui se rejoignent
