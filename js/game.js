@@ -1489,7 +1489,8 @@ const GameRules = {
       if ((this.tick + a * 7) % period !== 0) continue;
       const p = this.players[this.owner[a]];
       if (!p || !p.alive) continue;
-      const amount = this.buildingOutput(a) * (t === B_BARRACKS ? this.warFactor(p) : this.upkeepFactor(p));
+      const amount = this.buildingOutput(a) * (t === B_BARRACKS ? this.warFactor(p) * this.botBonus(p, 'troops')
+        : this.upkeepFactor(p) * this.botBonus(p, 'gold'));
       if (!amount) continue; // (une église hors des routes ne produit rien)
       let shown = amount;
       if (t !== B_BARRACKS) p.gold += amount;
@@ -2082,7 +2083,7 @@ const GameRules = {
     const max = this.maxTroops(p), army = this.armySize(p);
     if (army >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + Math.sqrt(p.tiles) * CONFIG.TROOP_GROWTH_SQRT;
-    return base * this.growthFactor(army / max) * this.warFactor(p) * this.earlyBoost();
+    return base * this.growthFactor(army / max) * this.warFactor(p) * this.earlyBoost() * this.botBonus(p, 'troops');
   },
 
   // Élan de départ : multiplicateur du recrutement, de 1 + EARLY_GROWTH_BONUS au début de la partie
@@ -2136,7 +2137,13 @@ const GameRules = {
   },
 
   goldRate(p) {
-    return (CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE) * this.upkeepFactor(p);
+    return (CONFIG.BASE_GOLD + p.tiles * CONFIG.GOLD_PER_TILE) * this.upkeepFactor(p) * this.botBonus(p, 'gold');
+  },
+
+  // Avantage des bots selon la difficulté (voir DIFFICULTIES.botBonus) : 1 pour le joueur, ou sans bonus
+  botBonus(p, key) {
+    const b = this.difficulty.botBonus;
+    return !b || !p || p.isHuman ? 1 : b[key] || 1;
   },
 
   // Solde des troupes : multiplicateur de l'or gagné (1 = rien à payer). Au-delà de UPKEEP_FROM de l'armée
@@ -3656,6 +3663,8 @@ const GameRules = {
     // (une cité impériale rend toutes les troupes du royaume plus fortes)
     // (⚒ ses mines de fer aussi)
     if (pid >= 0) best *= 1 + this.mineBonus(pid, 'iron');
+    // (🤖 en Difficile, les bots ont des soldats un peu plus forts)
+    if (pid >= 0) best *= this.botBonus(this.players[pid], 'power');
     return pid >= 0 && this.hasImperial(pid) ? best * (1 + IMPERIAL.troopPower) : best;
   },
 

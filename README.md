@@ -25,13 +25,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
 - 🤖 **3 à 11 royaumes rivaux** (tu choisis combien : Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
-- 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile
+- 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile (en Difficile, les bots ont un petit avantage : **+25 % d'or**, recrutement **20 % plus rapide** et soldats **10 % plus forts**)
 - ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ (en haut) la fait passer à x1, x1,5, x2 ou x3, pour des parties plus courtes
 - ✝️ **La Croyance** : tes églises prêchent chez tes voisins et convertissent peu à peu leurs terres
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis ta bannière, le **type de carte**, la **difficulté** (Facile, Normale, Difficile) et le
+1. **Fonde ta capitale** : choisis ta bannière, le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
    **nombre de royaumes rivaux** (de 3 à 11) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
@@ -690,6 +690,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.60** : 🎚️ Difficile : les bots ont un petit avantage (+25 % d'or, recrutement 20 % plus rapide, soldats 10 % plus forts)
 - **v0.92.59** : 🎯 on peut viser directement les mines ennemies pour les attaquer (comme une église ou un port) ; dans la zone d'une ville ou d'une église prise, elles partent avec elle
 - **v0.92.58** : ⛏️ une petite bulle à côté de chaque mine (la tienne comme celles des autres) montre ce qui y est miné et où elle en est (Fer +8 %, Or 2:14, Pierre −10 %, Diamant 62 %, épuisée)
 - **v0.92.57** : ⏩ bouton de vitesse en jeu (x1, x1,5, x2, x3), à côté de Pause ; le choix « Partie accélérée » du menu de départ disparaît · 🎮 pause et vitesse réservées à celui qui héberge la partie (pour une future partie à plusieurs)
