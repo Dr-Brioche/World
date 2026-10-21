@@ -829,7 +829,11 @@ const GameRules = {
     }
     for (const { t, pid, o } of [...best.values()].flat()) {
       if (this.owner[t] !== o || !this.players[o].alive) continue;
+      // (une église ou un port converti emmène les moulins et casernes qui occupent ses places)
+      const host = this.building[t] && this.hasSlots(this.anchor[t]) ? this.anchor[t] : -1;
+      const linked = host >= 0 ? this.linkedBuildings(host) : [];
       this.setOwner(t, pid);
+      for (const b of linked) if (this.owner[b] === o) this.setOwner(b, pid);
       // la conversion peut couper son royaume : la coupe s'applique tout de suite (voir captureEnclaves)
       if (this.players[o].alive && this.countNeighborsOwnedBy(t, o) >= 2) this.captureEnclaves(o, pid);
     }
@@ -837,12 +841,14 @@ const GameRules = {
 
   // La Croyance peut-elle convertir cette case du royaume o ? Jamais une ville ni un port fortifié (ils tiennent
   // leur région seuls), ni ce qui est dans leur muraille ; ni un avant-poste et sa zone, ni un mur, ni la route
-  // d'un assaut en cours. Les autres bâtiments (église, moulin, caserne, petit port…) passent avec leur case.
+  // d'un assaut en cours ; ni un moulin ou une caserne (ils suivent la ville, l'église ou le port dont ils occupent
+  // la place). Les autres bâtiments (église, petit port, mine) passent avec leur case, l'église et le port avec
+  // leurs moulins et casernes.
   faithConvertible(i, o, routes, sites) {
     if (!this.claimable(i) || this.wallAt[i] || sites.has(i) || routes.has(i)) return false;
     if (this.building[i]) {
       const a = this.anchor[i];
-      if (this.holdsAlone(a) || this.building[a] === B_OUTPOST) return false;
+      if (this.holdsAlone(a) || this.building[a] === B_OUTPOST || this.building[a] === B_MILL || this.building[a] === B_BARRACKS) return false;
       // (un bâtiment de plusieurs cases : toutes doivent pouvoir passer)
       if (this.footprint(a, this.building[a]).some(j => this.castleBonus(o, j) > 0 || this.portBonus(o, j) > 0 || this.outpostBonus(o, j) > 0)) return false;
     }
@@ -1050,7 +1056,7 @@ const GameRules = {
           if (d < best) { best = d; from = t; }
         }
         if (from < 0) return false;
-        path = this.searchPath(a.attacker, from, new Set(this.footprint(c, this.building[c])), passable, a.target, src);
+        path = this.searchPath(a.attacker, from, new Set(this.footprint(c, this.building[c])), passable, a.target, src, undefined, true);
         if (path && this.building[c] === B_CASTLE) {
           const k = path.findIndex(i => this.inWalls(c, i));
           if (k >= 0) path.length = k + 1;
@@ -2831,11 +2837,11 @@ const GameRules = {
       const d = this.tileDefense(target, i) + extra;
       if (d < dist[i]) { dist[i] = d; prev[i] = -1; heap.push(d, i); }
     };
+    if (allowFord) this.riverTiles(); // (prépare riverSide)
     if (from >= 0) start(from);
     else {
       // départ : les cases passables qui touchent nos terres (on part de nos cases, bien moins nombreuses que la carte)
       const W = this.W, N = this.N, own = this.owner;
-      if (allowFord) this.riverTiles(); // (prépare riverSide)
       for (let i = 0; i < N; i++) {
         if (own[i] !== pid) continue;
         const x = i % W;
@@ -2870,6 +2876,13 @@ const GameRules = {
         const nd = d + this.tileDefense(target, n);
         if (nd < dist[n]) { dist[n] = nd; prev[n] = i; heap.push(nd, n); }
       });
+      // (un fleuve au milieu de ses terres : l'armée le passe à gué, lentement, comme au départ)
+      if (allowFord && this.riverSide[i]) {
+        this.fordAcross(i, pid, (n, gap, bridged) => {
+          const nd = d + this.tileDefense(target, n) + (bridged ? gap : gap * CONFIG.FORD_PATH_COST);
+          if (nd < dist[n]) { dist[n] = nd; prev[n] = i; heap.push(nd, n); }
+        }, n => !done[n] && passable(n));
+      }
     }
     return null;
   },
@@ -4392,7 +4405,11 @@ const GameRules = {
     // Les soldats du bâtiment visé se battent tous, même ceux arrivés après le début de l'assaut :
     this.rallyGarrison(a);
     // Tant que des défenseurs (garnison ou renforts) tiennent la position, l'assaut se bat au lieu d'avancer
-    if (a.defenders + (a.garrison || 0) >= 1) return this.fight(a);
+    // (et un siège en cours se met en pause pendant le combat : sa jauge ne reprend qu'une fois les défenseurs battus)
+    if (a.defenders + (a.garrison || 0) >= 1) {
+      this.pauseSiege(a);
+      return this.fight(a);
+    }
     // Siège : l'armée est au pied des murs. Le château ne tombe qu'à la fin du siège ;
     // d'ici là, le défenseur peut encore envoyer des soldats (on se bat alors, juste au-dessus).
     if (a.siege) {
@@ -4436,6 +4453,20 @@ const GameRules = {
         return this.endAttack(a);
       }
       if (a.troops < this.tileCost(a, t)) return this.endAttack(a); // plus assez de soldats
+      // Un fleuve au milieu de ses terres : l'armée le passe à gué (CROSSING_TIME_FIRST / NEXT secondes), puis prend
+      // pied sur l'autre rive. (le gué du départ, lui, est compté dans la marche : voir entryFromPath)
+      const fording = a.route && a.route.length && !this.countFriendNeighbors(t, a.attacker);
+      if (fording) {
+        if (a.fordEnd === undefined) {
+          let time = Infinity;
+          this.fordAcross(t, a.attacker, (n, gap, bridged) => {
+            time = Math.min(time, bridged ? 0 : CONFIG.CROSSING_TIME_FIRST + (gap - 1) * CONFIG.CROSSING_TIME_NEXT);
+          });
+          a.fordEnd = this.tick + Math.round((time === Infinity ? 0 : time) * CONFIG.TICKS_PER_SECOND);
+        }
+        if (this.tick < a.fordEnd) { a.set.add(t); return; }
+        a.fordEnd = undefined; // (gué passé : l'armée a pied sur l'autre rive)
+      }
       // Arrivée au pied d'un château : le siège commence (il ne tombe pas tout de suite)
       if (a.target >= 0 && this.building[t] === B_CASTLE) return this.startSiege(a, this.anchor[t]);
       // Arrivée à la muraille du château visé : l'armée ne la traverse pas, elle s'arrête au pied du mur
@@ -4486,6 +4517,11 @@ const GameRules = {
           a.list.push(n);
         }
       });
+      // (au bord d'un fleuve : l'autre rive, dans son couloir, peut aussi être prise, à gué)
+      if (a.targetCastle >= 0 && this.riverSide[t]) {
+        this.fordAcross(t, a.attacker, n => { a.set.add(n); a.list.push(n); },
+          n => this.owner[n] === a.target && !a.set.has(n) && (!a.limitZone || a.limitZone.has(n)));
+      }
     }
   },
 
@@ -4658,7 +4694,16 @@ const GameRules = {
         }
       }
     }
-    for (const a of paused) if (a.siege) a.siege.end++;
+    for (const a of paused) this.pauseSiege(a);
+  },
+
+  // Met le siège de l'assaut a en pause pour ce tour (une fois par tour au plus) : sa fin et son début reculent
+  // d'un tour, la jauge ne bouge plus
+  pauseSiege(a) {
+    if (!a.siege || a.siege.pausedAt === this.tick) return;
+    a.siege.pausedAt = this.tick;
+    a.siege.start++;
+    a.siege.end++;
   },
 
   // Fin du siège : le château tombe, avec toute sa zone (voir onCastleTaken), et l'assaut s'arrête
