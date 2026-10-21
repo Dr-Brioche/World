@@ -355,8 +355,8 @@ const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTP
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
   null,
-  { name: 'Moulin',       gold: 1.5, img: 'img/moulin1.webp', size: 2.0 },
-  { name: 'Grand moulin', gold: 3.5, img: 'img/moulin2.webp', size: 2.4, upgradeCost: 150 },
+  { name: 'Moulin',       gold: 1.8, img: 'img/moulin1.webp', size: 2.0 },
+  { name: 'Grand moulin', gold: 4.2, img: 'img/moulin2.webp', size: 2.4, upgradeCost: 150 },
 ];
 
 // Les 3 niveaux de la caserne : troops = soldats produits toutes les PRODUCTION_INTERVAL secondes,
@@ -419,9 +419,9 @@ const CHURCH_LEVELS = [
 // landingCost = prix d'un débarquement (x1 = normal, x0.5 = moitié prix).
 const PORT_LEVELS = [
   null,
-  { name: 'Port',       gold: 1.5, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
-  { name: 'Grand port', gold: 4.5, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 4.6, upgradeCost: 500 },
-  { name: 'Port royal', gold: 10, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 6.2, upgradeCost: 2000, garrison: 10, bonus: 1 },
+  { name: 'Port',       gold: 3, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
+  { name: 'Grand port', gold: 8, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 4.6, upgradeCost: 500 },
+  { name: 'Port royal', gold: 16, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 6.2, upgradeCost: 2000, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue

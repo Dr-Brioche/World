@@ -499,9 +499,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Or produit | Moulins ou casernes autour | Expéditions maritimes | Prix |
      |---|---|---|---|---|
-     | 1. Port | comme un moulin | aucun | non | 💰 60 (puis 2 fois plus cher à chaque port) |
-     | 2. Grand port | +200 % | 1 | **oui** | 💰 500 |
-     | 3. Port royal | +122 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 2000 |
+     | 1. Port | plus qu'un moulin (3 💰 toutes les 10 s) | aucun | non | 💰 60 (puis 2 fois plus cher à chaque port) |
+     | 2. Grand port | +167 % | 1 | **oui** | 💰 500 |
+     | 3. Port royal | +100 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 2000 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
@@ -707,6 +707,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.70** : 🌾 moulins 20 % plus productifs (1,8 💰 toutes les 10 s, 4,2 pour un grand moulin, au lieu de 1,5 et 3,5) · ⚓ ports 2 fois plus productifs environ (3, 8 et 16 💰 toutes les 10 s selon le niveau, au lieu de 1,5, 4,5 et 10)
 - **v0.92.69** : 🔢 de loin, le niveau des bâtiments (II, III, IV) reste affiché à côté de leur icône, même bien dézoomé
 - **v0.92.68** : ⛏️ le nombre de mines dans ta barre d'infos (détail au survol), et dans la barre de résumé des autres royaumes (avec le détail par minerai : ⛏️ 3 (⚒️ 2 🪙 1))
 - **v0.92.67** : ⏸️ le siège d'une ville se met en pause tant que ses défenseurs se battent contre l'assaillant · 🌊 un fleuve au milieu des terres ennemies ne rend plus une ville inaccessible : l'armée le passe à gué (lentement) en plein assaut · ✝️ la Croyance ne prend plus les moulins et les casernes : ils suivent l'église, le port ou la ville dont ils occupent la place (une église convertie les emmène avec elle)
