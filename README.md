@@ -152,6 +152,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      🌊 **De l'autre côté d'un fleuve** : si un fleuve sépare tes terres des siennes (même sans autre frontière), tu peux
      quand même viser ses villes, églises, ports, mines et avant-postes : l'armée **passe le fleuve à gué**, lentement
      (10 s pour la 1re case de fleuve, 6 s pour les suivantes, rien sur un pont), puis prend pied sur l'autre rive.
+     C'est pareil pour un fleuve **au milieu de ses terres**, entre ta frontière et la ville visée : l'armée le passe à gué
+     (même temps), puis continue sa route.
    - **L'assaut entre chez l'ennemi** : tu peux encore envoyer des **renforts** en recliquant sur le château visé,
      mais ils partent de la cité d'où l'assaut est parti et **marchent jusqu'au front** (au moins 3 s) :
      plus ton armée s'est enfoncée loin de sa cité, plus ils mettent de temps à arriver.
@@ -201,6 +203,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      tenir **8 s** (fort en bois), **13 s** (château) ou **18 s** (citadelle) : pendant ce temps, sa garnison sort,
      et le défenseur peut encore **envoyer des soldats** le défendre ; tous se battent avec le bonus de ses murs.
      Une **jauge ronde**, à la couleur de l'assaillant, se remplit autour de la ville assiégée : quand le cercle est plein, elle tombe.
+     ⏸️ Le siège se met **en pause** tant que les défenseurs (garnison ou renforts) se battent contre l'armée : la jauge
+     ne reprend qu'une fois qu'ils sont tous battus.
      ⚓ Un **port fortifié** (niveau 3) se défend pareil, comme une petite ville : l'armée s'arrête à sa petite muraille
      et l'assiège **10 s**, le temps que ses défenseurs arrivent.
      **Deux armées ennemies** (pas alliées) qui assiègent **le même château** d'un troisième royaume s'affrontent
@@ -422,6 +426,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **églises** et les **petits ports** voisins (à moins de 30 cases), et son front ondule doucement.
      Si une conversion **coupe** son royaume, la coupe s'applique tout de suite (le morceau coupé est englobé), sauf
      les **zones de muraille** des villes et des ports fortifiés : la Croyance ne les détruit jamais.
+     Elle ne prend **jamais un moulin ni une caserne** : ils suivent la ville, l'église ou le port dont ils occupent la place.
+     Tant que ce bâtiment est à ton royaume, eux (et leur production) restent à toi ; si une église ou un port est converti,
+     ses moulins et casernes passent avec lui.
      Un royaume **désorganisé** (sans ville ni port fortifié) se fait convertir **2 fois plus vite**.
      Ça marche dans les deux sens : un voisin plus croyant convertit **tes** terres ! Dans le classement, une **📖 bible verte**
      à côté d'un voisin veut dire que tu convertis ses terres, une **bible rouge** que c'est lui qui convertit les tiennes.
@@ -700,6 +707,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.67** : ⏸️ le siège d'une ville se met en pause tant que ses défenseurs se battent contre l'assaillant · 🌊 un fleuve au milieu des terres ennemies ne rend plus une ville inaccessible : l'armée le passe à gué (lentement) en plein assaut · ✝️ la Croyance ne prend plus les moulins et les casernes : ils suivent l'église, le port ou la ville dont ils occupent la place (une église convertie les emmène avec elle)
 - **v0.92.66** : 🐛 une église (ou un port) prise sans son moulin ne laissait plus voir ce moulin dans ses places : son nouveau maître pouvait en bâtir un 2e à côté (d'où des églises niveau 1 avec 2 moulins) ; le moulin occupe maintenant toujours sa place
 - **v0.92.65** : 🐛 une route d'assaut ne peut plus être coupée en route (par exemple quand la Croyance convertit la case d'où elle part) : l'assaut n'est plus annulé · 🪙 mine d'or : 2 000 pièces en 5 minutes (et de nouveau 2 000 au niveau 2) · ⛏️ la bulle d'une mine n'affiche plus que l'icône de son minerai, par-dessus les bâtiments · 🏠 au survol : les places d'une église ou d'un port, et la place qu'occupe un moulin ou une caserne
 - **v0.92.64** : 🪙 le filon d'une mine d'or dure 5 minutes (au lieu de 3), et le niveau 2 le relance pour 5 minutes de plus
