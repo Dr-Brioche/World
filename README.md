@@ -406,9 +406,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Tes églises **prêchent chez tes voisins ennemis** (pas chez tes alliés de pacte) : si tu as **plus de Croyance**
      qu'un voisin, tu **convertis lentement ses terres** collées aux tiennes, une case à la fois. C'est l'**écart** qui compte :
      avec 100 contre 80, ta Croyance vaut 20 face à lui. Plus l'écart est grand, plus ça va vite : environ une case
-     toutes les **30 s** avec 20 d'écart, toutes les **20 s** avec 50, toutes les **5 s** avec 100, **une par seconde**
-     avec 200, **2 par seconde** avec 500, **5 par seconde** avec 1000 ; au-delà, ça accélère **de moins en moins** :
-     **7 par seconde** avec 2000, **8,5** avec 3000, et **10 par seconde** à partir de **5000** (le maximum). Plusieurs
+     toutes les **24 s** avec 20 d'écart, toutes les **16 s** avec 50, toutes les **4 s** avec 100, **1,25 par seconde**
+     avec 200, **2,5 par seconde** avec 500, **6 par seconde** avec 1000 ; au-delà, ça accélère **de moins en moins** :
+     **9 par seconde** avec 2000, **10,5** avec 3000, et **12,5 par seconde** à partir de **5000** (le maximum). Plusieurs
      croisades en même temps (une par cathédrale) servent donc encore. Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
      s'avancent dans le tien : les frontières deviennent plus nettes, et ses routes trop fines se referment.
      La foi avance **en courbes**, pas en ligne droite : comme elle gagne les villages, elle s'étire en pointe vers les
@@ -690,6 +690,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.61** : ✝️ la Croyance convertit les terres voisines 25 % plus vite
 - **v0.92.60** : 🎚️ Difficile : les bots ont un petit avantage (+25 % d'or, recrutement 20 % plus rapide, soldats 10 % plus forts)
 - **v0.92.59** : 🎯 on peut viser directement les mines ennemies pour les attaquer (comme une église ou un port) ; dans la zone d'une ville ou d'une église prise, elles partent avec elle
 - **v0.92.58** : ⛏️ une petite bulle à côté de chaque mine (la tienne comme celles des autres) montre ce qui y est miné et où elle en est (Fer +8 %, Or 2:14, Pierre −10 %, Diamant 62 %, épuisée)
