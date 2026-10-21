@@ -451,17 +451,17 @@ const MINE_LEVELS = [
 // carte), max = combien un royaume peut en avoir au plus (les autres ne comptent pas), puis par niveau (1 et 2) :
 const MINES = {
   // ⚒ fer : toutes les troupes du royaume sont plus fortes (+4 % / +8 % par mine, doublé si reliée : +48 % au plus)
-  iron: { name: 'Mine de fer', icon: '⚒️', terrain: 'mountain', count: [4, 6], max: 3, power: [0, 0.04, 0.08] },
+  iron: { name: 'Mine de fer', short: 'troupes plus fortes', icon: '⚒️', terrain: 'mountain', count: [4, 6], max: 3, power: [0, 0.04, 0.08] },
   // 🪙 or : 3 fois un moulin (6 fois au niveau 2), doublé si reliée ; mais le filon s'épuise au bout de 3 minutes
   //   d'exploitation (son compteur, à lui, passe d'un royaume à l'autre) ; le niveau 2 le relance pour 3 minutes de plus
-  gold: { name: 'Mine d\'or', icon: '🪙', terrain: 'mountain', count: [4, 6], gold: [0, 4.5, 9], time: 180 },
+  gold: { name: 'Mine d\'or', short: 'beaucoup d\'or, mais il s\'épuise', icon: '🪙', terrain: 'mountain', count: [4, 6], gold: [0, 4.5, 9], time: 180 },
   // 🪨 pierre (une carrière, en colline) : les améliorations, les murs et les ponts coûtent moins cher
   //   (−5 % / −10 % par carrière, doublé si reliée : −60 % au plus)
-  stone: { name: 'Carrière de pierre', icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },
+  stone: { name: 'Carrière de pierre', short: 'améliorations moins chères', icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },
   // 💎 diamant : une longue extraction (20 minutes ; 2 fois plus lente sans route, 50 % plus rapide au niveau 2) ;
   //   à chaque quart, 1 000 pièces, et 10 000 à la fin ; puis le filon est épuisé pour tout le monde.
   //   (son compteur passe à celui qui prend la mine : il touche les versements suivants)
-  diamond: { name: 'Mine de diamant', icon: '💎', terrain: 'mountain', count: [1, 3], time: 1200, speed: [0, 1, 1.5],
+  diamond: { name: 'Mine de diamant', short: 'un trésor de 13 000 pièces', icon: '💎', terrain: 'mountain', count: [1, 3], time: 1200, speed: [0, 1, 1.5],
     pay: 1000, final: 10000 },
 };
 const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond'];
