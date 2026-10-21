@@ -19,7 +19,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
   avec **6 cartes** au choix : 3 cartes **aléatoires** (Normale, Continentale, Base navale) et 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre)
-- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 14 (elle donne sa couleur à ton royaume)
+- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 18 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
 - ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
@@ -715,6 +715,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.78** : 🚩 18 nouveaux drapeaux pour les royaumes (épées, masse d'armes, soleil, marteau, canards, aigle, hallebardes, dragon, chêne, lion, château, fleurs de lys, croissant, poing, poissons, hache, main couronnée, croix) ; la couleur de chaque royaume suit le fond de son drapeau, accentuée pour que deux royaumes ne se ressemblent pas
 - **v0.92.77** : 🐉 carte Azeroth : le nord des Royaumes de l'Est retrouve ses prairies (Tirisfal, les Maleterres, Hautebrande, l'Arathi) entre les forêts des Pins-Argentés et des Hinterlands, et ses lacs (Lordamere, Darrowmere, le lac de Tirisfal, les lacs et la rivière des Hinterlands)
 - **v0.92.76** : ❄️ carte Azeroth : de la **neige** (blanc bleuté, comme une colline : seulement sur cette carte) au Norfendre, au Berceau-de-l'Hiver, à Dun Morogh et en Alterac · 🌊 lacs et rivières relevés sur les cartes du jeu (le Norfendre surtout), et 3 fleuves retracés en plus (l'Orneval, Féralas, Elwynn)
 - **v0.92.75** : 🐉 carte **Azeroth** redessinée d'après les vraies cartes du jeu de chaque continent (Kalimdor, les Royaumes de l'Est, le Norfendre) : côtes, lacs, et terrain de chaque région (forêts, prairies, déserts, roche, neige) bien plus fidèles

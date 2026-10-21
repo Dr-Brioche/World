@@ -63,7 +63,7 @@ const UI = {
     sizeForType();
 
     // Choix de la bannière dans le menu (elle donne la couleur du royaume)
-    this.banner = BANNERS.findIndex(b => b.name === 'Aigle vert');
+    this.banner = BANNERS.findIndex(b => b.name === 'Dragon');
     $('bannerPick').innerHTML = BANNERS.map((b, k) =>
       `<button type="button" data-banner="${k}" title="${escapeHtml(b.name)}"><img src="${b.img}" alt="${escapeHtml(b.name)}"></button>`
     ).join('');
@@ -181,7 +181,7 @@ const UI = {
       mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
     });
-    $('kBanner').src = BANNERS[this.banner].img;
+    $('kBanner').src = BANNERS[this.banner].icon;
     $('speedBtn').textContent = '⏩ x1'; // (chaque partie commence à vitesse normale)
     Render.setupMap();
     $('menu').classList.add('hidden');
@@ -285,7 +285,7 @@ const UI = {
 
   // Petite image de la bannière d'un royaume, pour les messages et les listes
   bannerImg(p, cls = 'bn') {
-    return `<img class="${cls}" src="${BANNERS[p.banner].img}" alt="" title="${escapeHtml(p.name)}">`;
+    return `<img class="${cls}" src="${BANNERS[p.banner].icon}" alt="" title="${escapeHtml(p.name)}">`;
   },
 
   // who = royaume (ou liste de royaumes) dont on affiche la bannière devant le message
