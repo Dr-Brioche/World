@@ -285,7 +285,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    doit prendre la place d'une église ou d'un port proche (sinon, impossible). En survolant une ville : « places prises : 3 sur 6 » ;
    en survolant une église ou un port : « 🏠 1/1 place » ; en survolant un moulin ou une caserne : la place qu'il occupe
    (d'une ville, d'une église, d'un port), ou « sans place » s'il a été pris à un autre royaume (il produit quand même pour
-   son nouveau maître, mais ne laisse pas de place libre pour en bâtir un autre).
+   son nouveau maître, mais ne laisse pas de place libre pour en bâtir un autre). De même, si une église (ou un port) passe
+   à un autre royaume sans son moulin, ce moulin occupe toujours sa place : le nouveau maître ne peut pas en bâtir un autre
+   à côté tant qu'il ne l'a pas améliorée.
    Les châteaux et les églises, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
    (l'aperçu devient rouge si c'est trop près). Quand tu choisis un **moulin** ou une **caserne**, les zones où l'on peut
@@ -698,6 +700,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.66** : 🐛 une église (ou un port) prise sans son moulin ne laissait plus voir ce moulin dans ses places : son nouveau maître pouvait en bâtir un 2e à côté (d'où des églises niveau 1 avec 2 moulins) ; le moulin occupe maintenant toujours sa place
 - **v0.92.65** : 🐛 une route d'assaut ne peut plus être coupée en route (par exemple quand la Croyance convertit la case d'où elle part) : l'assaut n'est plus annulé · 🪙 mine d'or : 2 000 pièces en 5 minutes (et de nouveau 2 000 au niveau 2) · ⛏️ la bulle d'une mine n'affiche plus que l'icône de son minerai, par-dessus les bâtiments · 🏠 au survol : les places d'une église ou d'un port, et la place qu'occupe un moulin ou une caserne
 - **v0.92.64** : 🪙 le filon d'une mine d'or dure 5 minutes (au lieu de 3), et le niveau 2 le relance pour 5 minutes de plus
 - **v0.92.63** : ⛏️ les autres bâtiments laissent 2 cases libres autour d'un filon · pendant la pose d'une mine, les filons passent par-dessus les bâtiments (une grande ville ne les cache plus) et la mine s'aimante à 5 cases au lieu de 3
