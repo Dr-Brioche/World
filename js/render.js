@@ -1904,16 +1904,17 @@ const Render = {
       const grow = 1 + CONFIG.ICON_LEVEL_GROWTH * (lvl - 1); // (plus grande selon le niveau)
       // (une mine : l'icône de son minerai)
       const icon = type === B_MINE && info.kind ? EMOJI_ICONS[MINES[info.kind].icon.replace('\uFE0F', '')] : undefined;
-      Icons.badge(ctx, type, px, py, parseFloat(ctx.font.match(/([\d.]+)px/)[1]) * grow, undefined, icon);
-      if (lvl > 1 && s >= 5) {
-        const f = Math.max(8, Math.min(14, s * 0.8));
+      const size = parseFloat(ctx.font.match(/([\d.]+)px/)[1]) * grow;
+      Icons.badge(ctx, type, px, py, size, undefined, icon);
+      // (le niveau, en haut à droite de l'icône : visible à tous les zooms où l'on voit l'icône)
+      if (lvl > 1) {
+        const f = Math.max(9, Math.min(14, size * 0.45));
         ctx.font = `700 ${f}px Georgia, serif`;
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgba(20,12,4,0.85)';
         ctx.fillStyle = '#ffe9a8';
         const roman = ['', 'I', 'II', 'III', 'IV'][lvl];
-        const k = CONFIG.BUILDING_DRAW_SCALE;
-        Icons.text(ctx, roman, px + s * half * 1.2 * k, py - s * half * 0.8 * k);
+        Icons.text(ctx, roman, px + size * 0.5 + f * 0.3, py - size * 0.4);
       }
       ctx.globalAlpha = 1;
     }

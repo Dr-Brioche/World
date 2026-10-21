@@ -707,6 +707,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.69** : 🔢 de loin, le niveau des bâtiments (II, III, IV) reste affiché à côté de leur icône, même bien dézoomé
 - **v0.92.68** : ⛏️ le nombre de mines dans ta barre d'infos (détail au survol), et dans la barre de résumé des autres royaumes (avec le détail par minerai : ⛏️ 3 (⚒️ 2 🪙 1))
 - **v0.92.67** : ⏸️ le siège d'une ville se met en pause tant que ses défenseurs se battent contre l'assaillant · 🌊 un fleuve au milieu des terres ennemies ne rend plus une ville inaccessible : l'armée le passe à gué (lentement) en plein assaut · ✝️ la Croyance ne prend plus les moulins et les casernes : ils suivent l'église, le port ou la ville dont ils occupent la place (une église convertie les emmène avec elle)
 - **v0.92.66** : 🐛 une église (ou un port) prise sans son moulin ne laissait plus voir ce moulin dans ses places : son nouveau maître pouvait en bâtir un 2e à côté (d'où des églises niveau 1 avec 2 moulins) ; le moulin occupe maintenant toujours sa place
