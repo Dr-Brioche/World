@@ -326,7 +326,7 @@ const CONFIG = {
 };
 
 const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6, PEAK: 7, DESERT: 8,
-  WOODED_HILLS: 9 };
+  WOODED_HILLS: 9, SNOW: 10 };
 
 const TERRAIN_INFO = [
   { name: 'Mer',      color: [52, 92, 130],   cost: Infinity },
@@ -344,6 +344,10 @@ const TERRAIN_INFO = [
   { name: 'Désert', color: [222, 198, 134], cost: 1 },
   // Colline boisée : une colline couverte de forêt, les deux bonus s'ajoutent (forêt +60 % et colline +120 %)
   { name: 'Colline boisée', color: [122, 124, 70], cost: 2.8 },
+  // Neige (seulement sur la carte Azeroth) : comme une colline (défense +120 %, aussi lente à traverser), mais blanche
+  // (le Norfendre, le Berceau-de-l'Hiver, Dun Morogh…)
+  // (un peu bleutée et moins éclatante que les sommets, pour ne pas les confondre)
+  { name: 'Neige', color: [184, 201, 224], cost: 2.2 },
 ];
 // cost = défense de la case (et temps pour la traverser) : 1 en plaine, plus ailleurs.
 // On ne peut rien construire sur un fleuve.
@@ -432,13 +436,13 @@ const PORT_LEVELS = [
 // désert, colline boisée. Dans le désert, tout bâtiment produit DESERT_PRODUCTION (0.8 = -20 %).
 const DESERT_PRODUCTION = 0.8;
 const TERRAIN_PRODUCTION = {
-  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0, 0, DESERT_PRODUCTION, 0.9], // les moulins aiment les plaines
+  [B_MILL]:     [0, 1.3, 1.0, 0.9, 0.7, 0, 0, 0, DESERT_PRODUCTION, 0.9, 0.9], // les moulins aiment les plaines (la neige : comme une colline)
   // les casernes, les forêts et les collines (colline boisée : les deux à la fois, +40 %)
-  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0, 0, DESERT_PRODUCTION, 1.4],
+  [B_BARRACKS]: [0, 1.0, 1.3, 1.3, 0.9, 0, 0, 0, DESERT_PRODUCTION, 1.4, 1.3],
   // les églises (or de leurs chemins et Croyance), les hauteurs : +30 % sur colline, colline boisée et montagne ;
   // neutre en plaine, et -20 % en forêt
-  [B_CHURCH]:   [0, 1.0, 0.8, 1.3, 1.3, 0, 0, 0, DESERT_PRODUCTION, 1.3],
-  [B_PORT]:     [0, 1.0, 1.0, 1.0, 1.0, 0, 0, 0, DESERT_PRODUCTION, 1.0], // le port : seul le désert compte
+  [B_CHURCH]:   [0, 1.0, 0.8, 1.3, 1.3, 0, 0, 0, DESERT_PRODUCTION, 1.3, 1.3],
+  [B_PORT]:     [0, 1.0, 1.0, 1.0, 1.0, 0, 0, 0, DESERT_PRODUCTION, 1.0, 1.0], // le port : seul le désert compte
 };
 
 // Niveaux de chaque type de bâtiment (null = ne s'améliore pas)

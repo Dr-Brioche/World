@@ -18,7 +18,7 @@ const CustomMaps = {
     for (let i = 0; i < terrain.length;) {
       let n = 1;
       while (i + n < terrain.length && terrain[i + n] === terrain[i]) n++;
-      out.push(terrain[i] + n.toString(36));
+      out.push(terrain[i].toString(36) + n.toString(36)); // (le terrain en 1 caractère : 0 à 9, puis a = la neige)
       i += n;
     }
     return out.join(',');
@@ -28,7 +28,7 @@ const CustomMaps = {
     let i = 0;
     for (const run of data.split(',')) {
       if (!run) continue;
-      const t = +run[0], n = parseInt(run.slice(1), 36);
+      const t = parseInt(run[0], 36), n = parseInt(run.slice(1), 36);
       terrain.fill(t, i, Math.min(N, i + n));
       i += n;
     }
