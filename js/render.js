@@ -958,11 +958,13 @@ const Render = {
       const zone = new Set();
       for (const c of G.castles) if (G.owner[c] === h.id) for (const i of G.castleZone(c, h.id)) zone.add(i);
       for (const a of G.buildingTiles) if (G.owner[a] === h.id && G.hasSlots(a)) for (const i of G.churchZone(a)) zone.add(i);
-      const ok = [], bad = [];
-      for (const i of zone) (G.canPlace(h.id, i, type) ? ok : bad).push(i);
-      this.buildable = { key, time: now, ok, bad };
+      // (en doré : au bord du chemin d'une église ou d'un port vers une ville, où il produit plus : voir Game.onRoad)
+      const ok = [], bad = [], road = [], links = G.roads();
+      for (const i of zone) (!G.canPlace(h.id, i, type) ? bad : G.onRoad(h.id, i, type, links) ? road : ok).push(i);
+      this.buildable = { key, time: now, ok, bad, road };
     }
     this.fillTiles(ox, oy, this.buildable.ok, 'rgba(140,240,110,0.3)');
+    this.fillTiles(ox, oy, this.buildable.road, 'rgba(255,205,60,0.5)');
     this.fillTiles(ox, oy, this.buildable.bad, 'rgba(235,45,35,0.42)');
   },
 
