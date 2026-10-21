@@ -45,6 +45,7 @@ html, body {
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
+  width: max-content; /* (sans ça, la barre se replie sur 2 lignes dès qu'elle dépasse la moitié de l'écran) */
   display: flex;
   gap: 16px;
   align-items: center;
@@ -101,16 +102,20 @@ html, body {
 #lb li.pactGroup .allies { visibility: hidden; } /* (les alliés sont déjà dans le cadre) */
 #lb button { padding: 0 4px; margin-left: 4px; font-size: 13px; line-height: 18px; }
 #lb li > * { vertical-align: middle; }
-.lbb { height: 22px; vertical-align: middle; margin-right: 4px; }
-.msg .bn, .attack .bn { height: 22px; vertical-align: middle; margin-right: 4px; }
-#kBanner { height: 26px; vertical-align: middle; }
+.lbb { height: 26px; vertical-align: middle; margin-right: 4px; }
+.msg .bn, .attack .bn { height: 26px; vertical-align: middle; margin-right: 4px; }
+#kBanner { height: 31px; vertical-align: middle; }
 #kName { text-shadow: 0 0 2px #000, 0 0 1px #000; } /* lisible même avec une bannière claire */
 .pickTitle { text-align: left; margin: 10px 0 4px; }
-#bannerPick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 6px 0 4px; }
+#bannerBtn { display: flex; align-items: center; gap: 10px; margin: 4px auto; padding: 4px 12px; background: var(--parchment-dark); }
+#bannerBtn img { height: 148px; display: block; }
+#bannerPick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 6px 0 4px;
+  max-height: 340px; overflow-y: auto; border: 2px solid var(--wood); border-radius: 6px; padding: 6px; }
+#bannerPick.hidden { display: none; }
 #bannerPick button { padding: 2px; background: transparent; border: 2px solid transparent; }
 #bannerPick button:hover { background: var(--parchment-dark); }
 #bannerPick button.active { border-color: var(--wood); background: var(--gold); }
-#bannerPick img { height: 74px; display: block; }
+#bannerPick img { height: 148px; display: block; }
 .nm {
   display: inline-block;
   width: 105px;
@@ -357,7 +362,7 @@ button:hover { background: #e8d6a8; }
 .rules li { margin: 4px 0; }
 
 @media (max-width: 760px) {
-  #bannerPick img { height: 60px; }
+  #bannerPick img, #bannerBtn img { height: 110px; }
   .panel { font-size: 12px; padding: 4px 8px; }
   #topbar { gap: 8px; left: 8px; right: 8px; transform: none; flex-wrap: wrap; justify-content: center; white-space: normal; }
   #side { top: auto; bottom: 120px; width: 170px; font-size: 11px; }
@@ -404,7 +409,7 @@ button:disabled .ico { opacity: 0.6; }
   padding: 3px 10px;
   z-index: 30;
 }
-.kTip .bn { height: 20px; vertical-align: middle; margin-right: 4px; }
+.kTip .bn { height: 24px; vertical-align: middle; margin-right: 4px; }
 .kTip span { white-space: nowrap; }
 
 /* Les règles, en jeu (bouton « Règles ») : une grande fiche qui défile */

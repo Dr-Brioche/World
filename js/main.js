@@ -77,10 +77,13 @@ const UI = {
       this.banner = k;
       document.querySelectorAll('#bannerPick button').forEach(b => b.classList.toggle('active', +b.dataset.banner === k));
       $('bannerName').textContent = BANNERS[k].name;
+      $('bannerCur').src = BANNERS[k].img;
     };
+    // (la liste des drapeaux s'ouvre et se ferme d'un clic sur le drapeau choisi ; choisir un drapeau la referme)
+    $('bannerBtn').addEventListener('click', () => $('bannerPick').classList.toggle('hidden'));
     $('bannerPick').addEventListener('click', e => {
       const btn = e.target.closest('button[data-banner]');
-      if (btn) pick(+btn.dataset.banner);
+      if (btn) { pick(+btn.dataset.banner); $('bannerPick').classList.add('hidden'); }
     });
     pick(this.banner);
     $('startBtn').addEventListener('click', () => this.start());
