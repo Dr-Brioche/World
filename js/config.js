@@ -89,7 +89,8 @@ const CONFIG = {
   PEAK_BLOB_RATIO: 0.015,       // en plus des chaînes, 1,5 % des terres en sommets isolés (le cœur des massifs)
 
   // --- Vitesse ---
-  TICKS_PER_SECOND: 10,    // nombre de "tours" de jeu par seconde
+  TICKS_PER_SECOND: 10,
+  GAME_SPEEDS: [1, 1.5, 2, 3], // vitesses de la partie, au choix en jeu (bouton ⏩ en haut)    // nombre de "tours" de jeu par seconde
 
   // --- Départ ---
   START_TROOPS: 10,       // soldats au départ (on commence petit !)
