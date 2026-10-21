@@ -506,13 +506,15 @@ const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST, B_MINE];
 const BANNER_FOOT = 0.28;
 const BANNER_SCALE = 1.8;
 const BANNERS = [
-  { name: "Épées croisées", img: 'img/bannieres/b01.webp', icon: 'img/bannieres/b01s.webp', color: [200, 36, 28] },
+  { name: "Épées croisées", img: 'img/bannieres/b01.webp', icon: 'img/bannieres/b01s.webp', color: [180, 20, 20] },
+  { name: "Le Péteur", img: 'img/bannieres/b21.webp', icon: 'img/bannieres/b21s.webp', color: [222, 78, 44] },
   { name: "Masse d'armes", img: 'img/bannieres/b02.webp', icon: 'img/bannieres/b02s.webp', color: [240, 128, 130] },
   { name: "Soleil", img: 'img/bannieres/b03.webp', icon: 'img/bannieres/b03s.webp', color: [138, 24, 72] },
-  { name: "Marteau", img: 'img/bannieres/b04.webp', icon: 'img/bannieres/b04s.webp', color: [240, 110, 16] },
+  { name: "Marteau", img: 'img/bannieres/b04.webp', icon: 'img/bannieres/b04s.webp', color: [245, 132, 10] },
   { name: "Canards", img: 'img/bannieres/b05.webp', icon: 'img/bannieres/b05s.webp', color: [200, 160, 50] },
   { name: "Aigle noir", img: 'img/bannieres/b06.webp', icon: 'img/bannieres/b06s.webp', color: [252, 232, 30] },
-  { name: "Hallebardes", img: 'img/bannieres/b07.webp', icon: 'img/bannieres/b07s.webp', color: [168, 206, 96] },
+  { name: "Hallebardes", img: 'img/bannieres/b07.webp', icon: 'img/bannieres/b07s.webp', color: [150, 182, 118] },
+  { name: "Chopes", img: 'img/bannieres/b20.webp', icon: 'img/bannieres/b20s.webp', color: [192, 222, 0] },
   { name: "Dragon", img: 'img/bannieres/b08.webp', icon: 'img/bannieres/b08s.webp', color: [38, 100, 48] },
   { name: "Chêne", img: 'img/bannieres/b09.webp', icon: 'img/bannieres/b09s.webp', color: [48, 120, 110] },
   { name: "Lion", img: 'img/bannieres/b10.webp', icon: 'img/bannieres/b10s.webp', color: [40, 210, 210] },
@@ -520,6 +522,7 @@ const BANNERS = [
   { name: "Fleurs de lys", img: 'img/bannieres/b12.webp', icon: 'img/bannieres/b12s.webp', color: [30, 60, 165] },
   { name: "Croissant", img: 'img/bannieres/b13.webp', icon: 'img/bannieres/b13s.webp', color: [125, 55, 190] },
   { name: "Poing", img: 'img/bannieres/b14.webp', icon: 'img/bannieres/b14s.webp', color: [112, 64, 30] },
+  { name: "Corbeau", img: 'img/bannieres/b19.webp', icon: 'img/bannieres/b19s.webp', color: [196, 166, 120] },
   { name: "Poissons", img: 'img/bannieres/b15.webp', icon: 'img/bannieres/b15s.webp', color: [238, 234, 222] },
   { name: "Hache d'or", img: 'img/bannieres/b16.webp', icon: 'img/bannieres/b16s.webp', color: [150, 150, 146] },
   { name: "Main couronnée", img: 'img/bannieres/b17.webp', icon: 'img/bannieres/b17s.webp', color: [70, 78, 98] },
@@ -529,7 +532,8 @@ const BANNERS = [
 // Les noms des royaumes contrôlés par l'ordinateur (ils reçoivent une bannière au hasard).
 // (autant de noms que de drapeaux, moins celui du joueur : on peut jouer contre autant de rivaux que de drapeaux)
 const KINGDOMS = ['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence', 'Lotharingie',
-  'Saxe', 'Castille', 'Écosse', 'Flandre', 'Aragon', 'Bohême', 'Navarre', 'Savoie', 'Hongrie', 'Pologne', 'Danemark'];
+  'Saxe', 'Castille', 'Écosse', 'Flandre', 'Aragon', 'Bohême', 'Navarre', 'Savoie', 'Hongrie', 'Pologne', 'Danemark',
+  'Bavière', 'Lombardie', 'Galles'];
 
 // botBonus : petit avantage donné aux royaumes de l'ordinateur (pas au joueur), en multiplicateurs
 //   gold = or gagné (revenu des terres et des bâtiments), troops = recrutement, power = force des soldats

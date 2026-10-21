@@ -19,11 +19,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
   avec **6 cartes** au choix : 3 cartes **aléatoires** (Normale, Continentale, Base navale) et 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre)
-- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 18 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
+- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 21 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
 - ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
-- 🤖 **3 à 17 royaumes rivaux** (tu choisis combien, un par drapeau : Bourgogne, Aquitaine, Castille, Bohême…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
+- 🤖 **3 à 20 royaumes rivaux** (tu choisis combien, un par drapeau : Bourgogne, Aquitaine, Castille, Bohême…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile (en Difficile, les bots ont un petit avantage : **+25 % d'or**, recrutement **20 % plus rapide** et soldats **10 % plus forts**)
 - ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ (en haut) la fait passer à x1, x1,5, x2 ou x3, pour des parties plus courtes
@@ -32,7 +32,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 🕹️ Comment jouer
 
 1. **Fonde ta capitale** : choisis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
-   **nombre de royaumes rivaux** (de 3 à 17, autant que de drapeaux disponibles) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
+   **nombre de royaumes rivaux** (de 3 à 20, autant que de drapeaux disponibles) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
    ou changer sa vitesse (en solo : toi). Sur la carte, **les royaumes rivaux
@@ -719,6 +719,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.84** : 🚩 3 nouveaux drapeaux : le Corbeau, les Chopes et le Péteur (21 en tout), et donc jusqu'à 20 royaumes rivaux (nouveaux noms : Bavière, Lombardie, Galles) ; couleurs voisines accentuées (rouge des épées plus profond, orange du marteau plus doré, vert des hallebardes plus doux)
 - **v0.92.83** : ⚔️ contre un territoire désorganisé, une grosse armée ne perd plus de soldats par case qu'une petite (au-delà de 500 soldats, chaque case coûte autant) : elle va juste plus vite, et prend bien plus de terres
 - **v0.92.82** : 🏝️ un royaume ne peut plus se cacher sur un îlot où personne ne peut débarquer : ses terres y disparaissent (et s'il n'avait plus que ça, il est anéanti)
 - **v0.92.81** : 💎 la mine de diamant rapporte 1 000, 2 000 puis 3 000 pièces aux trois premiers quarts de l'extraction, et toujours 10 000 à la fin (16 000 en tout, au lieu de 13 000)
