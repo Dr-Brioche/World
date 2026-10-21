@@ -246,10 +246,11 @@ const UI = {
     const o = i >= 0 && m && (G.phase === 'playing' || G.phase === 'spawn') && !this.selectedBuild ? G.owner[i] : -1;
     if (o < 0 || !h || o === h.id) { tip.classList.add('hidden'); this.tipFor = -1; return; }
     const p = G.players[o];
-    const types = [B_CASTLE, B_CHURCH, B_PORT, B_MILL, B_BARRACKS, B_MINE, B_OUTPOST];
+    const types = [B_CASTLE, B_CHURCH, B_PORT, B_MILL, B_BARRACKS, B_OUTPOST];
     const html = `${this.bannerImg(p)}<b>${escapeHtml(p.name)}</b>${G.areAllied(o, h.id) ? ' 🤝' : ''}` +
       ` · <span title="Soldats (épées : sans caserne ou niveau 1 · casque : caserne niveau 2 · bouclier : niveau 3)">${G.troopIcon(o)} ${fmt(p.troops)}</span>` +
       types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
+      this.minesText(o) +
       ` · <span title="Part des terres">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)} %</span>` +
       ` · <span title="Croyance">✝️ ${fmt(Math.round(G.faithOf(o)))}</span>`;
     // (on compare avec le dernier texte écrit : innerHTML, lui, a déjà vu ses emojis remplacés par des icônes)
@@ -259,6 +260,14 @@ const UI = {
     tip.style.left = (bar.left + bar.width / 2) + 'px';
     tip.style.top = (bar.bottom + 6) + 'px';
     tip.classList.remove('hidden');
+  },
+
+  // ⛏️ Les mines d'un royaume, pour la barre de résumé : « · ⛏️ 3 (⚒️ 2 🪙 1) » (rien s'il n'en a pas)
+  minesText(pid) {
+    const G = Game, mines = MINE_KINDS.map(k => [k, G.minesOf(pid, k).length]).filter(([, n]) => n);
+    if (!mines.length) return '';
+    const total = mines.reduce((s, [, n]) => s + n, 0);
+    return ` · <span title="Mines">⛏️ ${total} (${mines.map(([k, n]) => `${MINES[k].icon} ${n}`).join(' ')})</span>`;
   },
 
   // ✝️ Croyance face à un voisin ennemi, dans le classement : une bible verte si on convertit ses terres,
@@ -803,6 +812,12 @@ const UI = {
     this.refreshTroopGauge();
     $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + ' %';
     $('faith').textContent = fmt(Math.round(G.faithOf(h.id)));
+    // ⛏️ Nos mines : leur nombre (le détail par minerai au survol), seulement quand on en a
+    const mines = MINE_KINDS.map(k => [k, G.minesOf(h.id, k).length]).filter(([, n]) => n);
+    $('minesBox').classList.toggle('hidden', !mines.length);
+    $('mines').textContent = mines.reduce((s, [, n]) => s + n, 0);
+    // (« 2 mines de fer », « 1 carrière de pierre »)
+    $('minesBox').title = 'Mines : ' + mines.map(([k, n]) => `${n} ${MINES[k].name.toLowerCase().replace(/^(\S+)/, n > 1 ? '$1s' : '$1')}`).join(', ');
     // Puissance des troupes : 100 % = soldats ordinaires (caserne améliorée, mines de fer, cité impériale : plus)
     $('power').textContent = Math.round(G.troopPower(h.id) * 100) + ' %';
     // Durée de la partie (le temps de jeu : la pause l'arrête)
