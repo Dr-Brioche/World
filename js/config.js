@@ -510,8 +510,11 @@ const BANNERS = [
 const KINGDOMS = ['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence', 'Lotharingie',
   'Saxe', 'Castille', 'Écosse', 'Flandre', 'Aragon'];
 
+// botBonus : petit avantage donné aux royaumes de l'ordinateur (pas au joueur), en multiplicateurs
+//   gold = or gagné (revenu des terres et des bâtiments), troops = recrutement, power = force des soldats
 const DIFFICULTIES = {
   facile:    { bots: 5,  aggression: [0.6, 0.85], hateHuman: 0,    zeal: 0.5 },
   normal:    { bots: 7,  aggression: [0.45, 0.7], hateHuman: 0.1,  zeal: 1 },
-  difficile: { bots: 10, aggression: [0.3, 0.55], hateHuman: 0.25, zeal: 2 },
+  difficile: { bots: 10, aggression: [0.3, 0.55], hateHuman: 0.25, zeal: 2,
+               botBonus: { gold: 1.25, troops: 1.2, power: 1.1 } },
 };
