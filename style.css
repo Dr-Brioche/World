@@ -406,3 +406,10 @@ button:disabled .ico { opacity: 0.6; }
 }
 .kTip .bn { height: 20px; vertical-align: middle; margin-right: 4px; }
 .kTip span { white-space: nowrap; }
+
+/* Les règles, en jeu (bouton « Règles ») : une grande fiche qui défile */
+.rulesCard { max-width: 860px; max-height: 88vh; overflow-y: auto; text-align: left; }
+.rulesCard h1 { text-align: center; }
+.rulesCard #rulesClose { display: block; margin: 14px auto 0; }
+.rules ul { padding-left: 18px; margin: 4px 0; }
+.rules ul li { margin: 6px 0; }

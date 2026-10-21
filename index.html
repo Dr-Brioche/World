@@ -21,6 +21,7 @@
       <span title="Durée de la partie">⏳ <span id="clock">0:00</span></span>
       <span id="traitor" class="hidden"></span>
       <button id="pauseBtn">⏸ Pause</button>
+      <button id="rulesBtn" title="Les règles du jeu (le jeu se met en pause)">📜 Règles</button>
     </div>
 
     <div id="side" class="panel">
@@ -129,7 +130,36 @@
           <li>⚰️ <b>Après-guerre</b> : gagner un assaut réduit ta production de soldats (−25 %, 30 s ; pas pour un avant-poste détruit) ; le perdant est <b>galvanisé</b> (+25 %). Repousser un assaut galvanise aussi (+25 %, 15 s). Ces effets s'additionnent : un +25 % annule un −25 %.</li>
           <li>✂️ <b>Couper</b> un royaume : sur chaque île, il ne garde que son plus grand morceau (et les autres morceaux tenus par une ville qui font au moins 25 % du plus grand) ; les autres passent d'un coup à celui qui l'a coupé. Seuls ses châteaux et ports de niveau 3 tiennent, isolés : leur propriétaire clique dessus pour les relier par un assaut. Si <b>tous</b> tes châteaux sont isolés, ton armée y est bloquée : ton territoire n'est plus défendu et aucune armée n'en part, jusqu'à ce que tu le relies ou que tu y bâtisses un château (c'est d'ailleurs le seul bâtiment qu'un territoire sans château peut construire).</li>
           <li>🗺️ <b>Terrain</b> : forêts, collines et montagnes se défendent mieux (une <b>colline boisée</b> cumule les bonus de la forêt et de la colline) ; les sommets enneigés sont infranchissables. 🌊 Les fleuves n'appartiennent à personne : on les traverse à gué (clic droit sur la rive d'en face). 🌉 Si les deux rives sont à toi (ou une à toi, l'autre à un allié), clic droit sur le fleuve → <b>pont</b> (💰 700) : tes soldats le passent sans perdre de temps, et les routes aussi. 🏜️ Les <b>déserts</b> se prennent comme des plaines, mais les bâtiments posés dessus produisent 20 % de moins.</li>
-          <li>🏗️ <b>Bâtiments</b> (touches <b>1</b> à <b>5</b> et <b>7</b>, puis clic) : 🌾 moulin = or · ⚔️ caserne = soldats et armée plus grande · 🏰 château = défense · ⛪ église = Croyance, place pour bâtir et châteaux en plus · ⚓ port = or et expéditions (un chemin le relie à une ville proche : +30 % d'or, et à chaque ville proche jusqu'à 3 : bonus doublé ou triplé, comme pour un moulin entre plusieurs villes ; et une église proche de ce chemin ou d'une ville s'y relie et rapporte un peu d'or ; un moulin ou une caserne hors des villes, posé sur une de ces routes, produit +20 % ; une ville améliorée relie plus loin : +20 % de portée par niveau ; pendant la pose, les futures routes s'affichent en transparence, et un trait rouge indique si tu es trop loin). Moulins et casernes se bâtissent dans l'enceinte d'une ville (4 places, 6 au niveau 2, 9 au niveau 3) ou près d'une église (ou d'un port). Châteaux, églises et ports gardent leurs distances entre eux (cercles rouges). Clique sur un de tes bâtiments : flèche ⬆️ pour améliorer ou ✖ pour détruire (détruire une ville, une église ou un port fait aussi sauter les moulins et casernes qui en dépendaient). 🧱 Une ville de niveau 2 peut bâtir un <b>mur</b> (💰 500, puis 💰 1000 pour le 2e au niveau 3) : il va tout droit de la ville jusqu'à l'endroit choisi (12 cases au plus) et aucun assaut ne le franchit : un assaut dont la route est coupée le contourne, ou rebrousse chemin s'il n'a pas d'autre passage. Un mur qui relie deux de tes villes leur donne +50 soldats de garnison chacune. ⛏️ <b>Mine</b> (touche <b>7</b>) : sur un filon des montagnes (pierre : en colline). ⚒️ fer = troupes plus fortes · 🪙 or = beaucoup d'or, mais le filon s'épuise en 3 min (le niveau 2 le relance) · 🪨 pierre = améliorations, murs et ponts moins chers · 💎 diamant = 1 000 pièces à chaque quart de son extraction (20 min) et 10 000 à la fin. Une route vers une de tes villes double l'effet.</li>
+          <li>🏗️ <b>Bâtiments</b> : touches <b>1</b> à <b>5</b> et <b>7</b> (ou les boutons en bas), puis clic sur ton territoire. Clique sur un de tes bâtiments pour l'<b>améliorer</b> ⬆️ ou le <b>détruire</b> ✖. Chaque bâtiment du même type coûte un peu plus cher que le précédent.
+            <ul>
+              <li>🏰 <b>Château (ville)</b> — 3 niveaux (+ la cité impériale).
+                <br>– Protège ses terres avec sa muraille : on ne l'attaque qu'en l'assiégeant.
+                <br>– Garnison qui défend, places pour bâtir moulins et casernes (4, 6 puis 9).
+                <br>– 3 châteaux construits au plus (une église améliorée en débloque d'autres).
+                <br>– Niveau 2 : un <b>mur</b> (12 cases, aucun assaut ne le franchit) et une route commerciale vers un allié.</li>
+              <li>🌾 <b>Moulin</b> — 2 niveaux.
+                <br>– De l'or toutes les 10 s.
+                <br>– Dans l'enceinte d'une ville, ou près d'une église ou d'un grand port.
+                <br>– Meilleur en plaine ; relié par une route à une ville améliorée : il produit plus.</li>
+              <li>⚔️ <b>Caserne</b> — 3 niveaux.
+                <br>– Des soldats toutes les 10 s, et une armée plus grande.
+                <br>– Aux niveaux 2 et 3 : <b>tous</b> tes soldats sont plus forts.
+                <br>– Même endroit que le moulin ; meilleure en forêt et en colline.</li>
+              <li>⛪ <b>Église</b> — 3 niveaux.
+                <br>– De la <b>Croyance</b> (10, 30, 50) : plus que ton voisin, tu convertis ses terres.
+                <br>– Des places pour moulins et casernes autour d'elle, et des châteaux en plus.
+                <br>– Sans défense : on peut l'attaquer directement. La cathédrale lance des croisades.</li>
+              <li>⚓ <b>Port</b> — 3 niveaux, au bord de l'eau.
+                <br>– De l'or, plus encore s'il est relié à des villes et à leurs moulins.
+                <br>– Niveau 2 : les <b>expéditions maritimes</b>. Niveau 3 : une petite muraille et une garnison.</li>
+              <li>⛏️ <b>Mine</b> — 2 niveaux, seulement sur un <b>filon</b> (les icônes de minerai, en montagne ; en colline pour la pierre).
+                <br>– ⚒️ <b>Fer</b> : toutes tes troupes plus fortes (3 mines au plus).
+                <br>– 🪙 <b>Or</b> : beaucoup d'or, mais le filon s'épuise en 3 min ; le niveau 2 le relance.
+                <br>– 🪨 <b>Pierre</b> : améliorations, murs et ponts moins chers (3 carrières au plus).
+                <br>– 💎 <b>Diamant</b> : 20 min d'extraction, 1 000 pièces à chaque quart et 10 000 à la fin.
+                <br>– Une route vers une de tes villes double l'effet. Elle ne se démolit pas.</li>
+              <li>⛺ <b>Avant-poste</b> — ne se construit pas : il apparaît quand tes soldats débarquent sur une côte.</li>
+            </ul></li>
           <li>✝️ <b>Croyance</b> : chaque église en apporte (10, 30 ou 50 selon son niveau, +50 % si elle est reliée à une route). Si tu as plus de Croyance qu'un voisin ennemi (pas un allié), tu convertis lentement ses terres frontalières, d'autant plus vite que l'écart est grand (📖 verte dans le classement) ; s'il en a plus que toi, c'est lui qui convertit les tiennes (📖 rouge). Les villes, les ports fortifiés et ce qui est dans leur muraille ne sont jamais convertis. Une cathédrale peut lancer une <b>croisade religieuse</b> (💰 2000) : +1000 de Croyance pendant 60 s (aussi avec le bouton ✝️ Croisade de la barre des constructions, qui apparaît dès ta première cathédrale).</li>
           <li>💰 <b>Économie</b> : plus ton royaume est grand, plus il recrute, mais de moins en moins vite. Une armée trop pleine coûte de l'or (jusqu'à −25 % d'or gagné).</li>
           <li>⛵ <b>Mer</b> : avec un port de niveau 2, clic droit sur une côte lointaine → attaque navale (2 au plus contre un même royaume). Tes soldats y bâtissent un <b>avant-poste</b> qui défend sa zone avec ses soldats ; clique dessus pour envoyer des renforts ou rapatrier ses troupes. Un château bâti ou pris dans sa zone la fait entrer dans ton royaume.</li>
@@ -139,6 +169,15 @@
           <li>🏆 Possède 70 % des terres (ou élimine tout le monde) pour gagner. Anéantir un royaume rapporte 500 pièces et son trésor.</li>
         </ul>
       </details>
+    </div>
+  </div>
+
+  <!-- Les règles, en jeu (bouton « Règles » : le jeu se met en pause) -->
+  <div id="rulesScreen" class="overlay hidden">
+    <div class="card rulesCard">
+      <h1>📜 Règles du jeu</h1>
+      <div id="rulesBody"></div>
+      <button id="rulesClose" class="big">Reprendre la partie</button>
     </div>
   </div>
 
