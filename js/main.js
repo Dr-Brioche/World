@@ -77,12 +77,18 @@ const UI = {
     $('mapSize').addEventListener('change', fillOpponents);
     fillOpponents();
 
-    // Choix de la bannière dans le menu (elle donne la couleur du royaume)
-    this.banner = BANNERS.findIndex(b => b.name === 'Dragon');
-    $('bannerPick').innerHTML = BANNERS.map((b, k) =>
-      `<button type="button" data-banner="${k}" title="${escapeHtml(b.name)}"><img src="${b.img}" alt="${escapeHtml(b.name)}"></button>`
-    ).join('');
+    // Choix de la bannière dans le menu (elle donne la couleur du royaume) : seulement celles de la carte choisie
+    // (les écus des races de Warcraft sur la carte Azeroth, les drapeaux ailleurs) ; on retrouve le dernier choix de chaque sorte
+    const lastPick = { base: BANNERS.findIndex(b => b.name === 'Dragon'), azeroth: BANNERS.findIndex(b => b.name === 'Humains') };
+    const fillBanners = () => {
+      const list = bannersForMap($('mapType').value), set = BANNERS[list[0]].set || 'base';
+      $('bannerPick').innerHTML = list.map(k =>
+        `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].img}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
+      ).join('');
+      pick(list.includes(lastPick[set]) ? lastPick[set] : list[0]);
+    };
     const pick = k => {
+      lastPick[BANNERS[k].set || 'base'] = k;
       this.banner = k;
       document.querySelectorAll('#bannerPick button').forEach(b => b.classList.toggle('active', +b.dataset.banner === k));
       $('bannerName').textContent = BANNERS[k].name;
@@ -94,7 +100,8 @@ const UI = {
       const btn = e.target.closest('button[data-banner]');
       if (btn) { pick(+btn.dataset.banner); $('bannerPick').classList.add('hidden'); }
     });
-    pick(this.banner);
+    $('mapType').addEventListener('change', fillBanners);
+    fillBanners();
     $('startBtn').addEventListener('click', () => this.start());
     $('replayBtn').addEventListener('click', () => location.reload());
     $('continueBtn').addEventListener('click', () => {
@@ -201,7 +208,9 @@ const UI = {
       [W, H] = m ? [m.W, m.H] : C.MAP_SIZES.moyen;
     } else [W, H] = C.MAP_SIZES[$('mapSize').value] || C.MAP_SIZES.moyen;
     const byMap = Math.floor(W * H / C.CELLS_PER_OPPONENT);
-    return Math.max(C.MIN_OPPONENTS, Math.min(BANNERS.length - 1, KINGDOMS.length, byMap));
+    // (et pas plus de rivaux que de bannières de cette carte, moins celle du joueur ; sur les drapeaux, que de noms de royaumes)
+    const banners = bannersForMap(t), names = BANNERS[banners[0]].kingdom ? banners.length : KINGDOMS.length;
+    return Math.max(C.MIN_OPPONENTS, Math.min(banners.length - 1, names, byMap));
   },
 
   start() {

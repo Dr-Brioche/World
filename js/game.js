@@ -60,11 +60,13 @@ const GameRules = {
     this.pactsAllowed = opts.pacts !== false; // choisi dans le menu : pactes autorisés ou interdits
     this.human = this.addPlayer(opts.name, opts.banner, true);
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
-    // Les bots reçoivent au hasard les bannières que le joueur n'a pas prises
-    const banners = BANNERS.map((b, k) => k).filter(k => k !== opts.banner).sort(() => Math.random() - 0.5);
+    // Les bots reçoivent au hasard les bannières de la carte que le joueur n'a pas prises (sur Azeroth : les écus, et
+    // chaque royaume prend le nom de son écu : les Orcs, les Nains…)
+    const banners = bannersForMap(this.mapType).filter(k => k !== opts.banner).sort(() => Math.random() - 0.5);
+    banners.forEach((b, k) => { if (BANNERS[b].kingdom) names[k] = BANNERS[b].kingdom; });
     // Nombre de royaumes rivaux : choisi dans le menu (au moins MIN_OPPONENTS), sinon celui de la difficulté
     const bots = Math.max(CONFIG.MIN_OPPONENTS, opts.opponents || this.difficulty.bots);
-    for (let k = 0; k < bots && k < names.length && k < banners.length; k++) {
+    for (let k = 0; k < bots && k < banners.length && names[k]; k++) {
       this.addPlayer(names[k], banners[k], false);
     }
     this.phase = 'spawn';

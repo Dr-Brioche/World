@@ -68,6 +68,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      case par case sur les cartes du jeu** (une par continent) : les côtes, les lacs, les rivières et le terrain de chaque
      région d'après sa couleur (forêts, prairies, sable et terres rouges, roche, neige), avec ses trois continents autour de
      la Grande Mer, et quelques fleuves retracés à la main (la Fureur-du-Sud, l'Orneval, Féralas, le Thondroril, Elwynn).
+     🛡️ Sur cette carte, les drapeaux laissent la place à **15 écus des races et des groupes de World of Warcraft**
+     (Humains, Nains, Elfes de la nuit, Gnomes, Orcs, Morts-vivants, Taurens, Trolls, Gnolls, Ogres, Murlocs, Démons,
+     Défias, Monastère Écarlate, La Main d'Argent) : tu choisis le tien dans le menu, et chaque royaume rival prend le nom
+     de son écu (14 rivaux au plus).
      ❄️ C'est la seule carte avec de la **neige** (le Norfendre, le Berceau-de-l'Hiver, Dun Morogh, Alterac) : un terrain
      blanc bleuté qui se joue **comme une colline** (même défense, même lenteur, même production), différent des sommets
      blancs infranchissables.
@@ -719,6 +723,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.86** : 🛡️ carte Azeroth : 15 écus des races et des groupes de WoW à la place des drapeaux (Humains, Orcs, Elfes de la nuit, Défias, La Main d'Argent…), et les royaumes rivaux portent leur nom
 - **v0.92.85** : 🗺️ le nombre de royaumes rivaux est limité selon la taille de la carte (un pour 5 000 cases : 10 au plus sur la petite carte, 20 sur les autres) ; ton choix est retrouvé si tu repasses sur une carte plus grande
 - **v0.92.84** : 🚩 3 nouveaux drapeaux : le Corbeau, les Chopes et le Péteur (21 en tout), et donc jusqu'à 20 royaumes rivaux (nouveaux noms : Bavière, Lombardie, Galles) ; couleurs voisines accentuées (rouge des épées plus profond, orange du marteau plus doré, vert des hallebardes plus doux)
 - **v0.92.83** : ⚔️ contre un territoire désorganisé, une grosse armée ne perd plus de soldats par case qu'une petite (au-delà de 500 soldats, chaque case coûte autant) : elle va juste plus vite, et prend bien plus de terres
