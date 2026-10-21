@@ -22,10 +22,10 @@ const Render = {
   // Case en haut à gauche d'un bâtiment de ce type, centré sous la souris
   anchorAt(sx, sy, type) {
     const n = Game.sizeOf(type);
-    // (une mine s'aimante sur le filon le plus proche de la souris, à moins de 3 cases)
+    // (une mine s'aimante sur le filon le plus proche de la souris, à moins de 5 cases)
     if (type === B_MINE) {
       const mx = this.cam.x + sx / this.cam.scale, my = this.cam.y + sy / this.cam.scale;
-      let best = -1, bestD = 3;
+      let best = -1, bestD = 5;
       for (const d of Game.deposits) {
         const dd = Math.hypot(d.a % Game.W + 1 - mx, ((d.a / Game.W) | 0) + 1 - my);
         if (dd < bestD) { bestD = dd; best = d.a; }
@@ -2609,7 +2609,9 @@ const Render = {
     // Bâtiments : petites icônes de loin, vraies images quand on zoome
     const imgAlpha = Math.max(0, Math.min(1, (s - CASTLE_IMG_ZOOM) / 3));
     if (s >= 3 && !oldMap) {
-      this.drawDeposits(ox, oy);
+      // (pendant la pose d'une mine, les filons passent par-dessus les bâtiments : une grande ville ne les cache plus)
+      const placingMine = UI.selectedBuild === B_MINE;
+      if (!placingMine) this.drawDeposits(ox, oy);
       for (const i of G.buildingTiles) {
         // Centre du bâtiment = milieu de son carré ; icône à sa taille
         const type = G.building[i], half = G.sizeOf(type) / 2;
@@ -2632,6 +2634,7 @@ const Render = {
           this.drawBuildingLabel(i, type, px, py - s * top - 8);
         }
       }
+      if (placingMine) this.drawDeposits(ox, oy);
       this.drawWhiteFlags(ox, oy);
     }
 
