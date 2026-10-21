@@ -550,7 +550,7 @@ const GameRules = {
         d.left--;
         if (d.left <= 0) {
           this.version++; // (sa route disparaît)
-          if (p.isHuman) UI.log('🪙 Ta mine d\'or est épuisée' + (this.level[a] < 2 ? ' : améliore-la pour la relancer 3 minutes de plus !' : ' pour de bon.'), 'warn');
+          if (p.isHuman) UI.log('🪙 Ta mine d\'or est épuisée' + (this.level[a] < 2 ? ` : améliore-la pour la relancer ${Math.round(MINES.gold.time / 60)} minutes de plus !` : ' pour de bon.'), 'warn');
         }
         continue;
       }
@@ -1110,7 +1110,7 @@ const GameRules = {
       if (w.kind === 'up') {
         if (BUILDING_LEVELS[type][this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
         this.version++;
-        // (🪙 une mine d'or améliorée : son filon repart pour 3 minutes de plus)
+        // (🪙 une mine d'or améliorée : son filon repart pour MINES.gold.time de plus)
         const dep = type === B_MINE ? this.depositAt.get(a) : null;
         if (dep && dep.kind === 'gold') dep.left += MINES.gold.time * CONFIG.TICKS_PER_SECOND;
         if (type === B_CASTLE && this.castleInfo(a).imperial) {

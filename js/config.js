@@ -455,9 +455,9 @@ const MINE_LEVELS = [
 const MINES = {
   // ⚒ fer : toutes les troupes du royaume sont plus fortes (+4 % / +8 % par mine, doublé si reliée : +48 % au plus)
   iron: { name: 'Mine de fer', short: 'troupes plus fortes', icon: '⚒️', terrain: 'mountain', count: [4, 6], max: 3, power: [0, 0.04, 0.08] },
-  // 🪙 or : 3 fois un moulin (6 fois au niveau 2), doublé si reliée ; mais le filon s'épuise au bout de 3 minutes
-  //   d'exploitation (son compteur, à lui, passe d'un royaume à l'autre) ; le niveau 2 le relance pour 3 minutes de plus
-  gold: { name: 'Mine d\'or', short: 'beaucoup d\'or, mais il s\'épuise', icon: '🪙', terrain: 'mountain', count: [4, 6], gold: [0, 4.5, 9], time: 180 },
+  // 🪙 or : 3 fois un moulin (6 fois au niveau 2), doublé si reliée ; mais le filon s'épuise au bout de 5 minutes
+  //   d'exploitation (son compteur, à lui, passe d'un royaume à l'autre) ; le niveau 2 le relance pour 5 minutes de plus
+  gold: { name: 'Mine d\'or', short: 'beaucoup d\'or, mais il s\'épuise', icon: '🪙', terrain: 'mountain', count: [4, 6], gold: [0, 4.5, 9], time: 300 },
   // 🪨 pierre (une carrière, en colline) : les améliorations, les murs et les ponts coûtent moins cher
   //   (−5 % / −10 % par carrière, doublé si reliée : −60 % au plus)
   stone: { name: 'Carrière de pierre', short: 'améliorations moins chères', icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },

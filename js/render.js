@@ -2003,7 +2003,7 @@ const Render = {
       return;
     }
     if (d.kind !== 'diamond' && d.kind !== 'gold') return;
-    // (diamant : ce qui est extrait, avec les 3 quarts marqués ; or : le temps qui reste, 3 minutes = plein)
+    // (diamant : ce qui est extrait, avec les 3 quarts marqués ; or : le temps qui reste, MINES.gold.time = plein)
     const k = d.kind === 'diamond' ? d.progress : Math.min(1, d.left / (MINES.gold.time * CONFIG.TICKS_PER_SECOND));
     const col = d.kind === 'diamond' ? '#7fdcf5' : '#f1c232', start = -Math.PI / 2;
     ctx.lineWidth = Math.max(4, s * 0.3);

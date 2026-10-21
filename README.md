@@ -439,8 +439,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
        **3 mines au plus** (+48 % au maximum).
      - 🪙 **Mine d'or** : **3 fois un moulin** (6 fois au niveau 2), doublé si reliée. Mais son filon **s'épuise** au bout de
-       **3 minutes** d'exploitation (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
-       **relance pour 3 minutes de plus**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
+       **5 minutes** d'exploitation (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
+       **relance pour 5 minutes de plus**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
      - 🪨 **Carrière de pierre** (en colline) : les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
        (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
      - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
@@ -693,6 +693,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.64** : 🪙 le filon d'une mine d'or dure 5 minutes (au lieu de 3), et le niveau 2 le relance pour 5 minutes de plus
 - **v0.92.63** : ⛏️ les autres bâtiments laissent 2 cases libres autour d'un filon · pendant la pose d'une mine, les filons passent par-dessus les bâtiments (une grande ville ne les cache plus) et la mine s'aimante à 5 cases au lieu de 3
 - **v0.92.62** : ⚔️ la barre du haut affiche la puissance de tes troupes en % (caserne, mines de fer, cité impériale)
 - **v0.92.61** : ✝️ la Croyance convertit les terres voisines 25 % plus vite
