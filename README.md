@@ -115,7 +115,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    (ou un avant-poste) pour foncer droit dessus et **prendre toute sa zone d'un coup**. Avec une **citadelle** (château niveau 3),
    tu as droit à 2 assauts à la fois : **un de front et un sur une église ou un port**, ou deux ciblés.
    Un territoire **désorganisé** (royaume sans ville ni port fortifié, ou morceau coupé d'eux) se prend **plus vite**, et **d'autant plus vite
-   que ton armée est grande**. Si le royaume rebâtit (ou reprend) une ville, ou fortifie un port, pendant l'assaut, il est de nouveau organisé : l'assaut s'arrête.
+   que ton armée est grande**. Et une grosse armée n'y perd **pas plus de soldats par case** : au-delà de 500 soldats, chaque case
+   coûte autant (environ un demi-soldat en plaine) ; envoyer beaucoup de monde y est donc rentable. Si le royaume rebâtit (ou reprend) une ville, ou fortifie un port, pendant l'assaut, il est de nouveau organisé : l'assaut s'arrête.
    Toutes les troupes encore présentes dans ce royaume **défendent d'office**, mais désorganisées
    sans pouvoir en place : chaque soldat ne compte que pour **0,8**.
 
@@ -718,6 +719,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.83** : ⚔️ contre un territoire désorganisé, une grosse armée ne perd plus de soldats par case qu'une petite (au-delà de 500 soldats, chaque case coûte autant) : elle va juste plus vite, et prend bien plus de terres
 - **v0.92.82** : 🏝️ un royaume ne peut plus se cacher sur un îlot où personne ne peut débarquer : ses terres y disparaissent (et s'il n'avait plus que ça, il est anéanti)
 - **v0.92.81** : 💎 la mine de diamant rapporte 1 000, 2 000 puis 3 000 pièces aux trois premiers quarts de l'extraction, et toujours 10 000 à la fin (16 000 en tout, au lieu de 13 000)
 - **v0.92.80** : 🚩 drapeaux 20 % plus grands en jeu (carte, classement, messages, barre du haut), et 2 fois plus grands dans le menu de départ : le drapeau choisi en grand, un clic ouvre la liste déroulante de tous les drapeaux

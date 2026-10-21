@@ -3700,7 +3700,11 @@ const GameRules = {
   // Terres libres : quand l'élan de départ du recrutement retombe, elles coûtent moins de soldats d'autant
   // (jusqu'à 3 fois moins) : l'expansion en terre vierge garde le rythme du début, toute la partie.
   tileCost(a, t) {
-    const loss = Math.max(CONFIG.NEUTRAL_TILE_COST, a.troops * CONFIG.TILE_LOSS_RATE);
+    let n = a.troops;
+    // (territoire désorganisé : au-delà de DISORGANIZED_LOSS_FROM soldats, les pertes par case n'augmentent plus)
+    const M = CONFIG.DISORGANIZED_LOSS_FROM;
+    if (n > M && a.target >= 0 && (a.unlinked || this.leaderless(a))) n = M;
+    const loss = Math.max(CONFIG.NEUTRAL_TILE_COST, n * CONFIG.TILE_LOSS_RATE);
     const free = a.target < 0 ? this.earlyBoost() / (1 + CONFIG.EARLY_GROWTH_BONUS) / CONFIG.FREE_LAND_BOOST : 1;
     return loss * TERRAIN_INFO[this.terrain[t]].cost * free;
   },
