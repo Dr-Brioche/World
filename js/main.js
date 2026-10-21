@@ -85,6 +85,9 @@ const UI = {
       this.log('⚔️ La conquête continue ! Élimine les derniers royaumes si tu le souhaites.', 'good');
     });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
+    $('speedBtn').addEventListener('click', () => this.nextSpeed());
+    // (seul celui qui héberge la partie peut la mettre en pause ou changer sa vitesse : voir isHost)
+    document.querySelectorAll('.hostOnly').forEach(b => b.classList.toggle('hidden', !this.isHost()));
     // 📜 Règles : le jeu se met en pause, et les règles complètes s'affichent (les mêmes que sur l'écran de départ)
     $('rulesBtn').addEventListener('click', () => this.openRules());
     $('rulesClose').addEventListener('click', () => this.closeRules());
@@ -174,12 +177,12 @@ const UI = {
       banner: this.banner,
       difficulty: $('difficulty').value,
       opponents: +$('opponents').value,
-      speed: +$('speed').value,
       mapType: $('mapType').value,
       mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
     });
     $('kBanner').src = BANNERS[this.banner].img;
+    $('speedBtn').textContent = '⏩ x1'; // (chaque partie commence à vitesse normale)
     Render.setupMap();
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
@@ -211,7 +214,20 @@ const UI = {
     this.rulesPaused = false;
   },
 
+  // Celui qui héberge la partie : lui seul peut la mettre en pause et changer sa vitesse.
+  // (en solo, c'est toujours le joueur ; pour une future partie à plusieurs, seul l'hôte aura ces boutons)
+  isHost() { return true; },
+
+  // Vitesse suivante de la partie (x1 → x1,5 → x2 → x3 → x1)
+  nextSpeed() {
+    if (!this.isHost()) return;
+    const S = CONFIG.GAME_SPEEDS, k = S.indexOf(Game.speed);
+    Game.speed = S[(k + 1) % S.length];
+    $('speedBtn').textContent = `⏩ x${String(Game.speed).replace('.', ',')}`;
+  },
+
   togglePause() {
+    if (!this.isHost()) return;
     Game.paused = !Game.paused;
     $('pauseBtn').textContent = Game.paused ? '▶ Reprendre' : '⏸ Pause';
   },
@@ -780,8 +796,7 @@ const UI = {
     $('faith').textContent = fmt(Math.round(G.faithOf(h.id)));
     // Durée de la partie (le temps de jeu : la pause l'arrête)
     const secs = Math.floor(G.tick / CONFIG.TICKS_PER_SECOND), hh = Math.floor(secs / 3600), mm = Math.floor(secs / 60) % 60;
-    $('clock').textContent = (hh ? hh + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(secs % 60).padStart(2, '0') +
-      (G.speed > 1 ? ` (x${G.speed})` : '');
+    $('clock').textContent = (hh ? hh + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(secs % 60).padStart(2, '0');
     const traitorSecs = Math.ceil((h.traitorUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
     $('traitor').classList.toggle('hidden', !G.isTraitor(h));
     $('traitor').textContent = `🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % ` +
@@ -1641,7 +1656,7 @@ function main() {
     last = now;
     UI.panCamera(dt); // (caméra au clavier : ZQSD ou flèches)
     if (Game.phase === 'playing' && !Game.paused) {
-      acc += dt * Game.speed; // (partie accélérée : 2 tours de jeu au lieu d'un, tout va 2 fois plus vite)
+      acc += dt * Game.speed; // (partie accélérée : x2 = 2 tours de jeu au lieu d'un, tout va 2 fois plus vite)
       while (acc >= step) { Game.update(); acc -= step; }
     }
     Render.flush();

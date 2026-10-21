@@ -26,15 +26,16 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🤖 **3 à 11 royaumes rivaux** (tu choisis combien : Bourgogne, Aquitaine, Castille…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
 - 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile
-- ⏩ **Partie accélérée** : tout va 2 fois plus vite, pour des parties plus courtes
+- ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ (en haut) la fait passer à x1, x1,5, x2 ou x3, pour des parties plus courtes
 - ✝️ **La Croyance** : tes églises prêchent chez tes voisins et convertissent peu à peu leurs terres
 
 ## 🕹️ Comment jouer
 
 1. **Fonde ta capitale** : choisis ta bannière, le **type de carte**, la **difficulté** (Facile, Normale, Difficile) et le
-   **nombre de royaumes rivaux** (de 3 à 11) dans le menu. ⏩ **Vitesse de la partie** : *Normale*, ou *Accélérée* :
-   **tout** va 2 fois plus vite (production, recrutement, marches, assauts, sièges, chantiers, croisades…). Le chrono en
-   haut affiche le temps de jeu, suivi de « (x2) » : les durées du jeu (« 40 s de chantier ») défilent 2 fois plus vite. Sur la carte, **les royaumes rivaux
+   **nombre de royaumes rivaux** (de 3 à 11) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
+   Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
+   chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
+   ou changer sa vitesse (en solo : toi). Sur la carte, **les royaumes rivaux
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
    🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
@@ -683,10 +684,11 @@ mais **tout bâtiment posé dessus produit 20 % de moins** (moulins, casernes, p
 ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte **Monde**, ils sont à leur vraie place
 (Sahara, Arabie, Gobi, Kalahari, désert australien…), avec une bande fertile le long des fleuves qui les traversent (le Nil).
 
-**Contrôles** : 📜 le bouton **Règles**, en haut, met le jeu en pause et affiche les règles complètes (Échap ou « Reprendre la partie » pour revenir) · 🎥 déplace la carte en la **glissant** à la souris, ou au clavier avec **ZQSD** (WASD sur un clavier anglais) ou les **flèches** · molette : zoom · en survolant un **autre royaume**, une barre fixe, juste sous ta barre d'infos en haut de l'écran, le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), il s'illumine (doré chez toi, rouge chez l'ennemi) · sur la carte, la souris est une petite **main médiévale** (gantelet), qui devient une **épée** sur une cible que tu peux vraiment attaquer (château, église, port ou avant-poste ennemi atteignable, terres ennemies sans défense organisée, armée ennemie qui t'attaque) · en survolant une **armée ennemie** qui t'attaque, un **cercle de ciblage** rouge l'entoure (clic = envoyer tes défenseurs) · molette = zoom · glisser = déplacer la carte · `1` à `5` et `7` (ou `&` `é` `"` `'` `(` `è`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
+**Contrôles** : 📜 le bouton **Règles**, en haut, met le jeu en pause et affiche les règles complètes (Échap ou « Reprendre la partie » pour revenir) · ⏩ le bouton de vitesse fait passer la partie à x1, x1,5, x2 ou x3 · 🎥 déplace la carte en la **glissant** à la souris, ou au clavier avec **ZQSD** (WASD sur un clavier anglais) ou les **flèches** · molette : zoom · en survolant un **autre royaume**, une barre fixe, juste sous ta barre d'infos en haut de l'écran, le résume (👥 soldats, nombre de châteaux, églises, ports, moulins, casernes et avant-postes, quel que soit leur niveau, et 🗺️ part des terres) · en survolant un bâtiment qu'on peut sélectionner (un des tiens à améliorer, une cible ennemie), il s'illumine (doré chez toi, rouge chez l'ennemi) · sur la carte, la souris est une petite **main médiévale** (gantelet), qui devient une **épée** sur une cible que tu peux vraiment attaquer (château, église, port ou avant-poste ennemi atteignable, terres ennemies sans défense organisée, armée ennemie qui t'attaque) · en survolant une **armée ennemie** qui t'attaque, un **cercle de ciblage** rouge l'entoure (clic = envoyer tes défenseurs) · molette = zoom · glisser = déplacer la carte · `1` à `5` et `7` (ou `&` `é` `"` `'` `(` `è`) = choisir un bâtiment (puis clic pour le poser) · clic droit = menu d'actions (attaquer, construire, débarquer, traverser un fleuve) · `P` = pause · `Échap` / clic droit = annuler une construction
 
 ## 🆕 Nouveautés
 
+- **v0.92.57** : ⏩ bouton de vitesse en jeu (x1, x1,5, x2, x3), à côté de Pause ; le choix « Partie accélérée » du menu de départ disparaît · 🎮 pause et vitesse réservées à celui qui héberge la partie (pour une future partie à plusieurs)
 - **v0.92.56** : 📜 bouton **Règles** en jeu (en haut) : le jeu se met en pause et affiche les règles complètes ; les règles expliquent maintenant chaque bâtiment point par point · 💬 survol d'un moulin, d'une caserne, d'une église, d'un port ou d'une mine : juste un résumé (son niveau et ce qu'il rapporte vraiment)
 - **v0.92.55** : ⛏️ nouvelle icône de la mine : une vraie pioche, d'une seule couleur comme les autres icônes
 - **v0.92.54** : 💬 survol d'un château (le tien comme celui des autres) : la barre d'aide en bas à gauche ne montre plus que son nom et sa défense globale
