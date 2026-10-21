@@ -3916,18 +3916,19 @@ const GameRules = {
   },
 
   // Trajet de troops soldats de pid, du point from au point to (en cases) : ils prennent le chemin le plus rapide
-  // à travers leurs terres (une case de plaine coûte 1, une forêt 1.6, une colline 2.2, une montagne 2.8, un fleuve 4).
+  // à travers leurs terres (une case de plaine coûte 1, une forêt 1.6, une colline 2.2, une montagne 2.8, un fleuve 4 ;
+  // 1 partout dans la muraille de leurs villes : voir marchCost).
   // Renvoie { troops, from, pts, cum, start, arrive } : pts = les points du chemin, cum = le coût cumulé jusqu'à chacun.
   // (pas de chemin sur ses terres : ils vont tout droit, comme en plaine)
   // Un fleuve qui coupe ses terres se passe à gué (voir ownLandPath) : FORD_TIME secondes par case de fleuve.
   walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS) {
     const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x), W = this.W;
     const speed = this.defenderSpeed(troops, bonus), ford = this.fordCost(speed);
-    const path = this.ownLandPath(pid, tile(from), tile(to), ford);
+    const path = this.ownLandPath(pid, tile(from), tile(to), ford), march = this.marchCost(pid);
     const pts = [from], cum = [0];
     const add = (q, extra = 0) => {
       const last = pts[pts.length - 1];
-      const t = tile(q), cost = this.isLand(t) ? Math.min(4, TERRAIN_INFO[this.terrain[t]].cost) : 1;
+      const t = tile(q), cost = this.isLand(t) ? march(t) : 1;
       pts.push(q);
       cum.push(cum[cum.length - 1] + Math.hypot(q.x - last.x, q.y - last.y) * cost + extra);
     };
@@ -3978,7 +3979,7 @@ const GameRules = {
     const goal = new Map(); // case → ville
     for (const c of cands) for (const j of this.footprint(c, this.building[c])) goal.set(j, c);
     if (!this.cityBuf || this.cityBuf.seen.length !== N) this.cityBuf = { dist: new Float64Array(N), seen: new Int32Array(N), stamp: 0 };
-    const B = this.cityBuf, stamp = ++B.stamp, heap = new MinHeap(), slow = CONFIG.MARCH_OWN_LAND_BONUS;
+    const B = this.cityBuf, stamp = ++B.stamp, heap = new MinHeap(), slow = CONFIG.MARCH_OWN_LAND_BONUS, march = this.marchCost(pid);
     this.riverTiles(); // (prépare riverSide)
     const ford = this.fordCost(this.defenderSpeed(500)); // (pour une armée moyenne)
     B.seen[start] = stamp; B.dist[start] = 0;
@@ -3992,7 +3993,7 @@ const GameRules = {
       const x = i % W;
       for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
         if (n < 0 || B.seen[n] === -stamp || !this.isLand(n)) continue;
-        const o = own[n], terrain = Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        const o = own[n], terrain = march(n);
         const cost = o === pid ? terrain : o === enemy && enemy >= 0 ? terrain * slow : -1;
         if (cost < 0) continue;
         const nd = d + cost;
@@ -4001,7 +4002,7 @@ const GameRules = {
       // (un fleuve qui coupe ses terres : on le passe à gué, voir fordAcross)
       if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap, bridged) => {
         if (B.seen[n] === -stamp) return;
-        const nd = d + (bridged ? gap : gap * ford) + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        const nd = d + (bridged ? gap : gap * ford) + march(n);
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
       });
     }
@@ -4012,13 +4013,30 @@ const GameRules = {
   // Distances de marche (Dijkstra) depuis la case from, sur les terres de pid (fleuves passés à gué) : renvoie une
   // fonction case → distance (Infinity si on ne l'atteint pas à pied). Gardé en mémoire tant que la carte ne change pas
   // (l'aperçu du chemin d'assaut le demande souvent).
+  // Cases dans la muraille d'une ville de leur propre royaume (1 = oui). Gardé en mémoire tant que la carte ne change pas.
+  cityTiles() {
+    if (this.cityTilesVersion === this.version && this.cityTilesBuf) return this.cityTilesBuf;
+    const mask = this.cityTilesBuf && this.cityTilesBuf.length === this.N ? this.cityTilesBuf.fill(0) : new Uint8Array(this.N);
+    for (const c of this.castles) if (this.owner[c] >= 0) for (const i of this.castleZone(c, this.owner[c])) mask[i] = 1;
+    this.cityTilesBuf = mask;
+    this.cityTilesVersion = this.version;
+    return mask;
+  },
+
+  // Coût d'une case pour une armée de pid qui marche sur ses terres : celui du terrain (forêt, colline, montagne
+  // ralentissent, 4 au plus), sauf dans la muraille de ses propres villes, où les chemins sont tracés : comme une plaine.
+  marchCost(pid) {
+    const mask = this.cityTiles(), own = this.owner, T = this.terrain;
+    return i => (own[i] === pid && mask[i] ? 1 : Math.min(4, TERRAIN_INFO[T[i]].cost));
+  },
+
   ownLandField(pid, from) {
     const N = this.N, W = this.W, own = this.owner;
     if (!this.fieldBuf || this.fieldBuf.seen.length !== N) this.fieldBuf = { dist: new Float64Array(N), seen: new Int32Array(N), stamp: 0, key: '' };
     const B = this.fieldBuf, key = pid + ':' + from + ':' + this.version;
     if (B.key !== key) {
       B.key = key;
-      const stamp = ++B.stamp, heap = new MinHeap(), ford = this.fordCost(this.defenderSpeed(500));
+      const stamp = ++B.stamp, heap = new MinHeap(), ford = this.fordCost(this.defenderSpeed(500)), cost = this.marchCost(pid);
       this.riverTiles(); // (prépare riverSide)
       if (from >= 0 && from < N && own[from] === pid) { B.seen[from] = stamp; B.dist[from] = 0; heap.push(0, from); }
       // (seen[i] = stamp : case déjà vue ; seen[i] = -stamp : distance définitive)
@@ -4032,10 +4050,10 @@ const GameRules = {
         B.seen[i] = -stamp;
         const x = i % W;
         for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
-          if (n >= 0 && own[n] === pid && this.isLand(n)) visit(n, d + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost));
+          if (n >= 0 && own[n] === pid && this.isLand(n)) visit(n, d + cost(n));
         }
         if (this.riverSide[i]) this.fordAcross(i, pid, (n, gap, bridged) => {
-          visit(n, d + (bridged ? gap : gap * ford) + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost));
+          visit(n, d + (bridged ? gap : gap * ford) + cost(n));
         });
       }
     }
@@ -4054,7 +4072,7 @@ const GameRules = {
     if (from < 0 || from >= N || to < 0 || to >= N) return null;
     if (!this.walkBuf || this.walkBuf.seen.length !== N)
       this.walkBuf = { dist: new Float64Array(N), prev: new Int32Array(N), seen: new Int32Array(N), stamp: 0 };
-    const B = this.walkBuf, stamp = ++B.stamp, heap = new MinHeap();
+    const B = this.walkBuf, stamp = ++B.stamp, heap = new MinHeap(), cost = this.marchCost(pid);
     // (seen[i] = stamp : case déjà vue lors de CETTE recherche ; seen[i] = -stamp : case finie)
     const passable = i => i === to || (own[i] === pid && this.isLand(i));
     B.seen[from] = stamp; B.dist[from] = 0; B.prev[from] = -1;
@@ -4071,12 +4089,12 @@ const GameRules = {
       const x = i % W;
       for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
         if (n < 0 || B.seen[n] === -stamp || !passable(n)) continue;
-        const nd = d + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        const nd = d + cost(n);
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; B.prev[n] = i; heap.push(nd, n); }
       }
       if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap, bridged) => {
         if (B.seen[n] === -stamp) return;
-        const nd = d + (bridged ? gap : gap * ford) + Math.min(4, TERRAIN_INFO[this.terrain[n]].cost);
+        const nd = d + (bridged ? gap : gap * ford) + cost(n);
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; B.prev[n] = i; heap.push(nd, n); }
       });
     }
