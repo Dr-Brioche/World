@@ -334,6 +334,19 @@ const GameRules = {
       hosts.set(b, ch);
       used.set(ch, (used.get(ch) || 0) + 1);
     }
+    // Un moulin (ou une caserne) resté à un royaume, alors que l'église ou le port dont il occupait la place est passé
+    // à un autre (par la Croyance, par exemple) : il occupe toujours cette place. Le nouveau maître de l'église ne peut
+    // donc pas en bâtir un autre à côté, tant qu'il ne l'a pas améliorée.
+    for (const b of this.buildingTiles) {
+      const t = this.building[b], o = this.owner[b];
+      if ((t !== B_MILL && t !== B_BARRACKS) || o < 0 || hosts.has(b)) continue;
+      const cells = this.footprint(b, t);
+      for (const [q, list] of lists) {
+        if (q === o) continue;
+        const ch = list.find(c => cells.every(j => this.inChurchRange(c, j, this.buildingInfo(c).radius)));
+        if (ch !== undefined) { used.set(ch, (used.get(ch) || 0) + 1); break; }
+      }
+    }
     this.slotCache = hosts;
     this.slotUsed = used;
     this.slotVersion = this.version;
