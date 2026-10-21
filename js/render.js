@@ -2608,12 +2608,19 @@ const Render = {
       // (pendant la pose d'une mine, les filons passent par-dessus les bâtiments : une grande ville ne les cache plus)
       const placingMine = UI.selectedBuild === B_MINE;
       if (!placingMine) this.drawDeposits(ox, oy);
-      const mines = [];
+      const mines = [], shown = [];
+      // Les bâtiments visibles, du haut vers le bas de la carte (selon le bas de leur carré) : un bâtiment plus bas
+      // se dessine par-dessus celui qui est juste au-dessus de lui, comme sur une vraie vue en perspective
       for (const i of G.buildingTiles) {
-        // Centre du bâtiment = milieu de son carré ; icône à sa taille
+        // Centre du bâtiment = milieu de son carré
         const type = G.building[i], half = G.sizeOf(type) / 2;
         const px = ox + (i % G.W + half) * s, py = oy + (((i / G.W) | 0) + half) * s;
         if (px < -300 || py < -300 || px > this.vw + 300 || py > this.vh + 300) continue;
+        shown.push({ i, type, half, px, py, bottom: ((i / G.W) | 0) + 2 * half });
+      }
+      shown.sort((a, b) => a.bottom - b.bottom || a.px - b.px);
+      for (const { i, type, half, px, py } of shown) {
+        // (icône à sa taille)
         ctx.font = `${Math.max(9, Math.min(20 * half, s * half * 2)) * CONFIG.BUILDING_DRAW_SCALE}px serif`;
         if (BUILDING_LEVELS[type]) this.drawLeveledBuilding(i, px, py, imgAlpha);
         else this.drawSimpleBuilding(type, px, py, imgAlpha);
@@ -2621,6 +2628,9 @@ const Render = {
           this.drawMineState(i, px, py);
           mines.push([i, px, py]);
         }
+      }
+      // Par-dessus tous les bâtiments : leurs petites étiquettes
+      for (const { i, type, half, px, py } of shown) {
         // Un de nos châteaux (ou ports royaux) coupé de notre royaume : un petit fanion rouge au-dessus
         if (G.owner[i] === G.human.id && G.holdsAlone(i) && G.isIsolated(i)) this.drawIsolatedFlag(px - half * s - 4, py + 6);
         // Au-dessus du bâtiment : 🛡 sa garnison, ⚔ les soldats stationnés (avant-poste), 🏗️ la construction
