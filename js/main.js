@@ -351,7 +351,7 @@ const UI = {
     if (info.kind === 'iron') return [`Force des troupes ${pct(info.power)}`, x2, `${m.max} au plus`];
     if (info.kind === 'gold') return [`💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min`, x2, 'puis le filon s\'épuise'];
     if (info.kind === 'stone') return [`Prix des améliorations, murs et ponts ${pct(-info.discount)}`, x2, `${m.max} au plus`];
-    return [`💰 ${fmt(m.pay)} à chaque quart, ${fmt(m.final)} à la fin`, `Extraction : ${Math.round(m.time / 60 / info.speed)} min (×0,5 sans route)`];
+    return [`💰 ${m.pay.map(fmt).join(', ')} aux 3 premiers quarts, ${fmt(m.final)} à la fin`, `Extraction : ${Math.round(m.time / 60 / info.speed)} min (×0,5 sans route)`];
   },
 
   // Ce que change une amélioration (par rapport au niveau actuel) : une liste de petits avantages
