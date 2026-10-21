@@ -709,6 +709,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.73** : 🏘️ superposition des bâtiments : ceux plus bas sur la carte passent devant ceux du dessus (une caserne juste au-dessus d'une ville est cachée en partie par elle) ; garnisons et chantiers restent affichés par-dessus
 - **v0.92.72** : 🛤️ bonus des moulins et casernes au bord du chemin d'une église ou d'un port vers une ville : emplacements dorés pendant la pose, bonus affiché au survol, et il s'obtient jusqu'à 3 cases du chemin (au lieu de 2)
 - **v0.92.71** : 🏰 dans la muraille de leurs propres villes, les troupes en marche (assauts, défenseurs, retours) ne sont plus ralenties par le terrain
 - **v0.92.70** : 🌾 moulins 20 % plus productifs (1,8 💰 toutes les 10 s, 4,2 pour un grand moulin, au lieu de 1,5 et 3,5) · ⚓ ports 2 fois plus productifs environ (3, 8 et 16 💰 toutes les 10 s selon le niveau, au lieu de 1,5, 4,5 et 10)
