@@ -11,6 +11,7 @@ const CONFIG = {
     moyen: [650, 366],
     grand: [1000, 562],
   },
+  CELLS_PER_OPPONENT: 5000, // au plus un royaume rival pour 5000 cases de carte (petite carte : 10 rivaux au plus)
   // Relief et forêts des cartes aléatoires (un décor de Moyen Âge : beaucoup de forêts, moins de montagnes) :
   // plus le seuil est haut, plus le terrain est rare (forêt : plus il est bas, plus il y a de forêts)
   MOUNTAIN_LEVEL: 0.77,
