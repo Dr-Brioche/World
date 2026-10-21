@@ -687,7 +687,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
-- **v0.92.55** : ⛏️ nouvelle icône de la mine : une vraie pioche (manche de bois, fer recourbé)
+- **v0.92.55** : ⛏️ nouvelle icône de la mine : une vraie pioche, d'une seule couleur comme les autres icônes
 - **v0.92.54** : 💬 survol d'un château (le tien comme celui des autres) : la barre d'aide en bas à gauche ne montre plus que son nom et sa défense globale
 - **v0.92.53** : ⛏️ nouveau bâtiment, la **mine** (touche 7) : sur des filons posés au hasard dans les montagnes (ou les collines pour la pierre), 4 sortes : ⚒️ fer (troupes plus fortes, 3 au plus), 🪙 or (beaucoup d'or, mais le filon s'épuise en 3 minutes ; le niveau 2 le relance), 🪨 pierre (améliorations, murs et ponts moins chers, 3 au plus) et 💎 diamant (20 minutes d'extraction : 1 000 pièces à chaque quart et 10 000 à la fin, puis épuisé pour tous) ; 2 niveaux, x2 si une route la relie à une ville ; les bots en bâtissent aussi
 - **v0.92.52** : 🏰 grands bâtiments agrandis sur la carte : ports niveaux 2 et 3, casernes niveaux 2 et 3, villes niveaux 2, 3 et 4

@@ -96,9 +96,8 @@ const ICON_DEFS = {
   hammer: [{ d: 'M14 9L5 18l1.5 1.5L15.5 10.5', s: 'c', w: 2.2 }, { d: 'M12 4l6-1.5 3.5 3.5L20 12l-8-8z', f: 'c' }],
   pick: [{ d: 'M4 20L14 10', s: 'c', w: 2.2 }, { d: 'M6 6c5-3 10-3 14 1-3-1-6-1-8 1L10 6c-1 0-2.5 0-4 0z', f: 'c' }],
   // La pioche du mineur (la mine) : un manche de bois en diagonale, et son fer recourbé en croissant, pointu des deux côtés
-  pickaxe: [{ d: 'M3 21.5L14.3 5.9', s: '#2e2010', w: 3.6 }, { d: 'M3 21.5L14.3 5.9', s: '#a8703c', w: 2 },
-    { d: 'M3.6 3.6Q18.4.2 20.6 15.4Q13.4 7.4 3.6 3.6z', f: '#c4c8cd', s: '#2e2010', w: 1.2 },
-    { d: 'M7.6 3Q15.8 2.4 18.3 9.2', s: '#f4f6f8', w: 0.9 }, { d: 'M14.2 4.5a1.6 1.6 0 1 1-.01 0z', f: '#5a3a1c', s: '#2e2010', w: 0.8 }],
+  pickaxe: [{ d: 'M3.2 21.3L14 6.4', s: 'c', w: 2.4 },
+    { d: 'M3.6 3.6Q18.4.2 20.6 15.4Q13.4 7.4 3.6 3.6z', f: 'c' }],
   // --- Filons et mines (voir MINES) : un rocher gris, avec son minerai ---
   // fer : des éclats de métal sombre, bleutés
   ore_iron: [{ d: 'M1 22l3-12 6.5-7 7.5 2.5L23 13l-1 9z', f: '#8f8a7e', s: '#2e2010', w: 1.3 },
