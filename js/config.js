@@ -154,6 +154,7 @@ const CONFIG = {
   MINE_ROAD_DISTANCE: 30,    // une mine à moins de 30 cases d'une de ses villes (sur la même terre) y est reliée par une route
   MINE_ROAD_FACTOR: 2,       // ... et rapporte 2 fois plus (voir MINES)
   MINE_SPACING: 14,          // deux filons sont à au moins 14 cases l'un de l'autre
+  DEPOSIT_CLEARANCE: 2,      // les autres bâtiments laissent 2 cases libres autour d'un filon (la place de sa mine)
   PORT_ROAD_BONUS: 0.3,      // par un chemin de terre : +30 % d'or produit par le port
   PORT_MILL_BONUS: 0.15,     // chaque moulin relié par une route à la même ville que le port : +15 % d'or pour le port
   PORT_MILL_MAX: 6,          // (6 moulins au plus comptent : +90 % au maximum)

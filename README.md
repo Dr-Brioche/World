@@ -449,7 +449,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        chrono continue pour le nouveau maître, qui touche les versements suivants !
      À côté de chaque mine (la tienne comme celles des autres), une **petite bulle** montre ce qui y est miné et où elle en
      est : « Fer +8 % », « Or 2:14 », « Pierre −10 % », « Diamant 62 % ». Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
-     cercle (vert si tu peux y bâtir) et la mine s'aimante sur le filon le plus proche de la souris.
+     cercle (vert si tu peux y bâtir), passent **par-dessus les bâtiments** (une grande ville ne les cache plus), et la mine
+     s'aimante sur le filon le plus proche de la souris (à moins de 5 cases). Une mine **n'a pas d'autre règle de construction** :
+     elle se pose même dans la muraille d'une ville, ou tout près d'un autre bâtiment. Les **autres bâtiments**, eux, laissent
+     **2 cases libres** autour d'un filon (la place de sa mine) : réglage `DEPOSIT_CLEARANCE` dans `js/config.js`.
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Comme l'église, il donne des
      places pour des moulins et casernes autour de lui ; un moulin dans les zones d'un port **et** d'une église n'occupe
@@ -690,6 +693,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.63** : ⛏️ les autres bâtiments laissent 2 cases libres autour d'un filon · pendant la pose d'une mine, les filons passent par-dessus les bâtiments (une grande ville ne les cache plus) et la mine s'aimante à 5 cases au lieu de 3
 - **v0.92.62** : ⚔️ la barre du haut affiche la puissance de tes troupes en % (caserne, mines de fer, cité impériale)
 - **v0.92.61** : ✝️ la Croyance convertit les terres voisines 25 % plus vite
 - **v0.92.60** : 🎚️ Difficile : les bots ont un petit avantage (+25 % d'or, recrutement 20 % plus rapide, soldats 10 % plus forts)

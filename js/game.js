@@ -180,17 +180,29 @@ const GameRules = {
   canPlace(pid, a, type) {
     const n = this.sizeOf(type);
     if (a < 0 || a % this.W > this.W - n || ((a / this.W) | 0) > this.H - n) return false;
-    // (une mine : seulement sur un filon, tout entier à nous ; les autres bâtiments ne se posent pas sur un filon)
+    // (une mine : seulement sur un filon, tout entier à nous, sans les autres règles de construction : cercles
+    //  rouges, muraille, écart entre bâtiments ; les autres bâtiments, eux, laissent un peu de place autour d'un filon)
     if (type === B_MINE) {
       return this.depositAt.has(a) && this.footprint(a, type).every(j => this.owner[j] === pid && !this.building[j])
         && this.commanded(a, type);
     }
-    if (this.footprint(a, type).some(j => this.depositTile[j])) return false;
+    if (this.nearDeposit(a, type)) return false;
     if (type === B_PORT && !this.footprint(a, type).some(j => this.isCoastal(j))) return false;
     return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]
       && this.terrain[j] !== TERRAIN.RIVER)
       && this.insideWalls(pid, a, type) && !this.tooCloseToBuilding(a, type)
       && !this.churchCastleConflict(pid, a, type) && this.commanded(a, type);
+  },
+
+  // Le bâtiment type, posé en a, serait-il sur un filon ou à moins de DEPOSIT_CLEARANCE cases d'un filon ?
+  nearDeposit(a, type) {
+    const n = this.sizeOf(type), m = CONFIG.DEPOSIT_CLEARANCE, x0 = a % this.W, y0 = (a / this.W) | 0;
+    for (let y = Math.max(0, y0 - m); y <= Math.min(this.H - 1, y0 + n - 1 + m); y++) {
+      for (let x = Math.max(0, x0 - m); x <= Math.min(this.W - 1, x0 + n - 1 + m); x++) {
+        if (this.depositTile[y * this.W + x]) return true;
+      }
+    }
+    return false;
   },
 
   // Un territoire désorganisé (son morceau n'a ni ville ni port fortifié pour le diriger, ni avant-poste) ne peut
@@ -2182,7 +2194,8 @@ const GameRules = {
       const d = i >= 0 ? this.depositAt.get(i) : null;
       if (!d) return 'Une mine se bâtit sur un filon : les petites icônes de minerai, dans les montagnes (ou les collines pour la pierre).';
       const m = MINES[d.kind];
-      if (m.max && this.minesOf(p.id, d.kind).length >= m.max) return `Tu as déjà ${m.max} ${m.name.toLowerCase()}s : c'est le maximum.`;
+      // (« Mine de fer » → « mines de fer »)
+      if (m.max && this.minesOf(p.id, d.kind).length >= m.max) return `Tu as déjà ${m.max} ${m.name.toLowerCase().replace(/^(\S+)/, '$1s')} : c'est le maximum.`;
       if (!this.canPlace(p.id, i, type)) {
         return i >= 0 && this.owner[i] === p.id && !this.commanded(i, type)
           ? 'Ce territoire n\'a plus ni ville ni port fortifié pour le diriger : il ne peut rien construire d\'autre.'
@@ -2208,6 +2221,9 @@ const GameRules = {
       }
       if (type === B_PORT && i >= 0 && !this.footprint(i, type).some(j => this.isCoastal(j))) {
         return 'Un port se construit au bord de la mer ou d\'un fleuve.';
+      }
+      if (i >= 0 && this.nearDeposit(i, type)) {
+        return `Trop près d'un filon : il faut ${CONFIG.DEPOSIT_CLEARANCE} cases libres autour de lui (c'est la place de sa mine).`;
       }
       if (i >= 0 && this.tooCloseToBuilding(i, type)) {
         return `Trop près d'un autre bâtiment : il faut ${this.tooCloseToBuilding(i, type)} cases d'écart.`;
