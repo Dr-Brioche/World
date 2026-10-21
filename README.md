@@ -135,7 +135,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **⚔️ Le déroulement d'un assaut**
    - **La marche (sur tes terres)** : ton armée part de **ta place forte d'où elle arrive le plus vite** à la cible
      (une ville, ou un **port fortifié** de niveau 3 : une muraille et sa garnison)
-     (le vrai trajet à pied compte : fleuves, montagnes et détours, pas la distance à vol d'oiseau)
+     (le vrai trajet à pied compte : fleuves, montagnes et détours, pas la distance à vol d'oiseau ; mais **dans la muraille
+     de tes villes**, les chemins sont tracés : aucun ralentissement dû au terrain, même en forêt ou en montagne)
      (ou de ton avant-poste) et **marche jusqu'à ta frontière** par le **chemin le plus rapide** de tes terres ;
      elle entre chez l'ennemi par le meilleur passage **depuis cette ville** (et pas forcément par le bout de frontière
      le plus proche de la cible, qui l'obligerait à traverser tout ton royaume)
@@ -707,6 +708,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.71** : 🏰 dans la muraille de leurs propres villes, les troupes en marche (assauts, défenseurs, retours) ne sont plus ralenties par le terrain
 - **v0.92.70** : 🌾 moulins 20 % plus productifs (1,8 💰 toutes les 10 s, 4,2 pour un grand moulin, au lieu de 1,5 et 3,5) · ⚓ ports 2 fois plus productifs environ (3, 8 et 16 💰 toutes les 10 s selon le niveau, au lieu de 1,5, 4,5 et 10)
 - **v0.92.69** : 🔢 de loin, le niveau des bâtiments (II, III, IV) reste affiché à côté de leur icône, même bien dézoomé
 - **v0.92.68** : ⛏️ le nombre de mines dans ta barre d'infos (détail au survol), et dans la barre de résumé des autres royaumes (avec le détail par minerai : ⛏️ 3 (⚒️ 2 🪙 1))
