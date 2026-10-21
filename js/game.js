@@ -573,9 +573,10 @@ const GameRules = {
       const m = MINES.diamond, rate = m.speed[this.level[a] || 1] * (this.mineLinked(a) ? 1 : 0.5) / (m.time * TPS);
       d.progress = Math.min(1, d.progress + rate);
       while (d.paid < 3 && d.progress >= (d.paid + 1) / 4) {
+        const pay = m.pay[d.paid]; // (1 000 au 1er quart, 2 000 au 2e, 3 000 au 3e)
         d.paid++;
-        p.gold += m.pay;
-        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(m.pay)} 💰`); UI.log(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(m.pay)} pièces !`, 'good'); }
+        p.gold += pay;
+        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(pay)} 💰`); UI.log(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(pay)} pièces !`, 'good'); }
       }
       if (d.progress >= 1) {
         p.gold += m.final;

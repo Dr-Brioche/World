@@ -465,8 +465,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      - 🪨 **Carrière de pierre** (en colline) : les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
        (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
      - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
-       plus rapide au niveau 2), avec une **jauge ronde** autour d'elle. À chaque **quart**, **1 000 pièces** ; à la fin,
-       **10 000 pièces** d'un coup, puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
+       plus rapide au niveau 2), avec une **jauge ronde** autour d'elle. Au 1er **quart**, **1 000 pièces**, au 2e **2 000**, au 3e
+       **3 000**, et à la fin **10 000 pièces** d'un coup (16 000 en tout), puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
        chrono continue pour le nouveau maître, qui touche les versements suivants !
      À côté de chaque mine (la tienne comme celles des autres), une **petite bulle ronde** montre l'icône de ce qui y est
      miné (fer, or, pierre, diamant), toujours visible, même quand un grand bâtiment est à côté. Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
@@ -715,6 +715,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.81** : 💎 la mine de diamant rapporte 1 000, 2 000 puis 3 000 pièces aux trois premiers quarts de l'extraction, et toujours 10 000 à la fin (16 000 en tout, au lieu de 13 000)
 - **v0.92.80** : 🚩 drapeaux 20 % plus grands en jeu (carte, classement, messages, barre du haut), et 2 fois plus grands dans le menu de départ : le drapeau choisi en grand, un clic ouvre la liste déroulante de tous les drapeaux
 - **v0.92.79** : 🤖 jusqu'à **17 royaumes rivaux** (un par drapeau disponible), avec 6 nouveaux noms (Bohême, Navarre, Savoie, Hongrie, Pologne, Danemark) · 🏆 le classement montre toujours ton royaume, à son vrai rang, même hors des 10 premiers
 - **v0.92.78** : 🚩 18 nouveaux drapeaux pour les royaumes (épées, masse d'armes, soleil, marteau, canards, aigle, hallebardes, dragon, chêne, lion, château, fleurs de lys, croissant, poing, poissons, hache, main couronnée, croix) ; la couleur de chaque royaume suit le fond de son drapeau, accentuée pour que deux royaumes ne se ressemblent pas
