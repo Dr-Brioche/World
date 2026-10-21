@@ -762,7 +762,7 @@ const UI = {
           ? ` · 🎯 clique pour viser ${G.targetLabel(G.anchor[i])} (puis une 2e fois pour lancer l'assaut)`
           : ' · 🚫 inaccessible : des châteaux bloquent le passage';
       } else if (!G.isUnlinked(i)) { // (un morceau coupé de ses châteaux s'attaque de front : voir plus haut)
-        txt += ' · 🏰 protégé : vise un de ses châteaux, églises, ports ou avant-postes';
+        txt += ' · 🏰 protégé : vise un de ses châteaux, églises, ports, mines ou avant-postes';
       }
     } else if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id)) {
       const b = G.building[i];
@@ -1556,7 +1556,7 @@ const UI = {
       const valid = aimed ? G.attackSources(h.id).some(src => G.castlePath(h.id, c, src))
         : !G.isProtected(target) || G.isUnlinked(i);
       if (!valid) return this.log(aimed ? `Impossible d'atteindre ${G.targetLabel(c)} : des fortifications bloquent le passage.`
-        : `${G.players[target].name} est protégé : vise un de ses châteaux, églises, ports ou avant-postes.`, 'warn');
+        : `${G.players[target].name} est protégé : vise un de ses châteaux, églises, ports, mines ou avant-postes.`, 'warn');
       this.confirmBetrayal(G.players[target], () => { G.breakAlliance(h.id, target); attack(true); });
       return;
     }
