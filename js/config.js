@@ -530,6 +530,38 @@ const BANNERS = [
   { name: "Croix", img: 'img/bannieres/b18.webp', icon: 'img/bannieres/b18s.webp', color: [22, 20, 20] },
 ];
 
+// 🐉 Carte Azeroth : à la place des drapeaux, 15 écus des races et des groupes de World of Warcraft. Les royaumes
+// rivaux y prennent le nom de leur écu (kingdom). shield : un écu, sans hampe (sur la carte, il est posé par son milieu).
+const AZEROTH_BANNERS = [
+  { name: "Humains", kingdom: "Humains", color: [40, 82, 178] },
+  { name: "Nains", kingdom: "Nains", color: [215, 92, 30] },
+  { name: "Elfes de la nuit", kingdom: "Elfes de la nuit", color: [64, 50, 132] },
+  { name: "Gnomes", kingdom: "Gnomes", color: [240, 206, 30] },
+  { name: "Orcs", kingdom: "Orcs", color: [138, 20, 20] },
+  { name: "Morts-vivants", kingdom: "Morts-vivants", color: [112, 52, 165] },
+  { name: "Taurens", kingdom: "Taurens", color: [112, 76, 40] },
+  { name: "Trolls", kingdom: "Trolls", color: [40, 180, 190] },
+  { name: "Gnolls", kingdom: "Gnolls", color: [104, 112, 88] },
+  { name: "Ogres", kingdom: "Ogres", color: [204, 150, 52] },
+  { name: "Murlocs", kingdom: "Murlocs", color: [22, 110, 118] },
+  { name: "Démons", kingdom: "Démons", color: [82, 205, 40] },
+  { name: "Défias", kingdom: "Défias", color: [40, 40, 48] },
+  { name: "Monastère Écarlate", kingdom: "Monastère Écarlate", color: [228, 30, 42] },
+  { name: "La Main d'Argent", kingdom: "La Main d'Argent", color: [204, 208, 218] },
+];
+// (ils vont à la suite des drapeaux, dans la même liste : set = 'azeroth')
+AZEROTH_BANNERS.forEach((b, k) => {
+  const n = String(k + 1).padStart(2, '0');
+  BANNERS.push({ ...b, set: 'azeroth', shield: true, img: `img/bannieres/az${n}.webp`, icon: `img/bannieres/az${n}s.webp` });
+});
+// Les numéros (dans BANNERS) des bannières proposées sur une carte : les écus sur la carte Azeroth, les drapeaux ailleurs
+function bannersForMap(mapType) {
+  const set = mapType === 'azeroth' ? 'azeroth' : undefined;
+  return BANNERS.map((b, k) => k).filter(k => BANNERS[k].set === set);
+}
+// Sur la carte, un écu est dessiné à cette taille (il n'a pas de longue hampe : pas besoin de l'agrandir autant)
+const SHIELD_SCALE = 1.0;
+
 // Les noms des royaumes contrôlés par l'ordinateur (ils reçoivent une bannière au hasard).
 // (autant de noms que de drapeaux, moins celui du joueur : on peut jouer contre autant de rivaux que de drapeaux)
 const KINGDOMS = ['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence', 'Lotharingie',

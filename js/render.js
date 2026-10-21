@@ -1627,10 +1627,12 @@ const Render = {
   drawBannerImage(p, x, y, h) {
     const img = this.bannerImages[p.banner];
     if (!img.complete || !img.naturalWidth) return 0;
-    h *= BANNER_SCALE;
+    // (un écu, sur la carte Azeroth : sans hampe, posé par son milieu)
+    const shield = BANNERS[p.banner].shield;
+    h *= shield ? SHIELD_SCALE : BANNER_SCALE;
     const w = h * img.naturalWidth / img.naturalHeight;
     this.ctx.imageSmoothingEnabled = true;
-    this.ctx.drawImage(img, x - w * BANNER_FOOT, y - h, w, h);
+    this.ctx.drawImage(img, x - w * (shield ? 0.5 : BANNER_FOOT), y - h, w, h);
     this.ctx.imageSmoothingEnabled = false;
     return w;
   },
@@ -2710,8 +2712,9 @@ const Render = {
       const troops = this.troopsLabel(p);
       const tw = ctx.measureText(troops).width;
       // (le drapeau à gauche du nombre de soldats : il flotte à droite de sa hampe, on recule donc le pied du mât)
-      const bh = size * 1.5 * BANNER_SCALE, bw = bh * 184 / 240;
-      this.drawBannerImage(p, tx - tw / 2 - bw * (1 - BANNER_FOOT) - 2, ty + size * 0.5, size * 1.5);
+      const B = BANNERS[p.banner], bimg = this.bannerImages[p.banner];
+      const bh = size * 1.5 * (B.shield ? SHIELD_SCALE : BANNER_SCALE), bw = bh * (bimg.naturalWidth / bimg.naturalHeight || 0.77);
+      this.drawBannerImage(p, tx - tw / 2 - bw * (1 - (B.shield ? 0.5 : BANNER_FOOT)) - 2, ty + size * 0.5, size * 1.5);
       Icons.text(ctx, troops, tx, ty);
     }
 
