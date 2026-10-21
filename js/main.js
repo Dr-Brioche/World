@@ -61,12 +61,21 @@ const UI = {
     };
     $('mapType').addEventListener('change', sizeForType);
     sizeForType();
-
-    // Nombre de royaumes rivaux : de MIN_OPPONENTS à un par drapeau (moins celui du joueur), 7 par défaut
-    const maxOpp = Math.min(BANNERS.length - 1, KINGDOMS.length);
-    for (let n = CONFIG.MIN_OPPONENTS; n <= maxOpp; n++) {
-      $('opponents').insertAdjacentHTML('beforeend', `<option value="${n}"${n === 7 ? ' selected' : ''}>${n} royaumes rivaux</option>`);
-    }
+    // Nombre de royaumes rivaux : de MIN_OPPONENTS à un par drapeau (moins celui du joueur), et pas plus d'un pour
+    // CELLS_PER_OPPONENT cases de la carte choisie (une petite carte ne peut pas en accueillir autant) ; 7 par défaut
+    // (wantOpp : le nombre choisi par le joueur, retrouvé s'il repasse sur une carte assez grande)
+    this.wantOpp = 7;
+    $('opponents').addEventListener('change', () => { this.wantOpp = +$('opponents').value; });
+    const fillOpponents = () => {
+      const cur = this.wantOpp, max = this.maxOpponents();
+      $('opponents').innerHTML = '';
+      for (let n = CONFIG.MIN_OPPONENTS; n <= max; n++) {
+        $('opponents').insertAdjacentHTML('beforeend', `<option value="${n}"${n === Math.min(cur, max) ? ' selected' : ''}>${n} royaumes rivaux</option>`);
+      }
+    };
+    $('mapType').addEventListener('change', fillOpponents);
+    $('mapSize').addEventListener('change', fillOpponents);
+    fillOpponents();
 
     // Choix de la bannière dans le menu (elle donne la couleur du royaume)
     this.banner = BANNERS.findIndex(b => b.name === 'Dragon');
@@ -178,6 +187,21 @@ const UI = {
     });
     // Les emojis de la page deviennent des icônes médiévales dessinées (voir icons.js)
     Icons.watch();
+  },
+
+  // Nombre de rivaux le plus grand possible sur la carte choisie dans le menu (voir CELLS_PER_OPPONENT)
+  maxOpponents() {
+    const t = $('mapType').value, C = CONFIG;
+    let W, H;
+    if (t === 'world') [W, H] = [C.WORLD_MAP_WIDTH, C.WORLD_MAP_HEIGHT];
+    else if (t === 'europe') [W, H] = [C.EUROPE_MAP_WIDTH, C.EUROPE_MAP_HEIGHT];
+    else if (t === 'azeroth') [W, H] = [C.AZEROTH_MAP_WIDTH, C.AZEROTH_MAP_HEIGHT];
+    else if (t.startsWith('custom:')) {
+      const m = CustomMaps.all().find(m => 'custom:' + m.name === t);
+      [W, H] = m ? [m.W, m.H] : C.MAP_SIZES.moyen;
+    } else [W, H] = C.MAP_SIZES[$('mapSize').value] || C.MAP_SIZES.moyen;
+    const byMap = Math.floor(W * H / C.CELLS_PER_OPPONENT);
+    return Math.max(C.MIN_OPPONENTS, Math.min(BANNERS.length - 1, KINGDOMS.length, byMap));
   },
 
   start() {
