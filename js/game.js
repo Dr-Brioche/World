@@ -2906,6 +2906,40 @@ const GameRules = {
     return this.targetsOf(target).filter(a => !this.truceLeft(a)).sort((a, b) => d(a) - d(b)).slice(0, 3);
   },
 
+  // Îlots imprenables : sur un îlot (moins de MIN_SPAWN_LAND cases), si un royaume y tient des terres mais qu'aucun
+  // ennemi ne peut plus y débarquer (plus aucune place de 2x2 cases libres, hors de toute muraille, pour un avant-poste),
+  // personne ne pourrait jamais l'en chasser : ses terres sur l'îlot disparaissent (elles redeviennent libres, avec
+  // leurs bâtiments détruits). S'il n'avait plus que ça, il est anéanti. (vérifié une fois par seconde)
+  stepTinyIslands() {
+    if (this.tick % CONFIG.TICKS_PER_SECOND !== 0) return;
+    const size = this.landSize(), comp = this.landComp(), W = this.W, own = this.owner;
+    const islets = new Map(); // numéro de l'îlot → ses cases
+    for (let i = 0; i < this.N; i++) {
+      if (own[i] < 0 || size[i] >= CONFIG.MIN_SPAWN_LAND) continue;
+      if (!islets.has(comp[i])) islets.set(comp[i], []);
+    }
+    if (!islets.size) return;
+    for (let i = 0; i < this.N; i++) if (comp[i] >= 0 && islets.has(comp[i])) islets.get(comp[i]).push(i);
+    // (une case où un ennemi pourrait poser le pied : de la terre, pas un fleuve, sans bâtiment ni mur, hors des murailles)
+    const free = j => this.isLand(j) && this.terrain[j] !== TERRAIN.RIVER && !this.building[j] && !this.wallAt[j]
+      && (own[j] < 0 || !(this.castleProtects(own[j], j) || this.portBonus(own[j], j) > 0));
+    for (const tiles of islets.values()) {
+      if (tiles.some(t => t % W < W - 1 && free(t) && free(t + 1) && free(t + W) && free(t + W + 1))) continue;
+      const losers = new Set();
+      for (const t of tiles) {
+        const o = own[t];
+        if (o < 0) continue;
+        losers.add(o);
+        if (this.building[t] && this.anchor[t] === t) this.removeBuilding(t);
+      }
+      for (const t of tiles) if (own[t] >= 0) this.setOwner(t, -1);
+      this.version++;
+      for (const o of losers) {
+        if (this.players[o].isHuman) UI.log('🌊 Ton îlot est trop petit pour qu\'on puisse y débarquer : tes terres y disparaissent.', 'warn');
+      }
+    }
+  },
+
   // Une ville (château), une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant
   // CAPTURE_TRUCE secondes. Renvoie les secondes qui restent (0 = on peut l'attaquer).
   truceLeft(a) {
@@ -5112,6 +5146,7 @@ const GameRules = {
     this.stepWorks();
     this.stepMines();
     this.stepWalls();
+    this.stepTinyIslands();
     this.stepFaith();
     this.stepOutposts();
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
