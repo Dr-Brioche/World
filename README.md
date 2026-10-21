@@ -446,7 +446,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        plus rapide au niveau 2), avec une **jauge ronde** autour d'elle. À chaque **quart**, **1 000 pièces** ; à la fin,
        **10 000 pièces** d'un coup, puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
        chrono continue pour le nouveau maître, qui touche les versements suivants !
-     Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
+     À côté de chaque mine (la tienne comme celles des autres), une **petite bulle** montre ce qui y est miné et où elle en
+     est : « Fer +8 % », « Or 2:14 », « Pierre −10 % », « Diamant 62 % ». Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
      cercle (vert si tu peux y bâtir) et la mine s'aimante sur le filon le plus proche de la souris.
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Comme l'église, il donne des
@@ -688,6 +689,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.58** : ⛏️ une petite bulle à côté de chaque mine (la tienne comme celles des autres) montre ce qui y est miné et où elle en est (Fer +8 %, Or 2:14, Pierre −10 %, Diamant 62 %, épuisée)
 - **v0.92.57** : ⏩ bouton de vitesse en jeu (x1, x1,5, x2, x3), à côté de Pause ; le choix « Partie accélérée » du menu de départ disparaît · 🎮 pause et vitesse réservées à celui qui héberge la partie (pour une future partie à plusieurs)
 - **v0.92.56** : 📜 bouton **Règles** en jeu (en haut) : le jeu se met en pause et affiche les règles complètes ; les règles expliquent maintenant chaque bâtiment point par point · 💬 survol d'un moulin, d'une caserne, d'une église, d'un port ou d'une mine : juste un résumé (son niveau et ce qu'il rapporte vraiment)
 - **v0.92.55** : ⛏️ nouvelle icône de la mine : une vraie pioche, d'une seule couleur comme les autres icônes
