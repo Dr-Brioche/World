@@ -493,8 +493,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      🌾 **Le port exporte le grain** : de base, un port rapporte autant qu'un moulin. Chaque **moulin relié par une route** à une
      des villes du port lui rapporte **+15 %** d'or en plus (**6 moulins** au plus : +90 %). La barre d'aide l'indique en survolant le port.
      🌾 **Au bord d'une route** : un **moulin** ou une **caserne** bâti **hors des villes** (près d'une église ou d'un port),
-     **sur** une de ces routes ou juste à côté (à moins de **2 cases** de son centre), produit **+20 %**. En le posant,
-     la barre d'aide en bas l'indique (« 🛤️ au bord d'une route »).
+     **sur** une de ces routes ou juste à côté (à moins de **3 cases** de son centre), produit **+20 %**. En le posant,
+     les emplacements où il aura ce bonus sont **dorés** (au lieu de verts), et la barre d'aide en bas l'indique
+     (« 🛤️ au bord d'une route ») ; une fois bâti, son survol l'affiche aussi.
      En posant un port ou une église, la barre d'aide en bas indique s'il sera relié à une ville (ou sur la route).
      **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
 
@@ -708,6 +709,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.72** : 🛤️ bonus des moulins et casernes au bord du chemin d'une église ou d'un port vers une ville : emplacements dorés pendant la pose, bonus affiché au survol, et il s'obtient jusqu'à 3 cases du chemin (au lieu de 2)
 - **v0.92.71** : 🏰 dans la muraille de leurs propres villes, les troupes en marche (assauts, défenseurs, retours) ne sont plus ralenties par le terrain
 - **v0.92.70** : 🌾 moulins 20 % plus productifs (1,8 💰 toutes les 10 s, 4,2 pour un grand moulin, au lieu de 1,5 et 3,5) · ⚓ ports 2 fois plus productifs environ (3, 8 et 16 💰 toutes les 10 s selon le niveau, au lieu de 1,5, 4,5 et 10)
 - **v0.92.69** : 🔢 de loin, le niveau des bâtiments (II, III, IV) reste affiché à côté de leur icône, même bien dézoomé

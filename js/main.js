@@ -387,7 +387,10 @@ const UI = {
     if (b === B_MILL || b === B_PORT) txt += ` · +${n1(G.buildingOutput(a))} 💰${every}`;
     if (b === B_PORT && info.boatSpeed) txt += ' · ⛵ expéditions';
     if (b === B_BARRACKS) txt += ` · +${n1(G.buildingOutput(a))} soldats${every}` + (info.power > 1 ? ` · force ${pct(info.power - 1)}` : '');
-    // Moulin ou caserne : à qui il prend sa place (une ville, une église, un port), ou aucune (pris à un autre royaume)
+    // Moulin ou caserne : au bord d'une route (le chemin d'une église ou d'un port vers une ville) ; puis à qui il
+    // prend sa place (une ville, une église, un port), ou aucune (pris à un autre royaume)
+    const link = (b === B_MILL || b === B_BARRACKS) && G.roads().get(a);
+    if (link && link.onRoad) txt += ` · 🛤️ au bord d'une route : +${Math.round(link.bonus * 100)} %`;
     if (b === B_MILL || b === B_BARRACKS) {
       const host = G.slotHosts().get(a), hb = host === undefined ? 0 : G.building[host];
       txt += hb === B_CASTLE ? ' · 🏰 place d\'une ville' : hb === B_CHURCH ? ' · ⛪ place d\'une église'
