@@ -709,6 +709,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.74** : 🏰 nouvelle image pour la ville de niveau 2 (le château) : un fort de pierre et de bois, avec ses tours et sa grande maison au centre
 - **v0.92.73** : 🏘️ superposition des bâtiments : ceux plus bas sur la carte passent devant ceux du dessus (une caserne juste au-dessus d'une ville est cachée en partie par elle) ; garnisons et chantiers restent affichés par-dessus
 - **v0.92.72** : 🛤️ bonus des moulins et casernes au bord du chemin d'une église ou d'un port vers une ville : emplacements dorés pendant la pose, bonus affiché au survol, et il s'obtient jusqu'à 3 cases du chemin (au lieu de 2)
 - **v0.92.71** : 🏰 dans la muraille de leurs propres villes, les troupes en marche (assauts, défenseurs, retours) ne sont plus ralenties par le terrain
