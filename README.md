@@ -515,6 +515,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 
+   🏝️ **Îlots imprenables** : sur un îlot (moins de 600 cases), si plus aucun ennemi ne peut y débarquer (plus aucune place
+   libre de 2x2 cases, hors des murailles, pour un avant-poste), les terres qu'un royaume y tient **disparaissent** (elles
+   redeviennent libres, bâtiments compris) : on ne peut pas se cacher sur un rocher pour ne jamais être achevé.
    **⛵ Expéditions maritimes** (avec un port de niveau 2 ou 3) : fais un **clic droit** sur une côte
    (au bord de la mer ou d'un fleuve, ou juste dans l'eau à côté) et choisis **⛵ Attaque navale**. Un bateau part de ton port le plus rapide,
    navigue sur la mer et les fleuves (tout le monde le voit passer), puis débarque : tu prends une **petite
@@ -715,6 +718,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.82** : 🏝️ un royaume ne peut plus se cacher sur un îlot où personne ne peut débarquer : ses terres y disparaissent (et s'il n'avait plus que ça, il est anéanti)
 - **v0.92.81** : 💎 la mine de diamant rapporte 1 000, 2 000 puis 3 000 pièces aux trois premiers quarts de l'extraction, et toujours 10 000 à la fin (16 000 en tout, au lieu de 13 000)
 - **v0.92.80** : 🚩 drapeaux 20 % plus grands en jeu (carte, classement, messages, barre du haut), et 2 fois plus grands dans le menu de départ : le drapeau choisi en grand, un clic ouvre la liste déroulante de tous les drapeaux
 - **v0.92.79** : 🤖 jusqu'à **17 royaumes rivaux** (un par drapeau disponible), avec 6 nouveaux noms (Bohême, Navarre, Savoie, Hongrie, Pologne, Danemark) · 🏆 le classement montre toujours ton royaume, à son vrai rang, même hors des 10 premiers
