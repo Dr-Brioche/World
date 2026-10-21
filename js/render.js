@@ -1709,11 +1709,6 @@ const Render = {
     else if (G.garrison[a] >= 1) parts.push('🛡️ ' + fmt(G.garrison[a]));
     if (o && G.outpostReady(a) && o.stationed >= 1) parts.push('⚔ ' + fmt(o.stationed));
     if (o && !G.outpostReady(a)) parts.push(`🏗️ ${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s`);
-    // (une mine : le temps qui reste au filon d'or, ce qui est extrait du diamant)
-    const dep = type === B_MINE ? G.depositAt.get(a) : null;
-    if (dep && G.mineSpent(a)) parts.push('épuisée');
-    else if (dep && dep.kind === 'gold') parts.push('⏳ ' + clock(dep.left / CONFIG.TICKS_PER_SECOND));
-    else if (dep && dep.kind === 'diamond') parts.push(`💎 ${Math.floor(dep.progress * 100)} %`);
     if (!parts.length) return;
     const f = ctx.font, txt = parts.join('  ');
     ctx.font = '700 12px Georgia, serif';
@@ -1952,6 +1947,40 @@ const Render = {
       }
       Icons.badge(ctx, B_MINE, x, y, size, '#5a4a32', EMOJI_ICONS[MINES[d.kind].icon.replace('\uFE0F', '')]);
     }
+  },
+
+  // Petite bulle de parchemin à droite d'une mine (la sienne comme celles des autres) : ce qui y est miné, et où
+  // elle en est : « ⚒ Fer +8 % », « 🪙 Or 2:14 », « 🪨 Pierre −10 % », « 💎 Diamant 62 % » (ou « épuisée »)
+  drawMineBubble(a, px, py) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, d = G.depositAt.get(a), info = G.buildingInfo(a);
+    if (!d || !info.kind) return;
+    const k = G.mineLinked(a) ? CONFIG.MINE_ROAD_FACTOR : 1, TPS = CONFIG.TICKS_PER_SECOND;
+    const label = { iron: 'Fer', gold: 'Or', stone: 'Pierre', diamond: 'Diamant' }[d.kind];
+    const value = G.underConstruction(a) ? 'en chantier' : G.mineSpent(a) ? 'épuisée'
+      : d.kind === 'iron' ? pct(info.power * k) : d.kind === 'stone' ? pct(-info.discount * k)
+      : d.kind === 'gold' ? clock(d.left / TPS) : `${Math.floor(d.progress * 100)} %`;
+    const text = `${label} ${value}`, f = Math.max(11, Math.min(15, s * 0.95)), ic = f * 1.25, pad = 4;
+    ctx.save();
+    ctx.font = `700 ${f}px Georgia, serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const w = pad * 2 + ic + 3 + ctx.measureText(text).width, h = ic + pad;
+    const x = px + Math.max(14, s * 1.6 * CONFIG.BUILDING_DRAW_SCALE) + 4, y = py - h / 2 - s * 0.6;
+    // la bulle (et sa petite pointe vers la mine)
+    ctx.beginPath();
+    ctx.moveTo(x + 4, y + h * 0.35);
+    ctx.lineTo(x - 5, y + h * 0.75);
+    ctx.lineTo(x + 4, y + h * 0.75);
+    ctx.roundRect(x, y, w, h, 5);
+    ctx.fillStyle = G.mineSpent(a) ? 'rgba(200,190,170,0.92)' : 'rgba(243,227,191,0.95)';
+    ctx.fill();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = '#3a2512';
+    ctx.stroke();
+    Icons.draw(ctx, EMOJI_ICONS[MINES[d.kind].icon.replace('\uFE0F', '')], x + pad + ic / 2, y + h / 2, ic);
+    ctx.fillStyle = G.mineSpent(a) ? '#7a6a55' : '#3a2512';
+    ctx.fillText(text, x + pad + ic + 3, y + h / 2 + 0.5);
+    ctx.restore();
   },
 
   // Sur une mine : une croix si son filon est épuisé ; autour, une jauge ronde (le diamant extrait, l'or qui reste)
@@ -2589,7 +2618,10 @@ const Render = {
         ctx.font = `${Math.max(9, Math.min(20 * half, s * half * 2)) * CONFIG.BUILDING_DRAW_SCALE}px serif`;
         if (BUILDING_LEVELS[type]) this.drawLeveledBuilding(i, px, py, imgAlpha);
         else this.drawSimpleBuilding(type, px, py, imgAlpha);
-        if (type === B_MINE) this.drawMineState(i, px, py);
+        if (type === B_MINE) {
+          this.drawMineState(i, px, py);
+          if (s >= 4) this.drawMineBubble(i, px, py);
+        }
         // Un de nos châteaux (ou ports royaux) coupé de notre royaume : un petit fanion rouge au-dessus
         if (G.owner[i] === G.human.id && G.holdsAlone(i) && G.isIsolated(i)) this.drawIsolatedFlag(px - half * s - 4, py + 6);
         // Au-dessus du bâtiment : 🛡 sa garnison, ⚔ les soldats stationnés (avant-poste), 🏗️ la construction
