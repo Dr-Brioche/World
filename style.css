@@ -110,7 +110,7 @@ html, body {
 #bannerPick button { padding: 2px; background: transparent; border: 2px solid transparent; }
 #bannerPick button:hover { background: var(--parchment-dark); }
 #bannerPick button.active { border-color: var(--wood); background: var(--gold); }
-#bannerPick img { height: 92px; display: block; }
+#bannerPick img { height: 74px; display: block; }
 .nm {
   display: inline-block;
   width: 105px;

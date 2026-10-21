@@ -1622,13 +1622,15 @@ const Render = {
     return img;
   }),
 
-  // Dessine la bannière d'un royaume ; (x, y) = pied du mât, h = hauteur
+  // Dessine la bannière d'un royaume ; (x, y) = pied du mât, h = hauteur (agrandie de BANNER_SCALE)
+  // (le drapeau flotte à droite de sa hampe : le pied du mât est à BANNER_FOOT de la largeur de l'image)
   drawBannerImage(p, x, y, h) {
     const img = this.bannerImages[p.banner];
     if (!img.complete || !img.naturalWidth) return 0;
+    h *= BANNER_SCALE;
     const w = h * img.naturalWidth / img.naturalHeight;
     this.ctx.imageSmoothingEnabled = true;
-    this.ctx.drawImage(img, x - w / 2, y - h, w, h);
+    this.ctx.drawImage(img, x - w * BANNER_FOOT, y - h, w, h);
     this.ctx.imageSmoothingEnabled = false;
     return w;
   },
@@ -2707,7 +2709,9 @@ const Render = {
       ctx.fillStyle = ink ? '#3b2a17' : p.isHuman ? '#ffe9a8' : '#fff';
       const troops = this.troopsLabel(p);
       const tw = ctx.measureText(troops).width;
-      this.drawBannerImage(p, tx - tw / 2 - size * 0.45, ty + size * 0.05, size * 1.5);
+      // (le drapeau à gauche du nombre de soldats : il flotte à droite de sa hampe, on recule donc le pied du mât)
+      const bh = size * 1.5 * BANNER_SCALE, bw = bh * 184 / 240;
+      this.drawBannerImage(p, tx - tw / 2 - bw * (1 - BANNER_FOOT) - 2, ty + size * 0.5, size * 1.5);
       Icons.text(ctx, troops, tx, ty);
     }
 
