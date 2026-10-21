@@ -331,7 +331,7 @@ const UI = {
   minePerks(info) {
     const m = MINES[info.kind], every = `/ ${CONFIG.PRODUCTION_INTERVAL} s`, x2 = `×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville`;
     if (info.kind === 'iron') return [`Force des troupes ${pct(info.power)}`, x2, `${m.max} au plus`];
-    if (info.kind === 'gold') return [`Or +${info.gold} ${every}`, x2, `Filon : ${clock(m.time)}`];
+    if (info.kind === 'gold') return [`💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min`, x2, 'puis le filon s\'épuise'];
     if (info.kind === 'stone') return [`Prix des améliorations, murs et ponts ${pct(-info.discount)}`, x2, `${m.max} au plus`];
     return [`💰 ${fmt(m.pay)} à chaque quart, ${fmt(m.final)} à la fin`, `Extraction : ${Math.round(m.time / 60 / info.speed)} min (×0,5 sans route)`];
   },
@@ -362,7 +362,7 @@ const UI = {
     if (type === B_MINE) {
       const m = MINES[cur.kind];
       if (cur.kind === 'iron') return [`Force des troupes ${pct(m.power[1])} → ${pct(m.power[2])}`];
-      if (cur.kind === 'gold') return [`Or +${m.gold[1]} → +${m.gold[2]} ${'/ ' + CONFIG.PRODUCTION_INTERVAL + ' s'}`, `Filon relancé : ${clock(m.time)} de plus`];
+      if (cur.kind === 'gold') return [`Filon relancé : 💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min de plus`];
       if (cur.kind === 'stone') return [`Réduction ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`];
       return [`Extraction ${pct(m.speed[2] / m.speed[1] - 1)} plus rapide`];
     }
@@ -378,6 +378,14 @@ const UI = {
     if (b === B_MILL || b === B_PORT) txt += ` · +${n1(G.buildingOutput(a))} 💰${every}`;
     if (b === B_PORT && info.boatSpeed) txt += ' · ⛵ expéditions';
     if (b === B_BARRACKS) txt += ` · +${n1(G.buildingOutput(a))} soldats${every}` + (info.power > 1 ? ` · force ${pct(info.power - 1)}` : '');
+    // Moulin ou caserne : à qui il prend sa place (une ville, une église, un port), ou aucune (pris à un autre royaume)
+    if (b === B_MILL || b === B_BARRACKS) {
+      const host = G.slotHosts().get(a), hb = host === undefined ? 0 : G.building[host];
+      txt += hb === B_CASTLE ? ' · 🏰 place d\'une ville' : hb === B_CHURCH ? ' · ⛪ place d\'une église'
+        : hb === B_PORT ? ' · ⚓ place d\'un port' : ' · sans place (pris à un autre royaume)';
+    }
+    // Église ou port amélioré : ses places prises (moulins et casernes autour de lui)
+    if ((b === B_CHURCH || b === B_PORT) && G.hasSlots(a)) txt += ` · 🏠 ${G.churchUsed(a)}/${info.slots} place${info.slots > 1 ? 's' : ''}`;
     if (b === B_CHURCH) {
       const faith = info.faith * (1 + CONFIG.FAITH_ROAD_BONUS * G.churchLinks(o, a).length) * G.terrainFactor(a, B_CHURCH);
       const gold = G.buildingOutput(a);
@@ -388,7 +396,8 @@ const UI = {
       if (G.mineSpent(a)) txt += ' · ❌ épuisée';
       else {
         if (info.kind === 'iron') txt += ` · force des troupes ${pct(info.power * k)}`;
-        if (info.kind === 'gold') txt += ` · +${n1(info.gold * k)} 💰${every} · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`;
+        // (or : ce que le filon rapportera encore, et le temps qui lui reste)
+        if (info.kind === 'gold') txt += ` · encore ≈ ${fmt(Math.round(info.gold * k * d.left / CONFIG.TICKS_PER_SECOND / CONFIG.PRODUCTION_INTERVAL))} 💰 · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`;
         if (info.kind === 'stone') txt += ` · prix ${pct(-info.discount * k)}`;
         if (info.kind === 'diamond') txt += ` · 💎 ${Math.floor(d.progress * 100)} % extrait`;
         txt += k > 1 ? ' · 🛤️ reliée' : ' · sans route (×2 si reliée à une ville)';
