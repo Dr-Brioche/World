@@ -1949,37 +1949,30 @@ const Render = {
     }
   },
 
-  // Petite bulle de parchemin à droite d'une mine (la sienne comme celles des autres) : ce qui y est miné, et où
-  // elle en est : « ⚒ Fer +8 % », « 🪙 Or 2:14 », « 🪨 Pierre −10 % », « 💎 Diamant 62 % » (ou « épuisée »)
+  // ⛏️ À côté de chaque mine (la sienne comme celles des autres) : une petite bulle ronde avec l'icône de son minerai
+  // (fer, or, pierre, diamant), dessinée par-dessus les bâtiments pour qu'une grande ville ne la cache pas
   drawMineBubble(a, px, py) {
-    const G = Game, ctx = this.ctx, s = this.cam.scale, d = G.depositAt.get(a), info = G.buildingInfo(a);
-    if (!d || !info.kind) return;
-    const k = G.mineLinked(a) ? CONFIG.MINE_ROAD_FACTOR : 1, TPS = CONFIG.TICKS_PER_SECOND;
-    const label = { iron: 'Fer', gold: 'Or', stone: 'Pierre', diamond: 'Diamant' }[d.kind];
-    const value = G.underConstruction(a) ? 'en chantier' : G.mineSpent(a) ? 'épuisée'
-      : d.kind === 'iron' ? pct(info.power * k) : d.kind === 'stone' ? pct(-info.discount * k)
-      : d.kind === 'gold' ? clock(d.left / TPS) : `${Math.floor(d.progress * 100)} %`;
-    const text = `${label} ${value}`, f = Math.max(11, Math.min(15, s * 0.95)), ic = f * 1.25, pad = 4;
+    const G = Game, ctx = this.ctx, s = this.cam.scale, d = G.depositAt.get(a);
+    if (!d) return;
+    const r = Math.max(11, Math.min(17, s * 1.05));
+    const x = px + Math.max(14, s * 1.6 * CONFIG.BUILDING_DRAW_SCALE) + r * 0.6, y = py - s * 0.8 - r * 0.4;
     ctx.save();
-    ctx.font = `700 ${f}px Georgia, serif`;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    const w = pad * 2 + ic + 3 + ctx.measureText(text).width, h = ic + pad;
-    const x = px + Math.max(14, s * 1.6 * CONFIG.BUILDING_DRAW_SCALE) + 4, y = py - h / 2 - s * 0.6;
-    // la bulle (et sa petite pointe vers la mine)
-    ctx.beginPath();
-    ctx.moveTo(x + 4, y + h * 0.35);
-    ctx.lineTo(x - 5, y + h * 0.75);
-    ctx.lineTo(x + 4, y + h * 0.75);
-    ctx.roundRect(x, y, w, h, 5);
-    ctx.fillStyle = G.mineSpent(a) ? 'rgba(200,190,170,0.92)' : 'rgba(243,227,191,0.95)';
-    ctx.fill();
+    ctx.fillStyle = G.mineSpent(a) ? 'rgb(200,190,170)' : 'rgb(243,227,191)';
     ctx.lineWidth = 1.2;
     ctx.strokeStyle = '#3a2512';
+    // la petite pointe vers la mine, puis la bulle ronde par-dessus
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.8, y + r * 0.5);
+    ctx.lineTo(x - r * 1.45, y + r * 1.2);
+    ctx.lineTo(x - r * 0.35, y + r * 0.9);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
-    Icons.draw(ctx, EMOJI_ICONS[MINES[d.kind].icon.replace('\uFE0F', '')], x + pad + ic / 2, y + h / 2, ic);
-    ctx.fillStyle = G.mineSpent(a) ? '#7a6a55' : '#3a2512';
-    ctx.fillText(text, x + pad + ic + 3, y + h / 2 + 0.5);
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    Icons.draw(ctx, EMOJI_ICONS[MINES[d.kind].icon.replace('\uFE0F', '')], x, y, r * 1.45);
     ctx.restore();
   },
 
@@ -2612,6 +2605,7 @@ const Render = {
       // (pendant la pose d'une mine, les filons passent par-dessus les bâtiments : une grande ville ne les cache plus)
       const placingMine = UI.selectedBuild === B_MINE;
       if (!placingMine) this.drawDeposits(ox, oy);
+      const mines = [];
       for (const i of G.buildingTiles) {
         // Centre du bâtiment = milieu de son carré ; icône à sa taille
         const type = G.building[i], half = G.sizeOf(type) / 2;
@@ -2622,7 +2616,7 @@ const Render = {
         else this.drawSimpleBuilding(type, px, py, imgAlpha);
         if (type === B_MINE) {
           this.drawMineState(i, px, py);
-          if (s >= 4) this.drawMineBubble(i, px, py);
+          mines.push([i, px, py]);
         }
         // Un de nos châteaux (ou ports royaux) coupé de notre royaume : un petit fanion rouge au-dessus
         if (G.owner[i] === G.human.id && G.holdsAlone(i) && G.isIsolated(i)) this.drawIsolatedFlag(px - half * s - 4, py + 6);
@@ -2634,6 +2628,8 @@ const Render = {
           this.drawBuildingLabel(i, type, px, py - s * top - 8);
         }
       }
+      // (les bulles des mines par-dessus tous les bâtiments)
+      if (s >= 4) for (const [i, px, py] of mines) this.drawMineBubble(i, px, py);
       if (placingMine) this.drawDeposits(ox, oy);
       this.drawWhiteFlags(ox, oy);
     }

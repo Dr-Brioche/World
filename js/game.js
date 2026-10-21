@@ -496,7 +496,9 @@ const GameRules = {
   // Les infos d'une mine de cette sorte, à ce niveau (sans mine posée : pour les aperçus)
   mineInfoAt(kind, lvl) {
     const m = MINES[kind], name = lvl > 1 ? 'Grande ' + m.name[0].toLowerCase() + m.name.slice(1) : m.name;
-    return { ...MINE_LEVELS[lvl], name, kind, power: m.power && m.power[lvl], gold: m.gold && m.gold[lvl],
+    // (or : les 2000 pièces du filon, réparties sur ses versements : un toutes les PRODUCTION_INTERVAL secondes)
+    const gold = m.total ? m.total / (m.time / CONFIG.PRODUCTION_INTERVAL) : undefined;
+    return { ...MINE_LEVELS[lvl], name, kind, power: m.power && m.power[lvl], gold,
       discount: m.discount && m.discount[lvl], speed: m.speed && m.speed[lvl] };
   },
   // Le filon de la mine a est-il épuisé ? (or : plus de temps d'exploitation ; diamant : tout extrait)
@@ -2550,11 +2552,15 @@ const GameRules = {
   // Exceptions :
   // - les châteaux et les ports de niveau 3 savent se défendre (holdsAlone) : ils restent au royaume, isolés,
   //   avec les terres de leur zone (et les bâtiments qui s'y trouvent) ;
-  // - un morceau avec un avant-poste ou une colonie (invasion par la mer) se défend : il faut viser l'avant-poste.
+  // - un morceau avec un avant-poste ou une colonie (invasion par la mer) se défend : il faut viser l'avant-poste ;
+  // - la route d'un de ses assauts encore en cours n'est que visuelle : elle n'est jamais englobée (sinon l'armée
+  //   perdrait son chemin, par exemple quand la Croyance convertit la case d'où part sa route).
   captureEnclaves(target, cutter = -1) {
     const T = this.players[target];
     if (!T.alive) return;
     const r = this.regions(true), pieces = [];
+    const routes = new Set();
+    for (const [t] of this.pendingRoutes()) if (this.owner[t] === target) routes.add(t);
     for (let k = 0; k < r.size.length; k++) {
       if (r.owner[k] !== target || r.heart[k]) continue;
       if (r.anyOutpost[k] || r.colony[k]) continue;
@@ -2582,7 +2588,7 @@ const GameRules = {
       if (winner < 0) continue;
       let took = 0;
       for (const i of tiles) {
-        if (this.owner[i] !== target || kept(i)) continue;
+        if (this.owner[i] !== target || kept(i) || routes.has(i)) continue;
         // un bâtiment à cheval sur une zone gardée reste au royaume
         if (this.building[i] && this.footprint(this.anchor[i], this.building[i]).some(kept)) continue;
         // les garnisons des bâtiments pris se rendent

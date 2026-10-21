@@ -227,6 +227,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    d'un avant-poste), c'est le royaume qui entoure le plus le morceau qui le prend.
    Mais la **route** d'un assaut vers un objectif (château, église, port…) n'est que **visuelle** tant que le combat
    n'est pas joué : elle ne coupe le royaume que si l'assaut **prend son objectif**. S'il échoue, elle est rendue et rien n'est coupé.
+   Et elle ne peut **jamais être coupée** en route : même si la case d'où elle part est convertie par la Croyance (ou prise),
+   l'armée garde son chemin.
    Un morceau avec un **avant-poste** (une invasion par la mer) se défend : il faut viser l'avant-poste.
    Un royaume installé sur **plusieurs îles** (par la mer, puis un château) n'est pas « coupé » d'une île à l'autre.
 
@@ -280,7 +282,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **Les moulins et casernes se construisent dans l'enceinte d'une de tes villes** (dans sa muraille),
    **ou près d'une de tes églises** (ou d'un port amélioré), qui a encore de la place, pas ailleurs dans l'arrière-pays.
    Une ville a **4 places** (niveau 1), **6** (niveau 2) ou **9** (niveau 3) ; quand elle est pleine, un moulin dans sa muraille
-   doit prendre la place d'une église ou d'un port proche (sinon, impossible). En survolant une ville : « places prises : 3 sur 6 ».
+   doit prendre la place d'une église ou d'un port proche (sinon, impossible). En survolant une ville : « places prises : 3 sur 6 » ;
+   en survolant une église ou un port : « 🏠 1/1 place » ; en survolant un moulin ou une caserne : la place qu'il occupe
+   (d'une ville, d'une église, d'un port), ou « sans place » s'il a été pris à un autre royaume (il produit quand même pour
+   son nouveau maître, mais ne laisse pas de place libre pour en bâtir un autre).
    Les châteaux et les églises, eux, se construisent partout sur ton territoire.
    Il faut aussi laisser **3 cases d'écart** autour de chaque bâtiment, et **4 cases** autour des châteaux
    (l'aperçu devient rouge si c'est trop près). Quand tu choisis un **moulin** ou une **caserne**, les zones où l'on peut
@@ -438,17 +443,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      comme une église ou un port (sauf si elle est dans la muraille d'une ville : il faut d'abord prendre la ville, et la mine part avec elle).
      - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
        **3 mines au plus** (+48 % au maximum).
-     - 🪙 **Mine d'or** : **3 fois un moulin** (6 fois au niveau 2), doublé si reliée. Mais son filon **s'épuise** au bout de
-       **5 minutes** d'exploitation (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
-       **relance pour 5 minutes de plus**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
+     - 🪙 **Mine d'or** : son filon rapporte **2 000 pièces en 5 minutes** (un peu à chaque production), doublé si reliée.
+       Puis il **s'épuise** (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
+       **relance pour 5 minutes de plus**, qui rapportent de nouveau **2 000 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
      - 🪨 **Carrière de pierre** (en colline) : les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
        (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
      - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
        plus rapide au niveau 2), avec une **jauge ronde** autour d'elle. À chaque **quart**, **1 000 pièces** ; à la fin,
        **10 000 pièces** d'un coup, puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
        chrono continue pour le nouveau maître, qui touche les versements suivants !
-     À côté de chaque mine (la tienne comme celles des autres), une **petite bulle** montre ce qui y est miné et où elle en
-     est : « Fer +8 % », « Or 2:14 », « Pierre −10 % », « Diamant 62 % ». Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
+     À côté de chaque mine (la tienne comme celles des autres), une **petite bulle ronde** montre l'icône de ce qui y est
+     miné (fer, or, pierre, diamant), toujours visible, même quand un grand bâtiment est à côté. Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
      cercle (vert si tu peux y bâtir), passent **par-dessus les bâtiments** (une grande ville ne les cache plus), et la mine
      s'aimante sur le filon le plus proche de la souris (à moins de 5 cases). Une mine **n'a pas d'autre règle de construction** :
      elle se pose même dans la muraille d'une ville, ou tout près d'un autre bâtiment. Les **autres bâtiments**, eux, laissent
@@ -693,6 +698,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.65** : 🐛 une route d'assaut ne peut plus être coupée en route (par exemple quand la Croyance convertit la case d'où elle part) : l'assaut n'est plus annulé · 🪙 mine d'or : 2 000 pièces en 5 minutes (et de nouveau 2 000 au niveau 2) · ⛏️ la bulle d'une mine n'affiche plus que l'icône de son minerai, par-dessus les bâtiments · 🏠 au survol : les places d'une église ou d'un port, et la place qu'occupe un moulin ou une caserne
 - **v0.92.64** : 🪙 le filon d'une mine d'or dure 5 minutes (au lieu de 3), et le niveau 2 le relance pour 5 minutes de plus
 - **v0.92.63** : ⛏️ les autres bâtiments laissent 2 cases libres autour d'un filon · pendant la pose d'une mine, les filons passent par-dessus les bâtiments (une grande ville ne les cache plus) et la mine s'aimante à 5 cases au lieu de 3
 - **v0.92.62** : ⚔️ la barre du haut affiche la puissance de tes troupes en % (caserne, mines de fer, cité impériale)
