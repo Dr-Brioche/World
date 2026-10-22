@@ -201,6 +201,7 @@ const CONFIG = {
   // Puis les survivants rentrent par bateau (de même s'il échoue).
   VIKING_COST: 3000,
   VIKING_LOOT: 300,
+  VIKING_COOLDOWN: 60,         // secondes entre deux assauts vikings lancés (une fois par minute au plus)
   VIKING_RANGE: 25,
   VIKING_BONUS: 0.5,
   VIKING_MIN_TROOPS: 20,       // soldats à embarquer au moins

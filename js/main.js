@@ -1565,10 +1565,10 @@ const UI = {
   vikingText() {
     return tr(`Assaut viking (💰 ${fmt(CONFIG.VIKING_COST)}) : un raid par la mer, depuis ton port royal, sur une ville ennemie à ${CONFIG.VIKING_RANGE} cases au plus d'une côte, ` +
       `sans pertes en mer et avec des soldats +${Math.round(CONFIG.VIKING_BONUS * 100)} % plus forts. S'ils l'emportent, la ville est détruite avec ses moulins et casernes : ` +
-      `💰 ${fmt(CONFIG.VIKING_LOOT)} de butin par bâtiment détruit. Une fois acheté, lance-le quand tu veux.`,
+      `💰 ${fmt(CONFIG.VIKING_LOOT)} de butin par bâtiment détruit. Une fois acheté, lance-le quand tu veux (un par minute au plus).`,
       `Viking assault (💰 ${fmt(CONFIG.VIKING_COST)}): a raid by sea, from your royal port, on an enemy city within ${CONFIG.VIKING_RANGE} tiles of a coast, ` +
       `with no losses at sea and +${Math.round(CONFIG.VIKING_BONUS * 100)}% stronger soldiers. If they win, the city is destroyed with its mills and barracks: ` +
-      `💰 ${fmt(CONFIG.VIKING_LOOT)} of loot per building destroyed. Once bought, launch it whenever you want.`);
+      `💰 ${fmt(CONFIG.VIKING_LOOT)} of loot per building destroyed. Once bought, launch it whenever you want (one per minute at most).`);
   },
   // Bouton « Assaut viking » (menus du port royal) : l'acheter, ou, s'il est prêt, choisir sa cible
   updateVikingButton(btn, text) {
@@ -1586,7 +1586,8 @@ const UI = {
     const G = Game, h = G.human, btn = this.vikingBar, show = h.vikingReady || G.royalPorts(h.id).length > 0;
     btn.classList.toggle('hidden', !show);
     if (!show) return;
-    btn.querySelector('.cost').textContent = h.vikingReady ? tr('prêt !', 'ready!') : `💰 ${fmt(CONFIG.VIKING_COST)}`;
+    const wait = Math.ceil(G.vikingWait(h));
+    btn.querySelector('.cost').textContent = h.vikingReady ? (wait > 0 ? `⏳ ${wait} s` : tr('prêt !', 'ready!')) : `💰 ${fmt(CONFIG.VIKING_COST)}`;
     btn.classList.toggle('poor', !h.vikingReady && h.gold < CONFIG.VIKING_COST);
     btn.classList.toggle('active', !!this.vikingAim);
     const err = h.vikingReady ? null : G.vikingBuyError(h);
