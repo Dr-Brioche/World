@@ -61,21 +61,21 @@
       <h1>⚔️ Medieval Emperor ⚔️</h1>
       <p class="sub">Étends ton royaume, bâtis des châteaux, écrase tes rivaux.</p>
       <label>Nom de ton royaume <input id="name" maxlength="20" value="Mon Royaume"></label>
-      <div class="pickTitle">Ta bannière : <b id="bannerName"></b> <small>(elle donne sa couleur à ton royaume)</small></div>
+      <div class="pickTitle">Ta bannière : <b id="bannerName"></b></div>
       <!-- (une liste déroulante : le drapeau choisi, en grand ; un clic ouvre la liste de tous les drapeaux) -->
       <button type="button" id="bannerBtn" title="Changer de bannière"><img id="bannerCur" alt=""><span>▾ changer</span></button>
       <div id="bannerPick" class="hidden"></div>
       <label>Carte
         <select id="mapType">
           <optgroup label="🎲 Cartes aléatoires">
-            <option value="normal" selected>Normale (un continent et quelques îlots volcaniques)</option>
-            <option value="continental">Continentale (un seul grand continent)</option>
-            <option value="naval">Base navale (plusieurs grandes îles)</option>
+            <option value="normal" selected>Normale</option>
+            <option value="continental">Continentale</option>
+            <option value="naval">Base navale</option>
           </optgroup>
           <optgroup label="🗺️ Cartes prédéfinies">
-            <option value="world">Monde (la vraie carte du monde, très grande)</option>
-            <option value="europe">Europe (l'Europe en détail, immense)</option>
-            <option value="azeroth">Azeroth (le monde de Warcraft au temps du Norfendre, 700 x 550)</option>
+            <option value="world">Monde</option>
+            <option value="europe">Europe</option>
+            <option value="azeroth">Azeroth</option>
           </optgroup>
           <optgroup id="customMaps" label="✏️ Cartes dessinées"></optgroup>
         </select>
@@ -83,22 +83,22 @@
       <!-- (seulement pour la carte Azeroth) -->
       <label id="gameModeRow" class="hidden">Mode de jeu
         <select id="gameMode">
-          <option value="libre">Libre (chacun pour soi, ou des pactes)</option>
-          <option value="factions">Factions : Alliance, Horde, Pacte sauvage</option>
+          <option value="libre">Libre</option>
+          <option value="factions">Factions</option>
         </select>
       </label>
       <div id="factionInfo" class="factionInfo hidden"></div>
-      <a class="editorLink" href="editeur.html">🖌️ Dessiner une carte (éditeur de cartes)</a>
+      <a class="editorLink" href="editeur.html">🖌️ Dessiner une carte</a>
       <label>Taille de la carte
         <select id="mapSize">
-          <option value="petit">Petite (300 x 169)</option>
-          <option value="moyen" selected>Moyenne (650 x 366)</option>
-          <option value="grand">Grande (1000 x 562)</option>
+          <option value="petit">Petite</option>
+          <option value="moyen" selected>Moyenne</option>
+          <option value="grand">Grande</option>
         </select>
       </label>
       <label>Pactes (alliances)
         <select id="pacts">
-          <option value="non" selected>Interdits (chacun pour soi)</option>
+          <option value="non" selected>Interdits</option>
           <option value="oui">Autorisés</option>
         </select>
       </label>
@@ -106,7 +106,7 @@
         <select id="difficulty">
           <option value="facile">Facile</option>
           <option value="normal" selected>Normale</option>
-          <option value="difficile">Difficile (bots avantagés)</option>
+          <option value="difficile">Difficile</option>
         </select>
       </label>
       <label>Adversaires
@@ -114,7 +114,7 @@
       </label>
       <button id="startBtn" class="big">Commencer la conquête</button>
       <details class="rulesBox">
-        <summary>📜 Règles du jeu <small>(clique pour dérouler)</small></summary>
+        <summary>📜 Règles du jeu</summary>
         <ul class="rules">
           <li>🖌️ <b>Cartes dessinées</b> : le lien « Dessiner une carte » ouvre l'éditeur ; une carte enregistrée apparaît dans la liste des cartes (✏️ Cartes dessinées).</li>
           <li>👑 <b>Départ</b> : les royaumes rivaux sont déjà installés. Regarde qui est où, puis clique sur une terre libre pour fonder ta capitale.</li>
@@ -144,6 +144,7 @@
               <li>⚔️ <b>Caserne</b> — 3 niveaux.
                 <br>– Des soldats toutes les 10 s, et une armée plus grande.
                 <br>– Aux niveaux 2 et 3 : <b>tous</b> tes soldats sont plus forts.
+                <br>– Niveau 3 : <b>recrutement de masse</b> (💰 3000) : 60 s de recrutement bien plus rapide, surtout si ton armée est petite (jusqu'à x3, presque rien au-delà de la moitié de ton armée maximum) ; amplifié par la galvanisation, diminué par l'après-guerre.
                 <br>– Même endroit que le moulin ; meilleure en forêt et en colline.</li>
               <li>⛪ <b>Église</b> — 3 niveaux.
                 <br>– De la <b>Croyance</b> (10, 30, 50) : plus que ton voisin, tu convertis ses terres.
@@ -161,7 +162,7 @@
               <li>⛺ <b>Avant-poste</b> — ne se construit pas : il apparaît quand tes soldats débarquent sur une côte.</li>
               <li>🏝️ <b>Îlots imprenables</b> — sur un îlot où plus personne ne peut débarquer (plus de place libre hors des murailles), les terres d'un royaume disparaissent.</li>
             </ul></li>
-          <li>✝️ <b>Croyance</b> : chaque église en apporte (10, 30 ou 50 selon son niveau, +50 % si elle est reliée à une route). Si tu as plus de Croyance qu'un voisin ennemi (pas un allié), tu convertis lentement ses terres frontalières, d'autant plus vite que l'écart est grand (📖 verte dans le classement) ; s'il en a plus que toi, c'est lui qui convertit les tiennes (📖 rouge). Les villes, les ports fortifiés et ce qui est dans leur muraille ne sont jamais convertis. Les moulins et casernes non plus : ils suivent l'église, le port ou la ville dont ils occupent la place. Une cathédrale peut lancer une <b>croisade religieuse</b> (💰 2000) : +1000 de Croyance pendant 60 s (aussi avec le bouton ✝️ Croisade de la barre des constructions, qui apparaît dès ta première cathédrale).</li>
+          <li>✝️ <b>Croyance</b> : chaque église en apporte (10, 30 ou 50 selon son niveau, +50 % si elle est reliée à une route). Si tu as plus de Croyance qu'un voisin ennemi (pas un allié), tu convertis lentement ses terres frontalières, d'autant plus vite que l'écart est grand (📖 verte dans le classement) ; s'il en a plus que toi, c'est lui qui convertit les tiennes (📖 rouge). Les villes, les ports fortifiés et ce qui est dans leur muraille ne sont jamais convertis. Les moulins et casernes non plus : ils suivent l'église, le port ou la ville dont ils occupent la place. Une cathédrale peut lancer une <b>croisade religieuse</b> (💰 2500) : +1000 de Croyance pendant 60 s (aussi avec le bouton ✝️ Croisade de la barre des constructions, qui apparaît dès ta première cathédrale).</li>
           <li>💰 <b>Économie</b> : plus ton royaume est grand, plus il recrute, mais de moins en moins vite. Une armée trop pleine coûte de l'or (jusqu'à −25 % d'or gagné).</li>
           <li>⛵ <b>Mer</b> : avec un port de niveau 2, clic droit sur une côte lointaine → attaque navale (2 au plus contre un même royaume). Tes soldats y bâtissent un <b>avant-poste</b> qui défend sa zone avec ses soldats ; clique dessus pour envoyer des renforts ou rapatrier ses troupes. Un château bâti ou pris dans sa zone la fait entrer dans ton royaume.</li>
           <li>🤝 <b>Pactes</b> (si autorisés) : les alliés sont entourés d'une frontière en pointillés (or et couleur du fondateur). Seul le fondateur accepte les nouveaux membres. Clic droit chez un allié : lui envoyer des soldats ou de l'or. Attaquer un allié, c'est le trahir. 🛒 Une ville de niveau 2 peut ouvrir une <b>route commerciale</b> vers la ville d'un allié (bouton dans son menu, à côté du mur) : de l'or toutes les 10 s, d'autant plus que la route est longue.</li>

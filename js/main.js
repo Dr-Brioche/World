@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 
 // Petites icônes dessinées pour les menus (voir icons.js) : un style médiéval, pas des emojis
 const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall'), cross: iconSVG('cross'),
-  boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut'), cart: iconSVG('cart') };
+  boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut'), cart: iconSVG('cart'), spears: iconSVG('spears') };
 
 const UI = {
   selectedBuild: 0,
@@ -45,12 +45,22 @@ const UI = {
     });
     builds.appendChild(cb);
     this.crusadeBar = cb;
+    // Bouton « Recrutement de masse » : il apparaît dès qu'on a une grande caserne (niveau 3) (voir refreshLevyBar)
+    const lb = document.createElement('button');
+    lb.className = 'build crusade hidden';
+    lb.innerHTML = `<span class="icon">${ICONS.spears}</span><span>Recrutement</span><span class="cost"></span>`;
+    lb.addEventListener('click', () => {
+      const a = this.bigBarracks()[0];
+      if (a !== undefined) this.levy(a);
+    });
+    builds.appendChild(lb);
+    this.levyBar = lb;
 
     // Cartes dessinées avec l'éditeur (voir custommaps.js) : dans la liste des cartes. Revenu de l'éditeur avec
     // « Jouer cette carte » (index.html?carte=Nom) : elle est déjà choisie.
     const drawn = CustomMaps.all();
     $('customMaps').innerHTML = drawn.map(m =>
-      `<option value="custom:${escapeHtml(m.name)}">${escapeHtml(m.name)} (${m.W} x ${m.H})</option>`).join('');
+      `<option value="custom:${escapeHtml(m.name)}">${escapeHtml(m.name)}</option>`).join('');
     if (!drawn.length) $('customMaps').remove();
     const wanted = new URLSearchParams(location.search).get('carte');
     if (wanted && drawn.some(m => m.name === wanted)) $('mapType').value = 'custom:' + wanted;
@@ -560,6 +570,14 @@ const UI = {
       this.updateTradeButton(trade, a, true);
       trade.addEventListener('click', () => { close(); this.closeActionMenu(); this.startTrade(a); });
     }
+    // Grande caserne (niveau 3) : bouton « Recrutement de masse »
+    if (type === B_BARRACKS && G.level[a] >= 3) {
+      const btn = document.createElement('button');
+      btn.dataset.levy = '';
+      el.querySelector('.choices').prepend(btn);
+      this.updateLevyButton(btn, a, true);
+      btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.levy(a); });
+    }
     // Cathédrale (église de niveau 3) : bouton « Croisade »
     if (type === B_CHURCH && G.level[a] >= 3) {
       const btn = document.createElement('button');
@@ -596,6 +614,7 @@ const UI = {
       (G.building[a] === B_CASTLE && G.level[a] >= 2 ? `<button data-wall class="wall">${ICONS.wall}</button>` +
         `<button data-trade class="wall">${ICONS.cart}</button>` : '') +
       (G.building[a] === B_CHURCH && G.level[a] >= 3 ? `<button data-crusade class="up">${ICONS.cross}</button>` : '') +
+      (G.building[a] === B_BARRACKS && G.level[a] >= 3 ? `<button data-levy class="up">${ICONS.spears}</button>` : '') +
       (G.building[a] !== B_MINE || work ? `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>` : '');
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
@@ -615,6 +634,11 @@ const UI = {
     if (tradeBtn) {
       this.updateTradeButton(tradeBtn, a, false);
       tradeBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.startTrade(a); });
+    }
+    const levyBtn = el.querySelector('[data-levy]');
+    if (levyBtn) {
+      this.updateLevyButton(levyBtn, a, false);
+      levyBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.levy(a); });
     }
     const crusadeBtn = el.querySelector('[data-crusade]');
     if (crusadeBtn) {
@@ -918,6 +942,7 @@ const UI = {
     });
     this.refreshBuildingMenu();
     this.refreshCrusadeBar();
+    this.refreshLevyBar();
 
     const ranking = G.players.filter(p => p.alive && p.tiles > 0).sort((a, b) => b.tiles - a.tiles);
     const row = p => {
@@ -1405,6 +1430,8 @@ const UI = {
       if (btn) this.updateWallButton(btn, box.buildingAnchor, text);
       const cb = box && box.buildingAnchor !== undefined && box.querySelector('[data-crusade]');
       if (cb) this.updateCrusadeButton(cb, box.buildingAnchor, text);
+      const lv = box && box.buildingAnchor !== undefined && box.querySelector('[data-levy]');
+      if (lv) this.updateLevyButton(lv, box.buildingAnchor, text);
       const tb = box && box.buildingAnchor !== undefined && box.querySelector('[data-trade]');
       if (tb) this.updateTradeButton(tb, box.buildingAnchor, text);
     }
@@ -1462,6 +1489,42 @@ const UI = {
     const G = Game, err = G.startCrusade(G.human, a);
     if (err) return this.log(err, 'warn');
     this.log(`✝️ Croisade religieuse lancée : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance pendant ${CONFIG.CRUSADE_TIME} s ! Tes prêcheurs vont convertir les terres voisines bien plus vite.`, 'good');
+  },
+
+  // --- ⚔️ Recrutement de masse (grande caserne, niveau 3) ---
+  levyText() {
+    return `Recrutement de masse (💰 ${fmt(CONFIG.LEVY_COST)}) : ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s ` +
+      '(jusqu\'à 3 fois plus vite quand elle est presque vide ; plus guère d\'effet au-delà de la moitié de ton armée maximum)';
+  },
+  updateLevyButton(btn, a, text) {
+    const G = Game, h = G.human, left = Math.ceil(G.levyLeft(h)), err = G.levyError(h, a);
+    btn.disabled = !!err;
+    btn.title = left ? `Recrutement de masse en cours : encore ${left} s (recrutement x${G.levyFactor(h).toFixed(1).replace('.', ',')})` : err || this.levyText();
+    if (text) {
+      const html = left ? `⚔️ Recrutement : ${left} s` : `⚔️ Recrutement de masse (💰 ${fmt(CONFIG.LEVY_COST)})`;
+      if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
+    }
+  },
+  // Nos grandes casernes (niveau 3)
+  bigBarracks() {
+    const G = Game, h = G.human;
+    return G.buildingTiles.filter(a => G.building[a] === B_BARRACKS && G.owner[a] === h.id && G.level[a] >= 3);
+  },
+  // Bouton de la barre : caché sans grande caserne ; sinon son prix, ou le temps qui reste
+  refreshLevyBar() {
+    const G = Game, h = G.human, btn = this.levyBar, list = this.bigBarracks();
+    btn.classList.toggle('hidden', !list.length);
+    if (!list.length) return;
+    const left = Math.ceil(G.levyLeft(h)), cost = btn.querySelector('.cost'), err = G.levyError(h, list[0]);
+    cost.textContent = left ? `⏳ ${left} s` : `💰 ${fmt(CONFIG.LEVY_COST)}`;
+    btn.classList.toggle('poor', !left && h.gold < CONFIG.LEVY_COST);
+    btn.disabled = !!err;
+    btn.title = left ? `Recrutement de masse en cours : encore ${left} s (recrutement x${G.levyFactor(h).toFixed(1).replace('.', ',')})` : err || this.levyText();
+  },
+  levy(a) {
+    const G = Game, err = G.startLevy(G.human, a);
+    if (err) return this.log(err, 'warn');
+    this.log(`⚔️ Recrutement de masse lancé : ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s (surtout si elle est petite) !`, 'good');
   },
 
   // --- Murs d'une ville (château de niveau 2 ou plus) ---

@@ -687,6 +687,44 @@ const GameRules = {
   },
   faithOf(pid) { return this.faithAll()[pid] || 0; },
 
+  // --- ⚔️ Recrutement de masse (grande caserne, niveau 3) ---
+  // Secondes qui restent au recrutement de masse du royaume p (0 = aucun en cours)
+  levyLeft(p) { return Math.max(0, ((p.levyEnd || 0) - this.tick) / CONFIG.TICKS_PER_SECOND); },
+
+  // Multiplicateur du recrutement (soldats et casernes) pendant un recrutement de masse : fort quand l'armée est
+  // petite, il baisse un peu jusqu'à LEVY_FROM de l'armée maximum, puis vite, jusqu'à rien à LEVY_TO.
+  // Son bonus est lui-même amplifié par la galvanisation et diminué par l'après-guerre (voir warFactor) : il avantage
+  // le royaume qui se défend (galvanisé) bien plus que celui qui vient de gagner une bataille.
+  levyFactor(p) {
+    if (!p.levyEnd || this.tick >= p.levyEnd) return 1;
+    const C = CONFIG, r = this.armySize(p) / Math.max(1, this.maxTroops(p));
+    const k = r <= C.LEVY_FROM ? 1 - 0.2 * r / C.LEVY_FROM
+      : 0.8 * Math.max(0, 1 - (r - C.LEVY_FROM) / (C.LEVY_TO - C.LEVY_FROM)) ** 2;
+    return 1 + C.LEVY_BOOST * k * Math.max(0, this.warFactor(p));
+  },
+
+  // Pourquoi la caserne a ne peut pas lancer de recrutement de masse (null si elle le peut)
+  levyError(p, a) {
+    if (this.building[a] !== B_BARRACKS || this.owner[a] !== p.id) return 'Ce n\'est pas une de tes casernes.';
+    if (this.level[a] < 3) return 'Il faut une grande caserne (niveau 3) pour lancer un recrutement de masse.';
+    if (this.levyLeft(p) > 0) return `Un recrutement de masse est déjà en cours (encore ${Math.ceil(this.levyLeft(p))} s).`;
+    if (p.gold < CONFIG.LEVY_COST) return `Pas assez d'or : il faut 💰 ${CONFIG.LEVY_COST}.`;
+    return null;
+  },
+
+  // Lancer un recrutement de masse : LEVY_COST pièces, recrutement accéléré pendant LEVY_TIME s. Renvoie une erreur, ou null.
+  startLevy(p, a) {
+    const err = this.levyError(p, a);
+    if (err) return err;
+    p.gold -= CONFIG.LEVY_COST;
+    p.levyEnd = this.tick + CONFIG.LEVY_TIME * CONFIG.TICKS_PER_SECOND;
+    const h = this.human;
+    if (!p.isHuman && h && h.alive && this.neighborStats(p.id).has(h.id)) {
+      UI.log(`⚔️ ${p.name} lance un recrutement de masse : son armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s !`, 'warn', p);
+    }
+    return null;
+  },
+
   // Croisade religieuse en cours de la cathédrale a (ou null)
   crusadeOf(a) { return this.crusades.find(c => c.church === a && this.tick < c.end) || null; },
 
@@ -1576,7 +1614,7 @@ const GameRules = {
       if ((this.tick + a * 7) % period !== 0) continue;
       const p = this.players[this.owner[a]];
       if (!p || !p.alive) continue;
-      const amount = this.buildingOutput(a) * (t === B_BARRACKS ? this.warFactor(p) * this.botBonus(p, 'troops')
+      const amount = this.buildingOutput(a) * (t === B_BARRACKS ? this.warFactor(p) * this.botBonus(p, 'troops') * this.levyFactor(p)
         : this.upkeepFactor(p) * this.botBonus(p, 'gold'));
       if (!amount) continue; // (une église hors des routes ne produit rien)
       let shown = amount;
@@ -2170,7 +2208,7 @@ const GameRules = {
     const max = this.maxTroops(p), army = this.armySize(p);
     if (army >= max) return 0;
     const base = CONFIG.BASE_TROOP_GROWTH + Math.sqrt(p.tiles) * CONFIG.TROOP_GROWTH_SQRT;
-    return base * this.growthFactor(army / max) * this.warFactor(p) * this.earlyBoost() * this.botBonus(p, 'troops');
+    return base * this.growthFactor(army / max) * this.warFactor(p) * this.earlyBoost() * this.botBonus(p, 'troops') * this.levyFactor(p);
   },
 
   // Élan de départ : multiplicateur du recrutement, de 1 + EARLY_GROWTH_BONUS au début de la partie
