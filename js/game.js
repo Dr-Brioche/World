@@ -1482,14 +1482,19 @@ const GameRules = {
       const pid = this.owner[a], k = r.comp[a];
       // Relié par la terre au royaume : ses soldats stationnés rejoignent l'armée du royaume
       if (r.heart[k] && r.hasCastle[k] && o.stationed > 0) { this.players[pid].troops += o.stationed; o.stationed = 0; }
-      const castle = this.castles.find(c => this.owner[c] === pid && r.comp[c] === k);
+      // (un château, ou un port royal : un poste de commandement, qui unifie le territoire comme une ville)
+      const castle = this.buildingTiles.find(c => this.owner[c] === pid && r.comp[c] === k && this.holdsAlone(c));
       if (castle === undefined) continue;
       const p = this.players[pid];
       p.troops += this.garrison[a] + o.stationed;
       this.colonies.set(castle, pid);
       this.regionsCache = null;
       this.removeBuilding(a);
-      if (p.isHuman) UI.log(tr('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', '🏰 Your castle turns the outpost into true kingdom land: its soldiers join your army.'), 'good');
+      if (p.isHuman) {
+        UI.log(this.building[castle] === B_PORT
+          ? tr('⚓ Ton port royal fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', '⚓ Your royal port turns the outpost into true kingdom land: its soldiers join your army.')
+          : tr('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', '🏰 Your castle turns the outpost into true kingdom land: its soldiers join your army.'), 'good');
+      }
       return; // la carte a changé : on regardera les autres au prochain tour
     }
   },
@@ -2607,7 +2612,8 @@ const GameRules = {
       for (let q = s; q < n; q++) {
         const t = order[q], b = this.building[t];
         if (b === B_OUTPOST) { anyOp = true; if (this.outpostReady(this.anchor[t])) op = this.anchor[t]; }
-        if (b === B_CASTLE) { cas = true; if (this.colonies.get(this.anchor[t]) === o) col = true; }
+        if (b === B_CASTLE) cas = true;
+        if (b && this.colonies.get(this.anchor[t]) === o) col = true; // (château ou port royal d'une ancienne zone d'avant-poste)
         if (b && this.holdsAlone(this.anchor[t])) hold = true;
       }
       outpost.push(op); anyOutpost.push(anyOp); colony.push(col); hasCastle.push(cas); held.push(hold);

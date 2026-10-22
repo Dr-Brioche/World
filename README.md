@@ -582,7 +582,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Si l'avant-poste tombe pendant que des renforts sont en mer, leur bateau **fait demi-tour** jusqu'au port.
      Les renforts qui arrivent sur un avant-poste **déjà bâti** complètent sa garnison, et les autres
      stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
-   - Si un **château est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
+   - Si un **château** ou un **port royal** (niveau 3, un poste de commandement comme une ville) **est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
      ton armée : l'avant-poste disparaît et ses soldats rejoignent tes troupes.
    - **Toute la zone de l'avant-poste** (son morceau de territoire, tant qu'il n'est pas relié au royaume) est défendue
      par **ses soldats stationnés** : si l'ennemi y attaque une église ou un port, ce sont eux qui partent le défendre.
@@ -748,7 +748,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
-- **v0.92.98** : 🔥 **assaut viking** (port royal, niveau 3, 💰 3000) : un assaut par la mer, sans avant-poste, sur une ville ennemie à 25 cases au plus d'une côte ; traversée sans pertes, soldats +50 % plus forts, flamme 🔥 au-dessus des bateaux et des assauts vikings ; les survivants d'un échec rentrent par bateau ; les bots l'utilisent aussi
+- **v0.92.98** : ⚓ un port royal (niveau 3) bâti ou pris dans la zone d'un avant-poste la fait entrer dans ton royaume, comme un château (l'avant-poste disparaît) · 🔥 **assaut viking** (port royal, niveau 3, 💰 3000) : un assaut par la mer, sans avant-poste, sur une ville ennemie à 25 cases au plus d'une côte ; traversée sans pertes, soldats +50 % plus forts, flamme 🔥 au-dessus des bateaux et des assauts vikings ; les survivants d'un échec rentrent par bateau ; les bots l'utilisent aussi
 - **v0.92.97** : ⛏️ la souris sur ⛏️ (barre du haut) fait clignoter tes mines sur la carte · ⛵ les bots n'envoient plus d'expéditions au hasard : ils débarquent avec un but (des terres libres au-delà de la mer quand il n'y en a plus à leur frontière, ou tout près d'une ville d'un ennemi plus faible), renforcent leur avant-poste par la mer, puis lancent une vraie campagne depuis lui
 - **v0.92.96** : ⬆️ la fenêtre d'amélioration annonce ce que débloque le niveau 3 : « Débloque le recrutement de masse » (caserne → grande caserne) et « Débloque les croisades » (église → cathédrale)
 - **v0.92.95** : 🌍 le jeu parle anglais ! Une liste « Langue » en haut à droite du menu de départ : 🇬🇧 English (par défaut) ou 🇫🇷 Français. Tous les textes sont traduits (menu, règles, messages, infobulles, noms des bâtiments, des terrains, des royaumes et des bannières, éditeur de cartes) · 🤝 mode Factions : clic droit chez un allié de ton camp → envoyer des soldats ou de l'or (le % de la jauge « Envoyer »), et route commerciale possible entre alliés du camp · 🛡️ l'aide des alliés contre un assaut rejoint maintenant ton armée (à toi de l'envoyer se battre) au lieu de se battre toute seule sur tes terres · 🏰 une ville (château) coûte 250 au départ, le grand port (niveau 2) 400 · 🐛 une capitale fondée près d'un fleuve n'est plus déclarée « coupée de tous ses châteaux » dès le départ (Hurlevent en mode Factions)
