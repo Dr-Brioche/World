@@ -292,8 +292,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **-20 %** en forêt, normale en plaine.
    Dans le **désert** 🏜️, tout bâtiment (moulin, caserne, port) produit **20 % de moins**.
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
-   **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher** (et **2 fois plus cher**
-   pour les **églises** et les **ports**).
+   **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher** (seulement **25 %** pour
+   les **moulins** et les **casernes**, et **2 fois plus cher** pour les **églises** et les **ports** ; les mines gardent leur prix).
    Les bâtiments que tu **prends à l'ennemi** ne comptent pas (et un bâtiment perdu ne compte plus).
    **Les moulins et casernes se construisent dans l'enceinte d'une de tes villes** (dans sa muraille),
    **ou près d'une de tes églises** (ou d'un port amélioré), qui a encore de la place, pas ailleurs dans l'arrière-pays.
@@ -456,7 +456,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      quand toutes tes cathédrales ont déjà leur croisade en cours. De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
      en retard de Croyance (un message te prévient si c'est un voisin).
 
-   - ⛏️ **Mine** (touche **7**, 💰 **400**, puis 💰 **1000** pour le niveau 2) : elle se bâtit seulement sur un **filon**, une
+   - ⛏️ **Mine** (touche **7**, 💰 **600**, puis 💰 **1200** pour le niveau 2) : elle se bâtit seulement sur un **filon**, une
      petite icône de minerai posée au hasard sur la carte : dans les **montagnes** (fer, or, diamant) ou les **collines**
      (pierre). Il y en a environ 5 de fer, 5 d'or, 5 de pierre et 2 de diamant par carte. Une mine a **2 niveaux**, ne se
      démolit pas, et rapporte **2 fois plus** si une **route** la relie à une de tes villes (une ville à moins de **30 cases**,
@@ -723,6 +723,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.89** : 💰 le prix des moulins et des casernes monte moins vite (+25 % par bâtiment au lieu de +50 %) · ⛏️ mines plus chères : 600 (au lieu de 400), puis 1 200 pour le niveau 2 (au lieu de 1 000)
 - **v0.92.88** : 🚩 menu de départ : drapeaux un peu moins zoomés (cadre 25 % plus large : on voit le haut de la lance et le début des rubans)
 - **v0.92.87** : 🚩 au menu de départ, les drapeaux sont recadrés sur leur tissu (sans la lance ni les rubans) : leur motif se voit bien ; icônes des drapeaux plus nettes
 - **v0.92.86** : 🛡️ carte Azeroth : 15 écus des races et des groupes de WoW à la place des drapeaux (Humains, Orcs, Elfes de la nuit, Défias, La Main d'Argent…), et les royaumes rivaux portent leur nom
