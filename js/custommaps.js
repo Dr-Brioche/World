@@ -44,7 +44,8 @@ const CustomMaps = {
     const list = this.saved().filter(m => m.name !== map.name);
     list.push(map);
     try { localStorage.setItem(this.KEY, JSON.stringify(list)); } catch (e) {
-      return 'Impossible d\'enregistrer : le navigateur n\'a plus de place (supprime une ancienne carte, ou exporte-la).';
+      return tr('Impossible d\'enregistrer : le navigateur n\'a plus de place (supprime une ancienne carte, ou exporte-la).',
+        'Cannot save: the browser is out of space (delete an old map, or export it).');
     }
     return null;
   },

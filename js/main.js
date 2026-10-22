@@ -15,6 +15,9 @@ const UI = {
   plan: null,
 
   init() {
+    // Langue du jeu (en haut à droite du menu) : en changer recharge la page (voir lang.js)
+    $('langSelect').value = LANG;
+    $('langSelect').addEventListener('change', function () { setLang(this.value); });
     $('ratio').addEventListener('input', e => { this.ratio = e.target.value / 100; this.refresh(); });
     // (curseur lâché : il rend la main au clavier, pour que les flèches et ZQSD déplacent de nouveau la caméra)
     $('ratio').addEventListener('change', e => e.target.blur());
@@ -27,10 +30,10 @@ const UI = {
       const btn = document.createElement('button');
       btn.className = 'build';
       btn.dataset.type = t;
-      btn.title = `${b.name} : ${b.desc} (touche ${t})`;
+      btn.title = tr(`${b.name} : ${b.desc} (touche ${t})`, `${b.name}: ${b.desc} (key ${t})`);
       btn.innerHTML = `<span class="key">${t}</span><span class="icon">${b.icon}</span>` +
         `<span>${b.name}</span><span class="cost"></span>` +
-        (t === B_CASTLE ? '<span class="count" title="Châteaux construits / maximum (ta meilleure église en débloque d\'autres)"></span>' : '');
+        (t === B_CASTLE ? `<span class="count" title="${tr('Châteaux construits / maximum (ta meilleure église en débloque d\'autres)', 'Castles built / maximum (your best church unlocks more)')}"></span>` : '');
       btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
       builds.appendChild(btn);
     }
@@ -38,7 +41,7 @@ const UI = {
     // pour lancer une croisade d'ici, sans aller cliquer sur l'église (voir refreshCrusadeBar)
     const cb = document.createElement('button');
     cb.className = 'build crusade hidden';
-    cb.innerHTML = `<span class="icon">${ICONS.cross}</span><span>Croisade</span><span class="cost"></span>`;
+    cb.innerHTML = `<span class="icon">${ICONS.cross}</span><span>${tr('Croisade', 'Crusade')}</span><span class="cost"></span>`;
     cb.addEventListener('click', () => {
       const a = this.crusadeChurch();
       if (a >= 0) this.crusade(a);
@@ -48,7 +51,7 @@ const UI = {
     // Bouton « Recrutement de masse » : il apparaît dès qu'on a une grande caserne (niveau 3) (voir refreshLevyBar)
     const lb = document.createElement('button');
     lb.className = 'build crusade hidden';
-    lb.innerHTML = `<span class="icon">${ICONS.spears}</span><span>Recrutement</span><span class="cost"></span>`;
+    lb.innerHTML = `<span class="icon">${ICONS.spears}</span><span>${tr('Recrutement', 'Recruitment')}</span><span class="cost"></span>`;
     lb.addEventListener('click', () => {
       const a = this.bigBarracks()[0];
       if (a !== undefined) this.levy(a);
@@ -80,7 +83,7 @@ const UI = {
       const cur = this.wantOpp, max = this.maxOpponents();
       $('opponents').innerHTML = '';
       for (let n = CONFIG.MIN_OPPONENTS; n <= max; n++) {
-        $('opponents').insertAdjacentHTML('beforeend', `<option value="${n}"${n === Math.min(cur, max) ? ' selected' : ''}>${n} royaumes rivaux</option>`);
+        $('opponents').insertAdjacentHTML('beforeend', `<option value="${n}"${n === Math.min(cur, max) ? ' selected' : ''}>${tr(`${n} royaumes rivaux`, `${n} rival kingdoms`)}</option>`);
       }
     };
     $('mapType').addEventListener('change', fillOpponents);
@@ -89,11 +92,11 @@ const UI = {
 
     // Choix de la bannière dans le menu (elle donne la couleur du royaume) : seulement celles de la carte choisie
     // (les écus des races de Warcraft sur la carte Azeroth, les drapeaux ailleurs) ; on retrouve le dernier choix de chaque sorte
-    const lastPick = { base: BANNERS.findIndex(b => b.name === 'Dragon'), azeroth: BANNERS.findIndex(b => b.name === 'Humains') };
+    const lastPick = { base: BANNERS.findIndex(b => b.id === 'Dragon'), azeroth: BANNERS.findIndex(b => b.id === 'Humains') };
     const fillBanners = () => {
       // (mode « Factions » : seulement les 12 races des 3 camps)
       const races = this.factionMode() ? AZEROTH_FACTIONS.flatMap(f => f.races) : null;
-      const list = bannersForMap($('mapType').value).filter(k => !races || races.includes(BANNERS[k].name));
+      const list = bannersForMap($('mapType').value).filter(k => !races || races.includes(BANNERS[k].id));
       const set = BANNERS[list[0]].set || 'base';
       $('bannerPick').innerHTML = list.map(k =>
         `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
@@ -103,10 +106,15 @@ const UI = {
     const pick = k => {
       lastPick[BANNERS[k].set || 'base'] = k;
       // (mode « Factions » : le camp de la race choisie, et sa capitale)
-      const f = this.factionMode() && AZEROTH_FACTIONS.find(f => f.races.includes(BANNERS[k].name));
+      const f = this.factionMode() && AZEROTH_FACTIONS.find(f => f.races.includes(BANNERS[k].id));
       $('factionInfo').classList.toggle('hidden', !f);
-      if (f) $('factionInfo').textContent = `⚔️ Ton camp : ${f.name} (avec ${f.races.filter(r => r !== BANNERS[k].name).join(', ')}) · ` +
-        `ta capitale : ${AZEROTH_CAPITALS[BANNERS[k].name].place}. Les 3 camps s'affrontent ; un camp ne se divise jamais.`;
+      if (f) {
+        // (les races du camp sont gardées par leur nom fixe, id : on affiche leur nom dans la langue du jeu)
+        const others = f.races.filter(r => r !== BANNERS[k].id).map(r => BANNERS.find(b => b.id === r).name).join(', ');
+        const place = AZEROTH_CAPITALS[BANNERS[k].id].place;
+        $('factionInfo').textContent = tr(`⚔️ Ton camp : ${f.name} (avec ${others}) · ta capitale : ${place}. Les 3 camps s'affrontent ; un camp ne se divise jamais.`,
+          `⚔️ Your faction: ${f.name} (with ${others}) · your capital: ${place}. The 3 factions fight each other; a faction never splits.`);
+      }
       this.banner = k;
       document.querySelectorAll('#bannerPick button').forEach(b => b.classList.toggle('active', +b.dataset.banner === k));
       $('bannerName').textContent = BANNERS[k].name;
@@ -134,7 +142,7 @@ const UI = {
     $('continueBtn').addEventListener('click', () => {
       $('endscreen').classList.add('hidden');
       Game.continueAfterVictory();
-      this.log('⚔️ La conquête continue ! Élimine les derniers royaumes si tu le souhaites.', 'good');
+      this.log(tr('⚔️ La conquête continue ! Élimine les derniers royaumes si tu le souhaites.', '⚔️ The conquest goes on! Wipe out the last kingdoms if you wish.'), 'good');
     });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
     $('speedBtn').addEventListener('click', () => this.nextSpeed());
@@ -157,15 +165,17 @@ const UI = {
       const rec = e.target.closest('[data-recall]');
       if (rec) {
         const boat = Game.recallExpedition(Game.human.id, +rec.dataset.recall);
-        if (boat) this.log(`Ton bateau fait demi-tour vers le port : environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % des soldats à bord se perdront.`, 'warn');
+        if (boat) this.log(tr(`Ton bateau fait demi-tour vers le port : environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % des soldats à bord se perdront.`,
+          `Your ship turns back to port: about ${Math.round(CONFIG.RETREAT_LOSS * 100)}% of the soldiers on board will be lost.`), 'warn');
         return this.refreshAttacks();
       }
       const cancel = e.target.closest('[data-cancel]');
       if (!cancel) return;
       const id = cancel.dataset.cancel;
       const a = Game.cancelAttack(Game.human.id, +id);
-      if (a && a.calledBack) this.log('↩️ Ton armée n\'avait pas encore quitté tes terres : elle rentre tout de suite, sans perte.', 'good');
-      else if (a) this.log(`🏳️ Retraite ordonnée : tes soldats décrochent en ${CONFIG.RETREAT_TIME} s, et environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdront.`, 'warn');
+      if (a && a.calledBack) this.log(tr('↩️ Ton armée n\'avait pas encore quitté tes terres : elle rentre tout de suite, sans perte.', '↩️ Your army had not left your lands yet: it comes straight back, with no losses.'), 'good');
+      else if (a) this.log(tr(`🏳️ Retraite ordonnée : tes soldats décrochent en ${CONFIG.RETREAT_TIME} s, et environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdront.`,
+        `🏳️ Retreat ordered: your soldiers pull back in ${CONFIG.RETREAT_TIME} s, and about ${Math.round(CONFIG.RETREAT_LOSS * 100)}% will be lost.`), 'warn');
       this.refreshAttacks();
     });
 
@@ -246,7 +256,7 @@ const UI = {
   start() {
     Game.init({
       factions: this.factionMode(),
-      name: $('name').value.trim() || 'Mon Royaume',
+      name: $('name').value.trim() || tr('Mon Royaume', 'My Kingdom'),
       banner: this.banner,
       difficulty: $('difficulty').value,
       opponents: +$('opponents').value,
@@ -259,14 +269,16 @@ const UI = {
     Render.setupMap();
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
-    $('hint').textContent = '👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale';
+    $('hint').textContent = tr('👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale',
+      '👑 The rival kingdoms are already settled: click on free land to found your capital');
     // Mode « Factions » : chacun est déjà à sa capitale ; la partie attend en pause que le joueur se repère
     if (Game.factions) {
-      const h = Game.human, place = AZEROTH_CAPITALS[BANNERS[h.banner].name].place;
+      const h = Game.human, place = AZEROTH_CAPITALS[BANNERS[h.banner].id].place;
       const half = Game.sizeOf(B_CASTLE) / 2;
       Render.centerOn(h.capital % Game.W + half, ((h.capital / Game.W) | 0) + half);
-      $('pauseBtn').textContent = '▶ Reprendre';
-      this.log(`⚔️ Tu es à ${place}, avec ton camp : ${Game.pactName(h)}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`, 'good');
+      $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
+      this.log(tr(`⚔️ Tu es à ${place}, avec ton camp : ${Game.pactName(h)}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`,
+        `⚔️ You are in ${place}, with your faction: ${Game.pactName(h)}. The game is paused: get your bearings, then ▶ Resume (or P) to start!`), 'good');
     }
   },
 
@@ -280,11 +292,11 @@ const UI = {
   // Infobulle des petits carrés d'alliés dans le classement
   alliesTitle(p) {
     const names = Game.allies(p.id).map(o => o.name);
-    return escapeHtml(names.length ? `${Game.pactName(p)} : avec ${names.join(', ')}` : 'Aucun pacte');
+    return escapeHtml(names.length ? tr(`${Game.pactName(p)} : avec ${names.join(', ')}`, `${Game.pactName(p)}: with ${names.join(', ')}`) : tr('Aucun pacte', 'No pact'));
   },
 
   openRules() {
-    if (!$('rulesBody').firstChild) $('rulesBody').appendChild(document.querySelector('.rulesBox .rules').cloneNode(true));
+    if (!$('rulesBody').firstChild) $('rulesBody').appendChild(document.querySelector('.rulesBox .rules.' + LANG).cloneNode(true));
     this.rulesPaused = !Game.paused; // (on ne remet le jeu en marche en fermant que si c'est nous qui l'avons arrêté)
     if (this.rulesPaused) this.togglePause();
     $('rulesScreen').classList.remove('hidden');
@@ -304,13 +316,14 @@ const UI = {
     if (!this.isHost()) return;
     const S = CONFIG.GAME_SPEEDS, k = S.indexOf(Game.speed);
     Game.speed = S[(k + 1) % S.length];
-    $('speedBtn').textContent = `⏩ x${String(Game.speed).replace('.', ',')}`;
+    $('speedBtn').textContent = `⏩ x${LANG === 'fr' ? String(Game.speed).replace('.', ',') : Game.speed}`;
   },
 
   togglePause() {
     if (!this.isHost()) return;
     Game.paused = !Game.paused;
-    $('pauseBtn').textContent = Game.paused ? '▶ Reprendre' : '⏸ Pause';
+    $('pauseBtn').textContent = Game.paused ? tr('▶ Reprendre', '▶ Resume') : '⏸ Pause';
+
   },
 
   // Barre de résumé (fixe, juste sous la barre du haut) quand on survole un autre royaume : ses soldats, ses bâtiments

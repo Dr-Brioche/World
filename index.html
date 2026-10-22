@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -15,26 +15,26 @@
   <div id="hud" class="hidden">
     <div id="topbar" class="panel">
       <span><img id="kBanner" alt=""> <b id="kName"></b></span>
-      <span title="Or">💰 <span id="gold"></span></span>
-      <span title="Part des terres">🗺️ <span id="land"></span></span>
+      <span title="Or" data-en-title="Gold">💰 <span id="gold"></span></span>
+      <span title="Part des terres" data-en-title="Share of the land">🗺️ <span id="land"></span></span>
       <span id="minesBox" class="hidden">⛏️ <span id="mines"></span></span>
-      <span title="Puissance de tes troupes (100 % = des soldats ordinaires) : ta meilleure caserne, tes mines de fer et ta cité impériale la font monter">⚔️ <span id="power"></span></span>
-      <span id="faithBox" title="Croyance (tes églises) : plus que ton voisin ennemi, tu convertis peu à peu ses terres">✝️ <span id="faith"></span></span>
-      <span title="Durée de la partie">⏳ <span id="clock">0:00</span></span>
+      <span title="Puissance de tes troupes (100 % = des soldats ordinaires) : ta meilleure caserne, tes mines de fer et ta cité impériale la font monter" data-en-title="Strength of your troops (100% = ordinary soldiers): your best barracks, your iron mines and your imperial city raise it">⚔️ <span id="power"></span></span>
+      <span id="faithBox" title="Croyance (tes églises) : plus que ton voisin ennemi, tu convertis peu à peu ses terres" data-en-title="Faith (your churches): with more than an enemy neighbour, you slowly convert their land">✝️ <span id="faith"></span></span>
+      <span title="Durée de la partie" data-en-title="Game time">⏳ <span id="clock">0:00</span></span>
       <span id="traitor" class="hidden"></span>
       <button id="pauseBtn" class="hostOnly">⏸ Pause</button>
-      <button id="speedBtn" class="hostOnly" title="Vitesse de la partie (clique pour changer)">⏩ x1</button>
-      <button id="rulesBtn" title="Les règles du jeu (le jeu se met en pause)">📜 Règles</button>
+      <button id="speedBtn" class="hostOnly" title="Vitesse de la partie (clique pour changer)" data-en-title="Game speed (click to change)">⏩ x1</button>
+      <button id="rulesBtn" title="Les règles du jeu (le jeu se met en pause)" data-en-title="The rules of the game (the game pauses)" data-en="📜 Rules">📜 Règles</button>
     </div>
 
     <div id="side" class="panel">
-      <h3>Royaumes</h3>
+      <h3 data-en="Kingdoms">Royaumes</h3>
       <ol id="lb"></ol>
     </div>
 
     <div id="bottomwrap">
       <div id="attacks"></div>
-      <div id="troopGauge" class="panel" title="Tes soldats. La couleur montre ton recrutement : vert = au top, orange = normal, rouge = ralenti.">
+      <div id="troopGauge" class="panel" title="Tes soldats. La couleur montre ton recrutement : vert = au top, orange = normal, rouge = ralenti." data-en-title="Your soldiers. The colour shows your recruitment: green = at its best, orange = normal, red = slowed down.">
         <div id="troopRate"></div>
         <div class="gauge">
           <div id="troopFill"></div>
@@ -43,7 +43,7 @@
       </div>
       <div id="bottombar" class="panel">
         <label class="slider">
-          Envoyer
+          <span data-en="Send">Envoyer</span>
           <input type="range" id="ratio" min="5" max="100" value="30">
           <span id="ratioVal"></span>
         </label>
@@ -58,66 +58,73 @@
   <!-- Menu de départ -->
   <div id="menu" class="overlay">
     <div class="card">
+      <!-- (la langue du jeu, en haut à droite : l'anglais par défaut, ou le français) -->
+      <div class="langRow">
+        <select id="langSelect" title="Language / Langue">
+          <option value="en">🇬🇧 English</option>
+          <option value="fr">🇫🇷 Français</option>
+        </select>
+      </div>
       <h1>⚔️ Medieval Emperor ⚔️</h1>
-      <p class="sub">Étends ton royaume, bâtis des châteaux, écrase tes rivaux.</p>
-      <label>Nom de ton royaume <input id="name" maxlength="20" value="Mon Royaume"></label>
-      <div class="pickTitle">Ta bannière : <b id="bannerName"></b></div>
+      <p class="sub" data-en="Expand your kingdom, build castles, crush your rivals.">Étends ton royaume, bâtis des châteaux, écrase tes rivaux.</p>
+      <label><span data-en="Your kingdom's name">Nom de ton royaume</span> <input id="name" maxlength="20" value="Mon Royaume"></label>
+      <div class="pickTitle"><span data-en="Your banner:">Ta bannière :</span> <b id="bannerName"></b></div>
       <!-- (une liste déroulante : le drapeau choisi, en grand ; un clic ouvre la liste de tous les drapeaux) -->
-      <button type="button" id="bannerBtn" title="Changer de bannière"><img id="bannerCur" alt=""><span>▾ changer</span></button>
+      <button type="button" id="bannerBtn" title="Changer de bannière" data-en-title="Change banner"><img id="bannerCur" alt=""><span data-en="▾ change">▾ changer</span></button>
       <div id="bannerPick" class="hidden"></div>
-      <label>Carte
+      <label><span data-en="Map">Carte</span>
         <select id="mapType">
-          <optgroup label="🎲 Cartes aléatoires">
-            <option value="normal" selected>Normale</option>
-            <option value="continental">Continentale</option>
-            <option value="naval">Base navale</option>
+          <optgroup label="🎲 Cartes aléatoires" data-en-label="🎲 Random maps">
+            <option value="normal" selected data-en="Normal">Normale</option>
+            <option value="continental" data-en="Continental">Continentale</option>
+            <option value="naval" data-en="Naval base">Base navale</option>
           </optgroup>
-          <optgroup label="🗺️ Cartes prédéfinies">
-            <option value="world">Monde</option>
+          <optgroup label="🗺️ Cartes prédéfinies" data-en-label="🗺️ Preset maps">
+            <option value="world" data-en="World">Monde</option>
             <option value="europe">Europe</option>
             <option value="azeroth">Azeroth</option>
           </optgroup>
-          <optgroup id="customMaps" label="✏️ Cartes dessinées"></optgroup>
+          <optgroup id="customMaps" label="✏️ Cartes dessinées" data-en-label="✏️ Drawn maps"></optgroup>
         </select>
       </label>
       <!-- (seulement pour la carte Azeroth) -->
-      <label id="gameModeRow" class="hidden">Mode de jeu
+      <label id="gameModeRow" class="hidden"><span data-en="Game mode">Mode de jeu</span>
         <select id="gameMode">
-          <option value="libre">Libre</option>
+          <option value="libre" data-en="Free">Libre</option>
           <option value="factions">Factions</option>
         </select>
       </label>
       <div id="factionInfo" class="factionInfo hidden"></div>
-      <label>Taille de la carte
+      <label><span data-en="Map size">Taille de la carte</span>
         <select id="mapSize">
-          <option value="petit">Petite</option>
-          <option value="moyen" selected>Moyenne</option>
-          <option value="grand">Grande</option>
+          <option value="petit" data-en="Small">Petite</option>
+          <option value="moyen" selected data-en="Medium">Moyenne</option>
+          <option value="grand" data-en="Large">Grande</option>
         </select>
       </label>
-      <label>Pactes (alliances)
+      <label><span data-en="Pacts (alliances)">Pactes (alliances)</span>
         <select id="pacts">
-          <option value="non" selected>Interdits</option>
-          <option value="oui">Autorisés</option>
+          <option value="non" selected data-en="Forbidden">Interdits</option>
+          <option value="oui" data-en="Allowed">Autorisés</option>
         </select>
       </label>
-      <label>Difficulté
+      <label><span data-en="Difficulty">Difficulté</span>
         <select id="difficulty">
-          <option value="facile">Facile</option>
-          <option value="normal" selected>Normale</option>
-          <option value="difficile">Difficile</option>
+          <option value="facile" data-en="Easy">Facile</option>
+          <option value="normal" selected data-en="Normal">Normale</option>
+          <option value="difficile" data-en="Hard">Difficile</option>
         </select>
       </label>
-      <label>Adversaires
+      <label><span data-en="Opponents">Adversaires</span>
         <select id="opponents"></select> <!-- (rempli par main.js : de MIN_OPPONENTS à un par drapeau) -->
       </label>
-      <button id="startBtn" class="big">Commencer la conquête</button>
+      <button id="startBtn" class="big" data-en="Start the conquest">Commencer la conquête</button>
       <div class="menuFoot">
         <!-- (en bas à droite, en face des règles : ouvre l'éditeur de cartes) -->
-        <button type="button" id="editorBtn" onclick="location.href='editeur.html'">🖌️ Création de carte</button>
+        <button type="button" id="editorBtn" onclick="location.href='editeur.html'" data-en="🖌️ Map editor">🖌️ Création de carte</button>
         <details class="rulesBox">
-          <summary>📜 Règles du jeu</summary>
-          <ul class="rules">
+          <summary data-en="📜 Rules of the game">📜 Règles du jeu</summary>
+          <ul class="rules fr">
             <li>🖌️ <b>Cartes dessinées</b> : le bouton « Création de carte » (en bas du menu) ouvre l'éditeur ; une carte enregistrée apparaît dans la liste des cartes (✏️ Cartes dessinées).</li>
             <li>👑 <b>Départ</b> : les royaumes rivaux sont déjà installés. Regarde qui est où, puis clique sur une terre libre pour fonder ta capitale.</li>
             <li>⚔️ <b>Factions</b> (carte Azeroth) : 3 camps éternels (Alliance, Horde, Pacte sauvage), chacun à ses capitales du jeu ; on choisit sa race, pas son point de départ, et la partie démarre en pause.</li>
@@ -172,6 +179,61 @@
             <li>⌨️ <b>Clic droit</b> : menu d'actions · <b>Échap</b> : annuler · <b>P</b> : pause · molette : zoom · glisser, <b>ZQSD</b> ou les <b>flèches</b> : déplacer la carte.</li>
             <li>🏆 Possède 70 % des terres (ou élimine tout le monde) pour gagner. Anéantir un royaume rapporte 500 pièces et son trésor.</li>
           </ul>
+          <ul class="rules en">
+            <li>🖌️ <b>Drawn maps</b>: the « Map editor » button (at the bottom of the menu) opens the editor; a saved map appears in the list of maps (✏️ Drawn maps).</li>
+            <li>👑 <b>Start</b>: the rival kingdoms are already settled. Look at who is where, then click on free land to found your capital.</li>
+            <li>⚔️ <b>Factions</b> (Azeroth map): 3 eternal factions (Alliance, Horde, Wild Pact), each one at its capitals from the game; you choose your race, not your starting point, and the game starts paused.</li>
+            <li>🎚️ <b>Difficulty</b>: in Hard, the bots are more numerous, more aggressive and slightly favoured: +25% gold, 20% faster recruitment and 10% stronger soldiers.</li>
+            <li>⚔️ <b>Strength</b>: at the top, the strength of your soldiers in % (100% = ordinary). Your best barracks, your iron mines and your imperial city raise it.</li>
+            <li>⏩ <b>Speed</b>: in game, the ⏩ button at the top changes the game speed (x1, x1.5, x2, x3); ⏸ pauses it.</li>
+            <li>🖱️ <b>Expand</b>: click twice in a row on neighbouring free land (the « Send » slider chooses the % of soldiers). Free land is taken quickly for the whole game, and at the start your kingdom recruits faster.</li>
+            <li>🎯 <b>Attack a kingdom</b>: click on one of its <b>castles, churches, ports, mines or outposts</b> to target it (golden path), then <b>a 2nd time</b> to launch. 🏛️ Power is held by walls with their garrison (a city or a fortified port): without any city or fortified port, it is anarchy, the kingdom is disorganized and can be attacked head-on, anywhere (the bigger the army, the faster it advances), but you can also target one of its churches or ports to take its whole area at once (with a citadel: both at once). 👑 At level 4, a city becomes an <b>imperial city</b> (only one per game): stronger troops, stone roads…; the same goes for a piece of a kingdom with no city and no fortified port (nobody defends it, until it is linked to a castle).</li>
+            <li>⚔️ <b>The assault</b> leaves from your nearest city and marches across your land to your border (without slowing down inside the walls of your cities, whatever the terrain), by the fastest path (slow in rough terrain and for a big army, but 60% faster than in enemy land): click the target again to add soldiers right away. In enemy land it advances slowly (especially in rough terrain, and all the more so as the army is big), and your reinforcements march from your city: the farther the army, the longer they take. The army does not cross the walls of a castle: once at the foot of the wall, it must hold a <b>siege</b> (8, 13 or 18 s depending on its level; 10 s for an outpost), and only then does its garrison come out to fight. The siege pauses while its defenders are fighting the army. A city, church or port that has just been conquered cannot be attacked for 30 s. Disorganized land is taken 25% faster. Taking a castle, a church or a port gives its whole area and its buildings; but a failed assault gives back to the defender the path it had cut.</li>
+            <li>🏳️ <b>Retreat</b>: the small red cross in the corner of an assault's bar (or of a ship at sea) calls your soldiers back: 3 s to disengage (a ship turns back to port), and 15% losses (none if the army has not yet left your land).</li>
+            <li>🛡️ <b>Defend</b>: an assault is targeting you (its name flashes in the leaderboard: click it to see where)? As soon as it enters your land, click on its <b>banner</b>: your defenders leave from your nearest castle and march to meet it by the fastest path through your land, 18% faster than an assault (click again to reinforce your defending army: the soldiers join it in 3 s). Each soldier in a garrison counts as 3 in battle. Your allies can send you help.</li>
+            <li>⚰️ <b>Post-war</b>: winning an assault lowers your soldier production (−25%, 30 s; not for a destroyed outpost); the loser is <b>rallied</b> (+25%). Repelling an assault also rallies (+25%, 15 s). These effects add up: a +25% cancels a −25%.</li>
+            <li>✂️ <b>Cut</b> a kingdom: on each island, it only keeps its biggest piece (and the other pieces held by a city that are at least 25% of the biggest); the others go at once to whoever cut it. Only its castles and level 3 ports hold out, isolated: their owner clicks on them to link them back with an assault. If <b>all</b> your castles are isolated, your army is stuck there: your territory is no longer defended and no army leaves it, until you link it back or build a castle there (which is the only building a territory without a castle can build).</li>
+            <li>🗺️ <b>Terrain</b>: forests, hills and mountains are easier to defend (<b>wooded hills</b> combine the bonuses of forest and hills); snowy peaks cannot be crossed. 🌊 Rivers belong to nobody: you cross them at a ford (right-click on the opposite bank); an assault also fords them, slowly, even in the middle of enemy land. 🌉 If both banks are yours (or one yours, the other an ally's), right-click on the river → <b>bridge</b> (💰 700): your soldiers cross it without losing time, and so do roads. 🏜️ <b>Deserts</b> are taken like plains, but the buildings placed on them produce 20% less.</li>
+            <li>🏗️ <b>Buildings</b>: keys <b>1</b> to <b>5</b> and <b>7</b> (or the buttons at the bottom), then click on your territory. Click on one of your buildings to <b>upgrade</b> ⬆️ or <b>destroy</b> ✖ it. Each building of the same type costs a little more than the previous one.
+              <ul>
+                <li>🏰 <b>Castle (city)</b> — 3 levels (+ the imperial city).
+                  <br>– Protects its land with its walls: it can only be attacked by besieging it.
+                  <br>– A garrison that defends, and room to build mills and barracks (4, 6 then 9).
+                  <br>– 3 castles built at most (an upgraded church unlocks more).
+                  <br>– Level 2: a <b>wall</b> (12 tiles, no assault crosses it) and a trade route to an ally.</li>
+                <li>🌾 <b>Mill</b> — 2 levels.
+                  <br>– Gold every 10 s.
+                  <br>– Inside a city's walls, or near a church or a great port.
+                  <br>– Best on plains; linked by a road to an upgraded city: it produces more.</li>
+                <li>⚔️ <b>Barracks</b> — 3 levels.
+                  <br>– Soldiers every 10 s, and a bigger army.
+                  <br>– At levels 2 and 3: <b>all</b> your soldiers are stronger.
+                  <br>– Level 3: <b>mass recruitment</b> (💰 3000): 60 s of much faster recruitment, especially if your army is small (up to x3, almost nothing beyond half of your max army); amplified by rally, reduced by post-war.
+                  <br>– Same place as the mill; best in forests and hills.</li>
+                <li>⛪ <b>Church</b> — 3 levels.
+                  <br>– <b>Faith</b> (10, 30, 50): with more than your neighbour, you convert their land.
+                  <br>– Room for mills and barracks around it, and extra castles.
+                  <br>– No defence: it can be attacked directly. The cathedral launches crusades.</li>
+                <li>⚓ <b>Port</b> — 3 levels, by the water.
+                  <br>– Gold, even more if it is linked to cities and their mills.
+                  <br>– Level 2: <b>naval expeditions</b>. Level 3: small walls and a garrison.</li>
+                <li>⛏️ <b>Mine</b> — 2 levels, only on an <b>ore vein</b> (the ore icons, in mountains; in hills for stone). It can be placed even inside a city's walls or next to another building; other buildings, however, leave 2 free tiles around an ore vein.
+                  <br>– ⚒️ <b>Iron</b>: all your troops stronger (3 mines at most).
+                  <br>– 🪙 <b>Gold</b>: 2,500 coins in 10 min, then the vein runs dry; level 2 restarts it (2,500 more in 10 min).
+                  <br>– 🪨 <b>Stone</b>: cheaper upgrades, walls and bridges (3 quarries at most).
+                  <br>– 💎 <b>Diamond</b>: 20 min of mining: 1,000, 2,000 then 3,000 coins at the first three quarters, and 10,000 at the end.
+                  <br>– A road to one of your cities doubles the effect. It cannot be demolished, but it can be attacked directly, like a church.</li>
+                <li>⛺ <b>Outpost</b> — cannot be built: it appears when your soldiers land on a coast.</li>
+                <li>🏝️ <b>Unassailable islets</b> — on an islet where nobody can land any more (no free room outside the walls), a kingdom's land vanishes.</li>
+              </ul></li>
+            <li>✝️ <b>Faith</b>: each church brings some (10, 30 or 50 depending on its level, +50% if it is linked to a road). If you have more Faith than an enemy neighbour (not an ally), you slowly convert their border land, all the faster as the gap is large (green 📖 in the leaderboard); if they have more than you, they convert yours (red 📖). Cities, fortified ports and what lies inside their walls are never converted. Neither are mills and barracks: they follow the church, port or city whose room they use. A cathedral can launch a <b>crusade</b> (💰 2500): +1000 Faith for 60 s (also with the ✝️ Crusade button of the building bar, which appears with your first cathedral).</li>
+            <li>💰 <b>Economy</b>: the bigger your kingdom, the more it recruits, but less and less quickly. An army that is too full costs gold (up to −25% of gold earned).</li>
+            <li>⛵ <b>Sea</b>: with a level 2 port, right-click on a distant coast → naval attack (2 at most against the same kingdom). Your soldiers build an <b>outpost</b> there that defends its area with its soldiers; click on it to send reinforcements or bring its troops home. A castle built or taken in its area brings it into your kingdom.</li>
+            <li>🤝 <b>Pacts</b> (if allowed): allies are surrounded by a dotted border (gold and the founder's colour). Only the founder accepts new members. Right-click on an ally's land: send them soldiers or gold. Attacking an ally is betraying them. 🛒 A level 2 city can open a <b>trade route</b> to an ally's city (button in its menu, next to the wall): gold every 10 s, all the more as the route is long.</li>
+            <li>🔍 Hover over a rival kingdom: a bar sums up its soldiers, buildings and land. Click on a name in the leaderboard to go and see that kingdom. 🏳️ A white flag marks disorganized land.</li>
+            <li>⌨️ <b>Right-click</b>: action menu · <b>Esc</b>: cancel · <b>P</b>: pause · wheel: zoom · drag, <b>WASD</b> or the <b>arrows</b>: move the map.</li>
+            <li>🏆 Own 70% of the land (or eliminate everyone) to win. Wiping out a kingdom brings 500 coins and its treasury.</li>
+          </ul>
         </details>
       </div>
     </div>
@@ -180,9 +242,9 @@
   <!-- Les règles, en jeu (bouton « Règles » : le jeu se met en pause) -->
   <div id="rulesScreen" class="overlay hidden">
     <div class="card rulesCard">
-      <h1>📜 Règles du jeu</h1>
+      <h1 data-en="📜 Rules of the game">📜 Règles du jeu</h1>
       <div id="rulesBody"></div>
-      <button id="rulesClose" class="big">Reprendre la partie</button>
+      <button id="rulesClose" class="big" data-en="Resume the game">Reprendre la partie</button>
     </div>
   </div>
 
@@ -192,11 +254,12 @@
       <h1 id="endTitle"></h1>
       <p id="endText"></p>
       <p id="endStats"></p>
-      <button id="continueBtn" class="big hidden">Continuer</button>
-      <button id="replayBtn" class="big">Rejouer</button>
+      <button id="continueBtn" class="big hidden" data-en="Continue">Continuer</button>
+      <button id="replayBtn" class="big" data-en="Play again">Rejouer</button>
     </div>
   </div>
 
+  <script src="js/lang.js"></script>
   <script src="js/config.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/map.js"></script>

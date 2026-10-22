@@ -404,7 +404,8 @@ const GameRules = {
 
   // « ce château », « cette église »… pour les messages
   targetLabel(a) {
-    return ['', '', '', 'ce château', 'cette église', 'ce port', 'cet avant-poste', 'cette mine'][this.building[a]] || 'cette cible';
+    return tr(['', '', '', 'ce château', 'cette église', 'ce port', 'cet avant-poste', 'cette mine'],
+      ['', '', '', 'this castle', 'this church', 'this port', 'this outpost', 'this mine'])[this.building[a]] || tr('cette cible', 'this target');
   },
 
   // Retire un bâtiment de la carte (un avant-poste détruit)
@@ -514,7 +515,7 @@ const GameRules = {
   },
   // Les infos d'une mine de cette sorte, à ce niveau (sans mine posée : pour les aperçus)
   mineInfoAt(kind, lvl) {
-    const m = MINES[kind], name = lvl > 1 ? 'Grande ' + m.name[0].toLowerCase() + m.name.slice(1) : m.name;
+    const m = MINES[kind], name = lvl > 1 ? tr('Grande ', 'Great ') + m.name[0].toLowerCase() + m.name.slice(1) : m.name;
     // (or : les 2000 pièces du filon, réparties sur ses versements : un toutes les PRODUCTION_INTERVAL secondes)
     const gold = m.total ? m.total / (m.time / CONFIG.PRODUCTION_INTERVAL) : undefined;
     return { ...MINE_LEVELS[lvl], name, kind, power: m.power && m.power[lvl], gold,
@@ -571,7 +572,9 @@ const GameRules = {
         d.left--;
         if (d.left <= 0) {
           this.version++; // (sa route disparaît)
-          if (p.isHuman) UI.log('🪙 Ta mine d\'or est épuisée' + (this.level[a] < 2 ? ` : améliore-la pour la relancer ${Math.round(MINES.gold.time / 60)} minutes de plus !` : ' pour de bon.'), 'warn');
+          if (p.isHuman) UI.log(tr('🪙 Ta mine d\'or est épuisée', '🪙 Your gold mine is exhausted') + (this.level[a] < 2
+            ? tr(` : améliore-la pour la relancer ${Math.round(MINES.gold.time / 60)} minutes de plus !`, `: upgrade it to run it ${Math.round(MINES.gold.time / 60)} more minutes!`)
+            : tr(' pour de bon.', ' for good.')), 'warn');
         }
         continue;
       }
@@ -582,13 +585,13 @@ const GameRules = {
         const pay = m.pay[d.paid]; // (1 000 au 1er quart, 2 000 au 2e, 3 000 au 3e)
         d.paid++;
         p.gold += pay;
-        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(pay)} 💰`); UI.log(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(pay)} pièces !`, 'good'); }
+        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(pay)} 💰`); UI.log(tr(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(pay)} pièces !`, `💎 Your diamond mine is ${d.paid}/4 mined: +${fmt(pay)} gold!`), 'good'); }
       }
       if (d.progress >= 1) {
         p.gold += m.final;
         this.version++;
-        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(m.final)} 💰`); UI.log(`💎 Ta mine de diamant est entièrement extraite : +${fmt(m.final)} pièces ! Le filon est épuisé.`, 'good'); }
-        else if (this.human && this.human.alive) UI.log(`💎 ${p.name} a fini d'extraire une mine de diamant : +${fmt(m.final)} pièces !`, 'warn', p);
+        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(m.final)} 💰`); UI.log(tr(`💎 Ta mine de diamant est entièrement extraite : +${fmt(m.final)} pièces ! Le filon est épuisé.`, `💎 Your diamond mine is fully mined: +${fmt(m.final)} gold! The ore vein is exhausted.`), 'good'); }
+        else if (this.human && this.human.alive) UI.log(tr(`💎 ${p.name} a fini d'extraire une mine de diamant : +${fmt(m.final)} pièces !`, `💎 ${p.name} has finished mining a diamond mine: +${fmt(m.final)} gold!`), 'warn', p);
       }
     }
   },
@@ -616,13 +619,13 @@ const GameRules = {
   // (40 s pour passer au niveau 2, 60 s pour le niveau 3, quel que soit le bâtiment).
   // Renvoie un message d'erreur, ou null si les travaux commencent.
   upgradeBuilding(p, a) {
-    if (!this.building[a] || this.owner[a] !== p.id) return 'Ce n\'est pas un de tes bâtiments.';
-    if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
+    if (!this.building[a] || this.owner[a] !== p.id) return tr('Ce n\'est pas un de tes bâtiments.', 'This is not one of your buildings.');
+    if (this.works.has(a)) return tr('Des travaux sont déjà en cours sur ce bâtiment.', 'Works are already under way on this building.');
     const cost = this.upgradeCost(a);
-    if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
+    if (cost === null) return tr('Ce bâtiment est déjà au niveau maximum.', 'This building is already at the maximum level.');
     const why = this.upgradeBlocker(p, a);
     if (why) return why;
-    if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
+    if (p.gold < cost) return tr(`Pas assez d'or (${cost} nécessaires).`, `Not enough gold (${cost} needed).`);
     p.gold -= cost;
     const T = CONFIG.UPGRADE_TIME, secs = T[Math.min(T.length - 1, this.level[a] - 1)];
     this.startWorks(p, a, 'up', secs, cost);
@@ -635,13 +638,13 @@ const GameRules = {
     const levels = BUILDING_LEVELS[this.building[a]], next = levels && levels[this.level[a] + 1];
     if (!next || !next.imperial) return null;
     const building = [...this.works].some(([b, w]) => w.pid === p.id && w.kind === 'up' && this.building[b] === B_CASTLE && this.level[b] >= 3);
-    if (p.imperialBuilt || building) return 'Tu as déjà ta cité impériale : une seule par partie.';
+    if (p.imperialBuilt || building) return tr('Tu as déjà ta cité impériale : une seule par partie.', 'You already have your imperial city: only one per game.');
     const top = t => BUILDING_LEVELS[t].length - 1; // (le niveau maximum de ce type de bâtiment)
     const missing = [B_MILL, B_BARRACKS, B_CHURCH, B_PORT].filter(t =>
       !this.buildingTiles.some(b => this.building[b] === t && this.owner[b] === p.id && this.level[b] >= top(t)));
     if (missing.length) {
-      return 'Il faut un bâtiment de chaque type au niveau maximum. Il manque : ' +
-        missing.map(t => `${BUILDINGS[t].name} niveau ${top(t)}`).join(', ') + '.';
+      return tr('Il faut un bâtiment de chaque type au niveau maximum. Il manque : ', 'You need one building of each type at the maximum level. Missing: ') +
+        missing.map(t => tr(`${BUILDINGS[t].name} niveau ${top(t)}`, `${BUILDINGS[t].name} level ${top(t)}`)).join(', ') + '.';
     }
     return null;
   },
@@ -651,9 +654,9 @@ const GameRules = {
 
   // Lance la démolition d'un de ses bâtiments (DEMOLISH_TIME secondes). Renvoie un message d'erreur, ou null.
   demolishBuilding(p, a) {
-    if (!this.building[a] || this.owner[a] !== p.id || this.building[a] === B_OUTPOST) return 'Ce n\'est pas un de tes bâtiments.';
-    if (this.building[a] === B_MINE) return 'Une mine ne se démolit pas.';
-    if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
+    if (!this.building[a] || this.owner[a] !== p.id || this.building[a] === B_OUTPOST) return tr('Ce n\'est pas un de tes bâtiments.', 'This is not one of your buildings.');
+    if (this.building[a] === B_MINE) return tr('Une mine ne se démolit pas.', 'A mine cannot be demolished.');
+    if (this.works.has(a)) return tr('Des travaux sont déjà en cours sur ce bâtiment.', 'Works are already under way on this building.');
     this.startWorks(p, a, 'down', CONFIG.DEMOLISH_TIME, 0);
     return null;
   },
@@ -705,10 +708,10 @@ const GameRules = {
 
   // Pourquoi la caserne a ne peut pas lancer de recrutement de masse (null si elle le peut)
   levyError(p, a) {
-    if (this.building[a] !== B_BARRACKS || this.owner[a] !== p.id) return 'Ce n\'est pas une de tes casernes.';
-    if (this.level[a] < 3) return 'Il faut une grande caserne (niveau 3) pour lancer un recrutement de masse.';
-    if (this.levyLeft(p) > 0) return `Un recrutement de masse est déjà en cours (encore ${Math.ceil(this.levyLeft(p))} s).`;
-    if (p.gold < CONFIG.LEVY_COST) return `Pas assez d'or : il faut 💰 ${CONFIG.LEVY_COST}.`;
+    if (this.building[a] !== B_BARRACKS || this.owner[a] !== p.id) return tr('Ce n\'est pas une de tes casernes.', 'This is not one of your barracks.');
+    if (this.level[a] < 3) return tr('Il faut une grande caserne (niveau 3) pour lancer un recrutement de masse.', 'You need great barracks (level 3) to start a mass recruitment.');
+    if (this.levyLeft(p) > 0) return tr(`Un recrutement de masse est déjà en cours (encore ${Math.ceil(this.levyLeft(p))} s).`, `A mass recruitment is already under way (${Math.ceil(this.levyLeft(p))} s left).`);
+    if (p.gold < CONFIG.LEVY_COST) return tr(`Pas assez d'or : il faut 💰 ${CONFIG.LEVY_COST}.`, `Not enough gold: you need 💰 ${CONFIG.LEVY_COST}.`);
     return null;
   },
 
@@ -720,7 +723,8 @@ const GameRules = {
     p.levyEnd = this.tick + CONFIG.LEVY_TIME * CONFIG.TICKS_PER_SECOND;
     const h = this.human;
     if (!p.isHuman && h && h.alive && this.neighborStats(p.id).has(h.id)) {
-      UI.log(`⚔️ ${p.name} lance un recrutement de masse : son armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s !`, 'warn', p);
+      UI.log(tr(`⚔️ ${p.name} lance un recrutement de masse : son armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s !`,
+        `⚔️ ${p.name} starts a mass recruitment: their army rebuilds much faster for ${CONFIG.LEVY_TIME} s!`), 'warn', p);
     }
     return null;
   },
@@ -730,10 +734,10 @@ const GameRules = {
 
   // Pourquoi la cathédrale a ne peut pas lancer de croisade (null si elle le peut)
   crusadeError(p, a) {
-    if (this.building[a] !== B_CHURCH || this.owner[a] !== p.id) return 'Ce n\'est pas une de tes églises.';
-    if (this.level[a] < 3) return 'Il faut une cathédrale (église de niveau 3) pour lancer une croisade.';
-    if (this.crusadeOf(a)) return 'Une croisade est déjà en cours depuis cette cathédrale.';
-    if (p.gold < CONFIG.CRUSADE_COST) return `Pas assez d'or : il faut 💰 ${CONFIG.CRUSADE_COST}.`;
+    if (this.building[a] !== B_CHURCH || this.owner[a] !== p.id) return tr('Ce n\'est pas une de tes églises.', 'This is not one of your churches.');
+    if (this.level[a] < 3) return tr('Il faut une cathédrale (église de niveau 3) pour lancer une croisade.', 'You need a cathedral (level 3 church) to start a crusade.');
+    if (this.crusadeOf(a)) return tr('Une croisade est déjà en cours depuis cette cathédrale.', 'A crusade is already under way from this cathedral.');
+    if (p.gold < CONFIG.CRUSADE_COST) return tr(`Pas assez d'or : il faut 💰 ${CONFIG.CRUSADE_COST}.`, `Not enough gold: you need 💰 ${CONFIG.CRUSADE_COST}.`);
     return null;
   },
 
@@ -748,7 +752,8 @@ const GameRules = {
     this.faithCache = null; // (la Croyance change tout de suite)
     const h = this.human;
     if (!p.isHuman && h && h.alive && this.neighborStats(p.id).has(h.id)) {
-      UI.log(`✝️ ${p.name} lance une croisade religieuse : sa Croyance monte de ${CONFIG.CRUSADE_FAITH} pendant ${CONFIG.CRUSADE_TIME} s !`, 'warn', p);
+      UI.log(tr(`✝️ ${p.name} lance une croisade religieuse : sa Croyance monte de ${CONFIG.CRUSADE_FAITH} pendant ${CONFIG.CRUSADE_TIME} s !`,
+        `✝️ ${p.name} starts a crusade: their Faith rises by ${CONFIG.CRUSADE_FAITH} for ${CONFIG.CRUSADE_TIME} s!`), 'warn', p);
     }
     return null;
   },
@@ -783,7 +788,7 @@ const GameRules = {
       if (this.tick < c.end) continue;
       c.over = true;
       this.faithCache = null;
-      if (this.players[c.owner].isHuman) UI.log('✝️ Ta croisade religieuse est terminée : ta Croyance redescend.');
+      if (this.players[c.owner].isHuman) UI.log(tr('✝️ Ta croisade religieuse est terminée : ta Croyance redescend.', '✝️ Your crusade is over: your Faith goes back down.'));
     }
     this.crusades = this.crusades.filter(c => !c.over);
     // Chaque paire (prêcheur, converti) avance ; une conversion complète = une case. Avec un grand écart,
@@ -939,12 +944,12 @@ const GameRules = {
   // from = une case d'un mur déjà bâti de la ville (pour le second mur) : il part de là, au lieu de la muraille,
   // et va au plus à WALL_MAX_REACH cases de ce point.
   planWall(pid, c, target, from = -1) {
-    if (this.building[c] !== B_CASTLE || this.owner[c] !== pid) return { error: 'Ce n\'est pas une de tes villes.' };
+    if (this.building[c] !== B_CASTLE || this.owner[c] !== pid) return { error: tr('Ce n\'est pas une de tes villes.', 'This is not one of your cities.') };
     if (this.wallsOf(c).length >= this.wallMax(c)) {
-      return { error: this.level[c] < 2 ? 'Il faut une ville de niveau 2 pour bâtir un mur.'
-        : this.level[c] < 3 ? 'Cette ville a déjà son mur (une citadelle peut en bâtir un second).'
-        : this.level[c] < 4 ? 'Cette ville a déjà ses deux murs (une cité impériale peut en bâtir un troisième).'
-        : `Cette ville a déjà ses ${this.wallMax(c)} murs.` };
+      return { error: this.level[c] < 2 ? tr('Il faut une ville de niveau 2 pour bâtir un mur.', 'You need a level 2 city to build a wall.')
+        : this.level[c] < 3 ? tr('Cette ville a déjà son mur (une citadelle peut en bâtir un second).', 'This city already has its wall (a citadel can build a second one).')
+        : this.level[c] < 4 ? tr('Cette ville a déjà ses deux murs (une cité impériale peut en bâtir un troisième).', 'This city already has its two walls (an imperial city can build a third one).')
+        : tr(`Cette ville a déjà ses ${this.wallMax(c)} murs.`, `This city already has its ${this.wallMax(c)} walls.`) };
     }
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
     // Visé dans (ou tout près de) la muraille d'une autre de ses villes : le mur va jusqu'à elle, et les relie
@@ -967,16 +972,16 @@ const GameRules = {
     if (from >= 0) {
       // Second mur, depuis un point du premier (déjà bâti)
       if (!this.walls.some(w => w.castle === c && w.done && w.tiles.includes(from))) {
-        return { error: 'Le mur doit partir de la muraille de la ville, ou d\'un point de son premier mur déjà bâti.' };
+        return { error: tr('Le mur doit partir de la muraille de la ville, ou d\'un point de son premier mur déjà bâti.', 'The wall must start from the city walls, or from a point of its first wall already built.') };
       }
       sx = from % W; sy = (from / W) | 0;
       const reach = Math.hypot(tx - sx - 0.5, ty - sy - 0.5) - Rcity;
-      if (reach < 2) return { error: 'Vise un endroit plus loin de ton mur.' };
-      if (reach > CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de son point de départ.` };
+      if (reach < 2) return { error: tr('Vise un endroit plus loin de ton mur.', 'Aim at a spot further from your wall.') };
+      if (reach > CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: tr(`Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de son point de départ.`, `Too far: a wall reaches at most ${CONFIG.WALL_MAX_REACH} tiles from its starting point.`) };
     } else {
       const dist = Math.hypot(tx - cx, ty - cy), reach = dist - Rcity; // (jusqu'à la muraille de l'autre ville)
-      if (reach < R + 2) return { error: city >= 0 ? 'Ces deux villes se touchent déjà : pas besoin de mur entre elles.' : 'Vise un endroit hors de la muraille de la ville.' };
-      if (reach > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.` };
+      if (reach < R + 2) return { error: city >= 0 ? tr('Ces deux villes se touchent déjà : pas besoin de mur entre elles.', 'These two cities already touch: no need for a wall between them.') : tr('Vise un endroit hors de la muraille de la ville.', 'Aim at a spot outside the city walls.') };
+      if (reach > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: tr(`Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.`, `Too far: a wall reaches at most ${CONFIG.WALL_MAX_REACH} tiles from the city walls.`) };
       // le mur part du bord de la muraille de la ville, vers la case visée (tracé case par case, sans trou)
       sx = Math.floor(cx + (tx - cx) / dist * (R - 0.5)); sy = Math.floor(cy + (ty - cy) / dist * (R - 0.5));
     }
@@ -989,8 +994,8 @@ const GameRules = {
       if (city >= 0 && this.inCastleRange(city, x, y, Rcity)) break; // (arrivé à la muraille de l'autre ville)
       // (les cases dans la muraille de la ville sont la ville elle-même : le mur commence juste après)
       if (!this.wallBarrier(i) && !this.inCastleRange(c, x, y, R)) {
-        if (this.owner[i] !== pid) return { error: 'Le mur doit être entièrement sur tes terres.' };
-        if (this.building[i]) return { error: 'Un bâtiment est sur le chemin du mur.' };
+        if (this.owner[i] !== pid) return { error: tr('Le mur doit être entièrement sur tes terres.', 'The wall must be entirely on your land.') };
+        if (this.building[i]) return { error: tr('Un bâtiment est sur le chemin du mur.', 'A building is in the way of the wall.') };
         tiles.push(i);
       }
       if (x === ex && y === ey) break;
@@ -998,7 +1003,7 @@ const GameRules = {
       if (e2 >= dy) { err += dy; x += stx; }
       if (e2 <= dx) { err += dx; y += sty; }
     }
-    if (tiles.length < 2) return { error: city >= 0 ? 'Ces deux villes sont trop proches : pas besoin de mur entre elles.' : 'Le mur est trop court.' };
+    if (tiles.length < 2) return { error: city >= 0 ? tr('Ces deux villes sont trop proches : pas besoin de mur entre elles.', 'These two cities are too close: no need for a wall between them.') : tr('Le mur est trop court.', 'The wall is too short.') };
     return { tiles, end: city >= 0 ? tiles[tiles.length - 1] : target, sealed, city };
   },
 
@@ -1008,7 +1013,7 @@ const GameRules = {
     const plan = this.planWall(p.id, c, target, from);
     if (plan.error) return plan.error;
     const cost = this.wallCost(c);
-    if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
+    if (p.gold < cost) return tr(`Pas assez d'or (${cost} nécessaires).`, `Not enough gold (${cost} needed).`);
     p.gold -= cost;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.walls.push({ castle: c, owner: p.id, tiles: plan.tiles, city: plan.city, start: this.tick, ready: this.tick + CONFIG.WALL_BUILD_TIME * TPS, done: false });
@@ -1043,8 +1048,8 @@ const GameRules = {
       }
       const o = this.players[w.owner];
       if (o.isHuman) {
-        UI.log('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.' + (this.wallLinked(w.castle).size > before
-          ? ` Il relie tes villes : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacune !` : ''), 'good');
+        UI.log(tr('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.', '🧱 Your wall is built: no assault can cross it any more.') + (this.wallLinked(w.castle).size > before
+          ? tr(` Il relie tes villes : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacune !`, ` It links your cities: +${CONFIG.WALL_LINK_GARRISON} garrison soldiers for each!`) : ''), 'good');
       }
       const mine = new Set(w.tiles);
       for (const a of this.attacks) {
@@ -1053,12 +1058,12 @@ const GameRules = {
         if (!route || !route.slice(this.pathPassed(a)).some(t => mine.has(t))) continue;
         const p = this.players[a.attacker];
         if (this.rerouteAssault(a)) {
-          if (p.isHuman) UI.log(`🧱 Un mur ${this.deName(o.name)} barre la route de ton armée : elle le contourne.`, 'warn', o);
-          else if (o.isHuman) UI.log(`🧱 Ton mur barre la route de l'armée ${this.deName(p.name)} : elle doit faire le tour !`, 'good', p);
+          if (p.isHuman) UI.log(tr(`🧱 Un mur ${this.deName(o.name)} barre la route de ton armée : elle le contourne.`, `🧱 A wall of ${o.name} blocks your army's route: it goes around it.`), 'warn', o);
+          else if (o.isHuman) UI.log(tr(`🧱 Ton mur barre la route de l'armée ${this.deName(p.name)} : elle doit faire le tour !`, `🧱 Your wall blocks ${p.name}'s army: it has to go around!`), 'good', p);
           continue;
         }
-        if (p.isHuman) UI.log(`🧱 Un mur ${this.deName(o.name)} ferme le seul passage de ton armée : elle rebrousse chemin.`, 'warn', o);
-        else if (o.isHuman) UI.log(`🧱 Ton mur ferme le seul passage de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, 'good', p);
+        if (p.isHuman) UI.log(tr(`🧱 Un mur ${this.deName(o.name)} ferme le seul passage de ton armée : elle rebrousse chemin.`, `🧱 A wall of ${o.name} closes your army's only way through: it turns back.`), 'warn', o);
+        else if (o.isHuman) UI.log(tr(`🧱 Ton mur ferme le seul passage de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, `🧱 Your wall closes ${p.name}'s army's only way through: it turns back!`), 'good', p);
         this.wallRetreatLoss(a);
         this.endAttack(a);
       }
@@ -1132,7 +1137,8 @@ const GameRules = {
     a.troops *= keep;
     for (const r of a.pending) r.troops *= keep;
     if (this.players[a.attacker].isHuman) {
-      UI.log(`🧱 Pour rentrer, ton armée doit franchir ${n > 1 ? n + ' murs' : 'un mur'} : elle y perd ${Math.round((1 - keep) * 100)} % de ses soldats.`, 'warn');
+      UI.log(tr(`🧱 Pour rentrer, ton armée doit franchir ${n > 1 ? n + ' murs' : 'un mur'} : elle y perd ${Math.round((1 - keep) * 100)} % de ses soldats.`,
+        `🧱 To get home, your army must cross ${n > 1 ? n + ' walls' : 'a wall'}: it loses ${Math.round((1 - keep) * 100)}% of its soldiers.`), 'warn');
     }
   },
 
@@ -1166,7 +1172,7 @@ const GameRules = {
       const p = this.players[w.pid];
       if (this.owner[a] !== w.pid || !this.building[a]) {
         this.works.delete(a);
-        if (p.isHuman) UI.log('🏚️ Ton bâtiment a été pris pendant les travaux : ils sont perdus.', 'warn');
+        if (p.isHuman) UI.log(tr('🏚️ Ton bâtiment a été pris pendant les travaux : ils sont perdus.', '🏚️ Your building was taken during the works: they are lost.'), 'warn');
         continue;
       }
       if (this.tick < w.end) continue;
@@ -1182,9 +1188,9 @@ const GameRules = {
         if (type === B_CASTLE && this.castleInfo(a).imperial) {
           p.imperialBuilt = true; // (une seule par partie)
           this.garrison[a] = this.garrisonMax(a);
-          if (p.isHuman) UI.log('👑 Ta cité impériale est bâtie : murs immenses, garnison de 300, troupes plus fortes, routes de pierre !', 'good');
-          else UI.log(`👑 ${p.name} a bâti sa cité impériale !`, 'warn', p);
-        } else if (p.isHuman) UI.log(`${icon} Amélioration terminée : ${this.buildingInfo(a).name} !`, 'good');
+          if (p.isHuman) UI.log(tr('👑 Ta cité impériale est bâtie : murs immenses, garnison de 300, troupes plus fortes, routes de pierre !', '👑 Your imperial city is built: huge walls, a garrison of 300, stronger troops, stone roads!'), 'good');
+          else UI.log(tr(`👑 ${p.name} a bâti sa cité impériale !`, `👑 ${p.name} has built their imperial city!`), 'warn', p);
+        } else if (p.isHuman) UI.log(tr(`${icon} Amélioration terminée : ${this.buildingInfo(a).name} !`, `${icon} Upgrade complete: ${this.buildingInfo(a).name}!`), 'good');
       } else {
         // Les soldats de la garnison rejoignent l'armée
         p.troops += this.garrison[a] || 0;
@@ -1194,8 +1200,9 @@ const GameRules = {
         this.removeBuilding(a);
         const lost = linked.filter(b => !this.stillHosted(b));
         for (const b of lost) this.removeBuilding(b);
-        if (p.isHuman) UI.log(`🧨 ${BUILDINGS[type].name} détruit` +
-          (lost.length ? `, et ${lost.length > 1 ? `les ${lost.length} moulins ou casernes qui en dépendaient` : 'le moulin ou la caserne qui en dépendait'}.` : '.'), 'good');
+        if (p.isHuman) UI.log(tr(`🧨 ${BUILDINGS[type].name} détruit`, `🧨 ${BUILDINGS[type].name} destroyed`) +
+          (lost.length ? tr(`, et ${lost.length > 1 ? `les ${lost.length} moulins ou casernes qui en dépendaient` : 'le moulin ou la caserne qui en dépendait'}.`,
+            `, along with ${lost.length > 1 ? `the ${lost.length} mills or barracks that depended on it` : 'the mill or barracks that depended on it'}.`) : '.'), 'good');
       }
     }
   },

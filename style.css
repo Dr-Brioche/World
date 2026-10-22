@@ -423,3 +423,9 @@ button:disabled .ico { opacity: 0.6; }
 .rulesCard #rulesClose { display: block; margin: 14px auto 0; }
 .rules ul { padding-left: 18px; margin: 4px 0; }
 .rules ul li { margin: 6px 0; }
+
+/* 🌍 LANGUE : seul le passage de la langue choisie s'affiche (voir js/lang.js) */
+.lang-en .fr, .lang-fr .en { display: none !important; }
+/* le choix de la langue, en haut à droite du menu de départ */
+.langRow { text-align: right; margin: -14px -16px -6px 0; }
+.card .langRow select { font-size: 13px; padding: 2px 4px; max-width: none; }

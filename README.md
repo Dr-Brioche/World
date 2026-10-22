@@ -28,10 +28,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile (en Difficile, les bots ont un petit avantage : **+25 % d'or**, recrutement **20 % plus rapide** et soldats **10 % plus forts**)
 - ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ (en haut) la fait passer à x1, x1,5, x2 ou x3, pour des parties plus courtes
 - ✝️ **La Croyance** : tes églises prêchent chez tes voisins et convertissent peu à peu leurs terres
+- 🌍 **En anglais ou en français** : le jeu est en anglais par défaut ; la liste « Langue » en haut à droite du menu le passe en français (le choix est gardé)
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
+1. **Fonde ta capitale** : 🌍 choisis d'abord la **langue** du jeu en haut à droite du menu (🇬🇧 English, par défaut, ou 🇫🇷 Français : la page se recharge dans la nouvelle langue, et le choix est gardé pour les prochaines fois), puis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
    **nombre de royaumes rivaux** (de 3 à 20, autant que de drapeaux disponibles ; au plus un rival pour 5 000 cases de carte : 10 sur la petite carte, réglage `CELLS_PER_OPPONENT`) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
@@ -738,6 +739,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.95** : 🌍 le jeu parle anglais ! Une liste « Langue » en haut à droite du menu de départ : 🇬🇧 English (par défaut) ou 🇫🇷 Français. Tous les textes sont traduits (menu, règles, messages, infobulles, noms des bâtiments, des terrains, des royaumes et des bannières, éditeur de cartes)
 - **v0.92.94** : 🖌️ menu de départ : un vrai bouton « Création de carte » en bas à droite (en face des règles), à la place du petit lien
 - **v0.92.93** : ⚔️ nouveau bonus de la grande caserne : le **recrutement de masse** (💰 3000, 60 s, jusqu'à x3 de recrutement quand l'armée est petite, de moins en moins au-delà de 35 % de l'armée maximum ; amplifié par la galvanisation, diminué par l'après-guerre) · 🧹 menu de départ allégé (plus d'explications entre parenthèses dans les choix) · ✝️ la croisade passe à 💰 2500
 - **v0.92.92** : ⚔️ carte Azeroth : nouveau **mode « Factions »** : 3 camps éternels (l'Alliance, la Horde, le Pacte sauvage), chaque royaume à sa vraie capitale du jeu, la partie démarre en pause le temps de se repérer
