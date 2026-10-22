@@ -341,7 +341,10 @@ button:hover { background: #e8d6a8; }
 }
 .card select { max-width: 62%; }
 /* lien vers l'éditeur de cartes, sous le choix de la carte */
-.editorLink { display: block; margin: -4px 0 8px; font-size: 13px; color: var(--wood); }
+/* le bouton de l'éditeur de cartes : en bas à droite du menu, à la hauteur du titre des règles (en face) */
+/* (sur la ligne du titre des règles, même quand elles sont dépliées) */
+.menuFoot { position: relative; }
+#editorBtn { position: absolute; right: 0; top: 7px; padding: 4px 12px; font-size: 14px; z-index: 1; }
 .big {
   font-family: Cinzel, Georgia, serif;
   font-size: 18px;
@@ -358,6 +361,7 @@ button:hover { background: #e8d6a8; }
 }
 /* Règles repliées : on clique sur le titre pour les dérouler */
 .rulesBox { margin-top: 14px; text-align: left; border-top: 1px solid var(--parchment-dark); padding-top: 8px; }
+.rulesBox summary { padding-right: 190px; }
 .rulesBox summary { cursor: pointer; font-weight: bold; font-family: Cinzel, Georgia, serif; }
 .rulesBox summary small { font-weight: normal; font-family: Georgia, serif; opacity: 0.7; }
 .rules li { margin: 4px 0; }
