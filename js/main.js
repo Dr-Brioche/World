@@ -342,11 +342,11 @@ const UI = {
     const p = G.players[o];
     const types = [B_CASTLE, B_CHURCH, B_PORT, B_MILL, B_BARRACKS, B_OUTPOST];
     const html = `${this.bannerImg(p)}<b>${escapeHtml(p.name)}</b>${G.areAllied(o, h.id) ? ' 🤝' : ''}` +
-      ` · <span title="Soldats (épées : sans caserne ou niveau 1 · casque : caserne niveau 2 · bouclier : niveau 3)">${G.troopIcon(o)} ${fmt(p.troops)}</span>` +
+      ` · <span title="${tr('Soldats (épées : sans caserne ou niveau 1 · casque : caserne niveau 2 · bouclier : niveau 3)', 'Soldiers (swords: no barracks or level 1 · helmet: level 2 barracks · shield: level 3)')}">${G.troopIcon(o)} ${fmt(p.troops)}</span>` +
       types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
       this.minesText(o) +
-      ` · <span title="Part des terres">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)} %</span>` +
-      ` · <span title="Croyance">✝️ ${fmt(Math.round(G.faithOf(o)))}</span>`;
+      ` · <span title="${tr('Part des terres', 'Share of the land')}">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)}${tr(' %', '%')}</span>` +
+      ` · <span title="${tr('Croyance', 'Faith')}">✝️ ${fmt(Math.round(G.faithOf(o)))}</span>`;
     // (on compare avec le dernier texte écrit : innerHTML, lui, a déjà vu ses emojis remplacés par des icônes)
     if (this.tipHtml !== html) { this.tipHtml = html; tip.innerHTML = html; }
     // toujours au même endroit : centrée juste sous la barre de nos infos, en haut de l'écran
@@ -372,8 +372,9 @@ const UI = {
     const mine = Math.round(G.faithOf(h.id)), theirs = Math.round(G.faithOf(p.id));
     const win = G.faithEdge(h.id, p.id) > 0, lose = G.faithEdge(p.id, h.id) > 0;
     if (!win && !lose) return '<span class="faithB"></span>';
-    const title = `Croyance : toi ${mine}, ${p.name} ${theirs} : ` +
-      (win ? 'tes prêcheurs convertissent peu à peu ses terres' : 'ses prêcheurs convertissent peu à peu tes terres (bâtis ou améliore des églises !)');
+    const title = tr(`Croyance : toi ${mine}, ${p.name} ${theirs} : `, `Faith: you ${mine}, ${p.name} ${theirs}: `) +
+      (win ? tr('tes prêcheurs convertissent peu à peu ses terres', 'your preachers are slowly converting their lands')
+        : tr('ses prêcheurs convertissent peu à peu tes terres (bâtis ou améliore des églises !)', 'their preachers are slowly converting your lands (build or upgrade churches!)'));
     return `<span class="faithB ${win ? 'good' : 'bad'}" title="${escapeHtml(title)}">📖</span>`;
   },
 
@@ -399,121 +400,139 @@ const UI = {
     const G = Game, h = G.human, other = G.players[id];
     if (G.phase !== 'playing' || !h.alive) return;
     if (G.areAllied(h.id, id)) {
-      if (G.eternalPact(h.id)) return this.log(`⚔️ ${other.name} et toi êtes du même camp (${G.pactName(h)}) : ce pacte dure toute la partie.`, 'warn');
+      if (G.eternalPact(h.id)) return this.log(tr(`⚔️ ${other.name} et toi êtes du même camp (${G.pactName(h)}) : ce pacte dure toute la partie.`,
+        `⚔️ ${other.name} and you are in the same faction (${G.pactName(h)}): this pact lasts the whole game.`), 'warn');
       this.confirmBetrayal(other, () => G.breakAlliance(h.id, id));
       return;
     }
     const res = G.proposeAlliance(h.id, id);
-    if (res === 'refused') this.log(`🚫 ${other.name} refuse ton alliance.`, 'warn');
+    if (res === 'refused') this.log(tr(`🚫 ${other.name} refuse ton alliance.`, `🚫 ${other.name} turns down your alliance.`), 'warn');
     else if (res !== 'accepted') this.log(res, 'warn');
   },
 
   // Ce que fait un bâtiment à son niveau : une liste de petits avantages (« Défense des murs +200 % »…)
   levelPerks(type, info) {
-    const every = `/ ${CONFIG.PRODUCTION_INTERVAL} s`, places = n => `Places : ${n} moulin${n > 1 ? 's' : ''} ou caserne${n > 1 ? 's' : ''}`;
+    const every = `/ ${CONFIG.PRODUCTION_INTERVAL} s`, s = n => n > 1 ? 's' : '';
+    const places = n => tr(`Places : ${n} moulin${s(n)} ou caserne${s(n)}`, `Slots: ${n} mill${s(n)} or barracks`);
     if (type === B_PORT) {
-      return [`Or +${info.gold} ${every}`, info.boatSpeed && 'Expéditions maritimes', info.slots && places(info.slots),
-        info.garrison && 'Petite garnison', info.bonus && `Petite muraille ${pct(info.bonus)}`].filter(Boolean);
+      return [tr(`Or +${info.gold} ${every}`, `Gold +${info.gold} ${every}`), info.boatSpeed && tr('Expéditions maritimes', 'Naval expeditions'), info.slots && places(info.slots),
+        info.garrison && tr('Petite garnison', 'Small garrison'), info.bonus && tr(`Petite muraille ${pct(info.bonus)}`, `Small walls ${pct(info.bonus)}`)].filter(Boolean);
     }
     if (type === B_CASTLE) {
-      return [`Défense des murs ${pct(info.bonus)}`, places(info.slots),
-        info.road && `${info.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(info.roadBonus)}`,
-        info.trades && `Routes commerciales : ${info.trades}`,
+      return [tr(`Défense des murs ${pct(info.bonus)}`, `Wall defense ${pct(info.bonus)}`), places(info.slots),
+        info.road && tr(`${info.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(info.roadBonus)}`,
+          `${info.road === 'paved' ? 'Paved roads' : 'Dirt tracks'}: production ${pct(info.roadBonus)}`),
+        info.trades && tr(`Routes commerciales : ${info.trades}`, `Trade routes: ${info.trades}`),
         ...(info.imperial ? this.imperialPerks() : [])].filter(Boolean);
     }
     if (type === B_CHURCH) {
-      return [`Croyance +${info.faith}`, places(info.slots), info.castles && `Châteaux +${info.castles}`].filter(Boolean);
+      return [tr(`Croyance +${info.faith}`, `Faith +${info.faith}`), places(info.slots), info.castles && tr(`Châteaux +${info.castles}`, `Castles +${info.castles}`)].filter(Boolean);
     }
     if (type === B_BARRACKS) {
-      return [`Soldats +${info.troops} ${every}`, `Armée max +${info.maxTroops}`, info.power > 1 && `Force ${pct(info.power - 1)}`].filter(Boolean);
+      return [tr(`Soldats +${info.troops} ${every}`, `Soldiers +${info.troops} ${every}`), tr(`Armée max +${info.maxTroops}`, `Max army +${info.maxTroops}`),
+        info.power > 1 && tr(`Force ${pct(info.power - 1)}`, `Strength ${pct(info.power - 1)}`)].filter(Boolean);
     }
     if (type === B_MINE) return this.minePerks(info);
-    return [`Or +${info.gold} ${every}`];
+    return [tr(`Or +${info.gold} ${every}`, `Gold +${info.gold} ${every}`)];
   },
 
   // Ce que fait une mine à son niveau (info : voir Game.mineInfo) ; « x2 si reliée » : une route vers une de ses villes
   minePerks(info) {
-    const m = MINES[info.kind], every = `/ ${CONFIG.PRODUCTION_INTERVAL} s`, x2 = `×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville`;
-    if (info.kind === 'iron') return [`Force des troupes ${pct(info.power)}`, x2, `${m.max} au plus`];
-    if (info.kind === 'gold') return [`💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min`, x2, 'puis le filon s\'épuise'];
-    if (info.kind === 'stone') return [`Prix des améliorations, murs et ponts ${pct(-info.discount)}`, x2, `${m.max} au plus`];
-    return [`💰 ${m.pay.map(fmt).join(', ')} aux 3 premiers quarts, ${fmt(m.final)} à la fin`, `Extraction : ${Math.round(m.time / 60 / info.speed)} min (×0,5 sans route)`];
+    const m = MINES[info.kind], x2 = tr(`×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville`, `×${CONFIG.MINE_ROAD_FACTOR} if linked to a city`);
+    if (info.kind === 'iron') return [tr(`Force des troupes ${pct(info.power)}`, `Troop strength ${pct(info.power)}`), x2, tr(`${m.max} au plus`, `${m.max} at most`)];
+    if (info.kind === 'gold') return [tr(`💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min`, `💰 ${m.total.toLocaleString('en-US')} in ${Math.round(m.time / 60)} min`),
+      x2, tr('puis le filon s\'épuise', 'then the ore vein runs out')];
+    if (info.kind === 'stone') return [tr(`Prix des améliorations, murs et ponts ${pct(-info.discount)}`, `Cost of upgrades, walls and bridges ${pct(-info.discount)}`),
+      x2, tr(`${m.max} au plus`, `${m.max} at most`)];
+    return [tr(`💰 ${m.pay.map(fmt).join(', ')} aux 3 premiers quarts, ${fmt(m.final)} à la fin`, `💰 ${m.pay.map(fmt).join(', ')} at each of the first 3 quarters, ${fmt(m.final)} at the end`),
+      tr(`Extraction : ${Math.round(m.time / 60 / info.speed)} min (×0,5 sans route)`, `Extraction: ${Math.round(m.time / 60 / info.speed)} min (×0.5 without a road)`)];
   },
 
   // Ce que change une amélioration (par rapport au niveau actuel) : une liste de petits avantages
   upgradePerks(type, cur, next) {
-    const places = `Places : ${cur.slots} → ${next.slots}`;
+    const places = tr(`Places : ${cur.slots} → ${next.slots}`, `Slots: ${cur.slots} → ${next.slots}`);
     if (type === B_PORT) {
-      return [`Or ${pct(next.gold / cur.gold - 1)}`, next.slots && places,
-        ...(cur.boatSpeed ? [`Débarquements ${pct(next.landingCost / cur.landingCost - 1)}`, `Bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)}`]
-          : ['Débloque les expéditions maritimes']),
-        next.garrison && !cur.garrison && 'Petite garnison', next.bonus && `Petite muraille ${pct(next.bonus)}`].filter(Boolean);
+      return [tr(`Or ${pct(next.gold / cur.gold - 1)}`, `Gold ${pct(next.gold / cur.gold - 1)}`), next.slots && places,
+        ...(cur.boatSpeed ? [tr(`Débarquements ${pct(next.landingCost / cur.landingCost - 1)}`, `Landings ${pct(next.landingCost / cur.landingCost - 1)}`),
+          tr(`Bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)}`, `Ships ${pct(next.boatSpeed / cur.boatSpeed - 1)}`)]
+          : [tr('Débloque les expéditions maritimes', 'Unlocks naval expeditions')]),
+        next.garrison && !cur.garrison && tr('Petite garnison', 'Small garrison'), next.bonus && tr(`Petite muraille ${pct(next.bonus)}`, `Small walls ${pct(next.bonus)}`)].filter(Boolean);
     }
     if (type === B_CASTLE) {
       const lvl = CASTLE_LEVELS.indexOf(next), walls = n => Math.max(0, n - 1); // (murs à bâtir : voir Game.wallMax)
-      return ['Muraille plus grande', places, `Défense des murs ${pct(next.bonus - cur.bonus)}`, `Garnison ${fmt(cur.garrison)} → ${fmt(next.garrison)}`,
-        walls(lvl) > walls(lvl - 1) && `Murs : ${walls(lvl - 1)} → ${walls(lvl)}`,
-        next.road && `${next.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(next.roadBonus)}`,
-        next.trades > (cur.trades || 0) && `Routes commerciales : ${cur.trades || 0} → ${next.trades}`,
+      return [tr('Muraille plus grande', 'Larger walls'), places, tr(`Défense des murs ${pct(next.bonus - cur.bonus)}`, `Wall defense ${pct(next.bonus - cur.bonus)}`),
+        tr(`Garnison ${fmt(cur.garrison)} → ${fmt(next.garrison)}`, `Garrison ${fmt(cur.garrison)} → ${fmt(next.garrison)}`),
+        walls(lvl) > walls(lvl - 1) && tr(`Murs : ${walls(lvl - 1)} → ${walls(lvl)}`, `Walls: ${walls(lvl - 1)} → ${walls(lvl)}`),
+        next.road && tr(`${next.road === 'paved' ? 'Routes pavées' : 'Chemins'} : production ${pct(next.roadBonus)}`,
+          `${next.road === 'paved' ? 'Paved roads' : 'Dirt tracks'}: production ${pct(next.roadBonus)}`),
+        next.trades > (cur.trades || 0) && tr(`Routes commerciales : ${cur.trades || 0} → ${next.trades}`, `Trade routes: ${cur.trades || 0} → ${next.trades}`),
         ...(next.imperial ? this.imperialPerks() : [])].filter(Boolean);
     }
     if (type === B_CHURCH) {
-      return [`Croyance +${cur.faith} → +${next.faith}`, 'Zone plus grande', places, `Châteaux +${next.castles}`];
+      return [tr(`Croyance +${cur.faith} → +${next.faith}`, `Faith +${cur.faith} → +${next.faith}`), tr('Zone plus grande', 'Larger area'), places,
+        tr(`Châteaux +${next.castles}`, `Castles +${next.castles}`)];
     }
     if (type === B_BARRACKS) {
-      return [`Soldats ${pct(next.troops / cur.troops - 1)}`, `Armée max ${pct(next.maxTroops / cur.maxTroops - 1)}`, `Force ${pct(next.power - 1)}`];
+      return [tr(`Soldats ${pct(next.troops / cur.troops - 1)}`, `Soldiers ${pct(next.troops / cur.troops - 1)}`),
+        tr(`Armée max ${pct(next.maxTroops / cur.maxTroops - 1)}`, `Max army ${pct(next.maxTroops / cur.maxTroops - 1)}`),
+        tr(`Force ${pct(next.power - 1)}`, `Strength ${pct(next.power - 1)}`)];
     }
     if (type === B_MINE) {
       const m = MINES[cur.kind];
-      if (cur.kind === 'iron') return [`Force des troupes ${pct(m.power[1])} → ${pct(m.power[2])}`];
-      if (cur.kind === 'gold') return [`Filon relancé : 💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min de plus`];
-      if (cur.kind === 'stone') return [`Réduction ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`];
-      return [`Extraction ${pct(m.speed[2] / m.speed[1] - 1)} plus rapide`];
+      if (cur.kind === 'iron') return [tr(`Force des troupes ${pct(m.power[1])} → ${pct(m.power[2])}`, `Troop strength ${pct(m.power[1])} → ${pct(m.power[2])}`)];
+      if (cur.kind === 'gold') return [tr(`Filon relancé : 💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min de plus`,
+        `Ore vein restarted: 💰 ${m.total.toLocaleString('en-US')} over ${Math.round(m.time / 60)} more min`)];
+      if (cur.kind === 'stone') return [tr(`Réduction ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`, `Discount ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`)];
+      return [tr(`Extraction ${pct(m.speed[2] / m.speed[1] - 1)} plus rapide`, `Extraction ${pct(m.speed[2] / m.speed[1] - 1)} faster`)];
     }
-    return [`Or ${pct(next.gold / cur.gold - 1)}`];
+    return [tr(`Or ${pct(next.gold / cur.gold - 1)}`, `Gold ${pct(next.gold / cur.gold - 1)}`)];
   },
 
   // Le résumé d'un bâtiment (au survol) : son nom, son niveau et ce qu'il rapporte vraiment, en bref
   buildingSummary(a) {
     const G = Game, b = G.building[a], info = G.buildingInfo(a), o = G.owner[a], h = G.human;
     const every = ` / ${CONFIG.PRODUCTION_INTERVAL} s`, n1 = v => String(Math.round(v * 10) / 10);
-    let txt = `${b === B_MINE && info.kind ? MINES[info.kind].icon : BUILDINGS[b].icon} ${info.name} (niv. ${G.level[a]})` +
-      (o !== h.id ? ` ${G.deName(G.players[o].name)}` : '');
+    let txt = `${b === B_MINE && info.kind ? MINES[info.kind].icon : BUILDINGS[b].icon} ${info.name} (${tr('niv.', 'lvl')} ${G.level[a]})` +
+      (o !== h.id ? tr(` ${G.deName(G.players[o].name)}`, ` · ${G.players[o].name}`) : '');
     if (b === B_MILL || b === B_PORT) txt += ` · +${n1(G.buildingOutput(a))} 💰${every}`;
-    if (b === B_PORT && info.boatSpeed) txt += ' · ⛵ expéditions';
-    if (b === B_BARRACKS) txt += ` · +${n1(G.buildingOutput(a))} soldats${every}` + (info.power > 1 ? ` · force ${pct(info.power - 1)}` : '');
+    if (b === B_PORT && info.boatSpeed) txt += tr(' · ⛵ expéditions', ' · ⛵ expeditions');
+    if (b === B_BARRACKS) txt += tr(` · +${n1(G.buildingOutput(a))} soldats${every}`, ` · +${n1(G.buildingOutput(a))} soldiers${every}`) +
+      (info.power > 1 ? tr(` · force ${pct(info.power - 1)}`, ` · strength ${pct(info.power - 1)}`) : '');
     // Moulin ou caserne : au bord d'une route (le chemin d'une église ou d'un port vers une ville) ; puis à qui il
     // prend sa place (une ville, une église, un port), ou aucune (pris à un autre royaume)
     const link = (b === B_MILL || b === B_BARRACKS) && G.roads().get(a);
-    if (link && link.onRoad) txt += ` · 🛤️ au bord d'une route : +${Math.round(link.bonus * 100)} %`;
+    if (link && link.onRoad) txt += tr(` · 🛤️ au bord d'une route : +${Math.round(link.bonus * 100)} %`, ` · 🛤️ by a road: +${Math.round(link.bonus * 100)}%`);
     if (b === B_MILL || b === B_BARRACKS) {
       const host = G.slotHosts().get(a), hb = host === undefined ? 0 : G.building[host];
-      txt += hb === B_CASTLE ? ' · 🏰 place d\'une ville' : hb === B_CHURCH ? ' · ⛪ place d\'une église'
-        : hb === B_PORT ? ' · ⚓ place d\'un port' : ' · sans place (pris à un autre royaume)';
+      txt += hb === B_CASTLE ? tr(' · 🏰 place d\'une ville', ' · 🏰 city slot') : hb === B_CHURCH ? tr(' · ⛪ place d\'une église', ' · ⛪ church slot')
+        : hb === B_PORT ? tr(' · ⚓ place d\'un port', ' · ⚓ port slot') : tr(' · sans place (pris à un autre royaume)', ' · no slot (taken from another kingdom)');
     }
     // Église ou port amélioré : ses places prises (moulins et casernes autour de lui)
-    if ((b === B_CHURCH || b === B_PORT) && G.hasSlots(a)) txt += ` · 🏠 ${G.churchUsed(a)}/${info.slots} place${info.slots > 1 ? 's' : ''}`;
+    if ((b === B_CHURCH || b === B_PORT) && G.hasSlots(a)) txt += ` · 🏠 ${G.churchUsed(a)}/${info.slots} ${tr('place', 'slot')}${info.slots > 1 ? 's' : ''}`;
     if (b === B_CHURCH) {
       const faith = info.faith * (1 + CONFIG.FAITH_ROAD_BONUS * G.churchLinks(o, a).length) * G.terrainFactor(a, B_CHURCH);
       const gold = G.buildingOutput(a);
-      txt += ` · ✝️ Croyance +${Math.round(faith)}` + (gold > 0 ? ` · +${n1(gold)} 💰${every}` : '') + (G.crusadeOf(a) ? ' · ✝️ croisade en cours' : '');
+      txt += tr(` · ✝️ Croyance +${Math.round(faith)}`, ` · ✝️ Faith +${Math.round(faith)}`) + (gold > 0 ? ` · +${n1(gold)} 💰${every}` : '') +
+        (G.crusadeOf(a) ? tr(' · ✝️ croisade en cours', ' · ✝️ crusade under way') : '');
     }
     if (b === B_MINE && info.kind) {
       const d = G.depositAt.get(a), k = G.mineLinked(a) ? CONFIG.MINE_ROAD_FACTOR : 1;
-      if (G.mineSpent(a)) txt += ' · ❌ épuisée';
+      if (G.mineSpent(a)) txt += tr(' · ❌ épuisée', ' · ❌ exhausted');
       else {
-        if (info.kind === 'iron') txt += ` · force des troupes ${pct(info.power * k)}`;
+        if (info.kind === 'iron') txt += tr(` · force des troupes ${pct(info.power * k)}`, ` · troop strength ${pct(info.power * k)}`);
         // (or : ce que le filon rapportera encore, et le temps qui lui reste)
-        if (info.kind === 'gold') txt += ` · encore ≈ ${fmt(Math.round(info.gold * k * d.left / CONFIG.TICKS_PER_SECOND / CONFIG.PRODUCTION_INTERVAL))} 💰 · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`;
-        if (info.kind === 'stone') txt += ` · prix ${pct(-info.discount * k)}`;
-        if (info.kind === 'diamond') txt += ` · 💎 ${Math.floor(d.progress * 100)} % extrait`;
-        txt += k > 1 ? ' · 🛤️ reliée' : ' · sans route (×2 si reliée à une ville)';
+        const left = fmt(Math.round(info.gold * k * d.left / CONFIG.TICKS_PER_SECOND / CONFIG.PRODUCTION_INTERVAL));
+        if (info.kind === 'gold') txt += tr(` · encore ≈ ${left} 💰 · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`, ` · ≈ ${left} 💰 left · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`);
+        if (info.kind === 'stone') txt += tr(` · prix ${pct(-info.discount * k)}`, ` · costs ${pct(-info.discount * k)}`);
+        if (info.kind === 'diamond') txt += tr(` · 💎 ${Math.floor(d.progress * 100)} % extrait`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted`);
+        txt += k > 1 ? tr(' · 🛤️ reliée', ' · 🛤️ linked') : tr(' · sans route (×2 si reliée à une ville)', ' · no road (×2 if linked to a city)');
       }
     }
-    if (G.holdsAlone(a) && G.isIsolated(a)) txt += ' · 🚩 isolé';
+    if (G.holdsAlone(a) && G.isIsolated(a)) txt += tr(' · 🚩 isolé', ' · 🚩 isolated');
     const w = G.works.get(a);
-    if (w) txt += { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[w.kind];
-    else if (o === h.id) txt += ' · clique pour ses options';
+    if (w) txt += { up: tr(' · ⬆️ amélioration en cours', ' · ⬆️ upgrade under way'), build: tr(' · 🏗️ en construction', ' · 🏗️ under construction'),
+      down: tr(' · 🧨 démolition en cours', ' · 🧨 demolition under way') }[w.kind];
+    else if (o === h.id) txt += tr(' · clique pour ses options', ' · click for its options');
     return txt;
   },
 
@@ -521,19 +540,21 @@ const UI = {
   mineState(a) {
     const G = Game, d = G.depositAt.get(a);
     if (!d) return '';
-    let txt = G.mineSpent(a) ? ' · ❌ filon épuisé' + (d.kind === 'gold' && G.level[a] < 2 ? ' (améliore-la pour le relancer)' : '')
-      : d.kind === 'gold' ? ` · ⏳ filon : ${clock(d.left / CONFIG.TICKS_PER_SECOND)} d'exploitation`
-      : d.kind === 'diamond' ? ` · 💎 extrait à ${Math.floor(d.progress * 100)} % (${d.paid}/4 versements)` : '';
-    if (!G.mineSpent(a)) txt += G.mineLinked(a) ? ` · 🛤️ reliée à une ville : ×${CONFIG.MINE_ROAD_FACTOR}`
-      : ` · sans route (×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville)`;
+    let txt = G.mineSpent(a) ? tr(' · ❌ filon épuisé', ' · ❌ ore vein exhausted') + (d.kind === 'gold' && G.level[a] < 2 ? tr(' (améliore-la pour le relancer)', ' (upgrade it to restart it)') : '')
+      : d.kind === 'gold' ? tr(` · ⏳ filon : ${clock(d.left / CONFIG.TICKS_PER_SECOND)} d'exploitation`, ` · ⏳ ore vein: ${clock(d.left / CONFIG.TICKS_PER_SECOND)} of mining left`)
+      : d.kind === 'diamond' ? tr(` · 💎 extrait à ${Math.floor(d.progress * 100)} % (${d.paid}/4 versements)`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted (${d.paid}/4 payments)`) : '';
+    if (!G.mineSpent(a)) txt += G.mineLinked(a) ? tr(` · 🛤️ reliée à une ville : ×${CONFIG.MINE_ROAD_FACTOR}`, ` · 🛤️ linked to a city: ×${CONFIG.MINE_ROAD_FACTOR}`)
+      : tr(` · sans route (×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville)`, ` · no road (×${CONFIG.MINE_ROAD_FACTOR} if linked to a city)`);
     return txt;
   },
 
   // Ce qu'apporte en plus la cité impériale (château de niveau 4 : voir IMPERIAL)
   imperialPerks() {
-    return [`Force des troupes ${pct(IMPERIAL.troopPower)}`, `Revenus du commerce ${pct(IMPERIAL.tradeBonus)}`,
-      `Ports et églises reliés : routes de pierre, bonus x${IMPERIAL.roadFactor}`, `Bâtiments au bord : bonus x${IMPERIAL.roadFactor}`,
-      'Une seule par partie'];
+    return [tr(`Force des troupes ${pct(IMPERIAL.troopPower)}`, `Troop strength ${pct(IMPERIAL.troopPower)}`),
+      tr(`Revenus du commerce ${pct(IMPERIAL.tradeBonus)}`, `Trade income ${pct(IMPERIAL.tradeBonus)}`),
+      tr(`Ports et églises reliés : routes de pierre, bonus x${IMPERIAL.roadFactor}`, `Linked ports and churches: stone roads, bonus x${IMPERIAL.roadFactor}`),
+      tr(`Bâtiments au bord : bonus x${IMPERIAL.roadFactor}`, `Roadside buildings: bonus x${IMPERIAL.roadFactor}`),
+      tr('Une seule par partie', 'Only one per game')];
   },
 
   // Une liste d'avantages en HTML : un par ligne, avec un tiret
@@ -550,19 +571,20 @@ const UI = {
     const cur = G.buildingInfo(a), cost = G.upgradeCost(a);
     const close = () => { el.remove(); if (this.upgradeBox === el) this.upgradeBox = null; };
     // (une mine ne se démolit pas)
-    const del = type === B_MINE ? '' : `<button data-del>🧨 Détruire (${CONFIG.DEMOLISH_TIME} s)</button>`;
+    const del = type === B_MINE ? '' : `<button data-del>🧨 ${tr('Détruire', 'Demolish')} (${CONFIG.DEMOLISH_TIME} s)</button>`;
     const state = type === B_MINE ? this.mineState(a) : '';
     if (cost === null) {
-      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) : niveau maximum${state}` + this.perksHTML(this.levelPerks(type, cur)) +
+      el.innerHTML = `${icon} <b>${cur.name}</b> ` + tr(`(niveau ${G.level[a]}) : niveau maximum`, `(level ${G.level[a]}): max level`) + state + this.perksHTML(this.levelPerks(type, cur)) +
         `<div class="choices">${del}<button data-no>OK</button></div>`;
     } else {
       const next = BUILDING_LEVELS[type][G.level[a] + 1], why = G.upgradeBlocker(G.human, a);
-      el.innerHTML = `${icon} <b>${cur.name}</b> (niveau ${G.level[a]}) → <b>${type === B_MINE ? G.mineInfoAt(cur.kind, 2).name : next.name}</b> (niveau ${G.level[a] + 1})${state}<br>` +
+      el.innerHTML = `${icon} <b>${cur.name}</b> (${tr('niveau', 'level')} ${G.level[a]}) → <b>${type === B_MINE ? G.mineInfoAt(cur.kind, 2).name : next.name}</b> (${tr('niveau', 'level')} ${G.level[a] + 1})${state}<br>` +
         (next.img ? `<img src="${next.img}" alt="">` : '') +
         this.perksHTML(this.upgradePerks(type, cur, next)) +
         (why ? `<div class="need">⚠️ ${why}</div>` : '') + // (ce qu'il manque pour la cité impériale)
-        `<div class="choices"><button data-yes${G.human.gold >= cost && !why ? '' : ' disabled'}>Améliorer (💰 ${fmt(cost)})</button>` +
-        `${del}<button data-no>Fermer</button></div>`;
+        `<div class="choices"><button data-yes${G.human.gold >= cost && !why ? '' : ' disabled'}>${tr('Améliorer', 'Upgrade')} (💰 ${fmt(cost)})</button>` +
+        `${del}<button data-no>${tr('Fermer', 'Close')}</button></div>`;
+
       el.querySelector('[data-yes]').addEventListener('click', () => {
         const err = G.upgradeBuilding(G.human, a);
         if (err) return this.log(err, 'warn');

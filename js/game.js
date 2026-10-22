@@ -1327,8 +1327,10 @@ const GameRules = {
         o.stationed += this.garrison[a] - keep;
         this.garrison[a] = keep;
         if (p && p.isHuman) {
-          UI.log(`⛺ Ton avant-poste est bâti : ${fmt(keep)} soldats y restent en garnison, ${fmt(o.stationed)} stationnent ` +
-            'et peuvent attaquer depuis lui (curseur « Envoyer »).', 'good');
+          UI.log(tr(`⛺ Ton avant-poste est bâti : ${fmt(keep)} soldats y restent en garnison, ${fmt(o.stationed)} stationnent ` +
+            'et peuvent attaquer depuis lui (curseur « Envoyer »).',
+            `⛺ Your outpost is built: ${fmt(keep)} soldiers stay there as a garrison, ${fmt(o.stationed)} are stationed ` +
+            'and can attack from it ("Send" slider).'), 'good');
         }
       }
     }
@@ -1345,7 +1347,7 @@ const GameRules = {
       this.colonies.set(castle, pid);
       this.regionsCache = null;
       this.removeBuilding(a);
-      if (p.isHuman) UI.log('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', 'good');
+      if (p.isHuman) UI.log(tr('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', '🏰 Your castle turns the outpost into true kingdom land: its soldiers join your army.'), 'good');
       return; // la carte a changé : on regardera les autres au prochain tour
     }
   },
@@ -1353,7 +1355,7 @@ const GameRules = {
   // Envoie des renforts par la mer à son avant-poste a (depuis un port d'expédition). Message d'erreur, ou null.
   reinforceOutpost(pid, a, troops) {
     const p = this.players[pid], o = this.outposts.get(a);
-    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
+    if (!o || this.owner[a] !== pid) return tr('Ce n\'est pas un de tes avant-postes.', 'This is not one of your outposts.');
     let best = null;
     for (const port of this.expeditionPorts(pid)) {
       const path = this.boatPath(port, o.landing);
@@ -1361,7 +1363,7 @@ const GameRules = {
       const time = path.length / this.buildingInfo(port).boatSpeed;
       if (!best || time < best.time) best = { path, time, port };
     }
-    if (!best) return 'Aucun de tes ports d\'expédition (niveau 2 ou plus) ne peut rejoindre cet avant-poste.';
+    if (!best) return tr('Aucun de tes ports d\'expédition (niveau 2 ou plus) ne peut rejoindre cet avant-poste.', 'None of your expedition ports (level 2 or higher) can reach this outpost.');
     troops = Math.floor(Math.min(troops, p.troops));
     if (troops < 1) return 'Pas assez de soldats !';
     p.troops -= troops;
@@ -1503,21 +1505,21 @@ const GameRules = {
 
   // Pourquoi le joueur ne peut pas fonder sa capitale ici (null s'il le peut)
   spawnError(i) {
-    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return 'Choisis une terre, pas l\'eau !';
-    if (this.owner[i] >= 0) return `Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`;
-    if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return 'Cette île est trop petite pour y fonder ta capitale.';
-    if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE)) return 'Trop près d\'un royaume rival : éloigne-toi un peu.';
+    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return tr('Choisis une terre, pas l\'eau !', 'Pick land, not water!');
+    if (this.owner[i] >= 0) return tr(`Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`, `This land already belongs to ${this.players[this.owner[i]].name}.`);
+    if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return tr('Cette île est trop petite pour y fonder ta capitale.', 'This island is too small to found your capital on.');
+    if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE)) return tr('Trop près d\'un royaume rival : éloigne-toi un peu.', 'Too close to a rival kingdom: move a little further away.');
     return null;
   },
 
   // Mode « Factions » : les 11 autres races des 3 camps, les 3 pactes éternels, et chaque royaume à sa capitale
   // (AZEROTH_CAPITALS). Le joueur ne choisit pas où il commence : la partie démarre en pause, le temps de se repérer.
   startFactions(opts) {
-    const race = p => BANNERS[p.banner].name;
+    const race = p => BANNERS[p.banner].id; // (le nom fixe de la race, en français : voir AZEROTH_BANNERS)
     for (const f of AZEROTH_FACTIONS) {
       for (const r of f.races) {
-        const b = BANNERS.findIndex(x => x.set === 'azeroth' && x.name === r);
-        if (b !== opts.banner) this.addPlayer(r, b, false);
+        const b = BANNERS.findIndex(x => x.set === 'azeroth' && x.id === r);
+        if (b !== opts.banner) this.addPlayer(BANNERS[b].name, b, false);
       }
     }
     for (const f of AZEROTH_FACTIONS) {
@@ -1806,8 +1808,10 @@ const GameRules = {
   // Message : la ville c (« Cette ville »…) a déjà toutes ses routes
   tradeFull(c, who) {
     const n = this.tradeMax(c), next = CASTLE_LEVELS[this.level[c] + 1];
-    return `${who} a déjà ${n > 1 ? `ses ${n} routes commerciales` : 'sa route commerciale'}` +
-      (next ? ` (en l'améliorant en ${next.name}, elle en aura ${next.trades}).` : ' (le maximum).');
+    return tr(`${who} a déjà ${n > 1 ? `ses ${n} routes commerciales` : 'sa route commerciale'}`,
+      `${who} already has ${n > 1 ? `its ${n} trade routes` : 'its trade route'}`) +
+      (next ? tr(` (en l'améliorant en ${next.name}, elle en aura ${next.trades}).`, ` (upgraded to ${next.name}, it will have ${next.trades}).`)
+        : tr(' (le maximum).', ' (the maximum).'));
   },
   // Les routes commerciales de la ville a (qu'elle les ait ouvertes ou qu'elles y arrivent)
   tradesOf(a) { return this.tradeRoutes.filter(r => r.from === a || r.to === a); },
@@ -1818,10 +1822,10 @@ const GameRules = {
   },
   // Pourquoi la ville a de pid ne peut pas (encore) avoir de route commerciale, ou null si elle le peut
   tradeBlocker(pid, a) {
-    if (!this.pactsAllowed) return 'Pas de pactes dans cette partie : pas de route commerciale.';
-    if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return 'Il faut une de tes villes de niveau 2 ou plus.';
-    if (this.tradesOf(a).length >= this.tradeMax(a)) return this.tradeFull(a, 'Cette ville');
-    if (!this.tradePartners(pid).length) return 'Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.';
+    if (!this.pactsAllowed) return tr('Pas de pactes dans cette partie : pas de route commerciale.', 'No pacts in this game: no trade routes.');
+    if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return tr('Il faut une de tes villes de niveau 2 ou plus.', 'You need one of your cities at level 2 or higher.');
+    if (this.tradesOf(a).length >= this.tradeMax(a)) return this.tradeFull(a, tr('Cette ville', 'This city'));
+    if (!this.tradePartners(pid).length) return tr('Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.', 'You need an ally in your pact with a city at level 2 or higher.');
     return null;
   },
   // Plan d'une route commerciale de la ville a (au royaume pid) vers la ville visée en b :
@@ -1829,17 +1833,18 @@ const GameRules = {
   planTrade(pid, a, b) {
     const why = this.tradeBlocker(pid, a);
     if (why) return { error: why };
-    if (b < 0 || this.building[b] !== B_CASTLE) return { error: 'Clique sur une ville (un château) d\'un allié de ton pacte.' };
+    if (b < 0 || this.building[b] !== B_CASTLE) return { error: tr('Clique sur une ville (un château) d\'un allié de ton pacte.', 'Click a city (a castle) of an ally in your pact.') };
     b = this.anchor[b];
     const o = this.owner[b];
-    if (o < 0 || o === pid || !this.areAllied(pid, o)) return { error: 'Une route commerciale relie une de tes villes à une ville d\'un allié de ton pacte.' };
-    if (this.level[b] < 2) return { error: 'La ville de ton allié doit être de niveau 2 ou plus.' };
+    if (o < 0 || o === pid || !this.areAllied(pid, o)) return { error: tr('Une route commerciale relie une de tes villes à une ville d\'un allié de ton pacte.', 'A trade route links one of your cities to a city of an ally in your pact.') };
+    if (this.level[b] < 2) return { error: tr('La ville de ton allié doit être de niveau 2 ou plus.', 'Your ally\'s city must be level 2 or higher.') };
     // (on ne relie pas deux fois les mêmes villes, même si c'est ton allié qui a ouvert la route)
     if (this.tradeRoutes.some(r => (r.from === b && r.to === a) || (r.from === a && r.to === b))) {
-      return { error: 'Ces deux villes sont déjà reliées par une route commerciale : on ne les relie pas deux fois.' };
+      return { error: tr('Ces deux villes sont déjà reliées par une route commerciale : on ne les relie pas deux fois.', 'These two cities are already linked by a trade route: they cannot be linked twice.') };
     }
-    if (this.tradesOf(b).length >= this.tradeMax(b)) return { error: this.tradeFull(b, 'Cette ville alliée') };
-    const W = this.W, h = this.sizeOf(B_CASTLE) / 2, tooFar = `Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.`;
+    if (this.tradesOf(b).length >= this.tradeMax(b)) return { error: this.tradeFull(b, tr('Cette ville alliée', 'This allied city')) };
+    const W = this.W, h = this.sizeOf(B_CASTLE) / 2;
+    const tooFar = tr(`Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.`, `Too far: a trade route is at most ${CONFIG.TRADE_MAX_LENGTH} tiles long.`);
     // (à vol d'oiseau déjà trop loin : inutile de chercher un tracé)
     if (Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) > CONFIG.TRADE_MAX_LENGTH * 1.2) return { error: tooFar };
     const pts = this.tradePath(a % W + h, ((a / W) | 0) + h, b % W + h, ((b / W) | 0) + h, a % 2, pid, o);
@@ -1852,7 +1857,7 @@ const GameRules = {
   buildTrade(p, a, b) {
     const plan = this.planTrade(p.id, a, b);
     if (plan.error) return plan.error;
-    if (p.gold < plan.cost) return `Pas assez d'or : cette route commerciale coûte 💰 ${fmt(plan.cost)}.`;
+    if (p.gold < plan.cost) return tr(`Pas assez d'or : cette route commerciale coûte 💰 ${fmt(plan.cost)}.`, `Not enough gold: this trade route costs 💰 ${fmt(plan.cost)}.`);
     p.gold -= plan.cost;
     this.tradeRoutes.push({ from: a, to: plan.to, active: true, pts: plan.pts, tiles: this.routeTiles(plan.pts), len: plan.len, income: plan.income });
     this.version++;
@@ -1863,11 +1868,14 @@ const GameRules = {
   // sinon, c'est l'eau (mer, lac, fleuve sans pont) ou un sommet.
   tradeBlockReason(x1, y1, x2, y2, pid, o) {
     const free = this.roadDetour(x1, y1, x2, y2, i => this.roadTile(i), 40, 3);
-    if (!free) return 'Pas de passage assez court par la terre : la mer, un lac, un sommet ou un fleuve sans pont ' +
-      'coupe le chemin (un pont ouvre un passage).';
+    if (!free) return tr('Pas de passage assez court par la terre : la mer, un lac, un sommet ou un fleuve sans pont ' +
+      'coupe le chemin (un pont ouvre un passage).', 'No short enough way over land: the sea, a lake, a peak or a river without a bridge ' +
+      'cuts the way (a bridge opens a passage).');
     const other = this.routeTiles(free).find(i => this.owner[i] !== pid && this.owner[i] !== o && this.terrain[i] !== TERRAIN.RIVER);
-    const who = other === undefined ? null : this.owner[other] < 0 ? 'des terres libres' : `les terres ${this.deName(this.players[this.owner[other]].name)}`;
-    return 'La route commerciale doit rester sur vos deux territoires' + (who ? ` : ici, elle passerait par ${who}. Prends-les d'abord.` : '.');
+    const who = other === undefined ? null : this.owner[other] < 0 ? tr('des terres libres', 'free land')
+      : tr(`les terres ${this.deName(this.players[this.owner[other]].name)}`, `${this.players[this.owner[other]].name}'s land`);
+    return tr('La route commerciale doit rester sur vos deux territoires', 'The trade route must stay on your two territories') +
+      (who ? tr(` : ici, elle passerait par ${who}. Prends-les d'abord.`, `: here, it would go through ${who}. Take it first.`) : '.');
   },
   // Une case où peut passer une route commerciale entre les royaumes o et q : une case où une route peut passer, sur
   // le territoire de l'un des deux (ou un fleuve, sous un pont)
@@ -1902,7 +1910,7 @@ const GameRules = {
       if (this.building[r.from] !== B_CASTLE || this.building[r.to] !== B_CASTLE) {
         this.tradeRoutes.splice(this.tradeRoutes.indexOf(r), 1);
         this.version++;
-        if ((p && p.isHuman) || (q && q.isHuman)) UI.log('🛒 Une route commerciale disparaît : une de ses villes a été détruite.', 'warn');
+        if ((p && p.isHuman) || (q && q.isHuman)) UI.log(tr('🛒 Une route commerciale disparaît : une de ses villes a été détruite.', '🛒 A trade route disappears: one of its cities was destroyed.'), 'warn');
         continue;
       }
       const problem = this.tradeProblem(r), active = !problem;
@@ -1910,7 +1918,7 @@ const GameRules = {
       r.active = active;
       this.version++;
       if (!(p && p.isHuman) && !(q && q.isHuman)) continue;
-      const names = `${p ? p.name : '?'} et ${q ? q.name : '?'}`;
+      const names = tr(`${p ? p.name : '?'} et ${q ? q.name : '?'}`, `${p ? p.name : '?'} and ${q ? q.name : '?'}`);
       if (active) UI.log(`🛒 La route commerciale entre ${names} reprend : elle rapporte de nouveau de l'or !`, 'good');
       else if (problem === 'cut') UI.log(`🛒 La route commerciale entre ${names} est coupée : des terres sur son passage ont été prises. ` +
         'Elle reprendra quand tout son passage sera de nouveau à vous deux.', 'warn');
