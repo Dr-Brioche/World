@@ -917,7 +917,7 @@ const Render = {
       const set = new Set(zone);
       // Petite bulle près de la souris : la défense totale de la muraille (dessinée par-dessus tout, voir draw)
       const def = Math.round((G.castleZoneDefense(zone, level) - 1) * 100);
-      this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: `🛡️ Défense dans la muraille : +${def} %` };
+      this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: tr(`🛡️ Défense dans la muraille : +${def} %`, `🛡️ Defense inside the walls: +${def}%`) };
       this.fillTiles(ox, oy, zone, ok ? 'rgba(255,230,120,0.3)' : 'rgba(220,60,50,0.3)');
       this.drawWall(ox, oy, this.zoneEdges(zone, (i, n) => set.has(n)),
         ok ? 'rgba(255,230,140,0.95)' : 'rgba(230,90,80,0.95)', 'rgba(30,22,12,0.8)');
@@ -1018,6 +1018,13 @@ const Render = {
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = '#ffe2a8';
       Icons.text(ctx, '🛡 ' + fmt(defenders), sx, sy - 40);
+      // Des alliés du pacte se battent avec lui : la bannière de celui qui a envoyé le plus de soldats, plus petite
+      let ally = -1, most = 1;
+      if (a.allyDef) for (const k in a.allyDef) if (a.allyDef[k] >= most) { most = a.allyDef[k]; ally = +k; }
+      if (ally >= 0 && G.players[ally]) {
+        this.drawBannerImage(G.players[ally], sx + 26, sy + 4, 24);
+        Icons.text(ctx, '🤝', sx + 26, sy - 26);
+      }
     }
     // Zone cliquable (le défenseur clique dessus pour envoyer ses soldats)
     this.bannerHits.push({ id: a.id, x: bx + 20, y: by - 24 });
@@ -1196,7 +1203,7 @@ const Render = {
         }
         // Siège en cours : une jauge ronde autour de la cible se remplit jusqu'à sa chute (voir drawSiegeRing)
         if (a.siege) this.drawSiegeRing(ox, oy, a);
-        const siege = a.retreatEnd !== undefined ? '🏳️ retraite · ' : a.clash !== undefined ? '⚔️ bataille · ' : '';
+        const siege = a.retreatEnd !== undefined ? tr('🏳️ retraite · ', '🏳️ retreat · ') : a.clash !== undefined ? tr('⚔️ bataille · ', '⚔️ battle · ') : '';
         // Deux armées qui s'affrontent au pied du même château : leurs bannières se font face
         const shift = a.clash !== undefined ? (a.attacker < a.clash ? -30 : 30) : 0;
         this.drawArmyBanner(a, bx + shift, by, `${siege}${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
@@ -1217,7 +1224,7 @@ const Render = {
       }
       const bx = m ? ox + m.x * s : st >= 0 ? ox + (st % G.W + 0.5) * s : x1;
       const by = m ? oy + m.y * s : st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
-      this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `🏳️ retraite · ${fmt(a.troops)}` : `${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
+      this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `${tr('🏳️ retraite', '🏳️ retreat')} · ${fmt(a.troops)}` : `${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
     }
   },
 
@@ -1711,7 +1718,7 @@ const Render = {
     const G = Game, ctx = this.ctx, parts = [];
     const o = type === B_OUTPOST ? G.outposts.get(a) : null;
     // (avant-poste en construction : pas de garnison, juste des soldats affaiblis qui bâtissent)
-    if (G.builders(a) >= 1) parts.push(`⚔ ${fmt(G.builders(a))} affaiblis`);
+    if (G.builders(a) >= 1) parts.push(`⚔ ${fmt(G.builders(a))} ${tr('affaiblis', 'weakened')}`);
     else if (G.garrison[a] >= 1) parts.push('🛡️ ' + fmt(G.garrison[a]));
     if (o && G.outpostReady(a) && o.stationed >= 1) parts.push('⚔ ' + fmt(o.stationed));
     if (o && !G.outpostReady(a)) parts.push(`🏗️ ${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s`);
@@ -2238,7 +2245,8 @@ const Render = {
       ctx.stroke();
       ctx.setLineDash([]);
       // Au milieu du trait : la distance et la portée de la ville
-      const label = `🛤️ trop loin : ${Math.round(far.d)} cases (${Math.floor(far.max)} max)`;
+      const label = tr(`🛤️ trop loin : ${Math.round(far.d)} cases (${Math.floor(far.max)} max)`,
+        `🛤️ too far: ${Math.round(far.d)} cells (${Math.floor(far.max)} max)`);
       ctx.font = '600 13px Georgia, serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -2775,8 +2783,9 @@ const Render = {
       ctx.lineJoin = 'round';
     }
     this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: plan.error ||
-      `🛒 ${Math.round(plan.len)} cases · 💰 ${fmt(plan.cost)} · +${fmt(plan.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
-      (G.human.gold < plan.cost ? ' (pas assez d\'or)' : '') };
+      tr(`🛒 ${Math.round(plan.len)} cases · 💰 ${fmt(plan.cost)} · +${fmt(plan.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s`,
+        `🛒 ${Math.round(plan.len)} cells · 💰 ${fmt(plan.cost)} · +${fmt(plan.income)} 💰 every ${CONFIG.PRODUCTION_INTERVAL} s`) +
+      (G.human.gold < plan.cost ? tr(' (pas assez d\'or)', ' (not enough gold)') : '') };
   },
 
   // Bulle d'info pendant la pose (ou l'amélioration) d'un château : la défense totale de sa muraille

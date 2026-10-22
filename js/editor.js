@@ -26,7 +26,7 @@ const Ed = {
     $('palette').innerHTML = PALETTE.map((t, k) => {
       const c = TERRAIN_INFO[t].color;
       const key = (k + 1) % 10; // (le 10e terrain : touche 0)
-      return `<button data-t="${t}" title="${TERRAIN_INFO[t].name} (touche ${key})"><i style="background:rgb(${c})"></i>${key}. ${TERRAIN_INFO[t].name}</button>`;
+      return `<button data-t="${t}" title="${TERRAIN_INFO[t].name} (${tr('touche', 'key')} ${key})"><i style="background:rgb(${c})"></i>${key}. ${TERRAIN_INFO[t].name}</button>`;
     }).join('');
     $('palette').addEventListener('click', e => { const b = e.target.closest('button'); if (b) this.setBrush(+b.dataset.t); });
     document.querySelectorAll('.toolBtn').forEach(b => b.addEventListener('click', () => this.setTool(b.dataset.tool)));
@@ -34,7 +34,7 @@ const Ed = {
     $('undoBtn').addEventListener('click', () => this.doUndo());
     $('redoBtn').addEventListener('click', () => this.doRedo());
     document.querySelectorAll('[data-new]').forEach(b => b.addEventListener('click', () => {
-      if (this.changed && !confirm('Commencer une nouvelle carte ? Ce qui n\'est pas enregistré sera perdu.')) return;
+      if (this.changed && !confirm(tr('Commencer une nouvelle carte ? Ce qui n\'est pas enregistré sera perdu.', 'Start a new map? Anything not saved will be lost.'))) return;
       this.newMap(b.dataset.new, $('newSize').value);
     }));
     $('saveBtn').addEventListener('click', () => this.save());
@@ -73,7 +73,8 @@ const Ed = {
     }
     this.load(W, H, terrain);
     $('name').value = '';
-    this.message(kind === 'random' ? '🎲 Carte aléatoire : retouche-la à ton goût !' : '🖌️ Nouvelle carte : à toi de dessiner !');
+    this.message(kind === 'random' ? tr('🎲 Carte aléatoire : retouche-la à ton goût !', '🎲 Random map: touch it up as you like!')
+      : tr('🖌️ Nouvelle carte : à toi de dessiner !', '🖌️ New map: your turn to draw!'));
   },
 
   load(W, H, terrain) {
@@ -214,63 +215,66 @@ const Ed = {
       if (n >= CONFIG.MIN_SPAWN_LAND) big.push(n);
     }
     const total = big.reduce((a, b) => a + b, 0);
-    if (!big.length) return { ok: false, warn: `Il faut au moins une terre de ${CONFIG.MIN_SPAWN_LAND} cases (sans compter les fleuves) pour y fonder des royaumes.` };
+    if (!big.length) return { ok: false, warn: tr(`Il faut au moins une terre de ${CONFIG.MIN_SPAWN_LAND} cases (sans compter les fleuves) pour y fonder des royaumes.`,
+      `You need at least one landmass of ${CONFIG.MIN_SPAWN_LAND} cells (not counting rivers) to found kingdoms on it.`) };
     // (chaque royaume a besoin de place : sinon certains bots ne trouveront pas où s'installer)
-    if (total < CONFIG.MIN_SPAWN_LAND * 8) return { ok: true, warn: 'Carte enregistrée, mais il y a peu de terres : certains royaumes rivaux pourraient ne pas trouver de place.' };
+    if (total < CONFIG.MIN_SPAWN_LAND * 8) return { ok: true, warn: tr('Carte enregistrée, mais il y a peu de terres : certains royaumes rivaux pourraient ne pas trouver de place.',
+      'Map saved, but there is little land: some rival kingdoms might not find room.') };
     return { ok: true };
   },
 
   save() {
     const name = this.name();
-    if (!name) { this.message('Donne un nom à ta carte avant de l\'enregistrer.', 'bad'); $('name').focus(); return false; }
-    if (CUSTOM_MAPS.some(m => m.name === name)) { this.message('Ce nom est déjà celui d\'une carte du jeu : choisis-en un autre.', 'bad'); return false; }
+    if (!name) { this.message(tr('Donne un nom à ta carte avant de l\'enregistrer.', 'Give your map a name before saving it.'), 'bad'); $('name').focus(); return false; }
+    if (CUSTOM_MAPS.some(m => m.name === name)) { this.message(tr('Ce nom est déjà celui d\'une carte du jeu : choisis-en un autre.', 'This name is already used by a game map: pick another one.'), 'bad'); return false; }
     const check = this.check();
     if (!check.ok) { this.message(check.warn, 'bad'); return false; }
     const err = CustomMaps.save({ name, W: this.W, H: this.H, data: CustomMaps.encode(this.terrain) });
     if (err) { this.message(err, 'bad'); return false; }
     this.changed = false;
     this.refreshSaved(name);
-    this.message(check.warn || `💾 « ${name} » est enregistrée : elle est dans la liste des cartes du jeu (✏️ Cartes dessinées).`, check.warn ? 'bad' : 'good');
+    this.message(check.warn || tr(`💾 « ${name} » est enregistrée : elle est dans la liste des cartes du jeu (✏️ Cartes dessinées).`,
+      `💾 “${name}” is saved: it is in the game's list of maps (✏️ Drawn maps).`), check.warn ? 'bad' : 'good');
     return true;
   },
 
   refreshSaved(select) {
     const list = CustomMaps.all();
     $('saved').innerHTML = list.length
-      ? list.map(m => `<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)} (${m.W} x ${m.H})${m.builtIn ? ' · du jeu' : ''}</option>`).join('')
-      : '<option value="">(aucune carte enregistrée)</option>';
+      ? list.map(m => `<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)} (${m.W} x ${m.H})${m.builtIn ? tr(' · du jeu', ' · built-in') : ''}</option>`).join('')
+      : `<option value="">${tr('(aucune carte enregistrée)', '(no saved map)')}</option>`;
     if (select) $('saved').value = select;
   },
 
   open(name) {
     const m = name && CustomMaps.find(name);
     if (!m) return;
-    if (this.changed && !confirm('Ouvrir une autre carte ? Ce qui n\'est pas enregistré sera perdu.')) return;
+    if (this.changed && !confirm(tr('Ouvrir une autre carte ? Ce qui n\'est pas enregistré sera perdu.', 'Open another map? Anything not saved will be lost.'))) return;
     this.load(m.W, m.H, CustomMaps.decode(m.data, m.W * m.H));
     $('name').value = m.builtIn ? '' : m.name; // (une carte du jeu se modifie sous un autre nom)
-    this.message(`📂 « ${m.name} » est ouverte.`);
+    this.message(tr(`📂 « ${m.name} » est ouverte.`, `📂 “${m.name}” is open.`));
   },
 
   remove(name) {
     const m = name && CustomMaps.find(name);
     if (!m) return;
-    if (m.builtIn) return this.message('C\'est une carte du jeu : on ne peut pas la supprimer d\'ici.', 'bad');
-    if (!confirm(`Supprimer la carte « ${name} » ?`)) return;
+    if (m.builtIn) return this.message(tr('C\'est une carte du jeu : on ne peut pas la supprimer d\'ici.', 'This is a built-in map: it cannot be deleted from here.'), 'bad');
+    if (!confirm(tr(`Supprimer la carte « ${name} » ?`, `Delete the map “${name}”?`))) return;
     CustomMaps.remove(name);
     this.refreshSaved();
-    this.message(`🗑️ « ${name} » est supprimée.`);
+    this.message(tr(`🗑️ « ${name} » est supprimée.`, `🗑️ “${name}” is deleted.`));
   },
 
   // Télécharge la carte dans un fichier .json (pour la garder, la partager, ou l'ajouter au jeu pour tout le monde)
   exportMap() {
-    const name = this.name() || 'carte';
+    const name = this.name() || tr('carte', 'map');
     const json = JSON.stringify({ name, W: this.W, H: this.H, data: CustomMaps.encode(this.terrain) });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
     a.download = name.replace(/[^\w\- ]+/g, '_') + '.json';
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    this.message('📤 Carte exportée dans un fichier.');
+    this.message(tr('📤 Carte exportée dans un fichier.', '📤 Map exported to a file.'));
   },
 
   importMap(file) {
@@ -283,9 +287,10 @@ const Ed = {
         this.load(m.W, m.H, CustomMaps.decode(m.data, m.W * m.H));
         $('name').value = m.name || '';
         this.changed = true;
-        this.message(`📥 « ${m.name || 'carte'} » importée : enregistre-la pour l'avoir dans le jeu.`, 'good');
+        this.message(tr(`📥 « ${m.name || 'carte'} » importée : enregistre-la pour l'avoir dans le jeu.`,
+          `📥 “${m.name || 'map'}” imported: save it to have it in the game.`), 'good');
       } catch (e) {
-        this.message('Ce fichier n\'est pas une carte de l\'éditeur.', 'bad');
+        this.message(tr('Ce fichier n\'est pas une carte de l\'éditeur.', 'This file is not a map from the editor.'), 'bad');
       }
       $('importFile').value = '';
     };
@@ -328,7 +333,7 @@ const Ed = {
     ctx.lineWidth = 2;
     ctx.strokeRect(ox, oy, this.W * s, this.H * s);
     // Le pinceau sous la souris
-    let info = `Carte ${this.W} x ${this.H}`;
+    let info = `${tr('Carte', 'Map')} ${this.W} x ${this.H}`;
     if (this.mouse) {
       const t = this.tileAt(this.mouse.x, this.mouse.y), n = this.tool === 'fill' ? 1 : this.brushSize();
       const o = Math.floor((n - 1) / 2);
@@ -340,11 +345,12 @@ const Ed = {
         ctx.stroke();
       } else ctx.strokeRect(ox + (t.x - o) * s, oy + (t.y - o) * s, n * s, n * s);
       if (t.x >= 0 && t.y >= 0 && t.x < this.W && t.y < this.H) {
-        info += ` · case ${t.x}, ${t.y} : ${TERRAIN_INFO[this.terrain[t.y * this.W + t.x]].name}`;
+        info += ` · ${tr('case', 'cell')} ${t.x}, ${t.y}${tr(' :', ':')} ${TERRAIN_INFO[this.terrain[t.y * this.W + t.x]].name}`;
       }
     }
-    info += ` · pinceau : ${TERRAIN_INFO[this.brush].name}${this.tool === 'fill' ? ' (remplir)' : `, ${this.brushSize()} case${this.brushSize() > 1 ? 's' : ''}`}` +
-      (this.changed ? ' · ✏️ modifiée (pas encore enregistrée)' : '');
+    info += ` · ${tr('pinceau :', 'brush:')} ${TERRAIN_INFO[this.brush].name}${this.tool === 'fill' ? tr(' (remplir)', ' (fill)')
+      : `, ${this.brushSize()} ${tr('case', 'cell')}${this.brushSize() > 1 ? 's' : ''}`}` +
+      (this.changed ? tr(' · ✏️ modifiée (pas encore enregistrée)', ' · ✏️ modified (not saved yet)') : '');
     if (info !== this.lastInfo) { $('status').textContent = info; this.lastInfo = info; }
   },
 
@@ -414,4 +420,5 @@ function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+document.title = tr('Éditeur de cartes', 'Map editor');
 Ed.init();

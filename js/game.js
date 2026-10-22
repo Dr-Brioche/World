@@ -404,7 +404,8 @@ const GameRules = {
 
   // « ce château », « cette église »… pour les messages
   targetLabel(a) {
-    return ['', '', '', 'ce château', 'cette église', 'ce port', 'cet avant-poste', 'cette mine'][this.building[a]] || 'cette cible';
+    return tr(['', '', '', 'ce château', 'cette église', 'ce port', 'cet avant-poste', 'cette mine'],
+      ['', '', '', 'this castle', 'this church', 'this port', 'this outpost', 'this mine'])[this.building[a]] || tr('cette cible', 'this target');
   },
 
   // Retire un bâtiment de la carte (un avant-poste détruit)
@@ -514,7 +515,7 @@ const GameRules = {
   },
   // Les infos d'une mine de cette sorte, à ce niveau (sans mine posée : pour les aperçus)
   mineInfoAt(kind, lvl) {
-    const m = MINES[kind], name = lvl > 1 ? 'Grande ' + m.name[0].toLowerCase() + m.name.slice(1) : m.name;
+    const m = MINES[kind], name = lvl > 1 ? tr('Grande ', 'Great ') + m.name[0].toLowerCase() + m.name.slice(1) : m.name;
     // (or : les 2000 pièces du filon, réparties sur ses versements : un toutes les PRODUCTION_INTERVAL secondes)
     const gold = m.total ? m.total / (m.time / CONFIG.PRODUCTION_INTERVAL) : undefined;
     return { ...MINE_LEVELS[lvl], name, kind, power: m.power && m.power[lvl], gold,
@@ -571,7 +572,9 @@ const GameRules = {
         d.left--;
         if (d.left <= 0) {
           this.version++; // (sa route disparaît)
-          if (p.isHuman) UI.log('🪙 Ta mine d\'or est épuisée' + (this.level[a] < 2 ? ` : améliore-la pour la relancer ${Math.round(MINES.gold.time / 60)} minutes de plus !` : ' pour de bon.'), 'warn');
+          if (p.isHuman) UI.log(tr('🪙 Ta mine d\'or est épuisée', '🪙 Your gold mine is exhausted') + (this.level[a] < 2
+            ? tr(` : améliore-la pour la relancer ${Math.round(MINES.gold.time / 60)} minutes de plus !`, `: upgrade it to run it ${Math.round(MINES.gold.time / 60)} more minutes!`)
+            : tr(' pour de bon.', ' for good.')), 'warn');
         }
         continue;
       }
@@ -582,13 +585,13 @@ const GameRules = {
         const pay = m.pay[d.paid]; // (1 000 au 1er quart, 2 000 au 2e, 3 000 au 3e)
         d.paid++;
         p.gold += pay;
-        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(pay)} 💰`); UI.log(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(pay)} pièces !`, 'good'); }
+        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(pay)} 💰`); UI.log(tr(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(pay)} pièces !`, `💎 Your diamond mine is ${d.paid}/4 mined: +${fmt(pay)} gold!`), 'good'); }
       }
       if (d.progress >= 1) {
         p.gold += m.final;
         this.version++;
-        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(m.final)} 💰`); UI.log(`💎 Ta mine de diamant est entièrement extraite : +${fmt(m.final)} pièces ! Le filon est épuisé.`, 'good'); }
-        else if (this.human && this.human.alive) UI.log(`💎 ${p.name} a fini d'extraire une mine de diamant : +${fmt(m.final)} pièces !`, 'warn', p);
+        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(m.final)} 💰`); UI.log(tr(`💎 Ta mine de diamant est entièrement extraite : +${fmt(m.final)} pièces ! Le filon est épuisé.`, `💎 Your diamond mine is fully mined: +${fmt(m.final)} gold! The ore vein is exhausted.`), 'good'); }
+        else if (this.human && this.human.alive) UI.log(tr(`💎 ${p.name} a fini d'extraire une mine de diamant : +${fmt(m.final)} pièces !`, `💎 ${p.name} has finished mining a diamond mine: +${fmt(m.final)} gold!`), 'warn', p);
       }
     }
   },
@@ -616,13 +619,13 @@ const GameRules = {
   // (40 s pour passer au niveau 2, 60 s pour le niveau 3, quel que soit le bâtiment).
   // Renvoie un message d'erreur, ou null si les travaux commencent.
   upgradeBuilding(p, a) {
-    if (!this.building[a] || this.owner[a] !== p.id) return 'Ce n\'est pas un de tes bâtiments.';
-    if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
+    if (!this.building[a] || this.owner[a] !== p.id) return tr('Ce n\'est pas un de tes bâtiments.', 'This is not one of your buildings.');
+    if (this.works.has(a)) return tr('Des travaux sont déjà en cours sur ce bâtiment.', 'Works are already under way on this building.');
     const cost = this.upgradeCost(a);
-    if (cost === null) return 'Ce bâtiment est déjà au niveau maximum.';
+    if (cost === null) return tr('Ce bâtiment est déjà au niveau maximum.', 'This building is already at the maximum level.');
     const why = this.upgradeBlocker(p, a);
     if (why) return why;
-    if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
+    if (p.gold < cost) return tr(`Pas assez d'or (${cost} nécessaires).`, `Not enough gold (${cost} needed).`);
     p.gold -= cost;
     const T = CONFIG.UPGRADE_TIME, secs = T[Math.min(T.length - 1, this.level[a] - 1)];
     this.startWorks(p, a, 'up', secs, cost);
@@ -635,13 +638,13 @@ const GameRules = {
     const levels = BUILDING_LEVELS[this.building[a]], next = levels && levels[this.level[a] + 1];
     if (!next || !next.imperial) return null;
     const building = [...this.works].some(([b, w]) => w.pid === p.id && w.kind === 'up' && this.building[b] === B_CASTLE && this.level[b] >= 3);
-    if (p.imperialBuilt || building) return 'Tu as déjà ta cité impériale : une seule par partie.';
+    if (p.imperialBuilt || building) return tr('Tu as déjà ta cité impériale : une seule par partie.', 'You already have your imperial city: only one per game.');
     const top = t => BUILDING_LEVELS[t].length - 1; // (le niveau maximum de ce type de bâtiment)
     const missing = [B_MILL, B_BARRACKS, B_CHURCH, B_PORT].filter(t =>
       !this.buildingTiles.some(b => this.building[b] === t && this.owner[b] === p.id && this.level[b] >= top(t)));
     if (missing.length) {
-      return 'Il faut un bâtiment de chaque type au niveau maximum. Il manque : ' +
-        missing.map(t => `${BUILDINGS[t].name} niveau ${top(t)}`).join(', ') + '.';
+      return tr('Il faut un bâtiment de chaque type au niveau maximum. Il manque : ', 'You need one building of each type at the maximum level. Missing: ') +
+        missing.map(t => tr(`${BUILDINGS[t].name} niveau ${top(t)}`, `${BUILDINGS[t].name} level ${top(t)}`)).join(', ') + '.';
     }
     return null;
   },
@@ -651,9 +654,9 @@ const GameRules = {
 
   // Lance la démolition d'un de ses bâtiments (DEMOLISH_TIME secondes). Renvoie un message d'erreur, ou null.
   demolishBuilding(p, a) {
-    if (!this.building[a] || this.owner[a] !== p.id || this.building[a] === B_OUTPOST) return 'Ce n\'est pas un de tes bâtiments.';
-    if (this.building[a] === B_MINE) return 'Une mine ne se démolit pas.';
-    if (this.works.has(a)) return 'Des travaux sont déjà en cours sur ce bâtiment.';
+    if (!this.building[a] || this.owner[a] !== p.id || this.building[a] === B_OUTPOST) return tr('Ce n\'est pas un de tes bâtiments.', 'This is not one of your buildings.');
+    if (this.building[a] === B_MINE) return tr('Une mine ne se démolit pas.', 'A mine cannot be demolished.');
+    if (this.works.has(a)) return tr('Des travaux sont déjà en cours sur ce bâtiment.', 'Works are already under way on this building.');
     this.startWorks(p, a, 'down', CONFIG.DEMOLISH_TIME, 0);
     return null;
   },
@@ -705,10 +708,10 @@ const GameRules = {
 
   // Pourquoi la caserne a ne peut pas lancer de recrutement de masse (null si elle le peut)
   levyError(p, a) {
-    if (this.building[a] !== B_BARRACKS || this.owner[a] !== p.id) return 'Ce n\'est pas une de tes casernes.';
-    if (this.level[a] < 3) return 'Il faut une grande caserne (niveau 3) pour lancer un recrutement de masse.';
-    if (this.levyLeft(p) > 0) return `Un recrutement de masse est déjà en cours (encore ${Math.ceil(this.levyLeft(p))} s).`;
-    if (p.gold < CONFIG.LEVY_COST) return `Pas assez d'or : il faut 💰 ${CONFIG.LEVY_COST}.`;
+    if (this.building[a] !== B_BARRACKS || this.owner[a] !== p.id) return tr('Ce n\'est pas une de tes casernes.', 'This is not one of your barracks.');
+    if (this.level[a] < 3) return tr('Il faut une grande caserne (niveau 3) pour lancer un recrutement de masse.', 'You need great barracks (level 3) to start a mass recruitment.');
+    if (this.levyLeft(p) > 0) return tr(`Un recrutement de masse est déjà en cours (encore ${Math.ceil(this.levyLeft(p))} s).`, `A mass recruitment is already under way (${Math.ceil(this.levyLeft(p))} s left).`);
+    if (p.gold < CONFIG.LEVY_COST) return tr(`Pas assez d'or : il faut 💰 ${CONFIG.LEVY_COST}.`, `Not enough gold: you need 💰 ${CONFIG.LEVY_COST}.`);
     return null;
   },
 
@@ -720,7 +723,8 @@ const GameRules = {
     p.levyEnd = this.tick + CONFIG.LEVY_TIME * CONFIG.TICKS_PER_SECOND;
     const h = this.human;
     if (!p.isHuman && h && h.alive && this.neighborStats(p.id).has(h.id)) {
-      UI.log(`⚔️ ${p.name} lance un recrutement de masse : son armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s !`, 'warn', p);
+      UI.log(tr(`⚔️ ${p.name} lance un recrutement de masse : son armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s !`,
+        `⚔️ ${p.name} starts a mass recruitment: their army rebuilds much faster for ${CONFIG.LEVY_TIME} s!`), 'warn', p);
     }
     return null;
   },
@@ -730,10 +734,10 @@ const GameRules = {
 
   // Pourquoi la cathédrale a ne peut pas lancer de croisade (null si elle le peut)
   crusadeError(p, a) {
-    if (this.building[a] !== B_CHURCH || this.owner[a] !== p.id) return 'Ce n\'est pas une de tes églises.';
-    if (this.level[a] < 3) return 'Il faut une cathédrale (église de niveau 3) pour lancer une croisade.';
-    if (this.crusadeOf(a)) return 'Une croisade est déjà en cours depuis cette cathédrale.';
-    if (p.gold < CONFIG.CRUSADE_COST) return `Pas assez d'or : il faut 💰 ${CONFIG.CRUSADE_COST}.`;
+    if (this.building[a] !== B_CHURCH || this.owner[a] !== p.id) return tr('Ce n\'est pas une de tes églises.', 'This is not one of your churches.');
+    if (this.level[a] < 3) return tr('Il faut une cathédrale (église de niveau 3) pour lancer une croisade.', 'You need a cathedral (level 3 church) to start a crusade.');
+    if (this.crusadeOf(a)) return tr('Une croisade est déjà en cours depuis cette cathédrale.', 'A crusade is already under way from this cathedral.');
+    if (p.gold < CONFIG.CRUSADE_COST) return tr(`Pas assez d'or : il faut 💰 ${CONFIG.CRUSADE_COST}.`, `Not enough gold: you need 💰 ${CONFIG.CRUSADE_COST}.`);
     return null;
   },
 
@@ -748,7 +752,8 @@ const GameRules = {
     this.faithCache = null; // (la Croyance change tout de suite)
     const h = this.human;
     if (!p.isHuman && h && h.alive && this.neighborStats(p.id).has(h.id)) {
-      UI.log(`✝️ ${p.name} lance une croisade religieuse : sa Croyance monte de ${CONFIG.CRUSADE_FAITH} pendant ${CONFIG.CRUSADE_TIME} s !`, 'warn', p);
+      UI.log(tr(`✝️ ${p.name} lance une croisade religieuse : sa Croyance monte de ${CONFIG.CRUSADE_FAITH} pendant ${CONFIG.CRUSADE_TIME} s !`,
+        `✝️ ${p.name} starts a crusade: their Faith rises by ${CONFIG.CRUSADE_FAITH} for ${CONFIG.CRUSADE_TIME} s!`), 'warn', p);
     }
     return null;
   },
@@ -783,7 +788,7 @@ const GameRules = {
       if (this.tick < c.end) continue;
       c.over = true;
       this.faithCache = null;
-      if (this.players[c.owner].isHuman) UI.log('✝️ Ta croisade religieuse est terminée : ta Croyance redescend.');
+      if (this.players[c.owner].isHuman) UI.log(tr('✝️ Ta croisade religieuse est terminée : ta Croyance redescend.', '✝️ Your crusade is over: your Faith goes back down.'));
     }
     this.crusades = this.crusades.filter(c => !c.over);
     // Chaque paire (prêcheur, converti) avance ; une conversion complète = une case. Avec un grand écart,
@@ -939,12 +944,12 @@ const GameRules = {
   // from = une case d'un mur déjà bâti de la ville (pour le second mur) : il part de là, au lieu de la muraille,
   // et va au plus à WALL_MAX_REACH cases de ce point.
   planWall(pid, c, target, from = -1) {
-    if (this.building[c] !== B_CASTLE || this.owner[c] !== pid) return { error: 'Ce n\'est pas une de tes villes.' };
+    if (this.building[c] !== B_CASTLE || this.owner[c] !== pid) return { error: tr('Ce n\'est pas une de tes villes.', 'This is not one of your cities.') };
     if (this.wallsOf(c).length >= this.wallMax(c)) {
-      return { error: this.level[c] < 2 ? 'Il faut une ville de niveau 2 pour bâtir un mur.'
-        : this.level[c] < 3 ? 'Cette ville a déjà son mur (une citadelle peut en bâtir un second).'
-        : this.level[c] < 4 ? 'Cette ville a déjà ses deux murs (une cité impériale peut en bâtir un troisième).'
-        : `Cette ville a déjà ses ${this.wallMax(c)} murs.` };
+      return { error: this.level[c] < 2 ? tr('Il faut une ville de niveau 2 pour bâtir un mur.', 'You need a level 2 city to build a wall.')
+        : this.level[c] < 3 ? tr('Cette ville a déjà son mur (une citadelle peut en bâtir un second).', 'This city already has its wall (a citadel can build a second one).')
+        : this.level[c] < 4 ? tr('Cette ville a déjà ses deux murs (une cité impériale peut en bâtir un troisième).', 'This city already has its two walls (an imperial city can build a third one).')
+        : tr(`Cette ville a déjà ses ${this.wallMax(c)} murs.`, `This city already has its ${this.wallMax(c)} walls.`) };
     }
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
     // Visé dans (ou tout près de) la muraille d'une autre de ses villes : le mur va jusqu'à elle, et les relie
@@ -967,16 +972,16 @@ const GameRules = {
     if (from >= 0) {
       // Second mur, depuis un point du premier (déjà bâti)
       if (!this.walls.some(w => w.castle === c && w.done && w.tiles.includes(from))) {
-        return { error: 'Le mur doit partir de la muraille de la ville, ou d\'un point de son premier mur déjà bâti.' };
+        return { error: tr('Le mur doit partir de la muraille de la ville, ou d\'un point de son premier mur déjà bâti.', 'The wall must start from the city walls, or from a point of its first wall already built.') };
       }
       sx = from % W; sy = (from / W) | 0;
       const reach = Math.hypot(tx - sx - 0.5, ty - sy - 0.5) - Rcity;
-      if (reach < 2) return { error: 'Vise un endroit plus loin de ton mur.' };
-      if (reach > CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de son point de départ.` };
+      if (reach < 2) return { error: tr('Vise un endroit plus loin de ton mur.', 'Aim at a spot further from your wall.') };
+      if (reach > CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: tr(`Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de son point de départ.`, `Too far: a wall reaches at most ${CONFIG.WALL_MAX_REACH} tiles from its starting point.`) };
     } else {
       const dist = Math.hypot(tx - cx, ty - cy), reach = dist - Rcity; // (jusqu'à la muraille de l'autre ville)
-      if (reach < R + 2) return { error: city >= 0 ? 'Ces deux villes se touchent déjà : pas besoin de mur entre elles.' : 'Vise un endroit hors de la muraille de la ville.' };
-      if (reach > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: `Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.` };
+      if (reach < R + 2) return { error: city >= 0 ? tr('Ces deux villes se touchent déjà : pas besoin de mur entre elles.', 'These two cities already touch: no need for a wall between them.') : tr('Vise un endroit hors de la muraille de la ville.', 'Aim at a spot outside the city walls.') };
+      if (reach > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: tr(`Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.`, `Too far: a wall reaches at most ${CONFIG.WALL_MAX_REACH} tiles from the city walls.`) };
       // le mur part du bord de la muraille de la ville, vers la case visée (tracé case par case, sans trou)
       sx = Math.floor(cx + (tx - cx) / dist * (R - 0.5)); sy = Math.floor(cy + (ty - cy) / dist * (R - 0.5));
     }
@@ -989,8 +994,8 @@ const GameRules = {
       if (city >= 0 && this.inCastleRange(city, x, y, Rcity)) break; // (arrivé à la muraille de l'autre ville)
       // (les cases dans la muraille de la ville sont la ville elle-même : le mur commence juste après)
       if (!this.wallBarrier(i) && !this.inCastleRange(c, x, y, R)) {
-        if (this.owner[i] !== pid) return { error: 'Le mur doit être entièrement sur tes terres.' };
-        if (this.building[i]) return { error: 'Un bâtiment est sur le chemin du mur.' };
+        if (this.owner[i] !== pid) return { error: tr('Le mur doit être entièrement sur tes terres.', 'The wall must be entirely on your land.') };
+        if (this.building[i]) return { error: tr('Un bâtiment est sur le chemin du mur.', 'A building is in the way of the wall.') };
         tiles.push(i);
       }
       if (x === ex && y === ey) break;
@@ -998,7 +1003,7 @@ const GameRules = {
       if (e2 >= dy) { err += dy; x += stx; }
       if (e2 <= dx) { err += dx; y += sty; }
     }
-    if (tiles.length < 2) return { error: city >= 0 ? 'Ces deux villes sont trop proches : pas besoin de mur entre elles.' : 'Le mur est trop court.' };
+    if (tiles.length < 2) return { error: city >= 0 ? tr('Ces deux villes sont trop proches : pas besoin de mur entre elles.', 'These two cities are too close: no need for a wall between them.') : tr('Le mur est trop court.', 'The wall is too short.') };
     return { tiles, end: city >= 0 ? tiles[tiles.length - 1] : target, sealed, city };
   },
 
@@ -1008,7 +1013,7 @@ const GameRules = {
     const plan = this.planWall(p.id, c, target, from);
     if (plan.error) return plan.error;
     const cost = this.wallCost(c);
-    if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
+    if (p.gold < cost) return tr(`Pas assez d'or (${cost} nécessaires).`, `Not enough gold (${cost} needed).`);
     p.gold -= cost;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.walls.push({ castle: c, owner: p.id, tiles: plan.tiles, city: plan.city, start: this.tick, ready: this.tick + CONFIG.WALL_BUILD_TIME * TPS, done: false });
@@ -1043,8 +1048,8 @@ const GameRules = {
       }
       const o = this.players[w.owner];
       if (o.isHuman) {
-        UI.log('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.' + (this.wallLinked(w.castle).size > before
-          ? ` Il relie tes villes : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacune !` : ''), 'good');
+        UI.log(tr('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.', '🧱 Your wall is built: no assault can cross it any more.') + (this.wallLinked(w.castle).size > before
+          ? tr(` Il relie tes villes : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacune !`, ` It links your cities: +${CONFIG.WALL_LINK_GARRISON} garrison soldiers for each!`) : ''), 'good');
       }
       const mine = new Set(w.tiles);
       for (const a of this.attacks) {
@@ -1053,12 +1058,12 @@ const GameRules = {
         if (!route || !route.slice(this.pathPassed(a)).some(t => mine.has(t))) continue;
         const p = this.players[a.attacker];
         if (this.rerouteAssault(a)) {
-          if (p.isHuman) UI.log(`🧱 Un mur ${this.deName(o.name)} barre la route de ton armée : elle le contourne.`, 'warn', o);
-          else if (o.isHuman) UI.log(`🧱 Ton mur barre la route de l'armée ${this.deName(p.name)} : elle doit faire le tour !`, 'good', p);
+          if (p.isHuman) UI.log(tr(`🧱 Un mur ${this.deName(o.name)} barre la route de ton armée : elle le contourne.`, `🧱 A wall of ${o.name} blocks your army's route: it goes around it.`), 'warn', o);
+          else if (o.isHuman) UI.log(tr(`🧱 Ton mur barre la route de l'armée ${this.deName(p.name)} : elle doit faire le tour !`, `🧱 Your wall blocks ${p.name}'s army: it has to go around!`), 'good', p);
           continue;
         }
-        if (p.isHuman) UI.log(`🧱 Un mur ${this.deName(o.name)} ferme le seul passage de ton armée : elle rebrousse chemin.`, 'warn', o);
-        else if (o.isHuman) UI.log(`🧱 Ton mur ferme le seul passage de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, 'good', p);
+        if (p.isHuman) UI.log(tr(`🧱 Un mur ${this.deName(o.name)} ferme le seul passage de ton armée : elle rebrousse chemin.`, `🧱 A wall of ${o.name} closes your army's only way through: it turns back.`), 'warn', o);
+        else if (o.isHuman) UI.log(tr(`🧱 Ton mur ferme le seul passage de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, `🧱 Your wall closes ${p.name}'s army's only way through: it turns back!`), 'good', p);
         this.wallRetreatLoss(a);
         this.endAttack(a);
       }
@@ -1132,7 +1137,8 @@ const GameRules = {
     a.troops *= keep;
     for (const r of a.pending) r.troops *= keep;
     if (this.players[a.attacker].isHuman) {
-      UI.log(`🧱 Pour rentrer, ton armée doit franchir ${n > 1 ? n + ' murs' : 'un mur'} : elle y perd ${Math.round((1 - keep) * 100)} % de ses soldats.`, 'warn');
+      UI.log(tr(`🧱 Pour rentrer, ton armée doit franchir ${n > 1 ? n + ' murs' : 'un mur'} : elle y perd ${Math.round((1 - keep) * 100)} % de ses soldats.`,
+        `🧱 To get home, your army must cross ${n > 1 ? n + ' walls' : 'a wall'}: it loses ${Math.round((1 - keep) * 100)}% of its soldiers.`), 'warn');
     }
   },
 
@@ -1166,7 +1172,7 @@ const GameRules = {
       const p = this.players[w.pid];
       if (this.owner[a] !== w.pid || !this.building[a]) {
         this.works.delete(a);
-        if (p.isHuman) UI.log('🏚️ Ton bâtiment a été pris pendant les travaux : ils sont perdus.', 'warn');
+        if (p.isHuman) UI.log(tr('🏚️ Ton bâtiment a été pris pendant les travaux : ils sont perdus.', '🏚️ Your building was taken during the works: they are lost.'), 'warn');
         continue;
       }
       if (this.tick < w.end) continue;
@@ -1182,9 +1188,9 @@ const GameRules = {
         if (type === B_CASTLE && this.castleInfo(a).imperial) {
           p.imperialBuilt = true; // (une seule par partie)
           this.garrison[a] = this.garrisonMax(a);
-          if (p.isHuman) UI.log('👑 Ta cité impériale est bâtie : murs immenses, garnison de 300, troupes plus fortes, routes de pierre !', 'good');
-          else UI.log(`👑 ${p.name} a bâti sa cité impériale !`, 'warn', p);
-        } else if (p.isHuman) UI.log(`${icon} Amélioration terminée : ${this.buildingInfo(a).name} !`, 'good');
+          if (p.isHuman) UI.log(tr('👑 Ta cité impériale est bâtie : murs immenses, garnison de 300, troupes plus fortes, routes de pierre !', '👑 Your imperial city is built: huge walls, a garrison of 300, stronger troops, stone roads!'), 'good');
+          else UI.log(tr(`👑 ${p.name} a bâti sa cité impériale !`, `👑 ${p.name} has built their imperial city!`), 'warn', p);
+        } else if (p.isHuman) UI.log(tr(`${icon} Amélioration terminée : ${this.buildingInfo(a).name} !`, `${icon} Upgrade complete: ${this.buildingInfo(a).name}!`), 'good');
       } else {
         // Les soldats de la garnison rejoignent l'armée
         p.troops += this.garrison[a] || 0;
@@ -1194,8 +1200,9 @@ const GameRules = {
         this.removeBuilding(a);
         const lost = linked.filter(b => !this.stillHosted(b));
         for (const b of lost) this.removeBuilding(b);
-        if (p.isHuman) UI.log(`🧨 ${BUILDINGS[type].name} détruit` +
-          (lost.length ? `, et ${lost.length > 1 ? `les ${lost.length} moulins ou casernes qui en dépendaient` : 'le moulin ou la caserne qui en dépendait'}.` : '.'), 'good');
+        if (p.isHuman) UI.log(tr(`🧨 ${BUILDINGS[type].name} détruit`, `🧨 ${BUILDINGS[type].name} destroyed`) +
+          (lost.length ? tr(`, et ${lost.length > 1 ? `les ${lost.length} moulins ou casernes qui en dépendaient` : 'le moulin ou la caserne qui en dépendait'}.`,
+            `, along with ${lost.length > 1 ? `the ${lost.length} mills or barracks that depended on it` : 'the mill or barracks that depended on it'}.`) : '.'), 'good');
       }
     }
   },
@@ -1320,8 +1327,10 @@ const GameRules = {
         o.stationed += this.garrison[a] - keep;
         this.garrison[a] = keep;
         if (p && p.isHuman) {
-          UI.log(`⛺ Ton avant-poste est bâti : ${fmt(keep)} soldats y restent en garnison, ${fmt(o.stationed)} stationnent ` +
-            'et peuvent attaquer depuis lui (curseur « Envoyer »).', 'good');
+          UI.log(tr(`⛺ Ton avant-poste est bâti : ${fmt(keep)} soldats y restent en garnison, ${fmt(o.stationed)} stationnent ` +
+            'et peuvent attaquer depuis lui (curseur « Envoyer »).',
+            `⛺ Your outpost is built: ${fmt(keep)} soldiers stay there as a garrison, ${fmt(o.stationed)} are stationed ` +
+            'and can attack from it ("Send" slider).'), 'good');
         }
       }
     }
@@ -1338,7 +1347,7 @@ const GameRules = {
       this.colonies.set(castle, pid);
       this.regionsCache = null;
       this.removeBuilding(a);
-      if (p.isHuman) UI.log('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', 'good');
+      if (p.isHuman) UI.log(tr('🏰 Ton château fait de l\'avant-poste une vraie terre du royaume : ses soldats rejoignent ton armée.', '🏰 Your castle turns the outpost into true kingdom land: its soldiers join your army.'), 'good');
       return; // la carte a changé : on regardera les autres au prochain tour
     }
   },
@@ -1346,7 +1355,7 @@ const GameRules = {
   // Envoie des renforts par la mer à son avant-poste a (depuis un port d'expédition). Message d'erreur, ou null.
   reinforceOutpost(pid, a, troops) {
     const p = this.players[pid], o = this.outposts.get(a);
-    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
+    if (!o || this.owner[a] !== pid) return tr('Ce n\'est pas un de tes avant-postes.', 'This is not one of your outposts.');
     let best = null;
     for (const port of this.expeditionPorts(pid)) {
       const path = this.boatPath(port, o.landing);
@@ -1354,9 +1363,9 @@ const GameRules = {
       const time = path.length / this.buildingInfo(port).boatSpeed;
       if (!best || time < best.time) best = { path, time, port };
     }
-    if (!best) return 'Aucun de tes ports d\'expédition (niveau 2 ou plus) ne peut rejoindre cet avant-poste.';
+    if (!best) return tr('Aucun de tes ports d\'expédition (niveau 2 ou plus) ne peut rejoindre cet avant-poste.', 'None of your expedition ports (level 2 or higher) can reach this outpost.');
     troops = Math.floor(Math.min(troops, p.troops));
-    if (troops < 1) return 'Pas assez de soldats !';
+    if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, path: best.path, cost: 0, sent: troops,
@@ -1477,6 +1486,21 @@ const GameRules = {
       this.placeBuilding(best, B_CASTLE);
       p.capital = best;
     }
+    // Les bouts de terre de départ qui ne touchent pas la capitale (de l'autre côté d'un fleuve ou d'une crique)
+    // redeviennent libres : sinon, ils seraient tout de suite « coupés de tous ses châteaux »
+    const seen = new Set([p.capital]), todo = [p.capital];
+    while (todo.length) {
+      const i = todo.pop(), x = i % this.W;
+      for (const j of [i - this.W, i + this.W, x > 0 ? i - 1 : -1, x < this.W - 1 ? i + 1 : -1]) {
+        if (j >= 0 && j < this.N && !seen.has(j) && this.owner[j] === p.id) { seen.add(j); todo.push(j); }
+      }
+    }
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const x = cx + dx, y = cy + dy, i = y * this.W + x;
+        if (x >= 0 && y >= 0 && x < this.W && y < this.H && this.owner[i] === p.id && !seen.has(i)) this.setOwner(i, -1);
+      }
+    }
   },
 
   // Les royaumes rivaux s'installent dès l'ouverture de la carte : le joueur voit où ils sont
@@ -1496,21 +1520,21 @@ const GameRules = {
 
   // Pourquoi le joueur ne peut pas fonder sa capitale ici (null s'il le peut)
   spawnError(i) {
-    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return 'Choisis une terre, pas l\'eau !';
-    if (this.owner[i] >= 0) return `Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`;
-    if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return 'Cette île est trop petite pour y fonder ta capitale.';
-    if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE)) return 'Trop près d\'un royaume rival : éloigne-toi un peu.';
+    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return tr('Choisis une terre, pas l\'eau !', 'Pick land, not water!');
+    if (this.owner[i] >= 0) return tr(`Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`, `This land already belongs to ${this.players[this.owner[i]].name}.`);
+    if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return tr('Cette île est trop petite pour y fonder ta capitale.', 'This island is too small to found your capital on.');
+    if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE)) return tr('Trop près d\'un royaume rival : éloigne-toi un peu.', 'Too close to a rival kingdom: move a little further away.');
     return null;
   },
 
   // Mode « Factions » : les 11 autres races des 3 camps, les 3 pactes éternels, et chaque royaume à sa capitale
   // (AZEROTH_CAPITALS). Le joueur ne choisit pas où il commence : la partie démarre en pause, le temps de se repérer.
   startFactions(opts) {
-    const race = p => BANNERS[p.banner].name;
+    const race = p => BANNERS[p.banner].id; // (le nom fixe de la race, en français : voir AZEROTH_BANNERS)
     for (const f of AZEROTH_FACTIONS) {
       for (const r of f.races) {
-        const b = BANNERS.findIndex(x => x.set === 'azeroth' && x.name === r);
-        if (b !== opts.banner) this.addPlayer(r, b, false);
+        const b = BANNERS.findIndex(x => x.set === 'azeroth' && x.id === r);
+        if (b !== opts.banner) this.addPlayer(BANNERS[b].name, b, false);
       }
     }
     for (const f of AZEROTH_FACTIONS) {
@@ -1799,8 +1823,10 @@ const GameRules = {
   // Message : la ville c (« Cette ville »…) a déjà toutes ses routes
   tradeFull(c, who) {
     const n = this.tradeMax(c), next = CASTLE_LEVELS[this.level[c] + 1];
-    return `${who} a déjà ${n > 1 ? `ses ${n} routes commerciales` : 'sa route commerciale'}` +
-      (next ? ` (en l'améliorant en ${next.name}, elle en aura ${next.trades}).` : ' (le maximum).');
+    return tr(`${who} a déjà ${n > 1 ? `ses ${n} routes commerciales` : 'sa route commerciale'}`,
+      `${who} already has ${n > 1 ? `its ${n} trade routes` : 'its trade route'}`) +
+      (next ? tr(` (en l'améliorant en ${next.name}, elle en aura ${next.trades}).`, ` (upgraded to ${next.name}, it will have ${next.trades}).`)
+        : tr(' (le maximum).', ' (the maximum).'));
   },
   // Les routes commerciales de la ville a (qu'elle les ait ouvertes ou qu'elles y arrivent)
   tradesOf(a) { return this.tradeRoutes.filter(r => r.from === a || r.to === a); },
@@ -1811,10 +1837,11 @@ const GameRules = {
   },
   // Pourquoi la ville a de pid ne peut pas (encore) avoir de route commerciale, ou null si elle le peut
   tradeBlocker(pid, a) {
-    if (!this.pactsAllowed) return 'Pas de pactes dans cette partie : pas de route commerciale.';
-    if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return 'Il faut une de tes villes de niveau 2 ou plus.';
-    if (this.tradesOf(a).length >= this.tradeMax(a)) return this.tradeFull(a, 'Cette ville');
-    if (!this.tradePartners(pid).length) return 'Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.';
+    // (en mode Factions, les pactes ordinaires sont interdits, mais on commerce avec les alliés de son camp)
+    if (!this.pactsAllowed && !this.factions) return tr('Pas de pactes dans cette partie : pas de route commerciale.', 'No pacts in this game: no trade routes.');
+    if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return tr('Il faut une de tes villes de niveau 2 ou plus.', 'You need one of your cities at level 2 or higher.');
+    if (this.tradesOf(a).length >= this.tradeMax(a)) return this.tradeFull(a, tr('Cette ville', 'This city'));
+    if (!this.tradePartners(pid).length) return tr('Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.', 'You need an ally in your pact with a city at level 2 or higher.');
     return null;
   },
   // Plan d'une route commerciale de la ville a (au royaume pid) vers la ville visée en b :
@@ -1822,17 +1849,18 @@ const GameRules = {
   planTrade(pid, a, b) {
     const why = this.tradeBlocker(pid, a);
     if (why) return { error: why };
-    if (b < 0 || this.building[b] !== B_CASTLE) return { error: 'Clique sur une ville (un château) d\'un allié de ton pacte.' };
+    if (b < 0 || this.building[b] !== B_CASTLE) return { error: tr('Clique sur une ville (un château) d\'un allié de ton pacte.', 'Click a city (a castle) of an ally in your pact.') };
     b = this.anchor[b];
     const o = this.owner[b];
-    if (o < 0 || o === pid || !this.areAllied(pid, o)) return { error: 'Une route commerciale relie une de tes villes à une ville d\'un allié de ton pacte.' };
-    if (this.level[b] < 2) return { error: 'La ville de ton allié doit être de niveau 2 ou plus.' };
+    if (o < 0 || o === pid || !this.areAllied(pid, o)) return { error: tr('Une route commerciale relie une de tes villes à une ville d\'un allié de ton pacte.', 'A trade route links one of your cities to a city of an ally in your pact.') };
+    if (this.level[b] < 2) return { error: tr('La ville de ton allié doit être de niveau 2 ou plus.', 'Your ally\'s city must be level 2 or higher.') };
     // (on ne relie pas deux fois les mêmes villes, même si c'est ton allié qui a ouvert la route)
     if (this.tradeRoutes.some(r => (r.from === b && r.to === a) || (r.from === a && r.to === b))) {
-      return { error: 'Ces deux villes sont déjà reliées par une route commerciale : on ne les relie pas deux fois.' };
+      return { error: tr('Ces deux villes sont déjà reliées par une route commerciale : on ne les relie pas deux fois.', 'These two cities are already linked by a trade route: they cannot be linked twice.') };
     }
-    if (this.tradesOf(b).length >= this.tradeMax(b)) return { error: this.tradeFull(b, 'Cette ville alliée') };
-    const W = this.W, h = this.sizeOf(B_CASTLE) / 2, tooFar = `Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.`;
+    if (this.tradesOf(b).length >= this.tradeMax(b)) return { error: this.tradeFull(b, tr('Cette ville alliée', 'This allied city')) };
+    const W = this.W, h = this.sizeOf(B_CASTLE) / 2;
+    const tooFar = tr(`Trop loin : une route commerciale fait ${CONFIG.TRADE_MAX_LENGTH} cases au plus.`, `Too far: a trade route is at most ${CONFIG.TRADE_MAX_LENGTH} tiles long.`);
     // (à vol d'oiseau déjà trop loin : inutile de chercher un tracé)
     if (Math.abs(a % W - b % W) + Math.abs(((a / W) | 0) - ((b / W) | 0)) > CONFIG.TRADE_MAX_LENGTH * 1.2) return { error: tooFar };
     const pts = this.tradePath(a % W + h, ((a / W) | 0) + h, b % W + h, ((b / W) | 0) + h, a % 2, pid, o);
@@ -1845,7 +1873,7 @@ const GameRules = {
   buildTrade(p, a, b) {
     const plan = this.planTrade(p.id, a, b);
     if (plan.error) return plan.error;
-    if (p.gold < plan.cost) return `Pas assez d'or : cette route commerciale coûte 💰 ${fmt(plan.cost)}.`;
+    if (p.gold < plan.cost) return tr(`Pas assez d'or : cette route commerciale coûte 💰 ${fmt(plan.cost)}.`, `Not enough gold: this trade route costs 💰 ${fmt(plan.cost)}.`);
     p.gold -= plan.cost;
     this.tradeRoutes.push({ from: a, to: plan.to, active: true, pts: plan.pts, tiles: this.routeTiles(plan.pts), len: plan.len, income: plan.income });
     this.version++;
@@ -1856,11 +1884,14 @@ const GameRules = {
   // sinon, c'est l'eau (mer, lac, fleuve sans pont) ou un sommet.
   tradeBlockReason(x1, y1, x2, y2, pid, o) {
     const free = this.roadDetour(x1, y1, x2, y2, i => this.roadTile(i), 40, 3);
-    if (!free) return 'Pas de passage assez court par la terre : la mer, un lac, un sommet ou un fleuve sans pont ' +
-      'coupe le chemin (un pont ouvre un passage).';
+    if (!free) return tr('Pas de passage assez court par la terre : la mer, un lac, un sommet ou un fleuve sans pont ' +
+      'coupe le chemin (un pont ouvre un passage).', 'No short enough way over land: the sea, a lake, a peak or a river without a bridge ' +
+      'cuts the way (a bridge opens a passage).');
     const other = this.routeTiles(free).find(i => this.owner[i] !== pid && this.owner[i] !== o && this.terrain[i] !== TERRAIN.RIVER);
-    const who = other === undefined ? null : this.owner[other] < 0 ? 'des terres libres' : `les terres ${this.deName(this.players[this.owner[other]].name)}`;
-    return 'La route commerciale doit rester sur vos deux territoires' + (who ? ` : ici, elle passerait par ${who}. Prends-les d'abord.` : '.');
+    const who = other === undefined ? null : this.owner[other] < 0 ? tr('des terres libres', 'free land')
+      : tr(`les terres ${this.deName(this.players[this.owner[other]].name)}`, `${this.players[this.owner[other]].name}'s land`);
+    return tr('La route commerciale doit rester sur vos deux territoires', 'The trade route must stay on your two territories') +
+      (who ? tr(` : ici, elle passerait par ${who}. Prends-les d'abord.`, `: here, it would go through ${who}. Take it first.`) : '.');
   },
   // Une case où peut passer une route commerciale entre les royaumes o et q : une case où une route peut passer, sur
   // le territoire de l'un des deux (ou un fleuve, sous un pont)
@@ -1895,7 +1926,7 @@ const GameRules = {
       if (this.building[r.from] !== B_CASTLE || this.building[r.to] !== B_CASTLE) {
         this.tradeRoutes.splice(this.tradeRoutes.indexOf(r), 1);
         this.version++;
-        if ((p && p.isHuman) || (q && q.isHuman)) UI.log('🛒 Une route commerciale disparaît : une de ses villes a été détruite.', 'warn');
+        if ((p && p.isHuman) || (q && q.isHuman)) UI.log(tr('🛒 Une route commerciale disparaît : une de ses villes a été détruite.', '🛒 A trade route disappears: one of its cities was destroyed.'), 'warn');
         continue;
       }
       const problem = this.tradeProblem(r), active = !problem;
@@ -1903,12 +1934,14 @@ const GameRules = {
       r.active = active;
       this.version++;
       if (!(p && p.isHuman) && !(q && q.isHuman)) continue;
-      const names = `${p ? p.name : '?'} et ${q ? q.name : '?'}`;
-      if (active) UI.log(`🛒 La route commerciale entre ${names} reprend : elle rapporte de nouveau de l'or !`, 'good');
-      else if (problem === 'cut') UI.log(`🛒 La route commerciale entre ${names} est coupée : des terres sur son passage ont été prises. ` +
-        'Elle reprendra quand tout son passage sera de nouveau à vous deux.', 'warn');
-      else UI.log(`🛒 La route commerciale entre ${names} s'arrête : ils ne sont pas alliés. Elle reprendra si les royaumes ` +
-        'de ses deux villes forment un pacte.', 'warn');
+      const names = tr(`${p ? p.name : '?'} et ${q ? q.name : '?'}`, `${p ? p.name : '?'} and ${q ? q.name : '?'}`);
+      if (active) UI.log(tr(`🛒 La route commerciale entre ${names} reprend : elle rapporte de nouveau de l'or !`, `🛒 The trade route between ${names} resumes: it brings in gold again!`), 'good');
+      else if (problem === 'cut') UI.log(tr(`🛒 La route commerciale entre ${names} est coupée : des terres sur son passage ont été prises. ` +
+        'Elle reprendra quand tout son passage sera de nouveau à vous deux.', `🛒 The trade route between ${names} is cut: land along its way has been taken. ` +
+        'It will resume once its whole way belongs to you two again.'), 'warn');
+      else UI.log(tr(`🛒 La route commerciale entre ${names} s'arrête : ils ne sont pas alliés. Elle reprendra si les royaumes ` +
+        'de ses deux villes forment un pacte.', `🛒 The trade route between ${names} stops: they are not allies. It will resume if the kingdoms ` +
+        'of its two cities form a pact.'), 'warn');
     }
   },
   // Versement de l'or des routes commerciales (comme les moulins : toutes les PRODUCTION_INTERVAL secondes) :
@@ -2181,13 +2214,7 @@ const GameRules = {
     for (const a of this.attacks) {
       if (a.done) continue;
       if (a.attacker === id) sum += a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
-      if (a.target === id) {
-        let allies = 0;
-        if (a.allyDef) for (const k in a.allyDef) allies += a.allyDef[k];
-        sum += Math.max(0, a.defenders - allies) + this.defendersOnTheWay(a);
-      }
-      if (a.allyDef && a.allyDef[id]) sum += Math.max(0, a.allyDef[id]);
-      if (a.allyPending) for (const r of a.allyPending) if (r.pid === id) sum += r.troops;
+      if (a.target === id) sum += Math.max(0, a.defenders) + this.defendersOnTheWay(a);
     }
     for (const r of this.returning) if (r.pid === id) sum += r.troops;
     return sum;
@@ -2241,8 +2268,10 @@ const GameRules = {
     if (!noMalus) (p.postWarEnds = p.postWarEnds || []).push(end);
     if (d) (d.rallyEnds = d.rallyEnds || []).push(end);
     const secs = CONFIG.WAR_EFFECT_TIME;
-    if (p.isHuman && !noMalus) UI.log(`⚰️ Après-guerre : ton royaume panse ses blessures, −${Math.round(CONFIG.POST_WAR_MALUS * 100)} % de soldats produits pendant ${secs} s (en tout : −${Math.round(this.postWar(p) * 100)} %).`, 'warn');
-    if (d && d.isHuman) UI.log(`🔥 Ton peuple est galvanisé par la défaite : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s (en tout : +${Math.round(this.rallied(d) * 100)} %) !`, 'good');
+    if (p.isHuman && !noMalus) UI.log(tr(`⚰️ Après-guerre : ton royaume panse ses blessures, −${Math.round(CONFIG.POST_WAR_MALUS * 100)} % de soldats produits pendant ${secs} s (en tout : −${Math.round(this.postWar(p) * 100)} %).`,
+      `⚰️ Post-war: your kingdom licks its wounds, −${Math.round(CONFIG.POST_WAR_MALUS * 100)}% soldiers produced for ${secs} s (in total: −${Math.round(this.postWar(p) * 100)}%).`), 'warn');
+    if (d && d.isHuman) UI.log(tr(`🔥 Ton peuple est galvanisé par la défaite : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s (en tout : +${Math.round(this.rallied(d) * 100)} %) !`,
+      `🔥 Your people are rallied by defeat: +${Math.round(CONFIG.RALLY_BONUS * 100)}% soldiers produced for ${secs} s (in total: +${Math.round(this.rallied(d) * 100)}%)!`), 'good');
   },
 
   // Défense réussie (assaut repoussé) : le défenseur est galvanisé (+RALLY_BONUS de soldats produits)
@@ -2250,7 +2279,8 @@ const GameRules = {
   defenseRally(d) {
     const secs = CONFIG.DEFENSE_RALLY_TIME;
     (d.rallyEnds = d.rallyEnds || []).push(this.tick + secs * CONFIG.TICKS_PER_SECOND);
-    if (d.isHuman) UI.log(`🔥 Victoire ! Ton peuple est galvanisé : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s (en tout : +${Math.round(this.rallied(d) * 100)} %) !`, 'good');
+    if (d.isHuman) UI.log(tr(`🔥 Victoire ! Ton peuple est galvanisé : +${Math.round(CONFIG.RALLY_BONUS * 100)} % de soldats produits pendant ${secs} s (en tout : +${Math.round(this.rallied(d) * 100)} %) !`,
+      `🔥 Victory! Your people are rallied: +${Math.round(CONFIG.RALLY_BONUS * 100)}% soldiers produced for ${secs} s (in total: +${Math.round(this.rallied(d) * 100)}%)!`), 'good');
   },
 
   // Multiplicateur de recrutement selon le remplissage r (0 = vide, 1 = plein) :
@@ -2298,53 +2328,63 @@ const GameRules = {
   // Renvoie un message d'erreur, ou null si la construction a réussi.
   // i = case en haut à gauche du bâtiment (2x2 cases)
   tryBuild(p, i, type) {
-    if (BUILDINGS[type].hidden) return 'Ce bâtiment ne se construit pas.';
+    if (BUILDINGS[type].hidden) return tr('Ce bâtiment ne se construit pas.', 'This building cannot be built.');
     if (type === B_CASTLE && p.castlesBuilt >= this.maxCastles(p)) {
-      return `Tu as déjà construit ${this.maxCastles(p)} châteaux : c'est le maximum pour l'instant ` +
-        '(prends-en à l\'ennemi, ou améliore une église pour en débloquer).';
+      return tr(`Tu as déjà construit ${this.maxCastles(p)} châteaux : c'est le maximum pour l'instant ` +
+        '(prends-en à l\'ennemi, ou améliore une église pour en débloquer).', `You have already built ${this.maxCastles(p)} castles: that is the maximum for now ` +
+        '(take some from the enemy, or upgrade a church to unlock more).');
     }
     if (type === B_MINE) {
       const d = i >= 0 ? this.depositAt.get(i) : null;
-      if (!d) return 'Une mine se bâtit sur un filon : les petites icônes de minerai, dans les montagnes (ou les collines pour la pierre).';
+      if (!d) return tr('Une mine se bâtit sur un filon : les petites icônes de minerai, dans les montagnes (ou les collines pour la pierre).',
+        'A mine is built on an ore vein: the small ore icons, in the mountains (or the hills for stone).');
       const m = MINES[d.kind];
       // (« Mine de fer » → « mines de fer »)
-      if (m.max && this.minesOf(p.id, d.kind).length >= m.max) return `Tu as déjà ${m.max} ${m.name.toLowerCase().replace(/^(\S+)/, '$1s')} : c'est le maximum.`;
+      if (m.max && this.minesOf(p.id, d.kind).length >= m.max) return tr(`Tu as déjà ${m.max} ${m.name.toLowerCase().replace(/^(\S+)/, '$1s')} : c'est le maximum.`,
+        `You already have ${m.max} ${m.name.toLowerCase()}s: that is the maximum.`);
       if (!this.canPlace(p.id, i, type)) {
         return i >= 0 && this.owner[i] === p.id && !this.commanded(i, type)
-          ? 'Ce territoire n\'a plus ni ville ni port fortifié pour le diriger : il ne peut rien construire d\'autre.'
-          : 'Ce filon doit être tout entier sur ton territoire.';
+          ? tr('Ce territoire n\'a plus ni ville ni port fortifié pour le diriger : il ne peut rien construire d\'autre.', 'This territory no longer has a city or fortified port to rule it: it cannot build anything else.')
+          : tr('Ce filon doit être tout entier sur ton territoire.', 'This ore vein must be entirely on your territory.');
       }
     }
     if (!this.canPlace(p.id, i, type)) {
       const n = this.sizeOf(type);
       if (i >= 0 && this.owner[i] === p.id && !this.commanded(i, type)) {
-        return 'Ce territoire n\'a plus ni ville ni port fortifié pour le diriger : il ne peut rien construire d\'autre. ' +
-          'Bâtis d\'abord un château ici (ou relie ce territoire à un de tes châteaux).';
+        return tr('Ce territoire n\'a plus ni ville ni port fortifié pour le diriger : il ne peut rien construire d\'autre. ' +
+          'Bâtis d\'abord un château ici (ou relie ce territoire à un de tes châteaux).', 'This territory no longer has a city or fortified port to rule it: it cannot build anything else. ' +
+          'First build a castle here (or link this territory to one of your castles).');
       }
       if (i >= 0 && this.owner[i] === p.id && !this.insideWalls(p.id, i, type)) {
-        return `${BUILDINGS[type].name} : à construire dans l'enceinte d'une de tes villes, ou près d'une de tes églises (ou d'un port amélioré), ` +
-          'qui a encore de la place (une ville : 4 moulins ou casernes, 6 au niveau 2, 9 au niveau 3 ; pas ailleurs dans l\'arrière-pays).';
+        return tr(`${BUILDINGS[type].name} : à construire dans l'enceinte d'une de tes villes, ou près d'une de tes églises (ou d'un port amélioré), ` +
+          'qui a encore de la place (une ville : 4 moulins ou casernes, 6 au niveau 2, 9 au niveau 3 ; pas ailleurs dans l\'arrière-pays).',
+          `${BUILDINGS[type].name}: build it inside the walls of one of your cities, or near one of your churches (or an upgraded port), ` +
+          'that still has room (a city: 4 mills or barracks, 6 at level 2, 9 at level 3; not elsewhere in the hinterland).');
       }
       if (i >= 0 && this.owner[i] === p.id && this.churchCastleConflict(p.id, i, type)) {
         return type === B_CASTLE
-          ? 'Trop près d\'un de tes châteaux, églises, ports ou avant-postes (cercle rouge) : ' +
-            'pour un château près d\'un avant-poste, conquiers d\'abord des terres autour de lui.'
-          : 'Trop près (cercle rouge) : une église ou un port reste hors de la muraille de tes châteaux (même améliorés), ' +
-            'et loin de tes autres églises et ports.';
+          ? tr('Trop près d\'un de tes châteaux, églises, ports ou avant-postes (cercle rouge) : ' +
+            'pour un château près d\'un avant-poste, conquiers d\'abord des terres autour de lui.', 'Too close to one of your castles, churches, ports or outposts (red circle): ' +
+            'for a castle near an outpost, first conquer land around it.')
+          : tr('Trop près (cercle rouge) : une église ou un port reste hors de la muraille de tes châteaux (même améliorés), ' +
+            'et loin de tes autres églises et ports.', 'Too close (red circle): a church or a port stays outside the walls of your castles (even upgraded ones), ' +
+            'and far from your other churches and ports.');
       }
       if (type === B_PORT && i >= 0 && !this.footprint(i, type).some(j => this.isCoastal(j))) {
-        return 'Un port se construit au bord de la mer ou d\'un fleuve.';
+        return tr('Un port se construit au bord de la mer ou d\'un fleuve.', 'A port is built on the shore of the sea or a river.');
       }
       if (i >= 0 && this.nearDeposit(i, type)) {
-        return `Trop près d'un filon : il faut ${CONFIG.DEPOSIT_CLEARANCE} cases libres autour de lui (c'est la place de sa mine).`;
+        return tr(`Trop près d'un filon : il faut ${CONFIG.DEPOSIT_CLEARANCE} cases libres autour de lui (c'est la place de sa mine).`,
+          `Too close to an ore vein: it needs ${CONFIG.DEPOSIT_CLEARANCE} free tiles around it (that is the room for its mine).`);
       }
       if (i >= 0 && this.tooCloseToBuilding(i, type)) {
-        return `Trop près d'un autre bâtiment : il faut ${this.tooCloseToBuilding(i, type)} cases d'écart.`;
+        return tr(`Trop près d'un autre bâtiment : il faut ${this.tooCloseToBuilding(i, type)} cases d'écart.`,
+          `Too close to another building: keep ${this.tooCloseToBuilding(i, type)} tiles apart.`);
       }
-      return `Il faut ${n}x${n} cases libres sur ton territoire (pas de mer).`;
+      return tr(`Il faut ${n}x${n} cases libres sur ton territoire (pas de mer).`, `You need ${n}x${n} free tiles on your territory (no sea).`);
     }
     const cost = this.buildCost(p, type);
-    if (p.gold < cost) return `Pas assez d'or (${cost} nécessaires).`;
+    if (p.gold < cost) return tr(`Pas assez d'or (${cost} nécessaires).`, `Not enough gold (${cost} needed).`);
     p.gold -= cost;
     if (type === B_CASTLE) p.castlesBuilt++;
     this.placeBuilding(i, type);
@@ -2710,11 +2750,12 @@ const GameRules = {
       // Message seulement pour un gros morceau (ou un château isolé) : sinon, les petits bouts coupés spammeraient
       if (!took || (took < CONFIG.ENCLAVE_LOG_MIN && !keep.length)) continue;
       const A = this.players[winner];
-      const keepTxt = keep.length ? ` ${keep.length > 1 ? 'Ses châteaux (ou ports) tiennent' : (this.building[keep[0]] === B_CASTLE ? 'Son château tient' : 'Son port tient')} encore, isolé${keep.length > 1 ? 's' : ''}.` : '';
-      if (A.isHuman) UI.log(`✂️ Des terres ${this.deName(T.name)}, coupées de leur royaume, sont englobées par le tien !${keepTxt}`, 'good', T);
+      const keepTxt = !keep.length ? '' : tr(` ${keep.length > 1 ? 'Ses châteaux (ou ports) tiennent' : (this.building[keep[0]] === B_CASTLE ? 'Son château tient' : 'Son port tient')} encore, isolé${keep.length > 1 ? 's' : ''}.`,
+        ` ${keep.length > 1 ? 'Their castles (or ports) still hold out' : (this.building[keep[0]] === B_CASTLE ? 'Their castle still holds out' : 'Their port still holds out')}, isolated.`);
+      if (A.isHuman) UI.log(tr(`✂️ Des terres ${this.deName(T.name)}, coupées de leur royaume, sont englobées par le tien !${keepTxt}`, `✂️ Lands of ${T.name}, cut off from their kingdom, are absorbed by yours!${keepTxt}`), 'good', T);
       else if (T.isHuman) {
-        UI.log(`✂️ Une partie de ton royaume, coupée du reste, est englobée par ${A.name} !` +
-          (keep.length ? ' Ce qui est isolé tient encore : clique dessus pour lancer un assaut qui le relie à ton royaume.' : ''), 'warn', A);
+        UI.log(tr(`✂️ Une partie de ton royaume, coupée du reste, est englobée par ${A.name} !`, `✂️ A part of your kingdom, cut off from the rest, is absorbed by ${A.name}!`) +
+          (keep.length ? tr(' Ce qui est isolé tient encore : clique dessus pour lancer un assaut qui le relie à ton royaume.', ' What is isolated still holds out: click it to launch an assault that links it to your kingdom.') : ''), 'warn', A);
       }
     }
   },
@@ -2746,14 +2787,14 @@ const GameRules = {
   launchAttack(pid, target, troops, aimTile, source = -1) {
     const p = this.players[pid];
     if (source >= 0 && !(this.owner[source] === pid && this.outpostReady(source))) {
-      return 'Cet avant-poste ne peut pas (ou plus) lancer d\'attaque.';
+      return tr('Cet avant-poste ne peut pas (ou plus) lancer d\'attaque.', 'This outpost cannot (or can no longer) launch an attack.');
     }
     troops = Math.floor(Math.min(troops, this.troopsAt(pid, source)));
     if (target === pid) return null;
     if (target >= 0 && this.areAllied(pid, target)) {
-      return `${this.players[target].name} est ton allié ! Romps l'alliance d'abord.`;
+      return tr(`${this.players[target].name} est ton allié ! Romps l'alliance d'abord.`, `${this.players[target].name} is your ally! Break the alliance first.`);
     }
-    if (troops < 1) return 'Pas assez de soldats !';
+    if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     const frontier = this.buildFrontier(pid, target, source);
     // (pas de frontière directe, mais on vise un de ses bâtiments : l'armée peut l'atteindre en passant un fleuve à gué)
     const aimsBuilding = target >= 0 && aimTile !== undefined && TARGET_TYPES.includes(this.building[aimTile]) && this.owner[aimTile] === target;
@@ -2761,11 +2802,14 @@ const GameRules = {
       // (un avant-poste en construction ne sert pas encore de base : ses soldats bâtissent)
       const building = [...this.outposts.keys()].some(a => this.owner[a] === pid && !this.outpostReady(a));
       if (this.hasUnlinked(pid)) {
-        return 'Ton territoire est coupé de tous tes châteaux : tes armées ne peuvent plus en partir. ' +
-          'Relie-le à un château (clique sur ton château isolé pour lancer un assaut de jonction) ou bâtis-en un nouveau.';
+        return tr('Ton territoire est coupé de tous tes châteaux : tes armées ne peuvent plus en partir. ' +
+          'Relie-le à un château (clique sur ton château isolé pour lancer un assaut de jonction) ou bâtis-en un nouveau.',
+          'Your territory is cut off from all your castles: your armies can no longer leave it. ' +
+          'Link it to a castle (click your isolated castle to launch a linking assault) or build a new one.');
       }
-      return (target < 0 ? 'Aucune terre libre à ta frontière.' : `Tu n'as pas de frontière avec ${this.players[target].name}.`) +
-        (building ? ' Ton avant-poste est encore en construction : ses soldats ne pourront attaquer qu\'une fois les travaux finis.' : '');
+      return (target < 0 ? tr('Aucune terre libre à ta frontière.', 'No free land on your border.')
+        : tr(`Tu n'as pas de frontière avec ${this.players[target].name}.`, `You have no border with ${this.players[target].name}.`)) +
+        (building ? tr(' Ton avant-poste est encore en construction : ses soldats ne pourront attaquer qu\'une fois les travaux finis.', ' Your outpost is still being built: its soldiers can only attack once the works are done.') : '');
     }
     // Un royaume qui a encore une ville (un château) ne s'attaque qu'en visant un de ses bâtiments (voir isProtected).
     // Sans château, il est désorganisé : on peut attaquer tout son territoire de front (comme une terre libre),
@@ -2780,16 +2824,18 @@ const GameRules = {
       if (TARGET_TYPES.includes(b) && this.owner[aimTile] === target) castle = this.anchor[aimTile];
       else if (aimTile !== undefined && this.owner[aimTile] === target) unlinked = this.unlinkedPiece(aimTile);
       if (castle < 0 && !unlinked) {
-        return `${name} est protégé : clique sur un de ses châteaux, églises, ports, mines ou avant-postes pour lancer un assaut ` +
-          '(ou sur un morceau de son royaume coupé de tous ses châteaux).';
+        return tr(`${name} est protégé : clique sur un de ses châteaux, églises, ports, mines ou avant-postes pour lancer un assaut ` +
+          '(ou sur un morceau de son royaume coupé de tous ses châteaux).', `${name} is protected: click one of their castles, churches, ports, mines or outposts to launch an assault ` +
+          '(or a piece of their kingdom cut off from all their castles).');
       }
       // Ville, église ou port qui vient d'être conquis : on ne peut pas l'attaquer tout de suite
       const truce = castle >= 0 ? this.truceLeft(castle) : 0;
-      if (truce > 0) return `${this.targetLabel(castle)[0].toUpperCase()}${this.targetLabel(castle).slice(1)} vient de changer de mains : ` +
-        `impossible de l'attaquer avant ${Math.ceil(truce)} s.`;
+      if (truce > 0) return tr(`${this.targetLabel(castle)[0].toUpperCase()}${this.targetLabel(castle).slice(1)} vient de changer de mains : ` +
+        `impossible de l'attaquer avant ${Math.ceil(truce)} s.`, `${this.targetLabel(castle)[0].toUpperCase()}${this.targetLabel(castle).slice(1)} has just changed hands: ` +
+        `it cannot be attacked for ${Math.ceil(truce)} s.`);
       if (unlinked) {
         front = frontier.filter(t => unlinked.has(t));
-        if (!front.length) return 'Tu ne touches pas ce morceau de son royaume : impossible de l\'attaquer d\'ici.';
+        if (!front.length) return tr('Tu ne touches pas ce morceau de son royaume : impossible de l\'attaquer d\'ici.', 'You do not touch this piece of their kingdom: it cannot be attacked from here.');
       }
     }
     // Assauts déjà en cours contre ce royaume : on renforce celui qui vise la même cible ; sinon on en lance
@@ -2798,16 +2844,18 @@ const GameRules = {
       && this.sourceOfAttack(a) === source && a.retreatEnd === undefined); // (une armée en retraite ne reçoit plus de renforts)
     let a = running.find(a => a.targetCastle === castle && (castle >= 0 || !a.limitZone || a.limitZone.has(aimTile)));
     if (!a && running.length >= this.maxAssaults(pid)) {
-      return `Un assaut contre ${this.players[target].name} est déjà en cours.` +
-        (this.maxAssaults(pid) < CONFIG.CITADEL_ASSAULTS ? ' (Avec une citadelle, un château de niveau 3, tu pourrais en lancer 2 à la fois.)' : '');
+      return tr(`Un assaut contre ${this.players[target].name} est déjà en cours.`, `An assault against ${this.players[target].name} is already under way.`) +
+        (this.maxAssaults(pid) < CONFIG.CITADEL_ASSAULTS ? tr(' (Avec une citadelle, un château de niveau 3, tu pourrais en lancer 2 à la fois.)', ' (With a citadel, a level 3 castle, you could launch 2 at once.)') : '');
     }
     if (castle >= 0) {
       const name = this.players[target].name;
       path = this.castlePath(pid, castle, source);
       if (!path) {
-        return frontier.length ? `Impossible d'atteindre ${this.targetLabel(castle)} : ` +
-          `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`
-          : `Impossible d'atteindre ${this.targetLabel(castle)} : tu n'as pas de frontière avec ${name} (ni de fleuve à passer à gué jusqu'à lui).`;
+        return frontier.length ? tr(`Impossible d'atteindre ${this.targetLabel(castle)} : ` +
+          `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`,
+          `Cannot reach ${this.targetLabel(castle)}: ${name}'s fortifications block the way. First take the border castles.`)
+          : tr(`Impossible d'atteindre ${this.targetLabel(castle)} : tu n'as pas de frontière avec ${name} (ni de fleuve à passer à gué jusqu'à lui).`,
+            `Cannot reach ${this.targetLabel(castle)}: you have no border with ${name} (nor a river to ford up to it).`);
       }
       if (!front.length) front = [path[0]]; // (de l'autre côté d'un fleuve : l'armée commence par sa rive)
     }
@@ -2839,11 +2887,12 @@ const GameRules = {
         const secs = this.startMarch(a, a.startTile, troops);
         if (this.players[target].isHuman) {
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
-          UI.log(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! ` +
-            (unlinked ? 'Il vise ton territoire coupé de tous tes châteaux : personne ne peut le défendre !'
-              : alone ? 'Il vise ton avant-poste : seuls les soldats débarqués le défendront.'
-              : !this.isProtected(target) ? 'Sans ville ni port fortifié, toutes tes troupes défendront d\'office, désorganisées.'
-              : 'Dès qu\'elle entre sur tes terres, clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.'), 'warn', p);
+          UI.log(tr(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! `,
+            `⚠️ ${p.name}'s army (${fmt(troops)} soldiers) is marching to your border: it attacks in ${secs} s! `) +
+            (unlinked ? tr('Il vise ton territoire coupé de tous tes châteaux : personne ne peut le défendre !', 'It targets your territory cut off from all your castles: no one can defend it!')
+              : alone ? tr('Il vise ton avant-poste : seuls les soldats débarqués le défendront.', 'It targets your outpost: only the landed soldiers will defend it.')
+              : !this.isProtected(target) ? tr('Sans ville ni port fortifié, toutes tes troupes défendront d\'office, désorganisées.', 'With no city or fortified port, all your troops will defend automatically, disorganized.')
+              : tr('Dès qu\'elle entre sur tes terres, clique sur sa bannière ou sur « Défendre » pour envoyer tes soldats.', 'As soon as it enters your land, click its banner or "Defend" to send your soldiers.')), 'warn', p);
         }
       }
       this.attacks.push(a);
@@ -3026,7 +3075,7 @@ const GameRules = {
       for (const t of tiles) if (own[t] >= 0) this.setOwner(t, -1);
       this.version++;
       for (const o of losers) {
-        if (this.players[o].isHuman) UI.log('🌊 Ton îlot est trop petit pour qu\'on puisse y débarquer : tes terres y disparaissent.', 'warn');
+        if (this.players[o].isHuman) UI.log(tr('🌊 Ton îlot est trop petit pour qu\'on puisse y débarquer : tes terres y disparaissent.', '🌊 Your islet is too small for anyone to land on: your land there disappears.'), 'warn');
       }
     }
   },
@@ -3167,8 +3216,8 @@ const GameRules = {
   launchLink(pid, c, troops) {
     const p = this.players[pid];
     troops = Math.floor(Math.min(troops, p.troops));
-    if (this.owner[c] !== pid || !this.holdsAlone(c) || !this.isIsolated(c)) return 'Ce bâtiment n\'est pas coupé de ton royaume.';
-    if (troops < 1) return 'Pas assez de soldats !';
+    if (this.owner[c] !== pid || !this.holdsAlone(c) || !this.isIsolated(c)) return tr('Ce bâtiment n\'est pas coupé de ton royaume.', 'This building is not cut off from your kingdom.');
+    if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     let a = this.linkFor(c);
     if (a) {
       p.troops -= troops;
@@ -3178,7 +3227,7 @@ const GameRules = {
       return null;
     }
     const route = this.linkRoute(pid, c);
-    if (!route) return 'Impossible de le rejoindre : des murailles ennemies bloquent le passage.';
+    if (!route) return tr('Impossible de le rejoindre : des murailles ennemies bloquent le passage.', 'Cannot reach it: enemy walls block the way.');
     const half = this.sizeOf(this.building[c]) / 2;
     a = {
       id: this.nextAttackId++, attacker: pid, target: route.target, troops, done: false,
@@ -3198,7 +3247,8 @@ const GameRules = {
     p.troops -= troops;
     this.attacks.push(a);
     if (this.players[route.target].isHuman) {
-      UI.log(`⚠️ ${p.name} prépare un assaut à travers tes terres pour rejoindre son ${this.building[c] === B_PORT ? 'port' : 'château'} isolé (${fmt(troops)} soldats) !`, 'warn', p);
+      UI.log(tr(`⚠️ ${p.name} prépare un assaut à travers tes terres pour rejoindre son ${this.building[c] === B_PORT ? 'port' : 'château'} isolé (${fmt(troops)} soldats) !`,
+        `⚠️ ${p.name} is preparing an assault across your land to reach their isolated ${this.building[c] === B_PORT ? 'port' : 'castle'} (${fmt(troops)} soldiers)!`), 'warn', p);
     }
     return null;
   },
@@ -3234,9 +3284,10 @@ const GameRules = {
       this.garrison[c] += add;
       p.troops += a.troops - add;
     }
-    if (p.isHuman) UI.log(`🏰 Ton château isolé est de nouveau relié à ton royaume${siege ? ' : tes soldats rejoignent sa défense !' : ' !'}`, 'good');
+    if (p.isHuman) UI.log(tr(`🏰 Ton château isolé est de nouveau relié à ton royaume${siege ? ' : tes soldats rejoignent sa défense !' : ' !'}`,
+      `🏰 Your isolated castle is linked to your kingdom again${siege ? ': your soldiers join its defense!' : '!'}`), 'good');
     else if (siege && this.players[siege.attacker].isHuman) {
-      UI.log(`🏰 ${p.name} a rejoint le château que tu attaques : ses soldats renforcent la défense !`, 'warn', p);
+      UI.log(tr(`🏰 ${p.name} a rejoint le château que tu attaques : ses soldats renforcent la défense !`, `🏰 ${p.name} has reached the castle you are attacking: their soldiers reinforce the defense!`), 'warn', p);
     }
     a.troops = 0;
     this.endAttack(a);
@@ -3329,18 +3380,19 @@ const GameRules = {
   planLanding(pid, i) {
     const p = this.players[pid];
     const ports = this.expeditionPorts(pid);
-    if (!ports.length) return { error: 'Il te faut un port de niveau 2 pour les expéditions maritimes.' };
+    if (!ports.length) return { error: tr('Il te faut un port de niveau 2 pour les expéditions maritimes.', 'You need a level 2 port for naval expeditions.') };
     if (!this.landable(pid, i) || !this.isCoastal(i)) {
-      return { error: 'On débarque sur une côte (au bord de la mer ou d\'un fleuve) qui n\'est ni à toi ni à un allié, à côté des bâtiments.' };
+      return { error: tr('On débarque sur une côte (au bord de la mer ou d\'un fleuve) qui n\'est ni à toi ni à un allié, à côté des bâtiments.', 'You land on a coast (on the shore of the sea or a river) that belongs neither to you nor to an ally, away from buildings.') };
     }
-    if (this.expeditions.some(e => e.pid === pid && e.landing === i && e.home === undefined)) return { error: 'Une expédition est déjà en route vers cette côte.' };
+    if (this.expeditions.some(e => e.pid === pid && e.landing === i && e.home === undefined)) return { error: tr('Une expédition est déjà en route vers cette côte.', 'An expedition is already on its way to this coast.') };
     // Pas plus de MAX_SEA_ASSAULTS débarquements à la fois chez un même royaume (en mer ou avant-postes déjà plantés)
     const o = this.owner[i];
     if (o >= 0 && this.seaAssaultsOn(pid, o) >= CONFIG.MAX_SEA_ASSAULTS) {
-      return { error: `Tu as déjà ${CONFIG.MAX_SEA_ASSAULTS} débarquements chez ${this.players[o].name} (en mer ou avant-postes) : pas plus à la fois.` };
+      return { error: tr(`Tu as déjà ${CONFIG.MAX_SEA_ASSAULTS} débarquements chez ${this.players[o].name} (en mer ou avant-postes) : pas plus à la fois.`,
+        `You already have ${CONFIG.MAX_SEA_ASSAULTS} landings at ${this.players[o].name}'s (at sea or outposts): no more at once.`) };
     }
     const zone = this.landingZone(pid, i);
-    if (zone.anchor < 0) return { error: 'Pas assez de place sur cette côte pour un avant-poste.' };
+    if (zone.anchor < 0) return { error: tr('Pas assez de place sur cette côte pour un avant-poste.', 'Not enough room on this coast for an outpost.') };
     // Le port le plus rapide pour y aller
     let best = null;
     for (const a of ports) {
@@ -3349,7 +3401,7 @@ const GameRules = {
       const time = path.length / this.buildingInfo(a).boatSpeed; // en secondes
       if (!best || time < best.time) best = { port: a, path, time };
     }
-    if (!best) return { error: 'Aucun de tes ports ne peut rejoindre cette côte par l\'eau.' };
+    if (!best) return { error: tr('Aucun de tes ports ne peut rejoindre cette côte par l\'eau.', 'None of your ports can reach this coast by water.') };
     best.cost = Math.round(this.buildCost(p, B_OUTPOST) * this.buildingInfo(best.port).landingCost);
     // assez de soldats pour remplir la garnison de l'avant-poste une fois arrivés
     best.minTroops = Math.ceil(CONFIG.OUTPOST_GARRISON / (1 - this.seaLoss(best.time)));
@@ -3362,12 +3414,12 @@ const GameRules = {
   // Renvoie un message d'erreur, ou null.
   repatriate(pid, a) {
     const p = this.players[pid], o = this.outposts.get(a);
-    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
-    if (!this.outpostReady(a)) return 'L\'avant-poste est encore en construction : ses soldats bâtissent.';
+    if (!o || this.owner[a] !== pid) return tr('Ce n\'est pas un de tes avant-postes.', 'This is not one of your outposts.');
+    if (!this.outpostReady(a)) return tr('L\'avant-poste est encore en construction : ses soldats bâtissent.', 'The outpost is still being built: its soldiers are building it.');
     const troops = Math.floor(o.stationed);
-    if (troops < 1) return 'Aucun soldat n\'attend à cet avant-poste (sa garnison, elle, reste sur place).';
+    if (troops < 1) return tr('Aucun soldat n\'attend à cet avant-poste (sa garnison, elle, reste sur place).', 'No soldiers are waiting at this outpost (its garrison stays there).');
     const best = this.homePort(pid, o.landing);
-    if (!best) return 'Aucun de tes ports n\'est relié par l\'eau à cet avant-poste.';
+    if (!best) return tr('Aucun de tes ports n\'est relié par l\'eau à cet avant-poste.', 'None of your ports is linked by water to this outpost.');
     o.stationed -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, home: best.port,
@@ -3395,8 +3447,8 @@ const GameRules = {
   // ils rentrent quand même (comme ramenés par un navire marchand). Renvoie un message d'erreur, ou le nombre de soldats.
   abandonOutpost(pid, a) {
     const o = this.outposts.get(a);
-    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
-    if (this.attacks.some(x => !x.done && x.target === pid && x.targetCastle === a)) return 'Ton avant-poste est attaqué : impossible de l\'abandonner maintenant.';
+    if (!o || this.owner[a] !== pid) return tr('Ce n\'est pas un de tes avant-postes.', 'This is not one of your outposts.');
+    if (this.attacks.some(x => !x.done && x.target === pid && x.targetCastle === a)) return tr('Ton avant-poste est attaqué : impossible de l\'abandonner maintenant.', 'Your outpost is under attack: it cannot be abandoned now.');
     const troops = Math.floor(this.garrison[a] + o.stationed), landing = o.landing;
     this.removeBuilding(a);
     if (troops < 1) return 0;
@@ -3418,13 +3470,14 @@ const GameRules = {
     if (plan.error) return plan.error;
     // Une expédition au plus toutes les EXPEDITION_COOLDOWN secondes
     if (p.lastExpedition !== undefined && this.tick - p.lastExpedition < CONFIG.EXPEDITION_COOLDOWN * CONFIG.TICKS_PER_SECOND) {
-      return '⛵ Tes bateaux ne sont pas encore prêts.';
+      return tr('⛵ Tes bateaux ne sont pas encore prêts.', '⛵ Your ships are not ready yet.');
     }
-    if (p.gold < plan.cost) return `Pas assez d'or pour l'expédition (💰 ${plan.cost}).`;
+    if (p.gold < plan.cost) return tr(`Pas assez d'or pour l'expédition (💰 ${plan.cost}).`, `Not enough gold for the expedition (💰 ${plan.cost}).`);
     troops = Math.floor(Math.min(troops, p.troops));
     if (troops < plan.minTroops) {
-      return `Il faut au moins ${plan.minTroops} soldats pour l'expédition : de quoi remplir la garnison ` +
-        'de l\'avant-poste (pertes en mer comprises).';
+      return tr(`Il faut au moins ${plan.minTroops} soldats pour l'expédition : de quoi remplir la garnison ` +
+        'de l\'avant-poste (pertes en mer comprises).', `You need at least ${plan.minTroops} soldiers for the expedition: enough to fill the outpost's ` +
+        'garrison (losses at sea included).');
     }
     p.gold -= plan.cost;
     p.troops -= troops;
@@ -3436,7 +3489,8 @@ const GameRules = {
     // Prévenir les royaumes dont la côte est visée
     const o = this.owner[i];
     if (o >= 0 && this.players[o].isHuman) {
-      UI.log(`⛵ ${p.name} envoie une expédition vers ta côte ! Tiens-toi prêt à attaquer son avant-poste quand elle accostera.`, 'warn', p);
+      UI.log(tr(`⛵ ${p.name} envoie une expédition vers ta côte ! Tiens-toi prêt à attaquer son avant-poste quand elle accostera.`,
+        `⛵ ${p.name} is sending an expedition to your coast! Be ready to attack their outpost when it lands.`), 'warn', p);
     }
     return null;
   },
@@ -3475,7 +3529,7 @@ const GameRules = {
   // Renvoie { path, river, time } (path : de nos terres jusqu'à la case visée i) ou { error }.
   planCrossing(pid, i) {
     if (this.owner[i] !== -1 || !this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) {
-      return { error: 'Il faut viser une terre libre, de l\'autre côté du fleuve.' };
+      return { error: tr('Il faut viser une terre libre, de l\'autre côté du fleuve.', 'Aim at free land on the other side of the river.') };
     }
     const W = this.W, x0 = i % W, y0 = (i / W) | 0;
     const near = (j, R) => (j % W - x0) ** 2 + (((j / W) | 0) - y0) ** 2 <= R * R;
@@ -3502,7 +3556,7 @@ const GameRules = {
         queue.push(n);
       });
     }
-    return { error: 'Pas de gué ici : il faut un fleuve entre tes terres et cette terre libre (le grand fleuve, lui, est infranchissable).' };
+    return { error: tr('Pas de gué ici : il faut un fleuve entre tes terres et cette terre libre (le grand fleuve, lui, est infranchissable).', 'No ford here: there must be a river between your land and this free land (the great river cannot be crossed).') };
   },
 
   // Lance une traversée de fleuve vers la terre libre i. Renvoie un message d'erreur, ou null.
@@ -3511,7 +3565,7 @@ const GameRules = {
     const p = this.players[pid], TPS = CONFIG.TICKS_PER_SECOND;
     // (une seule traversée toutes les CROSSING_COOLDOWN secondes)
     const wait = p.lastCrossing === undefined ? 0 : (p.lastCrossing + CONFIG.CROSSING_COOLDOWN * TPS - this.tick) / TPS;
-    if (wait > 0) return `Tes soldats préparent la prochaine traversée : encore ${Math.ceil(wait)} s.`;
+    if (wait > 0) return tr(`Tes soldats préparent la prochaine traversée : encore ${Math.ceil(wait)} s.`, `Your soldiers are preparing the next crossing: ${Math.ceil(wait)} s left.`);
     const plan = this.planCrossing(pid, i);
     if (plan.error) return plan.error;
     p.lastCrossing = this.tick;
@@ -3530,7 +3584,7 @@ const GameRules = {
       if (!p.alive) continue;
       const blocked = c.path.slice(1).some(t => this.terrain[t] !== TERRAIN.RIVER && this.owner[t] !== -1 && this.owner[t] !== c.pid);
       if (blocked || this.owner[c.path[0]] !== c.pid) {
-        if (p.isHuman) UI.log('🚫 Le passage du fleuve a été pris par un autre : la traversée échoue.', 'warn');
+        if (p.isHuman) UI.log(tr('🚫 Le passage du fleuve a été pris par un autre : la traversée échoue.', '🚫 The river crossing was taken by someone else: the crossing fails.'), 'warn');
         continue;
       }
       // Les terres libres de la rive autour de la case visée (sans repasser par le fleuve) ; le fleuve reste neutre
@@ -3547,7 +3601,7 @@ const GameRules = {
         if (this.owner[t] === c.pid || !this.claimable(t)) continue; // (le gué, lui, reste neutre)
         this.setOwner(t, c.pid);
       }
-      if (p.isHuman) UI.log('🛶 Tes soldats ont traversé le fleuve : la terre de l\'autre rive est à toi !', 'good');
+      if (p.isHuman) UI.log(tr('🛶 Tes soldats ont traversé le fleuve : la terre de l\'autre rive est à toi !', '🛶 Your soldiers have crossed the river: the land on the other bank is yours!'), 'good');
     }
     this.crossings = this.crossings.filter(c => !c.done);
   },
@@ -3568,7 +3622,7 @@ const GameRules = {
       e.path = e.path.slice(0, idx + 1).reverse();
       e.start = this.tick;
       e.arrive = this.tick + back;
-      if (this.players[e.pid].isHuman) UI.log('⛵ Ton avant-poste est tombé : tes renforts font demi-tour vers le port.', 'warn');
+      if (this.players[e.pid].isHuman) UI.log(tr('⛵ Ton avant-poste est tombé : tes renforts font demi-tour vers le port.', '⛵ Your outpost has fallen: your reinforcements turn back to port.'), 'warn');
     }
     for (const e of this.expeditions) {
       if (this.tick < e.arrive) continue;
@@ -3578,7 +3632,7 @@ const GameRules = {
       // Soldats rapatriés d'un avant-poste : ils rejoignent l'armée
       if (e.home !== undefined) {
         p.troops += e.troops;
-        if (p.isHuman) UI.log(`🚢 ${fmt(e.troops)} soldats rapatriés sont rentrés au port.`, 'good');
+        if (p.isHuman) UI.log(tr(`🚢 ${fmt(e.troops)} soldats rapatriés sont rentrés au port.`, `🚢 ${fmt(e.troops)} repatriated soldiers are back in port.`), 'good');
         continue;
       }
       // Renforts pour un avant-poste : ils rejoignent sa garnison (ou rentrent s'il n'existe plus)
@@ -3591,10 +3645,10 @@ const GameRules = {
             this.garrison[a] += add;
             o.stationed += e.troops - add;
           } else this.garrison[a] += e.troops;
-          if (p.isHuman) UI.log(`⛺ ${fmt(e.troops)} soldats renforcent ton avant-poste.`, 'good');
+          if (p.isHuman) UI.log(tr(`⛺ ${fmt(e.troops)} soldats renforcent ton avant-poste.`, `⛺ ${fmt(e.troops)} soldiers reinforce your outpost.`), 'good');
         } else {
           p.troops += e.troops;
-          if (p.isHuman) UI.log('⛵ Ton avant-poste n\'existe plus : les renforts rentrent.', 'warn');
+          if (p.isHuman) UI.log(tr('⛵ Ton avant-poste n\'existe plus : les renforts rentrent.', '⛵ Your outpost no longer exists: the reinforcements head home.'), 'warn');
         }
         continue;
       }
@@ -3602,22 +3656,24 @@ const GameRules = {
       if (!this.landable(e.pid, e.landing) || zone.anchor < 0) {
         p.gold += e.cost; // la côte n'est plus possible (prise par soi ou un allié, bâtie…) : l'or est rendu
         p.troops += e.troops; // et les soldats rentrent
-        if (p.isHuman) UI.log('⛵ Impossible de débarquer sur la côte visée : l\'expédition rentre (or et soldats rendus).', 'warn');
+        if (p.isHuman) UI.log(tr('⛵ Impossible de débarquer sur la côte visée : l\'expédition rentre (or et soldats rendus).', '⛵ Cannot land on the targeted coast: the expedition returns (gold and soldiers refunded).'), 'warn');
         continue;
       }
       const victims = new Set(zone.tiles.map(j => this.owner[j]).filter(o => o >= 0));
       for (const j of zone.tiles) this.setOwner(j, e.pid);
       for (const o of victims) {
-        if (this.players[o].isHuman) UI.log(`⛵ ${p.name} a débarqué sur ta côte et y a planté un avant-poste ! Vise-le pour le détruire.`, 'warn', p);
+        if (this.players[o].isHuman) UI.log(tr(`⛵ ${p.name} a débarqué sur ta côte et y a planté un avant-poste ! Vise-le pour le détruire.`, `⛵ ${p.name} has landed on your coast and set up an outpost! Target it to destroy it.`), 'warn', p);
       }
       this.placeBuilding(zone.anchor, B_OUTPOST);
       this.garrison[zone.anchor] = e.troops; // tous les soldats débarqués défendent l'avant-poste
       this.outposts.set(zone.anchor, { ready: this.tick + CONFIG.OUTPOST_BUILD_TIME * CONFIG.TICKS_PER_SECOND,
         landing: e.landing, stationed: 0, victim: e.victim === undefined ? -1 : e.victim }); // (chez qui il est planté)
       if (p.isHuman) {
-        UI.log(`⛺ Débarquement réussi ! ${fmt(e.troops)} soldats bâtissent ton avant-poste (affaiblis tant qu'il n'est pas bâti) ` +
-          `(${fmt(e.sent - e.troops)} perdus en mer). Il sera bâti dans ${CONFIG.OUTPOST_BUILD_TIME} s.`, 'good');
-        Render.floatText(zone.anchor, B_OUTPOST, '⛵ Débarquement !');
+        UI.log(tr(`⛺ Débarquement réussi ! ${fmt(e.troops)} soldats bâtissent ton avant-poste (affaiblis tant qu'il n'est pas bâti) ` +
+          `(${fmt(e.sent - e.troops)} perdus en mer). Il sera bâti dans ${CONFIG.OUTPOST_BUILD_TIME} s.`,
+          `⛺ Landing successful! ${fmt(e.troops)} soldiers are building your outpost (weakened until it is built) ` +
+          `(${fmt(e.sent - e.troops)} lost at sea). It will be built in ${CONFIG.OUTPOST_BUILD_TIME} s.`), 'good');
+        Render.floatText(zone.anchor, B_OUTPOST, tr('⛵ Débarquement !', '⛵ Landing!'));
       }
     }
     this.expeditions = this.expeditions.filter(e => !e.done);
@@ -3889,7 +3945,7 @@ const GameRules = {
       if (!p.alive || p.troops <= 0) continue;
       for (const a of list) a.defenders += p.troops / list.length;
       if (p.isHuman && list.some(a => this.lastStand(a))) {
-        UI.log(`🏰 Ton dernier château est attaqué : tes ${fmt(p.troops)} soldats restants le défendent d'office !`, 'warn');
+        UI.log(tr(`🏰 Ton dernier château est attaqué : tes ${fmt(p.troops)} soldats restants le défendent d'office !`, `🏰 Your last castle is under attack: your ${fmt(p.troops)} remaining soldiers defend it automatically!`), 'warn');
       }
       p.troops = 0;
     }
@@ -3918,21 +3974,17 @@ const GameRules = {
     // La garnison combat en premier, puis les défenseurs envoyés
     const fromGarrison = Math.min(gar, defLoss);
     a.garrison = (a.garrison || 0) - fromGarrison / gp;
-    const before = a.defenders;
     a.defenders -= defLoss - fromGarrison;
-    // les alliés venus aider subissent leur part des pertes
-    if (a.allyDef && before > 0) for (const k in a.allyDef) a.allyDef[k] *= Math.max(0, a.defenders) / before;
     a.troops = Math.max(0, a.troops - defLoss * D * defBonus / atkBonus);
     if (a.troops < 1) {
       const p = this.players[a.attacker], d = this.players[a.target];
-      if (p.isHuman) UI.log(`💥 Ton assaut contre ${d.name} a été repoussé !`, 'warn', d);
-      else if (d.isHuman) UI.log(`🛡️ Tu as repoussé l'assaut de ${p.name} !`, 'good', p);
+      if (p.isHuman) UI.log(tr(`💥 Ton assaut contre ${d.name} a été repoussé !`, `💥 Your assault against ${d.name} was repelled!`), 'warn', d);
+      else if (d.isHuman) UI.log(tr(`🛡️ Tu as repoussé l'assaut de ${p.name} !`, `🛡️ You repelled ${p.name}'s assault!`), 'good', p);
       this.defenseRally(d);
       this.endAttack(a);
     } else if (a.defenders + a.garrison < 1) {
       a.defenders = 0;
       a.garrison = 0;
-      if (a.allyDef) for (const k in a.allyDef) a.allyDef[k] = 0;
     }
   },
 
@@ -4263,9 +4315,9 @@ const GameRules = {
   // rives), ou { error }.
   planBridge(pid, i) {
     const W = this.W, H = this.H;
-    if (i < 0 || this.terrain[i] !== TERRAIN.RIVER) return { error: 'Un pont se construit sur un fleuve (pas sur un grand fleuve, infranchissable).' };
-    if (this.bridgeAt[i]) return { error: 'Il y a déjà un pont ici.' };
-    let best = null, why = 'Les deux rives, juste en face, doivent être à toi (ou l\'une à toi, l\'autre à un allié de ton pacte).';
+    if (i < 0 || this.terrain[i] !== TERRAIN.RIVER) return { error: tr('Un pont se construit sur un fleuve (pas sur un grand fleuve, infranchissable).', 'A bridge is built on a river (not on a great river, which cannot be crossed).') };
+    if (this.bridgeAt[i]) return { error: tr('Il y a déjà un pont ici.', 'There is already a bridge here.') };
+    let best = null, why = tr('Les deux rives, juste en face, doivent être à toi (ou l\'une à toi, l\'autre à un allié de ton pacte).', 'Both banks, right opposite each other, must be yours (or one yours, the other an ally\'s in your pact).');
     // (une rive à toi, l'autre à toi ou à un allié de ton pacte : un pont relie aussi deux royaumes alliés,
     //  par exemple pour faire passer une route commerciale)
     const mineOrAlly = j => this.owner[j] === pid || (this.owner[j] >= 0 && this.areAllied(pid, this.owner[j]));
@@ -4288,7 +4340,7 @@ const GameRules = {
       if (a < 0 || b < 0 || tiles.length > 3) continue; // (pas de rive en face, ou fleuve trop large)
       if (!this.isLand(a) || !this.isLand(b)) continue;
       if (!mineOrAlly(a) || !mineOrAlly(b) || (this.owner[a] !== pid && this.owner[b] !== pid)) continue;
-      if (tiles.some(j => this.bridgeAt[j])) { why = 'Il y a déjà un pont ici.'; continue; }
+      if (tiles.some(j => this.bridgeAt[j])) { why = tr('Il y a déjà un pont ici.', 'There is already a bridge here.'); continue; }
       if (!best || tiles.length < best.tiles.length) best = { tiles, a, b };
     }
     return best || { error: why };
@@ -4300,7 +4352,7 @@ const GameRules = {
     const plan = this.planBridge(p.id, i);
     if (plan.error) return plan.error;
     const cost = this.bridgeCost(p.id);
-    if (p.gold < cost) return `Pas assez d'or : il faut 💰 ${fmt(cost)}.`;
+    if (p.gold < cost) return tr(`Pas assez d'or : il faut 💰 ${fmt(cost)}.`, `Not enough gold: you need 💰 ${fmt(cost)}.`);
     p.gold -= cost;
     this.bridges.push({ tiles: plan.tiles, a: plan.a, b: plan.b, owner: p.id });
     for (const j of plan.tiles) this.bridgeAt[j] = 1;
@@ -4440,28 +4492,6 @@ const GameRules = {
     a.defPending = a.defPending.filter(r => !r.done);
   },
 
-  // Envoyer une armée aider un allié du pacte qui se fait attaquer : elle arrive en REINFORCE_DELAY secondes
-  // et se bat avec ses défenseurs ; à la fin de l'assaut, ses survivants rentrent. Renvoie un message d'erreur, ou null.
-  helpAlly(pid, attackId, troops) {
-    const p = this.players[pid], TPS = CONFIG.TICKS_PER_SECOND;
-    const a = this.attacks.find(x => x.id === attackId && !x.done);
-    if (!a || a.target < 0 || !this.areAllied(pid, a.target)) return 'Cet assaut ne vise pas un de tes alliés.';
-    if (this.cutOff(a)) return 'Ce bâtiment est coupé de son royaume : aucun renfort ne peut le rejoindre.';
-    if (this.isPreparing(a)) return 'Cette armée marche encore sur ses terres : on ne peut l\'affronter qu\'une fois entrée chez ton allié.';
-    if (!a.allyLast) { a.allyLast = {}; a.allyDef = {}; a.allyPending = []; }
-    const wait = a.allyLast[pid] === undefined ? 0 : (a.allyLast[pid] + CONFIG.DEFEND_COOLDOWN * TPS - this.tick) / TPS;
-    if (wait > 0) return `Tes soldats se regroupent : prochaine aide dans ${Math.ceil(wait)} s.`;
-    troops = Math.floor(Math.min(troops, p.troops));
-    if (troops < 1) return 'Pas assez de soldats !';
-    p.troops -= troops;
-    a.allyPending.push({ pid, troops, tick: this.tick + CONFIG.REINFORCE_DELAY * TPS });
-    a.allyLast[pid] = this.tick;
-    const d = this.players[a.target], e = this.players[a.attacker];
-    if (d.isHuman) UI.log(`🤝 ${p.name} envoie ${fmt(troops)} soldats t'aider contre ${e.name} !`, 'good', p);
-    else if (e.isHuman) UI.log(`🤝 ${p.name} envoie ${fmt(troops)} soldats défendre son allié ${d.name} contre toi !`, 'warn', p);
-    return null;
-  },
-
   // Secondes à attendre avant de pouvoir renvoyer des défenseurs contre cet assaut : plus d'attente, chaque envoi
   // en plus renforce l'armée de défense déjà partie (voir sendDefenders)
   defendWait() { return 0; },
@@ -4473,23 +4503,24 @@ const GameRules = {
     if (a.targetCastle >= 0 && this.owner[a.targetCastle] !== a.target) {
       const p = this.players[a.attacker], o = this.owner[a.targetCastle];
       if (p.isHuman) UI.log(`↩️ ${this.targetLabel(a.targetCastle)[0].toUpperCase()}${this.targetLabel(a.targetCastle).slice(1)} ` +
-        `a été pris${o >= 0 ? ' par ' + this.players[o].name : ''} avant ton arrivée : ton armée fait demi-tour.`, 'warn');
+        tr(`a été pris${o >= 0 ? ' par ' + this.players[o].name : ''} avant ton arrivée : ton armée fait demi-tour.`,
+          `was taken${o >= 0 ? ' by ' + this.players[o].name : ''} before you arrived: your army turns back.`), 'warn');
       return this.endAttack(a);
     }
     if (this.isPreparing(a)) return;
     // Assaut sur un morceau coupé de ses châteaux : si son royaume l'a relié à un château entre-temps, il s'arrête
     if (a.unlinked && this.tick % CONFIG.TICKS_PER_SECOND === 0 && this.unlinkedRelinked(a)) {
       const p = this.players[a.attacker], d = this.players[a.target];
-      if (p.isHuman) UI.log(`🔗 ${d.name} a relié ses terres coupées à un château : ton assaut s'arrête.`, 'warn', d);
-      else if (d.isHuman) UI.log(`🔗 Tes terres coupées sont de nouveau reliées à un château : l'assaut ${this.deName(p.name)} s'arrête !`, 'good', p);
+      if (p.isHuman) UI.log(tr(`🔗 ${d.name} a relié ses terres coupées à un château : ton assaut s'arrête.`, `🔗 ${d.name} has linked their cut-off land to a castle: your assault stops.`), 'warn', d);
+      else if (d.isHuman) UI.log(tr(`🔗 Tes terres coupées sont de nouveau reliées à un château : l'assaut ${this.deName(p.name)} s'arrête !`, `🔗 Your cut-off land is linked to a castle again: ${p.name}'s assault stops!`), 'good', p);
       return this.endAttack(a);
     }
     // Assaut de front contre un royaume désorganisé : s'il rebâtit (ou reprend) un château entre-temps,
     // il est de nouveau organisé, et l'assaut s'arrête
     if (a.disorganized && this.tick % CONFIG.TICKS_PER_SECOND === 0 && this.isProtected(a.target)) {
       const p = this.players[a.attacker], d = this.players[a.target];
-      if (p.isHuman) UI.log(`🏰 ${d.name} a de nouveau une ville (ou un port fortifié) : il n'est plus désorganisé, ton assaut s'arrête.`, 'warn', d);
-      else if (d.isHuman) UI.log(`🏰 Tu as de nouveau une ville (ou un port fortifié) : l'assaut ${this.deName(p.name)} contre tes terres désorganisées s'arrête !`, 'good', p);
+      if (p.isHuman) UI.log(tr(`🏰 ${d.name} a de nouveau une ville (ou un port fortifié) : il n'est plus désorganisé, ton assaut s'arrête.`, `🏰 ${d.name} has a city (or a fortified port) again: no longer disorganized, your assault stops.`), 'warn', d);
+      else if (d.isHuman) UI.log(tr(`🏰 Tu as de nouveau une ville (ou un port fortifié) : l'assaut ${this.deName(p.name)} contre tes terres désorganisées s'arrête !`, `🏰 You have a city (or a fortified port) again: ${p.name}'s assault on your disorganized land stops!`), 'good', p);
       return this.endAttack(a);
     }
     if (a.prepTicks && this.tick === a.startTick) {
@@ -4501,7 +4532,7 @@ const GameRules = {
         const path = this.owner[a.targetCastle] === a.target
           ? this.castlePath(a.attacker, a.targetCastle, this.sourceOfAttack(a)) : null;
         if (!path) {
-          if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers le château est bloqué : assaut annulé.', 'warn');
+          if (this.players[a.attacker].isHuman) UI.log(tr('🚫 Le passage vers le château est bloqué : assaut annulé.', '🚫 The way to the castle is blocked: assault cancelled.'), 'warn');
           return this.endAttack(a);
         }
         a.pathTiles = path;
@@ -4512,7 +4543,7 @@ const GameRules = {
     if (a.link >= 0) {
       // Assaut de jonction : son château a été pris avant qu'il n'arrive, les soldats rentrent
       if (this.owner[a.link] !== a.attacker) {
-        if (this.players[a.attacker].isHuman) UI.log('💥 Trop tard : ton bâtiment isolé est tombé, ton assaut rentre.', 'warn');
+        if (this.players[a.attacker].isHuman) UI.log(tr('💥 Trop tard : ton bâtiment isolé est tombé, ton assaut rentre.', '💥 Too late: your isolated building has fallen, your assault heads home.'), 'warn');
         return this.endAttack(a);
       }
       // Déjà relié au royaume (par un autre chemin) : les soldats rejoignent sa défense
@@ -4521,7 +4552,7 @@ const GameRules = {
       if (this.tick === a.startTick) {
         const route = this.linkRoute(a.attacker, a.link, a.target);
         if (!route) {
-          if (this.players[a.attacker].isHuman) UI.log('🚫 Le passage vers ton bâtiment isolé est bloqué : assaut annulé.', 'warn');
+          if (this.players[a.attacker].isHuman) UI.log(tr('🚫 Le passage vers ton bâtiment isolé est bloqué : assaut annulé.', '🚫 The way to your isolated building is blocked: assault cancelled.'), 'warn');
           return this.endAttack(a);
         }
         a.path = route.path;
@@ -4541,15 +4572,6 @@ const GameRules = {
     // Arrivée des renforts
     for (const r of a.pending) if (r.tick <= this.tick) a.troops += r.troops;
     a.pending = a.pending.filter(r => r.tick > this.tick);
-    // Arrivée des alliés venus aider le défenseur : ils se battent avec ses défenseurs
-    if (a.allyPending) {
-      for (const r of a.allyPending) {
-        if (r.tick > this.tick) continue;
-        a.defenders += r.troops;
-        a.allyDef[r.pid] = (a.allyDef[r.pid] || 0) + r.troops;
-      }
-      a.allyPending = a.allyPending.filter(r => r.tick > this.tick);
-    }
     // Les soldats du bâtiment visé se battent tous, même ceux arrivés après le début de l'assaut :
     this.rallyGarrison(a);
     // Tant que des défenseurs (garnison ou renforts) tiennent la position, l'assaut se bat au lieu d'avancer
@@ -4595,8 +4617,8 @@ const GameRules = {
         if (p.isHuman && a.target >= 0 && this.players[a.target].alive) {
           const c = a.targetCastle;
           UI.log(c >= 0 && this.owner[c] === a.target
-            ? `🚫 Ton armée ne trouve plus de passage vers ${this.targetLabel(c)} : elle rentre.`
-            : `↩️ Ton assaut contre ${this.players[a.target].name} s'arrête : il n'y a plus rien à prendre de ce côté.`, 'warn', this.players[a.target]);
+            ? tr(`🚫 Ton armée ne trouve plus de passage vers ${this.targetLabel(c)} : elle rentre.`, `🚫 Your army can no longer find a way to ${this.targetLabel(c)}: it heads home.`)
+            : tr(`↩️ Ton assaut contre ${this.players[a.target].name} s'arrête : il n'y a plus rien à prendre de ce côté.`, `↩️ Your assault against ${this.players[a.target].name} stops: there is nothing left to take on this side.`), 'warn', this.players[a.target]);
         }
         return this.endAttack(a);
       }
@@ -4719,7 +4741,7 @@ const GameRules = {
     for (const r of a.pending) r.troops *= keep;
     this.wallRetreatLoss(a); // (et un mur bâti dans son dos coûte cher à franchir)
     const p = this.players[a.attacker];
-    if (p.isHuman) UI.log(`↩️ Retraite terminée : ${fmt(a.troops + a.pending.reduce((s, r) => s + r.troops, 0))} soldats rentrent.`, 'good');
+    if (p.isHuman) UI.log(tr(`↩️ Retraite terminée : ${fmt(a.troops + a.pending.reduce((s, r) => s + r.troops, 0))} soldats rentrent.`, `↩️ Retreat complete: ${fmt(a.troops + a.pending.reduce((s, r) => s + r.troops, 0))} soldiers come home.`), 'good');
     this.endAttack(a);
     return true;
   },
@@ -4759,10 +4781,13 @@ const GameRules = {
       a.garrisonOut = true;
     }
     const p = this.players[a.attacker], d = this.players[a.target];
-    const what = outpost ? ['un avant-poste', 'ton avant-poste', '⛺'] : port ? ['un port fortifié', 'ton port fortifié', '⚓']
-      : ['un château', 'ton château', '🏰'];
-    if (p.isHuman) UI.log(`${what[2]} Ton armée assiège ${what[0]} ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`, 'good', d);
-    else if (d.isHuman) UI.log(`${what[2]} ${p.name} assiège ${what[1]} ! Il tombe dans ${secs} s : envoie vite des défenseurs !`, 'warn', p);
+    const what = outpost ? tr(['un avant-poste', 'ton avant-poste', '⛺'], ['an outpost', 'your outpost', '⛺'])
+      : port ? tr(['un port fortifié', 'ton port fortifié', '⚓'], ['a fortified port', 'your fortified port', '⚓'])
+      : tr(['un château', 'ton château', '🏰'], ['a castle', 'your castle', '🏰']);
+    if (p.isHuman) UI.log(tr(`${what[2]} Ton armée assiège ${what[0]} ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`,
+      `${what[2]} Your army is besieging ${what[0]} of ${d.name}: it falls in ${secs} s if no one defends it.`), 'good', d);
+    else if (d.isHuman) UI.log(tr(`${what[2]} ${p.name} assiège ${what[1]} ! Il tombe dans ${secs} s : envoie vite des défenseurs !`,
+      `${what[2]} ${p.name} is besieging ${what[1]}! It falls in ${secs} s: send defenders quickly!`), 'warn', p);
   },
 
   // Port fortifié (niveau 3) : il a une petite muraille autour de sa zone, qu'un assaut assiège comme une petite ville
@@ -4785,7 +4810,7 @@ const GameRules = {
     const c = this.anchor[t];
     // (ses soldats qui attendaient là sont vaincus avec lui)
     const o = this.outposts.get(c), d = this.players[a.target], lost = Math.floor((o ? o.stationed : 0) + this.garrison[c]);
-    if (d.isHuman && lost >= 1) UI.log(`⛺ Ton avant-poste est détruit : ses ${fmt(lost)} soldats ont été vaincus.`, 'warn', this.players[a.attacker]);
+    if (d.isHuman && lost >= 1) UI.log(tr(`⛺ Ton avant-poste est détruit : ses ${fmt(lost)} soldats ont été vaincus.`, `⛺ Your outpost is destroyed: its ${fmt(lost)} soldiers were defeated.`), 'warn', this.players[a.attacker]);
     a.troops = Math.max(0, a.troops - this.tileCost(a, t));
     // la zone de l'avant-poste : son morceau de territoire (une tête de pont, pas le cœur du royaume)
     const r = this.regions(true), k = r.comp[c];
@@ -4796,8 +4821,8 @@ const GameRules = {
     for (const j of zone) if (this.owner[j] === a.target) { this.setOwner(j, a.attacker); taken++; }
     if (taken >= 1) {
       const p = this.players[a.attacker];
-      if (p.isHuman) UI.log(`⛺ Avant-poste détruit : les ${fmt(taken)} cases de sa zone sont à toi !`, 'good', d);
-      else if (d.isHuman) UI.log(`⛺ Les ${fmt(taken)} cases de la zone de ton avant-poste passent à ${p.name}.`, 'warn', p);
+      if (p.isHuman) UI.log(tr(`⛺ Avant-poste détruit : les ${fmt(taken)} cases de sa zone sont à toi !`, `⛺ Outpost destroyed: the ${fmt(taken)} tiles of its zone are yours!`), 'good', d);
+      else if (d.isHuman) UI.log(tr(`⛺ Les ${fmt(taken)} cases de la zone de ton avant-poste passent à ${p.name}.`, `⛺ The ${fmt(taken)} tiles of your outpost's zone go to ${p.name}.`), 'warn', p);
     }
     this.onTargetTaken(a, B_OUTPOST, false);
     this.removeBuilding(c);
@@ -4821,7 +4846,8 @@ const GameRules = {
           a.clashSeen = b.clashSeen = true;
           for (const [x, y] of [[a, b], [b, a]]) {
             if (this.players[x.attacker].isHuman) {
-              UI.log(`⚔️ Ton armée affronte celle ${this.deName(this.players[y.attacker].name)} au pied du château ! La gagnante reprendra le siège.`, 'warn', this.players[y.attacker]);
+              UI.log(tr(`⚔️ Ton armée affronte celle ${this.deName(this.players[y.attacker].name)} au pied du château ! La gagnante reprendra le siège.`,
+                `⚔️ Your army is fighting ${this.players[y.attacker].name}'s at the foot of the castle! The winner will resume the siege.`), 'warn', this.players[y.attacker]);
             }
           }
         }
@@ -4836,8 +4862,8 @@ const GameRules = {
         for (const [x, y] of [[a, b], [b, a]]) {
           if (x.troops >= 1) continue;
           const px = this.players[x.attacker], py = this.players[y.attacker];
-          if (px.isHuman) UI.log(`💥 Ton armée a été battue par celle de ${py.name} au pied du château.`, 'warn', py);
-          else if (py.isHuman) UI.log(`⚔️ Tu as battu l'armée de ${px.name} : ton siège reprend !`, 'good', px);
+          if (px.isHuman) UI.log(tr(`💥 Ton armée a été battue par celle de ${py.name} au pied du château.`, `💥 Your army was beaten by ${py.name}'s at the foot of the castle.`), 'warn', py);
+          else if (py.isHuman) UI.log(tr(`⚔️ Tu as battu l'armée de ${px.name} : ton siège reprend !`, `⚔️ You beat ${px.name}'s army: your siege resumes!`), 'good', px);
           this.endAttack(x);
         }
       }
@@ -4878,8 +4904,8 @@ const GameRules = {
     }
     a.cut = true; // la zone prise peut couper le royaume du défenseur (voir captureEnclaves)
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (p.isHuman) UI.log(`🏰 Tu as pris un château ${this.deName(d.name)}, avec toute sa zone et ses bâtiments !`, 'good', d);
-    else if (d.isHuman) UI.log(`🏰 ${p.name} a pris un de tes châteaux !`, 'warn', p);
+    if (p.isHuman) UI.log(tr(`🏰 Tu as pris un château ${this.deName(d.name)}, avec toute sa zone et ses bâtiments !`, `🏰 You took a castle of ${d.name}, with its whole zone and buildings!`), 'good', d);
+    else if (d.isHuman) UI.log(tr(`🏰 ${p.name} a pris un de tes châteaux !`, `🏰 ${p.name} took one of your castles!`), 'warn', p);
   },
 
   // Église (ou port) pris : sa zone passe à l'attaquant, avec les moulins et casernes construits grâce à elle.
@@ -4903,12 +4929,14 @@ const GameRules = {
     this.regionsCache = null;
     const p = this.players[a.attacker], d = this.players[a.target];
     this.warEffects(a, type === B_OUTPOST); // (détruire un avant-poste ne donne pas de malus d'après-guerre)
-    const what = { [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
-      [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'], [B_MINE]: ['⛏️', 'une mine', 'une de tes mines'] }[type];
-    const verb = type === B_OUTPOST ? 'détruit' : 'pris';
-    const zone = withZone ? `, avec sa zone et les bâtiments construits grâce à ${type === B_CHURCH ? 'elle' : 'lui'}` : '';
-    if (p.isHuman) UI.log(`${what[0]} Tu as ${verb} ${what[1]} ${this.deName(d.name)}${zone} !`, 'good', d);
-    else if (d.isHuman) UI.log(`${what[0]} ${p.name} a ${verb} ${what[2]}${zone} !`, 'warn', p);
+    const what = tr({ [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
+      [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'], [B_MINE]: ['⛏️', 'une mine', 'une de tes mines'] },
+      { [B_CHURCH]: ['⛪', 'a church', 'one of your churches'], [B_PORT]: ['⚓', 'a port', 'one of your ports'],
+        [B_OUTPOST]: ['⛺', 'an outpost', 'one of your outposts'], [B_MINE]: ['⛏️', 'a mine', 'one of your mines'] })[type];
+    const verb = type === B_OUTPOST ? tr('détruit', 'destroyed') : tr('pris', 'taken');
+    const zone = withZone ? tr(`, avec sa zone et les bâtiments construits grâce à ${type === B_CHURCH ? 'elle' : 'lui'}`, ', with its zone and the buildings built thanks to it') : '';
+    if (p.isHuman) UI.log(tr(`${what[0]} Tu as ${verb} ${what[1]} ${this.deName(d.name)}${zone} !`, `${what[0]} You have ${verb} ${what[1]} of ${d.name}${zone}!`), 'good', d);
+    else if (d.isHuman) UI.log(tr(`${what[0]} ${p.name} a ${verb} ${what[2]}${zone} !`, `${what[0]} ${p.name} has ${verb} ${what[2]}${zone}!`), 'warn', p);
   },
 
   endAttack(a) {
@@ -4918,15 +4946,6 @@ const GameRules = {
     const p = this.players[a.attacker];
     // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste)
     this.giveTroops(a.attacker, this.sourceOfAttack(a), a.troops + a.pending.reduce((s, r) => s + r.troops, 0));
-    // Les alliés venus aider rentrent chez eux avec leurs survivants
-    if (a.allyDef) {
-      for (const k in a.allyDef) {
-        const back = Math.min(a.allyDef[k], Math.max(0, a.defenders));
-        a.defenders -= back;
-        if (this.players[k].alive) this.players[k].troops += back;
-      }
-      for (const r of a.allyPending) if (this.players[r.pid].alive) this.players[r.pid].troops += r.troops; // (pas encore arrivés)
-    }
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château. Ceux qui étaient encore
     // en route font demi-tour : ils rentrent à pied jusqu'à la ville la plus proche (voir sendHome)
     if (a.target >= 0 && this.players[a.target].alive) {
@@ -4964,8 +4983,8 @@ const GameRules = {
     a.route = null;
     if (!back) return;
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (d.isHuman) UI.log(`🛡️ L'assaut ${this.deName(p.name)} a échoué : tu reprends les terres de son passage (${fmt(back)} cases).`, 'good', p);
-    else if (p.isHuman) UI.log(`🏳️ Ton assaut a échoué : ${d.name} reprend les terres de ton passage (${fmt(back)} cases).`, 'warn', d);
+    if (d.isHuman) UI.log(tr(`🛡️ L'assaut ${this.deName(p.name)} a échoué : tu reprends les terres de son passage (${fmt(back)} cases).`, `🛡️ ${p.name}'s assault has failed: you take back the land along its way (${fmt(back)} tiles).`), 'good', p);
+    else if (p.isHuman) UI.log(tr(`🏳️ Ton assaut a échoué : ${d.name} reprend les terres de ton passage (${fmt(back)} cases).`, `🏳️ Your assault has failed: ${d.name} takes back the land along your way (${fmt(back)} tiles).`), 'warn', d);
   },
 
   // Le royaume p n'a-t-il plus que des avant-postes ? Plus aucune ville ni port fortifié, et toutes ses terres sont
@@ -4986,7 +5005,7 @@ const GameRules = {
   // terres), ses avant-postes et leurs bâtiments sont supprimés, et leurs zones redeviennent des terres libres.
   loseKingdom(p) {
     const by = p.lastHitBy !== undefined && this.players[p.lastHitBy].alive ? p.lastHitBy : -1;
-    UI.log(`⛺ ${p.name} n'a plus que des avant-postes : son royaume est perdu, ses avant-postes sont abandonnés.`, p.isHuman ? 'warn' : '', p);
+    UI.log(tr(`⛺ ${p.name} n'a plus que des avant-postes : son royaume est perdu, ses avant-postes sont abandonnés.`, `⛺ ${p.name} has nothing left but outposts: their kingdom is lost, their outposts are abandoned.`), p.isHuman ? 'warn' : '', p);
     this.eliminate(p.id, by);
     for (const e of this.expeditions) if (e.pid === p.id) e.done = true; // (ses bateaux en mer sont perdus)
     for (const a of this.buildingTiles.slice()) if (this.owner[a] === p.id) this.removeBuilding(a);
@@ -5013,8 +5032,10 @@ const GameRules = {
     for (const a of this.buildingTiles.slice()) if (this.owner[a] === p.id && tiles.has(a)) this.removeBuilding(a);
     for (const t of tiles) if (this.owner[t] === p.id) this.setOwner(t, -1);
     if (p.isHuman && n) {
-      UI.log(`⚓ Tu as perdu ton dernier port : ${n > 1 ? `tes ${n} avant-postes sont abandonnés` : 'ton avant-poste est abandonné'}` +
-        (lost >= 1 ? ` et leurs ${fmt(lost)} soldats sont perdus` : '') + ' (plus aucun bateau ne peut les rejoindre).', 'warn');
+      UI.log(tr(`⚓ Tu as perdu ton dernier port : ${n > 1 ? `tes ${n} avant-postes sont abandonnés` : 'ton avant-poste est abandonné'}` +
+        (lost >= 1 ? ` et leurs ${fmt(lost)} soldats sont perdus` : '') + ' (plus aucun bateau ne peut les rejoindre).',
+        `⚓ You lost your last port: ${n > 1 ? `your ${n} outposts are abandoned` : 'your outpost is abandoned'}` +
+        (lost >= 1 ? ` and their ${fmt(lost)} soldiers are lost` : '') + ' (no ship can reach them any more).'), 'warn');
     }
   },
 
@@ -5027,13 +5048,13 @@ const GameRules = {
     for (const a of this.attacks) if (a.attacker === id && !a.done) this.endAttack(a);
     const killer = by >= 0 ? this.players[by] : null;
     if (killer) killer.kills++;
-    UI.log(`☠️ ${p.name} a été anéanti${killer ? ' par ' + killer.name : ''} !`, p.isHuman ? 'warn' : '', killer ? [p, killer] : p);
+    UI.log(tr(`☠️ ${p.name} a été anéanti${killer ? ' par ' + killer.name : ''} !`, `☠️ ${p.name} has been wiped out${killer ? ' by ' + killer.name : ''}!`), p.isHuman ? 'warn' : '', killer ? [p, killer] : p);
     // Le vainqueur reçoit une prime (ELIMINATION_BOUNTY) et le trésor qui restait au royaume anéanti
     const treasure = Math.max(0, Math.floor(p.gold));
     p.gold = 0;
     if (killer && killer.alive) {
       killer.gold += CONFIG.ELIMINATION_BOUNTY + treasure;
-      if (killer.isHuman) UI.log(`💰 Prime de conquête : +${fmt(CONFIG.ELIMINATION_BOUNTY)} pièces, et le trésor ${this.deName(p.name)} : +${fmt(treasure)} !`, 'good', p);
+      if (killer.isHuman) UI.log(tr(`💰 Prime de conquête : +${fmt(CONFIG.ELIMINATION_BOUNTY)} pièces, et le trésor ${this.deName(p.name)} : +${fmt(treasure)} !`, `💰 Conquest bounty: +${fmt(CONFIG.ELIMINATION_BOUNTY)} gold, plus ${p.name}'s treasury: +${fmt(treasure)}!`), 'good', p);
     }
   },
 
@@ -5054,12 +5075,12 @@ const GameRules = {
   pactBlock(a, b) {
     const pa = this.players[a], pb = this.players[b];
     if (pa.pact >= 0 && pb.pact >= 0) {
-      return pa.isHuman ? `Tu fais déjà partie d'un pacte, et ${pb.name} d'un autre.`
-        : `${pa.name} et ${pb.name} sont déjà dans des pactes différents.`;
+      return pa.isHuman ? tr(`Tu fais déjà partie d'un pacte, et ${pb.name} d'un autre.`, `You are already in a pact, and ${pb.name} in another one.`)
+        : tr(`${pa.name} et ${pb.name} sont déjà dans des pactes différents.`, `${pa.name} and ${pb.name} are already in different pacts.`);
     }
     const pact = pa.pact >= 0 ? pa.pact : pb.pact;
     if (pact >= 0 && this.pactMembers(pact).length >= CONFIG.MAX_PACT_SIZE) {
-      return `Le ${this.pacts.get(pact).name} est complet (${CONFIG.MAX_PACT_SIZE} royaumes maximum).`;
+      return tr(`Le ${this.pacts.get(pact).name} est complet (${CONFIG.MAX_PACT_SIZE} royaumes maximum).`, `The ${this.pacts.get(pact).name} is full (${CONFIG.MAX_PACT_SIZE} kingdoms maximum).`);
     }
     return null;
   },
@@ -5093,30 +5114,30 @@ const GameRules = {
   // Renvoie 'accepted', 'refused', 'pending' (en attente de la réponse du joueur) ou un message d'erreur.
   proposeAlliance(fromId, toId) {
     const from = this.players[fromId], to = this.players[toId];
-    if (!this.pactsAllowed) return 'Les pactes sont interdits dans cette partie : chacun pour soi !';
-    if (!from.alive || !to.alive || fromId === toId) return 'Ce royaume n\'existe plus.';
-    if (this.areAllied(fromId, toId)) return `Tu es déjà allié avec ${to.name}.`;
+    if (!this.pactsAllowed) return tr('Les pactes sont interdits dans cette partie : chacun pour soi !', 'Pacts are forbidden in this game: every kingdom for itself!');
+    if (!from.alive || !to.alive || fromId === toId) return tr('Ce royaume n\'existe plus.', 'This kingdom no longer exists.');
+    if (this.areAllied(fromId, toId)) return tr(`Tu es déjà allié avec ${to.name}.`, `You are already allied with ${to.name}.`);
     const block = this.pactBlock(fromId, toId);
     if (block) return block;
     const wait = (from.refusedUntil[toId] || 0) - this.tick;
-    if (wait > 0) return `${to.name} a refusé récemment. Réessaie dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`;
+    if (wait > 0) return tr(`${to.name} a refusé récemment. Réessaie dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`, `${to.name} refused recently. Try again in ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`);
     // Seul le fondateur d'un pacte (celui qui l'a proposé) y fait entrer de nouveaux membres : un autre membre ne
     // peut pas inviter, et une demande pour rejoindre le pacte va à son fondateur
     if (from.pact >= 0 && to.pact < 0) {
       const f = this.pactFounder(from.pact);
       if (f && f.id !== fromId) {
-        return `Seul ${f.name}, fondateur du ${this.pactName(from)}, peut faire entrer de nouveaux membres.`;
+        return tr(`Seul ${f.name}, fondateur du ${this.pactName(from)}, peut faire entrer de nouveaux membres.`, `Only ${f.name}, founder of the ${this.pactName(from)}, can let new members in.`);
       }
     }
     const judge = to.pact >= 0 && from.pact < 0 ? this.pactFounder(to.pact) || to : to;
     if (judge.isHuman) return UI.askAlliance(from) ? 'pending' : 'refused';
     if (this.wouldAccept(judge, from)) {
       this.makeAlliance(fromId, toId);
-      if (judge !== to && from.isHuman) UI.log(`🤝 ${judge.name}, fondateur du pacte, a accepté ta demande.`, 'good', judge);
+      if (judge !== to && from.isHuman) UI.log(tr(`🤝 ${judge.name}, fondateur du pacte, a accepté ta demande.`, `🤝 ${judge.name}, founder of the pact, accepted your request.`), 'good', judge);
       return 'accepted';
     }
     this.refuseAlliance(fromId, toId);
-    if (judge !== to && from.isHuman) UI.log(`🤝 ${judge.name}, fondateur du ${this.pactName(to)}, a refusé ta demande.`, 'warn', judge);
+    if (judge !== to && from.isHuman) UI.log(tr(`🤝 ${judge.name}, fondateur du ${this.pactName(to)}, a refusé ta demande.`, `🤝 ${judge.name}, founder of the ${this.pactName(to)}, refused your request.`), 'warn', judge);
     return 'refused';
   },
 
@@ -5144,13 +5165,13 @@ const GameRules = {
     if (this.areAllied(a, b) || this.pactBlock(a, b)) return;
     if (pa.pact < 0 && pb.pact < 0) {
       const id = this.nextPactId++;
-      this.pacts.set(id, { name: `Pacte ${this.deName(pa.name)}`, founder: pa.id }); // (a : celui qui l'a proposé)
+      this.pacts.set(id, { name: tr(`Pacte ${this.deName(pa.name)}`, `Pact of ${pa.name}`), founder: pa.id }); // (a : celui qui l'a proposé)
       pa.pact = pb.pact = id;
-      UI.log(`🤝 ${pa.name} et ${pb.name} forment le ${this.pacts.get(id).name} !`, 'good', [pa, pb]);
+      UI.log(tr(`🤝 ${pa.name} et ${pb.name} forment le ${this.pacts.get(id).name} !`, `🤝 ${pa.name} and ${pb.name} form the ${this.pacts.get(id).name}!`), 'good', [pa, pb]);
     } else {
       const host = pa.pact >= 0 ? pa : pb, joiner = host === pa ? pb : pa;
       joiner.pact = host.pact;
-      UI.log(`🤝 ${joiner.name} rejoint le ${this.pactName(host)} !`, 'good', [joiner, host]);
+      UI.log(tr(`🤝 ${joiner.name} rejoint le ${this.pactName(host)} !`, `🤝 ${joiner.name} joins the ${this.pactName(host)}!`), 'good', [joiner, host]);
     }
     this.version++;
     // Les combats entre membres du pacte s'arrêtent, les soldats rentrent
@@ -5163,28 +5184,28 @@ const GameRules = {
   // Renvoie un message d'erreur, ou le nombre de soldats reçus.
   sendTroopsToAlly(pid, ally, troops) {
     const p = this.players[pid], q = this.players[ally];
-    if (!q || !q.alive || !this.areAllied(pid, ally)) return 'On ne peut envoyer des soldats qu\'à un allié.';
+    if (!q || !q.alive || !this.areAllied(pid, ally)) return tr('On ne peut envoyer des soldats qu\'à un allié.', 'Soldiers can only be sent to an ally.');
     troops = Math.floor(Math.min(troops, p.troops));
     // pas plus que la place qu'il lui reste dans son armée
     const room = Math.max(0, this.maxTroops(q) - this.armySize(q));
     troops = Math.min(troops, Math.floor(room / CONFIG.ALLY_GIFT_RATIO));
-    if (troops < 1) return room < 1 ? `L'armée ${this.deName(q.name)} est déjà pleine.` : 'Pas assez de soldats !';
+    if (troops < 1) return room < 1 ? tr(`L'armée ${this.deName(q.name)} est déjà pleine.`, `${q.name}'s army is already full.`) : tr('Pas assez de soldats !', 'Not enough soldiers!');
     const got = troops * CONFIG.ALLY_GIFT_RATIO;
     p.troops -= troops;
     q.troops += got;
-    if (q.isHuman) UI.log(`🎁 ${p.name} t'envoie ${fmt(got)} soldats !`, 'good', p);
+    if (q.isHuman) UI.log(tr(`🎁 ${p.name} t'envoie ${fmt(got)} soldats !`, `🎁 ${p.name} sends you ${fmt(got)} soldiers!`), 'good', p);
     return got;
   },
 
   // Envoyer de l'or à un allié du pacte (il le reçoit tout de suite, en entier). Renvoie un message d'erreur, ou null.
   sendGoldToAlly(pid, ally, gold) {
     const p = this.players[pid], q = this.players[ally];
-    if (!q || !q.alive || !this.areAllied(pid, ally)) return 'On ne peut envoyer de l\'or qu\'à un allié de son pacte.';
+    if (!q || !q.alive || !this.areAllied(pid, ally)) return tr('On ne peut envoyer de l\'or qu\'à un allié de son pacte.', 'Gold can only be sent to an ally in your pact.');
     gold = Math.floor(Math.min(gold, p.gold));
-    if (gold < 1) return 'Pas assez d\'or !';
+    if (gold < 1) return tr('Pas assez d\'or !', 'Not enough gold!');
     p.gold -= gold;
     q.gold += gold;
-    if (q.isHuman) UI.log(`💰 ${p.name} t'envoie ${fmt(gold)} d'or !`, 'good', p);
+    if (q.isHuman) UI.log(tr(`💰 ${p.name} t'envoie ${fmt(gold)} d'or !`, `💰 ${p.name} sends you ${fmt(gold)} gold!`), 'good', p);
     return null;
   },
 
@@ -5203,7 +5224,7 @@ const GameRules = {
     const traitor = this.players[traitorId], name = this.pactName(traitor);
     this.leavePact(traitor);
     traitor.traitorUntil = this.tick + CONFIG.TRAITOR_DURATION * CONFIG.TICKS_PER_SECOND;
-    UI.log(`🗡️ ${traitor.name} a trahi le ${name} ! Sa défense est affaiblie.`, 'warn', traitor);
+    UI.log(tr(`🗡️ ${traitor.name} a trahi le ${name} ! Sa défense est affaiblie.`, `🗡️ ${traitor.name} has betrayed the ${name}! Their defense is weakened.`), 'warn', traitor);
   },
 
   // --- Boucle principale (appelée TICKS_PER_SECOND fois par seconde) ---
@@ -5262,9 +5283,11 @@ const GameRules = {
     if (this.tick % (2 * TPS) === 0 && h && h.alive) {
       const cut = this.hasUnlinked(h.id);
       if (cut && !h.cutWarned) {
-        UI.log('🚩 Ton territoire est coupé de tous tes châteaux ! Tes soldats sont bloqués dans ton château isolé : ' +
+        UI.log(tr('🚩 Ton territoire est coupé de tous tes châteaux ! Tes soldats sont bloqués dans ton château isolé : ' +
           'ce territoire n\'est plus défendu et aucune armée ne peut en partir. Relie-le (clique sur ton château isolé) ' +
-          'ou bâtis un nouveau château.', 'warn');
+          'ou bâtis un nouveau château.', '🚩 Your territory is cut off from all your castles! Your soldiers are stuck in your isolated castle: ' +
+          'this territory is no longer defended and no army can leave it. Link it (click your isolated castle) ' +
+          'or build a new castle.'), 'warn');
       }
       h.cutWarned = cut;
     }

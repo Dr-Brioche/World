@@ -28,10 +28,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile (en Difficile, les bots ont un petit avantage : **+25 % d'or**, recrutement **20 % plus rapide** et soldats **10 % plus forts**)
 - ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ (en haut) la fait passer à x1, x1,5, x2 ou x3, pour des parties plus courtes
 - ✝️ **La Croyance** : tes églises prêchent chez tes voisins et convertissent peu à peu leurs terres
+- 🌍 **En anglais ou en français** : le jeu est en anglais par défaut ; la liste « Langue » en haut à droite du menu le passe en français (le choix est gardé)
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
+1. **Fonde ta capitale** : 🌍 choisis d'abord la **langue** du jeu en haut à droite du menu (🇬🇧 English, par défaut, ou 🇫🇷 Français : la page se recharge dans la nouvelle langue, et le choix est gardé pour les prochaines fois), puis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
    **nombre de royaumes rivaux** (de 3 à 20, autant que de drapeaux disponibles ; au plus un rival pour 5 000 cases de carte : 10 sur la petite carte, réglage `CELLS_PER_OPPONENT`) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
@@ -368,7 +369,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Défense des murs | Muraille | Moulins et casernes dedans | Garnison | Prix |
      |---|---|---|---|---|---|
-     | 1. Fort en bois | +100 % | petite | 4 | quelques soldats | 💰 100 (puis plus cher à chaque château) |
+     | 1. Fort en bois | +100 % | petite | 4 | quelques soldats | 💰 250 (puis plus cher à chaque château) |
      | 2. Château | +200 % | moyenne | 6 | x5 | 💰 500 |
      | 3. Citadelle | +400 % | grande | 9 | x3 | 💰 3000 |
      | 4. Cité impériale | +600 % | immense | 12 | 300 soldats | 💰 15 000 |
@@ -528,7 +529,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | Niveau | Or produit | Moulins ou casernes autour | Expéditions maritimes | Prix |
      |---|---|---|---|---|
      | 1. Port | plus qu'un moulin (3 💰 toutes les 10 s) | aucun | non | 💰 60 (puis 2 fois plus cher à chaque port) |
-     | 2. Grand port | +167 % | 1 | **oui** | 💰 500 |
+     | 2. Grand port | +167 % | 1 | **oui** | 💰 400 |
      | 3. Port royal | +100 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 2000 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
@@ -599,9 +600,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
    **75 %**, le reste se perd en route, et sans dépasser son armée maximum. Et **💰 Envoyer de l'or** (le même %
    de ton trésor) : lui le reçoit **en entier**, tout de suite.
-   Si cet allié **se fait attaquer**, le menu propose aussi **🛡️ Aider [allié] contre [attaquant]** : tes soldats
-   arrivent en **5 s** et se battent avec ses défenseurs ; à la fin de l'assaut, les survivants rentrent chez toi.
-   Les royaumes rivaux aident aussi leurs alliés.
+   Ça marche aussi avec les alliés de ton camp en mode **Factions**. Un allié ne se bat jamais à ta place sur tes
+   terres : quand tu te fais attaquer, les royaumes de ton pacte t'envoient parfois des soldats, qui **rejoignent ton
+   armée** (un message te prévient) ; à toi de les envoyer se défendre. Les royaumes rivaux font de même entre eux.
 4. **Forme des pactes** (ils sont **interdits par défaut** : chacun pour soi ; autorise-les dans le menu de départ pour jouer avec) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
    pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
@@ -738,6 +739,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.95** : 🌍 le jeu parle anglais ! Une liste « Langue » en haut à droite du menu de départ : 🇬🇧 English (par défaut) ou 🇫🇷 Français. Tous les textes sont traduits (menu, règles, messages, infobulles, noms des bâtiments, des terrains, des royaumes et des bannières, éditeur de cartes) · 🤝 mode Factions : clic droit chez un allié de ton camp → envoyer des soldats ou de l'or (le % de la jauge « Envoyer »), et route commerciale possible entre alliés du camp · 🛡️ l'aide des alliés contre un assaut rejoint maintenant ton armée (à toi de l'envoyer se battre) au lieu de se battre toute seule sur tes terres · 🏰 une ville (château) coûte 250 au départ, le grand port (niveau 2) 400 · 🐛 une capitale fondée près d'un fleuve n'est plus déclarée « coupée de tous ses châteaux » dès le départ (Hurlevent en mode Factions)
 - **v0.92.94** : 🖌️ menu de départ : un vrai bouton « Création de carte » en bas à droite (en face des règles), à la place du petit lien
 - **v0.92.93** : ⚔️ nouveau bonus de la grande caserne : le **recrutement de masse** (💰 3000, 60 s, jusqu'à x3 de recrutement quand l'armée est petite, de moins en moins au-delà de 35 % de l'armée maximum ; amplifié par la galvanisation, diminué par l'après-guerre) · 🧹 menu de départ allégé (plus d'explications entre parenthèses dans les choix) · ✝️ la croisade passe à 💰 2500
 - **v0.92.92** : ⚔️ carte Azeroth : nouveau **mode « Factions »** : 3 camps éternels (l'Alliance, la Horde, le Pacte sauvage), chaque royaume à sa vraie capitale du jeu, la partie démarre en pause le temps de se repérer

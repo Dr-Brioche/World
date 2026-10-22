@@ -253,7 +253,6 @@ const CONFIG = {
   DEFEND_REINFORCE_DELAY: 3,   // défenseurs envoyés en plus : ils rejoignent l'armée de défense déjà partie en 3 s
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
   RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite
-  REINFORCE_DELAY: 5,          // une armée alliée venue aider met 5 s à arriver
   REINFORCE_MIN_TIME: 3,       // les renforts d'un assaut marchent de sa cité jusqu'au front (MARCH_SPEED) : au moins 3 s
   AI_SEND_INTERVAL: 12,        // un bot attend au moins 12 s entre deux envois de soldats (renforts, défenseurs)
                                // et envoie alors un gros paquet, au lieu de quelques soldats à chaque instant
@@ -343,25 +342,25 @@ const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 
   WOODED_HILLS: 9, SNOW: 10 };
 
 const TERRAIN_INFO = [
-  { name: 'Mer',      color: [52, 92, 130],   cost: Infinity },
-  { name: 'Plaine',   color: [172, 186, 112], cost: 1 },
-  { name: 'Forêt',    color: [92, 124, 70],   cost: 1.6 },
-  { name: 'Colline',  color: [162, 146, 104], cost: 2.2 },
-  { name: 'Montagne', color: [130, 124, 118], cost: 2.8 },
+  { name: tr('Mer', 'Sea'),      color: [52, 92, 130],   cost: Infinity },
+  { name: tr('Plaine', 'Plains'),   color: [172, 186, 112], cost: 1 },
+  { name: tr('Forêt', 'Forest'),    color: [92, 124, 70],   cost: 1.6 },
+  { name: tr('Colline', 'Hills'),  color: [162, 146, 104], cost: 2.2 },
+  { name: tr('Montagne', 'Mountain'), color: [130, 124, 118], cost: 2.8 },
   // Fleuve : une frontière naturelle, longue à traverser, et un gros bonus de défense (+3)
-  { name: 'Fleuve',   color: [74, 132, 184],  cost: 4 },
+  { name: tr('Fleuve', 'River'),   color: [74, 132, 184],  cost: 4 },
   // Grand fleuve (là où 3 fleuves se sont rejoints) : infranchissable, comme la mer
-  { name: 'Grand fleuve', color: [58, 108, 160], cost: Infinity },
+  { name: tr('Grand fleuve', 'Great river'), color: [58, 108, 160], cost: Infinity },
   // Sommet (le cœur des montagnes) : infranchissable
-  { name: 'Sommet', color: [226, 228, 232], cost: Infinity },
+  { name: tr('Sommet', 'Peak'), color: [226, 228, 232], cost: Infinity },
   // Désert : aucune défense en plus (comme une plaine), mais les bâtiments posés dessus produisent moins
-  { name: 'Désert', color: [222, 198, 134], cost: 1 },
+  { name: tr('Désert', 'Desert'), color: [222, 198, 134], cost: 1 },
   // Colline boisée : une colline couverte de forêt, les deux bonus s'ajoutent (forêt +60 % et colline +120 %)
-  { name: 'Colline boisée', color: [122, 124, 70], cost: 2.8 },
+  { name: tr('Colline boisée', 'Wooded hills'), color: [122, 124, 70], cost: 2.8 },
   // Neige (seulement sur la carte Azeroth) : comme une colline (défense +120 %, aussi lente à traverser), mais blanche
   // (le Norfendre, le Berceau-de-l'Hiver, Dun Morogh…)
   // (un peu bleutée et moins éclatante que les sommets, pour ne pas les confondre)
-  { name: 'Neige', color: [184, 201, 224], cost: 2.2 },
+  { name: tr('Neige', 'Snow'), color: [184, 201, 224], cost: 2.2 },
 ];
 // cost = défense de la case (et temps pour la traverser) : 1 en plaine, plus ailleurs.
 // On ne peut rien construire sur un fleuve.
@@ -373,8 +372,8 @@ const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTP
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
   null,
-  { name: 'Moulin',       gold: 1.8, img: 'img/moulin1.webp', size: 2.0 },
-  { name: 'Grand moulin', gold: 4.2, img: 'img/moulin2.webp', size: 2.4, upgradeCost: 150 },
+  { name: tr('Moulin', 'Mill'),       gold: 1.8, img: 'img/moulin1.webp', size: 2.0 },
+  { name: tr('Grand moulin', 'Great mill'), gold: 4.2, img: 'img/moulin2.webp', size: 2.4, upgradeCost: 150 },
 ];
 
 // Les 3 niveaux de la caserne : troops = soldats produits toutes les PRODUCTION_INTERVAL secondes,
@@ -383,9 +382,9 @@ const MILL_LEVELS = [
 // Ce bonus ne s'additionne pas : c'est la meilleure caserne du royaume qui compte.
 const BARRACKS_LEVELS = [
   null,
-  { name: 'Camp d\'entraînement', troops: 2, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.2 },
-  { name: 'Caserne',              troops: 4, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 4.6, upgradeCost: 400 },
-  { name: 'Grande caserne',       troops: 9, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 6.0, upgradeCost: 2500 },
+  { name: tr('Camp d\'entraînement', 'Training camp'), troops: 2, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.2 },
+  { name: tr('Caserne', 'Barracks'),              troops: 4, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 4.6, upgradeCost: 400 },
+  { name: tr('Grande caserne', 'Great barracks'),       troops: 9, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 6.0, upgradeCost: 2500 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
@@ -395,11 +394,11 @@ const BARRACKS_LEVELS = [
 // (le défenseur peut encore envoyer des soldats pendant ce temps).
 const CASTLE_LEVELS = [
   null,
-  { name: 'Fort en bois', radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.8, road: null,    roadBonus: 0, trades: 0 },
-  { name: 'Château',      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 6.4,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
-  { name: 'Citadelle',    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 7.8, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
+  { name: tr('Fort en bois', 'Wooden fort'), radius: 8,  bonus: 1, slots: 4, garrison: 10,  siege: 8,  img: 'img/chateau1.webp', size: 4.8, road: null,    roadBonus: 0, trades: 0 },
+  { name: tr('Château', 'Castle'),      radius: 10, bonus: 2, slots: 6, garrison: 50,  siege: 13, img: 'img/chateau2.webp', size: 6.4,   road: 'dirt',  roadBonus: 0.2, upgradeCost: 500, trades: 1 },
+  { name: tr('Citadelle', 'Citadel'),    radius: 13, bonus: 4, slots: 9, garrison: 150, siege: 18, img: 'img/chateau3.webp', size: 7.8, road: 'paved', roadBonus: 0.5, upgradeCost: 3000, trades: 2 },
   // Niveau 4 : la cité impériale, une seule par royaume et par partie (voir IMPERIAL plus bas)
-  { name: 'Cité impériale', radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau4.webp', size: 9.0, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
+  { name: tr('Cité impériale', 'Imperial city'), radius: 16, bonus: 6, slots: 12, garrison: 300, siege: 24, img: 'img/chateau4.webp', size: 9.0, road: 'paved', roadBonus: 1, upgradeCost: 15000, imperial: true, trades: 3 },
 ];
 // Cité impériale (château de niveau 4) : il faut au moins un bâtiment de chaque type au niveau maximum (moulin,
 // caserne, église, port et la citadelle elle-même), et on n'en bâtit qu'une par partie. En plus de ses murs :
@@ -426,9 +425,9 @@ const IMPERIAL = {
 // faith = Croyance apportée au royaume (les églises s'additionnent).
 const CHURCH_LEVELS = [
   null,
-  { name: 'Église',        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.7 },
-  { name: 'Grande église', slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3.6,   upgradeCost: 800 },
-  { name: 'Cathédrale',    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 5.0, upgradeCost: 2000 },
+  { name: tr('Église', 'Church'),        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.7 },
+  { name: tr('Grande église', 'Great church'), slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3.6,   upgradeCost: 800 },
+  { name: tr('Cathédrale', 'Cathedral'),    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 5.0, upgradeCost: 2000 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu
@@ -437,9 +436,9 @@ const CHURCH_LEVELS = [
 // landingCost = prix d'un débarquement (x1 = normal, x0.5 = moitié prix).
 const PORT_LEVELS = [
   null,
-  { name: 'Port',       gold: 3, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
-  { name: 'Grand port', gold: 8, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 4.6, upgradeCost: 500 },
-  { name: 'Port royal', gold: 16, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 6.2, upgradeCost: 2000, garrison: 10, bonus: 1 },
+  { name: tr('Port', 'Port'),       gold: 3, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
+  { name: tr('Grand port', 'Great port'), gold: 8, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 4.6, upgradeCost: 400 },
+  { name: tr('Port royal', 'Royal port'), gold: 16, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 6.2, upgradeCost: 2000, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
 // garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
@@ -465,25 +464,25 @@ const TERRAIN_PRODUCTION = {
 // de ses villes (une ville à moins de MINE_ROAD_DISTANCE cases, sur la même terre). Elle ne se démolit pas.
 const MINE_LEVELS = [
   null,
-  { name: 'Site minier',  img: 'img/mine1.webp', size: 3 },
-  { name: 'Grand site minier', img: 'img/mine2.webp', size: 3.8, upgradeCost: 1200 },
+  { name: tr('Site minier', 'Mining site'),  img: 'img/mine1.webp', size: 3 },
+  { name: tr('Grand site minier', 'Great mining site'), img: 'img/mine2.webp', size: 3.8, upgradeCost: 1200 },
 ];
 // Les 4 sortes de filons. count = combien sur une carte moyenne (au hasard entre les deux, un peu plus sur une grande
 // carte), max = combien un royaume peut en avoir au plus (les autres ne comptent pas), puis par niveau (1 et 2) :
 const MINES = {
   // ⚒ fer : toutes les troupes du royaume sont plus fortes (+4 % / +8 % par mine, doublé si reliée : +48 % au plus)
-  iron: { name: 'Mine de fer', short: 'troupes plus fortes', icon: '⚒️', terrain: 'mountain', count: [4, 6], max: 3, power: [0, 0.04, 0.08] },
+  iron: { name: tr('Mine de fer', 'Iron mine'), short: tr('troupes plus fortes', 'stronger troops'), icon: '⚒️', terrain: 'mountain', count: [4, 6], max: 3, power: [0, 0.04, 0.08] },
   // 🪙 or : le filon rapporte 2500 pièces en 10 minutes d'exploitation (un peu à chaque production), doublé si
   //   reliée ; puis il s'épuise (son compteur, à lui, passe d'un royaume à l'autre) ; le niveau 2 le relance pour
   //   10 minutes de plus, qui rapportent de nouveau 2500 pièces
-  gold: { name: 'Mine d\'or', short: 'beaucoup d\'or, mais il s\'épuise', icon: '🪙', terrain: 'mountain', count: [4, 6], total: 2500, time: 600 },
+  gold: { name: tr('Mine d\'or', 'Gold mine'), short: tr('beaucoup d\'or, mais il s\'épuise', 'lots of gold, but it runs out'), icon: '🪙', terrain: 'mountain', count: [4, 6], total: 2500, time: 600 },
   // 🪨 pierre (une carrière, en colline) : les améliorations, les murs et les ponts coûtent moins cher
   //   (−5 % / −10 % par carrière, doublé si reliée : −60 % au plus)
-  stone: { name: 'Carrière de pierre', short: 'améliorations moins chères', icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },
+  stone: { name: tr('Carrière de pierre', 'Stone quarry'), short: tr('améliorations moins chères', 'cheaper upgrades'), icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },
   // 💎 diamant : une longue extraction (20 minutes ; 2 fois plus lente sans route, 50 % plus rapide au niveau 2) ;
   //   au 1er quart 1 000 pièces, au 2e 2 000, au 3e 3 000, et 10 000 à la fin ; puis le filon est épuisé pour tout le monde.
   //   (son compteur passe à celui qui prend la mine : il touche les versements suivants)
-  diamond: { name: 'Mine de diamant', short: 'un trésor de 16 000 pièces', icon: '💎', terrain: 'mountain', count: [1, 3], time: 1200, speed: [0, 1, 1.5],
+  diamond: { name: tr('Mine de diamant', 'Diamond mine'), short: tr('un trésor de 16 000 pièces', 'a treasure of 16,000 gold'), icon: '💎', terrain: 'mountain', count: [1, 3], time: 1200, speed: [0, 1, 1.5],
     pay: [1000, 2000, 3000], final: 10000 }, // (pay : le versement de chaque quart, dans l'ordre)
 };
 const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond'];
@@ -494,15 +493,25 @@ const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS, CHUR
 // tiles = côté du carré occupé sur la carte (2 → 2x2 cases, 4 → 4x4 cases)
 const BUILDINGS = [
   null,
-  { name: 'Moulin',  icon: '🌾', tiles: 2, baseCost: 10, desc: `produit de l'or toutes les ${CONFIG.PRODUCTION_INTERVAL} s (2 niveaux)` },
-  { name: 'Caserne', icon: '⚔️', tiles: 2, baseCost: 20, desc: `produit des soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande (3 niveaux)` },
-  { name: 'Château', icon: '🏰', tiles: 4, baseCost: 100, desc: 'muraille qui protège ses terres (3 niveaux)' },
-  { name: 'Église',  icon: '⛪', tiles: 2, baseCost: 50, desc: 'hors des murailles, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)' },
-  { name: 'Port',    icon: '⚓', tiles: 2, baseCost: 60, desc: 'au bord de la mer ou d\'un fleuve, sans défense : produit de l\'or, et dès le niveau 2 les expéditions maritimes (3 niveaux)' },
+  { name: tr('Moulin', 'Mill'), icon: '🌾', tiles: 2, baseCost: 10,
+    desc: tr(`produit de l'or toutes les ${CONFIG.PRODUCTION_INTERVAL} s (2 niveaux)`, `produces gold every ${CONFIG.PRODUCTION_INTERVAL} s (2 levels)`) },
+  { name: tr('Caserne', 'Barracks'), icon: '⚔️', tiles: 2, baseCost: 20,
+    desc: tr(`produit des soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande (3 niveaux)`,
+      `trains soldiers every ${CONFIG.PRODUCTION_INTERVAL} s, bigger army (3 levels)`) },
+  { name: tr('Château', 'Castle'), icon: '🏰', tiles: 4, baseCost: 250,
+    desc: tr('muraille qui protège ses terres (3 niveaux)', 'walls that protect its lands (3 levels)') },
+  { name: tr('Église', 'Church'), icon: '⛪', tiles: 2, baseCost: 50,
+    desc: tr('hors des murailles, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)',
+      'outside the walls, undefended: mills and barracks around it, and more castles (3 levels)') },
+  { name: tr('Port', 'Port'), icon: '⚓', tiles: 2, baseCost: 60,
+    desc: tr('au bord de la mer ou d\'un fleuve, sans défense : produit de l\'or, et dès le niveau 2 les expéditions maritimes (3 niveaux)',
+      'by the sea or a river, undefended: produces gold, and naval expeditions from level 2 (3 levels)') },
   // L'avant-poste ne se construit pas : il apparaît quand on débarque (baseCost = prix de l'expédition)
-  { name: 'Avant-poste', icon: '⛺', tiles: 2, baseCost: 20, hidden: true, desc: 'base d\'un débarquement',
+  { name: tr('Avant-poste', 'Outpost'), icon: '⛺', tiles: 2, baseCost: 20, hidden: true, desc: tr('base d\'un débarquement', 'base of a landing'),
     img: 'img/avantposte.webp', size: 3.8 }, // (un seul niveau : son image est ici)
-  { name: 'Mine', icon: '⛏️', tiles: 2, baseCost: 600, desc: 'sur un filon : fer (troupes plus fortes), or (beaucoup d\'or, mais il s\'épuise), pierre (améliorations moins chères) ou diamant (un trésor) (2 niveaux)' },
+  { name: tr('Mine', 'Mine'), icon: '⛏️', tiles: 2, baseCost: 600,
+    desc: tr('sur un filon : fer (troupes plus fortes), or (beaucoup d\'or, mais il s\'épuise), pierre (améliorations moins chères) ou diamant (un trésor) (2 niveaux)',
+      'on an ore vein: iron (stronger troops), gold (lots of gold, but it runs out), stone (cheaper upgrades) or diamond (a treasure) (2 levels)') },
 ];
 
 // Bâtiments que l'on peut viser directement avec un assaut (un royaume qui en a ne s'attaque que comme ça)
@@ -518,47 +527,49 @@ const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST, B_MINE];
 const BANNER_FOOT = 0.28;
 const BANNER_SCALE = 1.8;
 const BANNERS = [
-  { name: "Épées croisées", img: 'img/bannieres/b01.webp', icon: 'img/bannieres/b01s.webp', logo: 'img/bannieres/b01m.webp', color: [180, 20, 20] },
-  { name: "Le Péteur", img: 'img/bannieres/b21.webp', icon: 'img/bannieres/b21s.webp', logo: 'img/bannieres/b21m.webp', color: [222, 78, 44] },
-  { name: "Masse d'armes", img: 'img/bannieres/b02.webp', icon: 'img/bannieres/b02s.webp', logo: 'img/bannieres/b02m.webp', color: [240, 128, 130] },
-  { name: "Soleil", img: 'img/bannieres/b03.webp', icon: 'img/bannieres/b03s.webp', logo: 'img/bannieres/b03m.webp', color: [138, 24, 72] },
-  { name: "Marteau", img: 'img/bannieres/b04.webp', icon: 'img/bannieres/b04s.webp', logo: 'img/bannieres/b04m.webp', color: [245, 132, 10] },
-  { name: "Canards", img: 'img/bannieres/b05.webp', icon: 'img/bannieres/b05s.webp', logo: 'img/bannieres/b05m.webp', color: [200, 160, 50] },
-  { name: "Aigle noir", img: 'img/bannieres/b06.webp', icon: 'img/bannieres/b06s.webp', logo: 'img/bannieres/b06m.webp', color: [252, 232, 30] },
-  { name: "Hallebardes", img: 'img/bannieres/b07.webp', icon: 'img/bannieres/b07s.webp', logo: 'img/bannieres/b07m.webp', color: [150, 182, 118] },
-  { name: "Chopes", img: 'img/bannieres/b20.webp', icon: 'img/bannieres/b20s.webp', logo: 'img/bannieres/b20m.webp', color: [192, 222, 0] },
-  { name: "Dragon", img: 'img/bannieres/b08.webp', icon: 'img/bannieres/b08s.webp', logo: 'img/bannieres/b08m.webp', color: [38, 100, 48] },
-  { name: "Chêne", img: 'img/bannieres/b09.webp', icon: 'img/bannieres/b09s.webp', logo: 'img/bannieres/b09m.webp', color: [48, 120, 110] },
-  { name: "Lion", img: 'img/bannieres/b10.webp', icon: 'img/bannieres/b10s.webp', logo: 'img/bannieres/b10m.webp', color: [40, 210, 210] },
-  { name: "Château", img: 'img/bannieres/b11.webp', icon: 'img/bannieres/b11s.webp', logo: 'img/bannieres/b11m.webp', color: [130, 185, 235] },
-  { name: "Fleurs de lys", img: 'img/bannieres/b12.webp', icon: 'img/bannieres/b12s.webp', logo: 'img/bannieres/b12m.webp', color: [30, 60, 165] },
-  { name: "Croissant", img: 'img/bannieres/b13.webp', icon: 'img/bannieres/b13s.webp', logo: 'img/bannieres/b13m.webp', color: [125, 55, 190] },
-  { name: "Poing", img: 'img/bannieres/b14.webp', icon: 'img/bannieres/b14s.webp', logo: 'img/bannieres/b14m.webp', color: [112, 64, 30] },
-  { name: "Corbeau", img: 'img/bannieres/b19.webp', icon: 'img/bannieres/b19s.webp', logo: 'img/bannieres/b19m.webp', color: [196, 166, 120] },
-  { name: "Poissons", img: 'img/bannieres/b15.webp', icon: 'img/bannieres/b15s.webp', logo: 'img/bannieres/b15m.webp', color: [238, 234, 222] },
-  { name: "Hache d'or", img: 'img/bannieres/b16.webp', icon: 'img/bannieres/b16s.webp', logo: 'img/bannieres/b16m.webp', color: [150, 150, 146] },
-  { name: "Main couronnée", img: 'img/bannieres/b17.webp', icon: 'img/bannieres/b17s.webp', logo: 'img/bannieres/b17m.webp', color: [70, 78, 98] },
-  { name: "Croix", img: 'img/bannieres/b18.webp', icon: 'img/bannieres/b18s.webp', logo: 'img/bannieres/b18m.webp', color: [22, 20, 20] },
+  { id: "Épées croisées", name: tr("Épées croisées", "Crossed swords"), img: 'img/bannieres/b01.webp', icon: 'img/bannieres/b01s.webp', logo: 'img/bannieres/b01m.webp', color: [180, 20, 20] },
+  { id: "Le Péteur", name: tr("Le Péteur", "The Farter"), img: 'img/bannieres/b21.webp', icon: 'img/bannieres/b21s.webp', logo: 'img/bannieres/b21m.webp', color: [222, 78, 44] },
+  { id: "Masse d'armes", name: tr("Masse d'armes", "Mace"), img: 'img/bannieres/b02.webp', icon: 'img/bannieres/b02s.webp', logo: 'img/bannieres/b02m.webp', color: [240, 128, 130] },
+  { id: "Soleil", name: tr("Soleil", "Sun"), img: 'img/bannieres/b03.webp', icon: 'img/bannieres/b03s.webp', logo: 'img/bannieres/b03m.webp', color: [138, 24, 72] },
+  { id: "Marteau", name: tr("Marteau", "Hammer"), img: 'img/bannieres/b04.webp', icon: 'img/bannieres/b04s.webp', logo: 'img/bannieres/b04m.webp', color: [245, 132, 10] },
+  { id: "Canards", name: tr("Canards", "Ducks"), img: 'img/bannieres/b05.webp', icon: 'img/bannieres/b05s.webp', logo: 'img/bannieres/b05m.webp', color: [200, 160, 50] },
+  { id: "Aigle noir", name: tr("Aigle noir", "Black eagle"), img: 'img/bannieres/b06.webp', icon: 'img/bannieres/b06s.webp', logo: 'img/bannieres/b06m.webp', color: [252, 232, 30] },
+  { id: "Hallebardes", name: tr("Hallebardes", "Halberds"), img: 'img/bannieres/b07.webp', icon: 'img/bannieres/b07s.webp', logo: 'img/bannieres/b07m.webp', color: [150, 182, 118] },
+  { id: "Chopes", name: tr("Chopes", "Tankards"), img: 'img/bannieres/b20.webp', icon: 'img/bannieres/b20s.webp', logo: 'img/bannieres/b20m.webp', color: [192, 222, 0] },
+  { id: "Dragon", name: tr("Dragon", "Dragon"), img: 'img/bannieres/b08.webp', icon: 'img/bannieres/b08s.webp', logo: 'img/bannieres/b08m.webp', color: [38, 100, 48] },
+  { id: "Chêne", name: tr("Chêne", "Oak"), img: 'img/bannieres/b09.webp', icon: 'img/bannieres/b09s.webp', logo: 'img/bannieres/b09m.webp', color: [48, 120, 110] },
+  { id: "Lion", name: tr("Lion", "Lion"), img: 'img/bannieres/b10.webp', icon: 'img/bannieres/b10s.webp', logo: 'img/bannieres/b10m.webp', color: [40, 210, 210] },
+  { id: "Château", name: tr("Château", "Castle"), img: 'img/bannieres/b11.webp', icon: 'img/bannieres/b11s.webp', logo: 'img/bannieres/b11m.webp', color: [130, 185, 235] },
+  { id: "Fleurs de lys", name: tr("Fleurs de lys", "Fleurs-de-lis"), img: 'img/bannieres/b12.webp', icon: 'img/bannieres/b12s.webp', logo: 'img/bannieres/b12m.webp', color: [30, 60, 165] },
+  { id: "Croissant", name: tr("Croissant", "Crescent"), img: 'img/bannieres/b13.webp', icon: 'img/bannieres/b13s.webp', logo: 'img/bannieres/b13m.webp', color: [125, 55, 190] },
+  { id: "Poing", name: tr("Poing", "Fist"), img: 'img/bannieres/b14.webp', icon: 'img/bannieres/b14s.webp', logo: 'img/bannieres/b14m.webp', color: [112, 64, 30] },
+  { id: "Corbeau", name: tr("Corbeau", "Raven"), img: 'img/bannieres/b19.webp', icon: 'img/bannieres/b19s.webp', logo: 'img/bannieres/b19m.webp', color: [196, 166, 120] },
+  { id: "Poissons", name: tr("Poissons", "Fish"), img: 'img/bannieres/b15.webp', icon: 'img/bannieres/b15s.webp', logo: 'img/bannieres/b15m.webp', color: [238, 234, 222] },
+  { id: "Hache d'or", name: tr("Hache d'or", "Golden axe"), img: 'img/bannieres/b16.webp', icon: 'img/bannieres/b16s.webp', logo: 'img/bannieres/b16m.webp', color: [150, 150, 146] },
+  { id: "Main couronnée", name: tr("Main couronnée", "Crowned hand"), img: 'img/bannieres/b17.webp', icon: 'img/bannieres/b17s.webp', logo: 'img/bannieres/b17m.webp', color: [70, 78, 98] },
+  { id: "Croix", name: tr("Croix", "Cross"), img: 'img/bannieres/b18.webp', icon: 'img/bannieres/b18s.webp', logo: 'img/bannieres/b18m.webp', color: [22, 20, 20] },
 ];
+
+// (id : le nom fixe d'une bannière, le même dans toutes les langues ; c'est lui que le code utilise pour la retrouver)
 
 // 🐉 Carte Azeroth : à la place des drapeaux, 15 écus des races et des groupes de World of Warcraft. Les royaumes
 // rivaux y prennent le nom de leur écu (kingdom). shield : un écu, sans hampe (sur la carte, il est posé par son milieu).
 const AZEROTH_BANNERS = [
-  { name: "Humains", kingdom: "Humains", color: [40, 82, 178] },
-  { name: "Nains", kingdom: "Nains", color: [215, 92, 30] },
-  { name: "Elfes de la nuit", kingdom: "Elfes de la nuit", color: [64, 50, 132] },
-  { name: "Gnomes", kingdom: "Gnomes", color: [240, 206, 30] },
-  { name: "Orcs", kingdom: "Orcs", color: [138, 20, 20] },
-  { name: "Morts-vivants", kingdom: "Morts-vivants", color: [112, 52, 165] },
-  { name: "Taurens", kingdom: "Taurens", color: [112, 76, 40] },
-  { name: "Trolls", kingdom: "Trolls", color: [40, 180, 190] },
-  { name: "Gnolls", kingdom: "Gnolls", color: [104, 112, 88] },
-  { name: "Ogres", kingdom: "Ogres", color: [204, 150, 52] },
-  { name: "Murlocs", kingdom: "Murlocs", color: [22, 110, 118] },
-  { name: "Démons", kingdom: "Démons", color: [82, 205, 40] },
-  { name: "Défias", kingdom: "Défias", color: [40, 40, 48] },
-  { name: "Monastère Écarlate", kingdom: "Monastère Écarlate", color: [228, 30, 42] },
-  { name: "La Main d'Argent", kingdom: "La Main d'Argent", color: [204, 208, 218] },
+  { id: "Humains", name: tr("Humains", "Humans"), kingdom: tr("Humains", "Humans"), color: [40, 82, 178] },
+  { id: "Nains", name: tr("Nains", "Dwarves"), kingdom: tr("Nains", "Dwarves"), color: [215, 92, 30] },
+  { id: "Elfes de la nuit", name: tr("Elfes de la nuit", "Night Elves"), kingdom: tr("Elfes de la nuit", "Night Elves"), color: [64, 50, 132] },
+  { id: "Gnomes", name: tr("Gnomes", "Gnomes"), kingdom: tr("Gnomes", "Gnomes"), color: [240, 206, 30] },
+  { id: "Orcs", name: tr("Orcs", "Orcs"), kingdom: tr("Orcs", "Orcs"), color: [138, 20, 20] },
+  { id: "Morts-vivants", name: tr("Morts-vivants", "Undead"), kingdom: tr("Morts-vivants", "Undead"), color: [112, 52, 165] },
+  { id: "Taurens", name: tr("Taurens", "Tauren"), kingdom: tr("Taurens", "Tauren"), color: [112, 76, 40] },
+  { id: "Trolls", name: tr("Trolls", "Trolls"), kingdom: tr("Trolls", "Trolls"), color: [40, 180, 190] },
+  { id: "Gnolls", name: tr("Gnolls", "Gnolls"), kingdom: tr("Gnolls", "Gnolls"), color: [104, 112, 88] },
+  { id: "Ogres", name: tr("Ogres", "Ogres"), kingdom: tr("Ogres", "Ogres"), color: [204, 150, 52] },
+  { id: "Murlocs", name: tr("Murlocs", "Murlocs"), kingdom: tr("Murlocs", "Murlocs"), color: [22, 110, 118] },
+  { id: "Démons", name: tr("Démons", "Demons"), kingdom: tr("Démons", "Demons"), color: [82, 205, 40] },
+  { id: "Défias", name: tr("Défias", "Defias"), kingdom: tr("Défias", "Defias"), color: [40, 40, 48] },
+  { id: "Monastère Écarlate", name: tr("Monastère Écarlate", "Scarlet Monastery"), kingdom: tr("Monastère Écarlate", "Scarlet Monastery"), color: [228, 30, 42] },
+  { id: "La Main d'Argent", name: tr("La Main d'Argent", "The Silver Hand"), kingdom: tr("La Main d'Argent", "The Silver Hand"), color: [204, 208, 218] },
 ];
 // (ils vont à la suite des drapeaux, dans la même liste : set = 'azeroth')
 AZEROTH_BANNERS.forEach((b, k) => {
@@ -574,23 +585,23 @@ function bannersForMap(mapType) {
 // trahison possible), et chaque royaume commence à sa capitale du jeu (x, y en cases de la carte Azeroth).
 // Le joueur choisit sa race (donc son camp), mais pas l'endroit où il commence.
 const AZEROTH_FACTIONS = [
-  { name: 'Alliance', races: ['Humains', 'Nains', 'Gnomes', 'Elfes de la nuit'] },
-  { name: 'Horde', races: ['Orcs', 'Trolls', 'Morts-vivants', 'Taurens'] },
-  { name: 'Pacte sauvage', races: ['Défias', 'Gnolls', 'Ogres', 'Murlocs'] },
+  { name: tr('Alliance', 'Alliance'), races: ['Humains', 'Nains', 'Gnomes', 'Elfes de la nuit'] },
+  { name: tr('Horde', 'Horde'), races: ['Orcs', 'Trolls', 'Morts-vivants', 'Taurens'] },
+  { name: tr('Pacte sauvage', 'Wild Pact'), races: ['Défias', 'Gnolls', 'Ogres', 'Murlocs'] },
 ];
 const AZEROTH_CAPITALS = {
-  'Humains': { at: [547, 402], place: 'Hurlevent' },
-  'Nains': { at: [591, 329], place: 'Forgefer' },
-  'Gnomes': { at: [543, 325], place: 'Gnomeregan' },
-  'Elfes de la nuit': { at: [38, 68], place: 'Darnassus' },
-  'Orcs': { at: [180, 236], place: 'Orgrimmar' },
-  'Trolls': { at: [194, 288], place: 'les îles de l\'Écho (Durotar)' },
-  'Morts-vivants': { at: [563, 171], place: 'Fossoyeuse' },
-  'Taurens': { at: [91, 305], place: 'les Pitons-du-Tonnerre' },
-  'Défias': { at: [531, 448], place: 'la Mine de la Mort (Marche de l\'Ouest)' },
-  'Gnolls': { at: [614, 414], place: 'les Carmines' },
-  'Ogres': { at: [64, 347], place: 'Hache-Tripes (Féralas)' },
-  'Murlocs': { at: [81, 155], place: 'Sombrivage' },
+  'Humains': { at: [547, 402], place: tr('Hurlevent', 'Stormwind') },
+  'Nains': { at: [591, 329], place: tr('Forgefer', 'Ironforge') },
+  'Gnomes': { at: [543, 325], place: tr('Gnomeregan', 'Gnomeregan') },
+  'Elfes de la nuit': { at: [38, 68], place: tr('Darnassus', 'Darnassus') },
+  'Orcs': { at: [180, 236], place: tr('Orgrimmar', 'Orgrimmar') },
+  'Trolls': { at: [194, 288], place: tr('les îles de l\'Écho (Durotar)', 'the Echo Isles (Durotar)') },
+  'Morts-vivants': { at: [563, 171], place: tr('Fossoyeuse', 'the Undercity') },
+  'Taurens': { at: [91, 305], place: tr('les Pitons-du-Tonnerre', 'Thunder Bluff') },
+  'Défias': { at: [531, 448], place: tr('la Mine de la Mort (Marche de l\'Ouest)', 'the Deadmines (Westfall)') },
+  'Gnolls': { at: [614, 414], place: tr('les Carmines', 'the Redridge Mountains') },
+  'Ogres': { at: [64, 347], place: tr('Hache-Tripes (Féralas)', 'Dire Maul (Feralas)') },
+  'Murlocs': { at: [81, 155], place: tr('Sombrivage', 'Darkshore') },
 };
 
 // Sur la carte, un écu est dessiné à cette taille (il n'a pas de longue hampe : pas besoin de l'agrandir autant)
@@ -598,9 +609,11 @@ const SHIELD_SCALE = 1.0;
 
 // Les noms des royaumes contrôlés par l'ordinateur (ils reçoivent une bannière au hasard).
 // (autant de noms que de drapeaux, moins celui du joueur : on peut jouer contre autant de rivaux que de drapeaux)
-const KINGDOMS = ['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence', 'Lotharingie',
+const KINGDOMS = tr(['Bourgogne', 'Aquitaine', 'Normandie', 'Bretagne', 'Provence', 'Lotharingie',
   'Saxe', 'Castille', 'Écosse', 'Flandre', 'Aragon', 'Bohême', 'Navarre', 'Savoie', 'Hongrie', 'Pologne', 'Danemark',
-  'Bavière', 'Lombardie', 'Galles'];
+  'Bavière', 'Lombardie', 'Galles'], ['Burgundy', 'Aquitaine', 'Normandy', 'Brittany', 'Provence', 'Lotharingia',
+  'Saxony', 'Castile', 'Scotland', 'Flanders', 'Aragon', 'Bohemia', 'Navarre', 'Savoy', 'Hungary', 'Poland', 'Denmark',
+  'Bavaria', 'Lombardy', 'Wales']);
 
 // botBonus : petit avantage donné aux royaumes de l'ordinateur (pas au joueur), en multiplicateurs
 //   gold = or gagné (revenu des terres et des bâtiments), troops = recrutement, power = force des soldats

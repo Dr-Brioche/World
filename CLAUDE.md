@@ -1,7 +1,11 @@
 # Medieval Emperor : notes pour Claude
 
 - Jeu de conquête médiéval en HTML/CSS/JS pur (sans build, sans dépendances), inspiré d'OpenFront.
-- Le projet est en français : textes du jeu, commentaires et messages de commit en français.
+- Le projet est en français : commentaires, README et messages de commit en français.
+- Le jeu est bilingue, **anglais par défaut** et français au choix (liste « Langue » du menu, voir `js/lang.js`) :
+  tout texte affiché s'écrit `tr('texte français', 'English text')` ; dans les pages HTML, un texte court porte
+  sa traduction dans `data-en` (`data-en-title`, `data-en-placeholder`, `data-en-label`, `data-en-value`) et un long passage existe
+  en deux blocs `.fr` / `.en`. Les bannières ont un `id` fixe (le nom français) et un `name` traduit.
 - Le joueur est débutant : garder un code simple et commenté, avec les réglages dans `js/config.js`.
 - Les scripts sont chargés par des balises `<script>` classiques (pas de modules ES) pour que le jeu
   marche en ouvrant `index.html` d'un double-clic.
