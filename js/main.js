@@ -469,12 +469,14 @@ const UI = {
     }
     if (type === B_CHURCH) {
       return [tr(`Croyance +${cur.faith} → +${next.faith}`, `Faith +${cur.faith} → +${next.faith}`), tr('Zone plus grande', 'Larger area'), places,
-        tr(`Châteaux +${next.castles}`, `Castles +${next.castles}`)];
+        tr(`Châteaux +${next.castles}`, `Castles +${next.castles}`),
+        CHURCH_LEVELS.indexOf(next) === 3 && tr('Débloque les croisades', 'Unlocks crusades')].filter(Boolean);
     }
     if (type === B_BARRACKS) {
       return [tr(`Soldats ${pct(next.troops / cur.troops - 1)}`, `Soldiers ${pct(next.troops / cur.troops - 1)}`),
         tr(`Armée max ${pct(next.maxTroops / cur.maxTroops - 1)}`, `Max army ${pct(next.maxTroops / cur.maxTroops - 1)}`),
-        tr(`Force ${pct(next.power - 1)}`, `Strength ${pct(next.power - 1)}`)];
+        tr(`Force ${pct(next.power - 1)}`, `Strength ${pct(next.power - 1)}`),
+        BARRACKS_LEVELS.indexOf(next) === 3 && tr('Débloque le recrutement de masse', 'Unlocks mass recruitment')].filter(Boolean);
     }
     if (type === B_MINE) {
       const m = MINES[cur.kind];
