@@ -1018,6 +1018,13 @@ const Render = {
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = '#ffe2a8';
       Icons.text(ctx, '🛡 ' + fmt(defenders), sx, sy - 40);
+      // Des alliés du pacte se battent avec lui : la bannière de celui qui a envoyé le plus de soldats, plus petite
+      let ally = -1, most = 1;
+      if (a.allyDef) for (const k in a.allyDef) if (a.allyDef[k] >= most) { most = a.allyDef[k]; ally = +k; }
+      if (ally >= 0 && G.players[ally]) {
+        this.drawBannerImage(G.players[ally], sx + 26, sy + 4, 24);
+        Icons.text(ctx, '🤝', sx + 26, sy - 26);
+      }
     }
     // Zone cliquable (le défenseur clique dessus pour envoyer ses soldats)
     this.bannerHits.push({ id: a.id, x: bx + 20, y: by - 24 });

@@ -645,12 +645,13 @@ const UI = {
     el.className = 'panel actionMenu quickMenu';
     el.buildingAnchor = a; // (pour le garder à jour : voir refreshBuildingMenu)
     // (la flèche est dessinée en SVG, de la couleur du texte : pas d'emoji)
-    el.innerHTML = `<button data-up class="up"${canUp ? '' : ' disabled'} title="Améliorer">${ICONS.up}</button>` +
+    el.innerHTML = `<button data-up class="up"${canUp ? '' : ' disabled'} title="${tr('Améliorer', 'Upgrade')}">${ICONS.up}</button>` +
       (G.building[a] === B_CASTLE && G.level[a] >= 2 ? `<button data-wall class="wall">${ICONS.wall}</button>` +
         `<button data-trade class="wall">${ICONS.cart}</button>` : '') +
       (G.building[a] === B_CHURCH && G.level[a] >= 3 ? `<button data-crusade class="up">${ICONS.cross}</button>` : '') +
       (G.building[a] === B_BARRACKS && G.level[a] >= 3 ? `<button data-levy class="up">${ICONS.spears}</button>` : '') +
-      (G.building[a] !== B_MINE || work ? `<button data-x class="danger" title="${work ? 'Annuler les travaux' : 'Détruire'}">✖</button>` : '');
+      (G.building[a] !== B_MINE || work ? `<button data-x class="danger" title="${work ? tr('Annuler les travaux', 'Cancel the works') : tr('Détruire', 'Demolish')}">✖</button>` : '');
+
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
     el.addEventListener('pointerdown', e => e.stopPropagation());
@@ -701,23 +702,25 @@ const UI = {
     const reinforce = () => {
       const err = G.reinforceOutpost(h.id, a, h.troops * this.ratio);
       if (err) this.log(err, 'warn');
-      else this.log('⛵ Des renforts partent par la mer vers ton avant-poste !', 'good');
+      else this.log(tr('⛵ Des renforts partent par la mer vers ton avant-poste !', '⛵ Reinforcements set sail for your outpost!'), 'good');
     };
     const repatriate = () => {
       const err = G.repatriate(h.id, a);
       if (err) this.log(err, 'warn');
-      else this.log(`🚢 ${fmt(stationed)} soldats rembarquent vers ton port.`, 'good');
+      else this.log(tr(`🚢 ${fmt(stationed)} soldats rembarquent vers ton port.`, `🚢 ${fmt(stationed)} soldiers re-embark for your port.`), 'good');
     };
     // Fenêtre d'info (en haut à gauche)
     const box = document.createElement('div');
     this.upgradeBox = box;
     box.className = 'msg request upgrade';
-    box.innerHTML = `⛺ <b>Avant-poste</b> ${G.outpostReady(a) ? '' : '(en construction)'} · 🛡️ garnison ${fmt(G.garrison[a])}` +
-      ` · ⚔ ${fmt(stationed)} soldats qui attendent` +
-      `<div class="choices"><button data-re>${ICONS.boatIn} Renforts (${fmt(send)} soldats)</button>` +
-      `<button data-rp${stationed < 1 ? ' disabled' : ''}>${ICONS.boatOut} Rapatrier</button>` +
-      `<button data-ab title="L'avant-poste disparaît (ses terres te restent) et tous ses soldats rentrent par la mer">🧨 Abandonner</button>` +
-      `<button data-no>Fermer</button></div>`;
+    box.innerHTML = tr(`⛺ <b>Avant-poste</b> ${G.outpostReady(a) ? '' : '(en construction)'} · 🛡️ garnison ${fmt(G.garrison[a])}` +
+      ` · ⚔ ${fmt(stationed)} soldats qui attendent`,
+      `⛺ <b>Outpost</b> ${G.outpostReady(a) ? '' : '(under construction)'} · 🛡️ garrison ${fmt(G.garrison[a])}` +
+      ` · ⚔ ${fmt(stationed)} soldiers waiting`) +
+      `<div class="choices"><button data-re>${ICONS.boatIn} ${tr(`Renforts (${fmt(send)} soldats)`, `Reinforce (${fmt(send)} soldiers)`)}</button>` +
+      `<button data-rp${stationed < 1 ? ' disabled' : ''}>${ICONS.boatOut} ${tr('Rapatrier', 'Bring back')}</button>` +
+      `<button data-ab title="${tr('L\'avant-poste disparaît (ses terres te restent) et tous ses soldats rentrent par la mer', 'The outpost disappears (you keep its lands) and all its soldiers sail home')}">🧨 ${tr('Abandonner', 'Abandon')}</button>` +
+      `<button data-no>${tr('Fermer', 'Close')}</button></div>`;
     const closeBox = () => { box.remove(); if (this.upgradeBox === box) this.upgradeBox = null; };
     box.querySelector('[data-re]').addEventListener('click', () => { this.closeBuildingMenus(); reinforce(); });
     box.querySelector('[data-rp]').addEventListener('click', () => { this.closeBuildingMenus(); repatriate(); });
@@ -726,7 +729,8 @@ const UI = {
       this.closeBuildingMenus();
       const got = G.abandonOutpost(h.id, a);
       if (typeof got === 'string') this.log(got, 'warn');
-      else this.log(`🧨 Avant-poste abandonné : ${fmt(got)} soldats rentrent ${G.homePort(h.id, o.landing) === null ? 'au royaume' : 'par la mer vers ton port'}.`, 'good');
+      else this.log(tr(`🧨 Avant-poste abandonné : ${fmt(got)} soldats rentrent ${G.homePort(h.id, o.landing) === null ? 'au royaume' : 'par la mer vers ton port'}.`,
+        `🧨 Outpost abandoned: ${fmt(got)} soldiers head ${G.homePort(h.id, o.landing) === null ? 'back to the kingdom' : 'home by sea to your port'}.`), 'good');
     });
     box.querySelector('[data-no]').addEventListener('click', closeBox);
     $('log').prepend(box);
@@ -734,8 +738,8 @@ const UI = {
     // Menu rapide (à côté de l'avant-poste)
     const el = document.createElement('div');
     el.className = 'panel actionMenu quickMenu';
-    el.innerHTML = `<button data-re class="up" title="Renforts par la mer">${ICONS.boatIn}</button>` +
-      `<button data-rp class="up" title="Rapatrier"${stationed < 1 ? ' disabled' : ''}>${ICONS.boatOut}</button>`;
+    el.innerHTML = `<button data-re class="up" title="${tr('Renforts par la mer', 'Reinforcements by sea')}">${ICONS.boatIn}</button>` +
+      `<button data-rp class="up" title="${tr('Rapatrier', 'Bring back')}"${stationed < 1 ? ' disabled' : ''}>${ICONS.boatOut}</button>`;
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
     el.addEventListener('pointerdown', e => e.stopPropagation());
@@ -753,9 +757,10 @@ const UI = {
     const el = document.createElement('div');
     this.demolishBox = el;
     el.className = 'msg request betray';
-    el.innerHTML = `🧨 Détruire ${BUILDINGS[type].icon} <b>${G.buildingInfo(a) ? G.buildingInfo(a).name : BUILDINGS[type].name}</b> ? ` +
-      `Les travaux prennent ${CONFIG.DEMOLISH_TIME} s, et il est perdu pour de bon.` +
-      `<div class="choices"><button data-yes>Détruire</button><button data-no>Annuler</button></div>`;
+    const what = `${BUILDINGS[type].icon} <b>${G.buildingInfo(a) ? G.buildingInfo(a).name : BUILDINGS[type].name}</b>`;
+    el.innerHTML = tr(`🧨 Détruire ${what} ? Les travaux prennent ${CONFIG.DEMOLISH_TIME} s, et il est perdu pour de bon.`,
+      `🧨 Demolish ${what}? The work takes ${CONFIG.DEMOLISH_TIME} s, and it is lost for good.`) +
+      `<div class="choices"><button data-yes>${tr('Détruire', 'Demolish')}</button><button data-no>${tr('Annuler', 'Cancel')}</button></div>`;
     const close = () => { el.remove(); if (this.demolishBox === el) this.demolishBox = null; };
     el.querySelector('[data-yes]').addEventListener('click', () => {
       close();
@@ -774,9 +779,11 @@ const UI = {
     this.betrayalBox = el;
     el.className = 'msg request betray';
     const pct = Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100);
-    el.innerHTML = `🗡️ Trahir <b>${escapeHtml(other.name)}</b> ? Ta défense sera affaiblie de ${pct} % ` +
-      `pendant ${CONFIG.TRAITOR_DURATION / 60} min et personne ne voudra s'allier avec toi.` +
-      `<div class="choices"><button data-yes>Trahir</button><button data-no>Annuler</button></div>`;
+    el.innerHTML = tr(`🗡️ Trahir <b>${escapeHtml(other.name)}</b> ? Ta défense sera affaiblie de ${pct} % ` +
+      `pendant ${CONFIG.TRAITOR_DURATION / 60} min et personne ne voudra s'allier avec toi.`,
+      `🗡️ Betray <b>${escapeHtml(other.name)}</b>? Your defense will be weakened by ${pct}% ` +
+      `for ${CONFIG.TRAITOR_DURATION / 60} min and nobody will want to ally with you.`) +
+      `<div class="choices"><button data-yes>${tr('Trahir', 'Betray')}</button><button data-no>${tr('Annuler', 'Cancel')}</button></div>`;
     const close = () => { el.remove(); if (this.betrayalBox === el) this.betrayalBox = null; };
     el.querySelector('[data-yes]').addEventListener('click', () => {
       close();
@@ -796,11 +803,11 @@ const UI = {
     const el = document.createElement('div');
     el.className = 'msg request';
     const h = Game.human;
-    const text = from.pact >= 0 ? `t'invite dans le <b>${escapeHtml(Game.pactName(from))}</b>.`
-      : h.pact >= 0 ? `veut rejoindre ton <b>${escapeHtml(Game.pactName(h))}</b>.`
-      : 'te propose de former un pacte.';
+    const text = from.pact >= 0 ? tr(`t'invite dans le <b>${escapeHtml(Game.pactName(from))}</b>.`, `invites you into the <b>${escapeHtml(Game.pactName(from))}</b>.`)
+      : h.pact >= 0 ? tr(`veut rejoindre ton <b>${escapeHtml(Game.pactName(h))}</b>.`, `wants to join your <b>${escapeHtml(Game.pactName(h))}</b>.`)
+      : tr('te propose de former un pacte.', 'offers to form a pact with you.');
     el.innerHTML = `${this.bannerImg(from)}🤝 <b>${escapeHtml(from.name)}</b> ${text}` +
-      `<div class="choices"><button data-yes>Accepter</button><button data-no>Refuser</button></div>`;
+      `<div class="choices"><button data-yes>${tr('Accepter', 'Accept')}</button><button data-no>${tr('Refuser', 'Decline')}</button></div>`;
     const answer = yes => {
       if (!this.pending.has(from.id)) return;
       this.pending.delete(from.id);
@@ -820,15 +827,19 @@ const UI = {
   // canContinue = il reste des royaumes rivaux : bouton « Continuer » pour finir la conquête
   showEnd(win, canContinue = false) {
     const h = Game.human, secs = Math.floor(Game.tick / CONFIG.TICKS_PER_SECOND);
-    $('endTitle').textContent = win ? '🏆 Victoire !' : '💀 Défaite...';
+    $('endTitle').textContent = win ? tr('🏆 Victoire !', '🏆 Victory!') : tr('💀 Défaite...', '💀 Defeat...');
     $('endText').textContent = win
-      ? (canContinue ? `Longue vie au royaume de ${h.name} ! Tu domines le continent.`
-        : `${h.name} a conquis le monde entier ! Plus aucun royaume ne te résiste.`)
-      : `Le royaume de ${h.name} est tombé. Les chroniques s'en souviendront...`;
-    $('endStats').innerHTML =
+      ? (canContinue ? tr(`Longue vie au royaume de ${h.name} ! Tu domines le continent.`, `Long live the kingdom of ${h.name}! You rule the continent.`)
+        : tr(`${h.name} a conquis le monde entier ! Plus aucun royaume ne te résiste.`, `${h.name} has conquered the whole world! No kingdom stands against you anymore.`))
+      : tr(`Le royaume de ${h.name} est tombé. Les chroniques s'en souviendront...`, `The kingdom of ${h.name} has fallen. The chronicles will remember...`);
+    const best = (h.maxTiles / Game.landCount * 100).toFixed(1);
+    $('endStats').innerHTML = tr(
       `⏱️ Durée : ${Math.floor(secs / 60)} min ${secs % 60} s<br>` +
-      `🗺️ Plus grand territoire : ${(h.maxTiles / Game.landCount * 100).toFixed(1)} %<br>` +
-      `☠️ Royaumes anéantis : ${h.kills}`;
+      `🗺️ Plus grand territoire : ${best} %<br>` +
+      `☠️ Royaumes anéantis : ${h.kills}`,
+      `⏱️ Duration: ${Math.floor(secs / 60)} min ${secs % 60} s<br>` +
+      `🗺️ Largest territory: ${best}%<br>` +
+      `☠️ Kingdoms destroyed: ${h.kills}`);
     $('continueBtn').classList.toggle('hidden', !canContinue);
     $('endscreen').classList.remove('hidden');
   },
@@ -846,20 +857,23 @@ const UI = {
   describeTile(i) {
     if (i < 0) return '';
     const G = Game, t = TERRAIN_INFO[G.terrain[i]];
-    if (G.terrain[i] === TERRAIN.GREAT_RIVER) return '🌊 Grand fleuve (infranchissable)';
-    if (G.terrain[i] === TERRAIN.RIVER) return '🌊 Fleuve : neutre, personne ne peut le prendre · pour passer, clic droit sur une terre libre en face → 🛶 Traverser le fleuve';
-    if (G.terrain[i] === TERRAIN.PEAK) return '🏔️ Sommet (infranchissable)';
-    if (!G.isLand(i)) return '🌊 Mer';
+    if (G.terrain[i] === TERRAIN.GREAT_RIVER) return tr('🌊 Grand fleuve (infranchissable)', '🌊 Great river (impassable)');
+    if (G.terrain[i] === TERRAIN.RIVER) return tr('🌊 Fleuve : neutre, personne ne peut le prendre · pour passer, clic droit sur une terre libre en face → 🛶 Traverser le fleuve',
+      '🌊 River: neutral, nobody can take it · to cross, right-click on free land on the other bank → 🛶 Cross the river');
+    if (G.terrain[i] === TERRAIN.PEAK) return tr('🏔️ Sommet (infranchissable)', '🏔️ Peak (impassable)');
+    if (!G.isLand(i)) return tr('🌊 Mer', '🌊 Sea');
     const o = G.owner[i];
     // Château (ou port fortifié), le nôtre comme celui des autres : juste sa défense globale, en bref
     const def = o >= 0 ? this.fortDefense(G.anchor[i]) : null;
     if (def !== null) {
       const a = G.anchor[i], b = G.building[i], info = G.buildingInfo(a), truce = G.truceLeft(a);
       const mine = o === G.human.id, work = G.works.get(a);
-      return `${BUILDINGS[b].icon} ${info.name} ${mine ? '' : G.deName(G.players[o].name) + ' '}· 🛡️ défense globale ${pct(def)}` +
-        (truce ? ` · ⏳ inattaquable encore ${Math.ceil(truce)} s` : '') +
-        (work ? { up: ' · ⬆️ amélioration en cours', build: ' · 🏗️ en construction', down: ' · 🧨 démolition en cours' }[work.kind]
-          : mine ? ' · clique pour ses options' : '');
+      return `${BUILDINGS[b].icon} ${info.name} ${mine ? '' : tr(G.deName(G.players[o].name) + ' ', `· ${G.players[o].name} `)}· ` +
+        tr(`🛡️ défense globale ${pct(def)}`, `🛡️ overall defense ${pct(def)}`) +
+        (truce ? tr(` · ⏳ inattaquable encore ${Math.ceil(truce)} s`, ` · ⏳ cannot be attacked for ${Math.ceil(truce)} more s`) : '') +
+        (work ? { up: tr(' · ⬆️ amélioration en cours', ' · ⬆️ upgrade under way'), build: tr(' · 🏗️ en construction', ' · 🏗️ under construction'),
+          down: tr(' · 🧨 démolition en cours', ' · 🧨 demolition under way') }[work.kind]
+          : mine ? tr(' · clique pour ses options', ' · click for its options') : '');
     }
     // Un autre bâtiment (moulin, caserne, église, port, mine) : un résumé, en bref (le détail est dans sa fenêtre, au clic)
     if (G.building[i] && G.building[i] !== B_OUTPOST && o >= 0) {
@@ -867,73 +881,82 @@ const UI = {
       let txt = this.buildingSummary(a);
       if (o !== G.human.id && !G.areAllied(o, G.human.id) && TARGET_TYPES.includes(b)) {
         const truce = G.truceLeft(a);
-        txt += truce ? ` · ⏳ inattaquable encore ${Math.ceil(truce)} s`
-          : Render.castlePreview && Render.castlePreview.path ? ' · 🎯 clique pour viser' : ' · 🚫 inaccessible';
+        txt += truce ? tr(` · ⏳ inattaquable encore ${Math.ceil(truce)} s`, ` · ⏳ cannot be attacked for ${Math.ceil(truce)} more s`)
+          : Render.castlePreview && Render.castlePreview.path ? tr(' · 🎯 clique pour viser', ' · 🎯 click to target') : tr(' · 🚫 inaccessible', ' · 🚫 out of reach');
       }
       return txt;
     }
-    let txt = t.cost > 1 ? `${t.name} (défense ${pct(t.cost - 1)})` : t.name;
-    if (G.terrain[i] === TERRAIN.DESERT) txt = `🏜️ ${t.name} (bâtiments : production ${pct(DESERT_PRODUCTION - 1)})`;
-    txt += o >= 0 ? ` · ${G.players[o].name}` : ' · Terre libre';
-    if (G.wallAt[i]) txt += ' · 🧱 Mur (aucun assaut ne le franchit)';
-    else if (G.walls.some(w => w.tiles.includes(i))) txt += ' · 🧱 Mur en chantier';
-    if (o >= 0 && G.areAllied(o, G.human.id)) txt += ' · 🤝 allié';
-    if (o >= 0 && G.isTraitor(G.players[o])) txt += ' · 🗡️ traître (défense affaiblie)';
+    let txt = t.cost > 1 ? tr(`${t.name} (défense ${pct(t.cost - 1)})`, `${t.name} (defense ${pct(t.cost - 1)})`) : t.name;
+    if (G.terrain[i] === TERRAIN.DESERT) txt = tr(`🏜️ ${t.name} (bâtiments : production ${pct(DESERT_PRODUCTION - 1)})`, `🏜️ ${t.name} (buildings: production ${pct(DESERT_PRODUCTION - 1)})`);
+    txt += o >= 0 ? ` · ${G.players[o].name}` : tr(' · Terre libre', ' · Free land');
+    if (G.wallAt[i]) txt += tr(' · 🧱 Mur (aucun assaut ne le franchit)', ' · 🧱 Wall (no assault can get past it)');
+    else if (G.walls.some(w => w.tiles.includes(i))) txt += tr(' · 🧱 Mur en chantier', ' · 🧱 Wall under construction');
+    if (o >= 0 && G.areAllied(o, G.human.id)) txt += tr(' · 🤝 allié', ' · 🤝 ally');
+    if (o >= 0 && G.isTraitor(G.players[o])) txt += tr(' · 🗡️ traître (défense affaiblie)', ' · 🗡️ traitor (weakened defense)');
     if (o >= 0 && !G.building[i] && G.isUnlinked(i)) {
-      txt += o === G.human.id ? ' · 🚩 coupé de tous tes châteaux : tes soldats sont bloqués dans ton château isolé, ce territoire n\'est plus défendu et aucune armée ne peut en partir ! Relie-le à un château (clique sur ton château isolé) ou bâtis-en un nouveau'
-        : ' · ⚠️ coupé de tous ses châteaux : clique pour l\'attaquer de front (personne ne le défend)';
+      txt += o === G.human.id ? tr(' · 🚩 coupé de tous tes châteaux : tes soldats sont bloqués dans ton château isolé, ce territoire n\'est plus défendu et aucune armée ne peut en partir ! Relie-le à un château (clique sur ton château isolé) ou bâtis-en un nouveau',
+        ' · 🚩 cut off from all your castles: your soldiers are stuck in your isolated castle, this territory is no longer defended and no army can leave it! Link it to a castle (click on your isolated castle) or build a new one')
+        : tr(' · ⚠️ coupé de tous ses châteaux : clique pour l\'attaquer de front (personne ne le défend)', ' · ⚠️ cut off from all its castles: click to attack it head-on (nobody defends it)');
     }
     if (G.building[i]) {
       txt += ` · ${BUILDINGS[G.building[i]].icon} ${BUILDINGS[G.building[i]].name}`;
       if (G.building[i] === B_OUTPOST) {
         const a = G.anchor[i], o = G.outposts.get(a);
-        txt += G.outpostReady(a) ? ` · 🛡️ ${fmt(G.garrison[a])} en garnison (fixe) · ⚔️ ${fmt(o.stationed)} stationnés (peuvent attaquer)`
-          : ` · ⚔️ ${fmt(G.garrison[a])} soldats affaiblis (pas encore de garnison : ils comptent pour 1, pas 3)`;
-        txt += G.outpostReady(a) ? ' · défense +100 % autour · base pour attaquer depuis la côte'
-          : ` · 🏗️ en construction (${Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND)} s) : ` +
+        txt += G.outpostReady(a) ? tr(` · 🛡️ ${fmt(G.garrison[a])} en garnison (fixe) · ⚔️ ${fmt(o.stationed)} stationnés (peuvent attaquer)`,
+          ` · 🛡️ ${fmt(G.garrison[a])} in garrison (fixed) · ⚔️ ${fmt(o.stationed)} stationed (can attack)`)
+          : tr(` · ⚔️ ${fmt(G.garrison[a])} soldats affaiblis (pas encore de garnison : ils comptent pour 1, pas 3)`,
+            ` · ⚔️ ${fmt(G.garrison[a])} weakened soldiers (no garrison yet: they count as 1, not 3)`);
+        const secs = Math.ceil((o.ready - G.tick) / CONFIG.TICKS_PER_SECOND);
+        txt += G.outpostReady(a) ? tr(' · défense +100 % autour · base pour attaquer depuis la côte', ' · defense +100% around it · a base to attack from the coast')
+          : tr(` · 🏗️ en construction (${secs} s) : ` +
             `ses soldats bâtissent et ne peuvent rien faire d'autre (pas d'attaque depuis lui), ` +
-            `défense ${pct(-CONFIG.OUTPOST_BUILDING_MALUS)}, on peut déjà l'attaquer`;
-        if (o && G.owner[a] === G.human.id) txt += ' · clique dessus pour envoyer des renforts par la mer';
-        txt += ' · un château bâti ou pris dans sa zone en fait une vraie terre du royaume';
+            `défense ${pct(-CONFIG.OUTPOST_BUILDING_MALUS)}, on peut déjà l'attaquer`,
+            ` · 🏗️ under construction (${secs} s): ` +
+            `its soldiers are building and can do nothing else (no attacks from it), ` +
+            `defense ${pct(-CONFIG.OUTPOST_BUILDING_MALUS)}, it can already be attacked`);
+        if (o && G.owner[a] === G.human.id) txt += tr(' · clique dessus pour envoyer des renforts par la mer', ' · click on it to send reinforcements by sea');
+        txt += tr(' · un château bâti ou pris dans sa zone en fait une vraie terre du royaume', ' · a castle built or taken in its area makes it true kingdom land');
       }
     }
     // Un filon libre (sans mine) : ce qu'il donnerait
     if (G.depositTile[i] && G.building[i] !== B_MINE) {
       const d = G.deposits.find(d => [d.a, d.a + 1, d.a + G.W, d.a + G.W + 1].includes(i));
-      if (d) txt += ` · ${MINES[d.kind].icon} filon : ${MINES[d.kind].name} (${MINES[d.kind].short})` +
-        (o === G.human.id ? ` · ⛏️ touche ${B_MINE} pour y bâtir une mine (💰 ${fmt(G.buildCost(G.human, B_MINE))})` : '');
+      if (d) txt += ` · ${MINES[d.kind].icon} ${tr('filon', 'ore vein')} : ${MINES[d.kind].name} (${MINES[d.kind].short})` +
+        (o === G.human.id ? tr(` · ⛏️ touche ${B_MINE} pour y bâtir une mine (💰 ${fmt(G.buildCost(G.human, B_MINE))})`, ` · ⛏️ key ${B_MINE} to build a mine here (💰 ${fmt(G.buildCost(G.human, B_MINE))})`) : '');
     }
-    if (o >= 0 && (G.castleProtects(o, i) || G.portBonus(o, i) > 0)) txt += ` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`;
+    if (o >= 0 && (G.castleProtects(o, i) || G.portBonus(o, i) > 0)) txt += tr(` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`, ` · inside the walls: defense ${pct(G.tileDefense(o, i) - 1)}`);
     // Conseils d'attaque contre un royaume ennemi
     if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id) && G.isProtected(o)) {
       const b = G.building[i];
       if (TARGET_TYPES.includes(b) && G.truceLeft(G.anchor[i])) {
-        txt += ` · ⏳ vient de changer de mains : inattaquable encore ${Math.ceil(G.truceLeft(G.anchor[i]))} s`;
+        txt += tr(` · ⏳ vient de changer de mains : inattaquable encore ${Math.ceil(G.truceLeft(G.anchor[i]))} s`, ` · ⏳ just changed hands: cannot be attacked for ${Math.ceil(G.truceLeft(G.anchor[i]))} more s`);
       } else if (TARGET_TYPES.includes(b)) {
         txt += Render.castlePreview && Render.castlePreview.path
-          ? ` · 🎯 clique pour viser ${G.targetLabel(G.anchor[i])} (puis une 2e fois pour lancer l'assaut)`
-          : ' · 🚫 inaccessible : des châteaux bloquent le passage';
+          ? tr(` · 🎯 clique pour viser ${G.targetLabel(G.anchor[i])} (puis une 2e fois pour lancer l'assaut)`, ` · 🎯 click to target ${G.targetLabel(G.anchor[i])} (then click again to launch the assault)`)
+          : tr(' · 🚫 inaccessible : des châteaux bloquent le passage', ' · 🚫 out of reach: castles block the way');
       } else if (!G.isUnlinked(i)) { // (un morceau coupé de ses châteaux s'attaque de front : voir plus haut)
-        txt += ' · 🏰 protégé : vise un de ses châteaux, églises, ports, mines ou avant-postes';
+        txt += tr(' · 🏰 protégé : vise un de ses châteaux, églises, ports, mines ou avant-postes', ' · 🏰 protected: target one of its castles, churches, ports, mines or outposts');
       }
     } else if (o >= 0 && o !== G.human.id && !G.areAllied(o, G.human.id)) {
       const b = G.building[i];
       if (TARGET_TYPES.includes(b) && G.truceLeft(G.anchor[i])) {
-        txt += ` · ⏳ vient de changer de mains : inattaquable encore ${Math.ceil(G.truceLeft(G.anchor[i]))} s`;
+        txt += tr(` · ⏳ vient de changer de mains : inattaquable encore ${Math.ceil(G.truceLeft(G.anchor[i]))} s`, ` · ⏳ just changed hands: cannot be attacked for ${Math.ceil(G.truceLeft(G.anchor[i]))} more s`);
       } else if (TARGET_TYPES.includes(b)) {
         txt += Render.castlePreview && Render.castlePreview.path
-          ? ` · 🎯 royaume désorganisé : clique pour viser ${G.targetLabel(G.anchor[i])} et prendre toute sa zone (ou clique ailleurs sur ses terres pour l'attaquer de front)`
-          : ' · 🚫 inaccessible : des châteaux bloquent le passage';
+          ? tr(` · 🎯 royaume désorganisé : clique pour viser ${G.targetLabel(G.anchor[i])} et prendre toute sa zone (ou clique ailleurs sur ses terres pour l'attaquer de front)`,
+            ` · 🎯 disorganized kingdom: click to target ${G.targetLabel(G.anchor[i])} and take its whole area (or click elsewhere on its lands to attack it head-on)`)
+          : tr(' · 🚫 inaccessible : des châteaux bloquent le passage', ' · 🚫 out of reach: castles block the way');
       } else {
-        txt += ' · ⚔️ plus de ville (château) : royaume désorganisé, clique pour l\'attaquer de front (ses troupes défendent, désorganisées), ou vise une de ses églises ou un de ses ports';
+        txt += tr(' · ⚔️ plus de ville (château) : royaume désorganisé, clique pour l\'attaquer de front (ses troupes défendent, désorganisées), ou vise une de ses églises ou un de ses ports',
+          ' · ⚔️ no city (castle) left: disorganized kingdom, click to attack it head-on (its troops defend, disorganized), or target one of its churches or ports');
       }
     }
     if (G.isCoastal(i) && G.landable(G.human.id, i) && G.expeditionPorts(G.human.id).length) {
-      txt += ' · ⛵ côte : clic droit → Débarquer';
+      txt += tr(' · ⛵ côte : clic droit → Débarquer', ' · ⛵ coast: right-click → Land');
     }
     // Fleuve : un pont, ou la possibilité d'en bâtir un (les deux rives à nous)
-    if (G.bridgeAt[i]) txt += ' · 🌉 pont : on passe ce fleuve sans s\'arrêter';
-    else if (G.terrain[i] === TERRAIN.RIVER && !G.planBridge(G.human.id, i).error) txt += ` · 🌉 clic droit → Construire un pont (💰 ${fmt(G.bridgeCost(G.human.id))})`;
+    if (G.bridgeAt[i]) txt += tr(' · 🌉 pont : on passe ce fleuve sans s\'arrêter', ' · 🌉 bridge: this river is crossed without stopping');
+    else if (G.terrain[i] === TERRAIN.RIVER && !G.planBridge(G.human.id, i).error) txt += tr(` · 🌉 clic droit → Construire un pont (💰 ${fmt(G.bridgeCost(G.human.id))})`, ` · 🌉 right-click → Build a bridge (💰 ${fmt(G.bridgeCost(G.human.id))})`);
     return txt;
   },
 
@@ -944,16 +967,18 @@ const UI = {
     $('kName').style.color = `rgb(${h.color})`;
     $('gold').textContent = fmt(h.gold);
     this.refreshTroopGauge();
-    $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + ' %';
+    $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + tr(' %', '%');
     $('faith').textContent = fmt(Math.round(G.faithOf(h.id)));
     // ⛏️ Nos mines : leur nombre (le détail par minerai au survol), seulement quand on en a
     const mines = MINE_KINDS.map(k => [k, G.minesOf(h.id, k).length]).filter(([, n]) => n);
     $('minesBox').classList.toggle('hidden', !mines.length);
     $('mines').textContent = mines.reduce((s, [, n]) => s + n, 0);
     // (« 2 mines de fer », « 1 carrière de pierre »)
-    $('minesBox').title = 'Mines : ' + mines.map(([k, n]) => `${n} ${MINES[k].name.toLowerCase().replace(/^(\S+)/, n > 1 ? '$1s' : '$1')}`).join(', ');
+    $('minesBox').title = tr('Mines : ', 'Mines: ') + mines.map(([k, n]) => LANG === 'fr' ? `${n} ${MINES[k].name.toLowerCase().replace(/^(\S+)/, n > 1 ? '$1s' : '$1')}`
+      : `${n} × ${MINES[k].name.toLowerCase()}`).join(', ');
     // Puissance des troupes : 100 % = soldats ordinaires (caserne améliorée, mines de fer, cité impériale : plus)
-    $('power').textContent = Math.round(G.troopPower(h.id) * 100) + ' %';
+    $('power').textContent = Math.round(G.troopPower(h.id) * 100) + tr(' %', '%');
+
     // Durée de la partie (le temps de jeu : la pause l'arrête)
     const secs = Math.floor(G.tick / CONFIG.TICKS_PER_SECOND), hh = Math.floor(secs / 3600), mm = Math.floor(secs / 60) % 60;
     $('clock').textContent = (hh ? hh + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(secs % 60).padStart(2, '0');
@@ -1024,10 +1049,13 @@ const UI = {
     if (G.phase === 'playing') {
       const freeArm = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
       $('hint').textContent = this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
-        : freeArm ? `🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`
+        : freeArm ? tr(`🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`,
+          `🌾 Free land: click once more to send ${fmt(G.human.troops * this.ratio)} soldiers into the attack`)
         : this.selectedBuild
-        ? `Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`
-        : UI.describeTile(Render.hover) || 'Clique sur une terre voisine pour attaquer · molette = zoom · glisser, ZQSD ou flèches = déplacer';
+        ? tr(`Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`,
+          `Click on your territory to build: ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Esc to cancel)`)
+        : UI.describeTile(Render.hover) || tr('Clique sur une terre voisine pour attaquer · molette = zoom · glisser, ZQSD ou flèches = déplacer',
+          'Click on neighbouring land to attack · wheel = zoom · drag, WASD or arrows = move');
     } else if (G.phase === 'spawn') {
       $('hint').textContent = this.spawnHint(Render.hover);
     } else if (G.phase === 'over') {
@@ -1045,20 +1073,21 @@ const UI = {
     $('troopFill').style.background = color;
     const st = G.stationedOf(h), sea = G.atSeaOf(h), away = G.campaignOf(h);
     // toute l'armée sur le maximum (ex. « 150 / 300 »), puis ce qui n'est pas disponible pour attaquer
-    const rest = [away >= 1 ? `⚔ ${fmt(away)} en campagne` : '', st >= 1 ? `⛺ ${fmt(st)} aux avant-postes` : '',
-      sea >= 1 ? `⛵ ${fmt(sea)} en mer` : ''].filter(Boolean);
-    $('troopText').textContent = `${G.troopIcon(h.id)} ${fmt(G.armySize(h))} / ${fmt(max)}` + (rest.length ? ` · dont ${rest.join(', ')}` : '');
+    const rest = [away >= 1 ? tr(`⚔ ${fmt(away)} en campagne`, `⚔ ${fmt(away)} on campaign`) : '', st >= 1 ? tr(`⛺ ${fmt(st)} aux avant-postes`, `⛺ ${fmt(st)} at outposts`) : '',
+      sea >= 1 ? tr(`⛵ ${fmt(sea)} en mer`, `⛵ ${fmt(sea)} at sea`) : ''].filter(Boolean);
+    $('troopText').textContent = `${G.troopIcon(h.id)} ${fmt(G.armySize(h))} / ${fmt(max)}` + (rest.length ? tr(` · dont ${rest.join(', ')}`, ` · of which ${rest.join(', ')}`) : '');
     // Pas de chiffre précis : juste l'état du recrutement
-    let tip = 'recrutement normal';
-    if (r >= 0.98) tip = 'armée pleine !';
-    else if (eff < 0.45) tip = 'trop de soldats, le recrutement ralentit';
-    else if (eff > 0.85) tip = 'recrutement au top';
+    let tip = tr('recrutement normal', 'normal recruitment');
+    if (r >= 0.98) tip = tr('armée pleine !', 'army full!');
+    else if (eff < 0.45) tip = tr('trop de soldats, le recrutement ralentit', 'too many soldiers, recruitment slows down');
+    else if (eff > 0.85) tip = tr('recrutement au top', 'peak recruitment');
     // Effets d'un assaut réussi (voir warFactor)
-    const war = (G.postWar(h) ? ` · <span style="color:#b8322a">⚰️ après-guerre −${Math.round(G.postWar(h) * 100)} %</span>` : '') +
-      (G.rallied(h) ? ` · <span style="color:#2f6b2a">🔥 galvanisé +${Math.round(G.rallied(h) * 100)} %</span>` : '') +
+    const P = tr(' %', '%');
+    const war = (G.postWar(h) ? ` · <span style="color:#b8322a">⚰️ ${tr('après-guerre', 'post-war')} −${Math.round(G.postWar(h) * 100)}${P}</span>` : '') +
+      (G.rallied(h) ? ` · <span style="color:#2f6b2a">🔥 ${tr('galvanisé', 'rallied')} +${Math.round(G.rallied(h) * 100)}${P}</span>` : '') +
       // (les deux à la fois : ils s'annulent, on montre le total)
       (G.postWar(h) && G.rallied(h) ? ` · total ${signedPct(G.warFactor(h) - 1)}` : '') +
-      (G.upkeepFactor(h) < 0.995 ? ` · <span style="color:#b8322a">💰 solde des troupes −${Math.round((1 - G.upkeepFactor(h)) * 100)} % d'or</span>` : '');
+      (G.upkeepFactor(h) < 0.995 ? ` · <span style="color:#b8322a">💰 ${tr(`solde des troupes −${Math.round((1 - G.upkeepFactor(h)) * 100)} % d'or`, `troop upkeep −${Math.round((1 - G.upkeepFactor(h)) * 100)}% gold`)}</span>` : '');
     $('troopRate').innerHTML = `<b style="color:${color}">${tip}</b>${war}`;
   },
 
@@ -1075,42 +1104,42 @@ const UI = {
       this.attacksKey = key;
       box.innerHTML = list.map(a => {
         if (a.link !== undefined && a.attacker === h.id) {
-          return `<div class="attack panel"><span class="goto" data-goto="${a.link}" title="Clique pour voir ce bâtiment isolé">⚔️ → ${G.building[a.link] === B_PORT ? '⚓ ton port isolé' : '🏰 ton château isolé'} 🔎</span><b data-troops="${a.id}"></b>` +
-            (a.retreatEnd !== undefined ? '<span class="retreat">🏳️ retraite…</span></div>'
+          return `<div class="attack panel"><span class="goto" data-goto="${a.link}" title="${tr('Clique pour voir ce bâtiment isolé', 'Click to see this isolated building')}">⚔️ → ${G.building[a.link] === B_PORT ? tr('⚓ ton port isolé', '⚓ your isolated port') : tr('🏰 ton château isolé', '🏰 your isolated castle')} 🔎</span><b data-troops="${a.id}"></b>` +
+            (a.retreatEnd !== undefined ? `<span class="retreat">${tr('🏳️ retraite…', '🏳️ retreating…')}</span></div>`
               : `${this.retreatCross('data-cancel', a.id)}</div>`);
         }
         if (G.cutOff(a) && a.target === h.id) {
           // Pas de bouton « Défendre » : le château est coupé du royaume
           const tb = a.unlinked ? -1 : G.building[a.targetCastle];
           return `<div class="attack panel incoming" title="${tb === B_OUTPOST
-            ? 'Ton avant-poste ne compte que sur sa garnison : clique dessus pour envoyer des renforts par la mer'
-            : a.unlinked ? 'Ce territoire est coupé de tous tes châteaux : relie-le à un château (clique sur ton château isolé) ou bâtis-en un'
-            : 'Il est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie'}">` +
-            `<span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque ` +
-            `${tb === B_OUTPOST ? 'ton avant-poste ⛺' : a.unlinked ? 'ton territoire coupé 🚩' : tb === B_PORT ? 'ton port isolé 🚩'
-              : tb === B_CASTLE ? 'ton château isolé 🚩' : 'ton bâtiment isolé 🚩'}</span>` +
+            ? tr('Ton avant-poste ne compte que sur sa garnison : clique dessus pour envoyer des renforts par la mer', 'Your outpost relies on its garrison alone: click on it to send reinforcements by sea')
+            : a.unlinked ? tr('Ce territoire est coupé de tous tes châteaux : relie-le à un château (clique sur ton château isolé) ou bâtis-en un', 'This territory is cut off from all your castles: link it to a castle (click on your isolated castle) or build one')
+            : tr('Il est coupé de ton royaume : clique dessus pour lancer un assaut qui le relie', 'It is cut off from your kingdom: click on it to launch an assault that links it')}">` +
+            `<span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} ${tr('attaque', 'attacks')} ` +
+            `${tb === B_OUTPOST ? tr('ton avant-poste ⛺', 'your outpost ⛺') : a.unlinked ? tr('ton territoire coupé 🚩', 'your cut-off territory 🚩') : tb === B_PORT ? tr('ton port isolé 🚩', 'your isolated port 🚩')
+              : tb === B_CASTLE ? tr('ton château isolé 🚩', 'your isolated castle 🚩') : tr('ton bâtiment isolé 🚩', 'your isolated building 🚩')}</span>` +
             `<b data-troops="${a.id}"></b></div>`;
         }
         if (a.attacker === h.id) {
-          const target = a.target < 0 ? 'Terres libres'
+          const target = a.target < 0 ? tr('Terres libres', 'Free land')
             : (a.targetCastle >= 0 && BUILDINGS[G.building[a.targetCastle]] ? BUILDINGS[G.building[a.targetCastle]].icon + ' ' : '') + escapeHtml(G.players[a.target].name);
           const flag = a.target >= 0 ? this.bannerImg(G.players[a.target]) : '';
           const from = G.sourceOfAttack(a) >= 0 ? '⛺ ' : '';
           return `<div class="attack panel"><span>${from}⚔️ → ${flag}${target}</span><b data-troops="${a.id}"></b>` +
-            (a.retreatEnd !== undefined ? '<span class="retreat">🏳️ retraite…</span></div>'
+            (a.retreatEnd !== undefined ? `<span class="retreat">${tr('🏳️ retraite…', '🏳️ retreating…')}</span></div>`
               : `${this.retreatCross('data-cancel', a.id)}</div>`);
         }
-        return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} attaque</span>` +
+        return `<div class="attack panel incoming"><span>${this.bannerImg(G.players[a.attacker])}${escapeHtml(G.players[a.attacker].name)} ${tr('attaque', 'attacks')}</span>` +
           `<b data-troops="${a.id}"></b>` +
           (G.isPreparing(a) // (pas encore entrée sur nos terres : on ne peut pas encore la contrer)
-            ? `<button data-defend="${a.id}" disabled title="Elle marche encore sur ses terres : tu pourras la contrer dès qu'elle entre sur les tiennes">🛡️ Défendre</button></div>`
-            : `<button data-defend="${a.id}" title="Envoyer le % de soldats choisi contre cet assaut">🛡️ Défendre</button></div>`);
+            ? `<button data-defend="${a.id}" disabled title="${tr('Elle marche encore sur ses terres : tu pourras la contrer dès qu\'elle entre sur les tiennes', 'It is still marching on its own lands: you can counter it as soon as it enters yours')}">🛡️ ${tr('Défendre', 'Defend')}</button></div>`
+            : `<button data-defend="${a.id}" title="${tr('Envoyer le % de soldats choisi contre cet assaut', 'Send the chosen % of soldiers against this assault')}">🛡️ ${tr('Défendre', 'Defend')}</button></div>`);
       }).join('') + boats.map(e => {
         // Transport en mer : débarquement, renforts vers un avant-poste, ou retour au port
-        const what = e.home !== undefined ? `${ICONS.boatOut} retour au port`
-          : e.reinforce !== undefined ? `${ICONS.boatIn} renforts pour ton avant-poste`
-          : `${ICONS.ship} → débarquement` + (G.owner[e.landing] >= 0 && G.owner[e.landing] !== h.id
-            ? ` chez ${this.bannerImg(G.players[G.owner[e.landing]])}${escapeHtml(G.players[G.owner[e.landing]].name)}` : '');
+        const what = e.home !== undefined ? `${ICONS.boatOut} ${tr('retour au port', 'back to port')}`
+          : e.reinforce !== undefined ? `${ICONS.boatIn} ${tr('renforts pour ton avant-poste', 'reinforcements for your outpost')}`
+          : `${ICONS.ship} → ${tr('débarquement', 'landing')}` + (G.owner[e.landing] >= 0 && G.owner[e.landing] !== h.id
+            ? ` ${tr('chez', 'at')} ${this.bannerImg(G.players[G.owner[e.landing]])}${escapeHtml(G.players[G.owner[e.landing]].name)}` : '');
         return `<div class="attack panel"><span>${what}</span><b data-boat="${e.id}"></b>` +
           (e.home !== undefined ? '' : this.retreatCross('data-recall', e.id)) + '</div>';
       }).join('');
@@ -1129,19 +1158,20 @@ const UI = {
       const defenders = (a.defenders || 0) + (a.garrison || 0), coming = G.defendersOnTheWay(a);
       // Assaut ennemi contre nous : juste ses soldats (la barre reste courte : « Écosse attaque · ⚔ 242 · Défendre »)
       if (a.target === h.id && a.attacker !== h.id) { el.textContent = `${G.troopIcon(a.attacker)} ${fmt(a.troops)}`; continue; }
-      el.textContent = `${G.troopIcon(a.attacker)} ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} en route)` : '') +
-        (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (coming >= 1 ? ` (🛡 +${fmt(coming)} en route)` : '') +
+      const onWay = tr('en route', 'on the way');
+      el.textContent = `${G.troopIcon(a.attacker)} ${fmt(a.troops)}` + (pending ? ` (+${fmt(pending)} ${onWay})` : '') +
+        (defenders >= 1 ? ` vs 🛡 ${fmt(defenders)}` : '') + (coming >= 1 ? ` (🛡 +${fmt(coming)} ${onWay})` : '') +
         (G.isPreparing(a) ? ` · ⏳ ${wait} s` : '') +
         // (garnison du château visé : elle attend derrière sa muraille, et n'entre en jeu qu'au siège)
-        (G.garrisonWaiting(a) >= 1 ? ` · 🏰 ${fmt(G.garrisonWaiting(a))} derrière les murs` : '') +
-        (a.siege ? ` · 🏰 siège ${Math.round(Math.max(0, Math.min(1, (G.tick - (a.siege.start || G.tick)) / Math.max(1, a.siege.end - (a.siege.start || G.tick)))) * 100)} %` : '') +
-        (a.target === G.human.id && G.defendWait(a) > 0 ? ` · ⏳ renforts dans ${Math.ceil(G.defendWait(a))} s` : '');
+        (G.garrisonWaiting(a) >= 1 ? tr(` · 🏰 ${fmt(G.garrisonWaiting(a))} derrière les murs`, ` · 🏰 ${fmt(G.garrisonWaiting(a))} behind the walls`) : '') +
+        (a.siege ? ` · 🏰 ${tr('siège', 'siege')} ${Math.round(Math.max(0, Math.min(1, (G.tick - (a.siege.start || G.tick)) / Math.max(1, a.siege.end - (a.siege.start || G.tick)))) * 100)}${tr(' %', '%')}` : '') +
+        (a.target === G.human.id && G.defendWait(a) > 0 ? tr(` · ⏳ renforts dans ${Math.ceil(G.defendWait(a))} s`, ` · ⏳ reinforcements in ${Math.ceil(G.defendWait(a))} s`) : '');
     }
   },
 
   // Petite croix dans le coin d'une barre (assaut ou transport en mer) : retraite, avec des pertes
   retreatCross(attr, id) {
-    return `<button class="x" ${attr}="${id}" title="Retraite : les soldats rentrent, ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdent">×</button>`;
+    return `<button class="x" ${attr}="${id}" title="${tr(`Retraite : les soldats rentrent, ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdent`, `Retreat: the soldiers come home, ${Math.round(CONFIG.RETREAT_LOSS * 100)}% are lost`)}">×</button>`;
   },
 
   // Pendant la construction d'un moulin, d'une caserne ou d'un port : production prévue selon le terrain
@@ -1154,28 +1184,33 @@ const UI = {
     if (t === B_CHURCH) {
       const list = G.churchLinks(h.id, a);
       // (le terrain compte aussi : plus forte sur les hauteurs, moins en forêt)
-      const k = G.terrainFactor(a, B_CHURCH), here = ` · terrain : ${prodText(k)}`;
+      const k = G.terrainFactor(a, B_CHURCH), here = tr(` · terrain : ${prodText(k)}`, ` · terrain: ${prodText(k)}`);
       const gold = Math.round(list.reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0) * k);
-      return here + (list.length ? ` · 🛤️ ${this.churchLinksText(list)} : +${gold} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
-          `, Croyance +${Math.round(CONFIG.FAITH_ROAD_BONUS * list.length * 100)} %`
-        : ' · trop loin d\'une ville ou d\'une route de port : pas de chemin');
+      return here + (list.length ? tr(` · 🛤️ ${this.churchLinksText(list)} : +${gold} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s` +
+          `, Croyance +${Math.round(CONFIG.FAITH_ROAD_BONUS * list.length * 100)} %`,
+          ` · 🛤️ ${this.churchLinksText(list)}: +${gold} 💰 every ${CONFIG.PRODUCTION_INTERVAL} s` +
+          `, Faith +${Math.round(CONFIG.FAITH_ROAD_BONUS * list.length * 100)}%`)
+        : tr(' · trop loin d\'une ville ou d\'une route de port : pas de chemin', ' · too far from a city or a port road: no path'));
     }
     if (!TERRAIN_PRODUCTION[t]) return '';
-    let txt = ` · production ici : ${prodText(G.terrainFactor(a, t))}`;
+    let txt = tr(` · production ici : ${prodText(G.terrainFactor(a, t))}`, ` · production here: ${prodText(G.terrainFactor(a, t))}`);
     if (t === B_MILL || t === B_BARRACKS) {
       // (dans la muraille de villes de niveau 2 ou 3 : une route par ville, 3 au plus ; sinon, au bord d'une route)
       const list = G.cityRoads(h.id, a, t).slice(0, CONFIG.ROAD_MAX_CITIES), sum = list.reduce((s, r) => s + r.bonus, 0);
-      if (list.length) txt += ` · 🛤️ ${list.length > 1 ? `${list.length} routes (vers ${list.length} villes)` : 'route vers la ville'} : +${Math.round(sum * 100)} %`;
+      if (list.length) txt += tr(` · 🛤️ ${list.length > 1 ? `${list.length} routes (vers ${list.length} villes)` : 'route vers la ville'} : +${Math.round(sum * 100)} %`,
+        ` · 🛤️ ${list.length > 1 ? `${list.length} roads (to ${list.length} cities)` : 'road to the city'}: +${Math.round(sum * 100)}%`);
       else {
-        const on = G.onRoad(h.id, a, t);
-        if (on) txt += ` · 🛤️ au bord d'une route${on === 2 ? ' de pierre' : ''} : +${Math.round(CONFIG.MILL_ROAD_BONUS * (on === 2 ? IMPERIAL.roadFactor : 1) * 100)} %`;
+        const on = G.onRoad(h.id, a, t), bonus = Math.round(CONFIG.MILL_ROAD_BONUS * (on === 2 ? IMPERIAL.roadFactor : 1) * 100);
+        if (on) txt += tr(` · 🛤️ au bord d'une route${on === 2 ? ' de pierre' : ''} : +${bonus} %`, ` · 🛤️ by a${on === 2 ? ' stone' : ''} road: +${bonus}%`);
       }
     }
     if (t === B_PORT) {
       const list = G.portRoadCastles(h.id, a), n = list.length;
       const sum = list.reduce((s, c) => s + CONFIG.PORT_ROAD_BONUS * (G.castleInfo(c).imperial ? IMPERIAL.roadFactor : 1), 0);
-      txt += n ? ` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or, et +${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin relié à ces villes`
-        : ` · aucune ville assez proche (${CONFIG.PORT_ROAD_DISTANCE} cases, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)} % par niveau de la ville) : pas de chemin`;
+      txt += n ? tr(` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or, et +${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin relié à ces villes`,
+          ` · 🛤️ linked to ${n > 1 ? `${n} cities (${n} paths)` : 'a city'}: +${Math.round(sum * 100)}% gold, and +${Math.round(CONFIG.PORT_MILL_BONUS * 100)}% per mill linked to these cities`)
+        : tr(` · aucune ville assez proche (${CONFIG.PORT_ROAD_DISTANCE} cases, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)} % par niveau de la ville) : pas de chemin`,
+          ` · no city close enough (${CONFIG.PORT_ROAD_DISTANCE} tiles, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)}% per city level): no path`);
     }
     return txt;
   },
@@ -1184,9 +1219,9 @@ const UI = {
   churchLinksText(list) {
     const cities = list.filter(l => l.castle !== undefined).length, port = list.some(l => l.port !== undefined);
     const parts = [];
-    if (cities) parts.push(cities > 1 ? `${cities} villes` : 'une ville');
-    if (port) parts.push('la route d\'un port');
-    return 'reliée à ' + parts.join(' et à ') + (list.length > 1 ? ` (${list.length} chemins)` : '');
+    if (cities) parts.push(cities > 1 ? tr(`${cities} villes`, `${cities} cities`) : tr('une ville', 'a city'));
+    if (port) parts.push(tr('la route d\'un port', 'a port road'));
+    return tr('reliée à ', 'linked to ') + parts.join(tr(' et à ', ' and to ')) + (list.length > 1 ? tr(` (${list.length} chemins)`, ` (${list.length} paths)`) : '');
   },
 
   // La caméra va voir une attaque de pid contre nous (s'il en a plusieurs, chaque clic montre la suivante)
@@ -1204,7 +1239,7 @@ const UI = {
   // Avant de fonder sa capitale : en survolant, le terrain et la défense qu'aurait la zone de sa première ville
   // (terrain + murs du fort en bois, en moyenne dans sa muraille), ou pourquoi on ne peut pas la fonder là
   spawnHint(i) {
-    const G = Game, base = '👑 Clique sur une terre libre pour fonder ta capitale';
+    const G = Game, base = tr('👑 Clique sur une terre libre pour fonder ta capitale', '👑 Click on free land to found your capital');
     if (i < 0 || !G.isLand(i)) return base;
     const err = G.spawnError(i);
     if (err) return `${base} · ⚠️ ${err}`;
@@ -1215,8 +1250,9 @@ const UI = {
       if (G.claimable(yy * W + xx)) zone.push(yy * W + xx);
     }
     const t = TERRAIN_INFO[G.terrain[i]];
-    return `${base} · ${t.name}${t.cost > 1 ? ` (défense ${pct(t.cost - 1)})` : ''} · 🛡️ défense de ta capitale ici : ` +
-      `${pct(G.castleZoneDefense(zone, 1) - 1)} (terrain + murs)`;
+    return `${base} · ${t.name}${t.cost > 1 ? tr(` (défense ${pct(t.cost - 1)})`, ` (defense ${pct(t.cost - 1)})`) : ''} · ` +
+      tr(`🛡️ défense de ta capitale ici : ${pct(G.castleZoneDefense(zone, 1) - 1)} (terrain + murs)`,
+        `🛡️ your capital's defense here: ${pct(G.castleZoneDefense(zone, 1) - 1)} (terrain + walls)`);
   },
 
   // La caméra va sur les terres du royaume pid (clic sur son nom dans le classement) : sur son plus grand morceau,
@@ -1245,11 +1281,15 @@ const UI = {
     const target = G.attacks.find(x => x.id === attackId && !x.done);
     // L'armée marche encore sur ses terres : on ne peut l'affronter qu'une fois entrée sur les nôtres
     if (target && G.isPreparing(target)) {
-      return this.log(`⏳ L'armée ${G.deName(G.players[target.attacker].name)} marche encore sur ses terres : tes défenseurs ` +
-        `pourront l'affronter dès qu'elle entre sur les tiennes (dans ${Math.ceil((target.startTick - G.tick) / CONFIG.TICKS_PER_SECOND)} s).`, 'warn');
+      const secs = Math.ceil((target.startTick - G.tick) / CONFIG.TICKS_PER_SECOND);
+      return this.log(tr(`⏳ L'armée ${G.deName(G.players[target.attacker].name)} marche encore sur ses terres : tes défenseurs ` +
+        `pourront l'affronter dès qu'elle entre sur les tiennes (dans ${secs} s).`,
+        `⏳ ${G.players[target.attacker].name}'s army is still marching on its own lands: your defenders ` +
+        `can face it as soon as it enters yours (in ${secs} s).`), 'warn');
     }
     if (target && G.defendWait(target) > 0) {
-      return this.log(`⏳ Tes défenseurs se regroupent : prochains renforts dans ${Math.ceil(G.defendWait(target))} s.`, 'warn');
+      return this.log(tr(`⏳ Tes défenseurs se regroupent : prochains renforts dans ${Math.ceil(G.defendWait(target))} s.`,
+        `⏳ Your defenders are regrouping: next reinforcements in ${Math.ceil(G.defendWait(target))} s.`), 'warn');
     }
     // Zone d'un avant-poste (pas encore reliée au royaume) : seuls ses soldats stationnés peuvent la défendre
     const zoneOp = target ? G.outpostZoneOf(target) : -1;
@@ -1259,21 +1299,31 @@ const UI = {
         // Avant-poste : ses soldats stationnés peuvent le défendre (pas ceux du royaume, au-delà des mers)
         const before = G.troopsAt(h.id, op);
         const a = G.sendDefenders(h.id, attackId, before * this.ratio);
-        if (a) return this.log(`🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldats stationnés à ton avant-poste partent le défendre ` +
-          '(seuls eux peuvent le rejoindre, au-delà des mers).', 'good');
-        return this.log('🚫 Ton avant-poste est au-delà des mers : seuls ses soldats le défendent, et il n\'en a plus de libres. ' +
-          'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.', 'warn');
+        if (a) return this.log(tr(`🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldats stationnés à ton avant-poste partent le défendre ` +
+          '(seuls eux peuvent le rejoindre, au-delà des mers).',
+          `🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldiers stationed at your outpost set out to defend it ` +
+          '(only they can reach it, beyond the seas).'), 'good');
+        return this.log(tr('🚫 Ton avant-poste est au-delà des mers : seuls ses soldats le défendent, et il n\'en a plus de libres. ' +
+          'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.',
+          '🚫 Your outpost is beyond the seas: only its own soldiers defend it, and it has none left to spare. ' +
+          'Click on the outpost to send it reinforcements by sea.'), 'warn');
       }
-      if (target.unlinked) return this.log('🚫 Ce territoire est coupé de tous tes châteaux : personne ne peut le défendre. ' +
-        'Relie-le à un château (clique sur ton château isolé) ou bâtis-en un nouveau.', 'warn');
-      return this.log('🚫 Il est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
-        'Clique dessus pour lancer un assaut qui le relie à ton royaume.', 'warn');
+      if (target.unlinked) return this.log(tr('🚫 Ce territoire est coupé de tous tes châteaux : personne ne peut le défendre. ' +
+        'Relie-le à un château (clique sur ton château isolé) ou bâtis-en un nouveau.',
+        '🚫 This territory is cut off from all your castles: nobody can defend it. ' +
+        'Link it to a castle (click on your isolated castle) or build a new one.'), 'warn');
+      return this.log(tr('🚫 Il est coupé de ton royaume : tes défenseurs ne peuvent pas le rejoindre. ' +
+        'Clique dessus pour lancer un assaut qui le relie à ton royaume.',
+        '🚫 It is cut off from your kingdom: your defenders cannot reach it. ' +
+        'Click on it to launch an assault that links it to your kingdom.'), 'warn');
     }
     const before = h.troops;
     const a = G.sendDefenders(h.id, attackId, h.troops * this.ratio);
-    if (a && a.reinforced) this.log(`🛡️ ${fmt(before - h.troops)} soldats renforcent ton armée de défense contre ${G.players[a.attacker].name} (ils la rejoignent dans ${CONFIG.DEFEND_REINFORCE_DELAY} s).`, 'good');
-    else if (a) this.log(`🛡️ ${fmt(before - h.troops)} défenseurs partent de ton château le plus proche à la rencontre de ${G.players[a.attacker].name} !`, 'good');
-    else this.log('Pas assez de soldats pour défendre !', 'warn');
+    if (a && a.reinforced) this.log(tr(`🛡️ ${fmt(before - h.troops)} soldats renforcent ton armée de défense contre ${G.players[a.attacker].name} (ils la rejoignent dans ${CONFIG.DEFEND_REINFORCE_DELAY} s).`,
+      `🛡️ ${fmt(before - h.troops)} soldiers reinforce your defending army against ${G.players[a.attacker].name} (they join it in ${CONFIG.DEFEND_REINFORCE_DELAY} s).`), 'good');
+    else if (a) this.log(tr(`🛡️ ${fmt(before - h.troops)} défenseurs partent de ton château le plus proche à la rencontre de ${G.players[a.attacker].name} !`,
+      `🛡️ ${fmt(before - h.troops)} defenders set out from your nearest castle to meet ${G.players[a.attacker].name}!`), 'good');
+    else this.log(tr('Pas assez de soldats pour défendre !', 'Not enough soldiers to defend!'), 'warn');
   },
 
   // Assaut (selon le curseur « Envoyer ») pour relier un château isolé à son royaume
@@ -1291,7 +1341,9 @@ const UI = {
     const G = Game, h = G.human;
     // (ville, église ou port qui vient d'être conquis : pas d'assaut avant la fin de la trêve)
     if (c >= 0 && G.truceLeft(c)) {
-      return this.log(`⏳ ${G.targetLabel(c)[0].toUpperCase()}${G.targetLabel(c).slice(1)} vient de changer de mains : impossible de l'attaquer avant ${Math.ceil(G.truceLeft(c))} s.`, 'warn');
+      return this.log(tr(`⏳ ${G.targetLabel(c)[0].toUpperCase()}${G.targetLabel(c).slice(1)} vient de changer de mains : impossible de l'attaquer avant ${Math.ceil(G.truceLeft(c))} s.`,
+        `⏳ ${G.targetLabel(c)[0].toUpperCase()}${G.targetLabel(c).slice(1)} just changed hands: it cannot be attacked for ${Math.ceil(G.truceLeft(c))} s.`), 'warn');
+
     }
     let source = null;
     if (c >= 0) {
