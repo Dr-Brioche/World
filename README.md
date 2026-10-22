@@ -464,16 +464,16 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      comme une église ou un port (sauf si elle est dans la muraille d'une ville : il faut d'abord prendre la ville, et la mine part avec elle).
      - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
        **3 mines au plus** (+48 % au maximum).
-     - 🪙 **Mine d'or** : son filon rapporte **5 000 pièces en 10 minutes** (un peu à chaque production), doublé si reliée.
+     - 🪙 **Mine d'or** : son filon rapporte **2 500 pièces en 10 minutes** (un peu à chaque production), doublé si reliée.
        Puis il **s'épuise** (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
-       **relance pour 10 minutes de plus**, qui rapportent de nouveau **5 000 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
+       **relance pour 10 minutes de plus**, qui rapportent de nouveau **2 500 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
      - 🪨 **Carrière de pierre** (en colline) : les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
        (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
      - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
        plus rapide au niveau 2), avec une **jauge ronde** autour d'elle. Au 1er **quart**, **1 000 pièces**, au 2e **2 000**, au 3e
        **3 000**, et à la fin **10 000 pièces** d'un coup (16 000 en tout), puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
        chrono continue pour le nouveau maître, qui touche les versements suivants !
-     À côté de chaque mine (la tienne comme celles des autres), une **petite bulle ronde** montre l'icône de ce qui y est
+     À gauche de chaque mine (la tienne comme celles des autres), une **petite bulle ronde** montre l'icône de ce qui y est
      miné (fer, or, pierre, diamant), toujours visible, même quand un grand bâtiment est à côté. Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
      cercle (vert si tu peux y bâtir), passent **par-dessus les bâtiments** (une grande ville ne les cache plus), et la mine
      s'aimante sur le filon le plus proche de la souris (à moins de 5 cases). Une mine **n'a pas d'autre règle de construction** :
@@ -723,6 +723,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.91** : ⛏️ la bulle du minerai passe à gauche de la mine (elle ne recouvre plus le chiffre de son niveau) · 🪙 mine d'or : 2 500 pièces en 10 minutes (au lieu de 5 000), et de nouveau 2 500 au niveau 2
 - **v0.92.90** : 🪙 mine d'or : 5 000 pièces en 10 minutes (au lieu de 2 000 en 5), et de nouveau 5 000 en 10 minutes au niveau 2 · 💰 moulins et casernes : +35 % par bâtiment (au lieu de +25 %)
 - **v0.92.89** : 💰 le prix des moulins et des casernes monte moins vite (+25 % par bâtiment au lieu de +50 %) · ⛏️ mines plus chères : 600 (au lieu de 400), puis 1 200 pour le niveau 2 (au lieu de 1 000)
 - **v0.92.88** : 🚩 menu de départ : drapeaux un peu moins zoomés (cadre 25 % plus large : on voit le haut de la lance et le début des rubans)

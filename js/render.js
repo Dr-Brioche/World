@@ -1962,16 +1962,17 @@ const Render = {
     const G = Game, ctx = this.ctx, s = this.cam.scale, d = G.depositAt.get(a);
     if (!d) return;
     const r = Math.max(11, Math.min(17, s * 1.05));
-    const x = px + Math.max(14, s * 1.6 * CONFIG.BUILDING_DRAW_SCALE) + r * 0.6, y = py - s * 0.8 - r * 0.4;
+    // (à gauche de la mine : à droite, il y a déjà le chiffre de son niveau)
+    const x = px - Math.max(14, s * 1.6 * CONFIG.BUILDING_DRAW_SCALE) - r * 0.6, y = py - s * 0.8 - r * 0.4;
     ctx.save();
     ctx.fillStyle = G.mineSpent(a) ? 'rgb(200,190,170)' : 'rgb(243,227,191)';
     ctx.lineWidth = 1.2;
     ctx.strokeStyle = '#3a2512';
     // la petite pointe vers la mine, puis la bulle ronde par-dessus
     ctx.beginPath();
-    ctx.moveTo(x - r * 0.8, y + r * 0.5);
-    ctx.lineTo(x - r * 1.45, y + r * 1.2);
-    ctx.lineTo(x - r * 0.35, y + r * 0.9);
+    ctx.moveTo(x + r * 0.8, y + r * 0.5);
+    ctx.lineTo(x + r * 1.45, y + r * 1.2);
+    ctx.lineTo(x + r * 0.35, y + r * 0.9);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
