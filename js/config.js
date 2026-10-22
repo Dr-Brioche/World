@@ -253,7 +253,6 @@ const CONFIG = {
   DEFEND_REINFORCE_DELAY: 3,   // défenseurs envoyés en plus : ils rejoignent l'armée de défense déjà partie en 3 s
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
   RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite
-  REINFORCE_DELAY: 5,          // une armée alliée venue aider met 5 s à arriver
   REINFORCE_MIN_TIME: 3,       // les renforts d'un assaut marchent de sa cité jusqu'au front (MARCH_SPEED) : au moins 3 s
   AI_SEND_INTERVAL: 12,        // un bot attend au moins 12 s entre deux envois de soldats (renforts, défenseurs)
                                // et envoie alors un gros paquet, au lieu de quelques soldats à chaque instant
@@ -438,7 +437,7 @@ const CHURCH_LEVELS = [
 const PORT_LEVELS = [
   null,
   { name: tr('Port', 'Port'),       gold: 3, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
-  { name: tr('Grand port', 'Great port'), gold: 8, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 4.6, upgradeCost: 500 },
+  { name: tr('Grand port', 'Great port'), gold: 8, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 4.6, upgradeCost: 400 },
   { name: tr('Port royal', 'Royal port'), gold: 16, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 6.2, upgradeCost: 2000, garrison: 10, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
@@ -499,7 +498,7 @@ const BUILDINGS = [
   { name: tr('Caserne', 'Barracks'), icon: '⚔️', tiles: 2, baseCost: 20,
     desc: tr(`produit des soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande (3 niveaux)`,
       `trains soldiers every ${CONFIG.PRODUCTION_INTERVAL} s, bigger army (3 levels)`) },
-  { name: tr('Château', 'Castle'), icon: '🏰', tiles: 4, baseCost: 100,
+  { name: tr('Château', 'Castle'), icon: '🏰', tiles: 4, baseCost: 250,
     desc: tr('muraille qui protège ses terres (3 niveaux)', 'walls that protect its lands (3 levels)') },
   { name: tr('Église', 'Church'), icon: '⛪', tiles: 2, baseCost: 50,
     desc: tr('hors des murailles, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)',

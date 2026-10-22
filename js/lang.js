@@ -31,6 +31,7 @@ function translatePage(root = document) {
   for (const el of root.querySelectorAll('[data-en-title]')) el.title = el.dataset.enTitle;
   for (const el of root.querySelectorAll('[data-en-placeholder]')) el.placeholder = el.dataset.enPlaceholder;
   for (const el of root.querySelectorAll('[data-en-label]')) el.label = el.dataset.enLabel; // (titres des groupes d'une liste)
+  for (const el of root.querySelectorAll('[data-en-value]')) el.value = el.dataset.enValue; // (texte déjà écrit dans un champ)
 }
 // (ce fichier est chargé en bas de la page : elle est déjà là, on la traduit tout de suite, avant les autres scripts)
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => translatePage());

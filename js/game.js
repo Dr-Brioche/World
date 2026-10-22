@@ -1365,7 +1365,7 @@ const GameRules = {
     }
     if (!best) return tr('Aucun de tes ports d\'expédition (niveau 2 ou plus) ne peut rejoindre cet avant-poste.', 'None of your expedition ports (level 2 or higher) can reach this outpost.');
     troops = Math.floor(Math.min(troops, p.troops));
-    if (troops < 1) return 'Pas assez de soldats !';
+    if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, path: best.path, cost: 0, sent: troops,
@@ -1485,6 +1485,21 @@ const GameRules = {
       p.castlesBuilt++;
       this.placeBuilding(best, B_CASTLE);
       p.capital = best;
+    }
+    // Les bouts de terre de départ qui ne touchent pas la capitale (de l'autre côté d'un fleuve ou d'une crique)
+    // redeviennent libres : sinon, ils seraient tout de suite « coupés de tous ses châteaux »
+    const seen = new Set([p.capital]), todo = [p.capital];
+    while (todo.length) {
+      const i = todo.pop(), x = i % this.W;
+      for (const j of [i - this.W, i + this.W, x > 0 ? i - 1 : -1, x < this.W - 1 ? i + 1 : -1]) {
+        if (j >= 0 && j < this.N && !seen.has(j) && this.owner[j] === p.id) { seen.add(j); todo.push(j); }
+      }
+    }
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const x = cx + dx, y = cy + dy, i = y * this.W + x;
+        if (x >= 0 && y >= 0 && x < this.W && y < this.H && this.owner[i] === p.id && !seen.has(i)) this.setOwner(i, -1);
+      }
     }
   },
 
@@ -1822,7 +1837,8 @@ const GameRules = {
   },
   // Pourquoi la ville a de pid ne peut pas (encore) avoir de route commerciale, ou null si elle le peut
   tradeBlocker(pid, a) {
-    if (!this.pactsAllowed) return tr('Pas de pactes dans cette partie : pas de route commerciale.', 'No pacts in this game: no trade routes.');
+    // (en mode Factions, les pactes ordinaires sont interdits, mais on commerce avec les alliés de son camp)
+    if (!this.pactsAllowed && !this.factions) return tr('Pas de pactes dans cette partie : pas de route commerciale.', 'No pacts in this game: no trade routes.');
     if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return tr('Il faut une de tes villes de niveau 2 ou plus.', 'You need one of your cities at level 2 or higher.');
     if (this.tradesOf(a).length >= this.tradeMax(a)) return this.tradeFull(a, tr('Cette ville', 'This city'));
     if (!this.tradePartners(pid).length) return tr('Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.', 'You need an ally in your pact with a city at level 2 or higher.');
@@ -2198,13 +2214,7 @@ const GameRules = {
     for (const a of this.attacks) {
       if (a.done) continue;
       if (a.attacker === id) sum += a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
-      if (a.target === id) {
-        let allies = 0;
-        if (a.allyDef) for (const k in a.allyDef) allies += a.allyDef[k];
-        sum += Math.max(0, a.defenders - allies) + this.defendersOnTheWay(a);
-      }
-      if (a.allyDef && a.allyDef[id]) sum += Math.max(0, a.allyDef[id]);
-      if (a.allyPending) for (const r of a.allyPending) if (r.pid === id) sum += r.troops;
+      if (a.target === id) sum += Math.max(0, a.defenders) + this.defendersOnTheWay(a);
     }
     for (const r of this.returning) if (r.pid === id) sum += r.troops;
     return sum;
@@ -3207,7 +3217,7 @@ const GameRules = {
     const p = this.players[pid];
     troops = Math.floor(Math.min(troops, p.troops));
     if (this.owner[c] !== pid || !this.holdsAlone(c) || !this.isIsolated(c)) return tr('Ce bâtiment n\'est pas coupé de ton royaume.', 'This building is not cut off from your kingdom.');
-    if (troops < 1) return 'Pas assez de soldats !';
+    if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     let a = this.linkFor(c);
     if (a) {
       p.troops -= troops;
@@ -3404,7 +3414,7 @@ const GameRules = {
   // Renvoie un message d'erreur, ou null.
   repatriate(pid, a) {
     const p = this.players[pid], o = this.outposts.get(a);
-    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
+    if (!o || this.owner[a] !== pid) return tr('Ce n\'est pas un de tes avant-postes.', 'This is not one of your outposts.');
     if (!this.outpostReady(a)) return tr('L\'avant-poste est encore en construction : ses soldats bâtissent.', 'The outpost is still being built: its soldiers are building it.');
     const troops = Math.floor(o.stationed);
     if (troops < 1) return tr('Aucun soldat n\'attend à cet avant-poste (sa garnison, elle, reste sur place).', 'No soldiers are waiting at this outpost (its garrison stays there).');
@@ -3437,7 +3447,7 @@ const GameRules = {
   // ils rentrent quand même (comme ramenés par un navire marchand). Renvoie un message d'erreur, ou le nombre de soldats.
   abandonOutpost(pid, a) {
     const o = this.outposts.get(a);
-    if (!o || this.owner[a] !== pid) return 'Ce n\'est pas un de tes avant-postes.';
+    if (!o || this.owner[a] !== pid) return tr('Ce n\'est pas un de tes avant-postes.', 'This is not one of your outposts.');
     if (this.attacks.some(x => !x.done && x.target === pid && x.targetCastle === a)) return tr('Ton avant-poste est attaqué : impossible de l\'abandonner maintenant.', 'Your outpost is under attack: it cannot be abandoned now.');
     const troops = Math.floor(this.garrison[a] + o.stationed), landing = o.landing;
     this.removeBuilding(a);
@@ -3964,10 +3974,7 @@ const GameRules = {
     // La garnison combat en premier, puis les défenseurs envoyés
     const fromGarrison = Math.min(gar, defLoss);
     a.garrison = (a.garrison || 0) - fromGarrison / gp;
-    const before = a.defenders;
     a.defenders -= defLoss - fromGarrison;
-    // les alliés venus aider subissent leur part des pertes
-    if (a.allyDef && before > 0) for (const k in a.allyDef) a.allyDef[k] *= Math.max(0, a.defenders) / before;
     a.troops = Math.max(0, a.troops - defLoss * D * defBonus / atkBonus);
     if (a.troops < 1) {
       const p = this.players[a.attacker], d = this.players[a.target];
@@ -3978,7 +3985,6 @@ const GameRules = {
     } else if (a.defenders + a.garrison < 1) {
       a.defenders = 0;
       a.garrison = 0;
-      if (a.allyDef) for (const k in a.allyDef) a.allyDef[k] = 0;
     }
   },
 
@@ -4486,28 +4492,6 @@ const GameRules = {
     a.defPending = a.defPending.filter(r => !r.done);
   },
 
-  // Envoyer une armée aider un allié du pacte qui se fait attaquer : elle arrive en REINFORCE_DELAY secondes
-  // et se bat avec ses défenseurs ; à la fin de l'assaut, ses survivants rentrent. Renvoie un message d'erreur, ou null.
-  helpAlly(pid, attackId, troops) {
-    const p = this.players[pid], TPS = CONFIG.TICKS_PER_SECOND;
-    const a = this.attacks.find(x => x.id === attackId && !x.done);
-    if (!a || a.target < 0 || !this.areAllied(pid, a.target)) return tr('Cet assaut ne vise pas un de tes alliés.', 'This assault is not targeting one of your allies.');
-    if (this.cutOff(a)) return tr('Ce bâtiment est coupé de son royaume : aucun renfort ne peut le rejoindre.', 'This building is cut off from its kingdom: no reinforcements can reach it.');
-    if (this.isPreparing(a)) return tr('Cette armée marche encore sur ses terres : on ne peut l\'affronter qu\'une fois entrée chez ton allié.', 'This army is still marching on its own land: it can only be fought once it has entered your ally\'s land.');
-    if (!a.allyLast) { a.allyLast = {}; a.allyDef = {}; a.allyPending = []; }
-    const wait = a.allyLast[pid] === undefined ? 0 : (a.allyLast[pid] + CONFIG.DEFEND_COOLDOWN * TPS - this.tick) / TPS;
-    if (wait > 0) return tr(`Tes soldats se regroupent : prochaine aide dans ${Math.ceil(wait)} s.`, `Your soldiers are regrouping: next help in ${Math.ceil(wait)} s.`);
-    troops = Math.floor(Math.min(troops, p.troops));
-    if (troops < 1) return 'Pas assez de soldats !';
-    p.troops -= troops;
-    a.allyPending.push({ pid, troops, tick: this.tick + CONFIG.REINFORCE_DELAY * TPS });
-    a.allyLast[pid] = this.tick;
-    const d = this.players[a.target], e = this.players[a.attacker];
-    if (d.isHuman) UI.log(tr(`🤝 ${p.name} envoie ${fmt(troops)} soldats t'aider contre ${e.name} !`, `🤝 ${p.name} sends ${fmt(troops)} soldiers to help you against ${e.name}!`), 'good', p);
-    else if (e.isHuman) UI.log(tr(`🤝 ${p.name} envoie ${fmt(troops)} soldats défendre son allié ${d.name} contre toi !`, `🤝 ${p.name} sends ${fmt(troops)} soldiers to defend their ally ${d.name} against you!`), 'warn', p);
-    return null;
-  },
-
   // Secondes à attendre avant de pouvoir renvoyer des défenseurs contre cet assaut : plus d'attente, chaque envoi
   // en plus renforce l'armée de défense déjà partie (voir sendDefenders)
   defendWait() { return 0; },
@@ -4588,15 +4572,6 @@ const GameRules = {
     // Arrivée des renforts
     for (const r of a.pending) if (r.tick <= this.tick) a.troops += r.troops;
     a.pending = a.pending.filter(r => r.tick > this.tick);
-    // Arrivée des alliés venus aider le défenseur : ils se battent avec ses défenseurs
-    if (a.allyPending) {
-      for (const r of a.allyPending) {
-        if (r.tick > this.tick) continue;
-        a.defenders += r.troops;
-        a.allyDef[r.pid] = (a.allyDef[r.pid] || 0) + r.troops;
-      }
-      a.allyPending = a.allyPending.filter(r => r.tick > this.tick);
-    }
     // Les soldats du bâtiment visé se battent tous, même ceux arrivés après le début de l'assaut :
     this.rallyGarrison(a);
     // Tant que des défenseurs (garnison ou renforts) tiennent la position, l'assaut se bat au lieu d'avancer
@@ -4806,11 +4781,11 @@ const GameRules = {
       a.garrisonOut = true;
     }
     const p = this.players[a.attacker], d = this.players[a.target];
-    const what = outpost ? tr(['un avant-poste', 'ton avant-poste', '⛺'], ['outpost', 'your outpost', '⛺'])
-      : port ? tr(['un port fortifié', 'ton port fortifié', '⚓'], ['fortified port', 'your fortified port', '⚓'])
-      : tr(['un château', 'ton château', '🏰'], ['castle', 'your castle', '🏰']);
+    const what = outpost ? tr(['un avant-poste', 'ton avant-poste', '⛺'], ['an outpost', 'your outpost', '⛺'])
+      : port ? tr(['un port fortifié', 'ton port fortifié', '⚓'], ['a fortified port', 'your fortified port', '⚓'])
+      : tr(['un château', 'ton château', '🏰'], ['a castle', 'your castle', '🏰']);
     if (p.isHuman) UI.log(tr(`${what[2]} Ton armée assiège ${what[0]} ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`,
-      `${what[2]} Your army is besieging a ${what[0]} of ${d.name}: it falls in ${secs} s if no one defends it.`), 'good', d);
+      `${what[2]} Your army is besieging ${what[0]} of ${d.name}: it falls in ${secs} s if no one defends it.`), 'good', d);
     else if (d.isHuman) UI.log(tr(`${what[2]} ${p.name} assiège ${what[1]} ! Il tombe dans ${secs} s : envoie vite des défenseurs !`,
       `${what[2]} ${p.name} is besieging ${what[1]}! It falls in ${secs} s: send defenders quickly!`), 'warn', p);
   },
@@ -4956,11 +4931,11 @@ const GameRules = {
     this.warEffects(a, type === B_OUTPOST); // (détruire un avant-poste ne donne pas de malus d'après-guerre)
     const what = tr({ [B_CHURCH]: ['⛪', 'une église', 'une de tes églises'], [B_PORT]: ['⚓', 'un port', 'un de tes ports'],
       [B_OUTPOST]: ['⛺', 'un avant-poste', 'un de tes avant-postes'], [B_MINE]: ['⛏️', 'une mine', 'une de tes mines'] },
-      { [B_CHURCH]: ['⛪', 'church', 'one of your churches'], [B_PORT]: ['⚓', 'port', 'one of your ports'],
-        [B_OUTPOST]: ['⛺', 'outpost', 'one of your outposts'], [B_MINE]: ['⛏️', 'mine', 'one of your mines'] })[type];
+      { [B_CHURCH]: ['⛪', 'a church', 'one of your churches'], [B_PORT]: ['⚓', 'a port', 'one of your ports'],
+        [B_OUTPOST]: ['⛺', 'an outpost', 'one of your outposts'], [B_MINE]: ['⛏️', 'a mine', 'one of your mines'] })[type];
     const verb = type === B_OUTPOST ? tr('détruit', 'destroyed') : tr('pris', 'taken');
     const zone = withZone ? tr(`, avec sa zone et les bâtiments construits grâce à ${type === B_CHURCH ? 'elle' : 'lui'}`, ', with its zone and the buildings built thanks to it') : '';
-    if (p.isHuman) UI.log(tr(`${what[0]} Tu as ${verb} ${what[1]} ${this.deName(d.name)}${zone} !`, `${what[0]} You have ${verb} a ${what[1]} of ${d.name}${zone}!`), 'good', d);
+    if (p.isHuman) UI.log(tr(`${what[0]} Tu as ${verb} ${what[1]} ${this.deName(d.name)}${zone} !`, `${what[0]} You have ${verb} ${what[1]} of ${d.name}${zone}!`), 'good', d);
     else if (d.isHuman) UI.log(tr(`${what[0]} ${p.name} a ${verb} ${what[2]}${zone} !`, `${what[0]} ${p.name} has ${verb} ${what[2]}${zone}!`), 'warn', p);
   },
 
@@ -4971,15 +4946,6 @@ const GameRules = {
     const p = this.players[a.attacker];
     // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste)
     this.giveTroops(a.attacker, this.sourceOfAttack(a), a.troops + a.pending.reduce((s, r) => s + r.troops, 0));
-    // Les alliés venus aider rentrent chez eux avec leurs survivants
-    if (a.allyDef) {
-      for (const k in a.allyDef) {
-        const back = Math.min(a.allyDef[k], Math.max(0, a.defenders));
-        a.defenders -= back;
-        if (this.players[k].alive) this.players[k].troops += back;
-      }
-      for (const r of a.allyPending) if (this.players[r.pid].alive) this.players[r.pid].troops += r.troops; // (pas encore arrivés)
-    }
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château. Ceux qui étaient encore
     // en route font demi-tour : ils rentrent à pied jusqu'à la ville la plus proche (voir sendHome)
     if (a.target >= 0 && this.players[a.target].alive) {

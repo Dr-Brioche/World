@@ -185,12 +185,21 @@ const AI = {
       const chunk = Math.max(needed * 1.3, Game.maxTroops(p) * 0.1); // (au moins un bon paquet)
       if (Game.sendDefenders(p.id, a.id, Math.min(chunk, p.troops * 0.6))) a.aiDefSent = Game.tick;
     }
-    // Un allié du pacte se fait attaquer : on envoie parfois une armée l'aider
+    // Un allié du pacte se fait attaquer : on lui envoie parfois des soldats (ils rejoignent son armée, chez lui ;
+    // c'est lui qui les envoie se défendre). Une fois au plus par assaut et par allié toutes les DEFEND_COOLDOWN s.
     for (const a of Game.attacks) {
-      if (a.done || a.target < 0 || a.attacker === p.id || !Game.areAllied(p.id, a.target) || Game.isPreparing(a) || Game.cutOff(a)) continue;
+      if (a.done || a.target < 0 || a.attacker === p.id || !Game.areAllied(p.id, a.target) || Game.isPreparing(a)) continue;
       const need = a.troops / Game.combatRatio(a) - a.defenders - Game.garrisonFor(a) * Game.garrisonPower(a);
       if (need <= 0 || p.troops < Game.maxTroops(p) * 0.3 || Math.random() > 0.3) continue;
-      Game.helpAlly(p.id, a.id, Math.min(need, p.troops * 0.25));
+      a.aiHelped = a.aiHelped || {};
+      if (Game.tick - (a.aiHelped[p.id] ?? -1e9) < CONFIG.DEFEND_COOLDOWN * CONFIG.TICKS_PER_SECOND) continue;
+      a.aiHelped[p.id] = Game.tick;
+      const got = Game.sendTroopsToAlly(p.id, a.target, Math.min(need, p.troops * 0.25));
+      // (le défenseur est un autre bot : il enverra ces soldats au combat lui-même, voir plus haut)
+      if (typeof got === 'number' && Game.players[a.target].isHuman) {
+        UI.log(tr(`🤝 ${p.name} t'envoie ${fmt(got)} soldats pour t'aider contre ${Game.players[a.attacker].name} : à toi de les envoyer se battre !`,
+          `🤝 ${p.name} sends you ${fmt(got)} soldiers to help against ${Game.players[a.attacker].name}: up to you to send them into battle!`), 'good', p);
+      }
     }
     // Une armée se prépare contre nous : parfois, on tente de faire la paix (un pacte)
     const threats = Game.attacks.filter(a => !a.done && a.target === p.id && Game.isPreparing(a));
