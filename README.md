@@ -92,7 +92,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Strangleronce) et le **Norfendre** au nord, entre les deux (la Couronne de glace, infranchissable, les pics Foudroyés,
      Sholazar, Zul'Drak, les Grisonnes, le fjord Hurlant). Au pont de Thandol, les deux moitiés des Royaumes de l'Est ne
      tiennent que par un isthme étroit.
-   🖌️ **Dessine tes cartes** : sous le choix de la carte, le lien **« Dessiner une carte »** ouvre l'**éditeur de cartes**
+   🖌️ **Dessine tes cartes** : le bouton **« 🖌️ Création de carte »**, en bas à droite du menu (en face des règles), ouvre l'**éditeur de cartes**
    (`editeur.html`). Pars d'une carte toute en mer, toute en terre, ou d'une carte au hasard, puis peins les terrains
    (mer, plaine, forêt, colline, montagne, sommet, désert, fleuve, grand fleuve, colline boisée) au **pinceau** (taille réglable) ou
    avec l'outil **remplir**. Clic droit (ou Espace + glisser) pour déplacer la carte, molette pour zoomer, touches 1 à 9
@@ -738,6 +738,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.94** : 🖌️ menu de départ : un vrai bouton « Création de carte » en bas à droite (en face des règles), à la place du petit lien
 - **v0.92.93** : ⚔️ nouveau bonus de la grande caserne : le **recrutement de masse** (💰 3000, 60 s, jusqu'à x3 de recrutement quand l'armée est petite, de moins en moins au-delà de 35 % de l'armée maximum ; amplifié par la galvanisation, diminué par l'après-guerre) · 🧹 menu de départ allégé (plus d'explications entre parenthèses dans les choix) · ✝️ la croisade passe à 💰 2500
 - **v0.92.92** : ⚔️ carte Azeroth : nouveau **mode « Factions »** : 3 camps éternels (l'Alliance, la Horde, le Pacte sauvage), chaque royaume à sa vraie capitale du jeu, la partie démarre en pause le temps de se repérer
 - **v0.92.91** : ⛏️ la bulle du minerai passe à gauche de la mine (elle ne recouvre plus le chiffre de son niveau) · 🪙 mine d'or : 2 500 pièces en 10 minutes (au lieu de 5 000), et de nouveau 2 500 au niveau 2
