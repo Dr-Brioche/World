@@ -2193,8 +2193,9 @@ const GameRules = {
 
   buildCost(p, type) {
     // (les églises et les ports montent 2 fois plus vite : on n'en bâtit pas trop)
-    // (une mine coûte toujours le même prix)
-    const growth = type === B_MINE ? 1 : type === B_CHURCH || type === B_PORT ? CONFIG.RARE_COST_GROWTH : CONFIG.BUILDING_COST_GROWTH;
+    // (une mine coûte toujours le même prix ; les moulins et casernes montent moins vite : MILL_COST_GROWTH)
+    const growth = type === B_MINE ? 1 : type === B_CHURCH || type === B_PORT ? CONFIG.RARE_COST_GROWTH
+      : type === B_MILL || type === B_BARRACKS ? CONFIG.MILL_COST_GROWTH : CONFIG.BUILDING_COST_GROWTH;
     return Math.round(BUILDINGS[type].baseCost * Math.pow(growth, this.builtCount(p, type)));
   },
 

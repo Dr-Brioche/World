@@ -140,6 +140,7 @@ const CONFIG = {
   BUILDING_DRAW_SCALE: 1.5, // taille des bâtiments dessinés sur la carte (icônes et images) : 1.5 = 50 % plus grands
   ICON_LEVEL_GROWTH: 0.18,  // de loin, l'icône d'un bâtiment grandit de 18 % par niveau (une cathédrale se voit mieux qu'une église)
   RARE_COST_GROWTH: 2,       // ...et x2 pour les églises et les ports (une hausse 2 fois plus forte : +100 % au lieu de +50 %)
+  MILL_COST_GROWTH: 1.25,    // ...et seulement x1.25 pour les moulins et les casernes (on en bâtit beaucoup : leur prix monte moins vite)
   BUILD_TIME: 3,             // secondes de chantier pour construire un bâtiment (il ne produit rien avant)
   UPGRADE_TIME: [40, 60, 90], // améliorer un bâtiment : 40 s pour passer au niveau 2, 60 s au niveau 3, 90 s au niveau 4
   // Murs : une ville de niveau 2 peut bâtir 1 mur, une citadelle (niveau 3) un 2e. Un mur va de la muraille de la
@@ -456,7 +457,7 @@ const TERRAIN_PRODUCTION = {
 const MINE_LEVELS = [
   null,
   { name: 'Site minier',  img: 'img/mine1.webp', size: 3 },
-  { name: 'Grand site minier', img: 'img/mine2.webp', size: 3.8, upgradeCost: 1000 },
+  { name: 'Grand site minier', img: 'img/mine2.webp', size: 3.8, upgradeCost: 1200 },
 ];
 // Les 4 sortes de filons. count = combien sur une carte moyenne (au hasard entre les deux, un peu plus sur une grande
 // carte), max = combien un royaume peut en avoir au plus (les autres ne comptent pas), puis par niveau (1 et 2) :
@@ -492,7 +493,7 @@ const BUILDINGS = [
   // L'avant-poste ne se construit pas : il apparaît quand on débarque (baseCost = prix de l'expédition)
   { name: 'Avant-poste', icon: '⛺', tiles: 2, baseCost: 20, hidden: true, desc: 'base d\'un débarquement',
     img: 'img/avantposte.webp', size: 3.8 }, // (un seul niveau : son image est ici)
-  { name: 'Mine', icon: '⛏️', tiles: 2, baseCost: 400, desc: 'sur un filon : fer (troupes plus fortes), or (beaucoup d\'or, mais il s\'épuise), pierre (améliorations moins chères) ou diamant (un trésor) (2 niveaux)' },
+  { name: 'Mine', icon: '⛏️', tiles: 2, baseCost: 600, desc: 'sur un filon : fer (troupes plus fortes), or (beaucoup d\'or, mais il s\'épuise), pierre (améliorations moins chères) ou diamant (un trésor) (2 niveaux)' },
 ];
 
 // Bâtiments que l'on peut viser directement avec un assaut (un royaume qui en a ne s'attaque que comme ça)
