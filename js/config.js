@@ -500,34 +500,35 @@ const BUILDINGS = [
 const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST, B_MINE];
 
 // Les bannières des royaumes (une par couleur) : la bannière choisie donne sa couleur au royaume.
-// img = le drapeau entier, sur sa hampe (carte, menu) ; icon = juste son tissu (petites icônes du classement, des messages…)
+// img = le drapeau entier, sur sa hampe (carte) ; icon = son tissu et ses rubans (petites icônes du classement, des messages…) ;
+// logo = juste le tissu, recadré sur son motif (le choix de la bannière, au menu de départ)
 // (la couleur suit le fond du drapeau, accentuée pour que deux royaumes ne se ressemblent pas sur la carte)
 // Sur la carte : le pied du mât est à BANNER_FOOT de la largeur de l'image (le drapeau flotte à sa droite), et les
 // drapeaux sont dessinés BANNER_SCALE fois plus hauts que les anciennes bannières (la longue hampe prend de la place ; 1.8 : +20 %)
 const BANNER_FOOT = 0.28;
 const BANNER_SCALE = 1.8;
 const BANNERS = [
-  { name: "Épées croisées", img: 'img/bannieres/b01.webp', icon: 'img/bannieres/b01s.webp', color: [180, 20, 20] },
-  { name: "Le Péteur", img: 'img/bannieres/b21.webp', icon: 'img/bannieres/b21s.webp', color: [222, 78, 44] },
-  { name: "Masse d'armes", img: 'img/bannieres/b02.webp', icon: 'img/bannieres/b02s.webp', color: [240, 128, 130] },
-  { name: "Soleil", img: 'img/bannieres/b03.webp', icon: 'img/bannieres/b03s.webp', color: [138, 24, 72] },
-  { name: "Marteau", img: 'img/bannieres/b04.webp', icon: 'img/bannieres/b04s.webp', color: [245, 132, 10] },
-  { name: "Canards", img: 'img/bannieres/b05.webp', icon: 'img/bannieres/b05s.webp', color: [200, 160, 50] },
-  { name: "Aigle noir", img: 'img/bannieres/b06.webp', icon: 'img/bannieres/b06s.webp', color: [252, 232, 30] },
-  { name: "Hallebardes", img: 'img/bannieres/b07.webp', icon: 'img/bannieres/b07s.webp', color: [150, 182, 118] },
-  { name: "Chopes", img: 'img/bannieres/b20.webp', icon: 'img/bannieres/b20s.webp', color: [192, 222, 0] },
-  { name: "Dragon", img: 'img/bannieres/b08.webp', icon: 'img/bannieres/b08s.webp', color: [38, 100, 48] },
-  { name: "Chêne", img: 'img/bannieres/b09.webp', icon: 'img/bannieres/b09s.webp', color: [48, 120, 110] },
-  { name: "Lion", img: 'img/bannieres/b10.webp', icon: 'img/bannieres/b10s.webp', color: [40, 210, 210] },
-  { name: "Château", img: 'img/bannieres/b11.webp', icon: 'img/bannieres/b11s.webp', color: [130, 185, 235] },
-  { name: "Fleurs de lys", img: 'img/bannieres/b12.webp', icon: 'img/bannieres/b12s.webp', color: [30, 60, 165] },
-  { name: "Croissant", img: 'img/bannieres/b13.webp', icon: 'img/bannieres/b13s.webp', color: [125, 55, 190] },
-  { name: "Poing", img: 'img/bannieres/b14.webp', icon: 'img/bannieres/b14s.webp', color: [112, 64, 30] },
-  { name: "Corbeau", img: 'img/bannieres/b19.webp', icon: 'img/bannieres/b19s.webp', color: [196, 166, 120] },
-  { name: "Poissons", img: 'img/bannieres/b15.webp', icon: 'img/bannieres/b15s.webp', color: [238, 234, 222] },
-  { name: "Hache d'or", img: 'img/bannieres/b16.webp', icon: 'img/bannieres/b16s.webp', color: [150, 150, 146] },
-  { name: "Main couronnée", img: 'img/bannieres/b17.webp', icon: 'img/bannieres/b17s.webp', color: [70, 78, 98] },
-  { name: "Croix", img: 'img/bannieres/b18.webp', icon: 'img/bannieres/b18s.webp', color: [22, 20, 20] },
+  { name: "Épées croisées", img: 'img/bannieres/b01.webp', icon: 'img/bannieres/b01s.webp', logo: 'img/bannieres/b01m.webp', color: [180, 20, 20] },
+  { name: "Le Péteur", img: 'img/bannieres/b21.webp', icon: 'img/bannieres/b21s.webp', logo: 'img/bannieres/b21m.webp', color: [222, 78, 44] },
+  { name: "Masse d'armes", img: 'img/bannieres/b02.webp', icon: 'img/bannieres/b02s.webp', logo: 'img/bannieres/b02m.webp', color: [240, 128, 130] },
+  { name: "Soleil", img: 'img/bannieres/b03.webp', icon: 'img/bannieres/b03s.webp', logo: 'img/bannieres/b03m.webp', color: [138, 24, 72] },
+  { name: "Marteau", img: 'img/bannieres/b04.webp', icon: 'img/bannieres/b04s.webp', logo: 'img/bannieres/b04m.webp', color: [245, 132, 10] },
+  { name: "Canards", img: 'img/bannieres/b05.webp', icon: 'img/bannieres/b05s.webp', logo: 'img/bannieres/b05m.webp', color: [200, 160, 50] },
+  { name: "Aigle noir", img: 'img/bannieres/b06.webp', icon: 'img/bannieres/b06s.webp', logo: 'img/bannieres/b06m.webp', color: [252, 232, 30] },
+  { name: "Hallebardes", img: 'img/bannieres/b07.webp', icon: 'img/bannieres/b07s.webp', logo: 'img/bannieres/b07m.webp', color: [150, 182, 118] },
+  { name: "Chopes", img: 'img/bannieres/b20.webp', icon: 'img/bannieres/b20s.webp', logo: 'img/bannieres/b20m.webp', color: [192, 222, 0] },
+  { name: "Dragon", img: 'img/bannieres/b08.webp', icon: 'img/bannieres/b08s.webp', logo: 'img/bannieres/b08m.webp', color: [38, 100, 48] },
+  { name: "Chêne", img: 'img/bannieres/b09.webp', icon: 'img/bannieres/b09s.webp', logo: 'img/bannieres/b09m.webp', color: [48, 120, 110] },
+  { name: "Lion", img: 'img/bannieres/b10.webp', icon: 'img/bannieres/b10s.webp', logo: 'img/bannieres/b10m.webp', color: [40, 210, 210] },
+  { name: "Château", img: 'img/bannieres/b11.webp', icon: 'img/bannieres/b11s.webp', logo: 'img/bannieres/b11m.webp', color: [130, 185, 235] },
+  { name: "Fleurs de lys", img: 'img/bannieres/b12.webp', icon: 'img/bannieres/b12s.webp', logo: 'img/bannieres/b12m.webp', color: [30, 60, 165] },
+  { name: "Croissant", img: 'img/bannieres/b13.webp', icon: 'img/bannieres/b13s.webp', logo: 'img/bannieres/b13m.webp', color: [125, 55, 190] },
+  { name: "Poing", img: 'img/bannieres/b14.webp', icon: 'img/bannieres/b14s.webp', logo: 'img/bannieres/b14m.webp', color: [112, 64, 30] },
+  { name: "Corbeau", img: 'img/bannieres/b19.webp', icon: 'img/bannieres/b19s.webp', logo: 'img/bannieres/b19m.webp', color: [196, 166, 120] },
+  { name: "Poissons", img: 'img/bannieres/b15.webp', icon: 'img/bannieres/b15s.webp', logo: 'img/bannieres/b15m.webp', color: [238, 234, 222] },
+  { name: "Hache d'or", img: 'img/bannieres/b16.webp', icon: 'img/bannieres/b16s.webp', logo: 'img/bannieres/b16m.webp', color: [150, 150, 146] },
+  { name: "Main couronnée", img: 'img/bannieres/b17.webp', icon: 'img/bannieres/b17s.webp', logo: 'img/bannieres/b17m.webp', color: [70, 78, 98] },
+  { name: "Croix", img: 'img/bannieres/b18.webp', icon: 'img/bannieres/b18s.webp', logo: 'img/bannieres/b18m.webp', color: [22, 20, 20] },
 ];
 
 // 🐉 Carte Azeroth : à la place des drapeaux, 15 écus des races et des groupes de World of Warcraft. Les royaumes

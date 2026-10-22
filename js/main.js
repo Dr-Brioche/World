@@ -83,7 +83,7 @@ const UI = {
     const fillBanners = () => {
       const list = bannersForMap($('mapType').value), set = BANNERS[list[0]].set || 'base';
       $('bannerPick').innerHTML = list.map(k =>
-        `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].img}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
+        `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
       ).join('');
       pick(list.includes(lastPick[set]) ? lastPick[set] : list[0]);
     };
@@ -92,7 +92,7 @@ const UI = {
       this.banner = k;
       document.querySelectorAll('#bannerPick button').forEach(b => b.classList.toggle('active', +b.dataset.banner === k));
       $('bannerName').textContent = BANNERS[k].name;
-      $('bannerCur').src = BANNERS[k].img;
+      $('bannerCur').src = BANNERS[k].logo || BANNERS[k].icon; // (au menu : juste le tissu, recadré sur son motif ; un écu : en entier)
     };
     // (la liste des drapeaux s'ouvre et se ferme d'un clic sur le drapeau choisi ; choisir un drapeau la referme)
     $('bannerBtn').addEventListener('click', () => $('bannerPick').classList.toggle('hidden'));
