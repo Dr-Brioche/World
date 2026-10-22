@@ -1713,6 +1713,36 @@ const Render = {
     }
   },
 
+  // La souris est sur ⛏️ (barre du haut) : nos mines clignotent sur la carte, pour bien les repérer
+  drawFlashingMines(ox, oy) {
+    const G = Game;
+    if (!UI.flashMines || !G.human) return;
+    const ctx = this.ctx, s = this.cam.scale, on = Math.floor(performance.now() / 300) % 2 === 0;
+    ctx.save();
+    for (const a of G.buildingTiles) {
+      if (G.building[a] !== B_MINE || G.owner[a] !== G.human.id) continue;
+      const half = G.sizeOf(B_MINE) / 2;
+      const x = ox + (a % G.W + half) * s, y = oy + (((a / G.W) | 0) + half) * s;
+      const r = Math.max(24, s * half * 2.5); // (assez grand pour se voir même de très loin)
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = on ? 'rgba(255,215,90,0.5)' : 'rgba(255,215,90,0.12)';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = on ? '#ffd34d' : 'rgba(255,211,77,0.5)';
+      ctx.stroke();
+      // (un deuxième cercle, plus large, quand il s'allume)
+      if (on) {
+        ctx.beginPath();
+        ctx.arc(x, y, r * 1.5, 0, Math.PI * 2);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,211,77,0.7)';
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  },
+
   // Petite étiquette au-dessus d'un bâtiment : garnison, soldats stationnés, temps de construction
   drawBuildingLabel(a, type, x, y) {
     const G = Game, ctx = this.ctx, parts = [];
@@ -2731,6 +2761,7 @@ const Render = {
       this.drawCastleAssaultPreview(ox, oy);
       this.drawHoveredBuildings(ox, oy);
       this.drawSelectable(ox, oy);
+      this.drawFlashingMines(ox, oy);
       this.drawWorks(ox, oy);
       this.drawFloaters(ox, oy);
     }
