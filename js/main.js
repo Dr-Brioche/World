@@ -1563,10 +1563,12 @@ const UI = {
 
   // --- 🔥 Assaut viking (port royal) ---
   vikingText() {
-    return tr(`Assaut viking (💰 ${fmt(CONFIG.VIKING_COST)}) : un assaut par la mer sur une ville ennemie à ${CONFIG.VIKING_RANGE} cases au plus d'une côte, ` +
-      `sans pertes en mer et avec des soldats +${Math.round(CONFIG.VIKING_BONUS * 100)} % plus forts. Une fois acheté, lance-le quand tu veux.`,
-      `Viking assault (💰 ${fmt(CONFIG.VIKING_COST)}): an assault by sea on an enemy city within ${CONFIG.VIKING_RANGE} tiles of a coast, ` +
-      `with no losses at sea and +${Math.round(CONFIG.VIKING_BONUS * 100)}% stronger soldiers. Once bought, launch it whenever you want.`);
+    return tr(`Assaut viking (💰 ${fmt(CONFIG.VIKING_COST)}) : un raid par la mer, depuis ton port royal, sur une ville ennemie à ${CONFIG.VIKING_RANGE} cases au plus d'une côte, ` +
+      `sans pertes en mer et avec des soldats +${Math.round(CONFIG.VIKING_BONUS * 100)} % plus forts. S'ils l'emportent, la ville est détruite avec ses moulins et casernes : ` +
+      `💰 ${fmt(CONFIG.VIKING_LOOT)} de butin par bâtiment détruit. Une fois acheté, lance-le quand tu veux.`,
+      `Viking assault (💰 ${fmt(CONFIG.VIKING_COST)}): a raid by sea, from your royal port, on an enemy city within ${CONFIG.VIKING_RANGE} tiles of a coast, ` +
+      `with no losses at sea and +${Math.round(CONFIG.VIKING_BONUS * 100)}% stronger soldiers. If they win, the city is destroyed with its mills and barracks: ` +
+      `💰 ${fmt(CONFIG.VIKING_LOOT)} of loot per building destroyed. Once bought, launch it whenever you want.`);
   },
   // Bouton « Assaut viking » (menus du port royal) : l'acheter, ou, s'il est prêt, choisir sa cible
   updateVikingButton(btn, text) {
@@ -1616,8 +1618,8 @@ const UI = {
     document.body.style.cursor = '';
   },
   vikingHint() {
-    return tr(`🔥 Assaut viking : clique sur une ville (ou un port fortifié) ennemie à ${CONFIG.VIKING_RANGE} cases au plus d'une côte · ${fmt(Game.human.troops * this.ratio)} soldats (curseur « Envoyer ») · Échap : plus tard`,
-      `🔥 Viking assault: click an enemy city (or fortified port) within ${CONFIG.VIKING_RANGE} tiles of a coast · ${fmt(Game.human.troops * this.ratio)} soldiers (« Send » slider) · Esc: later`);
+    return tr(`🔥 Assaut viking : clique sur une ville (ou un port fortifié) ennemie à raser, à ${CONFIG.VIKING_RANGE} cases au plus d'une côte · ${fmt(Game.human.troops * this.ratio)} soldats (curseur « Envoyer ») · Échap : plus tard`,
+      `🔥 Viking assault: click an enemy city (or fortified port) to raze, within ${CONFIG.VIKING_RANGE} tiles of a coast · ${fmt(Game.human.troops * this.ratio)} soldiers (« Send » slider) · Esc: later`);
   },
   // Lancer l'assaut viking sur la cible en i
   viking(i) {
@@ -1625,8 +1627,8 @@ const UI = {
     const err = G.launchViking(h.id, i, n);
     if (err) return this.log(err, 'warn');
     this.cancelVikingAim();
-    this.log(tr(`🔥 Tes Vikings embarquent (${fmt(n)} soldats) : ils traversent la mer sans pertes et débarqueront près de leur cible !`,
-      `🔥 Your Vikings set sail (${fmt(n)} soldiers): they cross the sea with no losses and will land near their target!`), 'good');
+    this.log(tr(`🔥 Tes Vikings embarquent (${fmt(n)} soldats) : ils traversent la mer sans pertes, débarqueront près de leur cible et la raseront !`,
+      `🔥 Your Vikings set sail (${fmt(n)} soldiers): they cross the sea with no losses, will land near their target and raze it!`), 'good');
   },
 
   // --- Croisade religieuse (cathédrale) ---

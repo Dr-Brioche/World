@@ -537,10 +537,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      🔥 **Assaut viking** (port royal, niveau 3) : achète-le **💰 3000** (bouton 🔥 Viking dans la barre des constructions,
      ou dans le menu du port royal) ; il est alors **prêt** (un seul à la fois), à lancer quand tu veux. Clique sur le bouton
      🔥 Viking, puis sur une **ville** (ou un port fortifié) ennemie **de l'autre côté de la mer**, à **25 cases au plus d'une
-     de ses côtes** (ou fais un clic droit sur elle → « 🔥 Assaut viking ») : tes bateaux partent avec le % de soldats du curseur
-     « Envoyer », traversent **sans aucune perte en mer**, débarquent sur la côte la plus proche de la cible et l'armée marche
-     droit sur elle, **sans avant-poste**, avec des soldats **50 % plus forts**. Bateaux et assauts vikings portent une
-     **🔥 flamme** pour les reconnaître. S'il échoue (ou si tu le rappelles), les survivants rembarquent et rentrent au port.
+     de ses côtes** (ou fais un clic droit sur elle → « 🔥 Assaut viking ») : tes bateaux partent **de ton port royal** avec le %
+     de soldats du curseur « Envoyer », traversent **sans aucune perte en mer**, débarquent sur la côte la plus proche de la
+     cible et l'armée marche droit sur elle, **sans avant-poste**, avec des soldats **50 % plus forts**. C'est un **raid** :
+     à la fin du siège, la ville n'est pas prise mais **détruite**, avec ses moulins et casernes, et chaque bâtiment détruit
+     te rapporte **💰 300 de butin** ; les terres restent à l'ennemi. Puis les survivants rembarquent et rentrent au port (de
+     même s'il échoue ou si tu le rappelles). Bateaux et assauts vikings portent une **🔥 flamme** pour les reconnaître.
      Une fois lancé, il faut en racheter un. Les bots s'en servent aussi (réglages `VIKING_...` dans `js/config.js`).
 
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
@@ -748,6 +750,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.99** : 🔥 l'assaut viking devient un **raid** : il part forcément d'un port royal, et s'il l'emporte, la ville visée est **détruite** (avec ses moulins et casernes) au lieu d'être prise ; 💰 300 de butin par bâtiment détruit, puis les Vikings rentrent par bateau
 - **v0.92.98** : ⚓ un port royal (niveau 3) bâti ou pris dans la zone d'un avant-poste la fait entrer dans ton royaume, comme un château (l'avant-poste disparaît) · 🔥 **assaut viking** (port royal, niveau 3, 💰 3000) : un assaut par la mer, sans avant-poste, sur une ville ennemie à 25 cases au plus d'une côte ; traversée sans pertes, soldats +50 % plus forts, flamme 🔥 au-dessus des bateaux et des assauts vikings ; les survivants d'un échec rentrent par bateau ; les bots l'utilisent aussi
 - **v0.92.97** : ⛏️ la souris sur ⛏️ (barre du haut) fait clignoter tes mines sur la carte · ⛵ les bots n'envoient plus d'expéditions au hasard : ils débarquent avec un but (des terres libres au-delà de la mer quand il n'y en a plus à leur frontière, ou tout près d'une ville d'un ennemi plus faible), renforcent leur avant-poste par la mer, puis lancent une vraie campagne depuis lui
 - **v0.92.96** : ⬆️ la fenêtre d'amélioration annonce ce que débloque le niveau 3 : « Débloque le recrutement de masse » (caserne → grande caserne) et « Débloque les croisades » (église → cathédrale)
