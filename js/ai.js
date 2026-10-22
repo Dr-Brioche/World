@@ -12,13 +12,15 @@ const AI = {
     if (Math.random() < 0.1) this.tryLevy(p);
     if (Math.random() < (p.bridgeSaving ? 0.3 : 0.05)) this.tryBridge(p);
     if (Math.random() < 0.05) this.tryExpedition(p);
+    if (Math.random() < 0.05) this.tryViking(p);
     if (this.stuckOnIsland(p)) this.goToSea(p);
     if (Math.random() < 0.08) this.tryAlliance(p);
 
     this.reactToThreats(p);
 
     // Une seule campagne à la fois ; si l'assaut en cours se heurte à des défenseurs, renforts !
-    const mine = Game.attacks.find(a => !a.done && a.attacker === p.id);
+    // (un assaut viking, parti de la mer, vit sa vie : il ne compte pas)
+    const mine = Game.attacks.find(a => !a.done && a.attacker === p.id && a.viking === undefined);
     if (mine) {
       // Assaut de jonction bloqué par des défenseurs : renforts
       // (un bot attend AI_SEND_INTERVAL secondes entre deux envois, et que son armée ait repris des forces :
@@ -281,6 +283,22 @@ const AI = {
         if (!G.launchExpedition(p.id, i, p.troops * 0.35)) return;
       }
     }
+  },
+
+  // 🔥 Avec un port royal : on achète un assaut viking quand on est riche et que l'armée est bien remplie, puis on
+  // le lance sur une ville d'un ennemi plus faible que nous, de l'autre côté de la mer
+  tryViking(p) {
+    const G = Game, max = G.maxTroops(p);
+    if (!p.vikingReady) {
+      if (p.gold >= CONFIG.VIKING_COST + 1000 && p.troops > max * 0.6) G.buyViking(p);
+      return;
+    }
+    if (p.troops < max * 0.5 || G.expeditions.some(e => !e.done && e.pid === p.id && e.viking !== undefined)) return;
+    const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.areAllied(p.id, o.id) && o.troops < p.troops * 0.8);
+    if (!foes.length) return;
+    const foe = foes[(Math.random() * foes.length) | 0];
+    const cities = G.castles.filter(c => G.owner[c] === foe.id).sort(() => Math.random() - 0.5).slice(0, 3);
+    for (const c of cities) if (!G.launchViking(p.id, c, p.troops * 0.5)) return;
   },
 
   // Nos avant-postes bâtis servent vraiment :

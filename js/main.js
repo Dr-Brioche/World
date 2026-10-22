@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 
 // Petites icônes dessinées pour les menus (voir icons.js) : un style médiéval, pas des emojis
 const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall'), cross: iconSVG('cross'),
-  boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut'), cart: iconSVG('cart'), spears: iconSVG('spears') };
+  boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut'), cart: iconSVG('cart'), spears: iconSVG('spears'), flame: iconSVG('flame') };
 
 const UI = {
   selectedBuild: 0,
@@ -58,6 +58,14 @@ const UI = {
     });
     builds.appendChild(lb);
     this.levyBar = lb;
+    // Bouton « Viking » : il apparaît dès qu'on a un port royal (niveau 3) : acheter un assaut viking, puis choisir
+    // sa cible (voir refreshVikingBar)
+    const vb = document.createElement('button');
+    vb.className = 'build crusade hidden';
+    vb.innerHTML = `<span class="icon">${ICONS.flame}</span><span>${tr('Viking', 'Viking')}</span><span class="cost"></span>`;
+    vb.addEventListener('click', () => this.vikingButton());
+    builds.appendChild(vb);
+    this.vikingBar = vb;
 
     // Cartes dessinées avec l'éditeur (voir custommaps.js) : dans la liste des cartes. Revenu de l'éditeur avec
     // « Jouer cette carte » (index.html?carte=Nom) : elle est déjà choisie.
@@ -229,7 +237,7 @@ const UI = {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
-      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.closeBuildingMenus(); this.freeArm = 0; }
+      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
     });
     // Les emojis de la page deviennent des icônes médiévales dessinées (voir icons.js)
@@ -286,7 +294,7 @@ const UI = {
   },
 
   selectBuild(t) {
-    if (t) { this.cancelPlan(); this.cancelWall(); }
+    if (t) { this.cancelPlan(); this.cancelWall(); this.cancelVikingAim(); }
     this.selectedBuild = t;
     document.querySelectorAll('.build[data-type]').forEach(b => b.classList.toggle('active', +b.dataset.type === t));
     document.body.style.cursor = t ? 'cell' : '';
@@ -458,7 +466,8 @@ const UI = {
         ...(cur.boatSpeed ? [tr(`Débarquements ${pct(next.landingCost / cur.landingCost - 1)}`, `Landings ${pct(next.landingCost / cur.landingCost - 1)}`),
           tr(`Bateaux ${pct(next.boatSpeed / cur.boatSpeed - 1)}`, `Ships ${pct(next.boatSpeed / cur.boatSpeed - 1)}`)]
           : [tr('Débloque les expéditions maritimes', 'Unlocks naval expeditions')]),
-        next.garrison && !cur.garrison && tr('Petite garnison', 'Small garrison'), next.bonus && tr(`Petite muraille ${pct(next.bonus)}`, `Small walls ${pct(next.bonus)}`)].filter(Boolean);
+        next.garrison && !cur.garrison && tr('Petite garnison', 'Small garrison'), next.bonus && tr(`Petite muraille ${pct(next.bonus)}`, `Small walls ${pct(next.bonus)}`),
+        PORT_LEVELS.indexOf(next) === 3 && tr('Débloque l\'assaut viking', 'Unlocks the Viking assault')].filter(Boolean);
     }
     if (type === B_CASTLE) {
       const lvl = CASTLE_LEVELS.indexOf(next), walls = n => Math.max(0, n - 1); // (murs à bâtir : voir Game.wallMax)
@@ -616,6 +625,14 @@ const UI = {
       this.updateLevyButton(btn, a, true);
       btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.levy(a); });
     }
+    // Port royal (port de niveau 3) : bouton « Assaut viking »
+    if (type === B_PORT && G.level[a] >= 3) {
+      const btn = document.createElement('button');
+      btn.dataset.viking = '';
+      el.querySelector('.choices').prepend(btn);
+      this.updateVikingButton(btn, true);
+      btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.vikingButton(); });
+    }
     // Cathédrale (église de niveau 3) : bouton « Croisade »
     if (type === B_CHURCH && G.level[a] >= 3) {
       const btn = document.createElement('button');
@@ -653,6 +670,7 @@ const UI = {
         `<button data-trade class="wall">${ICONS.cart}</button>` : '') +
       (G.building[a] === B_CHURCH && G.level[a] >= 3 ? `<button data-crusade class="up">${ICONS.cross}</button>` : '') +
       (G.building[a] === B_BARRACKS && G.level[a] >= 3 ? `<button data-levy class="up">${ICONS.spears}</button>` : '') +
+      (G.building[a] === B_PORT && G.level[a] >= 3 ? `<button data-viking class="up">${ICONS.flame}</button>` : '') +
       (G.building[a] !== B_MINE || work ? `<button data-x class="danger" title="${work ? tr('Annuler les travaux', 'Cancel the works') : tr('Détruire', 'Demolish')}">✖</button>` : '');
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
@@ -677,6 +695,11 @@ const UI = {
     if (levyBtn) {
       this.updateLevyButton(levyBtn, a, false);
       levyBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.levy(a); });
+    }
+    const vikingBtn = el.querySelector('[data-viking]');
+    if (vikingBtn) {
+      this.updateVikingButton(vikingBtn, false);
+      vikingBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.vikingButton(); });
     }
     const crusadeBtn = el.querySelector('[data-crusade]');
     if (crusadeBtn) {
@@ -1005,6 +1028,7 @@ const UI = {
     this.refreshBuildingMenu();
     this.refreshCrusadeBar();
     this.refreshLevyBar();
+    this.refreshVikingBar();
 
     const ranking = G.players.filter(p => p.alive && p.tiles > 0).sort((a, b) => b.tiles - a.tiles);
     const row = p => {
@@ -1050,7 +1074,7 @@ const UI = {
 
     if (G.phase === 'playing') {
       const freeArm = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
-      $('hint').textContent = this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
+      $('hint').textContent = this.vikingAim ? this.vikingHint() : this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
         : freeArm ? tr(`🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`,
           `🌾 Free land: click once more to send ${fmt(G.human.troops * this.ratio)} soldiers into the attack`)
         : this.selectedBuild
@@ -1403,6 +1427,13 @@ const UI = {
     // (pas sur les terres d'un allié de son camp, en mode Factions : ce pacte-là ne se trahit pas)
     const sameCamp = G.owner[i] >= 0 && G.eternalPact(h.id) && G.areAllied(h.id, G.owner[i]);
     if (G.isLand(i) && !own && !sameCamp) items.push({ label: tr('⚔️ Attaquer', '⚔️ Attack'), run: () => { this.freeArm = performance.now(); this.onMapClick(sx, sy); } });
+    // 🔥 Assaut viking prêt : sur une ville (ou un port fortifié) ennemie, le lancer d'ici
+    if (h.vikingReady && G.building[i] && G.holdsAlone(G.anchor[i]) && G.owner[i] >= 0 && !own && !G.areAllied(h.id, G.owner[i])) {
+      const plan = G.planViking(h.id, i), n = Math.floor(h.troops * this.ratio);
+      const label = tr(`🔥 Assaut viking avec ${fmt(n)} soldats`, `🔥 Viking assault with ${fmt(n)} soldiers`);
+      if (plan.error) items.push({ label, disabled: plan.error });
+      else items.push({ label: label + tr(` (débarquement à ${Math.ceil(plan.time)} s de bateau)`, ` (landing after ${Math.ceil(plan.time)} s at sea)`), run: () => this.viking(i) });
+    }
     // Sur un royaume ennemi : lui proposer une alliance (ou, s'il est allié, rompre le pacte)
     // (en mode Factions, pas de nouveaux pactes, mais on aide quand même les alliés de son camp)
     const o = G.owner[i];
@@ -1523,9 +1554,79 @@ const UI = {
       if (cb) this.updateCrusadeButton(cb, box.buildingAnchor, text);
       const lv = box && box.buildingAnchor !== undefined && box.querySelector('[data-levy]');
       if (lv) this.updateLevyButton(lv, box.buildingAnchor, text);
+      const vk = box && box.buildingAnchor !== undefined && box.querySelector('[data-viking]');
+      if (vk) this.updateVikingButton(vk, text);
       const tb = box && box.buildingAnchor !== undefined && box.querySelector('[data-trade]');
       if (tb) this.updateTradeButton(tb, box.buildingAnchor, text);
     }
+  },
+
+  // --- 🔥 Assaut viking (port royal) ---
+  vikingText() {
+    return tr(`Assaut viking (💰 ${fmt(CONFIG.VIKING_COST)}) : un assaut par la mer sur une ville ennemie à ${CONFIG.VIKING_RANGE} cases au plus d'une côte, ` +
+      `sans pertes en mer et avec des soldats +${Math.round(CONFIG.VIKING_BONUS * 100)} % plus forts. Une fois acheté, lance-le quand tu veux.`,
+      `Viking assault (💰 ${fmt(CONFIG.VIKING_COST)}): an assault by sea on an enemy city within ${CONFIG.VIKING_RANGE} tiles of a coast, ` +
+      `with no losses at sea and +${Math.round(CONFIG.VIKING_BONUS * 100)}% stronger soldiers. Once bought, launch it whenever you want.`);
+  },
+  // Bouton « Assaut viking » (menus du port royal) : l'acheter, ou, s'il est prêt, choisir sa cible
+  updateVikingButton(btn, text) {
+    const G = Game, h = G.human, ready = h.vikingReady, err = ready ? null : G.vikingBuyError(h);
+    btn.disabled = !!err;
+    btn.title = ready ? tr('🔥 Assaut viking prêt : clique, puis choisis une ville ennemie de l\'autre côté de la mer', '🔥 Viking assault ready: click, then choose an enemy city across the sea')
+      : err || this.vikingText();
+    if (text) {
+      const html = ready ? tr('🔥 Assaut viking : choisir la cible', '🔥 Viking assault: choose the target') : tr(`🔥 Assaut viking (💰 ${fmt(CONFIG.VIKING_COST)})`, `🔥 Viking assault (💰 ${fmt(CONFIG.VIKING_COST)})`);
+      if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
+    }
+  },
+  // Bouton de la barre : caché sans port royal (sauf si un assaut viking est déjà prêt)
+  refreshVikingBar() {
+    const G = Game, h = G.human, btn = this.vikingBar, show = h.vikingReady || G.royalPorts(h.id).length > 0;
+    btn.classList.toggle('hidden', !show);
+    if (!show) return;
+    btn.querySelector('.cost').textContent = h.vikingReady ? tr('prêt !', 'ready!') : `💰 ${fmt(CONFIG.VIKING_COST)}`;
+    btn.classList.toggle('poor', !h.vikingReady && h.gold < CONFIG.VIKING_COST);
+    btn.classList.toggle('active', !!this.vikingAim);
+    const err = h.vikingReady ? null : G.vikingBuyError(h);
+    btn.disabled = !!err;
+    btn.title = h.vikingReady ? tr('🔥 Assaut viking prêt : clique, puis choisis une ville ennemie de l\'autre côté de la mer', '🔥 Viking assault ready: click, then choose an enemy city across the sea')
+      : err || this.vikingText();
+  },
+  // Clic sur un bouton « Viking » : l'acheter, ou choisir sa cible (un 2e clic annule le choix)
+  vikingButton() {
+    const G = Game, h = G.human;
+    if (h.vikingReady) return this.vikingAim ? this.cancelVikingAim() : this.startVikingAim();
+    const err = G.buyViking(h);
+    if (err) return this.log(err, 'warn');
+    this.log(tr('🔥 Assaut viking prêt ! Clique sur le bouton « Viking », puis sur une ville ennemie de l\'autre côté de la mer (ou clic droit sur elle).',
+      '🔥 Viking assault ready! Click the « Viking » button, then an enemy city across the sea (or right-click it).'), 'good');
+    this.startVikingAim();
+  },
+  startVikingAim() {
+    this.selectBuild(0);
+    this.cancelPlan();
+    this.cancelWall();
+    this.cancelTrade();
+    this.vikingAim = true;
+    document.body.style.cursor = 'crosshair';
+  },
+  cancelVikingAim() {
+    if (!this.vikingAim) return;
+    this.vikingAim = false;
+    document.body.style.cursor = '';
+  },
+  vikingHint() {
+    return tr(`🔥 Assaut viking : clique sur une ville (ou un port fortifié) ennemie à ${CONFIG.VIKING_RANGE} cases au plus d'une côte · ${fmt(Game.human.troops * this.ratio)} soldats (curseur « Envoyer ») · Échap : plus tard`,
+      `🔥 Viking assault: click an enemy city (or fortified port) within ${CONFIG.VIKING_RANGE} tiles of a coast · ${fmt(Game.human.troops * this.ratio)} soldiers (« Send » slider) · Esc: later`);
+  },
+  // Lancer l'assaut viking sur la cible en i
+  viking(i) {
+    const G = Game, h = G.human, n = Math.floor(h.troops * this.ratio);
+    const err = G.launchViking(h.id, i, n);
+    if (err) return this.log(err, 'warn');
+    this.cancelVikingAim();
+    this.log(tr(`🔥 Tes Vikings embarquent (${fmt(n)} soldats) : ils traversent la mer sans pertes et débarqueront près de leur cible !`,
+      `🔥 Your Vikings set sail (${fmt(n)} soldiers): they cross the sea with no losses and will land near their target!`), 'good');
   },
 
   // --- Croisade religieuse (cathédrale) ---
@@ -1777,6 +1878,8 @@ const UI = {
       this.log(tr(`🧱 Chantier du mur lancé (💰 ${fmt(cost)}) : il sera debout dans ${CONFIG.WALL_BUILD_TIME} s.`, `🧱 Wall construction started (💰 ${fmt(cost)}): it will stand in ${CONFIG.WALL_BUILD_TIME} s.`), 'good');
       return;
     }
+    // Assaut viking : le clic choisit la ville ennemie visée
+    if (this.vikingAim) return this.viking(i);
     // Route commerciale : le clic choisit la ville alliée
     if (this.tradeFor >= 0) {
       const a = this.tradeFor, plan = G.planTrade(h.id, a, i);
