@@ -194,10 +194,13 @@ const CONFIG = {
   LEVY_FROM: 0.35,
   LEVY_TO: 0.65,
   // 🔥 Assaut viking (port royal, niveau 3) : on l'achète VIKING_COST pièces, il est alors prêt (un seul à la fois) ;
-  // on le lance quand on veut sur une ville (ou un port fortifié) ennemie de l'autre côté de la mer, à VIKING_RANGE
-  // cases au plus d'une de ses côtes : les bateaux traversent sans pertes, l'armée débarque et marche droit sur la
-  // cible, avec des soldats VIKING_BONUS plus forts (+50 %). S'il échoue, les survivants rentrent par bateau.
+  // on le lance quand on veut, depuis un port royal, sur une ville (ou un port fortifié) ennemie de l'autre côté de
+  // la mer, à VIKING_RANGE cases au plus d'une de ses côtes : les bateaux traversent sans pertes, l'armée débarque et
+  // marche droit sur la cible, avec des soldats VIKING_BONUS plus forts (+50 %). C'est un raid : s'il l'emporte, la
+  // cible est DÉTRUITE (avec ses moulins et casernes), et chaque bâtiment détruit rapporte VIKING_LOOT pièces.
+  // Puis les survivants rentrent par bateau (de même s'il échoue).
   VIKING_COST: 3000,
+  VIKING_LOOT: 300,
   VIKING_RANGE: 25,
   VIKING_BONUS: 0.5,
   VIKING_MIN_TROOPS: 20,       // soldats à embarquer au moins

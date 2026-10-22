@@ -730,10 +730,11 @@ const GameRules = {
   },
 
   // --- 🔥 Assaut viking (port royal, niveau 3) ---
-  // On l'achète VIKING_COST pièces : il est alors prêt (un seul à la fois), et on le lance quand on veut sur une ville
-  // (ou un port fortifié) ennemie de l'autre côté de la mer, à VIKING_RANGE cases au plus d'une de ses côtes.
-  // Les bateaux traversent sans pertes, l'armée débarque sur la côte la plus proche de la cible et marche droit sur
-  // elle, avec des soldats VIKING_BONUS plus forts. S'il échoue (ou s'il est rappelé), les survivants rentrent par bateau.
+  // On l'achète VIKING_COST pièces : il est alors prêt (un seul à la fois), et on le lance quand on veut, depuis un de
+  // ses ports royaux, sur une ville (ou un port fortifié) ennemie de l'autre côté de la mer, à VIKING_RANGE cases au
+  // plus d'une de ses côtes. Les bateaux traversent sans pertes, l'armée débarque sur la côte la plus proche de la
+  // cible et marche droit sur elle, avec des soldats VIKING_BONUS plus forts. C'est un raid : à la fin du siège, la
+  // cible est détruite (voir vikingRaid). Puis (ou s'il échoue, ou s'il est rappelé) les survivants rentrent par bateau.
   royalPorts(pid) {
     return this.buildingTiles.filter(a => this.building[a] === B_PORT && this.owner[a] === pid && this.level[a] >= 3);
   },
@@ -781,8 +782,8 @@ const GameRules = {
     const name = this.players[o].name;
     if (this.areAllied(pid, o)) return { error: tr(`${name} est ton allié !`, `${name} is your ally!`) };
     if (this.truceLeft(c) > 0) return { error: tr(`${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} vient de changer de mains : attends un peu.`, `${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} has just changed hands: wait a little.`) };
-    const ports = this.expeditionPorts(pid);
-    if (!ports.length) return { error: tr('Il te faut un port d\'où partir.', 'You need a port to sail from.') };
+    const ports = this.royalPorts(pid); // (les Vikings ne partent que d'un port royal)
+    if (!ports.length) return { error: tr('Il te faut un port royal (niveau 3) d\'où partir.', 'You need a royal port (level 3) to sail from.') };
     // Les côtes de ce royaume à R cases au plus de la cible, de la plus proche à la plus lointaine
     const h = this.sizeOf(this.building[c]) / 2, cx = c % W + h, cy = ((c / W) | 0) + h, coasts = [];
     for (let y = Math.max(0, Math.floor(cy - R)); y <= Math.min(this.H - 1, Math.ceil(cy + R)); y++) {
@@ -813,8 +814,8 @@ const GameRules = {
       const route = this.vikingRoute(pid, c, j);
       if (route) return { castle: c, target: o, landing: j, route, ...best };
     }
-    return { error: tr('Aucun débarquement possible près de cette cible : pas de côte que tes bateaux peuvent rejoindre, ou des fortifications bloquent le chemin.',
-      'No landing possible near this target: no coast your ships can reach, or fortifications block the way.') };
+    return { error: tr('Aucun débarquement possible près de cette cible : pas de côte que les bateaux de tes ports royaux peuvent rejoindre, ou des fortifications bloquent le chemin.',
+      'No landing possible near this target: no coast the ships of your royal ports can reach, or fortifications block the way.') };
   },
   // Lancer l'assaut viking de pid sur la cible en i, avec troops soldats. Renvoie un message d'erreur, ou null.
   launchViking(pid, i, troops) {
@@ -862,6 +863,23 @@ const GameRules = {
       `🔥 Your Vikings (${fmt(e.troops)} soldiers) land in ${d.name}'s land and march on ${this.targetLabel(c)}!`), 'good', d);
     else if (d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} (${fmt(e.troops)} soldats) ont débarqué ! Clique sur leur bannière pour envoyer tes défenseurs.`,
       `🔥 ${p.name}'s Vikings (${fmt(e.troops)} soldiers) have landed! Click their banner to send your defenders.`), 'warn', p);
+  },
+  // 🔥 Fin du siège d'un assaut viking : c'est un raid. La cible (ville ou port fortifié) est détruite, avec les moulins
+  // et casernes qui en dépendent ; chaque bâtiment détruit rapporte VIKING_LOOT pièces au pillard. Les terres restent
+  // au défenseur (la route des Vikings lui revient), et les survivants rembarquent (voir endAttack).
+  vikingRaid(a, c) {
+    const p = this.players[a.attacker], d = this.players[a.target];
+    const ruins = [c, ...this.linkedBuildings(c)];
+    const city = this.building[c] === B_CASTLE, what = city ? tr('une ville', 'a city') : tr('un port fortifié', 'a fortified port');
+    for (const b of ruins) this.removeBuilding(b);
+    const loot = ruins.length * CONFIG.VIKING_LOOT;
+    p.gold += loot;
+    this.warEffects(a);
+    if (p.isHuman) UI.log(tr(`🔥 Tes Vikings ont rasé ${what} ${this.deName(d.name)} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} détruit${ruins.length > 1 ? 's' : ''}, 💰 ${fmt(loot)} de butin ! Ils rembarquent.`,
+      `🔥 Your Vikings razed ${what} of ${d.name}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} destroyed, 💰 ${fmt(loot)} of loot! They set sail home.`), 'good', d);
+    else if (d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} ont rasé une de tes ${city ? 'villes' : 'places fortes'} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} détruit${ruins.length > 1 ? 's' : ''} !`,
+      `🔥 ${p.name}'s Vikings razed one of your ${city ? 'cities' : 'strongholds'}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} destroyed!`), 'warn', p);
+    return this.endAttack(a);
   },
   // Des soldats rembarquent sur la côte `from` et rentrent au port le plus proche (ils rejoignent l'armée en arrivant)
   sailHome(pid, from, troops) {
@@ -4756,6 +4774,7 @@ const GameRules = {
       const sb = this.building[a.siege.tile];
       if (sb !== B_CASTLE && sb !== B_OUTPOST && sb !== B_PORT) return this.endAttack(a); // (il n'existe plus)
       if (this.tick < a.siege.end) return;
+      if (a.viking !== undefined) return this.vikingRaid(a, this.anchor[a.siege.tile]); // (🔥 un raid viking détruit sa cible)
       return sb === B_OUTPOST ? this.takeOutpost(a, a.siege.tile) : sb === B_PORT ? this.takePort(a, this.anchor[a.siege.tile])
         : this.takeCastle(a, a.siege.tile);
     }
