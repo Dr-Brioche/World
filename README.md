@@ -723,6 +723,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.88** : 🚩 menu de départ : drapeaux un peu moins zoomés (cadre 25 % plus large : on voit le haut de la lance et le début des rubans)
 - **v0.92.87** : 🚩 au menu de départ, les drapeaux sont recadrés sur leur tissu (sans la lance ni les rubans) : leur motif se voit bien ; icônes des drapeaux plus nettes
 - **v0.92.86** : 🛡️ carte Azeroth : 15 écus des races et des groupes de WoW à la place des drapeaux (Humains, Orcs, Elfes de la nuit, Défias, La Main d'Argent…), et les royaumes rivaux portent leur nom
 - **v0.92.85** : 🗺️ le nombre de royaumes rivaux est limité selon la taille de la carte (un pour 5 000 cases : 10 au plus sur la petite carte, 20 sur les autres) ; ton choix est retrouvé si tu repasses sur une carte plus grande
