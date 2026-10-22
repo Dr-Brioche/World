@@ -292,7 +292,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **-20 %** en forêt, normale en plaine.
    Dans le **désert** 🏜️, tout bâtiment (moulin, caserne, port) produit **20 % de moins**.
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
-   **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher** (seulement **25 %** pour
+   **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher** (seulement **35 %** pour
    les **moulins** et les **casernes**, et **2 fois plus cher** pour les **églises** et les **ports** ; les mines gardent leur prix).
    Les bâtiments que tu **prends à l'ennemi** ne comptent pas (et un bâtiment perdu ne compte plus).
    **Les moulins et casernes se construisent dans l'enceinte d'une de tes villes** (dans sa muraille),
@@ -464,9 +464,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      comme une église ou un port (sauf si elle est dans la muraille d'une ville : il faut d'abord prendre la ville, et la mine part avec elle).
      - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
        **3 mines au plus** (+48 % au maximum).
-     - 🪙 **Mine d'or** : son filon rapporte **2 000 pièces en 5 minutes** (un peu à chaque production), doublé si reliée.
+     - 🪙 **Mine d'or** : son filon rapporte **5 000 pièces en 10 minutes** (un peu à chaque production), doublé si reliée.
        Puis il **s'épuise** (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
-       **relance pour 5 minutes de plus**, qui rapportent de nouveau **2 000 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
+       **relance pour 10 minutes de plus**, qui rapportent de nouveau **5 000 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
      - 🪨 **Carrière de pierre** (en colline) : les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
        (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
      - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
@@ -723,6 +723,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.90** : 🪙 mine d'or : 5 000 pièces en 10 minutes (au lieu de 2 000 en 5), et de nouveau 5 000 en 10 minutes au niveau 2 · 💰 moulins et casernes : +35 % par bâtiment (au lieu de +25 %)
 - **v0.92.89** : 💰 le prix des moulins et des casernes monte moins vite (+25 % par bâtiment au lieu de +50 %) · ⛏️ mines plus chères : 600 (au lieu de 400), puis 1 200 pour le niveau 2 (au lieu de 1 000)
 - **v0.92.88** : 🚩 menu de départ : drapeaux un peu moins zoomés (cadre 25 % plus large : on voit le haut de la lance et le début des rubans)
 - **v0.92.87** : 🚩 au menu de départ, les drapeaux sont recadrés sur leur tissu (sans la lance ni les rubans) : leur motif se voit bien ; icônes des drapeaux plus nettes

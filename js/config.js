@@ -140,7 +140,7 @@ const CONFIG = {
   BUILDING_DRAW_SCALE: 1.5, // taille des bâtiments dessinés sur la carte (icônes et images) : 1.5 = 50 % plus grands
   ICON_LEVEL_GROWTH: 0.18,  // de loin, l'icône d'un bâtiment grandit de 18 % par niveau (une cathédrale se voit mieux qu'une église)
   RARE_COST_GROWTH: 2,       // ...et x2 pour les églises et les ports (une hausse 2 fois plus forte : +100 % au lieu de +50 %)
-  MILL_COST_GROWTH: 1.25,    // ...et seulement x1.25 pour les moulins et les casernes (on en bâtit beaucoup : leur prix monte moins vite)
+  MILL_COST_GROWTH: 1.35,    // ...et seulement x1.35 pour les moulins et les casernes (on en bâtit beaucoup : leur prix monte moins vite)
   BUILD_TIME: 3,             // secondes de chantier pour construire un bâtiment (il ne produit rien avant)
   UPGRADE_TIME: [40, 60, 90], // améliorer un bâtiment : 40 s pour passer au niveau 2, 60 s au niveau 3, 90 s au niveau 4
   // Murs : une ville de niveau 2 peut bâtir 1 mur, une citadelle (niveau 3) un 2e. Un mur va de la muraille de la
@@ -464,10 +464,10 @@ const MINE_LEVELS = [
 const MINES = {
   // ⚒ fer : toutes les troupes du royaume sont plus fortes (+4 % / +8 % par mine, doublé si reliée : +48 % au plus)
   iron: { name: 'Mine de fer', short: 'troupes plus fortes', icon: '⚒️', terrain: 'mountain', count: [4, 6], max: 3, power: [0, 0.04, 0.08] },
-  // 🪙 or : le filon rapporte 2000 pièces en 5 minutes d'exploitation (un peu à chaque production), doublé si
+  // 🪙 or : le filon rapporte 5000 pièces en 10 minutes d'exploitation (un peu à chaque production), doublé si
   //   reliée ; puis il s'épuise (son compteur, à lui, passe d'un royaume à l'autre) ; le niveau 2 le relance pour
-  //   5 minutes de plus, qui rapportent de nouveau 2000 pièces
-  gold: { name: 'Mine d\'or', short: 'beaucoup d\'or, mais il s\'épuise', icon: '🪙', terrain: 'mountain', count: [4, 6], total: 2000, time: 300 },
+  //   10 minutes de plus, qui rapportent de nouveau 5000 pièces
+  gold: { name: 'Mine d\'or', short: 'beaucoup d\'or, mais il s\'épuise', icon: '🪙', terrain: 'mountain', count: [4, 6], total: 5000, time: 600 },
   // 🪨 pierre (une carrière, en colline) : les améliorations, les murs et les ponts coûtent moins cher
   //   (−5 % / −10 % par carrière, doublé si reliée : −60 % au plus)
   stone: { name: 'Carrière de pierre', short: 'améliorations moins chères', icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },
