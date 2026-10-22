@@ -193,6 +193,14 @@ const CONFIG = {
   LEVY_BOOST: 2,
   LEVY_FROM: 0.35,
   LEVY_TO: 0.65,
+  // 🔥 Assaut viking (port royal, niveau 3) : on l'achète VIKING_COST pièces, il est alors prêt (un seul à la fois) ;
+  // on le lance quand on veut sur une ville (ou un port fortifié) ennemie de l'autre côté de la mer, à VIKING_RANGE
+  // cases au plus d'une de ses côtes : les bateaux traversent sans pertes, l'armée débarque et marche droit sur la
+  // cible, avec des soldats VIKING_BONUS plus forts (+50 %). S'il échoue, les survivants rentrent par bateau.
+  VIKING_COST: 3000,
+  VIKING_RANGE: 25,
+  VIKING_BONUS: 0.5,
+  VIKING_MIN_TROOPS: 20,       // soldats à embarquer au moins
   CRUSADE_FAITH: 1000,
   CRUSADE_TIME: 60,
   // Vitesse de la conversion selon l'écart de Croyance : [écart, secondes pour convertir une case].

@@ -534,6 +534,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
+     🔥 **Assaut viking** (port royal, niveau 3) : achète-le **💰 3000** (bouton 🔥 Viking dans la barre des constructions,
+     ou dans le menu du port royal) ; il est alors **prêt** (un seul à la fois), à lancer quand tu veux. Clique sur le bouton
+     🔥 Viking, puis sur une **ville** (ou un port fortifié) ennemie **de l'autre côté de la mer**, à **25 cases au plus d'une
+     de ses côtes** (ou fais un clic droit sur elle → « 🔥 Assaut viking ») : tes bateaux partent avec le % de soldats du curseur
+     « Envoyer », traversent **sans aucune perte en mer**, débarquent sur la côte la plus proche de la cible et l'armée marche
+     droit sur elle, **sans avant-poste**, avec des soldats **50 % plus forts**. Bateaux et assauts vikings portent une
+     **🔥 flamme** pour les reconnaître. S'il échoue (ou si tu le rappelles), les survivants rembarquent et rentrent au port.
+     Une fois lancé, il faut en racheter un. Les bots s'en servent aussi (réglages `VIKING_...` dans `js/config.js`).
+
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
 
    🏝️ **Îlots imprenables** : sur un îlot (moins de 600 cases), si plus aucun ennemi ne peut y débarquer (plus aucune place
@@ -739,6 +748,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.98** : 🔥 **assaut viking** (port royal, niveau 3, 💰 3000) : un assaut par la mer, sans avant-poste, sur une ville ennemie à 25 cases au plus d'une côte ; traversée sans pertes, soldats +50 % plus forts, flamme 🔥 au-dessus des bateaux et des assauts vikings ; les survivants d'un échec rentrent par bateau ; les bots l'utilisent aussi
 - **v0.92.97** : ⛏️ la souris sur ⛏️ (barre du haut) fait clignoter tes mines sur la carte · ⛵ les bots n'envoient plus d'expéditions au hasard : ils débarquent avec un but (des terres libres au-delà de la mer quand il n'y en a plus à leur frontière, ou tout près d'une ville d'un ennemi plus faible), renforcent leur avant-poste par la mer, puis lancent une vraie campagne depuis lui
 - **v0.92.96** : ⬆️ la fenêtre d'amélioration annonce ce que débloque le niveau 3 : « Débloque le recrutement de masse » (caserne → grande caserne) et « Débloque les croisades » (église → cathédrale)
 - **v0.92.95** : 🌍 le jeu parle anglais ! Une liste « Langue » en haut à droite du menu de départ : 🇬🇧 English (par défaut) ou 🇫🇷 Français. Tous les textes sont traduits (menu, règles, messages, infobulles, noms des bâtiments, des terrains, des royaumes et des bannières, éditeur de cartes) · 🤝 mode Factions : clic droit chez un allié de ton camp → envoyer des soldats ou de l'or (le % de la jauge « Envoyer »), et route commerciale possible entre alliés du camp · 🛡️ l'aide des alliés contre un assaut rejoint maintenant ton armée (à toi de l'envoyer se battre) au lieu de se battre toute seule sur tes terres · 🏰 une ville (château) coûte 250 au départ, le grand port (niveau 2) 400 · 🐛 une capitale fondée près d'un fleuve n'est plus déclarée « coupée de tous ses châteaux » dès le départ (Hurlevent en mode Factions)

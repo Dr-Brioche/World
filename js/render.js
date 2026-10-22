@@ -1207,6 +1207,8 @@ const Render = {
         // Deux armées qui s'affrontent au pied du même château : leurs bannières se font face
         const shift = a.clash !== undefined ? (a.attacker < a.clash ? -30 : 30) : 0;
         this.drawArmyBanner(a, bx + shift, by, `${siege}${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
+        // 🔥 un assaut viking : une flamme au-dessus de sa bannière
+        if (a.viking !== undefined) this.drawFlame(bx + shift - 14, by - 52);
         continue;
       }
       // Marche sur ses propres terres : pas de flèche. Le front menacé scintille à la couleur de l'attaquant,
@@ -1576,8 +1578,23 @@ const Render = {
     for (const e of G.expeditions) {
       // soldats à bord (ils diminuent un peu pendant la traversée)
       const t = Math.min(1, (G.tick - e.start) / Math.max(1, e.arrive - e.start));
-      this.drawBoat(ox, oy, e.path, t, e.pid, e.sent - (e.sent - e.troops) * t);
+      const at = this.drawBoat(ox, oy, e.path, t, e.pid, e.sent - (e.sent - e.troops) * t);
+      // 🔥 un bateau viking : une flamme au-dessus, pour le distinguer des autres
+      if (e.viking !== undefined) this.drawFlame(at.x - 30, at.y - 18);
     }
+  },
+
+  // 🔥 La flamme des Vikings (bateaux et assauts vikings), sur un rond sombre pour bien se voir
+  drawFlame(x, y) {
+    const ctx = this.ctx;
+    ctx.beginPath();
+    ctx.arc(x, y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(20,12,4,0.75)';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ff9a3c';
+    ctx.stroke();
+    Icons.draw(ctx, 'flame', x, y, 22);
   },
 
   // Bateau qui avance le long de son trajet (t = 0 au départ, 1 à l'arrivée), avec ses soldats à bord (null = aucun)

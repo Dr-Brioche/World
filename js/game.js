@@ -729,6 +729,148 @@ const GameRules = {
     return null;
   },
 
+  // --- 🔥 Assaut viking (port royal, niveau 3) ---
+  // On l'achète VIKING_COST pièces : il est alors prêt (un seul à la fois), et on le lance quand on veut sur une ville
+  // (ou un port fortifié) ennemie de l'autre côté de la mer, à VIKING_RANGE cases au plus d'une de ses côtes.
+  // Les bateaux traversent sans pertes, l'armée débarque sur la côte la plus proche de la cible et marche droit sur
+  // elle, avec des soldats VIKING_BONUS plus forts. S'il échoue (ou s'il est rappelé), les survivants rentrent par bateau.
+  royalPorts(pid) {
+    return this.buildingTiles.filter(a => this.building[a] === B_PORT && this.owner[a] === pid && this.level[a] >= 3);
+  },
+  // Pourquoi p ne peut pas acheter d'assaut viking (null s'il le peut)
+  vikingBuyError(p) {
+    if (!this.royalPorts(p.id).length) return tr('Il faut un port royal (port de niveau 3) pour préparer un assaut viking.', 'You need a royal port (level 3 port) to prepare a Viking assault.');
+    if (p.vikingReady) return tr('Ton assaut viking est déjà prêt : choisis sa cible !', 'Your Viking assault is already ready: choose its target!');
+    if (p.gold < CONFIG.VIKING_COST) return tr(`Pas assez d'or : il faut 💰 ${CONFIG.VIKING_COST}.`, `Not enough gold: you need 💰 ${CONFIG.VIKING_COST}.`);
+    return null;
+  },
+  buyViking(p) {
+    const err = this.vikingBuyError(p);
+    if (err) return err;
+    p.gold -= CONFIG.VIKING_COST;
+    p.vikingReady = true;
+    return null;
+  },
+  // Chemin de l'assaut viking de pid de la côte où il débarque (landing) jusqu'à la cible c (null s'il n'y en a pas)
+  vikingRoute(pid, c, landing) {
+    const passable = this.castlePassable(c);
+    if (!passable(landing)) return null;
+    const foot = new Set(this.footprint(c, this.building[c]));
+    return this.stopAtWalls(c, this.searchPath(pid, landing, foot, passable, this.owner[c], undefined, undefined, true));
+  },
+  // Les trajets en bateau depuis le port a : pour chaque case d'eau, la case d'où l'on vient (-1 : au port, -2 : jamais atteinte)
+  boatField(a) {
+    const prev = new Int32Array(this.N).fill(-2), queue = [];
+    for (const j of this.footprint(a, B_PORT)) {
+      this.forNeighbors(j, n => { if (this.navigable(n) && prev[n] === -2) { prev[n] = -1; queue.push(n); } });
+    }
+    for (let q = 0; q < queue.length; q++) {
+      const c = queue[q];
+      this.forNeighbors(c, n => { if (prev[n] === -2 && this.navigable(n)) { prev[n] = c; queue.push(n); } });
+    }
+    return prev;
+  },
+  // Préparer l'assaut viking de pid sur la cible en i : { castle, target, landing, route, port, path, time }, ou { error }
+  planViking(pid, i) {
+    const p = this.players[pid], W = this.W, R = CONFIG.VIKING_RANGE;
+    if (!p.vikingReady) return { error: tr('Achète d\'abord un assaut viking (dans le menu de ton port royal).', 'First buy a Viking assault (in the menu of your royal port).') };
+    const c = i >= 0 && this.building[i] ? this.anchor[i] : -1, o = c >= 0 ? this.owner[c] : -1;
+    if (c < 0 || o < 0 || o === pid || !this.holdsAlone(c)) {
+      return { error: tr('Un assaut viking vise une ville (un château) ou un port fortifié ennemi.', 'A Viking assault targets an enemy city (a castle) or fortified port.') };
+    }
+    const name = this.players[o].name;
+    if (this.areAllied(pid, o)) return { error: tr(`${name} est ton allié !`, `${name} is your ally!`) };
+    if (this.truceLeft(c) > 0) return { error: tr(`${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} vient de changer de mains : attends un peu.`, `${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} has just changed hands: wait a little.`) };
+    const ports = this.expeditionPorts(pid);
+    if (!ports.length) return { error: tr('Il te faut un port d\'où partir.', 'You need a port to sail from.') };
+    // Les côtes de ce royaume à R cases au plus de la cible, de la plus proche à la plus lointaine
+    const h = this.sizeOf(this.building[c]) / 2, cx = c % W + h, cy = ((c / W) | 0) + h, coasts = [];
+    for (let y = Math.max(0, Math.floor(cy - R)); y <= Math.min(this.H - 1, Math.ceil(cy + R)); y++) {
+      for (let x = Math.max(0, Math.floor(cx - R)); x <= Math.min(W - 1, Math.ceil(cx + R)); x++) {
+        const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
+        if (d <= R && this.owner[j] === o && !this.building[j] && !this.wallAt[j] && this.isCoastal(j)) coasts.push([d, j]);
+      }
+    }
+    if (!coasts.length) return { error: tr(`Aucune côte ${this.deName(name)} à moins de ${R} cases de cette cible.`, `No coast of ${name} within ${R} tiles of this target.`) };
+    coasts.sort((a, b) => a[0] - b[0]);
+    const fields = ports.map(a => ({ a, prev: this.boatField(a), speed: this.buildingInfo(a).boatSpeed }));
+    let tries = 0;
+    for (const [, j] of coasts) {
+      // le meilleur bateau pour cette côte (le plus rapide)
+      let best = null;
+      for (const f of fields) {
+        let end = -1;
+        this.forNeighbors(j, n => { if (end < 0 && this.navigable(n) && f.prev[n] !== -2) end = n; });
+        if (end < 0) continue;
+        const path = [];
+        for (let k = end; k >= 0; k = f.prev[k]) path.push(k);
+        path.reverse();
+        const time = path.length / f.speed;
+        if (!best || time < best.time) best = { port: f.a, path, time };
+      }
+      if (!best) continue;
+      if (++tries > 15) break; // (on ne cherche pas indéfiniment un passage par la terre)
+      const route = this.vikingRoute(pid, c, j);
+      if (route) return { castle: c, target: o, landing: j, route, ...best };
+    }
+    return { error: tr('Aucun débarquement possible près de cette cible : pas de côte que tes bateaux peuvent rejoindre, ou des fortifications bloquent le chemin.',
+      'No landing possible near this target: no coast your ships can reach, or fortifications block the way.') };
+  },
+  // Lancer l'assaut viking de pid sur la cible en i, avec troops soldats. Renvoie un message d'erreur, ou null.
+  launchViking(pid, i, troops) {
+    const plan = this.planViking(pid, i), p = this.players[pid];
+    if (plan.error) return plan.error;
+    troops = Math.floor(Math.min(troops, p.troops));
+    if (troops < CONFIG.VIKING_MIN_TROOPS) return tr(`Il faut au moins ${CONFIG.VIKING_MIN_TROOPS} soldats pour un assaut viking.`, `You need at least ${CONFIG.VIKING_MIN_TROOPS} soldiers for a Viking assault.`);
+    p.troops -= troops;
+    p.vikingReady = false; // (l'assaut est utilisé : il faudra en racheter un)
+    const TPS = CONFIG.TICKS_PER_SECOND;
+    this.expeditions.push({ id: this.nextAttackId++, pid, viking: plan.castle, victim: plan.target, landing: plan.landing,
+      path: plan.path, port: plan.port, cost: 0, sent: troops, troops, // (aucune perte en mer)
+      start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(plan.time * TPS)) });
+    const d = this.players[plan.target];
+    if (d.isHuman) {
+      UI.log(tr(`🔥 ${p.name} lance un assaut viking (${fmt(troops)} soldats) vers ${this.targetLabel(plan.castle)} ! Ses bateaux arrivent dans ${Math.ceil(plan.time)} s.`,
+        `🔥 ${p.name} launches a Viking assault (${fmt(troops)} soldiers) at ${this.targetLabel(plan.castle)}! Their ships arrive in ${Math.ceil(plan.time)} s.`), 'warn', p);
+    }
+    return null;
+  },
+  // Les Vikings accostent : ils débarquent et marchent droit sur leur cible (un assaut, parti de la côte)
+  vikingLands(e) {
+    const p = this.players[e.pid], c = e.viking, o = this.owner[c], W = this.W;
+    const ok = o >= 0 && o === e.victim && this.players[o].alive && !this.areAllied(e.pid, o) && this.holdsAlone(c) && this.owner[e.landing] === o;
+    const route = ok ? this.vikingRoute(e.pid, c, e.landing) : null;
+    if (!route) {
+      this.sailHome(e.pid, e.landing, e.troops);
+      if (p.isHuman) UI.log(tr('🔥 La cible de ton assaut viking n\'est plus possible : tes Vikings rentrent au port.', '🔥 The target of your Viking assault is no longer possible: your Vikings sail back to port.'), 'warn');
+      return;
+    }
+    const L = e.landing, h = this.sizeOf(this.building[c]) / 2, at = { x: L % W + 0.5, y: ((L / W) | 0) + 0.5 };
+    const a = {
+      id: this.nextAttackId++, attacker: e.pid, target: o, troops: e.troops, done: false, startTick: this.tick,
+      targetCastle: c, source: -1, defenders: 0, pending: [], frontTile: route[0],
+      viking: L, // (la côte où l'armée a débarqué : c'est de là que repartiront les bateaux)
+      startTile: L, marchFrom: at, fromX: at.x, fromY: at.y, toX: c % W + h, toY: ((c / W) | 0) + h,
+    };
+    a.list = [route[0]];
+    a.set = new Set(a.list);
+    a.pathTiles = route;
+    a.limitZone = this.corridor(c, route);
+    this.attacks.push(a);
+    const d = this.players[o];
+    if (p.isHuman) UI.log(tr(`🔥 Tes Vikings (${fmt(e.troops)} soldats) débarquent chez ${d.name} et marchent sur ${this.targetLabel(c)} !`,
+      `🔥 Your Vikings (${fmt(e.troops)} soldiers) land in ${d.name}'s land and march on ${this.targetLabel(c)}!`), 'good', d);
+    else if (d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} (${fmt(e.troops)} soldats) ont débarqué ! Clique sur leur bannière pour envoyer tes défenseurs.`,
+      `🔥 ${p.name}'s Vikings (${fmt(e.troops)} soldiers) have landed! Click their banner to send your defenders.`), 'warn', p);
+  },
+  // Des soldats rembarquent sur la côte `from` et rentrent au port le plus proche (ils rejoignent l'armée en arrivant)
+  sailHome(pid, from, troops) {
+    const best = this.homePort(pid, from), TPS = CONFIG.TICKS_PER_SECOND;
+    if (!best || troops < 1) { this.players[pid].troops += Math.max(0, troops); return; }
+    this.expeditions.push({ id: this.nextAttackId++, pid, landing: from, home: best.port, path: best.path.slice().reverse(),
+      sent: troops, troops, start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
+  },
+
   // Croisade religieuse en cours de la cathédrale a (ou null)
   crusadeOf(a) { return this.crusades.find(c => c.church === a && this.tick < c.end) || null; },
 
@@ -2511,8 +2653,18 @@ const GameRules = {
   //  - aucune armée ne peut en partir (il n'a pas de château, la « zone de départ » des armées).
   // Le seul moyen d'en sortir : le relier à un château (assaut de jonction depuis le château isolé), ou y bâtir
   // un nouveau château.
+  // (la tête de pont d'un assaut viking en cours, elle, n'est pas « coupée » : ses soldats viennent de la mer)
   pieceUnlinked(r, k) {
-    return k >= 0 && !r.held[k] && !r.anyOutpost[k] && this.isProtected(r.owner[k]);
+    return k >= 0 && !r.held[k] && !r.anyOutpost[k] && this.isProtected(r.owner[k]) && !this.vikingTiles().has(r.order[r.start[k]]);
+  },
+  // Cases prises par les assauts vikings en cours (leur route depuis la côte du débarquement)
+  vikingTiles() {
+    if (this.vikingTilesVersion !== this.version) {
+      this.vikingTilesVersion = this.version;
+      this.vikingTilesSet = new Set();
+      for (const a of this.attacks) if (!a.done && a.viking !== undefined && a.route) for (const t of a.route) this.vikingTilesSet.add(t);
+    }
+    return this.vikingTilesSet;
   },
   // Tous les châteaux de pid sont isolés (aucun n'est relié à son cœur) : son armée est bloquée dans
   // ces châteaux. Elle peut les défendre (elle y est !), mais désorganisée (x LEADERLESS_DEFENSE) ;
@@ -2841,7 +2993,8 @@ const GameRules = {
     // Assauts déjà en cours contre ce royaume : on renforce celui qui vise la même cible ; sinon on en lance
     // un nouveau, s'il en reste (1 à la fois, 2 avec une citadelle)
     const running = this.attacks.filter(a => !a.done && a.attacker === pid && a.target === target && a.link === undefined
-      && this.sourceOfAttack(a) === source && a.retreatEnd === undefined); // (une armée en retraite ne reçoit plus de renforts)
+      && this.sourceOfAttack(a) === source && a.retreatEnd === undefined // (une armée en retraite ne reçoit plus de renforts)
+      && a.viking === undefined); // (ni un assaut viking, venu par la mer)
     let a = running.find(a => a.targetCastle === castle && (castle >= 0 || !a.limitZone || a.limitZone.has(aimTile)));
     if (!a && running.length >= this.maxAssaults(pid)) {
       return tr(`Un assaut contre ${this.players[target].name} est déjà en cours.`, `An assault against ${this.players[target].name} is already under way.`) +
@@ -2951,12 +3104,15 @@ const GameRules = {
     const walk = i => (field(i) < Infinity ? field(i) : 3 * Math.hypot(i % W + 0.5 - dep.x, ((i / W) | 0) + 0.5 - dep.y))
       / CONFIG.MARCH_OWN_LAND_BONUS;
     // (-1 = on part de la frontière ; true : on peut passer un fleuve à gué pour l'atteindre)
-    const path = this.searchPath(pid, -1, foot, passable, this.owner[c], source, walk, true);
+    return this.stopAtWalls(c, this.searchPath(pid, -1, foot, passable, this.owner[c], source, walk, true));
+  },
+  // Un chemin vers le château c s'arrête à sa muraille (on l'assiège depuis là) ; de même à la petite muraille
+  // d'un port fortifié
+  stopAtWalls(c, path) {
     if (path && this.building[c] === B_CASTLE) {
       const k = path.findIndex(i => this.inWalls(c, i));
       if (k >= 0) path.length = k + 1;
     }
-    // (de même à la petite muraille d'un port fortifié : on l'assiège depuis là)
     if (path && this.walledPort(c)) {
       const k = path.findIndex(i => this.inPortWalls(c, i));
       if (k >= 0) path.length = k + 1;
@@ -3514,6 +3670,7 @@ const GameRules = {
     const aboard = e.sent - (e.sent - e.troops) * k; // (les pertes en mer déjà subies)
     e.troops = e.sent = aboard * (1 - CONFIG.RETREAT_LOSS);
     e.reinforce = undefined;
+    e.viking = undefined;
     e.home = e.port !== undefined ? e.port : e.path[0];
     e.path = e.path.slice(0, idx + 1).reverse();
     const back = Math.max(1, this.tick - e.start);
@@ -3635,6 +3792,8 @@ const GameRules = {
         if (p.isHuman) UI.log(tr(`🚢 ${fmt(e.troops)} soldats rapatriés sont rentrés au port.`, `🚢 ${fmt(e.troops)} repatriated soldiers are back in port.`), 'good');
         continue;
       }
+      // Assaut viking : l'armée débarque et marche sur sa cible
+      if (e.viking !== undefined) { this.vikingLands(e); continue; }
       // Renforts pour un avant-poste : ils rejoignent sa garnison (ou rentrent s'il n'existe plus)
       if (e.reinforce !== undefined) {
         if (this.building[e.reinforce] === B_OUTPOST && this.owner[e.reinforce] === e.pid) {
@@ -3820,6 +3979,8 @@ const GameRules = {
       let around = this.countFriendNeighbors(t, a.attacker);
       // (un assaut vers un objectif peut commencer de l'autre côté d'un fleuve, passé à gué : sa rive compte)
       if (!around && a.targetCastle >= 0 && this.riverSide[t]) this.fordAcross(t, a.attacker, () => { around = 1; });
+      // (🔥 des Vikings prennent pied sur la côte où ils débarquent, depuis leurs bateaux)
+      if (!around && a.viking === t) around = 1;
       const score = around / TERRAIN_INFO[this.terrain[t]].cost;
       // Un assaut vers un objectif ne sort pas de son couloir (limitZone)
       const outside = a.limitZone && !a.limitZone.has(t);
@@ -3851,7 +4012,8 @@ const GameRules = {
     // (territoire désorganisé : au-delà de DISORGANIZED_LOSS_FROM soldats, les pertes par case n'augmentent plus)
     const M = CONFIG.DISORGANIZED_LOSS_FROM;
     if (n > M && a.target >= 0 && (a.unlinked || this.leaderless(a))) n = M;
-    const loss = Math.max(CONFIG.NEUTRAL_TILE_COST, n * CONFIG.TILE_LOSS_RATE);
+    let loss = Math.max(CONFIG.NEUTRAL_TILE_COST, n * CONFIG.TILE_LOSS_RATE);
+    if (a.viking !== undefined) loss /= 1 + CONFIG.VIKING_BONUS; // (🔥 des Vikings : +50 % de force)
     const free = a.target < 0 ? this.earlyBoost() / (1 + CONFIG.EARLY_GROWTH_BONUS) / CONFIG.FREE_LAND_BOOST : 1;
     return loss * TERRAIN_INFO[this.terrain[t]].cost * free;
   },
@@ -3907,6 +4069,7 @@ const GameRules = {
   // corrigée par la force des soldats des deux camps (casernes de niveau 2 et 3)
   combatRatio(a) {
     let r = this.frontDefense(a) * this.troopPower(a.target) / this.troopPower(a.attacker);
+    if (a.viking !== undefined) r /= 1 + CONFIG.VIKING_BONUS; // (🔥 des Vikings : +50 % de force)
     // Royaume sans château (ville) : ses troupes, désorganisées, ne comptent que pour 0.8
     if (this.leaderless(a)) r *= CONFIG.LEADERLESS_DEFENSE;
     // Armée bloquée dans ses châteaux isolés : elle les défend, mais moins bien
@@ -4944,8 +5107,11 @@ const GameRules = {
     a.done = true;
     this.revertRoute(a);
     const p = this.players[a.attacker];
-    // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste)
-    this.giveTroops(a.attacker, this.sourceOfAttack(a), a.troops + a.pending.reduce((s, r) => s + r.troops, 0));
+    // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste) ;
+    // des Vikings qui n'ont pas pris leur cible rembarquent là où ils ont débarqué
+    const back = a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
+    if (a.viking !== undefined && !a.won && !a.castleTaken) this.sailHome(a.attacker, a.viking, back);
+    else this.giveTroops(a.attacker, this.sourceOfAttack(a), back);
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château. Ceux qui étaient encore
     // en route font demi-tour : ils rentrent à pied jusqu'à la ville la plus proche (voir sendHome)
     if (a.target >= 0 && this.players[a.target].alive) {
