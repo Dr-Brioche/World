@@ -81,7 +81,10 @@ const UI = {
     // (les écus des races de Warcraft sur la carte Azeroth, les drapeaux ailleurs) ; on retrouve le dernier choix de chaque sorte
     const lastPick = { base: BANNERS.findIndex(b => b.name === 'Dragon'), azeroth: BANNERS.findIndex(b => b.name === 'Humains') };
     const fillBanners = () => {
-      const list = bannersForMap($('mapType').value), set = BANNERS[list[0]].set || 'base';
+      // (mode « Factions » : seulement les 12 races des 3 camps)
+      const races = this.factionMode() ? AZEROTH_FACTIONS.flatMap(f => f.races) : null;
+      const list = bannersForMap($('mapType').value).filter(k => !races || races.includes(BANNERS[k].name));
+      const set = BANNERS[list[0]].set || 'base';
       $('bannerPick').innerHTML = list.map(k =>
         `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
       ).join('');
@@ -89,6 +92,11 @@ const UI = {
     };
     const pick = k => {
       lastPick[BANNERS[k].set || 'base'] = k;
+      // (mode « Factions » : le camp de la race choisie, et sa capitale)
+      const f = this.factionMode() && AZEROTH_FACTIONS.find(f => f.races.includes(BANNERS[k].name));
+      $('factionInfo').classList.toggle('hidden', !f);
+      if (f) $('factionInfo').textContent = `⚔️ Ton camp : ${f.name} (avec ${f.races.filter(r => r !== BANNERS[k].name).join(', ')}) · ` +
+        `ta capitale : ${AZEROTH_CAPITALS[BANNERS[k].name].place}. Les 3 camps s'affrontent ; un camp ne se divise jamais.`;
       this.banner = k;
       document.querySelectorAll('#bannerPick button').forEach(b => b.classList.toggle('active', +b.dataset.banner === k));
       $('bannerName').textContent = BANNERS[k].name;
@@ -100,8 +108,17 @@ const UI = {
       const btn = e.target.closest('button[data-banner]');
       if (btn) { pick(+btn.dataset.banner); $('bannerPick').classList.add('hidden'); }
     });
-    $('mapType').addEventListener('change', fillBanners);
-    fillBanners();
+    // Mode de jeu (carte Azeroth seulement) : en « Factions », 12 royaumes (les 3 camps), pactes et nombre de rivaux imposés
+    const modeChange = () => {
+      const az = $('mapType').value === 'azeroth', fac = this.factionMode();
+      $('gameModeRow').classList.toggle('hidden', !az);
+      $('opponents').disabled = fac;
+      $('pacts').disabled = fac;
+      fillBanners();
+    };
+    $('mapType').addEventListener('change', modeChange);
+    $('gameMode').addEventListener('change', modeChange);
+    modeChange();
     $('startBtn').addEventListener('click', () => this.start());
     $('replayBtn').addEventListener('click', () => location.reload());
     $('continueBtn').addEventListener('click', () => {
@@ -213,8 +230,12 @@ const UI = {
     return Math.max(C.MIN_OPPONENTS, Math.min(banners.length - 1, names, byMap));
   },
 
+  // Le mode « Factions » est-il choisi ? (carte Azeroth seulement)
+  factionMode() { return $('mapType').value === 'azeroth' && $('gameMode').value === 'factions'; },
+
   start() {
     Game.init({
+      factions: this.factionMode(),
       name: $('name').value.trim() || 'Mon Royaume',
       banner: this.banner,
       difficulty: $('difficulty').value,
@@ -229,6 +250,14 @@ const UI = {
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
     $('hint').textContent = '👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale';
+    // Mode « Factions » : chacun est déjà à sa capitale ; la partie attend en pause que le joueur se repère
+    if (Game.factions) {
+      const h = Game.human, place = AZEROTH_CAPITALS[BANNERS[h.banner].name].place;
+      const half = Game.sizeOf(B_CASTLE) / 2;
+      Render.centerOn(h.capital % Game.W + half, ((h.capital / Game.W) | 0) + half);
+      $('pauseBtn').textContent = '▶ Reprendre';
+      this.log(`⚔️ Tu es à ${place}, avec ton camp : ${Game.pactName(h)}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`, 'good');
+    }
   },
 
   selectBuild(t) {
@@ -347,6 +376,7 @@ const UI = {
     const G = Game, h = G.human, other = G.players[id];
     if (G.phase !== 'playing' || !h.alive) return;
     if (G.areAllied(h.id, id)) {
+      if (G.eternalPact(h.id)) return this.log(`⚔️ ${other.name} et toi êtes du même camp (${G.pactName(h)}) : ce pacte dure toute la partie.`, 'warn');
       this.confirmBetrayal(other, () => G.breakAlliance(h.id, id));
       return;
     }
@@ -1626,7 +1656,11 @@ const UI = {
       const err = G.launchAttack(h.id, target, G.troopsAt(h.id, src) * this.ratio, i, src);
       if (err) this.log(err, 'warn');
     };
-    // Attaquer un allié = le trahir (après confirmation, qui vaut validation de l'assaut)
+    // Attaquer un allié = le trahir (après confirmation, qui vaut validation de l'assaut) ; sauf dans un camp du mode
+    // « Factions » : on n'attaque jamais son propre camp
+    if (target >= 0 && G.areAllied(h.id, target) && G.eternalPact(h.id)) {
+      return this.log(`⚔️ ${G.players[target].name} est de ton camp (${G.pactName(h)}) : on n'attaque pas ses alliés.`, 'warn');
+    }
     if (target >= 0 && G.areAllied(h.id, target)) {
       // (on vérifie d'abord qu'il y a vraiment une cible à attaquer ici : sinon on le trahirait pour rien)
       const valid = aimed ? G.attackSources(h.id).some(src => G.castlePath(h.id, c, src))

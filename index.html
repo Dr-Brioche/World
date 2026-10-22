@@ -80,6 +80,14 @@
           <optgroup id="customMaps" label="✏️ Cartes dessinées"></optgroup>
         </select>
       </label>
+      <!-- (seulement pour la carte Azeroth) -->
+      <label id="gameModeRow" class="hidden">Mode de jeu
+        <select id="gameMode">
+          <option value="libre">Libre (chacun pour soi, ou des pactes)</option>
+          <option value="factions">Factions : Alliance, Horde, Pacte sauvage</option>
+        </select>
+      </label>
+      <div id="factionInfo" class="factionInfo hidden"></div>
       <a class="editorLink" href="editeur.html">🖌️ Dessiner une carte (éditeur de cartes)</a>
       <label>Taille de la carte
         <select id="mapSize">
@@ -110,6 +118,7 @@
         <ul class="rules">
           <li>🖌️ <b>Cartes dessinées</b> : le lien « Dessiner une carte » ouvre l'éditeur ; une carte enregistrée apparaît dans la liste des cartes (✏️ Cartes dessinées).</li>
           <li>👑 <b>Départ</b> : les royaumes rivaux sont déjà installés. Regarde qui est où, puis clique sur une terre libre pour fonder ta capitale.</li>
+          <li>⚔️ <b>Factions</b> (carte Azeroth) : 3 camps éternels (Alliance, Horde, Pacte sauvage), chacun à ses capitales du jeu ; on choisit sa race, pas son point de départ, et la partie démarre en pause.</li>
           <li>🎚️ <b>Difficulté</b> : en Difficile, les bots sont plus nombreux, plus agressifs et un peu avantagés : +25 % d'or, recrutement 20 % plus rapide et soldats 10 % plus forts.</li>
           <li>⚔️ <b>Puissance</b> : en haut, la force de tes soldats en % (100 % = ordinaires). Ta meilleure caserne, tes mines de fer et ta cité impériale la font monter.</li>
           <li>⏩ <b>Vitesse</b> : en jeu, le bouton ⏩ en haut change la vitesse de la partie (x1, x1,5, x2, x3) ; ⏸ la met en pause.</li>

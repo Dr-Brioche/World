@@ -206,6 +206,7 @@ const AI = {
 
   // Entouré uniquement d'alliés et à l'étroit : trahison du plus faible !
   betray(p, nb) {
+    if (Game.eternalPact(p.id)) return; // (un camp du mode « Factions » ne se trahit jamais)
     let victim = null;
     for (const [o] of nb) {
       if (o < 0 || !Game.areAllied(p.id, o)) continue;
