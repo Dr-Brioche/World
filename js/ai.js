@@ -9,6 +9,7 @@ const AI = {
     if (Math.random() < 0.4) this.tryBuild(p);
     if (Math.random() < 0.1) this.tryWall(p);
     if (Math.random() < 0.05 * (Game.difficulty.zeal || 1)) this.tryCrusade(p);
+    if (Math.random() < 0.1) this.tryLevy(p);
     if (Math.random() < (p.bridgeSaving ? 0.3 : 0.05)) this.tryBridge(p);
     if (Math.random() < 0.05) this.tryExpedition(p);
     if (this.stuckOnIsland(p)) this.goToSea(p);
@@ -289,6 +290,14 @@ const AI = {
       if (best >= 0 && !G.buildWall(p, c, best)) return true;
     }
     return false;
+  },
+
+  // Recrutement de masse : avec une grande caserne, une armée bien entamée (moins de 30 % du maximum) et de l'or en réserve
+  tryLevy(p) {
+    const G = Game;
+    if (p.gold < CONFIG.LEVY_COST * 1.5 || G.armySize(p) > 0.3 * G.maxTroops(p)) return false;
+    const b = G.buildingTiles.find(a => G.building[a] === B_BARRACKS && !G.levyError(p, a));
+    return b !== undefined && !G.startLevy(p, b);
   },
 
   // Croisade religieuse : en retard de Croyance sur un voisin ennemi, avec une cathédrale et de l'or en réserve

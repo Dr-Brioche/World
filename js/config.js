@@ -181,9 +181,18 @@ const CONFIG = {
   FAITH_LURE_RANGE: 30,      //   qui gagne les villages) : attirée par ceux à moins de 30 cases...
   FAITH_WAVE: 2,             // ...et son front ondule un peu (au lieu d'avancer en ligne droite)
   FAITH_DISORGANIZED: 2,     // un royaume désorganisé (sans ville ni port fortifié) se fait convertir 2 fois plus vite
-  // Croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2000 pièces :
+  // Croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2500 pièces :
   // +1000 de Croyance pour le royaume pendant 60 s (une croisade à la fois par cathédrale)
-  CRUSADE_COST: 2000,
+  CRUSADE_COST: 2500,
+  // ⚔️ Recrutement de masse : une grande caserne (niveau 3) peut le lancer pour 3000 pièces : pendant 60 s, le royaume
+  // recrute bien plus vite (un à la fois par royaume). Plus l'armée est petite, plus c'est fort : jusqu'à
+  // x(1 + LEVY_BOOST) quand l'armée est vide, encore x2,6 environ à LEVY_FROM (35 %) de l'armée maximum ; puis ça décroît
+  // vite, jusqu'à rien à LEVY_TO (65 %) : à plus de la moitié de l'armée maximum, il ne sert presque plus à rien.
+  LEVY_COST: 3000,
+  LEVY_TIME: 60,
+  LEVY_BOOST: 2,
+  LEVY_FROM: 0.35,
+  LEVY_TO: 0.65,
   CRUSADE_FAITH: 1000,
   CRUSADE_TIME: 60,
   // Vitesse de la conversion selon l'écart de Croyance : [écart, secondes pour convertir une case].

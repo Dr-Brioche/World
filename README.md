@@ -339,6 +339,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | 2. Caserne | +100 % | +100 % | **+80 %** | 💰 400 |
      | 3. Grande caserne | +125 % | **x7** (+350 soldats) | **+150 %** | 💰 2500 |
 
+     ⚔️ **Recrutement de masse** (avec une **grande caserne**, niveau 3 : bouton dans son menu, et dans la barre des
+     constructions) : pour **💰 3000**, ton royaume recrute **bien plus vite pendant 60 s** (un seul à la fois). C'est
+     d'autant plus fort que ton armée est **petite** : jusqu'à **x3** quand elle est presque vide, encore x2,6 à 35 % de ton
+     armée maximum ; puis l'effet tombe vite (x1,4 à 50 %, plus rien à 65 %). Idéal pour se refaire après une grosse bataille.
+     Son bonus est **amplifié par la galvanisation** et **diminué par l'après-guerre** : il avantage la **défense** (un royaume
+     galvanisé +50 % voit son bonus monter de moitié), bien plus que l'attaquant qui vient de gagner.
+
      Une caserne ne fait pas dépasser l'armée maximum. **L'armée maximum compte tous tes soldats** : ceux du royaume, mais
      aussi ceux **partis en campagne** (dans tes assauts, tes défenseurs, ceux qui rentrent), aux avant-postes et en mer
      (pas les garnisons) : pendant qu'une armée est au loin, le royaume ne recrute pas au-delà de son maximum. Les soldats produits et l'armée max de toutes
@@ -458,7 +465,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      organisée : pas d'une zone d'avant-poste, ni d'un morceau coupé de ses villes, ni d'un royaume désorganisé (sans ville).
      Les **bots** bâtissent et améliorent plus d'églises quand un voisin les dépasse en Croyance (surtout en Difficile).
      ✝️ **Croisade religieuse** : une **cathédrale** (église de niveau 3) propose une action dans son menu rapide (la croix,
-     comme le mur des villes) et dans sa fenêtre : pour **💰 2000**, ta Croyance monte de **+1000 pendant 60 s** (une croisade
+     comme le mur des villes) et dans sa fenêtre : pour **💰 2500**, ta Croyance monte de **+1000 pendant 60 s** (une croisade
      à la fois par cathédrale). Dès ta première cathédrale, un bouton **✝️ Croisade** apparaît aussi dans la barre des
      constructions, en bas : un clic la lance tout de suite (depuis une cathédrale libre), et il affiche le temps restant
      quand toutes tes cathédrales ont déjà leur croisade en cours. De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
@@ -731,6 +738,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.93** : ⚔️ nouveau bonus de la grande caserne : le **recrutement de masse** (💰 3000, 60 s, jusqu'à x3 de recrutement quand l'armée est petite, de moins en moins au-delà de 35 % de l'armée maximum ; amplifié par la galvanisation, diminué par l'après-guerre) · 🧹 menu de départ allégé (plus d'explications entre parenthèses dans les choix) · ✝️ la croisade passe à 💰 2500
 - **v0.92.92** : ⚔️ carte Azeroth : nouveau **mode « Factions »** : 3 camps éternels (l'Alliance, la Horde, le Pacte sauvage), chaque royaume à sa vraie capitale du jeu, la partie démarre en pause le temps de se repérer
 - **v0.92.91** : ⛏️ la bulle du minerai passe à gauche de la mine (elle ne recouvre plus le chiffre de son niveau) · 🪙 mine d'or : 2 500 pièces en 10 minutes (au lieu de 5 000), et de nouveau 2 500 au niveau 2
 - **v0.92.90** : 🪙 mine d'or : 5 000 pièces en 10 minutes (au lieu de 2 000 en 5), et de nouveau 5 000 en 10 minutes au niveau 2 · 💰 moulins et casernes : +35 % par bâtiment (au lieu de +25 %)
