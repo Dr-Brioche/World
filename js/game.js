@@ -58,7 +58,11 @@ const GameRules = {
     this.difficulty = DIFFICULTIES[opts.difficulty];
     this.speed = 1; // vitesse de la partie (x1, x1.5, x2, x3 : bouton ⏩ en jeu) : la boucle de jeu tourne plus vite (voir main.js)
     this.pactsAllowed = opts.pacts !== false; // choisi dans le menu : pactes autorisés ou interdits
+    // ⚔️ Mode « Factions » (carte Azeroth) : 3 camps éternels, chacun à ses capitales du jeu (voir startFactions)
+    this.factions = !!opts.factions && this.mapType === 'azeroth';
+    if (this.factions) this.pactsAllowed = false; // (pas d'autres pactes que les 3 camps)
     this.human = this.addPlayer(opts.name, opts.banner, true);
+    if (this.factions) return this.startFactions(opts);
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
     // Les bots reçoivent au hasard les bannières de la carte que le joueur n'a pas prises (sur Azeroth : les écus, et
     // chaque royaume prend le nom de son écu : les Orcs, les Nains…)
@@ -1459,6 +1463,52 @@ const GameRules = {
     if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return 'Cette île est trop petite pour y fonder ta capitale.';
     if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE)) return 'Trop près d\'un royaume rival : éloigne-toi un peu.';
     return null;
+  },
+
+  // Mode « Factions » : les 11 autres races des 3 camps, les 3 pactes éternels, et chaque royaume à sa capitale
+  // (AZEROTH_CAPITALS). Le joueur ne choisit pas où il commence : la partie démarre en pause, le temps de se repérer.
+  startFactions(opts) {
+    const race = p => BANNERS[p.banner].name;
+    for (const f of AZEROTH_FACTIONS) {
+      for (const r of f.races) {
+        const b = BANNERS.findIndex(x => x.set === 'azeroth' && x.name === r);
+        if (b !== opts.banner) this.addPlayer(r, b, false);
+      }
+    }
+    for (const f of AZEROTH_FACTIONS) {
+      const id = this.nextPactId++;
+      this.pacts.set(id, { name: f.name, founder: -1, eternal: true });
+      for (const p of this.players) if (f.races.includes(race(p))) p.pact = id;
+    }
+    for (const p of this.players) {
+      const [x, y] = AZEROTH_CAPITALS[race(p)].at;
+      this.spawnPlayer(p, this.nearestSpawn(x, y));
+    }
+    this.phase = 'playing';
+    this.paused = true;
+  },
+
+  // La case la plus proche de (x, y) où l'on peut fonder une capitale (une terre libre, pas un fleuve, sur une
+  // terre assez grande ; pas trop près d'une autre capitale si possible)
+  nearestSpawn(x, y) {
+    const W = this.W, ok = (i, d) => this.isLand(i) && this.terrain[i] !== TERRAIN.RIVER && this.owner[i] < 0
+      && this.landSize()[i] >= CONFIG.MIN_SPAWN_LAND && this.canSpawnAt(i, d);
+    for (const d of [CONFIG.MIN_SPAWN_DISTANCE, CONFIG.MIN_SPAWN_DISTANCE / 2, 0]) {
+      for (let r = 0; r < 40; r++) {
+        let best = -1, bestD = Infinity;
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+            const xx = x + dx, yy = y + dy;
+            if (xx < 1 || yy < 1 || xx >= W - 1 || yy >= this.H - 1) continue;
+            const i = yy * W + xx;
+            if (dx * dx + dy * dy < bestD && ok(i, d)) { best = i; bestD = dx * dx + dy * dy; }
+          }
+        }
+        if (best >= 0) return best;
+      }
+    }
+    return y * W + x;
   },
 
   // Le joueur fonde sa capitale : la partie commence
@@ -5100,12 +5150,18 @@ const GameRules = {
     return null;
   },
 
+  // Le royaume pid est-il dans un pacte éternel (un camp du mode « Factions ») ? Il ne peut ni le quitter ni le trahir.
+  eternalPact(pid) {
+    const id = this.players[pid].pact;
+    return id >= 0 && !!(this.pacts.get(id) || {}).eternal;
+  },
+
   // Un traître a sa défense affaiblie pendant TRAITOR_DURATION secondes
   isTraitor(p) { return this.tick < p.traitorUntil; },
 
   // Trahir un allié = quitter son pacte (en traître)
   breakAlliance(traitorId, otherId) {
-    if (!this.areAllied(traitorId, otherId)) return;
+    if (!this.areAllied(traitorId, otherId) || this.eternalPact(traitorId)) return;
     const traitor = this.players[traitorId], name = this.pactName(traitor);
     this.leavePact(traitor);
     traitor.traitorUntil = this.tick + CONFIG.TRAITOR_DURATION * CONFIG.TICKS_PER_SECOND;
@@ -5187,10 +5243,13 @@ const GameRules = {
       UI.showEnd(false);
       return;
     }
-    const botsAlive = this.players.some(p => !p.isHuman && p.alive);
+    // (mode « Factions » : les royaumes de son camp ne comptent pas comme rivaux, et les terres du camp comptent ensemble)
+    const botsAlive = this.players.some(p => !p.isHuman && p.alive && !(this.factions && this.areAllied(p.id, h.id)));
+    const share = (this.factions ? this.players.filter(p => p === h || this.areAllied(p.id, h.id)) : [h])
+      .reduce((s, p) => s + p.tiles, 0) / this.landCount;
     // Victoire : 70 % des terres (WIN_RATIO ; une seule fois, on peut ensuite continuer à jouer),
     // ou plus aucun royaume rival (fin de la partie)
-    if (!botsAlive || (!this.victoryShown && h.tiles / this.landCount >= CONFIG.WIN_RATIO)) {
+    if (!botsAlive || (!this.victoryShown && share >= CONFIG.WIN_RATIO)) {
       this.victoryShown = true;
       this.phase = 'over';
       UI.showEnd(true, botsAlive);

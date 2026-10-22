@@ -30,6 +30,7 @@ html, body {
 }
 
 .hidden { display: none !important; }
+.factionInfo { font-size: 13px; text-align: left; margin: 2px 0 6px; opacity: 0.85; }
 
 .panel {
   position: fixed;

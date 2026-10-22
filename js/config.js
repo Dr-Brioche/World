@@ -561,6 +561,29 @@ function bannersForMap(mapType) {
   const set = mapType === 'azeroth' ? 'azeroth' : undefined;
   return BANNERS.map((b, k) => k).filter(k => BANNERS[k].set === set);
 }
+// ⚔️ Mode « Factions » (carte Azeroth seulement) : 3 camps, chacun un pacte éternel (il ne se rompt jamais, pas de
+// trahison possible), et chaque royaume commence à sa capitale du jeu (x, y en cases de la carte Azeroth).
+// Le joueur choisit sa race (donc son camp), mais pas l'endroit où il commence.
+const AZEROTH_FACTIONS = [
+  { name: 'Alliance', races: ['Humains', 'Nains', 'Gnomes', 'Elfes de la nuit'] },
+  { name: 'Horde', races: ['Orcs', 'Trolls', 'Morts-vivants', 'Taurens'] },
+  { name: 'Pacte sauvage', races: ['Défias', 'Gnolls', 'Ogres', 'Murlocs'] },
+];
+const AZEROTH_CAPITALS = {
+  'Humains': { at: [547, 402], place: 'Hurlevent' },
+  'Nains': { at: [591, 329], place: 'Forgefer' },
+  'Gnomes': { at: [543, 325], place: 'Gnomeregan' },
+  'Elfes de la nuit': { at: [38, 68], place: 'Darnassus' },
+  'Orcs': { at: [180, 236], place: 'Orgrimmar' },
+  'Trolls': { at: [194, 288], place: 'les îles de l\'Écho (Durotar)' },
+  'Morts-vivants': { at: [563, 171], place: 'Fossoyeuse' },
+  'Taurens': { at: [91, 305], place: 'les Pitons-du-Tonnerre' },
+  'Défias': { at: [531, 448], place: 'la Mine de la Mort (Marche de l\'Ouest)' },
+  'Gnolls': { at: [614, 414], place: 'les Carmines' },
+  'Ogres': { at: [64, 347], place: 'Hache-Tripes (Féralas)' },
+  'Murlocs': { at: [81, 155], place: 'Sombrivage' },
+};
+
 // Sur la carte, un écu est dessiné à cette taille (il n'a pas de longue hampe : pas besoin de l'agrandir autant)
 const SHIELD_SCALE = 1.0;
 

@@ -72,6 +72,14 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (Humains, Nains, Elfes de la nuit, Gnomes, Orcs, Morts-vivants, Taurens, Trolls, Gnolls, Ogres, Murlocs, Démons,
      Défias, Monastère Écarlate, La Main d'Argent) : tu choisis le tien dans le menu, et chaque royaume rival prend le nom
      de son écu (14 rivaux au plus).
+     ⚔️ **Mode « Factions »** (choix « Mode de jeu » du menu, sur cette carte seulement) : 12 royaumes répartis en
+     **3 camps** qui sont des **pactes éternels** (on ne peut ni les quitter, ni trahir, ni attaquer son propre camp) :
+     **l'Alliance** (Humains, Nains, Gnomes, Elfes de la nuit), **la Horde** (Orcs, Trolls, Morts-vivants, Taurens) et
+     **le Pacte sauvage** (Défias, Gnolls, Ogres, Murlocs). Tu choisis ta race (donc ton camp), mais pas où tu commences :
+     chaque royaume est installé à **sa capitale du jeu** (Hurlevent, Forgefer, Gnomeregan, Darnassus, Orgrimmar, les îles de
+     l'Écho, Fossoyeuse, les Pitons-du-Tonnerre ; les Défias à la Mine de la Mort, les Gnolls dans les Carmines, les Ogres à
+     Hache-Tripes, les Murlocs à Sombrivage). La partie **démarre en pause**, centrée sur ta capitale, le temps de te
+     repérer (▶ Reprendre ou `P` pour commencer). Ton camp gagne quand les deux autres sont anéantis (ou qu'il tient 70 % des terres).
      ❄️ C'est la seule carte avec de la **neige** (le Norfendre, le Berceau-de-l'Hiver, Dun Morogh, Alterac) : un terrain
      blanc bleuté qui se joue **comme une colline** (même défense, même lenteur, même production), différent des sommets
      blancs infranchissables.
@@ -723,6 +731,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.92** : ⚔️ carte Azeroth : nouveau **mode « Factions »** : 3 camps éternels (l'Alliance, la Horde, le Pacte sauvage), chaque royaume à sa vraie capitale du jeu, la partie démarre en pause le temps de se repérer
 - **v0.92.91** : ⛏️ la bulle du minerai passe à gauche de la mine (elle ne recouvre plus le chiffre de son niveau) · 🪙 mine d'or : 2 500 pièces en 10 minutes (au lieu de 5 000), et de nouveau 2 500 au niveau 2
 - **v0.92.90** : 🪙 mine d'or : 5 000 pièces en 10 minutes (au lieu de 2 000 en 5), et de nouveau 5 000 en 10 minutes au niveau 2 · 💰 moulins et casernes : +35 % par bâtiment (au lieu de +25 %)
 - **v0.92.89** : 💰 le prix des moulins et des casernes monte moins vite (+25 % par bâtiment au lieu de +50 %) · ⛏️ mines plus chères : 600 (au lieu de 400), puis 1 200 pour le niveau 2 (au lieu de 1 000)
