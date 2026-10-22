@@ -542,7 +542,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      cible et l'armée marche droit sur elle, **sans avant-poste**, avec des soldats **50 % plus forts**. C'est un **raid** :
      à la fin du siège, la ville n'est pas prise mais **détruite**, avec ses moulins et casernes, et chaque bâtiment détruit
      te rapporte **💰 300 de butin** ; les terres restent à l'ennemi. Puis les survivants rembarquent et rentrent au port (de
-     même s'il échoue ou si tu le rappelles). Bateaux et assauts vikings portent une **🔥 flamme** pour les reconnaître.
+     même s'il échoue ou si tu le rappelles). **Un seul assaut viking par minute** au plus. Bateaux et assauts vikings portent une **🔥 flamme** pour les reconnaître.
      Une fois lancé, il faut en racheter un. Les bots s'en servent aussi (réglages `VIKING_...` dans `js/config.js`).
 
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
@@ -750,6 +750,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.100** : 🔥 un seul assaut viking par minute au plus (réglage `VIKING_COOLDOWN`) ; le bouton Viking affiche le temps restant
 - **v0.92.99** : 🔥 l'assaut viking devient un **raid** : il part forcément d'un port royal, et s'il l'emporte, la ville visée est **détruite** (avec ses moulins et casernes) au lieu d'être prise ; 💰 300 de butin par bâtiment détruit, puis les Vikings rentrent par bateau
 - **v0.92.98** : ⚓ un port royal (niveau 3) bâti ou pris dans la zone d'un avant-poste la fait entrer dans ton royaume, comme un château (l'avant-poste disparaît) · 🔥 **assaut viking** (port royal, niveau 3, 💰 3000) : un assaut par la mer, sans avant-poste, sur une ville ennemie à 25 cases au plus d'une côte ; traversée sans pertes, soldats +50 % plus forts, flamme 🔥 au-dessus des bateaux et des assauts vikings ; les survivants d'un échec rentrent par bateau ; les bots l'utilisent aussi
 - **v0.92.97** : ⛏️ la souris sur ⛏️ (barre du haut) fait clignoter tes mines sur la carte · ⛵ les bots n'envoient plus d'expéditions au hasard : ils débarquent avec un but (des terres libres au-delà de la mer quand il n'y en a plus à leur frontière, ou tout près d'une ville d'un ennemi plus faible), renforcent leur avant-poste par la mer, puis lancent une vraie campagne depuis lui

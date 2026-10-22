@@ -738,6 +738,11 @@ const GameRules = {
   royalPorts(pid) {
     return this.buildingTiles.filter(a => this.building[a] === B_PORT && this.owner[a] === pid && this.level[a] >= 3);
   },
+  // Secondes avant de pouvoir relancer un assaut viking (0 si c'est possible) : un par minute au plus
+  vikingWait(p) {
+    if (p.lastViking === undefined) return 0;
+    return Math.max(0, (p.lastViking + CONFIG.VIKING_COOLDOWN * CONFIG.TICKS_PER_SECOND - this.tick) / CONFIG.TICKS_PER_SECOND);
+  },
   // Pourquoi p ne peut pas acheter d'assaut viking (null s'il le peut)
   vikingBuyError(p) {
     if (!this.royalPorts(p.id).length) return tr('Il faut un port royal (port de niveau 3) pour préparer un assaut viking.', 'You need a royal port (level 3 port) to prepare a Viking assault.');
@@ -775,6 +780,8 @@ const GameRules = {
   planViking(pid, i) {
     const p = this.players[pid], W = this.W, R = CONFIG.VIKING_RANGE;
     if (!p.vikingReady) return { error: tr('Achète d\'abord un assaut viking (dans le menu de ton port royal).', 'First buy a Viking assault (in the menu of your royal port).') };
+    const wait = Math.ceil(this.vikingWait(p));
+    if (wait > 0) return { error: tr(`Tes Vikings se préparent : prochain assaut viking dans ${wait} s (un par minute au plus).`, `Your Vikings are getting ready: next Viking assault in ${wait} s (one per minute at most).`) };
     const c = i >= 0 && this.building[i] ? this.anchor[i] : -1, o = c >= 0 ? this.owner[c] : -1;
     if (c < 0 || o < 0 || o === pid || !this.holdsAlone(c)) {
       return { error: tr('Un assaut viking vise une ville (un château) ou un port fortifié ennemi.', 'A Viking assault targets an enemy city (a castle) or fortified port.') };
@@ -825,6 +832,7 @@ const GameRules = {
     if (troops < CONFIG.VIKING_MIN_TROOPS) return tr(`Il faut au moins ${CONFIG.VIKING_MIN_TROOPS} soldats pour un assaut viking.`, `You need at least ${CONFIG.VIKING_MIN_TROOPS} soldiers for a Viking assault.`);
     p.troops -= troops;
     p.vikingReady = false; // (l'assaut est utilisé : il faudra en racheter un)
+    p.lastViking = this.tick; // (le suivant pas avant VIKING_COOLDOWN secondes)
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, viking: plan.castle, victim: plan.target, landing: plan.landing,
       path: plan.path, port: plan.port, cost: 0, sent: troops, troops, // (aucune perte en mer)
