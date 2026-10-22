@@ -54,11 +54,8 @@ const AI = {
     const max = Game.maxTroops(p);
     const nb = Game.neighborStats(p.id);
 
-    // Nos avant-postes bâtis : leurs soldats stationnés prennent des terres libres autour
-    for (const [op, o] of Game.outposts) {
-      if (Game.owner[op] !== p.id || !Game.outpostReady(op) || o.stationed < 10 || Math.random() > 0.3) continue;
-      Game.launchAttack(p.id, -1, o.stationed * 0.7, undefined, op);
-    }
+    // Nos avant-postes bâtis : des bases pour une campagne (voir useOutposts)
+    if (this.useOutposts(p)) return;
 
     // Un de nos châteaux (ou ports de niveau 3) est isolé : de temps en temps, on tente de le relier au royaume
     if (p.troops > max * 0.4 && Math.random() < 0.2) {
@@ -247,15 +244,76 @@ const AI = {
     if (Math.random() < 0.3) this.tryExpedition(p, true);
   },
 
-  // Avec un grand port : parfois, une expédition vers une côte au hasard (freeFirst : de préférence une terre libre)
+  // ⛵ Avec un grand port : une expédition, mais seulement avec un but (un seul débarquement en mer à la fois,
+  // et pas plus de 2 avant-postes) :
+  //  - des terres libres de l'autre côté de la mer, quand il n'y en a plus à notre frontière (freeFirst : bloqué sur son île) ;
+  //  - une campagne : débarquer tout près d'une ville (ou d'une église, d'un port…) d'un ennemi plus faible que nous,
+  //    pour l'attaquer ensuite depuis l'avant-poste (voir useOutposts).
   tryExpedition(p, freeFirst) {
-    if (!Game.expeditionPorts(p.id).length || p.gold < 40) return;
-    for (let k = 0; k < (freeFirst ? 60 : 15); k++) {
-      const i = (Math.random() * Game.N) | 0;
-      if (!Game.isCoastal(i) || !Game.landable(p.id, i)) continue;
-      if (freeFirst && k < 45 && Game.owner[i] !== -1) continue;
-      if (!Game.launchExpedition(p.id, i, Math.max(p.troops * 0.3, 12))) return;
+    const G = Game, W = G.W;
+    if (!G.expeditionPorts(p.id).length || p.gold < 40) return;
+    const sailing = G.expeditions.some(e => !e.done && e.pid === p.id && e.home === undefined && !e.reinforce);
+    const bases = [...G.outposts.keys()].filter(a => G.owner[a] === p.id).length;
+    if (sailing || bases >= 2) return;
+    // Des terres libres au-delà de la mer
+    if (freeFirst || !G.neighborStats(p.id).has(-1)) {
+      for (let k = 0; k < 60; k++) {
+        const i = (Math.random() * G.N) | 0;
+        if (G.owner[i] !== -1 || !G.isCoastal(i) || !G.landable(p.id, i)) continue;
+        if (!G.launchExpedition(p.id, i, Math.max(p.troops * 0.2, 12))) return;
+      }
     }
+    if (freeFirst) return;
+    // Une campagne par la mer : il faut une armée bien remplie, et pas déjà un avant-poste à utiliser
+    if (bases >= 1 || p.troops < G.maxTroops(p) * 0.5) return;
+    const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.areAllied(p.id, o.id) && o.troops < p.troops * 0.8);
+    if (!foes.length) return;
+    const foe = foes[(Math.random() * foes.length) | 0];
+    const targets = G.targetsOf(foe.id).sort(() => Math.random() - 0.5).slice(0, 5);
+    for (const t of targets) {
+      // une côte de cet ennemi à moins de 10 cases de sa cible
+      const tx = t % W, ty = (t / W) | 0;
+      for (let k = 0; k < 40; k++) {
+        const x = tx + Math.round((Math.random() * 2 - 1) * 10), y = ty + Math.round((Math.random() * 2 - 1) * 10);
+        if (x < 0 || y < 0 || x >= W || y >= G.H) continue;
+        const i = y * W + x;
+        if (G.owner[i] !== foe.id || !G.isCoastal(i) || !G.landable(p.id, i)) continue;
+        if (!G.launchExpedition(p.id, i, p.troops * 0.35)) return;
+      }
+    }
+  },
+
+  // Nos avant-postes bâtis servent vraiment :
+  //  - planté chez un ennemi : on y masse des soldats (renforts par la mer), puis on lance une campagne depuis
+  //    l'avant-poste sur sa cible la plus proche (château, église, port…) ;
+  //  - sur des terres libres (ou si l'ennemi n'en est plus un) : ses soldats prennent les terres autour.
+  // Renvoie true si une attaque est partie.
+  useOutposts(p) {
+    const G = Game, W = G.W, max = G.maxTroops(p);
+    const dist = (a, b) => (a % W - b % W) ** 2 + (((a / W) | 0) - ((b / W) | 0)) ** 2;
+    for (const [op, o] of G.outposts) {
+      if (G.owner[op] !== p.id || !G.outpostReady(op)) continue;
+      const v = o.victim;
+      if (v < 0 || !G.players[v].alive || G.areAllied(p.id, v)) {
+        if (o.stationed >= 10 && Math.random() < 0.3 && !G.launchAttack(p.id, -1, o.stationed * 0.7, undefined, op)) return true;
+        continue;
+      }
+      // la cible de l'ennemi la plus proche de l'avant-poste, et de quoi la prendre (sa garnison, avec une marge)
+      const aim = G.targetsOf(v).filter(a => !G.truceLeft(a)).sort((a, b) => dist(a, op) - dist(b, op))[0];
+      const need = Math.max(max * 0.15, (aim !== undefined ? G.garrison[aim] || 0 : 0) * 3 + 30);
+      if (o.stationed >= need) {
+        if (!G.launchAttack(p.id, v, o.stationed * 0.9, aim, op)) return true;
+        // (impossible de partir d'ici : après quelques essais, on rapatrie ses soldats)
+        o.aiFails = (o.aiFails || 0) + 1;
+        if (o.aiFails > 10) { G.repatriate(p.id, op); o.aiFails = 0; }
+        continue;
+      }
+      // pas encore assez : des renforts par la mer (une expédition de renfort à la fois)
+      if (p.troops > max * 0.4 && !G.expeditions.some(e => !e.done && e.reinforce === op)) {
+        G.reinforceOutpost(p.id, op, Math.min(p.troops * 0.35, need * 1.2 - o.stationed));
+      }
+    }
+    return false;
   },
 
   // Un mur pour fermer un passage : une ville de niveau 2 (ou 3) qui a assez d'or regarde par où un royaume

@@ -150,6 +150,9 @@ const UI = {
     document.querySelectorAll('.hostOnly').forEach(b => b.classList.toggle('hidden', !this.isHost()));
     // 📜 Règles : le jeu se met en pause, et les règles complètes s'affichent (les mêmes que sur l'écran de départ)
     $('rulesBtn').addEventListener('click', () => this.openRules());
+    // Souris sur ⛏️ dans la barre du haut : nos mines clignotent sur la carte (voir Render.drawFlashingMines)
+    $('minesBox').addEventListener('mouseenter', () => { this.flashMines = true; });
+    $('minesBox').addEventListener('mouseleave', () => { this.flashMines = false; });
     $('rulesClose').addEventListener('click', () => this.closeRules());
     $('attacks').addEventListener('click', e => {
       // (closest : le texte des boutons est remplacé par des icônes, le clic peut tomber sur l'icône)
