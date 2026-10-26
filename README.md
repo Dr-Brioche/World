@@ -571,7 +571,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - L'avant-poste met **20 secondes à être bâti** après le débarquement (compte à rebours sur la carte).
      Pendant ce temps, ses soldats bâtissent et **ne peuvent rien faire d'autre** (pas d'attaque depuis lui) ;
      on peut déjà l'attaquer. Il n'a **pas encore de garnison** : juste des **soldats affaiblis**, occupés à bâtir
-     (« ⚔ 30 affaiblis » sur la carte) : chacun ne compte que pour 1 au combat (pas 3 comme une garnison), avec **-0,2 de défense**. Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
+     (« ⚔ 30 affaiblis » sur la carte) : chacun ne compte que pour 1 au combat (pas 3 comme une garnison), **sans aucun bonus du terrain** (même en montagne : ils ne sont pas encore retranchés) et à **60 % de leur force** (réglage `OUTPOST_BUILDING_DEFENSE`). Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
      tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
    - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** (au-delà des
      mers, ton royaume ne peut pas lui envoyer de défenseurs ; une fois relié, ses soldats stationnés rejoignent
@@ -750,6 +750,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.101** : ⛺ un avant-poste en construction est vraiment affaibli : ses soldats, occupés à bâtir, n'ont plus le bonus du terrain (une montagne les rendait presque 3 fois plus forts) et ne se battent qu'à 60 %
 - **v0.92.100** : 🔥 un seul assaut viking par minute au plus (réglage `VIKING_COOLDOWN`) ; le bouton Viking affiche le temps restant
 - **v0.92.99** : 🔥 l'assaut viking devient un **raid** : il part forcément d'un port royal, et s'il l'emporte, la ville visée est **détruite** (avec ses moulins et casernes) au lieu d'être prise ; 💰 300 de butin par bâtiment détruit, puis les Vikings rentrent par bateau
 - **v0.92.98** : ⚓ un port royal (niveau 3) bâti ou pris dans la zone d'un avant-poste la fait entrer dans ton royaume, comme un château (l'avant-poste disparaît) · 🔥 **assaut viking** (port royal, niveau 3, 💰 3000) : un assaut par la mer, sans avant-poste, sur une ville ennemie à 25 cases au plus d'une côte ; traversée sans pertes, soldats +50 % plus forts, flamme 🔥 au-dessus des bateaux et des assauts vikings ; les survivants d'un échec rentrent par bateau ; les bots l'utilisent aussi
