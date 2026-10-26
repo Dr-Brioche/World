@@ -935,10 +935,10 @@ const UI = {
         txt += G.outpostReady(a) ? tr(' · défense +100 % autour · base pour attaquer depuis la côte', ' · defense +100% around it · a base to attack from the coast')
           : tr(` · 🏗️ en construction (${secs} s) : ` +
             `ses soldats bâtissent et ne peuvent rien faire d'autre (pas d'attaque depuis lui), ` +
-            `défense ${pct(-CONFIG.OUTPOST_BUILDING_MALUS)}, on peut déjà l'attaquer`,
+            `défense affaiblie (${pct(CONFIG.OUTPOST_BUILDING_DEFENSE - 1)}, sans bonus du terrain), on peut déjà l'attaquer`,
             ` · 🏗️ under construction (${secs} s): ` +
             `its soldiers are building and can do nothing else (no attacks from it), ` +
-            `defense ${pct(-CONFIG.OUTPOST_BUILDING_MALUS)}, it can already be attacked`);
+            `weakened defense (${pct(CONFIG.OUTPOST_BUILDING_DEFENSE - 1)}, no terrain bonus), it can already be attacked`);
         if (o && G.owner[a] === G.human.id) txt += tr(' · clique dessus pour envoyer des renforts par la mer', ' · click on it to send reinforcements by sea');
         txt += tr(' · un château bâti ou pris dans sa zone en fait une vraie terre du royaume', ' · a castle built or taken in its area makes it true kingdom land');
       }

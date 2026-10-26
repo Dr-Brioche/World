@@ -4059,12 +4059,12 @@ const GameRules = {
       if (t === undefined) return 1;
       a.frontTile = t;
     }
+    // Avant-poste en construction : ses défenseurs, occupés à bâtir, ne sont pas encore retranchés. Le terrain ne les
+    // aide pas (même en montagne), et ils se battent moins bien (OUTPOST_BUILDING_DEFENSE)
+    if (this.outpostBuilding(a.target, t)) return CONFIG.OUTPOST_BUILDING_DEFENSE;
     let def = this.tileDefense(a.target, t);
     if (this.isTraitor(this.players[a.target])) def *= CONFIG.TRAITOR_DEFENSE_MALUS;
-    def = Math.max(1, def);
-    // Avant-poste en construction : ses défenseurs, occupés à bâtir, se défendent moins bien
-    if (this.outpostBuilding(a.target, t)) def -= CONFIG.OUTPOST_BUILDING_MALUS;
-    return def;
+    return Math.max(1, def);
   },
 
   // Niveau de la meilleure caserne d'un royaume (0 s'il n'en a pas), et l'icône de ses troupes qui va avec :
