@@ -223,7 +223,7 @@ const CHARLEMAGNE = {
       desc: tr('Le royaume lombard du roi Didier, qui rêve de prendre Rome.', 'King Desiderius\' Lombard kingdom, which dreams of taking Rome.'),
     },
     {
-      id: 'avars', name: tr('Avars', 'Avars'), leader: tr('le khagan', 'the Khagan'), flag: 'b03', color: [138, 24, 72],
+      id: 'avars', name: tr('Avars', 'Avars'), leader: tr('le khagan', 'the Khagan'), flag: 'cm_avars', color: [242, 230, 200],
       playable: true,
       capital: [19.80, 46.90, tr('le Ring', 'the Ring')],
       cities: [[17.64, 47.69, tr('Győr', 'Győr')], [19.61, 44.97, tr('Sirmium', 'Sirmium')]],
