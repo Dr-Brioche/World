@@ -1633,6 +1633,7 @@ const UI = {
     const G = Game, h = G.human;
     const err = G.launchLink(h.id, c, h.troops * this.ratio);
     if (err) this.log(err, 'warn');
+    else Music.sound('assault'); // (🔔 l'armée part à l'assaut)
   },
 
   // --- Choisir la cible d'un assaut, puis valider ---
@@ -1689,6 +1690,7 @@ const UI = {
     // (assaut de front : on garde la case du 1er clic, pour ne pas viser par erreur une église cliquée au 2e)
     const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, src) * this.ratio, p.castle >= 0 ? p.castle : p.tile, src);
     if (err) this.log(err, 'warn');
+    else Music.sound('assault'); // (🔔 l'armée part à l'assaut)
     return true;
   },
 
@@ -1913,6 +1915,7 @@ const UI = {
     const G = Game, h = G.human, n = Math.floor(h.troops * this.ratio);
     const err = G.launchViking(h.id, i, n);
     if (err) return this.log(err, 'warn');
+    Music.sound('assault'); // (🔔 les Vikings partent à l'assaut)
     this.cancelVikingAim();
     this.log(tr(`🔥 Tes Vikings embarquent (${fmt(n)} soldats) : ils traversent la mer sans pertes, débarqueront près de leur cible et la raseront !`,
       `🔥 Your Vikings set sail (${fmt(n)} soldiers): they cross the sea with no losses, will land near their target and raze it!`), 'good');
@@ -2227,6 +2230,7 @@ const UI = {
       const src = running ? G.sourceOfAttack(running) : G.bestSource(h.id, target, i);
       const err = G.launchAttack(h.id, target, G.troopsAt(h.id, src) * this.ratio, i, src);
       if (err) this.log(err, 'warn');
+      else if (target >= 0 && !running) Music.sound('assault'); // (🔔 l'armée part à l'assaut d'un ennemi ; pas les terres libres ni les renforts)
     };
     // Attaquer un allié = le trahir (après confirmation, qui vaut validation de l'assaut) ; sauf dans un camp du mode
     // « Factions » : on n'attaque jamais son propre camp
