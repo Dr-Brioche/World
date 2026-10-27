@@ -145,7 +145,7 @@ const CHARLEMAGNE = {
       desc: tr('Le dernier royaume chrétien d\'Espagne, dans ses montagnes.', 'The last Christian kingdom of Spain, in its mountains.'),
     },
     {
-      id: 'aquitaine', name: tr('Aquitaine', 'Aquitaine'), leader: tr('le duc Hunald II', 'Duke Hunald II'), flag: 'b04', color: [214, 140, 30],
+      id: 'aquitaine', name: tr('Aquitaine', 'Aquitaine'), leader: tr('le duc Hunald II', 'Duke Hunald II'), flag: 'cm_aquitaine', color: [224, 198, 36],
       playable: true,
       capital: [-0.58, 44.84, tr('Bordeaux', 'Bordeaux')],
       cities: [[0.72, 45.18, tr('Périgueux', 'Périgueux')]],
