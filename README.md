@@ -160,7 +160,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        prévient) si tu **perds la ville** (ou ta ville de haut niveau, ta Croyance, Rome) : il faut tout tenir en même
        temps. Tout est rempli : tu es **couronné empereur** !
        (Sinon, la victoire normale à 70 % des terres reste possible.)
-     Les bannières des factions sont provisoires (des drapeaux du jeu) : les vraies bannières historiques arriveront.
+     Chaque faction porte sa **propre bannière** (le monogramme de Charlemagne pour les Francs, les clés de saint Pierre
+     pour le pape, l'aigle bicéphale de Byzance, la guivre des Lombards, le corbeau des Danois…) et la couleur de son royaume.
      Tous les réglages du scénario sont dans `js/charlemagne.js`.
    🏰 **Scénario « Gouffre de Helm (3019) »** (rubrique 📜 Scénarios, d'après *Les Deux Tours*) : la nuit du 3 au 4 mars
      3019 du Tiers Âge. Tu es le roi **Théoden** : les Rohirrim se sont retranchés au Gouffre de Helm, et l'armée de
@@ -860,6 +861,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.117** : 👑 Charlemagne : les **15 factions ont leurs vraies bannières** (monogramme KAROLUS des Francs et de Carloman, clés de saint Pierre du pape, aigle bicéphale de Byzance, guivre lombarde, cheval saxon, corbeau danois, triskèle breton, croix des Asturies…) et chaque royaume prend la couleur de son drapeau : Carloman en violet, les Lombards en vert, la Bavière en orange, les Saxons en noir… (Rome, les Francs et Carloman se distinguent enfin au premier coup d'œil)
 - **v0.92.116** : 👑 Charlemagne : ⚔️ la **révolte d'Aquitaine** (Hunald II, Bordeaux) avec le **château isolé de Fronsac** · ⚔️ les **Slaves**, pillards du nord-est : terres imprenables, **razzias** de plus en plus grosses qui rasent leur cible · ✝️ succès **« Empire chrétien »** (terres franques reliées à Rome : +100 de Croyance pour toujours) · capitales au moins au niveau 2, Pavie et Vannes au niveau 3, Rouen et Wurtzbourg deviennent des églises · 🗺️ au bord des cartes Charlemagne et Europe, la terre finit sur des sommets (plus de ligne de mer que suivent les bateaux)
 - **v0.92.115** : 📊 en posant un bâtiment, une petite bulle donne son bonus de production à l'endroit visé (« +30 % », « −20 % ») · ⬆️ touche **U** : la souris d'amélioration (un clic sur un de ses bâtiments l'améliore directement) · 🧹 plus d'icône à côté du choix de la langue, au menu
 - **v0.92.114** : 🏰 nouveau scénario **Gouffre de Helm (3019)** : défendre Fort-le-Cor jusqu'à l'aube contre les vagues d'Isengard (petite carte du Gouffre, Digue, Mur, Fort-le-Cor, Cavernes Scintillantes), avec les Dunlendings, les wargs, le ponceau, le feu de Saroumane, le Cor de Helm, la nuit et l'orage, puis l'aube (Gandalf, Erkenbrand, les Huorns) ; des succès font venir les elfes de la Lórien et les nains d'Aglarond · 🗼 nouveau bâtiment, la **tour de garde** (5 niveaux, elle tire sur les armées ennemies proches ; prise, elle retombe au niveau 1)

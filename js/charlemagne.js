@@ -127,7 +127,7 @@ const CHARLEMAGNE = {
       desc: tr('Un petit duché, vassal rebelle des Francs : leur première cible.', 'A small duchy, rebel vassal of the Franks: their first target.'),
     },
     {
-      id: 'bretons', name: tr('Bretons', 'Bretons'), leader: tr('les chefs bretons', 'the Breton chiefs'), flag: 'cm_bretons', color: [126, 160, 204],
+      id: 'bretons', name: tr('Bretons', 'Bretons'), leader: tr('les chefs bretons', 'the Breton chiefs'), flag: 'cm_bretons', color: [156, 186, 218],
       playable: true,
       capital: [-2.76, 47.66, tr('Vannes', 'Vannes')], capitalLevel: 3,
       cities: [[-4.10, 48.00, tr('Quimper', 'Quimper')]],
@@ -156,7 +156,7 @@ const CHARLEMAGNE = {
         '769: Duke Hunald II raises Aquitaine against the Franks, who hold only the isolated castle of Fronsac there.'),
     },
     {
-      id: 'francs', name: tr('Francs', 'Franks'), leader: tr('Charlemagne', 'Charlemagne'), flag: 'b12', color: [30, 60, 165],
+      id: 'francs', name: tr('Francs', 'Franks'), leader: tr('Charlemagne', 'Charlemagne'), flag: 'cm_francs', color: [26, 58, 140],
       playable: true,
       capital: [3.00, 49.58, tr('Noyon', 'Noyon')],
       cities: [[2.35, 48.86, tr('Paris', 'Paris')], [0.69, 47.39, tr('Tours', 'Tours')], [6.96, 50.94, tr('Cologne', 'Cologne')],
