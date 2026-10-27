@@ -185,6 +185,7 @@ const UI = {
     });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
     $('musicBtn').addEventListener('click', () => Music.toggle()); // (🎵 la musique d'ambiance : voir music.js)
+    $('musicVol').addEventListener('input', e => Music.setVolume(+e.target.value));
     $('speedBtn').addEventListener('click', () => this.nextSpeed());
     // (seul celui qui héberge la partie peut la mettre en pause ou changer sa vitesse : voir isHost)
     document.querySelectorAll('.hostOnly').forEach(b => b.classList.toggle('hidden', !this.isHost()));
