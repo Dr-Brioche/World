@@ -83,8 +83,8 @@ const CHARLEMAGNE = {
       title: tr('La mort de Pépin le Bref', 'The death of Pepin the Short'),
       text: tr('Le roi Pépin s\'est éteint à Saint-Denis. Selon la coutume franque, son royaume est partagé entre ses deux fils : à toi, Charles, le nord et l\'ouest, de la Neustrie à l\'Austrasie ; à ton frère Carloman, la Bourgogne, la Provence et le sud. Les deux frères se jalousent, mais ils sont liés au pape par un pacte sacré. Autour d\'eux, les Saxons païens, les Lombards, les Bavarois du duc Tassilon et les Avars guettent le moindre faux pas…',
         'King Pepin has passed away at Saint-Denis. As Frankish custom demands, his kingdom is shared between his two sons: to you, Charles, the north and the west, from Neustria to Austrasia; to your brother Carloman, Burgundy, Provence and the south. The two brothers envy each other, but they are bound to the pope by a sacred pact. Around them, the pagan Saxons, the Lombards, the Bavarians of Duke Tassilo and the Avars wait for the slightest mistake…'),
-      todo: tr('Les 9 objectifs de Charlemagne sont dans le cadre en haut à gauche : remplis-les tous en même temps pour être couronné empereur. La partie est en pause : regarde la carte, puis ▶ Reprendre (ou P).',
-        'Charlemagne\'s 9 objectives are in the box at the top left: complete them all at once to be crowned emperor. The game is paused: look at the map, then ▶ Resume (or P).'),
+      todo: tr('Les 9 objectifs de Charlemagne sont dans le cadre en haut à gauche : remplis-les tous en même temps pour être couronné empereur. La partie est en pause : regarde la carte, puis ▶ Reprendre (ou Espace).',
+        'Charlemagne\'s 9 objectives are in the box at the top left: complete them all at once to be crowned emperor. The game is paused: look at the map, then ▶ Resume (or Space).'),
     },
     aquitaine: {
       date: tr('Printemps 769', 'Spring 769'),
