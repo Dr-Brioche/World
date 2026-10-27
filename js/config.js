@@ -391,7 +391,8 @@ const CONFIG = {
     SOUNDS: {
       cityLost: 'sons/perte-ville.mp3', // une de nos villes est prise (ou rasée)
       assault: 'sons/assaut-depart.mp3', // notre armée part à l'assaut d'un ennemi (pas pour les terres libres)
-      upgrade: 'sons/amelioration.mp3', // un de nos bâtiments vient de finir son amélioration
+      build: 'sons/construction.mp3', // un de nos bâtiments vient d'être construit, ou de finir son amélioration
+      diamond: 'sons/diamant.mp3',     // une de nos mines de diamant rapporte son or (à chaque quart, et le trésor final)
       enemyAssault: 'sons/assaut-ennemi.mp3', // un ennemi lance un assaut sur nous (ou des Vikings débarquent chez nous)
     },
     SOUND_GAP: 3,

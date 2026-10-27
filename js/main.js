@@ -199,6 +199,11 @@ const UI = {
     $('minesBox').addEventListener('mouseenter', () => { this.flashMines = true; });
     $('minesBox').addEventListener('mouseleave', () => { this.flashMines = false; });
     $('rulesClose').addEventListener('click', () => this.closeRules());
+    // ↩ Quitter la partie : on confirme (le jeu se met en pause), puis retour au menu de départ (la page se recharge,
+    // comme avec « Rejouer » ; la langue, la musique et son volume restent ceux choisis)
+    $('quitBtn').addEventListener('click', () => this.openQuit());
+    $('quitNo').addEventListener('click', () => this.closeQuit());
+    $('quitYes').addEventListener('click', () => location.reload());
     $('attacks').addEventListener('click', e => {
       // (closest : le texte des boutons est remplacé par des icônes, le clic peut tomber sur l'icône)
       const def = e.target.closest('[data-defend]');
@@ -283,6 +288,7 @@ const UI = {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
+      if (e.key === 'Escape' && !$('quitScreen').classList.contains('hidden')) return this.closeQuit(); // (… et « Quitter ? »)
       if (e.key === 'Escape') { this.setUpgradeMode(false); this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; }
       // P ou la barre Espace : pause (Espace ne doit pas cliquer le bouton qui a gardé le focus, ni faire défiler la page)
       if (e.key === 'p' || e.key === 'P' || e.code === 'Space') {
@@ -456,6 +462,17 @@ const UI = {
     $('rulesScreen').classList.add('hidden');
     if (this.rulesPaused && Game.paused) this.togglePause();
     this.rulesPaused = false;
+  },
+  // ↩ Quitter la partie ? (comme les règles : le jeu se met en pause, et ne repart que si c'est nous qui l'avons arrêté)
+  openQuit() {
+    this.quitPaused = Game.phase === 'playing' && !Game.paused;
+    if (this.quitPaused) this.togglePause();
+    $('quitScreen').classList.remove('hidden');
+  },
+  closeQuit() {
+    $('quitScreen').classList.add('hidden');
+    if (this.quitPaused && Game.paused) this.togglePause();
+    this.quitPaused = false;
   },
 
   // Celui qui héberge la partie : lui seul peut la mettre en pause et changer sa vitesse.
@@ -1209,11 +1226,14 @@ const UI = {
   },
 
   // 👑 Le cadre des objectifs (en haut à gauche) : redessiné seulement quand un objectif change ; les messages
-  // s'affichent juste en dessous
+  // s'affichent juste en dessous (voir placeTopPanels)
   refreshObjectives() {
     const box = $('objectives'), list = Game.objectives();
     box.classList.toggle('hidden', !list.length);
-    if (!list.length) { $('log').style.top = ''; return; }
+    if (list.length) this.drawObjectives(box, list);
+    this.placeTopPanels(box, list.length > 0);
+  },
+  drawObjectives(box, list) {
     if (this.objFolded === undefined) this.objFolded = window.innerWidth < 760; // (replié d'office sur un petit écran)
     // (le titre et l'aide dépendent du scénario ; on ne redessine que si un objectif ou un texte a changé)
     const title = Game.hd ? Game.helmTitle() : tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives');
@@ -1228,7 +1248,16 @@ const UI = {
         'Hold the Hornburg (or the Caves) until dawn; the other objectives bring you reinforcements (click: fold or unfold)')
         : tr('Tous remplis : tu es couronné empereur ! (clic : replier ou déplier)', 'All complete: you are crowned emperor! (click: fold or unfold)');
     }
-    $('log').style.top = Math.round(box.getBoundingClientRect().bottom + 6) + 'px';
+  },
+  // Sous la barre du haut (qui peut tenir sur 2 lignes sur un écran étroit) : les objectifs, puis (sur un téléphone)
+  // le cadre de la musique, puis les messages ; chacun juste sous le précédent, pour qu'ils ne se chevauchent pas
+  placeTopPanels(box, shown) {
+    let y = $('topbar').getBoundingClientRect().bottom + 6;
+    if (shown) { box.style.top = Math.round(y) + 'px'; y = box.getBoundingClientRect().bottom + 6; }
+    const music = $('musicBox'), phone = window.innerWidth <= 760;
+    music.style.top = phone ? Math.round(y) + 'px' : '';
+    if (phone) y = music.getBoundingClientRect().bottom + 6;
+    $('log').style.top = Math.round(y) + 'px';
   },
 
   refresh() {

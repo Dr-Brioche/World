@@ -44,7 +44,8 @@ html, body {
 
 #topbar {
   top: 8px;
-  left: 50%;
+  /* (centrée dans la place laissée à gauche du classement : 280 px de large + ses marges) */
+  left: calc((100% - 296px) / 2);
   transform: translateX(-50%);
   width: max-content; /* (sans ça, la barre se replie sur 2 lignes dès qu'elle dépasse la moitié de l'écran) */
   display: flex;
@@ -399,10 +400,16 @@ button:hover { background: #e8d6a8; }
 .rulesBox summary small { font-weight: normal; font-family: Georgia, serif; opacity: 0.7; }
 .rules li { margin: 4px 0; }
 
+/* (écran moyen : la barre du haut, entre le bord gauche et le classement, passe sur 2 lignes s'il le faut) */
+@media (min-width: 761px) and (max-width: 1180px) {
+  #topbar { left: 8px; right: 304px; width: auto; transform: none; flex-wrap: wrap; justify-content: center; white-space: normal; row-gap: 4px; gap: 10px; }
+}
+
 @media (max-width: 760px) {
   #bannerPick img, #bannerBtn img { height: 110px; }
   .panel { font-size: 12px; padding: 4px 8px; }
-  #topbar { gap: 8px; left: 8px; right: 8px; transform: none; flex-wrap: wrap; justify-content: center; white-space: normal; }
+  /* (width: auto : sur 2 lignes s'il le faut, pour que les boutons Pause, vitesse, Menu et Règles restent à l'écran) */
+  #topbar { gap: 8px; left: 8px; right: 8px; width: auto; transform: none; flex-wrap: wrap; justify-content: center; white-space: normal; row-gap: 4px; }
   #side { top: auto; bottom: 120px; width: 170px; font-size: 11px; }
   .nm { width: 80px; }
   #bottomwrap { left: 8px; right: 8px; transform: none; }
@@ -411,11 +418,13 @@ button:hover { background: #e8d6a8; }
   #builds { flex-wrap: wrap; justify-content: center; gap: 4px; }
   .build { min-width: 56px; padding: 4px; }
   #hint { display: none; }
-  #log { top: 80px; width: calc(100% - 16px); }
+  /* (sous la barre du haut, qui tient sur 2 lignes : les objectifs, la musique, puis les messages ; leur hauteur
+     exacte est calculée par UI.placeTopPanels) */
+  #log { width: calc(100% - 16px); }
   /* (🎵 sur un téléphone, la barre du bas prend toute la largeur : la musique passe en haut à droite, sous la barre du haut) */
   /* (en jeu : en haut à droite, sous la barre du haut ; dans le menu : en haut à gauche, à côté du titre) */
   #musicBox { bottom: auto; top: 6px; right: auto; left: 6px; }
-  #hud:not(.hidden) ~ #musicBox { top: 96px; right: 8px; left: auto; }
+  #hud:not(.hidden) ~ #musicBox { right: 8px; left: auto; }
   #musicBox { padding: 2px 6px; }
   #musicVol { width: 60px; }
 }
