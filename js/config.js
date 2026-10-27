@@ -328,7 +328,8 @@ const CONFIG = {
 
   // --- Alliances (pactes) ---
   MAX_PACT_SIZE: 3,              // nombre maximum de royaumes dans un même pacte
-  ALLIANCE_REFUSAL_COOLDOWN: 30, // secondes avant de redemander au même royaume
+  ALLIANCE_REFUSAL_COOLDOWN: 120, // après un refus, secondes avant de redemander à ce royaume (ni à un membre de son pacte)
+  ALLIANCE_REQUEST_GAP: 20,      // au moins 20 s entre deux demandes d'alliance affichées au joueur (pas de spam)
   TRAITOR_DURATION: 120,         // secondes pendant lesquelles un traître est mal vu
   TRAITOR_DEFENSE_MALUS: 0.5,    // les terres d'un traître coûtent 2x moins cher à prendre
   ALLIANCE_REQUEST_TIMEOUT: 15,  // secondes pour répondre à une demande d'alliance
