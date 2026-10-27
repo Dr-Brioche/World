@@ -514,7 +514,8 @@ const GameRules = {
   mineInfo(a) {
     const d = this.depositAt.get(a), lvl = this.level[a] || 1, base = MINE_LEVELS[lvl];
     if (!d) return base;
-    return this.mineInfoAt(d.kind, lvl);
+    const info = this.mineInfoAt(d.kind, lvl);
+    return d.name ? { ...info, name: `${info.name} (${d.name})` } : info; // (une mine historique : son nom)
   },
   // Les infos d'une mine de cette sorte, à ce niveau (sans mine posée : pour les aperçus)
   mineInfoAt(kind, lvl) {
@@ -1783,15 +1784,15 @@ const GameRules = {
         for (const type of [B_MILL, B_MILL, B_BARRACKS]) this.placeOnLand(p, type, cx, cy, 2, inside);
       }
     }
-    // Les mines célèbres de l'époque : une mine déjà creusée, chez la faction qui tient ces terres
-    for (const [lon, lat, kind] of C.HISTORIC_MINES) {
-      const [x, y] = at(lon, lat), i = Math.round(y) * W + Math.round(x), p = this.players[this.owner[i]];
-      if (!p) continue;
+    // Les mines célèbres de l'époque : une mine déjà creusée chez la faction qui tient ces terres, ou un simple filon
+    // sur une terre libre (à qui y bâtira sa mine)
+    for (const [lon, lat, kind, name, role] of C.HISTORIC_MINES) {
+      const [x, y] = at(lon, lat), p = role ? this.players[cm.role[role]] : null;
       // (on retire les filons posés au hasard trop près de là)
-      for (const d of this.deposits.filter(d => Math.hypot(d.a % W - x, ((d.a / W) | 0) - y) < CONFIG.MINE_SPACING)) this.removeDeposit(d.a);
-      const a = this.placeOnLand(p, B_MINE, x, y, 1);
+      for (const d of this.deposits.filter(d => !d.historic && Math.hypot(d.a % W - x, ((d.a / W) | 0) - y) < CONFIG.MINE_SPACING)) this.removeDeposit(d.a);
+      const a = p ? this.placeOnLand(p, B_MINE, x, y, 1) : this.spotNear(-1, B_MINE, x, y);
       if (a < 0) continue;
-      const d = { a, kind, left: MINES.gold.time * TPS, progress: 0, paid: 0 };
+      const d = { a, kind, name, historic: true, left: MINES.gold.time * TPS, progress: 0, paid: 0 };
       this.deposits.push(d);
       this.depositAt.set(a, d);
       for (const j of [a, a + 1, a + W, a + W + 1]) this.depositTile[j] = 1;
@@ -1824,8 +1825,18 @@ const GameRules = {
   // Pose un bâtiment du royaume p au plus près du point (x, y) (en cases), sur ses terres, à bonne distance des
   // autres bâtiments (inside : une condition en plus sur ses cases). Renvoie sa case d'ancrage, ou -1.
   placeOnLand(p, type, x, y, level, inside = null) {
+    const best = this.spotNear(p.id, type, x, y, inside);
+    if (best < 0) return -1;
+    this.placeBuilding(best, type);
+    this.level[best] = level;
+    this.builtBy[best] = -1; // (déjà là au début : ne fait pas monter le prix des suivants)
+    if (type === B_CASTLE) this.garrison[best] = this.garrisonMax(best);
+    return best;
+  },
+  // La place libre la plus proche de (x, y) pour un bâtiment type, sur les terres de pid (-1 = terre libre)
+  spotNear(pid, type, x, y, inside = null) {
     const W = this.W, n = this.sizeOf(type), ok = a => this.footprint(a, type).every(j =>
-      this.owner[j] === p.id && this.claimable(j) && !this.building[j] && (!inside || inside(j)));
+      this.owner[j] === pid && this.claimable(j) && !this.building[j] && (!inside || inside(j)));
     for (let r = 0; r <= 16; r++) {
       let best = -1, bestD = Infinity;
       for (let dy = -r; dy <= r; dy++) {
@@ -1837,13 +1848,7 @@ const GameRules = {
           if (d < bestD && ok(a) && !this.tooCloseToBuilding(a, type)) { best = a; bestD = d; }
         }
       }
-      if (best >= 0) {
-        this.placeBuilding(best, type);
-        this.level[best] = level;
-        this.builtBy[best] = -1; // (déjà là au début : ne fait pas monter le prix des suivants)
-        if (type === B_CASTLE) this.garrison[best] = this.garrisonMax(best);
-        return best;
-      }
+      if (best >= 0) return best;
     }
     return -1;
   },
@@ -1908,6 +1913,7 @@ const GameRules = {
     const cm = this.cm, h = this.human;
     if (o.kind === 'capital') return this.owner[cm.capital[o.role]] === h.id;
     if (o.kind === 'site') { const a = cm.sites.get(o.at.join(',')); return a !== undefined && this.owner[a] === h.id; }
+    if (o.kind === 'mines') return this.deposits.filter(d => d.historic && this.building[d.a] === B_MINE && this.owner[d.a] === h.id).length >= o.goal[cm.diff];
     if (o.kind === 'citadel') return this.castles.some(c => this.owner[c] === h.id && this.level[c] >= o.goal[cm.diff]);
     if (o.kind === 'faith') {
       // (sans les croisades en cours : elles ne durent qu'une minute)
