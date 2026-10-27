@@ -4,6 +4,7 @@
 const AI = {
   update(p) {
     if (p.raiders) return; // (⚔️ des pillards, comme les Slaves de Charlemagne : ils ne font que leurs razzias, voir stepRaids)
+    if (p.dormant) return; // (👑 l'Aquitaine, avant sa révolte : elle n'a encore ni terres ni armée)
     if (--p.aiTimer > 0) return;
     p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Math.random() * 2));
 

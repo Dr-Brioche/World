@@ -50,6 +50,145 @@ const CHARLEMAGNE = {
   // ✝️ Succès « Empire chrétien » : quand les terres des Francs touchent celles de Rome, leur Croyance gagne
   // CHRISTIAN_EMPIRE pour toujours
   CHRISTIAN_EMPIRE: 100,
+
+  // 📜 Les grands événements (un parchemin s'ouvre au milieu de l'écran et met la partie en pause : voir EVENTS)
+  // 769 : la révolte d'Aquitaine éclate entre ces deux moments (secondes, au hasard) ; d'ici là, ses terres sont franques
+  AQUITAINE_REVOLT: [60, 180],
+  // 778 : Roncevaux. La première ville prise par les Francs au sud des Pyrénées (à l'ouest de cette longitude et au sud
+  // de cette latitude) : l'arrière-garde est massacrée au retour, les Francs perdent LOSS de leur armée
+  RONCEVAUX: { LON: 3.3, LAT: 43.0, LOSS: 0.3 },
+  // 782 : Widukind. DELAY secondes après la prise d'Eresburg par les Francs, les Saxons (s'il en reste) lèvent une armée
+  // de ARMY soldats et contre-attaquent sur Eresburg
+  WIDUKIND: { DELAY: 120, ARMY: { facile: 1500, normal: 2500, difficile: 3500 } },
+  // 787 : Tassilon s'allie aux Avars (minutes de jeu, selon la difficulté), si les Francs ne tiennent pas encore Ratisbonne
+  TASSILO: { facile: 16, normal: 13, difficile: 10 },
+  // 797 : Irène s'empare du trône de Byzance (minutes de jeu) : Byzance perd la moitié de ses soldats et de ses
+  // garnisons, et ne recrute plus pendant TIME secondes
+  IRENE: { AT: { facile: 14, normal: 18, difficile: 22 }, TIME: 120 },
+  // 797-802 : l'éléphant du calife. Quand les Francs prennent Barcelone : GOLD pièces et +FAITH de Croyance pour toujours
+  ELEPHANT: { GOLD: 1000, FAITH: 50 },
+  // 799 : le pape Léon III agressé. Quand les Francs ont rempli OBJECTIVES objectifs (et que Rome est au pape) : sa
+  // garnison tombe de moitié et ne se reconstitue plus ; s'ils ne la remplissent pas (en envoyant des soldats au pape)
+  // dans les TIME secondes, l'objectif « Rome » est perdu tant qu'elle n'est pas pleine
+  LEO: { OBJECTIVES: 5, TIME: 120 },
+  // 799 : les premiers Vikings. À partir de START minutes, toutes les EVERY secondes, les Danois (s'il en reste)
+  // débarquent ARMY guerriers près d'une ville côtière des Francs (un raid : elle est rasée s'ils la prennent)
+  VIKINGS: { START: { facile: 25, normal: 20, difficile: 16 }, EVERY: 150, ARMY: { facile: 500, normal: 800, difficile: 1200 } },
+
+  // Les textes des parchemins (date, titre, récit, ce qu'il faut faire) ; « {clé} » est remplacé par un nombre du jeu.
+  // Ils s'ouvrent quand le joueur est les Francs ; sinon, un simple message les remplace.
+  EVENTS: {
+    intro: {
+      date: tr('Octobre de l\'an de grâce 768', 'October, in the year of grace 768'),
+      title: tr('La mort de Pépin le Bref', 'The death of Pepin the Short'),
+      text: tr('Le roi Pépin s\'est éteint à Saint-Denis. Selon la coutume franque, son royaume est partagé entre ses deux fils : à toi, Charles, le nord et l\'ouest, de la Neustrie à l\'Austrasie ; à ton frère Carloman, la Bourgogne, la Provence et le sud. Les deux frères se jalousent, mais ils sont liés au pape par un pacte sacré. Autour d\'eux, les Saxons païens, les Lombards, les Bavarois du duc Tassilon et les Avars guettent le moindre faux pas…',
+        'King Pepin has passed away at Saint-Denis. As Frankish custom demands, his kingdom is shared between his two sons: to you, Charles, the north and the west, from Neustria to Austrasia; to your brother Carloman, Burgundy, Provence and the south. The two brothers envy each other, but they are bound to the pope by a sacred pact. Around them, the pagan Saxons, the Lombards, the Bavarians of Duke Tassilo and the Avars wait for the slightest mistake…'),
+      todo: tr('Les 9 objectifs de Charlemagne sont dans le cadre en haut à gauche : remplis-les tous en même temps pour être couronné empereur. La partie est en pause : regarde la carte, puis ▶ Reprendre (ou P).',
+        'Charlemagne\'s 9 objectives are in the box at the top left: complete them all at once to be crowned emperor. The game is paused: look at the map, then ▶ Resume (or P).'),
+    },
+    aquitaine: {
+      date: tr('Printemps 769', 'Spring 769'),
+      title: tr('La trahison d\'Aquitaine', 'The betrayal of Aquitaine'),
+      text: tr('À peine Pépin enterré, le duc Hunald II soulève l\'Aquitaine contre les Francs ! Bordeaux, Périgueux et Angoulême ferment leurs portes à tes hommes et lèvent ses bannières. Seul ton château de Fronsac, bâti sur la Dordogne, tient encore… mais il est désormais isolé au milieu des terres rebelles : aucun renfort ne peut l\'atteindre.',
+        'Pepin is barely buried when Duke Hunald II raises Aquitaine against the Franks! Bordeaux, Périgueux and Angoulême close their gates to your men and raise his banners. Only your castle of Fronsac, built on the Dordogne, still holds… but it is now isolated in the middle of the rebel lands: no reinforcement can reach it.'),
+      todo: tr('Fronsac ne compte que sur sa garnison. Attaque l\'Aquitaine pour relier Fronsac à ton royaume (clique sur ton château isolé pour lancer un assaut de jonction), et prends Bordeaux pour mater la révolte.',
+        'Fronsac can only count on its garrison. Attack Aquitaine to link Fronsac to your kingdom (click your isolated castle to launch a link assault), and take Bordeaux to crush the revolt.'),
+    },
+    carloman: {
+      date: tr('Décembre 771', 'December 771'),
+      title: tr('Carloman est mort', 'Carloman is dead'),
+      text: tr('Ton frère Carloman est mort subitement, à Samoussy. Sa veuve s\'est enfuie chez le roi Didier, en Lombardie, avec ses enfants. Les grands du royaume de Carloman viennent te prêter serment : te voilà seul roi des Francs, maître de toute la Gaule.',
+        'Your brother Carloman has died suddenly, at Samoussy. His widow has fled to King Desiderius, in Lombardy, with her children. The great men of Carloman\'s kingdom come to swear allegiance to you: you are now sole king of the Franks, master of all Gaul.'),
+      todo: tr('Ses villes, ses terres, ses soldats et son or sont à toi. Tes frontières touchent maintenant les Lombards, la Bavière et l\'émirat de Cordoue : garde des soldats sur ces fronts.',
+        'His cities, lands, soldiers and gold are yours. Your borders now touch the Lombards, Bavaria and the emirate of Córdoba: keep soldiers on these fronts.'),
+    },
+    lombards: {
+      date: tr('773', '773'),
+      title: tr('Didier marche sur Rome', 'Desiderius marches on Rome'),
+      text: tr('Le roi des Lombards, Didier, a levé une armée de {army} soldats. Il veut forcer le pape Adrien à couronner les fils de Carloman, et s\'emparer des terres de saint Pierre. Le pape t\'appelle au secours : Rome n\'a pas d\'armée, seulement la garnison de ses murs.',
+        'The king of the Lombards, Desiderius, has raised an army of {army} soldiers. He wants to force Pope Hadrian to crown Carloman\'s sons, and to seize the lands of Saint Peter. The pope calls you for help: Rome has no army, only the garrison of its walls.'),
+      todo: tr('L\'armée lombarde part dans {secs} s, et le siège de Rome durera 2 minutes. Frappe les Lombards avant (moins ils ont de villes, plus leur armée est petite), ou envoie des soldats au pape pour renforcer sa garnison (ses terres doivent toucher les tiennes). Si Rome tombe, tu pourras la libérer ensuite.',
+        'The Lombard army sets out in {secs} s, and the siege of Rome will last 2 minutes. Strike the Lombards first (the fewer cities they hold, the smaller their army), or send soldiers to the pope to reinforce his garrison (his land must touch yours). If Rome falls, you can free it afterwards.'),
+    },
+    romeFalls: {
+      date: tr('Les terres de saint Pierre', 'The lands of Saint Peter'),
+      title: tr('Rome est tombée', 'Rome has fallen'),
+      text: tr('Les Lombards sont entrés dans Rome ! Le pape a perdu sa ville, et la chrétienté tout entière regarde vers toi, le protecteur de l\'Église.',
+        'The Lombards have entered Rome! The pope has lost his city, and all of Christendom looks to you, the protector of the Church.'),
+      todo: tr('L\'objectif « Protéger Rome » est perdu. Reprends Rome : elle sera rendue au pape (ou restera à toi s\'il n\'est plus là, et l\'objectif sera rempli).',
+        'The "Protect Rome" objective is lost. Take Rome back: it will be returned to the pope (or stay yours if he is gone, and the objective will be met).'),
+    },
+    christian: {
+      date: tr('Succès', 'Achievement'),
+      title: tr('L\'Empire chrétien', 'The Christian Empire'),
+      text: tr('Tes terres touchent enfin celles de Rome : de la mer du Nord jusqu\'au tombeau de saint Pierre, une même chrétienté unit les peuples. Les moines chantent ton nom dans les abbayes.',
+        'Your lands finally reach those of Rome: from the North Sea to the tomb of Saint Peter, a single Christendom unites the peoples. Monks sing your name in the abbeys.'),
+      todo: tr('Ta Croyance gagne +{faith} pour toujours.', 'Your Faith gains +{faith} forever.'),
+    },
+    raids: {
+      date: tr('Aux marches de l\'Est', 'On the eastern marches'),
+      title: tr('Les razzias des Slaves', 'The raids of the Slavs'),
+      text: tr('Au-delà de l\'Elbe, les Wendes et les peuples slaves ne bâtissent pas de royaume : ils frappent et disparaissent. Leur première razzia ({army} guerriers) s\'abat sur {victim}. Leurs forêts et leurs marais sont imprenables, et chaque razzia sera plus grosse que la précédente.',
+        'Beyond the Elbe, the Wends and the Slavic peoples build no kingdom: they strike and vanish. Their first raid ({army} warriors) falls upon {victim}. Their forests and marshes cannot be taken, and each raid will be bigger than the last.'),
+      todo: tr('On ne peut que se défendre contre eux : garde des soldats près de tes villes voisines de leurs terres. Une razzia qui prend une ville la rase avec ses moulins et ses casernes.',
+        'You can only defend yourself against them: keep soldiers near your cities bordering their lands. A raid that takes a city razes it with its mills and barracks.'),
+    },
+    roncevaux: {
+      date: tr('15 août 778', '15 August 778'),
+      title: tr('Roncevaux', 'Roncevaux'),
+      text: tr('Ta campagne d\'Espagne a pris une ville, mais au retour, dans le col de Roncevaux, les Basques tendent une embuscade à ton arrière-garde. Le comte Roland sonne trop tard de son olifant : il meurt avec ses compagnons, et {lost} de tes soldats ne reverront jamais la Gaule.',
+        'Your Spanish campaign has taken a city, but on the way back, in the pass of Roncevaux, the Basques ambush your rearguard. Count Roland blows his oliphant too late: he dies with his companions, and {lost} of your soldiers will never see Gaul again.'),
+      todo: tr('Les campagnes au-delà des Pyrénées coûtent cher : avance prudemment en Espagne, et tiens bien Barcelone (la Marche d\'Espagne).',
+        'Campaigns beyond the Pyrenees are costly: advance carefully in Spain, and hold Barcelona firmly (the Spanish March).'),
+    },
+    widukind: {
+      date: tr('782', '782'),
+      title: tr('La révolte de Widukind', 'The revolt of Widukind'),
+      text: tr('Tu croyais la Saxe soumise ? Le chef saxon Widukind, réfugié chez les Danois, revient et soulève tout son peuple. Une armée de {army} Saxons sort des forêts et marche sur Eresburg pour reprendre le sanctuaire de l\'Irminsul !',
+        'You thought Saxony subdued? The Saxon chief Widukind, who had fled to the Danes, returns and raises his whole people. An army of {army} Saxons comes out of the forests and marches on Eresburg to retake the sanctuary of the Irminsul!'),
+      todo: tr('Défends Eresburg : clique sur la bannière de leur armée dès qu\'elle entre sur tes terres pour envoyer tes défenseurs. Si tu la perds, l\'objectif des Saxons est perdu.',
+        'Defend Eresburg: click their army\'s banner as soon as it enters your land to send your defenders. If you lose it, the Saxon objective is lost.'),
+    },
+    tassilo: {
+      date: tr('787', '787'),
+      title: tr('Tassilon trahit', 'Tassilo betrays'),
+      text: tr('Le duc Tassilon de Bavière, ton cousin et ton vassal, a renié son serment : il s\'allie en secret avec le khagan des Avars. Désormais, les cavaliers des steppes viendront au secours de la Bavière.',
+        'Duke Tassilo of Bavaria, your cousin and your vassal, has broken his oath: he secretly allies with the Khagan of the Avars. From now on, the horsemen of the steppes will come to Bavaria\'s aid.'),
+      todo: tr('Prendre Ratisbonne sera plus dur : frappe vite et fort, ou affaiblis d\'abord les Avars.',
+        'Taking Regensburg will be harder: strike fast and hard, or weaken the Avars first.'),
+    },
+    irene: {
+      date: tr('797', '797'),
+      title: tr('Irène, impératrice', 'Irene, Empress'),
+      text: tr('À Constantinople, l\'impératrice Irène a fait aveugler son propre fils pour régner seule. L\'empire est déchiré : la moitié de ses soldats a déserté, et il ne recrute plus pendant {secs} secondes. Pour la première fois, aucun empereur ne siège sur le trône des Césars…',
+        'In Constantinople, Empress Irene has had her own son blinded so she can rule alone. The empire is torn apart: half of its soldiers have deserted, and it recruits no more for {secs} seconds. For the first time, no emperor sits on the throne of the Caesars…'),
+      todo: tr('C\'est le moment d\'attaquer les terres byzantines (en Italie du Sud ou dans les Balkans), si tes armées peuvent les atteindre.',
+        'Now is the time to attack Byzantine lands (in southern Italy or the Balkans), if your armies can reach them.'),
+    },
+    elephant: {
+      date: tr('802', '802'),
+      title: tr('L\'éléphant du calife', 'The caliph\'s elephant'),
+      text: tr('Ta Marche d\'Espagne impressionne jusqu\'à Bagdad. Le calife Haroun al-Rachid t\'envoie une ambassade chargée de présents : des épices, des soieries, une horloge qui sonne les heures… et Abul-Abbas, un éléphant blanc, le premier qu\'on ait jamais vu en Gaule !',
+        'Your Spanish March impresses even Baghdad. Caliph Harun al-Rashid sends you an embassy laden with gifts: spices, silks, a clock that strikes the hours… and Abul-Abbas, a white elephant, the first ever seen in Gaul!'),
+      todo: tr('Tu reçois {gold} pièces d\'or, et ta Croyance gagne +{faith} pour toujours.', 'You receive {gold} gold coins, and your Faith gains +{faith} forever.'),
+    },
+    leo: {
+      date: tr('25 avril 799', '25 April 799'),
+      title: tr('Le pape Léon III agressé', 'Pope Leo III attacked'),
+      text: tr('Pendant une procession, des nobles romains ont attaqué le pape Léon III : ils ont tenté de lui crever les yeux et de lui couper la langue ! Une émeute gronde dans Rome, et la moitié de sa garnison a pris le parti des conjurés. Le pape s\'est enfui, et implore ton aide.',
+        'During a procession, Roman nobles attacked Pope Leo III: they tried to put out his eyes and cut out his tongue! A riot rumbles in Rome, and half of its garrison has sided with the conspirators. The pope has fled, and begs for your help.'),
+      todo: tr('Tu as {secs} s pour remplir la garnison de Rome : envoie des soldats au pape (clic droit sur ses terres, qui doivent toucher les tiennes). Sinon, l\'objectif « Protéger Rome » sera perdu tant que sa garnison ne sera pas pleine.',
+        'You have {secs} s to fill Rome\'s garrison: send soldiers to the pope (right-click his land, which must touch yours). Otherwise, the "Protect Rome" objective will be lost until his garrison is full.'),
+    },
+    vikings: {
+      date: tr('799', '799'),
+      title: tr('Les premiers Vikings', 'The first Vikings'),
+      text: tr('Des navires à tête de dragon sont apparus au large de tes côtes ! Les Danois du roi Sigfred ne se contentent plus de commercer : {army} guerriers vikings débarquent près de {city}. Désormais, ils reviendront régulièrement piller tes villes côtières.',
+        'Dragon-headed ships have appeared off your coasts! King Sigfred\'s Danes are no longer content to trade: {army} Viking warriors land near {city}. From now on, they will come back regularly to plunder your coastal cities.'),
+      todo: tr('Une ville prise par les Vikings est rasée. Garde des soldats près des côtes, renforce les garnisons de tes ports et de tes villes côtières, ou soumets les Danois pour en finir.',
+        'A city taken by the Vikings is razed. Keep soldiers near the coasts, reinforce the garrisons of your ports and coastal cities, or subdue the Danes to put an end to it.'),
+    },
+  },
   // 👑 Les objectifs des Francs (dans un cadre, en haut à gauche) : tous remplis, Charles est couronné empereur.
   // Un objectif rempli est barré, avec un ✔ ; il se perd si on perd la ville (ou le niveau, la Croyance, Rome).
   //  - capital : tenir la capitale de cette faction ;

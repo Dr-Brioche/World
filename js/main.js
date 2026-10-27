@@ -174,6 +174,7 @@ const UI = {
     $('replayBtn').addEventListener('click', () => location.reload());
     // 📽️ Le résumé de la partie (voir replay.js)
     $('summaryBtn').addEventListener('click', () => Replay.open());
+    $('pClose').addEventListener('click', () => this.closeParchment()); // (📜 parchemin d'un grand événement)
     $('replayClose').addEventListener('click', () => Replay.close());
     $('replayPlay').addEventListener('click', () => Replay.togglePlay());
     $('replaySlider').addEventListener('input', e => { Replay.playing = false; Replay.seek(+e.target.value); });
@@ -263,6 +264,11 @@ const UI = {
       // Touche 1, 2 ou 3 : le bâtiment suit la souris, un clic le pose (même touche = annuler)
       // On regarde la touche physique (e.code) : sur un clavier AZERTY, la touche « 1 » du haut
       // donne « & » sans Maj, « 2 » donne « é », « 3 » donne « " ». Le pavé numérique marche aussi.
+      // (📜 un parchemin d'événement est ouvert : Entrée, Espace ou Échap le referment, et rien d'autre ne marche)
+      if (this.parchmentOn) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); this.closeParchment(); }
+        return;
+      }
       const m = /^(Digit|Numpad)(\d)$/.exec(e.code);
       const n = m ? +m[2] : 0;
       // (un bâtiment dont le bouton est caché ne se choisit pas : la tour hors du Gouffre de Helm…)
@@ -388,9 +394,8 @@ const UI = {
       $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
       this.log(tr(`👑 Octobre 768 : tu es ${f.leader} (${f.name}), à ${f.capital[2]}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`,
         `👑 October 768: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or P) to start!`), 'good');
-      // (769 : la révolte d'Aquitaine, avec le château isolé de Fronsac)
-      if (f.id === 'francs') this.log(tr('⚔️ 769 : le duc Hunald II soulève l\'Aquitaine contre toi ! Ton château de Fronsac est isolé au milieu de ses terres : ses soldats ne peuvent compter que sur sa garnison. Tiens-le, et relie-le à ton royaume en soumettant l\'Aquitaine.',
-        '⚔️ 769: Duke Hunald II raises Aquitaine against you! Your castle of Fronsac is isolated in the middle of his lands: it can only count on its garrison. Hold it, and link it to your kingdom by subduing Aquitaine.'), 'warn');
+      // 📜 (les Francs : un parchemin raconte le contexte ; les grands événements suivront, voir stepCharlemagne)
+      if (f.id === 'francs') this.parchment(CHARLEMAGNE.EVENTS.intro);
     }
   },
 
@@ -454,8 +459,41 @@ const UI = {
   },
 
   togglePause() {
-    if (!this.isHost()) return;
+    if (!this.isHost() || this.parchmentOn) return; // (📜 pas pendant la lecture d'un parchemin)
     Game.paused = !Game.paused;
+    $('pauseBtn').textContent = Game.paused ? tr('▶ Reprendre', '▶ Resume') : '⏸ Pause';
+  },
+
+  // 📜 Un grand événement d'un scénario : un parchemin se déroule au milieu de l'écran et met la partie en pause.
+  // ev = { date, title, text, todo } (todo : ce qu'il faut faire ; « {clé} » dans les textes devient vars.clé).
+  // Plusieurs événements à la fois : ils attendent leur tour. Une fois le dernier refermé, la partie reprend
+  // (si elle tournait avant le premier).
+  parchment(ev, vars = {}) {
+    const fill = t => (t || '').replace(/\{(\w+)\}/g, (m, k) => vars[k] !== undefined ? vars[k] : m);
+    (this.parchments = this.parchments || []).push({ date: fill(ev.date), title: fill(ev.title), text: fill(ev.text), todo: fill(ev.todo) });
+    if (!this.parchmentOn) this.nextParchment();
+  },
+  nextParchment() {
+    const ev = this.parchments.shift();
+    if (!this.parchmentOn) { this.parchmentOn = true; this.parchmentWasPaused = Game.paused; }
+    Game.paused = true;
+    $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
+    $('pDate').textContent = ev.date;
+    $('pTitle').textContent = ev.title;
+    $('pText').textContent = ev.text;
+    $('pTodo').innerHTML = ev.todo ? `<b>${tr('Ce qu\'il faut faire :', 'What to do:')}</b> ${escapeHtml(ev.todo)}` : '';
+    // (on relance l'animation : la feuille se déroule à chaque parchemin)
+    const sheet = document.querySelector('#parchment .sheet');
+    sheet.style.animation = 'none'; void sheet.offsetWidth; sheet.style.animation = '';
+    sheet.scrollTop = 0;
+    $('parchment').classList.remove('hidden');
+  },
+  closeParchment() {
+    if (!this.parchmentOn) return;
+    if (this.parchments.length) return this.nextParchment();
+    $('parchment').classList.add('hidden');
+    this.parchmentOn = false;
+    Game.paused = this.parchmentWasPaused;
     $('pauseBtn').textContent = Game.paused ? tr('▶ Reprendre', '▶ Resume') : '⏸ Pause';
   },
 
@@ -629,6 +667,7 @@ const UI = {
     const G = Game, b = G.building[a], info = G.buildingInfo(a), o = G.owner[a], h = G.human;
     const every = ` / ${CONFIG.PRODUCTION_INTERVAL} s`, n1 = v => String(Math.round(v * 10) / 10);
     let txt = `${b === B_MINE && info.kind ? MINES[info.kind].icon : BUILDINGS[b].icon} ${info.name} (${tr('niv.', 'lvl')} ${G.level[a]})` +
+      (G.placeNames.has(a) ? ` · ${G.placeNames.get(a)}` : '') + // (🏷️ une ville historique : son nom)
       (o !== h.id ? tr(` ${G.deName(G.players[o].name)}`, ` · ${G.players[o].name}`) : '');
     if (b === B_MILL || b === B_PORT) txt += ` · +${n1(G.buildingOutput(a))} 💰${every}`;
     if (b === B_PORT && info.boatSpeed) txt += tr(' · ⛵ expéditions', ' · ⛵ expeditions');
@@ -1533,7 +1572,7 @@ const UI = {
       const secs = Math.ceil((target.startTick - G.tick) / CONFIG.TICKS_PER_SECOND);
       return this.log(tr(`⏳ L'armée ${G.deName(G.players[target.attacker].name)} marche encore sur ses terres : tes défenseurs ` +
         `pourront l'affronter dès qu'elle entre sur les tiennes (dans ${secs} s).`,
-        `⏳ ${G.players[target.attacker].name}'s army is still marching on its own lands: your defenders ` +
+        `⏳ ${possessive(G.players[target.attacker].name)} army is still marching on its own lands: your defenders ` +
         `can face it as soon as it enters yours (in ${secs} s).`), 'warn');
     }
     if (target && G.defendWait(target) > 0) {
@@ -1669,10 +1708,10 @@ const UI = {
         if (far) items.push({ label: tr(`🎁 Envoyer des soldats à ${name}`, `🎁 Send soldiers to ${name}`), disabled: far });
         // (un allié sans armée, comme Rome : les soldats vont renforcer la garnison de sa capitale)
         else if (G.players[o].noArmy) items.push({ label: tr(`🎁 Envoyer ${fmt(n)} soldats renforcer la garnison ${G.deName(name)} (${fmt(n * CONFIG.ALLY_GIFT_RATIO)} arriveront)`,
-          `🎁 Send ${fmt(n)} soldiers to reinforce ${name}'s garrison (${fmt(n * CONFIG.ALLY_GIFT_RATIO)} will arrive)`), run: () => {
+          `🎁 Send ${fmt(n)} soldiers to reinforce ${possessive(name)} garrison (${fmt(n * CONFIG.ALLY_GIFT_RATIO)} will arrive)`), run: () => {
           const got = G.sendTroopsToAlly(h.id, o, n);
           if (typeof got === 'string') this.log(got, 'warn');
-          else this.log(tr(`🎁 ${fmt(got)} soldats renforcent la garnison ${G.deName(G.players[o].name)} !`, `🎁 ${fmt(got)} soldiers reinforce ${G.players[o].name}'s garrison!`), 'good', G.players[o]);
+          else this.log(tr(`🎁 ${fmt(got)} soldats renforcent la garnison ${G.deName(G.players[o].name)} !`, `🎁 ${fmt(got)} soldiers reinforce ${possessive(G.players[o].name)} garrison!`), 'good', G.players[o]);
         } });
         else items.push({ label: tr(`🎁 Envoyer ${fmt(n)} soldats à ${name} (il en recevra ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`,
           `🎁 Send ${fmt(n)} soldiers to ${name} (they will receive ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`), run: () => {
