@@ -62,7 +62,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Europe** 🏰 (1000 x 1000 cases, immense) : l'Europe en détail, de l'Islande à la Volga et du cap Nord au Sahara,
      avec l'Afrique du Nord, l'Anatolie et le Caucase. Les îles (Grande-Bretagne, Irlande, Sicile, Sardaigne, Corse,
      Crète, Chypre, les îles danoises…), la mer Noire, les grands lacs (Ladoga, Onega, Vänern, Léman…), les montagnes
-     (Alpes, Pyrénées, Carpates, Alpes scandinaves, Apennins, Balkans, Caucase, Atlas, Taurus…) et une cinquantaine
+     (Alpes, Pyrénées, Carpates, Alpes scandinaves, Apennins, Balkans, Caucase, Atlas, Taurus…), dessinées avec un
+     **relief naturel** (des chaînes qui serpentent et se ramifient, des vallées de collines entre leurs arêtes, des
+     piémonts qui s'effilochent), les vieux massifs de collines (Massif armoricain, Ardennes, Massif central, forêt de
+     Bohême, Sierra Morena, plateau central russe, Podolie, Valdaï, Småland…), l'épaisse forêt de Germanie, et une cinquantaine
      de fleuves avec leurs méandres (Rhin, Danube, Loire, Seine, Rhône, Pô, Elbe, Vistule, Dniepr, Don, Tamise…).
      Le Danube (après Belgrade), le Dniepr (après Kiev) et le Don inférieur sont de grands fleuves infranchissables ;
      le Bosphore, à Istanbul, est un passage de terre entre l'Europe et l'Asie.
@@ -98,9 +101,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      tiennent que par un isthme étroit.
    👑 **Scénario « Charlemagne (768) »** (rubrique 📜 Scénarios) : octobre 768, Pépin le Bref vient de mourir. La carte
      couvre l'**Europe de l'Ouest et la Méditerranée**, de l'Irlande et du Portugal jusqu'à **Constantinople** (les mêmes
-     côtes et fleuves que la carte Europe, en 780 x 620 cases, avec un **relief plus naturel** : des chaînes qui
-     serpentent et se ramifient, des vallées de collines entre leurs arêtes, des piémonts qui s'effilochent, les vieux
-     massifs de collines (Massif armoricain, Ardennes, Massif central, Sierra Morena…) et l'épaisse forêt de Germanie). **13 factions** y sont déjà installées, sur
+     côtes, fleuves et reliefs que la carte Europe, en 780 x 620 cases). **13 factions** y sont déjà installées, sur
      leurs terres de l'époque, avec leurs vraies villes (niveau 1, sans moulin ni caserne) et 1 à 3 **églises** aux
      bourgades notables : les **Francs** de Charles (Noyon, Paris, Rouen, Tours, Bordeaux, Cologne, Wurtzbourg),
      **Carloman**, son frère (Reims, Lyon, Strasbourg, Toulouse, Marseille), les **Lombards** du roi Didier (Pavie,
@@ -809,6 +810,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.113** : 🗺️ carte **Europe** redessinée comme celle de Charlemagne : relief naturel (crêtes qui serpentent et se ramifient, vallées de collines, sommets en massifs, piémonts irréguliers), 28 massifs de collines en plus (dont, à l'est et au nord, le plateau central russe, la Podolie, le Valdaï, le Småland, la Laponie finlandaise, les Khibiny), forêts plus denses en Germanie
 - **v0.92.112** : ⛏️ Charlemagne : 16 mines historiques sur toute la carte (une par faction, deux pour Cordoue, deux aux confins), avec leur nom au survol (argent de Melle, fer de Brescia, or du Pangée, argent du Harz, trésor des Avars, mercure d'Almadén…) · 👑 nouvel objectif : tenir 4, 6 ou 8 mines historiques selon la difficulté
 - **v0.92.111** : 🗺️ carte Charlemagne redessinée : montagnes moins rectilignes (crêtes qui serpentent et se ramifient, largeur variable, vallées de collines, sommets enneigés en massifs), piémonts irréguliers, collines en taches éparses, 19 nouveaux massifs (Massif armoricain, Ardennes et Eifel, forêt de Bohême, Sierra Morena, monts de León, Péloponnèse…), forêts plus denses en Germanie
 - **v0.92.110** : 👑 Charlemagne : un objectif rempli **se perd** si on perd la ville (ou le niveau, la Croyance, Rome) ; il faut tout tenir en même temps pour être couronné · objectif de Croyance relevé à 350, 700 ou 1 200 (le pacte avec Rome en donne déjà 150) · ⛏️ 3 mines historiques déjà creusées : l'argent de Melle (Francs), le fer d'Amberg (Bavière), l'or de Las Médulas (Asturies)
