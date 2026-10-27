@@ -621,7 +621,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **plus grand royaume** qui reste devient le fondateur, et le pacte prend son nom (« Pacte de … ») : une demande pour rejoindre le pacte
    va à lui, et les autres membres ne peuvent pas inviter.
    **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
-   Les membres d'un pacte ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer un pacte : accepte ou refuse.
+   Les membres d'un pacte ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer un pacte : accepte ou refuse. Pas de spam : au plus une demande toutes les
+   20 s, et un royaume refusé ne redemande pas avant **2 minutes**, ni à toi ni à un autre membre de ton pacte.
    **Qui est allié avec qui ?** Chaque pacte est entouré d'une **frontière en pointillés**, **or** et **couleur de son fondateur**,
    visible par tous, qui fait le tour de tous ses membres (plus fine quand on dézoome). Dans le **classement**, les membres d'un pacte sont **regroupés dans un cadre**,
    avec le nom du pacte et sa **part des terres** (tous ses membres ensemble) ; les pactes et les royaumes seuls sont classés ensemble.
@@ -751,6 +752,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.103** : 🤝 fini le spam de demandes d'alliance : au plus une demande toutes les 20 s, et un royaume refusé ne redemande pas avant 2 minutes (ni à toi, ni à un autre membre de ton pacte, ce qui la renvoyait au fondateur) · 🐛 une demande d'alliance ne reste plus bloquée à l'écran : elle disparaît si son royaume tombe, à la fin de la partie ou au début d'une nouvelle
 - **v0.92.102** : 🤝 si le fondateur d'un pacte le quitte (ou tombe), le plus grand royaume du pacte devient le fondateur et le pacte prend son nom
 - **v0.92.101** : ⛺ un avant-poste en construction est vraiment affaibli : ses soldats, occupés à bâtir, n'ont plus le bonus du terrain (une montagne les rendait presque 3 fois plus forts) et ne se battent qu'à 60 %
 - **v0.92.100** : 🔥 un seul assaut viking par minute au plus (réglage `VIKING_COOLDOWN`) ; le bouton Viking affiche le temps restant

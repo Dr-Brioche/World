@@ -5337,8 +5337,6 @@ const GameRules = {
     if (this.areAllied(fromId, toId)) return tr(`Tu es déjà allié avec ${to.name}.`, `You are already allied with ${to.name}.`);
     const block = this.pactBlock(fromId, toId);
     if (block) return block;
-    const wait = (from.refusedUntil[toId] || 0) - this.tick;
-    if (wait > 0) return tr(`${to.name} a refusé récemment. Réessaie dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`, `${to.name} refused recently. Try again in ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`);
     // Seul le fondateur d'un pacte (celui qui l'a proposé) y fait entrer de nouveaux membres : un autre membre ne
     // peut pas inviter, et une demande pour rejoindre le pacte va à son fondateur
     if (from.pact >= 0 && to.pact < 0) {
@@ -5348,6 +5346,9 @@ const GameRules = {
       }
     }
     const judge = to.pact >= 0 && from.pact < 0 ? this.pactFounder(to.pact) || to : to;
+    // (un refus récent vaut pour tout le pacte : on ne redemande ni au même royaume, ni à un autre membre de son pacte)
+    const wait = Math.max(from.refusedUntil[toId] || 0, from.refusedUntil[judge.id] || 0) - this.tick;
+    if (wait > 0) return tr(`${judge.name} a refusé récemment. Réessaie dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`, `${judge.name} refused recently. Try again in ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`);
     if (judge.isHuman) return UI.askAlliance(from) ? 'pending' : 'refused';
     if (this.wouldAccept(judge, from)) {
       this.makeAlliance(fromId, toId);
@@ -5369,8 +5370,13 @@ const GameRules = {
     return f && members.includes(f) ? f : this.newFounder(id);
   },
 
+  // fromId a essuyé un refus de toId : il ne redemandera pas avant ALLIANCE_REFUSAL_COOLDOWN secondes, ni à lui,
+  // ni à aucun membre de son pacte (sinon, en demandant à chacun, il ferait pleuvoir les demandes sur le fondateur)
   refuseAlliance(fromId, toId) {
-    this.players[fromId].refusedUntil[toId] = this.tick + CONFIG.ALLIANCE_REFUSAL_COOLDOWN * CONFIG.TICKS_PER_SECOND;
+    const from = this.players[fromId], to = this.players[toId];
+    const until = this.tick + CONFIG.ALLIANCE_REFUSAL_COOLDOWN * CONFIG.TICKS_PER_SECOND;
+    from.refusedUntil[toId] = until;
+    if (to.pact >= 0) for (const m of this.pactMembers(to.pact)) from.refusedUntil[m.id] = until;
   },
 
   // a et b s'allient : soit ils créent un nouveau pacte, soit l'un rejoint le pacte de l'autre

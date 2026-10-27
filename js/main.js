@@ -265,6 +265,7 @@ const UI = {
   factionMode() { return $('mapType').value === 'azeroth' && $('gameMode').value === 'factions'; },
 
   start() {
+    this.dropAllianceRequests(true);
     Game.init({
       factions: this.factionMode(),
       name: $('name').value.trim() || tr('Mon Royaume', 'My Kingdom'),
@@ -822,8 +823,12 @@ const UI = {
   // Un royaume propose une alliance au joueur. Renvoie false si une demande est déjà en cours.
   askAlliance(from) {
     this.pending = this.pending || new Set();
-    // Pas plus de 2 demandes affichées à la fois, pour ne pas cacher la carte
+    // Pas plus de 2 demandes affichées à la fois, pour ne pas cacher la carte, et au moins ALLIANCE_REQUEST_GAP
+    // secondes entre deux demandes (pas de spam)
     if (this.pending.has(from.id) || this.pending.size >= 2) return false;
+    const now = performance.now();
+    if (this.lastAsk && now - this.lastAsk < CONFIG.ALLIANCE_REQUEST_GAP * 1000) return false;
+    this.lastAsk = now;
     this.pending.add(from.id);
     const el = document.createElement('div');
     el.className = 'msg request';
@@ -834,9 +839,9 @@ const UI = {
     el.innerHTML = `${this.bannerImg(from)}🤝 <b>${escapeHtml(from.name)}</b> ${text}` +
       `<div class="choices"><button data-yes>${tr('Accepter', 'Accept')}</button><button data-no>${tr('Refuser', 'Decline')}</button></div>`;
     const answer = yes => {
+      el.remove(); // (le message disparaît toujours, même si la demande n'a plus lieu d'être)
       if (!this.pending.has(from.id)) return;
       this.pending.delete(from.id);
-      el.remove();
       const block = Game.pactBlock(from.id, Game.human.id);
       if (yes && block) this.log(block, 'warn'); // la situation a changé entre-temps
       if (yes && !block && from.alive && Game.human.alive) Game.makeAlliance(from.id, Game.human.id);
@@ -844,13 +849,26 @@ const UI = {
     };
     el.querySelector('[data-yes]').addEventListener('click', () => answer(true));
     el.querySelector('[data-no]').addEventListener('click', () => answer(false));
+    el.allianceFrom = from; // (voir dropAllianceRequests)
+    el.answer = answer;
     $('log').prepend(el);
     setTimeout(() => answer(false), CONFIG.ALLIANCE_REQUEST_TIMEOUT * 1000);
     return true;
   },
 
+  // Les demandes d'alliance affichées qui n'ont plus lieu d'être disparaissent (refusées) : celle d'un royaume tombé,
+  // ou toutes (all = true : fin de partie, nouvelle partie, joueur anéanti)
+  dropAllianceRequests(all = false) {
+    for (const el of document.querySelectorAll('#log .msg.request')) {
+      if (!el.answer) continue;
+      if (all || !el.allianceFrom.alive || !Game.human || !Game.human.alive) el.answer(false);
+    }
+    if (all && this.pending) this.pending.clear();
+  },
+
   // canContinue = il reste des royaumes rivaux : bouton « Continuer » pour finir la conquête
   showEnd(win, canContinue = false) {
+    this.dropAllianceRequests(true);
     const h = Game.human, secs = Math.floor(Game.tick / CONFIG.TICKS_PER_SECOND);
     $('endTitle').textContent = win ? tr('🏆 Victoire !', '🏆 Victory!') : tr('💀 Défaite...', '💀 Defeat...');
     $('endText').textContent = win
@@ -986,6 +1004,7 @@ const UI = {
   },
 
   refresh() {
+    this.dropAllianceRequests();
     const G = Game, h = G.human;
     if (!h) return;
     $('kName').textContent = h.name;
