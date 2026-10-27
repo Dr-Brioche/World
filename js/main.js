@@ -1945,7 +1945,7 @@ const UI = {
     const G = Game, h = G.human, n = Math.floor(h.troops * this.ratio);
     const err = G.launchViking(h.id, i, n);
     if (err) return this.log(err, 'warn');
-    Music.sound('assault'); // (🔔 les Vikings partent à l'assaut)
+    Music.sound('viking'); // (🔔 le son des Vikings)
     this.cancelVikingAim();
     this.log(tr(`🔥 Tes Vikings embarquent (${fmt(n)} soldats) : ils traversent la mer sans pertes, débarqueront près de leur cible et la raseront !`,
       `🔥 Your Vikings set sail (${fmt(n)} soldiers): they cross the sea with no losses, will land near their target and raze it!`), 'good');
@@ -2005,6 +2005,7 @@ const UI = {
   crusade(a) {
     const G = Game, err = G.startCrusade(G.human, a);
     if (err) return this.log(err, 'warn');
+    Music.sound('crusade'); // (🔔 le son de la croisade)
     this.log(tr(`✝️ Croisade religieuse lancée : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance pendant ${CONFIG.CRUSADE_TIME} s ! Tes prêcheurs vont convertir les terres voisines bien plus vite.`,
       `✝️ Crusade launched: +${fmt(CONFIG.CRUSADE_FAITH)} Faith for ${CONFIG.CRUSADE_TIME} s! Your preachers will convert neighbouring lands much faster.`), 'good');
   },
@@ -2052,6 +2053,7 @@ const UI = {
   levy(a) {
     const G = Game, err = G.startLevy(G.human, a);
     if (err) return this.log(err, 'warn');
+    Music.sound('levy'); // (🔔 le son des renforts)
     this.log(tr(`⚔️ Recrutement de masse lancé : ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s (surtout si elle est petite) !`,
       `⚔️ Mass recruitment launched: your army rebuilds much faster for ${CONFIG.LEVY_TIME} s (especially if it is small)!`), 'good');
   },

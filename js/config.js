@@ -393,6 +393,10 @@ const CONFIG = {
       assault: 'sons/assaut-depart.mp3', // notre armée part à l'assaut d'un ennemi (pas pour les terres libres)
       build: 'sons/construction.mp3', // un de nos bâtiments vient d'être construit, ou de finir son amélioration
       diamond: 'sons/diamant.mp3',     // une de nos mines de diamant rapporte son or (à chaque quart, et le trésor final)
+      crusade: 'sons/croisade.mp3',    // on lance une croisade religieuse
+      viking: 'sons/viking.mp3',       // on lance un assaut viking
+      levy: 'sons/renforts.mp3',       // on lance un recrutement de masse (les renforts de la grande caserne)
+      capture: 'sons/capture.mp3',     // on prend une ville ennemie
       enemyAssault: 'sons/assaut-ennemi.mp3', // un ennemi lance un assaut sur nous (ou des Vikings débarquent chez nous)
     },
     SOUND_GAP: 3,

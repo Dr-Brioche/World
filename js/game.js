@@ -5614,7 +5614,10 @@ const GameRules = {
     }
     a.cut = true; // la zone prise peut couper le royaume du défenseur (voir captureEnclaves)
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (p.isHuman) UI.log(tr(`🏰 Tu as pris un château ${this.deName(d.name)}, avec toute sa zone et ses bâtiments !`, `🏰 You took a castle of ${d.name}, with its whole zone and buildings!`), 'good', d);
+    if (p.isHuman) {
+      UI.log(tr(`🏰 Tu as pris un château ${this.deName(d.name)}, avec toute sa zone et ses bâtiments !`, `🏰 You took a castle of ${d.name}, with its whole zone and buildings!`), 'good', d);
+      Music.sound('capture'); // (🔔 le son de la ville prise)
+    }
     else if (d.isHuman) {
       UI.log(tr(`🏰 ${p.name} a pris un de tes châteaux !`, `🏰 ${p.name} took one of your castles!`), 'warn', p);
       Music.sound('cityLost'); // (🔔 le son de la ville perdue)
