@@ -155,6 +155,12 @@ const ICON_DEFS = {
   // globe crucigère (la langue du jeu)
   orb: [{ d: 'M12 9a6 6 0 1 1-.01 0z', f: '#d9a520', s: '#6b4a12', w: 1.3 }, { d: 'M6 15h12M12 9v12', s: '#6b4a12', w: 1.1 },
     { d: 'M12 2v7M9.5 4.5h5', s: '#6b4a12', w: 1.7 }],
+  // deux notes de musique liées (la musique d'ambiance) ; barrées de rouge : musique coupée
+  music: [{ d: 'M9 18V5.5l11-2.5V15.5', s: 'c', w: 2 }, { d: 'M9 8.2l11-2.5', s: 'c', w: 2 },
+    { d: 'M9.5 18a3.2 2.5 0 1 1-6.4 0a3.2 2.5 0 1 1 6.4 0zM20.5 15.5a3.2 2.5 0 1 1-6.4 0a3.2 2.5 0 1 1 6.4 0z', f: 'c' }],
+  nomusic: [{ d: 'M9 18V5.5l11-2.5V15.5', s: 'c', w: 2, o: 0.45 }, { d: 'M9 8.2l11-2.5', s: 'c', w: 2, o: 0.45 },
+    { d: 'M9.5 18a3.2 2.5 0 1 1-6.4 0a3.2 2.5 0 1 1 6.4 0zM20.5 15.5a3.2 2.5 0 1 1-6.4 0a3.2 2.5 0 1 1 6.4 0z', f: 'c', o: 0.45 },
+    { d: 'M3 3l18 18', s: '#b8322a', w: 2.4 }],
 };
 
 // Emojis → icônes. (Les emojis des « title » et des listes déroulantes restent : là, on ne peut pas dessiner.)
@@ -168,7 +174,7 @@ const EMOJI_ICONS = {
   '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
   '⛏': 'pickaxe', '⚒': 'ore_iron', '🪙': 'ore_gold', '🪨': 'ore_stone', '💎': 'ore_diamond', '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
-  '🖌': 'brush', '✏': 'quill', '🌍': 'orb', '🗼': 'tower', '📯': 'horn',
+  '🖌': 'brush', '✏': 'quill', '🌍': 'orb', '🗼': 'tower', '📯': 'horn', '🎵': 'music', '🔇': 'nomusic',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 
