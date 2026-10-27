@@ -899,6 +899,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.126** : 🎵 un deuxième morceau d'ambiance, *M2* (de dr_brioche) : le jeu tire au hasard entre les deux, sans jouer deux fois de suite le même
 - **v0.92.125** : 🎵 la musique est 2 fois moins forte au départ, et une petite **barre de volume** l'accompagne ; le bouton 🎵 passe en bas à droite de l'écran (en haut à droite sur un téléphone)
 - **v0.92.124** : 🎵 **musique d'ambiance** : pendant la partie, des morceaux tirés au hasard (le premier : *M1*, de dr_brioche), en fondu, avec de temps en temps un moment de silence entre deux ; le bouton 🎵 de la barre du haut (ou la touche `M`) la coupe ou la remet
 - **v0.92.123** : ✝️ dans le classement, à côté de la bible verte ou rouge, un petit chiffre donne l'écart de Croyance avec ce voisin (« +180 », « −420 ») · la conversion ralentit moins pour une avance mince : 1,2 fois plus de Croyance convertit 1,8 fois moins vite (au lieu de 3)
