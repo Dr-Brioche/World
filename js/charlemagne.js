@@ -32,9 +32,23 @@ const CHARLEMAGNE = {
   // ... et le siège de Rome dure 2 minutes (au lieu de 24 s), pour laisser aux Francs le temps de réagir : les soldats
   // envoyés au pape (il faut que leurs terres se touchent) entrent dans la garnison de Rome
   ROME_SIEGE: 120,
-  // Pour être couronné empereur (en jouant les Francs) : tenir les capitales de ces factions (ou les avoir
-  // anéanties), en gardant le pape en vie (l'allié des Francs)
-  EMPIRE: ['saxons', 'lombards', 'baviere', 'avars'],
+  // 👑 Les objectifs des Francs (dans un cadre, en haut à gauche) : tous remplis, Charles est couronné empereur.
+  // Une fois rempli, un objectif reste acquis (barré, avec un ✔), sauf celui de Rome, qui doit tenir jusqu'au bout.
+  //  - capital : tenir la capitale de cette faction (ou l'avoir anéantie) ;
+  //  - site : tenir la ville ou l'église posée à ce point [longitude, latitude] (voir la liste des factions) ;
+  //  - citadel : avoir une ville de ce niveau ; faith : avoir cette Croyance (sans compter les croisades) ;
+  //    (ces deux-là dépendent de la difficulté : goal = { facile, normal, difficile } ; « {n} » dans le texte devient ce nombre)
+  //  - rome : Rome au pape (ou aux Francs, s'il n'est plus là).
+  OBJECTIVES: [
+    { kind: 'capital', role: 'baviere', text: tr('Soumettre la Bavière : prendre Ratisbonne (788)', 'Subdue Bavaria: take Regensburg (788)') },
+    { kind: 'capital', role: 'lombards', text: tr('Devenir roi des Lombards : prendre Pavie (774)', 'Become king of the Lombards: take Pavia (774)') },
+    { kind: 'capital', role: 'saxons', text: tr('Soumettre les Saxons : prendre Eresburg et abattre l\'Irminsul (772)', 'Subdue the Saxons: take Eresburg and fell the Irminsul (772)') },
+    { kind: 'capital', role: 'avars', text: tr('Abattre le Ring des Avars et piller son trésor (796)', 'Bring down the Avar Ring and plunder its treasure (796)') },
+    { kind: 'site', at: [2.17, 41.39], text: tr('Créer la Marche d\'Espagne : prendre Barcelone (801)', 'Create the Spanish March: take Barcelona (801)') },
+    { kind: 'citadel', goal: { facile: 3, normal: 4, difficile: 4 }, text: tr('Bâtir une capitale impériale, comme Aix-la-Chapelle : une ville de niveau {n}', 'Build an imperial capital, like Aachen: a level {n} city') },
+    { kind: 'faith', goal: { facile: 250, normal: 600, difficile: 1000 }, text: tr('Christianiser l\'empire : atteindre {n} de Croyance (sans croisade)', 'Christianise the empire: reach {n} Faith (without a crusade)') },
+    { kind: 'rome', text: tr('Protéger Rome : qu\'elle reste au pape (ou à toi)', 'Protect Rome: it must stay with the pope (or with you)') },
+  ],
 
   factions: [
     {

@@ -165,6 +165,8 @@ const UI = {
     document.querySelectorAll('.hostOnly').forEach(b => b.classList.toggle('hidden', !this.isHost()));
     // 📜 Règles : le jeu se met en pause, et les règles complètes s'affichent (les mêmes que sur l'écran de départ)
     $('rulesBtn').addEventListener('click', () => this.openRules());
+    // 👑 Le cadre des objectifs se replie (ou se déplie) d'un clic
+    $('objectives').addEventListener('click', () => { this.objFolded = !this.objFolded; $('objectives').dataset.key = ''; this.refreshObjectives(); });
     // Souris sur ⛏️ dans la barre du haut : nos mines clignotent sur la carte (voir Render.drawFlashingMines)
     $('minesBox').addEventListener('mouseenter', () => { this.flashMines = true; });
     $('minesBox').addEventListener('mouseleave', () => { this.flashMines = false; });
@@ -1070,11 +1072,31 @@ const UI = {
     else document.body.insertBefore(hint, $('log'));
   },
 
+  // 👑 Le cadre des objectifs (en haut à gauche) : redessiné seulement quand un objectif change ; les messages
+  // s'affichent juste en dessous
+  refreshObjectives() {
+    const box = $('objectives'), list = Game.objectives();
+    box.classList.toggle('hidden', !list.length);
+    if (!list.length) { $('log').style.top = ''; return; }
+    if (this.objFolded === undefined) this.objFolded = window.innerWidth < 760; // (replié d'office sur un petit écran)
+    const key = list.map(o => (o.done ? 1 : 0)).join('') + (this.objFolded ? 'f' : '');
+    if (box.dataset.key !== key) {
+      box.dataset.key = key;
+      const n = list.filter(o => o.done).length;
+      box.innerHTML = `<div class="t"><span>${tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives')}</span>` +
+        `<span>${n}/${list.length} ${this.objFolded ? '▸' : '▾'}</span></div>` +
+        (this.objFolded ? '' : `<ul>${list.map(o => `<li class="${o.done ? 'done' : ''}">${escapeHtml(o.text)}</li>`).join('')}</ul>`);
+      box.title = tr('Tous remplis : tu es couronné empereur ! (clic : replier ou déplier)', 'All complete: you are crowned emperor! (click: fold or unfold)');
+    }
+    $('log').style.top = Math.round(box.getBoundingClientRect().bottom + 6) + 'px';
+  },
+
   refresh() {
     this.dropAllianceRequests();
     if (!this.hintCheck || performance.now() - this.hintCheck > 500) { this.hintCheck = performance.now(); this.placeHint(); }
     const G = Game, h = G.human;
     if (!h) return;
+    this.refreshObjectives();
     $('kName').textContent = h.name;
     $('kName').style.color = `rgb(${h.color})`;
     $('gold').textContent = fmt(h.gold);

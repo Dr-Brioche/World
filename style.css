@@ -267,6 +267,16 @@ button:hover { background: #e8d6a8; }
   pointer-events: none;
 }
 #hint:empty { display: none; }
+
+/* 👑 Les objectifs d'un scénario, en haut à gauche (voir UI.refreshObjectives) : un objectif rempli est barré, grisé,
+   avec un ✔ ; un clic sur le cadre le replie (il ne garde que son titre) */
+#objectives { top: 60px; left: 8px; width: 330px; font-size: 12px; padding: 6px 10px; cursor: pointer; }
+#objectives .t { display: flex; justify-content: space-between; gap: 8px; font-family: Cinzel, Georgia, serif; font-weight: bold; }
+#objectives ul { list-style: none; margin: 4px 0 0; padding: 0; }
+#objectives li { position: relative; margin: 3px 0; padding-left: 16px; }
+#objectives li::before { content: '•'; position: absolute; left: 4px; }
+#objectives li.done { text-decoration: line-through; opacity: 0.55; }
+#objectives li.done::before { content: '✔'; left: 0; color: var(--good); font-weight: bold; }
 /* fenêtre étroite : sous la barre du bas, au centre (voir UI.placeHint) */
 #hint.under { max-width: min(760px, calc(100vw - 16px)); text-align: center; padding: 3px 10px; }
 

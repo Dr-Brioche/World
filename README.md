@@ -122,8 +122,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        perdu des villes). Le **siège de Rome dure 2 minutes** : les soldats envoyés au pape (clic droit sur ses terres,
        si elles touchent les tiennes) **renforcent sa garnison**, et 1 500 suffisent à la sauver. Si Rome tombe, les
        Francs peuvent la **libérer** : elle est **rendue au pape** ;
-     - **victoire des Francs** : tenir les capitales des **Saxons**, des **Lombards**, de la **Bavière** et des **Avars**
-       (ou les avoir anéantis), avec **Rome au pape** (ou à toi, s'il n'est plus là) : tu es **couronné empereur** !
+     - **victoire des Francs** : remplir les **8 objectifs de Charlemagne**, listés dans un **cadre en haut à gauche**
+       (un clic le replie ; un objectif rempli est **barré en gris avec un ✔**) :
+       soumettre la **Bavière** (prendre Ratisbonne, 788), devenir **roi des Lombards** (prendre Pavie, 774), soumettre
+       les **Saxons** (prendre Eresburg et abattre l'Irminsul, 772), abattre le **Ring des Avars** (796), créer la
+       **Marche d'Espagne** (prendre Barcelone, 801), bâtir une **capitale impériale** comme Aix-la-Chapelle (une ville de
+       niveau 3 en Facile, 4 en Normal et Difficile), **christianiser l'empire** (250 de Croyance en Facile, 600 en
+       Normal, 1 000 en Difficile, sans compter une croisade en cours) et **protéger Rome**
+       (qu'elle reste au pape, ou à toi s'il n'est plus là). Une faction anéantie compte comme soumise. Les objectifs
+       restent acquis, sauf Rome, qu'il faut garder jusqu'au bout. Tout est rempli : tu es **couronné empereur** !
        (Sinon, la victoire normale à 70 % des terres reste possible.)
      Les bannières des factions sont provisoires (des drapeaux du jeu) : les vraies bannières historiques arriveront.
      Tous les réglages du scénario sont dans `js/charlemagne.js`.
@@ -790,6 +797,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.109** : 👑 Charlemagne : un **cadre d'objectifs** en haut à gauche (8 objectifs historiques : Bavière, Pavie, Saxons et Irminsul, Ring des Avars, Marche d'Espagne, capitale impériale de niveau 3 à 4 et Croyance de 250 à 1 000 selon la difficulté, Rome), barrés en gris avec un ✔ une fois remplis ; les remplir tous fait couronner empereur
 - **v0.92.108** : 👑 nouveau scénario **Charlemagne (768)** : l'Europe de l'Ouest et la Méditerranée, 13 factions historiques à leurs vraies places (Francs, Carloman, Lombards, Papauté, Byzance, Bavière, Saxons, Danois, Avars, Cordoue, Asturies, Bretons, Anglo-Saxons), Rome et Constantinople au niveau 4, mort de Carloman, marche des Lombards sur Rome (siège de 2 minutes), victoire « Couronné empereur » · 🎁 on n'envoie plus de soldats qu'à un allié dont les terres touchent les tiennes
 - **v0.92.107** : 🎨 menu de départ dans le style du jeu : la liste des cartes devient un panneau rangé par sortes, avec des icônes dessinées (dés, carte, parchemin, plume), le bouton « Création de carte » a son pinceau, et la langue son globe crucigère (plus d'emojis)
 - **v0.92.106** : 📜 une 3ᵉ sorte de cartes dans le menu, les **scénarios** : « Azeroth : les Factions » (camps et capitales imposés) y remplace le choix « Mode de jeu » ; dans les cartes prédéfinies, Azeroth se joue désormais en départ classique, comme Monde et Europe
