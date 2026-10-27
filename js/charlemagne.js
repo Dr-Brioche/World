@@ -136,7 +136,7 @@ const CHARLEMAGNE = {
       desc: tr('Les Bretons d\'Armorique, au bout du monde franc.', 'The Bretons of Armorica, at the far end of the Frankish world.'),
     },
     {
-      id: 'asturies', name: tr('Asturies', 'Asturias'), leader: tr('le roi Aurelio', 'King Aurelius'), flag: 'b18', color: [70, 70, 80],
+      id: 'asturies', name: tr('Asturies', 'Asturias'), leader: tr('le roi Aurelio', 'King Aurelius'), flag: 'cm_asturies', color: [158, 158, 168],
       playable: true,
       capital: [-5.84, 43.36, tr('Oviedo', 'Oviedo')],
       cities: [[-7.56, 43.01, tr('Lugo', 'Lugo')]],
