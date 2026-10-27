@@ -696,6 +696,7 @@ const GameRules = {
 
   // Multiplicateur du recrutement (soldats et casernes) pendant un recrutement de masse : fort quand l'armée est
   // petite, il baisse un peu jusqu'à LEVY_FROM de l'armée maximum, puis vite, jusqu'à rien à LEVY_TO.
+  // Il favorise les petits royaumes face aux grands : voir levySize.
   // Son bonus est lui-même amplifié par la galvanisation et diminué par l'après-guerre (voir warFactor) : il avantage
   // le royaume qui se défend (galvanisé) bien plus que celui qui vient de gagner une bataille.
   levyFactor(p) {
@@ -703,7 +704,15 @@ const GameRules = {
     const C = CONFIG, r = this.armySize(p) / Math.max(1, this.maxTroops(p));
     const k = r <= C.LEVY_FROM ? 1 - 0.2 * r / C.LEVY_FROM
       : 0.8 * Math.max(0, 1 - (r - C.LEVY_FROM) / (C.LEVY_TO - C.LEVY_FROM)) ** 2;
-    return 1 + C.LEVY_BOOST * k * Math.max(0, this.warFactor(p));
+    return 1 + C.LEVY_BOOST * k * this.levySize(p) * Math.max(0, this.warFactor(p));
+  },
+  // Le bonus du recrutement de masse selon la taille du royaume : son armée maximum comparée à celle du plus grand
+  // royaume en vie. LEVY_SMALL pour un tout petit royaume, LEVY_BIG pour le plus grand, et entre les deux en proportion.
+  levySize(p) {
+    let biggest = 1;
+    for (const q of this.players) if (q.alive) biggest = Math.max(biggest, this.maxTroops(q));
+    const s = Math.min(1, this.maxTroops(p) / biggest);
+    return CONFIG.LEVY_SMALL + (CONFIG.LEVY_BIG - CONFIG.LEVY_SMALL) * s;
   },
 
   // Pourquoi la caserne a ne peut pas lancer de recrutement de masse (null si elle le peut)
