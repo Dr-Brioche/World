@@ -382,10 +382,11 @@ const CONFIG = {
     VICTORY: 'sons/musique/victoire.mp3',
     VICTORY_GAIN: 2,
     // 🔔 Les petits sons du jeu (de dr_brioche), joués par-dessus la musique, au même volume que le son de la victoire
-    // (et pas plus d'un toutes les SOUND_GAP secondes : plusieurs villes perdues d'un coup ne font qu'un son)
+    // (et pas plus d'un même son toutes les SOUND_GAP secondes : plusieurs villes perdues d'un coup ne font qu'un son)
     SOUNDS: {
       cityLost: 'sons/perte-ville.mp3', // une de nos villes est prise (ou rasée)
       assault: 'sons/assaut-depart.mp3', // notre armée part à l'assaut d'un ennemi (pas pour les terres libres)
+      upgrade: 'sons/amelioration.mp3', // un de nos bâtiments vient de finir son amélioration
     },
     SOUND_GAP: 3,
   },

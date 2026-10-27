@@ -1387,6 +1387,7 @@ const GameRules = {
       if (w.kind === 'up') {
         if (BUILDING_LEVELS[type][this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
         this.version++;
+        if (p.isHuman) Music.sound('upgrade'); // (🔔 le son de l'amélioration terminée)
         // (🪙 une mine d'or améliorée : son filon repart pour MINES.gold.time de plus)
         const dep = type === B_MINE ? this.depositAt.get(a) : null;
         if (dep && dep.kind === 'gold') dep.left += MINES.gold.time * CONFIG.TICKS_PER_SECOND;

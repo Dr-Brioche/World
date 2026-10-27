@@ -92,11 +92,11 @@ const Music = {
     a.play().catch(() => { this.jingle = null; });
   },
   // 🔔 Un petit son du jeu (voir CONFIG.MUSIC.SOUNDS), par-dessus la musique d'ambiance (rien si le joueur a coupé
-  // la musique, ni si un autre vient de se jouer)
+  // la musique, ni si le même son vient de se jouer)
   sound(key) {
-    const M = CONFIG.MUSIC, src = M.SOUNDS[key], now = performance.now();
-    if (!this.on || !src || now - (this.lastSound || -Infinity) < M.SOUND_GAP * 1000) return;
-    this.lastSound = now;
+    const M = CONFIG.MUSIC, src = M.SOUNDS[key], now = performance.now(), last = this.lastSound = this.lastSound || {};
+    if (!this.on || !src || now - (last[key] || -Infinity) < M.SOUND_GAP * 1000) return;
+    last[key] = now;
     const a = new Audio(src);
     a.volume = Math.min(1, this.volume * M.VICTORY_GAIN);
     a.play().catch(() => { /* (lecture refusée par le navigateur : tant pis) */ });
