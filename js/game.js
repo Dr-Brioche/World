@@ -5284,7 +5284,8 @@ const GameRules = {
     return null;
   },
 
-  // Quitter son pacte ; s'il ne reste qu'un seul royaume, le pacte disparaît
+  // Quitter son pacte ; s'il ne reste qu'un seul royaume, le pacte disparaît. Si c'est son fondateur qui part,
+  // le plus grand royaume qui reste prend sa place, et le pacte prend son nom.
   leavePact(p) {
     const id = p.pact;
     if (id < 0) return;
@@ -5293,8 +5294,26 @@ const GameRules = {
     if (rest.length < 2) {
       for (const m of rest) m.pact = -1;
       this.pacts.delete(id);
-    }
+    } else if (this.pacts.get(id).founder === p.id) this.newFounder(id);
     this.version++;
+  },
+
+  // Le fondateur du pacte id est parti : le plus grand royaume du pacte devient son fondateur, et le pacte prend
+  // son nom (« Pacte de … »). Pas pour les camps éternels du mode Factions, qui gardent leur nom.
+  newFounder(id) {
+    const pact = this.pacts.get(id), members = this.pactMembers(id);
+    if (!pact || !members.length) return null;
+    const f = members.reduce((best, m) => m.tiles > best.tiles ? m : best);
+    pact.founder = f.id;
+    if (!pact.eternal) {
+      const old = pact.name;
+      pact.name = tr(`Pacte ${this.deName(f.name)}`, `Pact of ${f.name}`);
+      if (members.some(m => m.isHuman)) {
+        UI.log(tr(`🤝 Le ${old} a perdu son fondateur : ${f.name}, le plus grand royaume du pacte, le remplace. Il devient le ${pact.name}.`,
+          `🤝 The ${old} has lost its founder: ${f.name}, the largest kingdom of the pact, takes over. It becomes the ${pact.name}.`), 'good', f);
+      }
+    }
+    return f;
   },
 
   // Un royaume (bot) accepte-t-il l'alliance proposée par "from" ?
@@ -5346,12 +5365,8 @@ const GameRules = {
     const pact = this.pacts.get(id);
     if (!pact) return null;
     const members = this.pactMembers(id);
-    let f = this.players[pact.founder];
-    if (!f || !members.includes(f)) {
-      f = members[0] || null;
-      if (f) pact.founder = f.id;
-    }
-    return f;
+    const f = this.players[pact.founder];
+    return f && members.includes(f) ? f : this.newFounder(id);
   },
 
   refuseAlliance(fromId, toId) {
