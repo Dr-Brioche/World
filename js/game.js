@@ -597,12 +597,12 @@ const GameRules = {
         const pay = m.pay[d.paid]; // (1 000 au 1er quart, 2 000 au 2e, 3 000 au 3e)
         d.paid++;
         p.gold += pay;
-        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(pay)} 💰`); UI.log(tr(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(pay)} pièces !`, `💎 Your diamond mine is ${d.paid}/4 mined: +${fmt(pay)} gold!`), 'good'); }
+        if (p.isHuman) { Music.sound('diamond'); Render.floatText(a, B_MINE, `+${fmt(pay)} 💰`); UI.log(tr(`💎 Ta mine de diamant est extraite au ${d.paid}/4 : +${fmt(pay)} pièces !`, `💎 Your diamond mine is ${d.paid}/4 mined: +${fmt(pay)} gold!`), 'good'); }
       }
       if (d.progress >= 1) {
         p.gold += m.final;
         this.version++;
-        if (p.isHuman) { Render.floatText(a, B_MINE, `+${fmt(m.final)} 💰`); UI.log(tr(`💎 Ta mine de diamant est entièrement extraite : +${fmt(m.final)} pièces ! Le filon est épuisé.`, `💎 Your diamond mine is fully mined: +${fmt(m.final)} gold! The ore vein is exhausted.`), 'good'); }
+        if (p.isHuman) { Music.sound('diamond'); Render.floatText(a, B_MINE, `+${fmt(m.final)} 💰`); UI.log(tr(`💎 Ta mine de diamant est entièrement extraite : +${fmt(m.final)} pièces ! Le filon est épuisé.`, `💎 Your diamond mine is fully mined: +${fmt(m.final)} gold! The ore vein is exhausted.`), 'good'); }
         else if (this.human && this.human.alive) UI.log(tr(`💎 ${p.name} a fini d'extraire une mine de diamant : +${fmt(m.final)} pièces !`, `💎 ${p.name} has finished mining a diamond mine: +${fmt(m.final)} gold!`), 'warn', p);
       }
     }
@@ -1385,11 +1385,14 @@ const GameRules = {
       if (this.tick < w.end) continue;
       this.works.delete(a);
       const type = this.building[a], icon = BUILDINGS[type].icon;
-      if (w.kind === 'build') continue; // chantier fini : le bâtiment fonctionne
+      if (w.kind === 'build') { // chantier fini : le bâtiment fonctionne
+        if (p.isHuman) Music.sound('build'); // (🔔 le son de la construction)
+        continue;
+      }
       if (w.kind === 'up') {
         if (BUILDING_LEVELS[type][this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
         this.version++;
-        if (p.isHuman) Music.sound('upgrade'); // (🔔 le son de l'amélioration terminée)
+        if (p.isHuman) Music.sound('build'); // (🔔 le son de la construction : amélioration terminée)
         // (🪙 une mine d'or améliorée : son filon repart pour MINES.gold.time de plus)
         const dep = type === B_MINE ? this.depositAt.get(a) : null;
         if (dep && dep.kind === 'gold') dep.left += MINES.gold.time * CONFIG.TICKS_PER_SECOND;
