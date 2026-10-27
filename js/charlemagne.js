@@ -245,7 +245,7 @@ const CHARLEMAGNE = {
       desc: tr('L\'émirat omeyyade d\'Abd al-Rahman, maître de presque toute l\'Espagne.', 'Abd al-Rahman\'s Umayyad emirate, master of almost all of Spain.'),
     },
     {
-      id: 'anglos', name: tr('Anglo-Saxons', 'Anglo-Saxons'), leader: tr('le roi Offa', 'King Offa'), flag: 'b08', color: [38, 100, 48],
+      id: 'anglos', name: tr('Anglo-Saxons', 'Anglo-Saxons'), leader: tr('le roi Offa', 'King Offa'), flag: 'cm_anglos', color: [124, 166, 84],
       playable: true,
       capital: [-1.69, 52.63, tr('Tamworth', 'Tamworth')],
       cities: [[-0.12, 51.51, tr('Londres', 'London')], [-1.31, 51.06, tr('Winchester', 'Winchester')], [-1.08, 53.96, tr('York', 'York')]],
