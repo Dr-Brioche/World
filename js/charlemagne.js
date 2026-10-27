@@ -191,7 +191,7 @@ const CHARLEMAGNE = {
       desc: '',
     },
     {
-      id: 'saxons', name: tr('Saxons', 'Saxons'), leader: tr('Widukind', 'Widukind'), flag: 'b09', color: [48, 120, 110],
+      id: 'saxons', name: tr('Saxons', 'Saxons'), leader: tr('Widukind', 'Widukind'), flag: 'cm_saxons', color: [62, 58, 56],
       playable: true,
       capital: [8.85, 51.42, tr('Eresburg', 'Eresburg')],
       cities: [[8.92, 52.29, tr('Minden', 'Minden')], [10.38, 53.30, tr('Bardowick', 'Bardowick')]],
