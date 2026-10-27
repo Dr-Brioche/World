@@ -201,7 +201,7 @@ const CHARLEMAGNE = {
       desc: tr('Les Saxons païens de Widukind, entre le Rhin et l\'Elbe : le grand ennemi des Francs.', 'Widukind\'s pagan Saxons, between the Rhine and the Elbe: the great enemy of the Franks.'),
     },
     {
-      id: 'danois', name: tr('Danois', 'Danes'), leader: tr('le roi Sigfred', 'King Sigfred'), flag: 'b19', color: [196, 166, 120],
+      id: 'danois', name: tr('Danois', 'Danes'), leader: tr('le roi Sigfred', 'King Sigfred'), flag: 'cm_danois', color: [228, 160, 44],
       playable: true,
       capital: [9.57, 54.49, tr('Hedeby', 'Hedeby')],
       cities: [[8.76, 55.33, tr('Ribe', 'Ribe')], [11.97, 55.60, tr('Lejre', 'Lejre')]],
