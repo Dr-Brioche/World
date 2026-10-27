@@ -15,6 +15,7 @@ const UI = {
   plan: null,
 
   init() {
+    Music.menu(); // (🏰 la musique du menu de départ, jusqu'au début de la partie : voir music.js)
     // Langue du jeu (en haut à droite du menu) : en changer recharge la page (voir lang.js)
     $('langSelect').value = LANG;
     $('langSelect').addEventListener('change', function () { setLang(this.value); });
@@ -263,8 +264,8 @@ const UI = {
     };
 
     window.addEventListener('keydown', e => {
-      // (🎵 touche M : couper ou remettre la musique, à tout moment de la partie, même au choix de la capitale)
-      if (e.code === 'KeyM' && Game.phase !== 'menu' && !typing(e.target)) return Music.toggle();
+      // (🎵 touche M : couper ou remettre la musique, à tout moment, même dans le menu de départ)
+      if (e.code === 'KeyM' && !typing(e.target)) return Music.toggle();
       if (Game.phase !== 'playing' || typing(e.target)) return;
       // Touche 1, 2 ou 3 : le bâtiment suit la souris, un clic le pose (même touche = annuler)
       // On regarde la touche physique (e.code) : sur un clavier AZERTY, la touche « 1 » du haut

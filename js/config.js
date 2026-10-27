@@ -379,10 +379,15 @@ const CONFIG = {
     PAUSE: [20, 120],        // silence entre deux morceaux (secondes, au hasard entre les deux)
     // 🏆 Le son de la victoire (de dr_brioche), joué une fois sur l'écran de victoire (à la place de la musique
     // d'ambiance) ; VICTORY_GAIN : son volume, par rapport à celui de la musique (2 = deux fois plus fort, au plus 1)
+    // 🏰 La musique du menu de départ (de dr_brioche) : en boucle dans le menu, coupée en MENU_FADE secondes au début
+    // de la partie
+    MENU: 'sons/musique/menu.mp3',
+    MENU_FADE: 1.2,
     VICTORY: 'sons/musique/victoire.mp3',
     VICTORY_GAIN: 2,
-    // 🔔 Les petits sons du jeu (de dr_brioche), joués par-dessus la musique, au même volume que le son de la victoire
-    // (et pas plus d'un même son toutes les SOUND_GAP secondes : plusieurs villes perdues d'un coup ne font qu'un son)
+    // 🔔 Les petits sons du jeu (de dr_brioche), joués par-dessus la musique, au même volume que le son de la victoire ;
+    // un seul à la fois (un nouveau son coupe net le précédent), et pas plus d'un même son toutes les SOUND_GAP
+    // secondes (plusieurs villes perdues d'un coup ne font qu'un son)
     SOUNDS: {
       cityLost: 'sons/perte-ville.mp3', // une de nos villes est prise (ou rasée)
       assault: 'sons/assaut-depart.mp3', // notre armée part à l'assaut d'un ennemi (pas pour les terres libres)
@@ -390,7 +395,6 @@ const CONFIG = {
       enemyAssault: 'sons/assaut-ennemi.mp3', // un ennemi lance un assaut sur nous (ou des Vikings débarquent chez nous)
     },
     SOUND_GAP: 3,
-    SOUND_QUEUE: 3,          // un petit son qui arrive pendant qu'un autre joue attend sa fin (3 en attente au plus)
   },
 
   // --- 📽️ Résumé de la partie (bouton « Résumé » de l'écran de fin, voir replay.js) ---

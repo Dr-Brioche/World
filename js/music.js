@@ -15,14 +15,54 @@ const Music = {
   fader: null,
   jingle: null,    // le son de la victoire, quand il se joue
   effect: null,    // le petit son en train de se jouer (voir sound)
-  sounds: [],      // les petits sons qui attendent leur tour
 
-  // La partie commence : la musique démarre (si le joueur ne l'a pas coupée)
-  start() {
+  // Les choix du joueur, gardés dans le navigateur : musique coupée ou non, et son volume
+  loadPrefs() {
     try { this.on = localStorage.getItem('medievalEmperor.music') !== 'off'; } catch (e) { this.on = true; }
     let v = null;
     try { v = localStorage.getItem('medievalEmperor.musicVolume'); } catch (e) { /* (navigateur sans stockage) */ }
     this.volume = v !== null && !isNaN(+v) ? +v : CONFIG.MUSIC.VOLUME;
+  },
+
+  // 🏰 La musique du menu de départ : en boucle tant qu'on est dans le menu (voir stopMenu). Un navigateur ne joue
+  // pas de son avant le premier geste du joueur : si elle est refusée, elle démarre à son premier clic ou à sa
+  // première touche.
+  menu() {
+    this.loadPrefs();
+    if (!this.on || !CONFIG.MUSIC.MENU || this.menuAudio) return;
+    const a = this.menuAudio = new Audio(CONFIG.MUSIC.MENU);
+    a.loop = true;
+    a.volume = this.volume;
+    a.play().catch(() => {
+      const retry = () => {
+        removeEventListener('pointerdown', retry, true);
+        removeEventListener('keydown', retry, true);
+        if (this.menuAudio === a) a.play().catch(() => { /* (toujours refusée : tant pis) */ });
+      };
+      addEventListener('pointerdown', retry, true);
+      addEventListener('keydown', retry, true);
+    });
+  },
+  // La musique du menu s'arrête, en fondu rapide (la partie commence, ou le joueur coupe la musique)
+  stopMenu() {
+    const a = this.menuAudio;
+    if (!a) return;
+    this.menuAudio = null;
+    // (le fondu compte à partir de son premier pas : la création de la carte, juste après, occupe le navigateur
+    //  un moment ; la musique continue pendant ce temps, puis s'éteint en douceur)
+    const v0 = a.volume;
+    let t0 = null;
+    const fade = setInterval(() => {
+      if (t0 === null) t0 = performance.now();
+      const k = (performance.now() - t0) / (CONFIG.MUSIC.MENU_FADE * 1000);
+      if (k >= 1) { clearInterval(fade); a.pause(); } else a.volume = v0 * (1 - k);
+    }, 50);
+  },
+
+  // La partie commence : la musique du menu s'arrête, et la musique d'ambiance démarre (si le joueur ne l'a pas coupée)
+  start() {
+    this.stopMenu();
+    this.loadPrefs();
     const bar = document.getElementById('musicVol');
     if (bar) bar.value = Math.round(this.volume * 100);
     this.refreshButton();
@@ -34,8 +74,9 @@ const Music = {
     this.on = !this.on;
     try { localStorage.setItem('medievalEmperor.music', this.on ? 'on' : 'off'); } catch (e) { /* (navigateur sans stockage) */ }
     this.refreshButton();
-    if (this.on) this.next();
-    else this.stop();
+    if (!this.on) { this.stop(); this.stopMenu(); }
+    else if (Game.phase === 'menu') this.menu(); // (dans le menu de départ : sa musique à lui)
+    else this.next();
   },
   refreshButton() {
     const b = document.getElementById('musicBtn');
@@ -51,7 +92,7 @@ const Music = {
   },
   stop() {
     if (this.jingle) { this.jingle.pause(); this.jingle = null; }
-    if (!this.on) { this.sounds = []; if (this.effect) { this.effect.pause(); this.effect = null; } } // (musique coupée : les petits sons aussi)
+    if (!this.on && this.effect) { this.effect.pause(); this.effect = null; } // (musique coupée : les petits sons aussi)
     clearTimeout(this.timer); this.timer = null;
     clearInterval(this.fader); this.fader = null;
     if (this.audio) { this.audio.pause(); this.audio = null; }
@@ -96,28 +137,17 @@ const Music = {
   },
   // 🔔 Un petit son du jeu (voir CONFIG.MUSIC.SOUNDS), par-dessus la musique d'ambiance (rien si le joueur a coupé
   // la musique, ni si le même son vient de se jouer)
-  // Les petits sons se jouent l'un après l'autre : un son qui arrive pendant qu'un autre joue attend la fin de
-  // celui-ci (il ne le coupe pas). Au plus SOUND_QUEUE sons attendent, et jamais deux fois le même.
+  // Un seul petit son à la fois : un son qui arrive pendant qu'un autre joue le coupe net et démarre tout de suite
+  // (plusieurs événements d'un coup s'enchaînent ainsi sans attendre)
   sound(key) {
     const M = CONFIG.MUSIC, src = M.SOUNDS[key], now = performance.now(), last = this.lastSound = this.lastSound || {};
     if (!this.on || !src || now - (last[key] || -Infinity) < M.SOUND_GAP * 1000) return;
     last[key] = now;
-    const queue = this.sounds = this.sounds || [];
-    if (queue.includes(src) || queue.length >= M.SOUND_QUEUE) return;
-    queue.push(src);
-    if (!this.effect) this.nextSound();
-  },
-  // Le son suivant de la file (s'il y en a un)
-  nextSound() {
-    this.effect = null;
-    const src = (this.sounds || []).shift();
-    if (!src || !this.on) return;
+    if (this.effect) this.effect.pause(); // (le son précédent est coupé net)
     const a = this.effect = new Audio(src);
-    a.volume = Math.min(1, this.volume * CONFIG.MUSIC.VICTORY_GAIN);
-    const done = () => { if (this.effect === a) this.nextSound(); };
-    a.addEventListener('ended', done);
-    a.addEventListener('error', done);
-    a.play().catch(done); // (lecture refusée par le navigateur : on passe au suivant)
+    a.volume = Math.min(1, this.volume * M.VICTORY_GAIN);
+    a.addEventListener('ended', () => { if (this.effect === a) this.effect = null; });
+    a.play().catch(() => { /* (lecture refusée par le navigateur : tant pis) */ });
   },
   // La partie continue après la victoire : la musique d'ambiance reprend (après un moment de silence)
   resume() {
