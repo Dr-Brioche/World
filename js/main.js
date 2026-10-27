@@ -266,8 +266,10 @@ const UI = {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
-      if (e.key === 'Escape') { this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; }
+      if (e.key === 'Escape') { this.setUpgradeMode(false); this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; }
       if (e.key === 'p' || e.key === 'P') this.togglePause();
+      // Touche U : la souris d'amélioration (chaque clic sur un de ses bâtiments l'améliore tout de suite)
+      if (e.code === 'KeyU') this.setUpgradeMode(!this.upgradeMode);
     });
     // Les emojis de la page deviennent des icônes médiévales dessinées (voir icons.js)
     Icons.watch();
@@ -384,8 +386,30 @@ const UI = {
     }
   },
 
+  // ⬆️ La souris d'amélioration (touche U) : un clic sur un de ses bâtiments l'améliore directement, sans passer par
+  // son menu (pour aller vite quand on a beaucoup d'or). Elle reste active jusqu'à U ou Échap.
+  setUpgradeMode(on) {
+    if (on) { this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelVikingAim(); this.closeBuildingMenus(); }
+    this.upgradeMode = on;
+  },
+  upgradeHint() {
+    const G = Game, i = Render.hover, a = i >= 0 && G.building[i] && G.owner[i] === G.human.id ? G.anchor[i] : -1;
+    const cost = a >= 0 ? G.upgradeCost(a) : null;
+    return tr('⬆️ Amélioration rapide : clique sur tes bâtiments pour les améliorer', '⬆️ Quick upgrade: click your buildings to upgrade them') +
+      (cost !== null ? ` · ${BUILDINGS[G.building[a]].name} → ${tr('niveau', 'level')} ${G.level[a] + 1} : 💰 ${fmt(cost)}` : '') +
+      tr(' · U ou Échap : arrêter', ' · U or Esc: stop');
+  },
+  // Clic avec la souris d'amélioration : on améliore le bâtiment visé (ou on dit pourquoi on ne peut pas)
+  quickUpgrade(i) {
+    const G = Game, h = G.human;
+    if (!G.building[i] || G.owner[i] !== h.id) return;
+    const a = G.anchor[i], err = G.upgradeBuilding(h, a);
+    if (err) return this.log(err, 'warn');
+    Render.floatText(a, G.building[a], '⬆️');
+  },
+
   selectBuild(t) {
-    if (t) { this.cancelPlan(); this.cancelWall(); this.cancelVikingAim(); }
+    if (t) { this.cancelPlan(); this.cancelWall(); this.cancelVikingAim(); this.upgradeMode = false; }
     this.selectedBuild = t;
     document.querySelectorAll('.build[data-type]').forEach(b => b.classList.toggle('active', +b.dataset.type === t));
     document.body.style.cursor = t ? 'cell' : '';
@@ -1247,6 +1271,7 @@ const UI = {
       $('hint').textContent = this.vikingAim ? this.vikingHint() : this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
         : freeArm ? tr(`🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`,
           `🌾 Free land: click once more to send ${fmt(G.human.troops * this.ratio)} soldiers into the attack`)
+        : this.upgradeMode ? this.upgradeHint()
         : this.selectedBuild
         ? tr(`Clique sur ton territoire pour construire : ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Échap pour annuler)`,
           `Click on your territory to build: ${BUILDINGS[this.selectedBuild].name}${this.terrainHint()} (Esc to cancel)`)
@@ -1368,6 +1393,23 @@ const UI = {
   // Petite croix dans le coin d'une barre (assaut ou transport en mer) : retraite, avec des pertes
   retreatCross(attr, id) {
     return `<button class="x" ${attr}="${id}" title="${tr(`Retraite : les soldats rentrent, ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdent`, `Retreat: the soldiers come home, ${Math.round(CONFIG.RETREAT_LOSS * 100)}% are lost`)}">×</button>`;
+  },
+
+  // Le bonus de production final d'un bâtiment de type t posé en a (0.3 = +30 %), ou null s'il n'en a pas :
+  // le terrain, et les routes (moulin, caserne, port) ou les chemins (église : sa Croyance)
+  placeBonus(a, t) {
+    const G = Game, h = G.human;
+    if (!TERRAIN_PRODUCTION[t]) return null;
+    const k = G.terrainFactor(a, t);
+    if (t === B_CHURCH) return k * (1 + CONFIG.FAITH_ROAD_BONUS * G.churchLinks(h.id, a).length) - 1;
+    let road = 0;
+    if (t === B_MILL || t === B_BARRACKS) {
+      const list = G.cityRoads(h.id, a, t).slice(0, CONFIG.ROAD_MAX_CITIES);
+      if (list.length) road = list.reduce((s, r) => s + r.bonus, 0);
+      else { const on = G.onRoad(h.id, a, t); if (on) road = CONFIG.MILL_ROAD_BONUS * (on === 2 ? IMPERIAL.roadFactor : 1); }
+    }
+    if (t === B_PORT) road = G.portRoadCastles(h.id, a).reduce((s, c) => s + CONFIG.PORT_ROAD_BONUS * (G.castleInfo(c).imperial ? IMPERIAL.roadFactor : 1), 0);
+    return k * (1 + road) - 1;
   },
 
   // Pendant la construction d'un moulin, d'une caserne ou d'un port : production prévue selon le terrain
@@ -2044,6 +2086,7 @@ const UI = {
     }
     if (G.phase !== 'playing' || !G.human.alive) return;
     const h = G.human;
+    if (this.upgradeMode) return this.quickUpgrade(i); // (⬆️ souris d'amélioration, touche U)
     // Clic sur la bannière d'un assaut contre soi : on envoie des défenseurs
     const banner = Render.bannerAt(sx, sy);
     const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;

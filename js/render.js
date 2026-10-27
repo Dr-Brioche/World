@@ -1863,6 +1863,11 @@ const Render = {
 
   // Curseur habituel sur la carte : une petite main médiévale (gantelet de cuir à manchette dorée) qui pointe
   // de l'index (le clic se fait au bout du doigt)
+  // ⬆️ La souris d'amélioration (touche U) : une flèche dorée vers le haut (son « point chaud » : la pointe)
+  UPGRADE_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
+    '<path d="M16 2L28 16h-7v13h-10V16H4z" fill="#f0c94a" stroke="#3a2512" stroke-width="2" stroke-linejoin="round"/>' +
+    '<path d="M16 7l7 8" stroke="#fff4c2" stroke-width="1.5" stroke-linecap="round"/></svg>') + '") 16 2, pointer',
   HAND_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
     '<path d="M7 16V4a2.5 2.5 0 0 1 5 0v8.5h.8a2.3 2.3 0 0 1 4.2.6a2.3 2.3 0 0 1 4.2.8a2.1 2.1 0 0 1 3.8 1.3V21c0 3-2.2 4.5-5 4.5h-6.5' +
@@ -1932,7 +1937,7 @@ const Render = {
   drawSelectable(ox, oy) {
     const G = Game, a = UI.wallFor >= 0 || UI.tradeFor >= 0 ? -1 : this.selectableAt(this.hover);
     // épée sur une cible attaquable, main médiévale ailleurs ; pendant une construction, le curseur de pose (voir UI)
-    const cursor = UI.selectedBuild || UI.wallFor >= 0 || UI.tradeFor >= 0 ? '' : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
+    const cursor = UI.upgradeMode ? this.UPGRADE_CURSOR : UI.selectedBuild || UI.wallFor >= 0 || UI.tradeFor >= 0 ? '' : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
     // (on garde le dernier curseur choisi : le navigateur réécrit l'adresse de l'image à sa façon)
     if (this.curCursor !== cursor) { this.curCursor = cursor; this.canvas.style.cursor = cursor; }
     if (a < 0) return;
@@ -2778,6 +2783,10 @@ const Render = {
           ctx.strokeStyle = ok ? '#1f6b1a' : '#a3261f';
           ctx.strokeRect(rx, ry, n * s, n * s);
           this.drawBuildingGhost(t, rx + n * s / 2, ry + n * s / 2, ok);
+          // Petite bulle près de la souris : le bonus de production final ici (« +30 % »), sans plus d'explication
+          // (le détail est dans la barre d'info, en bas)
+          const bonus = ok && !upgrading ? UI.placeBonus(a, t) : null;
+          if (bonus !== null) this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: signedPct(bonus), color: bonus > 0.005 ? '#1f6b1a' : bonus < -0.005 ? '#a3261f' : '#2b1d0e' };
         }
       } else {
         ctx.strokeRect(ox + hx * s, oy + hy * s, s, s);
@@ -2897,7 +2906,7 @@ const Render = {
     ctx.roundRect ? ctx.roundRect(x, y, w, h, 6) : ctx.rect(x, y, w, h);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = '#2b1d0e';
+    ctx.fillStyle = tip.color || '#2b1d0e'; // (un bonus en vert, un malus en rouge)
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     Icons.text(ctx, tip.text, x + 8, y + h / 2 + 1, false);

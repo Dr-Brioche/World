@@ -130,7 +130,6 @@ html, body {
 #mapPick .opts { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 28px; }
 #mapPick .opts button { background: var(--parchment-dark); }
 #mapPick .opts button.active { background: var(--gold); box-shadow: 0 0 0 2px var(--ink) inset; }
-.langIco .ico { width: 1.7em; height: 1.7em; }
 .nm {
   display: inline-block;
   width: 105px;
