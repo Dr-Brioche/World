@@ -233,7 +233,7 @@ const CHARLEMAGNE = {
       desc: tr('Les Avars, cavaliers des steppes, et leur Ring rempli de trésors.', 'The Avars, horsemen of the steppes, and their Ring full of treasure.'),
     },
     {
-      id: 'cordoue', name: tr('Cordoue', 'Córdoba'), leader: tr('l\'émir Abd al-Rahman Ier', 'Emir Abd al-Rahman I'), flag: 'b13', color: [125, 55, 190],
+      id: 'cordoue', name: tr('Cordoue', 'Córdoba'), leader: tr('l\'émir Abd al-Rahman Ier', 'Emir Abd al-Rahman I'), flag: 'cm_cordoue', color: [226, 112, 170],
       playable: true,
       capital: [-4.78, 37.89, tr('Cordoue', 'Córdoba')],
       cities: [[-4.02, 39.86, tr('Tolède', 'Toledo')], [-0.88, 41.65, tr('Saragosse', 'Zaragoza')], [-5.98, 37.39, tr('Séville', 'Seville')],
