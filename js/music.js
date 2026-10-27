@@ -13,6 +13,7 @@ const Music = {
   last: -1,        // le dernier morceau joué (pour ne pas le rejouer tout de suite)
   timer: null,     // le prochain morceau (après un silence)
   fader: null,
+  jingle: null,    // le son de la victoire, quand il se joue
 
   // La partie commence : la musique démarre (si le joueur ne l'a pas coupée)
   start() {
@@ -47,6 +48,7 @@ const Music = {
     try { localStorage.setItem('medievalEmperor.musicVolume', String(this.volume)); } catch (e) { /* (navigateur sans stockage) */ }
   },
   stop() {
+    if (this.jingle) { this.jingle.pause(); this.jingle = null; }
     clearTimeout(this.timer); this.timer = null;
     clearInterval(this.fader); this.fader = null;
     if (this.audio) { this.audio.pause(); this.audio = null; }
@@ -77,6 +79,21 @@ const Music = {
       const t = a.currentTime, left = (a.duration || Infinity) - t;
       a.volume = this.volume * Math.max(0, Math.min(1, t / M.FADE, left / M.FADE));
     }, 100);
+  },
+
+  // 🏆 La partie est gagnée : la musique d'ambiance s'arrête, et le son de la victoire se joue une fois (rien si le
+  // joueur a coupé la musique). La musique d'ambiance ne reprend que s'il continue la partie (voir resume).
+  victory() {
+    this.stop();
+    if (!this.on || !CONFIG.MUSIC.VICTORY) return;
+    const a = this.jingle = new Audio(CONFIG.MUSIC.VICTORY);
+    a.volume = Math.min(1, this.volume * CONFIG.MUSIC.VICTORY_GAIN);
+    a.addEventListener('ended', () => { if (this.jingle === a) this.jingle = null; });
+    a.play().catch(() => { this.jingle = null; });
+  },
+  // La partie continue après la victoire : la musique d'ambiance reprend (après un moment de silence)
+  resume() {
+    if (this.on && !this.audio && !this.timer) this.afterTrack();
   },
 
   // Le morceau est fini : un moment de silence (de durée tirée au hasard, voir PAUSE), puis le suivant
