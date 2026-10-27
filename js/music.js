@@ -33,15 +33,15 @@ const Music = {
     const a = this.menuAudio = new Audio(CONFIG.MUSIC.MENU);
     a.loop = true;
     a.volume = this.volume;
-    a.play().catch(() => {
-      const retry = () => {
-        removeEventListener('pointerdown', retry, true);
-        removeEventListener('keydown', retry, true);
-        if (this.menuAudio === a) a.play().catch(() => { /* (toujours refusée : tant pis) */ });
-      };
-      addEventListener('pointerdown', retry, true);
-      addEventListener('keydown', retry, true);
-    });
+    // (refusée : on réessaie à chaque geste du joueur, jusqu'à ce qu'elle démarre vraiment. Sur un écran tactile,
+    //  c'est le doigt levé qui autorise le son, pas le doigt posé : on écoute donc tous ces gestes.)
+    const gestures = ['pointerdown', 'pointerup', 'click', 'touchend', 'keydown'];
+    const retry = () => {
+      if (this.menuAudio !== a) return forget();
+      if (a.paused) a.play().then(forget, () => { /* (pas encore autorisée : au prochain geste) */ });
+    };
+    const forget = () => gestures.forEach(g => removeEventListener(g, retry, true));
+    a.play().catch(() => gestures.forEach(g => addEventListener(g, retry, true)));
   },
   // La musique du menu s'arrête, en fondu rapide (la partie commence, ou le joueur coupe la musique)
   stopMenu() {
