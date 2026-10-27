@@ -79,7 +79,7 @@ const UI = {
     // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe, Azeroth et les cartes dessinées ont leur taille)
     const sizeForType = () => {
       const t = this.mapType();
-      $('mapSize').disabled = ['world', 'europe', 'azeroth'].includes(t) || t.startsWith('custom:');
+      $('mapSize').disabled = ['world', 'europe', 'azeroth', 'charlemagne'].includes(t) || t.startsWith('custom:');
     };
     $('mapType').addEventListener('change', sizeForType);
     sizeForType();
@@ -101,11 +101,13 @@ const UI = {
 
     // Choix de la bannière dans le menu (elle donne la couleur du royaume) : seulement celles de la carte choisie
     // (les écus des races de Warcraft sur la carte Azeroth, les drapeaux ailleurs) ; on retrouve le dernier choix de chaque sorte
-    const lastPick = { base: BANNERS.findIndex(b => b.id === 'Dragon'), azeroth: BANNERS.findIndex(b => b.id === 'Humains') };
+    const lastPick = { base: BANNERS.findIndex(b => b.id === 'Dragon'), azeroth: BANNERS.findIndex(b => b.id === 'Humains'),
+      charlemagne: BANNERS.findIndex(b => b.set === 'charlemagne' && b.id === 'francs') };
     const fillBanners = () => {
-      // (mode « Factions » : seulement les 12 races des 3 camps)
+      // (mode « Factions » : seulement les 12 races des 3 camps ; scénario « Charlemagne » : les factions jouables)
       const races = this.factionMode() ? AZEROTH_FACTIONS.flatMap(f => f.races) : null;
-      const list = bannersForMap(this.mapType()).filter(k => !races || races.includes(BANNERS[k].id));
+      const list = bannersForMap(this.mapType()).filter(k => (!races || races.includes(BANNERS[k].id))
+        && (BANNERS[k].set !== 'charlemagne' || this.cmFaction(k).playable));
       const set = BANNERS[list[0]].set || 'base';
       $('bannerPick').innerHTML = list.map(k =>
         `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
@@ -116,7 +118,13 @@ const UI = {
       lastPick[BANNERS[k].set || 'base'] = k;
       // (mode « Factions » : le camp de la race choisie, et sa capitale)
       const f = this.factionMode() && AZEROTH_FACTIONS.find(f => f.races.includes(BANNERS[k].id));
-      $('factionInfo').classList.toggle('hidden', !f);
+      // (scénario « Charlemagne » : qui l'on incarne, sa capitale et son histoire)
+      const cf = BANNERS[k].set === 'charlemagne' && this.cmFaction(k);
+      $('factionInfo').classList.toggle('hidden', !f && !cf);
+      if (cf) {
+        $('factionInfo').textContent = tr(`👑 768 · ${cf.name} : tu es ${cf.leader}, à ${cf.capital[2]}. ${cf.desc}`,
+          `👑 768 · ${cf.name}: you are ${cf.leader}, in ${cf.capital[2]}. ${cf.desc}`);
+      }
       if (f) {
         // (les races du camp sont gardées par leur nom fixe, id : on affiche leur nom dans la langue du jeu)
         const others = f.races.filter(r => r !== BANNERS[k].id).map(r => BANNERS.find(b => b.id === r).name).join(', ');
@@ -137,7 +145,7 @@ const UI = {
     });
     // Scénario « Azeroth : les Factions » : 12 royaumes (les 3 camps), pactes et nombre de rivaux imposés
     const modeChange = () => {
-      const fac = this.factionMode();
+      const fac = this.factionMode() || $('mapType').value === 'charlemagne'; // (un scénario : rivaux et pactes imposés)
       $('opponents').disabled = fac;
       $('pacts').disabled = fac;
       fillBanners();
@@ -290,6 +298,8 @@ const UI = {
   // chacun choisit où fonder sa capitale) et scénarios (une carte prédéfinie avec des camps et des départs imposés).
   // Le scénario choisi est-il « Azeroth : les Factions » ?
   factionMode() { return $('mapType').value === 'factions'; },
+  // La faction du scénario « Charlemagne » de la bannière k (voir charlemagne.js)
+  cmFaction(k) { return CHARLEMAGNE.factions.find(f => f.id === BANNERS[k].id); },
   // La carte à générer pour le choix du menu (un scénario se joue sur une carte prédéfinie)
   mapType() { return this.factionMode() ? 'azeroth' : $('mapType').value; },
 
@@ -320,6 +330,16 @@ const UI = {
       $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
       this.log(tr(`⚔️ Tu es à ${place}, avec ton camp : ${Game.pactName(h)}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`,
         `⚔️ You are in ${place}, with your faction: ${Game.pactName(h)}. The game is paused: get your bearings, then ▶ Resume (or P) to start!`), 'good');
+    }
+    // 👑 Scénario « Charlemagne » : pas de nouvelles villes (le bouton Château disparaît)
+    document.querySelector(`.build[data-type="${B_CASTLE}"]`).classList.toggle('hidden', !!Game.cm);
+    // 👑 Scénario « Charlemagne » : chacun est déjà dans son royaume de 768 ; la partie attend en pause
+    if (Game.cm) {
+      const h = Game.human, f = this.cmFaction(h.banner), half = Game.sizeOf(B_CASTLE) / 2;
+      if (h.capital >= 0) Render.centerOn(h.capital % Game.W + half, ((h.capital / Game.W) | 0) + half);
+      $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
+      this.log(tr(`👑 Octobre 768 : tu es ${f.leader} (${f.name}), à ${f.capital[2]}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`,
+        `👑 October 768: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or P) to start!`), 'good');
     }
   },
 
@@ -896,7 +916,8 @@ const UI = {
   },
 
   // canContinue = il reste des royaumes rivaux : bouton « Continuer » pour finir la conquête
-  showEnd(win, canContinue = false) {
+  // kind = 'empire' : 👑 la victoire du scénario « Charlemagne » (couronné empereur)
+  showEnd(win, canContinue = false, kind = '') {
     this.dropAllianceRequests(true);
     const h = Game.human, secs = Math.floor(Game.tick / CONFIG.TICKS_PER_SECOND);
     $('endTitle').textContent = win ? tr('🏆 Victoire !', '🏆 Victory!') : tr('💀 Défaite...', '💀 Defeat...');
@@ -904,6 +925,11 @@ const UI = {
       ? (canContinue ? tr(`Longue vie au royaume de ${h.name} ! Tu domines le continent.`, `Long live the kingdom of ${h.name}! You rule the continent.`)
         : tr(`${h.name} a conquis le monde entier ! Plus aucun royaume ne te résiste.`, `${h.name} has conquered the whole world! No kingdom stands against you anymore.`))
       : tr(`Le royaume de ${h.name} est tombé. Les chroniques s'en souviendront...`, `The kingdom of ${h.name} has fallen. The chronicles will remember...`);
+    if (kind === 'empire') {
+      $('endTitle').textContent = tr('👑 Couronné empereur !', '👑 Crowned emperor!');
+      $('endText').textContent = tr('Noël 800, à Rome : le pape pose la couronne sur la tête de Charles. Saxons, Lombards, Bavarois et Avars sont soumis : l\'Empire d\'Occident renaît, et l\'histoire l\'appellera Charlemagne !',
+        'Christmas 800, in Rome: the pope sets the crown on Charles\'s head. Saxons, Lombards, Bavarians and Avars are subdued: the Western Empire is reborn, and history will call him Charlemagne!');
+    }
     const best = (h.maxTiles / Game.landCount * 100).toFixed(1);
     $('endStats').innerHTML = tr(
       `⏱️ Durée : ${Math.floor(secs / 60)} min ${secs % 60} s<br>` +
@@ -1502,7 +1528,17 @@ const UI = {
       const name = escapeHtml(G.players[o].name);
       if (G.areAllied(h.id, o)) {
         const n = Math.floor(h.troops * this.ratio);
-        items.push({ label: tr(`🎁 Envoyer ${fmt(n)} soldats à ${name} (il en recevra ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`,
+        // (seulement à un allié dont les terres touchent les nôtres, et qui a une armée)
+        const far = !G.neighborStats(h.id).has(o) ? tr(`Ses terres ne touchent pas les tiennes : tes soldats ne peuvent pas rejoindre ${G.players[o].name}.`, `Their land does not touch yours: your soldiers cannot reach ${G.players[o].name}.`) : null;
+        if (far) items.push({ label: tr(`🎁 Envoyer des soldats à ${name}`, `🎁 Send soldiers to ${name}`), disabled: far });
+        // (un allié sans armée, comme Rome : les soldats vont renforcer la garnison de sa capitale)
+        else if (G.players[o].noArmy) items.push({ label: tr(`🎁 Envoyer ${fmt(n)} soldats renforcer la garnison ${G.deName(name)} (${fmt(n * CONFIG.ALLY_GIFT_RATIO)} arriveront)`,
+          `🎁 Send ${fmt(n)} soldiers to reinforce ${name}'s garrison (${fmt(n * CONFIG.ALLY_GIFT_RATIO)} will arrive)`), run: () => {
+          const got = G.sendTroopsToAlly(h.id, o, n);
+          if (typeof got === 'string') this.log(got, 'warn');
+          else this.log(tr(`🎁 ${fmt(got)} soldats renforcent la garnison ${G.deName(G.players[o].name)} !`, `🎁 ${fmt(got)} soldiers reinforce ${G.players[o].name}'s garrison!`), 'good', G.players[o]);
+        } });
+        else items.push({ label: tr(`🎁 Envoyer ${fmt(n)} soldats à ${name} (il en recevra ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`,
           `🎁 Send ${fmt(n)} soldiers to ${name} (they will receive ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`), run: () => {
           const got = G.sendTroopsToAlly(h.id, o, n);
           if (typeof got === 'string') this.log(got, 'warn');

@@ -275,3 +275,16 @@ function generateEuropeMap(seed) {
     forestLevel: (lat, lon) => (lon < -12 && lat > 62) || lat > 69 ? Infinity : lat > 58 ? 0.45 : lat > 45 ? 0.51 : 0.6,
   });
 }
+
+// 👑 Carte du scénario « Charlemagne » : la même Europe (mêmes côtes, montagnes et fleuves), recadrée sur l'Europe de
+// l'Ouest et la Méditerranée, de l'Irlande et du Portugal jusqu'à Constantinople et l'ouest de l'Anatolie
+// (voir charlemagne.js). Un peu plus détaillée que la carte « Europe » (une case fait environ 3,5 km).
+const CHARLEMAGNE_PROJ = { lon0: -11, lonSpan: 44, latTop: 58.5, latBottom: 34, wrap: false };
+
+function generateCharlemagneMap(seed) {
+  return buildGeoMap(seed, CONFIG.CHARLEMAGNE_MAP_WIDTH, CONFIG.CHARLEMAGNE_MAP_HEIGHT, {
+    proj: CHARLEMAGNE_PROJ, lands: EUROPE_LANDS, lakes: EUROPE_LAKES, deserts: EUROPE_DESERTS, glaciers: EUROPE_GLACIERS,
+    mountains: EUROPE_MOUNTAINS, rivers: EUROPE_RIVERS, detail: 2.5, coastAmp: 4, widthScale: 1, meander: 4,
+    forestLevel: lat => lat > 45 ? 0.51 : 0.6, // (moins de forêts autour de la Méditerranée)
+  });
+}

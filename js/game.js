@@ -61,8 +61,11 @@ const GameRules = {
     // ⚔️ Mode « Factions » (carte Azeroth) : 3 camps éternels, chacun à ses capitales du jeu (voir startFactions)
     this.factions = !!opts.factions && this.mapType === 'azeroth';
     if (this.factions) this.pactsAllowed = false; // (pas d'autres pactes que les 3 camps)
+    this.cm = null; // (le scénario « Charlemagne » en cours, voir startCharlemagne)
     this.human = this.addPlayer(opts.name, opts.banner, true);
     if (this.factions) return this.startFactions(opts);
+    // 👑 Scénario « Charlemagne » : l'Europe de 768, avec ses factions déjà en place (voir startCharlemagne)
+    if (this.mapType === 'charlemagne') return this.startCharlemagne(opts);
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
     // Les bots reçoivent au hasard les bannières de la carte que le joueur n'a pas prises (sur Azeroth : les écus, et
     // chaque royaume prend le nom de son écu : les Orcs, les Nains…)
@@ -1732,6 +1735,170 @@ const GameRules = {
     this.paused = true;
   },
 
+  // --- 👑 Scénario « Charlemagne » (les données : voir charlemagne.js) ---
+  // Chaque faction reçoit ses terres de 768, ses villes (niveau 1 ; Rome et Constantinople au niveau 4, avec déjà des
+  // moulins et une caserne de niveau 2) et ses églises. Les Francs, Carloman et le pape forment un pacte éternel.
+  // La partie démarre en pause, centrée sur la capitale du joueur.
+  startCharlemagne(opts) {
+    const C = CHARLEMAGNE, W = this.W, H = this.H, P = CHARLEMAGNE_PROJ, TPS = CONFIG.TICKS_PER_SECOND;
+    const at = (lon, lat) => [geoX(P, lon, W), geoY(P, lat, H)];
+    this.pactsAllowed = false; // (pas d'autres pactes que celui de Rome)
+    const cm = this.cm = { role: {}, capital: {} };
+    // Les factions (le joueur incarne celle de sa bannière)
+    for (const f of C.factions) {
+      const b = BANNERS.findIndex(x => x.set === 'charlemagne' && x.id === f.id);
+      const p = b === opts.banner ? this.human : this.addPlayer(f.name, b, false);
+      p.name = f.name;
+      p.role = f.id;
+      p.defensive = !!f.defensive; // (Rome et Byzance : elles se défendent, mais ne partent pas en conquête)
+      p.noArmy = !!f.noArmy;       // (Rome : pas d'armée, seulement la garnison de ses villes)
+      p.gold = C.START_GOLD;
+      cm.role[f.id] = p.id;
+    }
+    // Les terres de 768 : une case va à la première faction dont le territoire la contient
+    const polys = [];
+    for (const f of C.factions) {
+      for (const ring of f.lands) {
+        const pts = ring.map(([lon, lat]) => at(lon, lat)), xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
+        polys.push({ pid: cm.role[f.id], pts, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) });
+      }
+    }
+    for (let i = 0; i < this.N; i++) {
+      if (!this.claimable(i)) continue;
+      const x = i % W + 0.5, y = ((i / W) | 0) + 0.5;
+      const q = polys.find(q => x >= q.x0 && x <= q.x1 && y >= q.y0 && y <= q.y1 && insidePolygon(q.pts, x, y));
+      if (q) this.setOwner(i, q.pid);
+    }
+    // Les villes et les églises, au plus près de leur vraie place
+    for (const f of C.factions) {
+      const p = this.players[cm.role[f.id]];
+      const cap = this.placeOnLand(p, B_CASTLE, ...at(f.capital[0], f.capital[1]), f.capitalLevel || 1);
+      if (cap >= 0) { p.capital = cap; cm.capital[f.id] = cap; p.castlesBuilt = 1; }
+      for (const c of f.cities) this.placeOnLand(p, B_CASTLE, ...at(c[0], c[1]), 1);
+      for (const c of f.churches) this.placeOnLand(p, B_CHURCH, ...at(c[0], c[1]), 1);
+      // (Rome et Constantinople : 2 moulins et une caserne de niveau 2 dans leur muraille, qui grandiront avec le temps)
+      if (f.production && cap >= 0) {
+        const h = this.sizeOf(B_CASTLE) / 2, cx = cap % W + h, cy = ((cap / W) | 0) + h, inside = j => this.inWalls(cap, j);
+        for (const type of [B_MILL, B_MILL, B_BARRACKS]) this.placeOnLand(p, type, cx, cy, 2, inside);
+      }
+    }
+    // Ce qui n'est tenu par aucune ville (îlots, bouts de côte…) redevient une terre libre
+    const r = this.regions(true), loose = [];
+    for (let k = 0; k < r.size.length; k++) {
+      if (r.owner[k] >= 0 && !r.held[k]) loose.push(...r.order.subarray(r.start[k], r.start[k] + r.size[k]));
+    }
+    for (const t of loose) {
+      if (this.building[t] && this.anchor[t] === t) this.removeBuilding(t);
+      this.setOwner(t, -1);
+    }
+    // Les armées, le pacte de Rome, et les dates du scénario (selon la difficulté)
+    for (const p of this.players) p.troops = p.noArmy ? 0 : Math.round(this.maxTroops(p) * C.START_ARMY);
+    if (cm.capital.papaute >= 0) this.garrison[cm.capital.papaute] = C.ROME_GARRISON;
+    const id = this.nextPactId++;
+    this.pacts.set(id, { name: tr('Alliance de Rome', 'Alliance of Rome'), founder: cm.role.francs, eternal: true });
+    for (const role of ['francs', 'carloman', 'papaute']) this.players[cm.role[role]].pact = id;
+    const diff = C.CARLOMAN_DIES[opts.difficulty] ? opts.difficulty : 'normal';
+    cm.carlomanTick = C.CARLOMAN_DIES[diff] * 60 * TPS;
+    cm.lombardTick = C.LOMBARDS_MARCH[diff] * 60 * TPS;
+    cm.lombardArmy = C.LOMBARDS_ARMY[diff];
+    cm.lombardCities = this.castles.filter(c => this.owner[c] === cm.role.lombards).length;
+    this.phase = 'playing';
+    this.paused = true;
+  },
+
+  // Pose un bâtiment du royaume p au plus près du point (x, y) (en cases), sur ses terres, à bonne distance des
+  // autres bâtiments (inside : une condition en plus sur ses cases). Renvoie sa case d'ancrage, ou -1.
+  placeOnLand(p, type, x, y, level, inside = null) {
+    const W = this.W, n = this.sizeOf(type), ok = a => this.footprint(a, type).every(j =>
+      this.owner[j] === p.id && this.claimable(j) && !this.building[j] && (!inside || inside(j)));
+    for (let r = 0; r <= 16; r++) {
+      let best = -1, bestD = Infinity;
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const ax = Math.round(x - n / 2) + dx, ay = Math.round(y - n / 2) + dy;
+          if (ax < 0 || ay < 0 || ax > W - n || ay > this.H - n) continue;
+          const a = ay * W + ax, d = dx * dx + dy * dy;
+          if (d < bestD && ok(a) && !this.tooCloseToBuilding(a, type)) { best = a; bestD = d; }
+        }
+      }
+      if (best >= 0) {
+        this.placeBuilding(best, type);
+        this.level[best] = level;
+        this.builtBy[best] = -1; // (déjà là au début : ne fait pas monter le prix des suivants)
+        if (type === B_CASTLE) this.garrison[best] = this.garrisonMax(best);
+        return best;
+      }
+    }
+    return -1;
+  },
+
+  // Chaque seconde : les grands moments du scénario
+  stepCharlemagne() {
+    const cm = this.cm, C = CHARLEMAGNE, TPS = CONFIG.TICKS_PER_SECOND;
+    if (!cm || this.tick % TPS) return;
+    const P = role => this.players[cm.role[role]];
+    const franks = P('francs'), carl = P('carloman'), pope = P('papaute'), lomb = P('lombards');
+    // 771 : Carloman meurt, son royaume revient à Charlemagne
+    if (carl.alive && this.tick >= cm.carlomanTick && franks.alive) {
+      const keep = this.castles.filter(c => this.owner[c] === carl.id).map(c => [c, this.garrison[c]]);
+      franks.troops += carl.troops;
+      franks.gold += carl.gold;
+      carl.troops = carl.gold = 0;
+      this.eliminate(carl.id, -1, true); // (d'abord : ce n'est pas une conquête, il n'y a ni prime ni message d'anéantissement)
+      for (let i = 0; i < this.N; i++) if (this.owner[i] === carl.id) this.setOwner(i, franks.id);
+      for (const [c, g] of keep) this.garrison[c] = g; // (ses garnisons restent en place)
+      for (const w of this.works.values()) if (w.pid === carl.id) w.pid = franks.id;
+      UI.log(tr('⚱️ Carloman est mort : son royaume revient à Charles, désormais seul roi des Francs !',
+        '⚱️ Carloman is dead: his kingdom passes to Charles, now sole king of the Franks!'), franks.isHuman ? 'good' : '', franks);
+    }
+    // 773 : les Lombards marchent sur Rome (on prévient un peu avant). Leur grande armée dépend des villes qu'ils
+    // tiennent encore : un royaume lombard déjà entamé par les Francs en lève bien moins
+    const cities = this.castles.filter(c => this.owner[c] === lomb.id).length;
+    const army = Math.round(cm.lombardArmy * Math.min(1, cities / Math.max(1, cm.lombardCities)));
+    if (!cm.lombardWarned && this.tick >= cm.lombardTick - C.LOMBARDS_WARNING * TPS && lomb.alive && pope.alive) {
+      cm.lombardWarned = true;
+      UI.log(lomb.isHuman
+        ? tr('⚔️ Ton armée se rassemble : bientôt, les Lombards pourront marcher sur Rome !', '⚔️ Your army is gathering: soon the Lombards will be able to march on Rome!')
+        : tr(`⚠️ Didier, roi des Lombards, lève une armée de ${fmt(army)} soldats pour marcher sur Rome ! Le pape appelle les Francs au secours`,
+          `⚠️ Desiderius, king of the Lombards, is raising an army of ${fmt(army)} soldiers to march on Rome! The pope calls the Franks for help`) +
+          (this.areAllied(this.human.id, pope.id) ? tr(' : frappe les Lombards avant qu\'ils n\'arrivent, ou libère Rome ensuite !', ': strike the Lombards before they arrive, or free Rome afterwards!') : '.'), 'warn', lomb);
+    }
+    if (!cm.lombardMarched && this.tick >= cm.lombardTick) {
+      cm.lombardMarched = true;
+      if (lomb.alive && pope.alive && this.owner[cm.capital.papaute] === pope.id) {
+        lomb.troops = Math.max(lomb.troops, army / 0.85); // (une grande levée, pour cette guerre)
+        if (lomb.isHuman) UI.log(tr('⚔️ Ta grande levée est prête : à toi de marcher sur Rome !', '⚔️ Your great levy is ready: it is up to you to march on Rome!'), 'good');
+        else if (!this.launchAttack(lomb.id, pope.id, lomb.troops * 0.85, cm.capital.papaute)) {
+          UI.log(tr('⚔️ Les Lombards marchent sur Rome ! Défends le pape, ton allié.', '⚔️ The Lombards are marching on Rome! Defend the pope, your ally.'), 'warn', lomb);
+        }
+      }
+    }
+  },
+
+  // Une ville vient d'être prise : si c'est Rome, libérée par les Francs (ou un allié du pape), elle est rendue au pape
+  scenarioCastleTaken(a, castle) {
+    const cm = this.cm;
+    if (!cm || castle !== cm.capital.papaute) return;
+    const pope = this.players[cm.role.papaute];
+    if (!pope.alive || a.attacker === pope.id || !this.areAllied(a.attacker, pope.id)) return;
+    for (let i = 0; i < this.N; i++) if (this.owner[i] === a.attacker && this.inWalls(castle, i)) this.setOwner(i, pope.id);
+    for (const j of this.footprint(castle, B_CASTLE)) this.setOwner(j, pope.id);
+    this.garrison[castle] = this.garrisonMax(castle) * 0.5;
+    UI.log(tr(`✝️ ${this.players[a.attacker].name} libère Rome et la rend au pape !`, `✝️ ${this.players[a.attacker].name} frees Rome and gives it back to the pope!`), 'good', [this.players[a.attacker], pope]);
+  },
+
+  // 👑 Charlemagne couronné empereur : le joueur (les Francs) tient les capitales des Saxons, des Lombards, de la
+  // Bavière et des Avars (ou les a anéantis), et le pape, son allié, est toujours là
+  empireWon() {
+    const cm = this.cm, h = this.human;
+    if (!cm || h.role !== 'francs') return false;
+    // (Rome doit être au pape, ou aux Francs s'il n'est plus là : ils l'ont libérée)
+    const rome = this.owner[cm.capital.papaute], pope = this.players[cm.role.papaute];
+    if (!((pope.alive && rome === pope.id) || rome === h.id)) return false;
+    return CHARLEMAGNE.EMPIRE.every(role => !this.players[cm.role[role]].alive || this.owner[cm.capital[role]] === h.id);
+  },
+
   // La case la plus proche de (x, y) où l'on peut fonder une capitale (une terre libre, pas un fleuve, sur une
   // terre assez grande ; pas trop près d'une autre capitale si possible)
   nearestSpawn(x, y) {
@@ -2020,7 +2187,7 @@ const GameRules = {
   // Pourquoi la ville a de pid ne peut pas (encore) avoir de route commerciale, ou null si elle le peut
   tradeBlocker(pid, a) {
     // (en mode Factions, les pactes ordinaires sont interdits, mais on commerce avec les alliés de son camp)
-    if (!this.pactsAllowed && !this.factions) return tr('Pas de pactes dans cette partie : pas de route commerciale.', 'No pacts in this game: no trade routes.');
+    if (!this.pactsAllowed && !this.factions && !this.cm) return tr('Pas de pactes dans cette partie : pas de route commerciale.', 'No pacts in this game: no trade routes.');
     if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return tr('Il faut une de tes villes de niveau 2 ou plus.', 'You need one of your cities at level 2 or higher.');
     if (this.tradesOf(a).length >= this.tradeMax(a)) return this.tradeFull(a, tr('Cette ville', 'This city'));
     if (!this.tradePartners(pid).length) return tr('Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.', 'You need an ally in your pact with a city at level 2 or higher.');
@@ -2357,6 +2524,8 @@ const GameRules = {
     const t = this.building[a];
     if (t === B_OUTPOST) return this.outpostReady(a) ? CONFIG.OUTPOST_GARRISON : Infinity; // en construction : tous
     // (une ville reliée par un mur à d'autres villes du royaume : WALL_LINK_GARRISON soldats de plus par ville reliée)
+    // (👑 Charlemagne : Rome, tant qu'elle est au pape, a une grande garnison : voir ROME_GARRISON)
+    if (t === B_CASTLE && this.cm && a === this.cm.capital.papaute && this.owner[a] === this.cm.role.papaute) return CHARLEMAGNE.ROME_GARRISON;
     if (t === B_CASTLE) return this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0);
     if (t === B_PORT) return this.buildingInfo(a).garrison || 0;
     return 0;
@@ -2511,6 +2680,8 @@ const GameRules = {
   // i = case en haut à gauche du bâtiment (2x2 cases)
   tryBuild(p, i, type) {
     if (BUILDINGS[type].hidden) return tr('Ce bâtiment ne se construit pas.', 'This building cannot be built.');
+    // (👑 scénario « Charlemagne » : les villes de 768 sont toutes là ; on les améliore, on les prend, mais on n'en bâtit pas)
+    if (type === B_CASTLE && this.cm) return tr('Dans ce scénario, on ne bâtit pas de nouvelle ville : améliore les tiennes, ou prends celles des autres.', 'In this scenario, no new city can be built: upgrade yours, or take other kingdoms\' cities.');
     if (type === B_CASTLE && p.castlesBuilt >= this.maxCastles(p)) {
       return tr(`Tu as déjà construit ${this.maxCastles(p)} châteaux : c'est le maximum pour l'instant ` +
         '(prends-en à l\'ennemi, ou améliore une église pour en débloquer).', `You have already built ${this.maxCastles(p)} castles: that is the maximum for now ` +
@@ -4976,7 +5147,9 @@ const GameRules = {
   // L'armée arrive au pied du château (case t) : le siège dure quelques secondes selon son niveau
   startSiege(a, t) {
     const outpost = this.building[t] === B_OUTPOST, port = this.building[t] === B_PORT;
-    const secs = outpost ? CONFIG.OUTPOST_SIEGE : port ? CONFIG.PORT_SIEGE : this.castleInfo(this.anchor[t]).siege;
+    let secs = outpost ? CONFIG.OUTPOST_SIEGE : port ? CONFIG.PORT_SIEGE : this.castleInfo(this.anchor[t]).siege;
+    // (👑 Charlemagne : le siège de Rome dure ROME_SIEGE secondes, le temps que les Francs viennent au secours)
+    if (this.cm && this.anchor[t] === this.cm.capital.papaute && this.owner[t] === this.cm.role.papaute) secs = CHARLEMAGNE.ROME_SIEGE;
     a.siege = { tile: t, start: this.tick, end: this.tick + secs * CONFIG.TICKS_PER_SECOND }; // (start : pour la jauge)
     a.frontTile = t; // on se bat au pied des murs (avec leur bonus de défense)
     // L'ennemi est à la muraille : la garnison du château entre enfin en jeu (elle n'en sort pas avant)
@@ -5091,6 +5264,7 @@ const GameRules = {
     a.troops = Math.max(0, a.troops - this.tileCost(a, t));
     this.setOwner(t, a.attacker);
     this.onCastleTaken(a, castle, zone);
+    this.scenarioCastleTaken(a, castle); // (👑 Charlemagne : Rome libérée est rendue au pape)
     return this.endAttack(a);
   },
 
@@ -5247,7 +5421,7 @@ const GameRules = {
     }
   },
 
-  eliminate(id, by) {
+  eliminate(id, by, silent = false) {
     const p = this.players[id];
     if (!p.alive) return;
     p.alive = false;
@@ -5256,7 +5430,7 @@ const GameRules = {
     for (const a of this.attacks) if (a.attacker === id && !a.done) this.endAttack(a);
     const killer = by >= 0 ? this.players[by] : null;
     if (killer) killer.kills++;
-    UI.log(tr(`☠️ ${p.name} a été anéanti${killer ? ' par ' + killer.name : ''} !`, `☠️ ${p.name} has been wiped out${killer ? ' by ' + killer.name : ''}!`), p.isHuman ? 'warn' : '', killer ? [p, killer] : p);
+    if (!silent) UI.log(tr(`☠️ ${p.name} a été anéanti${killer ? ' par ' + killer.name : ''} !`, `☠️ ${p.name} has been wiped out${killer ? ' by ' + killer.name : ''}!`), p.isHuman ? 'warn' : '', killer ? [p, killer] : p);
     // Le vainqueur reçoit une prime (ELIMINATION_BOUNTY) et le trésor qui restait au royaume anéanti
     const treasure = Math.max(0, Math.floor(p.gold));
     p.gold = 0;
@@ -5414,16 +5588,21 @@ const GameRules = {
   sendTroopsToAlly(pid, ally, troops) {
     const p = this.players[pid], q = this.players[ally];
     if (!q || !q.alive || !this.areAllied(pid, ally)) return tr('On ne peut envoyer des soldats qu\'à un allié.', 'Soldiers can only be sent to an ally.');
+    // (les soldats marchent : il faut que ses terres touchent les nôtres)
+    if (!this.neighborStats(pid).has(ally)) return tr(`Les terres ${this.deName(q.name)} ne touchent pas les tiennes : tes soldats ne peuvent pas les rejoindre.`, `${q.name}'s land does not touch yours: your soldiers cannot reach it.`);
+    // (un allié sans armée, comme Rome : les soldats renforcent la garnison de sa capitale, même pendant un siège)
+    const fort = q.noArmy ? this.castles.find(c => c === q.capital && this.owner[c] === q.id) : undefined;
+    if (q.noArmy && fort === undefined) return tr(`${q.name} n'a plus de ville où recevoir tes soldats.`, `${q.name} no longer has a city to receive your soldiers.`);
     troops = Math.floor(Math.min(troops, p.troops));
-    // pas plus que la place qu'il lui reste dans son armée
-    const room = Math.max(0, this.maxTroops(q) - this.armySize(q));
+    // pas plus que la place qu'il lui reste dans son armée (sauf pour une garnison)
+    const room = fort !== undefined ? Infinity : Math.max(0, this.maxTroops(q) - this.armySize(q));
     troops = Math.min(troops, Math.floor(room / CONFIG.ALLY_GIFT_RATIO));
     if (troops < 1) return room < 1 ? tr(`L'armée ${this.deName(q.name)} est déjà pleine.`, `${q.name}'s army is already full.`) : tr('Pas assez de soldats !', 'Not enough soldiers!');
     const got = troops * CONFIG.ALLY_GIFT_RATIO;
     p.troops -= troops;
-    q.troops += got;
-    if (q.isHuman) UI.log(tr(`🎁 ${p.name} t'envoie ${fmt(got)} soldats !`, `🎁 ${p.name} sends you ${fmt(got)} soldiers!`), 'good', p);
-    return got;
+    if (fort !== undefined) this.garrison[fort] += got;
+    else q.troops += got;
+    return got; // (le message pour le joueur qui les reçoit : voir AI.reactToThreats)
   },
 
   // Envoyer de l'or à un allié du pacte (il le reçoit tout de suite, en entier). Renvoie un message d'erreur, ou null.
@@ -5464,7 +5643,9 @@ const GameRules = {
 
     for (const p of this.players) {
       if (!p.alive) continue;
-      p.troops += this.troopRate(p) / TPS;
+      // (👑 Charlemagne : Rome ne recrute pas de soldats, elle n'a que sa garnison)
+      if (p.noArmy) p.troops = 0;
+      else p.troops += this.troopRate(p) / TPS;
       p.gold += this.goldRate(p) / TPS;
     }
     this.produce();
@@ -5480,7 +5661,8 @@ const GameRules = {
       if (this.building[c] === B_OUTPOST) continue; // (la garnison d'un avant-poste ne se reconstitue pas : voir stepOutposts)
       const max = this.garrisonMax(c);
       if (!max || max === Infinity || this.owner[c] < 0 || besieged.has(c)) continue;
-      this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);
+      // (une garnison renforcée au-delà de son maximum, par des soldats alliés, n'est pas réduite)
+      if (this.garrison[c] < max) this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);
     }
 
     this.levy();
@@ -5522,6 +5704,7 @@ const GameRules = {
     }
 
     for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
+    this.stepCharlemagne();
 
     if (this.tick % TPS === 0) this.checkEnd();
   },
@@ -5533,8 +5716,16 @@ const GameRules = {
       UI.showEnd(false);
       return;
     }
-    // (mode « Factions » : les royaumes de son camp ne comptent pas comme rivaux, et les terres du camp comptent ensemble)
-    const botsAlive = this.players.some(p => !p.isHuman && p.alive && !(this.factions && this.areAllied(p.id, h.id)));
+    // (mode « Factions » : les royaumes de son camp ne comptent pas comme rivaux, et les terres du camp comptent ensemble ;
+    //  scénario « Charlemagne » : ses alliés ne comptent pas comme rivaux non plus)
+    const botsAlive = this.players.some(p => !p.isHuman && p.alive && !((this.factions || this.cm) && this.areAllied(p.id, h.id)));
+    // 👑 Charlemagne couronné empereur (une seule fois : on peut ensuite continuer à jouer)
+    if (!this.empireShown && this.empireWon()) {
+      this.empireShown = this.victoryShown = true;
+      this.phase = 'over';
+      UI.showEnd(true, botsAlive, 'empire');
+      return;
+    }
     const share = (this.factions ? this.players.filter(p => p === h || this.areAllied(p.id, h.id)) : [h])
       .reduce((s, p) => s + p.tiles, 0) / this.landCount;
     // Victoire : 70 % des terres (WIN_RATIO ; une seule fois, on peut ensuite continuer à jouer),
