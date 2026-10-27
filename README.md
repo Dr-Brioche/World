@@ -899,6 +899,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.139** : 🎵 le bouton de la musique et sa **barre de volume** sont aussi sur la page du menu (en bas à droite ; en haut à gauche sur un téléphone) : la barre règle la musique du menu tout de suite, et le premier clic sur 🎵 la lance (au lieu de la couper alors qu'on ne l'entendait pas encore)
 - **v0.92.138** : 🏰 la musique du menu démarre aussi sur un téléphone ou une tablette (au premier toucher : avant, elle restait muette)
 - **v0.92.137** : 🏰 une **musique pour le menu de départ** (de dr_brioche) : en boucle dans le menu (dès ton premier clic ou ta première touche : avant, le navigateur interdit le son), elle s'éteint en fondu au début de la partie ; la touche `M` la coupe aussi · 🔔 un nouveau petit son **coupe net** celui qui joue encore, pour enchaîner tout de suite
 - **v0.92.136** : 🔔 une **alerte sonore** (de dr_brioche) quand un ennemi lance un assaut sur toi (ou un assaut viking, ou que des Vikings débarquent chez toi)
