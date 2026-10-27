@@ -1743,7 +1743,7 @@ const GameRules = {
     const C = CHARLEMAGNE, W = this.W, H = this.H, P = CHARLEMAGNE_PROJ, TPS = CONFIG.TICKS_PER_SECOND;
     const at = (lon, lat) => [geoX(P, lon, W), geoY(P, lat, H)];
     this.pactsAllowed = false; // (pas d'autres pactes que celui de Rome)
-    const cm = this.cm = { role: {}, capital: {} };
+    const cm = this.cm = { role: {}, capital: {}, sites: new Map(), done: {} };
     // Les factions (le joueur incarne celle de sa bannière)
     for (const f of C.factions) {
       const b = BANNERS.findIndex(x => x.set === 'charlemagne' && x.id === f.id);
@@ -1774,8 +1774,9 @@ const GameRules = {
       const p = this.players[cm.role[f.id]];
       const cap = this.placeOnLand(p, B_CASTLE, ...at(f.capital[0], f.capital[1]), f.capitalLevel || 1);
       if (cap >= 0) { p.capital = cap; cm.capital[f.id] = cap; p.castlesBuilt = 1; }
-      for (const c of f.cities) this.placeOnLand(p, B_CASTLE, ...at(c[0], c[1]), 1);
-      for (const c of f.churches) this.placeOnLand(p, B_CHURCH, ...at(c[0], c[1]), 1);
+      // (chaque ville ou église est notée à son point [longitude, latitude] : voir les objectifs « site »)
+      for (const c of f.cities) cm.sites.set(c[0] + ',' + c[1], this.placeOnLand(p, B_CASTLE, ...at(c[0], c[1]), 1));
+      for (const c of f.churches) cm.sites.set(c[0] + ',' + c[1], this.placeOnLand(p, B_CHURCH, ...at(c[0], c[1]), 1));
       // (Rome et Constantinople : 2 moulins et une caserne de niveau 2 dans leur muraille, qui grandiront avec le temps)
       if (f.production && cap >= 0) {
         const h = this.sizeOf(B_CASTLE) / 2, cx = cap % W + h, cy = ((cap / W) | 0) + h, inside = j => this.inWalls(cap, j);
@@ -1798,6 +1799,7 @@ const GameRules = {
     this.pacts.set(id, { name: tr('Alliance de Rome', 'Alliance of Rome'), founder: cm.role.francs, eternal: true });
     for (const role of ['francs', 'carloman', 'papaute']) this.players[cm.role[role]].pact = id;
     const diff = C.CARLOMAN_DIES[opts.difficulty] ? opts.difficulty : 'normal';
+    cm.diff = diff;
     cm.carlomanTick = C.CARLOMAN_DIES[diff] * 60 * TPS;
     cm.lombardTick = C.LOMBARDS_MARCH[diff] * 60 * TPS;
     cm.lombardArmy = C.LOMBARDS_ARMY[diff];
@@ -1888,15 +1890,47 @@ const GameRules = {
     UI.log(tr(`✝️ ${this.players[a.attacker].name} libère Rome et la rend au pape !`, `✝️ ${this.players[a.attacker].name} frees Rome and gives it back to the pope!`), 'good', [this.players[a.attacker], pope]);
   },
 
-  // 👑 Charlemagne couronné empereur : le joueur (les Francs) tient les capitales des Saxons, des Lombards, de la
-  // Bavière et des Avars (ou les a anéantis), et le pape, son allié, est toujours là
-  empireWon() {
+  // 👑 Les objectifs des Francs (voir OBJECTIVES dans charlemagne.js) : l'objectif k est-il rempli en ce moment ?
+  objectiveMet(o) {
     const cm = this.cm, h = this.human;
-    if (!cm || h.role !== 'francs') return false;
-    // (Rome doit être au pape, ou aux Francs s'il n'est plus là : ils l'ont libérée)
+    if (o.kind === 'capital') return !this.players[cm.role[o.role]].alive || this.owner[cm.capital[o.role]] === h.id;
+    if (o.kind === 'site') { const a = cm.sites.get(o.at.join(',')); return a !== undefined && this.owner[a] === h.id; }
+    if (o.kind === 'citadel') return this.castles.some(c => this.owner[c] === h.id && this.level[c] >= o.goal[cm.diff]);
+    if (o.kind === 'faith') {
+      // (sans les croisades en cours : elles ne durent qu'une minute)
+      const crusades = this.crusades.filter(c => this.tick < c.end && c.owner === h.id && this.owner[c.church] === h.id).length;
+      return this.faithOf(h.id) - crusades * CONFIG.CRUSADE_FAITH >= o.goal[cm.diff];
+    }
+    // Rome : au pape, ou aux Francs s'il n'est plus là (ils l'ont libérée)
     const rome = this.owner[cm.capital.papaute], pope = this.players[cm.role.papaute];
-    if (!((pope.alive && rome === pope.id) || rome === h.id)) return false;
-    return CHARLEMAGNE.EMPIRE.every(role => !this.players[cm.role[role]].alive || this.owner[cm.capital[role]] === h.id);
+    return (pope.alive && rome === pope.id) || rome === h.id;
+  },
+  // Le texte d'un objectif, avec le nombre à atteindre selon la difficulté
+  objectiveText(o) {
+    return o.goal ? o.text.replace('{n}', o.goal[this.cm.diff]) : o.text;
+  },
+  // Chaque seconde : les objectifs remplis le restent (sauf Rome, qui doit tenir jusqu'au bout) ; un message pour chacun
+  stepObjectives() {
+    const cm = this.cm;
+    if (!cm || this.human.role !== 'francs' || this.tick % CONFIG.TICKS_PER_SECOND) return;
+    CHARLEMAGNE.OBJECTIVES.forEach((o, k) => {
+      if (o.kind === 'rome' || cm.done[k] || !this.objectiveMet(o)) return;
+      cm.done[k] = true;
+      const t = this.objectiveText(o);
+      UI.log(tr(`✔️ Objectif rempli : ${t}`, `✔️ Objective complete: ${t}`), 'good');
+    });
+  },
+  // L'état des objectifs, pour le cadre en haut à gauche : [{ text, done }]
+  objectives() {
+    const cm = this.cm;
+    if (!cm || this.human.role !== 'francs') return [];
+    return CHARLEMAGNE.OBJECTIVES.map((o, k) => ({ text: this.objectiveText(o), done: o.kind === 'rome' ? this.objectiveMet(o) : !!cm.done[k] }));
+  },
+
+  // 👑 Charlemagne couronné empereur : tous ses objectifs sont remplis (et Rome est toujours au pape, ou à lui)
+  empireWon() {
+    const list = this.objectives();
+    return list.length > 0 && list.every(o => o.done);
   },
 
   // La case la plus proche de (x, y) où l'on peut fonder une capitale (une terre libre, pas un fleuve, sur une
@@ -5705,6 +5739,7 @@ const GameRules = {
 
     for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
     this.stepCharlemagne();
+    this.stepObjectives();
 
     if (this.tick % TPS === 0) this.checkEnd();
   },
