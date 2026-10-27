@@ -899,6 +899,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.131** : 🎵 un septième morceau d'ambiance, *M7* (de dr_brioche)
 - **v0.92.130** : 🎵 un sixième morceau d'ambiance, *M6* (de dr_brioche)
 - **v0.92.129** : 🎵 un cinquième morceau d'ambiance, *M5* (de dr_brioche)
 - **v0.92.128** : 🎵 un quatrième morceau d'ambiance, *M4* (de dr_brioche)
