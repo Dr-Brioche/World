@@ -14,7 +14,7 @@
 //  - enclaves : des terres à elle au milieu de celles d'une autre ([longitude, latitude, rayon en cases]).
 // playable : le joueur peut l'incarner (pas Rome, ni Byzance, ni Carloman) ; defensive : elle se défend, s'étend sur
 // les terres libres, mais ne lance pas de conquêtes ; production : moulins et casernes de niveau 2 autour de la capitale.
-// flag : la bannière (en attendant les vraies bannières historiques, un des drapeaux du jeu).
+// flag : la bannière (img/bannieres/cm_<faction> : les vraies bannières des factions ; en attendant, un des drapeaux du jeu).
 // raiders : des pillards (les Slaves) : leurs terres sont imprenables, ils ne s'étendent pas, mais lancent des razzias
 // (voir RAIDS).
 
@@ -89,7 +89,7 @@ const CHARLEMAGNE = {
 
   factions: [
     {
-      id: 'papaute', name: tr('Papauté', 'Papacy'), leader: tr('le pape Étienne III', 'Pope Stephen III'), flag: 'b15', color: [238, 226, 170],
+      id: 'papaute', name: tr('Papauté', 'Papacy'), leader: tr('le pape Étienne III', 'Pope Stephen III'), flag: 'cm_papaute', color: [150, 26, 56],
       defensive: true, production: true, noArmy: true,
       capital: [12.48, 41.90, tr('Rome', 'Rome')], capitalLevel: 4,
       cities: [[12.20, 44.42, tr('Ravenne', 'Ravenna')]],
@@ -100,7 +100,7 @@ const CHARLEMAGNE = {
       desc: tr('Le pape, allié des Francs, tient Rome et Ravenne.', 'The pope, ally of the Franks, holds Rome and Ravenna.'),
     },
     {
-      id: 'byzance', name: tr('Byzance', 'Byzantium'), leader: tr("l'empereur Constantin V", 'Emperor Constantine V'), flag: 'b06', color: [214, 170, 40],
+      id: 'byzance', name: tr('Byzance', 'Byzantium'), leader: tr("l'empereur Constantin V", 'Emperor Constantine V'), flag: 'cm_byzance', color: [196, 134, 52],
       defensive: true, production: true,
       capital: [28.98, 41.01, tr('Constantinople', 'Constantinople')], capitalLevel: 4,
       cities: [[22.94, 40.64, tr('Thessalonique', 'Thessalonica')], [23.73, 37.98, tr('Athènes', 'Athens')],
@@ -117,7 +117,7 @@ const CHARLEMAGNE = {
       desc: tr('Le vieil Empire romain d\'Orient, riche et bien défendu.', 'The old Eastern Roman Empire, rich and well defended.'),
     },
     {
-      id: 'baviere', name: tr('Bavière', 'Bavaria'), leader: tr('le duc Tassilon III', 'Duke Tassilo III'), flag: 'b10', color: [40, 200, 210],
+      id: 'baviere', name: tr('Bavière', 'Bavaria'), leader: tr('le duc Tassilon III', 'Duke Tassilo III'), flag: 'cm_baviere', color: [218, 112, 40],
       playable: true,
       capital: [12.10, 49.02, tr('Ratisbonne', 'Regensburg')],
       cities: [[13.04, 47.80, tr('Salzbourg', 'Salzburg')]],
@@ -127,7 +127,7 @@ const CHARLEMAGNE = {
       desc: tr('Un petit duché, vassal rebelle des Francs : leur première cible.', 'A small duchy, rebel vassal of the Franks: their first target.'),
     },
     {
-      id: 'bretons', name: tr('Bretons', 'Bretons'), leader: tr('les chefs bretons', 'the Breton chiefs'), flag: 'b07', color: [150, 182, 118],
+      id: 'bretons', name: tr('Bretons', 'Bretons'), leader: tr('les chefs bretons', 'the Breton chiefs'), flag: 'cm_bretons', color: [156, 186, 218],
       playable: true,
       capital: [-2.76, 47.66, tr('Vannes', 'Vannes')], capitalLevel: 3,
       cities: [[-4.10, 48.00, tr('Quimper', 'Quimper')]],
@@ -136,7 +136,7 @@ const CHARLEMAGNE = {
       desc: tr('Les Bretons d\'Armorique, au bout du monde franc.', 'The Bretons of Armorica, at the far end of the Frankish world.'),
     },
     {
-      id: 'asturies', name: tr('Asturies', 'Asturias'), leader: tr('le roi Aurelio', 'King Aurelius'), flag: 'b18', color: [70, 70, 80],
+      id: 'asturies', name: tr('Asturies', 'Asturias'), leader: tr('le roi Aurelio', 'King Aurelius'), flag: 'cm_asturies', color: [158, 158, 168],
       playable: true,
       capital: [-5.84, 43.36, tr('Oviedo', 'Oviedo')],
       cities: [[-7.56, 43.01, tr('Lugo', 'Lugo')]],
@@ -145,7 +145,7 @@ const CHARLEMAGNE = {
       desc: tr('Le dernier royaume chrétien d\'Espagne, dans ses montagnes.', 'The last Christian kingdom of Spain, in its mountains.'),
     },
     {
-      id: 'aquitaine', name: tr('Aquitaine', 'Aquitaine'), leader: tr('le duc Hunald II', 'Duke Hunald II'), flag: 'b04', color: [214, 140, 30],
+      id: 'aquitaine', name: tr('Aquitaine', 'Aquitaine'), leader: tr('le duc Hunald II', 'Duke Hunald II'), flag: 'cm_aquitaine', color: [224, 198, 36],
       playable: true,
       capital: [-0.58, 44.84, tr('Bordeaux', 'Bordeaux')],
       cities: [[0.72, 45.18, tr('Périgueux', 'Périgueux')]],
@@ -156,7 +156,7 @@ const CHARLEMAGNE = {
         '769: Duke Hunald II raises Aquitaine against the Franks, who hold only the isolated castle of Fronsac there.'),
     },
     {
-      id: 'francs', name: tr('Francs', 'Franks'), leader: tr('Charlemagne', 'Charlemagne'), flag: 'b12', color: [30, 60, 165],
+      id: 'francs', name: tr('Francs', 'Franks'), leader: tr('Charlemagne', 'Charlemagne'), flag: 'cm_francs', color: [26, 58, 140],
       playable: true,
       capital: [3.00, 49.58, tr('Noyon', 'Noyon')],
       cities: [[2.35, 48.86, tr('Paris', 'Paris')], [0.69, 47.39, tr('Tours', 'Tours')], [6.96, 50.94, tr('Cologne', 'Cologne')],
@@ -178,7 +178,7 @@ const CHARLEMAGNE = {
         'and the pope is your ally. Subdue the Saxons, the Lombards, Bavaria and the Avars to be crowned emperor!'),
     },
     {
-      id: 'carloman', name: tr('Carloman', 'Carloman'), leader: tr('Carloman', 'Carloman'), flag: 'b11', color: [120, 170, 230],
+      id: 'carloman', name: tr('Carloman', 'Carloman'), leader: tr('Carloman', 'Carloman'), flag: 'cm_carloman', color: [128, 56, 156],
       capital: [4.03, 49.26, tr('Reims', 'Reims')],
       cities: [[4.83, 45.76, tr('Lyon', 'Lyon')], [7.75, 48.58, tr('Strasbourg', 'Strasbourg')], [1.44, 43.60, tr('Toulouse', 'Toulouse')],
         [5.37, 43.30, tr('Marseille', 'Marseille')]],
@@ -191,7 +191,7 @@ const CHARLEMAGNE = {
       desc: '',
     },
     {
-      id: 'saxons', name: tr('Saxons', 'Saxons'), leader: tr('Widukind', 'Widukind'), flag: 'b09', color: [48, 120, 110],
+      id: 'saxons', name: tr('Saxons', 'Saxons'), leader: tr('Widukind', 'Widukind'), flag: 'cm_saxons', color: [62, 58, 56],
       playable: true,
       capital: [8.85, 51.42, tr('Eresburg', 'Eresburg')],
       cities: [[8.92, 52.29, tr('Minden', 'Minden')], [10.38, 53.30, tr('Bardowick', 'Bardowick')]],
@@ -201,7 +201,7 @@ const CHARLEMAGNE = {
       desc: tr('Les Saxons païens de Widukind, entre le Rhin et l\'Elbe : le grand ennemi des Francs.', 'Widukind\'s pagan Saxons, between the Rhine and the Elbe: the great enemy of the Franks.'),
     },
     {
-      id: 'danois', name: tr('Danois', 'Danes'), leader: tr('le roi Sigfred', 'King Sigfred'), flag: 'b19', color: [196, 166, 120],
+      id: 'danois', name: tr('Danois', 'Danes'), leader: tr('le roi Sigfred', 'King Sigfred'), flag: 'cm_danois', color: [228, 160, 44],
       playable: true,
       capital: [9.57, 54.49, tr('Hedeby', 'Hedeby')],
       cities: [[8.76, 55.33, tr('Ribe', 'Ribe')], [11.97, 55.60, tr('Lejre', 'Lejre')]],
@@ -210,7 +210,7 @@ const CHARLEMAGNE = {
       desc: tr('Les Danois du Jutland et des îles, marins redoutables.', 'The Danes of Jutland and the islands, fearsome seafarers.'),
     },
     {
-      id: 'lombards', name: tr('Lombards', 'Lombards'), leader: tr('le roi Didier', 'King Desiderius'), flag: 'b01', color: [180, 25, 25],
+      id: 'lombards', name: tr('Lombards', 'Lombards'), leader: tr('le roi Didier', 'King Desiderius'), flag: 'cm_lombards', color: [36, 104, 68],
       playable: true,
       capital: [9.16, 45.19, tr('Pavie', 'Pavia')], capitalLevel: 3,
       cities: [[10.99, 45.44, tr('Vérone', 'Verona')], [13.43, 46.09, tr('Cividale', 'Cividale')], [10.50, 43.84, tr('Lucques', 'Lucca')],
@@ -223,7 +223,7 @@ const CHARLEMAGNE = {
       desc: tr('Le royaume lombard du roi Didier, qui rêve de prendre Rome.', 'King Desiderius\' Lombard kingdom, which dreams of taking Rome.'),
     },
     {
-      id: 'avars', name: tr('Avars', 'Avars'), leader: tr('le khagan', 'the Khagan'), flag: 'b03', color: [138, 24, 72],
+      id: 'avars', name: tr('Avars', 'Avars'), leader: tr('le khagan', 'the Khagan'), flag: 'cm_avars', color: [242, 230, 200],
       playable: true,
       capital: [19.80, 46.90, tr('le Ring', 'the Ring')],
       cities: [[17.64, 47.69, tr('Győr', 'Győr')], [19.61, 44.97, tr('Sirmium', 'Sirmium')]],
@@ -233,7 +233,7 @@ const CHARLEMAGNE = {
       desc: tr('Les Avars, cavaliers des steppes, et leur Ring rempli de trésors.', 'The Avars, horsemen of the steppes, and their Ring full of treasure.'),
     },
     {
-      id: 'cordoue', name: tr('Cordoue', 'Córdoba'), leader: tr('l\'émir Abd al-Rahman Ier', 'Emir Abd al-Rahman I'), flag: 'b13', color: [125, 55, 190],
+      id: 'cordoue', name: tr('Cordoue', 'Córdoba'), leader: tr('l\'émir Abd al-Rahman Ier', 'Emir Abd al-Rahman I'), flag: 'cm_cordoue', color: [226, 112, 170],
       playable: true,
       capital: [-4.78, 37.89, tr('Cordoue', 'Córdoba')],
       cities: [[-4.02, 39.86, tr('Tolède', 'Toledo')], [-0.88, 41.65, tr('Saragosse', 'Zaragoza')], [-5.98, 37.39, tr('Séville', 'Seville')],
@@ -245,7 +245,7 @@ const CHARLEMAGNE = {
       desc: tr('L\'émirat omeyyade d\'Abd al-Rahman, maître de presque toute l\'Espagne.', 'Abd al-Rahman\'s Umayyad emirate, master of almost all of Spain.'),
     },
     {
-      id: 'anglos', name: tr('Anglo-Saxons', 'Anglo-Saxons'), leader: tr('le roi Offa', 'King Offa'), flag: 'b08', color: [38, 100, 48],
+      id: 'anglos', name: tr('Anglo-Saxons', 'Anglo-Saxons'), leader: tr('le roi Offa', 'King Offa'), flag: 'cm_anglos', color: [124, 166, 84],
       playable: true,
       capital: [-1.69, 52.63, tr('Tamworth', 'Tamworth')],
       cities: [[-0.12, 51.51, tr('Londres', 'London')], [-1.31, 51.06, tr('Winchester', 'Winchester')], [-1.08, 53.96, tr('York', 'York')]],
@@ -258,7 +258,7 @@ const CHARLEMAGNE = {
     {
       // ⚔️ Les pillards du nord-est : leurs terres sont imprenables, ils ne s'étendent pas, mais lancent des razzias de
       // plus en plus grosses sur leurs voisins (voir RAIDS)
-      id: 'slaves', name: tr('Slaves', 'Slavs'), leader: tr('les chefs wendes', 'the Wendish chieftains'), flag: 'b16', color: [120, 96, 70],
+      id: 'slaves', name: tr('Slaves', 'Slavs'), leader: tr('les chefs wendes', 'the Wendish chieftains'), flag: 'cm_slaves', color: [40, 150, 148],
       raiders: true, noArmy: true,
       capital: [12.55, 52.41, tr('Brenna', 'Brenna')],
       cities: [[14.42, 50.08, tr('Prague', 'Prague')], [17.6, 52.54, tr('Gniezno', 'Gniezno')]],
