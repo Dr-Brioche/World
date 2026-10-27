@@ -46,16 +46,32 @@ const CHARLEMAGNE = {
     { kind: 'capital', role: 'avars', text: tr('Abattre le Ring des Avars et piller son trésor (796)', 'Bring down the Avar Ring and plunder its treasure (796)') },
     { kind: 'site', at: [2.17, 41.39], text: tr('Créer la Marche d\'Espagne : prendre Barcelone (801)', 'Create the Spanish March: take Barcelona (801)') },
     { kind: 'citadel', goal: { facile: 3, normal: 4, difficile: 4 }, text: tr('Bâtir une capitale impériale, comme Aix-la-Chapelle : une ville de niveau {n}', 'Build an imperial capital, like Aachen: a level {n} city') },
+    { kind: 'mines', goal: { facile: 4, normal: 6, difficile: 8 }, text: tr('Tenir les richesses de l\'Occident : {n} mines historiques (⛏️ au nom célèbre)', 'Hold the riches of the West: {n} historic mines (⛏️ with a famous name)') },
     { kind: 'faith', goal: { facile: 350, normal: 700, difficile: 1200 }, text: tr('Christianiser l\'empire : atteindre {n} de Croyance (sans croisade)', 'Christianise the empire: reach {n} Faith (without a crusade)') },
     { kind: 'rome', text: tr('Protéger Rome : qu\'elle reste au pape (ou à toi)', 'Protect Rome: it must stay with the pope (or with you)') },
   ],
 
-  // ⛏️ Quelques mines célèbres de l'époque, déjà creusées (niveau 1) par la faction qui tient ces terres en 768,
-  // en plus des filons posés au hasard. [longitude, latitude, sorte de filon (voir MINES dans config.js), nom]
+  // ⛏️ Les mines célèbres de l'époque, en plus des filons posés au hasard : déjà creusées (niveau 1) par la faction
+  // qui tient ces terres en 768, ou un simple filon sur une terre libre. Chaque faction a la sienne (Cordoue deux).
+  // [longitude, latitude, sorte de filon (voir MINES dans config.js : 💎 diamant = un trésor), nom, faction qui la tient
+  //  (null = un filon sur une terre libre)]
   HISTORIC_MINES: [
-    [-0.14, 46.22, 'gold', 'Melle'],         // les mines d'argent de Melle, qui fournissaient les ateliers monétaires francs
-    [11.86, 49.44, 'iron', 'Amberg'],        // le fer du Haut-Palatinat (Amberg), en Bavière, la « Ruhr du Moyen Âge »
-    [-6.77, 42.47, 'gold', 'Las Médulas'],   // les vieilles mines d'or romaines de Las Médulas, au sud des Asturies
+    [-0.14, 46.22, 'gold', tr('argent de Melle', 'Melle silver'), 'francs'],              // Francs : l'argent des ateliers monétaires
+    [1.6, 42.95, 'iron', tr('fer de l\'Ariège', 'Ariège iron'), 'carloman'],                // Carloman : les mines du Rancié
+    [10.2, 45.7, 'iron', tr('fer de Brescia', 'Brescia iron'), 'lombards'],                 // Lombards : les forges du val Trompia
+    [12.8, 41.95, 'stone', tr('travertin de Tivoli', 'Tivoli travertine'), 'papaute'],     // Papauté : la pierre des monuments de Rome
+    [24.0, 40.9, 'gold', tr('or du Pangée', 'Pangaion gold'), 'byzance'],                  // Byzance : les mines d'or de Thrace
+    [11.86, 49.44, 'iron', tr('fer d\'Amberg', 'Amberg iron'), 'baviere'],                 // Bavière : la « Ruhr du Moyen Âge »
+    [10.43, 51.89, 'gold', tr('argent du Harz', 'Harz silver'), 'saxons'],                // Saxons : le Rammelsberg
+    [9.0, 56.0, 'iron', tr('fer des marais du Jutland', 'Jutland bog iron'), 'danois'],   // Danois : le fer des épées vikings
+    [19.6, 46.6, 'diamond', tr('trésor des Avars', 'Avar treasure'), 'avars'],           // Avars : le trésor pillé en 796
+    [-6.6, 37.7, 'gold', tr('argent de Rio Tinto', 'Rio Tinto silver'), 'cordoue'],        // Cordoue
+    [-4.83, 38.77, 'diamond', tr('mercure d\'Almadén', 'Almadén mercury'), 'cordoue'],    // Cordoue : al-ma'din, « la mine »
+    [-6.77, 42.47, 'gold', tr('or de Las Médulas', 'Las Médulas gold'), 'asturies'],        // Asturies : les vieilles mines romaines
+    [-3.75, 48.36, 'gold', tr('argent de Huelgoat', 'Huelgoat silver'), 'bretons'],        // Bretons : le plomb argentifère
+    [0.3, 51.05, 'iron', tr('fer du Weald', 'Weald iron'), 'anglos'],                     // Anglo-Saxons : les forges du Sussex
+    [14.9, 47.52, 'iron', tr('fer du Norique', 'Noricum iron'), null],                // terre libre : l'Erzberg, le fer des Alpes
+    [23.1, 46.3, 'gold', tr('or de Transylvanie', 'Transylvanian gold'), null],       // terre libre : l'or de la Dacie romaine
   ],
 
   factions: [

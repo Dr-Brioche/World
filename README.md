@@ -111,8 +111,14 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **Asturies** (Oviedo, Lugo), les **Bretons** (Vannes, Quimper) et les **Anglo-Saxons** d'Offa (Tamworth, Londres,
      Winchester, York). Le reste (Irlande, Écosse, Afrique du Nord, terres slaves…) est libre.
      **Rome et Constantinople** sont des cités de niveau 4, avec déjà deux moulins et une caserne de niveau 2.
-     Trois **mines célèbres** sont déjà creusées (en plus des filons au hasard) : les mines d'**argent de Melle**
-     (une mine d'or, chez les Francs), le **fer d'Amberg** (en Bavière) et l'**or de Las Médulas** (dans les Asturies).
+     ⛏️ **16 mines historiques** (en plus des filons au hasard), là où on les exploitait : **chaque faction a la sienne**,
+     déjà creusée, et son nom s'affiche au survol. L'argent de Melle (Francs), le fer de l'Ariège (Carloman), le fer de
+     Brescia (Lombards), le travertin de Tivoli (Papauté), l'or du Pangée (Byzance), le fer d'Amberg (Bavière), l'argent
+     du Harz (Saxons), le fer des marais du Jutland (Danois), le 💎 trésor des Avars, l'argent de Rio Tinto et le 💎
+     mercure d'Almadén (Cordoue), l'or de Las Médulas (Asturies), l'argent de Huelgoat (Bretons), le fer du Weald
+     (Anglo-Saxons), plus le fer du Norique et l'or de Transylvanie, aux confins (souvent sur une terre libre, où il
+     reste à bâtir la mine). L'argent compte comme une mine d'or ; le trésor des Avars et le mercure d'Almadén comme
+     une mine de diamant.
      Tu choisis ta faction dans le menu (tout le monde sauf Rome, Byzance et Carloman), mais le but est surtout de jouer
      les **Francs** et de bâtir l'empire de Charlemagne. Règles du scénario :
      - **pas de nouvelles villes** : on améliore les siennes, on prend celles des autres (le bouton Château disparaît) ;
@@ -126,12 +132,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        perdu des villes). Le **siège de Rome dure 2 minutes** : les soldats envoyés au pape (clic droit sur ses terres,
        si elles touchent les tiennes) **renforcent sa garnison**, et 1 500 suffisent à la sauver. Si Rome tombe, les
        Francs peuvent la **libérer** : elle est **rendue au pape** ;
-     - **victoire des Francs** : remplir les **8 objectifs de Charlemagne**, listés dans un **cadre en haut à gauche**
+     - **victoire des Francs** : remplir les **9 objectifs de Charlemagne**, listés dans un **cadre en haut à gauche**
        (un clic le replie ; un objectif rempli est **barré en gris avec un ✔**) :
        soumettre la **Bavière** (prendre Ratisbonne, 788), devenir **roi des Lombards** (prendre Pavie, 774), soumettre
        les **Saxons** (prendre Eresburg et abattre l'Irminsul, 772), abattre le **Ring des Avars** (796), créer la
        **Marche d'Espagne** (prendre Barcelone, 801), bâtir une **capitale impériale** comme Aix-la-Chapelle (une ville de
-       niveau 3 en Facile, 4 en Normal et Difficile), **christianiser l'empire** (350 de Croyance en Facile, 700 en
+       niveau 3 en Facile, 4 en Normal et Difficile), tenir les **richesses de l'Occident** (4, 6 ou 8 **mines
+       historiques** selon la difficulté), **christianiser l'empire** (350 de Croyance en Facile, 700 en
        Normal, 1 200 en Difficile : le pacte avec Rome en donne déjà 150, sans compter une croisade en cours) et **protéger Rome**
        (qu'elle reste au pape, ou à toi s'il n'est plus là). Un objectif **se perd** (le ✔ disparaît, un message
        prévient) si tu **perds la ville** (ou ta ville de haut niveau, ta Croyance, Rome) : il faut tout tenir en même
@@ -802,6 +809,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.112** : ⛏️ Charlemagne : 16 mines historiques sur toute la carte (une par faction, deux pour Cordoue, deux aux confins), avec leur nom au survol (argent de Melle, fer de Brescia, or du Pangée, argent du Harz, trésor des Avars, mercure d'Almadén…) · 👑 nouvel objectif : tenir 4, 6 ou 8 mines historiques selon la difficulté
 - **v0.92.111** : 🗺️ carte Charlemagne redessinée : montagnes moins rectilignes (crêtes qui serpentent et se ramifient, largeur variable, vallées de collines, sommets enneigés en massifs), piémonts irréguliers, collines en taches éparses, 19 nouveaux massifs (Massif armoricain, Ardennes et Eifel, forêt de Bohême, Sierra Morena, monts de León, Péloponnèse…), forêts plus denses en Germanie
 - **v0.92.110** : 👑 Charlemagne : un objectif rempli **se perd** si on perd la ville (ou le niveau, la Croyance, Rome) ; il faut tout tenir en même temps pour être couronné · objectif de Croyance relevé à 350, 700 ou 1 200 (le pacte avec Rome en donne déjà 150) · ⛏️ 3 mines historiques déjà creusées : l'argent de Melle (Francs), le fer d'Amberg (Bavière), l'or de Las Médulas (Asturies)
 - **v0.92.109** : 👑 Charlemagne : un **cadre d'objectifs** en haut à gauche (8 objectifs historiques : Bavière, Pavie, Saxons et Irminsul, Ring des Avars, Marche d'Espagne, capitale impériale de niveau 3 à 4 et Croyance de 250 à 1 000 selon la difficulté, Rome), barrés en gris avec un ✔ une fois remplis ; les remplir tous fait couronner empereur

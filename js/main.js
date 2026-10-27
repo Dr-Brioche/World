@@ -1021,7 +1021,7 @@ const UI = {
     // Un filon libre (sans mine) : ce qu'il donnerait
     if (G.depositTile[i] && G.building[i] !== B_MINE) {
       const d = G.deposits.find(d => [d.a, d.a + 1, d.a + G.W, d.a + G.W + 1].includes(i));
-      if (d) txt += ` · ${MINES[d.kind].icon} ${tr('filon', 'ore vein')} : ${MINES[d.kind].name} (${MINES[d.kind].short})` +
+      if (d) txt += ` · ${MINES[d.kind].icon} ${tr('filon', 'ore vein')} : ${MINES[d.kind].name}${d.name ? ` · ${d.name}` : ''} (${MINES[d.kind].short})` +
         (o === G.human.id ? tr(` · ⛏️ touche ${B_MINE} pour y bâtir une mine (💰 ${fmt(G.buildCost(G.human, B_MINE))})`, ` · ⛏️ key ${B_MINE} to build a mine here (💰 ${fmt(G.buildCost(G.human, B_MINE))})`) : '');
     }
     if (o >= 0 && (G.castleProtects(o, i) || G.portBonus(o, i) > 0)) txt += tr(` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`, ` · inside the walls: defense ${pct(G.tileDefense(o, i) - 1)}`);
