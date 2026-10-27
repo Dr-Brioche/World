@@ -1,7 +1,8 @@
 // 🎵 MUSIQUE D'AMBIANCE
-// Pendant la partie, des morceaux choisis au hasard (CONFIG.MUSIC.TRACKS), en fondu, avec de temps en temps un moment
-// de silence entre deux. Le bouton 🎵 en bas à droite (ou la touche M) la coupe ou la remet, et la petite barre à
-// côté règle son volume ; ces choix sont gardés dans le navigateur pour les parties suivantes.
+// Pendant la partie, des morceaux choisis au hasard (CONFIG.MUSIC.TRACKS), en fondu, avec toujours un moment
+// de silence (de durée tirée au hasard) entre deux. Le bouton 🎵 en bas à droite (ou la touche M) la coupe ou la
+// remet, et la petite barre à côté règle son volume ; ces choix sont gardés dans le navigateur pour les parties
+// suivantes.
 // (Un navigateur ne joue pas de son avant que le joueur ait cliqué : la musique démarre avec la partie, au clic sur
 // « Commencer ».)
 
@@ -78,9 +79,9 @@ const Music = {
     }, 100);
   },
 
-  // Le morceau est fini : souvent un moment de silence, sinon une courte pause, puis le suivant
+  // Le morceau est fini : un moment de silence (de durée tirée au hasard, voir PAUSE), puis le suivant
   afterTrack() {
-    const M = CONFIG.MUSIC, [lo, hi] = Math.random() < M.SILENCE_CHANCE ? M.SILENCE : M.GAP;
+    const [lo, hi] = CONFIG.MUSIC.PAUSE;
     this.stop();
     if (this.on) this.timer = setTimeout(() => { this.timer = null; this.next(); }, (lo + Math.random() * (hi - lo)) * 1000);
   },
