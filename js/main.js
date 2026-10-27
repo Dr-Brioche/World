@@ -278,7 +278,11 @@ const UI = {
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
       if (e.key === 'Escape') { this.setUpgradeMode(false); this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; }
-      if (e.key === 'p' || e.key === 'P') this.togglePause();
+      // P ou la barre Espace : pause (Espace ne doit pas cliquer le bouton qui a gardé le focus, ni faire défiler la page)
+      if (e.key === 'p' || e.key === 'P' || e.code === 'Space') {
+        if (e.code === 'Space') { e.preventDefault(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+        this.togglePause();
+      }
       // Touche U : la souris d'amélioration (chaque clic sur un de ses bâtiments l'améliore tout de suite)
       if (e.code === 'KeyU') this.setUpgradeMode(!this.upgradeMode);
     });
@@ -365,8 +369,8 @@ const UI = {
       const half = Game.sizeOf(B_CASTLE) / 2;
       Render.centerOn(h.capital % Game.W + half, ((h.capital / Game.W) | 0) + half);
       $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
-      this.log(tr(`⚔️ Tu es à ${place}, avec ton camp : ${Game.pactName(h)}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`,
-        `⚔️ You are in ${place}, with your faction: ${Game.pactName(h)}. The game is paused: get your bearings, then ▶ Resume (or P) to start!`), 'good');
+      this.log(tr(`⚔️ Tu es à ${place}, avec ton camp : ${Game.pactName(h)}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou Espace) pour commencer !`,
+        `⚔️ You are in ${place}, with your faction: ${Game.pactName(h)}. The game is paused: get your bearings, then ▶ Resume (or Space) to start!`), 'good');
     }
     // 👑 Scénarios « Charlemagne » et « Gouffre de Helm » : pas de nouvelles villes (le bouton Château disparaît) ;
     // 🗼 les tours de garde, seulement au Gouffre de Helm (où il n'y a ni églises ni ports)
@@ -382,18 +386,18 @@ const UI = {
       $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
       this.log(tr('🏰 Nuit du 3 mars 3019 : tu es le roi Théoden, retranché à Fort-le-Cor. L\'armée de Saroumane approche : tiens jusqu\'à l\'aube ! ' +
         'Bâtis et améliore des tours de garde 🗼, envoie tes soldats défendre chaque muraille assiégée, et garde le Cor de Helm 📯 pour le pire moment. ' +
-        'La partie est en pause : ▶ Reprendre (ou P) pour commencer !',
+        'La partie est en pause : ▶ Reprendre (ou Espace) pour commencer !',
         '🏰 Night of 3 March 3019: you are King Théoden, holed up in the Hornburg. Saruman\'s army is coming: hold until dawn! ' +
         'Build and upgrade guard towers 🗼, send your soldiers to defend every besieged wall, and save the Horn of Helm 📯 for the worst moment. ' +
-        'The game is paused: ▶ Resume (or P) to start!'), 'good');
+        'The game is paused: ▶ Resume (or Space) to start!'), 'good');
     }
     // 👑 Scénario « Charlemagne » : chacun est déjà dans son royaume de 768 ; la partie attend en pause
     if (Game.cm) {
       const h = Game.human, f = this.cmFaction(h.banner), half = Game.sizeOf(B_CASTLE) / 2;
       if (h.capital >= 0) Render.centerOn(h.capital % Game.W + half, ((h.capital / Game.W) | 0) + half);
       $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
-      this.log(tr(`👑 Octobre 768 : tu es ${f.leader} (${f.name}), à ${f.capital[2]}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`,
-        `👑 October 768: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or P) to start!`), 'good');
+      this.log(tr(`👑 Octobre 768 : tu es ${f.leader} (${f.name}), à ${f.capital[2]}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou Espace) pour commencer !`,
+        `👑 October 768: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or Space) to start!`), 'good');
       // 📜 (les Francs : un parchemin raconte le contexte ; les grands événements suivront, voir stepCharlemagne)
       if (f.id === 'francs') this.parchment(CHARLEMAGNE.EVENTS.intro);
     }
