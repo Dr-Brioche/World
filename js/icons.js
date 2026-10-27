@@ -35,6 +35,12 @@ const ICON_DEFS = {
     { d: 'M8.3 4.6L7.9 0.9l2.1 1.8L12 0.2l2 2.5 2.1-1.8-.4 3.7z', f: '#f0c94a', s: '#6b4a12', w: 0.7 },
     { d: 'M12 11.4l6.2 2v3.6c0 3.6-2.7 5.7-6.2 6.8-3.5-1.1-6.2-3.2-6.2-6.8v-3.6z', f: '#c0392b', s: '#2a1a0c', w: 1 },
     { d: 'M12 13.8v7.6M9.2 16.6h5.6', s: '#f0c94a', w: 1.6 }],
+  // Tour de garde : une tour carrée, crénelée, avec une meurtrière et sa porte
+  tower: [{ d: 'M6 22V5h2.5v2.2h2.2V5h2.6v2.2h2.2V5H18v17h-4v-4a2 2 0 0 0-4 0v4z', f: 'c' },
+    { d: 'M12 10v3.5', s: '#f3e3bf', w: 1.4 }],
+  // Cor (le Cor de Helm) : une corne recourbée, cerclée d'or, avec son embouchure
+  horn: [{ d: 'M3 15.5c4.5 0 8.5-2 11.5-6.5L20.5 3l1.5 1.5-4.5 6.5c-2.5 5-7.5 8.5-14.5 8.5z', f: 'c' },
+    { d: 'M15 8.5l2.5 2.5M11.5 12l2 2.2', s: '#d9a520', w: 1.6 }, { d: 'M2 14.5v5', s: 'c', w: 2.2 }],
   tent: [{ d: 'M12 4L2 21h20z', f: 'c' }, { d: 'M12 11l-3.2 10h6.4z', f: '#f3e3bf', o: 0.9 }, { d: 'M12 4V1.5l3 1-3 1', s: 'c', w: 1.2 }],
   // --- Ressources et armée ---
   gold: [{ d: 'M15.5 9.5a6 6 0 1 1-.01 0z', f: '#d9a520', s: '#6b4a12', w: 1.2 },
@@ -162,7 +168,7 @@ const EMOJI_ICONS = {
   '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
   '⛏': 'pickaxe', '⚒': 'ore_iron', '🪙': 'ore_gold', '🪨': 'ore_stone', '💎': 'ore_diamond', '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
-  '🖌': 'brush', '✏': 'quill', '🌍': 'orb',
+  '🖌': 'brush', '✏': 'quill', '🌍': 'orb', '🗼': 'tower', '📯': 'horn',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 

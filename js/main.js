@@ -33,7 +33,8 @@ const UI = {
       btn.title = tr(`${b.name} : ${b.desc} (touche ${t})`, `${b.name}: ${b.desc} (key ${t})`);
       btn.innerHTML = `<span class="key">${t}</span><span class="icon">${b.icon}</span>` +
         `<span>${b.name}</span><span class="cost"></span>` +
-        (t === B_CASTLE ? `<span class="count" title="${tr('Châteaux construits / maximum (ta meilleure église en débloque d\'autres)', 'Castles built / maximum (your best church unlocks more)')}"></span>` : '');
+        (t === B_CASTLE ? `<span class="count" title="${tr('Châteaux construits / maximum (ta meilleure église en débloque d\'autres)', 'Castles built / maximum (your best church unlocks more)')}"></span>` : '') +
+      (t === B_TOWER ? `<span class="count" title="${tr('Tours bâties / maximum', 'Towers built / maximum')}"></span>` : '');
       btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
       builds.appendChild(btn);
     }
@@ -66,6 +67,15 @@ const UI = {
     vb.addEventListener('click', () => this.vikingButton());
     builds.appendChild(vb);
     this.vikingBar = vb;
+    // 📯 Bouton « Cor de Helm » : seulement au Gouffre de Helm (voir helm.js)
+    const hb = document.createElement('button');
+    hb.className = 'build crusade hidden';
+    hb.innerHTML = `<span class="icon">📯</span><span>${tr('Cor de Helm', 'Horn of Helm')}</span><span class="cost"></span>`;
+    hb.title = tr(`Sonner le Cor de Helm : les assaillants perdent ${Math.round(HELM.HORN_FLEE * 100)} % de leurs soldats, et les tiens se battent ${Math.round((HELM.HORN_POWER - 1) * 100)} % plus fort pendant ${HELM.HORN_TIME} s`,
+      `Sound the Horn of Helm: attackers lose ${Math.round(HELM.HORN_FLEE * 100)}% of their soldiers, and yours fight ${Math.round((HELM.HORN_POWER - 1) * 100)}% harder for ${HELM.HORN_TIME} s`);
+    hb.addEventListener('click', () => { const err = Game.helmHorn(); if (err) this.log(err, 'warn'); });
+    builds.appendChild(hb);
+    this.hornBar = hb;
 
     // Cartes dessinées avec l'éditeur (voir custommaps.js) : dans la liste des cartes. Revenu de l'éditeur avec
     // « Jouer cette carte » (index.html?carte=Nom) : elle est déjà choisie.
@@ -79,7 +89,7 @@ const UI = {
     // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe, Azeroth et les cartes dessinées ont leur taille)
     const sizeForType = () => {
       const t = this.mapType();
-      $('mapSize').disabled = ['world', 'europe', 'azeroth', 'charlemagne'].includes(t) || t.startsWith('custom:');
+      $('mapSize').disabled = ['world', 'europe', 'azeroth', 'charlemagne', 'helm'].includes(t) || t.startsWith('custom:');
     };
     $('mapType').addEventListener('change', sizeForType);
     sizeForType();
@@ -102,12 +112,14 @@ const UI = {
     // Choix de la bannière dans le menu (elle donne la couleur du royaume) : seulement celles de la carte choisie
     // (les écus des races de Warcraft sur la carte Azeroth, les drapeaux ailleurs) ; on retrouve le dernier choix de chaque sorte
     const lastPick = { base: BANNERS.findIndex(b => b.id === 'Dragon'), azeroth: BANNERS.findIndex(b => b.id === 'Humains'),
-      charlemagne: BANNERS.findIndex(b => b.set === 'charlemagne' && b.id === 'francs') };
+      charlemagne: BANNERS.findIndex(b => b.set === 'charlemagne' && b.id === 'francs'),
+      helm: BANNERS.findIndex(b => b.set === 'helm' && b.id === 'rohan') };
     const fillBanners = () => {
       // (mode « Factions » : seulement les 12 races des 3 camps ; scénario « Charlemagne » : les factions jouables)
       const races = this.factionMode() ? AZEROTH_FACTIONS.flatMap(f => f.races) : null;
       const list = bannersForMap(this.mapType()).filter(k => (!races || races.includes(BANNERS[k].id))
-        && (BANNERS[k].set !== 'charlemagne' || this.cmFaction(k).playable));
+        && (BANNERS[k].set !== 'charlemagne' || this.cmFaction(k).playable)
+        && (BANNERS[k].set !== 'helm' || this.helmFaction(k).playable));
       const set = BANNERS[list[0]].set || 'base';
       $('bannerPick').innerHTML = list.map(k =>
         `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
@@ -120,7 +132,13 @@ const UI = {
       const f = this.factionMode() && AZEROTH_FACTIONS.find(f => f.races.includes(BANNERS[k].id));
       // (scénario « Charlemagne » : qui l'on incarne, sa capitale et son histoire)
       const cf = BANNERS[k].set === 'charlemagne' && this.cmFaction(k);
-      $('factionInfo').classList.toggle('hidden', !f && !cf);
+      // (scénario « Gouffre de Helm » : le Rohan, retranché dans le Gouffre)
+      const hf = BANNERS[k].set === 'helm' && this.helmFaction(k);
+      $('factionInfo').classList.toggle('hidden', !f && !cf && !hf);
+      if (hf) {
+        $('factionInfo').textContent = tr(`🏰 3 mars 3019 · ${hf.name} : tu es ${hf.leader}, à Fort-le-Cor. ${hf.desc}`,
+          `🏰 3 March 3019 · ${hf.name}: you are ${hf.leader}, in the Hornburg. ${hf.desc}`);
+      }
       if (cf) {
         $('factionInfo').textContent = tr(`👑 768 · ${cf.name} : tu es ${cf.leader}, à ${cf.capital[2]}. ${cf.desc}`,
           `👑 768 · ${cf.name}: you are ${cf.leader}, in ${cf.capital[2]}. ${cf.desc}`);
@@ -145,7 +163,7 @@ const UI = {
     });
     // Scénario « Azeroth : les Factions » : 12 royaumes (les 3 camps), pactes et nombre de rivaux imposés
     const modeChange = () => {
-      const fac = this.factionMode() || $('mapType').value === 'charlemagne'; // (un scénario : rivaux et pactes imposés)
+      const fac = this.factionMode() || ['charlemagne', 'helm'].includes($('mapType').value); // (un scénario : rivaux et pactes imposés)
       $('opponents').disabled = fac;
       $('pacts').disabled = fac;
       fillBanners();
@@ -242,7 +260,9 @@ const UI = {
       // donne « & » sans Maj, « 2 » donne « é », « 3 » donne « " ». Le pavé numérique marche aussi.
       const m = /^(Digit|Numpad)(\d)$/.exec(e.code);
       const n = m ? +m[2] : 0;
-      if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden) {
+      // (un bâtiment dont le bouton est caché ne se choisit pas : la tour hors du Gouffre de Helm…)
+      const shown = n && document.querySelector(`.build[data-type="${n}"]:not(.hidden)`);
+      if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden && shown) {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
@@ -302,6 +322,8 @@ const UI = {
   factionMode() { return $('mapType').value === 'factions'; },
   // La faction du scénario « Charlemagne » de la bannière k (voir charlemagne.js)
   cmFaction(k) { return CHARLEMAGNE.factions.find(f => f.id === BANNERS[k].id); },
+  // La faction du scénario « Gouffre de Helm » de la bannière k (voir HELM dans helmmap.js)
+  helmFaction(k) { return HELM.factions.find(f => f.id === BANNERS[k].id); },
   // La carte à générer pour le choix du menu (un scénario se joue sur une carte prédéfinie)
   mapType() { return this.factionMode() ? 'azeroth' : $('mapType').value; },
 
@@ -333,8 +355,25 @@ const UI = {
       this.log(tr(`⚔️ Tu es à ${place}, avec ton camp : ${Game.pactName(h)}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`,
         `⚔️ You are in ${place}, with your faction: ${Game.pactName(h)}. The game is paused: get your bearings, then ▶ Resume (or P) to start!`), 'good');
     }
-    // 👑 Scénario « Charlemagne » : pas de nouvelles villes (le bouton Château disparaît)
-    document.querySelector(`.build[data-type="${B_CASTLE}"]`).classList.toggle('hidden', !!Game.cm);
+    // 👑 Scénarios « Charlemagne » et « Gouffre de Helm » : pas de nouvelles villes (le bouton Château disparaît) ;
+    // 🗼 les tours de garde, seulement au Gouffre de Helm (où il n'y a ni églises ni ports)
+    const bt = t => document.querySelector(`.build[data-type="${t}"]`);
+    bt(B_CASTLE).classList.toggle('hidden', !!(Game.cm || Game.hd));
+    bt(B_TOWER).classList.toggle('hidden', !Game.hd);
+    for (const t of [B_CHURCH, B_PORT]) bt(t).classList.toggle('hidden', !!Game.hd);
+    this.hornBar.classList.toggle('hidden', !Game.hd);
+    // 🏰 Scénario « Gouffre de Helm » : la nuit commence ; la partie attend en pause, centrée sur Fort-le-Cor
+    if (Game.hd) {
+      const a = Game.hd.place.hornburg, half = Game.sizeOf(B_CASTLE) / 2;
+      Render.centerOn(a % Game.W + half - 30, ((a / Game.W) | 0) + half);
+      $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
+      this.log(tr('🏰 Nuit du 3 mars 3019 : tu es le roi Théoden, retranché à Fort-le-Cor. L\'armée de Saroumane approche : tiens jusqu\'à l\'aube ! ' +
+        'Bâtis et améliore des tours de garde 🗼, envoie tes soldats défendre chaque muraille assiégée, et garde le Cor de Helm 📯 pour le pire moment. ' +
+        'La partie est en pause : ▶ Reprendre (ou P) pour commencer !',
+        '🏰 Night of 3 March 3019: you are King Théoden, holed up in the Hornburg. Saruman\'s army is coming: hold until dawn! ' +
+        'Build and upgrade guard towers 🗼, send your soldiers to defend every besieged wall, and save the Horn of Helm 📯 for the worst moment. ' +
+        'The game is paused: ▶ Resume (or P) to start!'), 'good');
+    }
     // 👑 Scénario « Charlemagne » : chacun est déjà dans son royaume de 768 ; la partie attend en pause
     if (Game.cm) {
       const h = Game.human, f = this.cmFaction(h.banner), half = Game.sizeOf(B_CASTLE) / 2;
@@ -927,6 +966,16 @@ const UI = {
       ? (canContinue ? tr(`Longue vie au royaume de ${h.name} ! Tu domines le continent.`, `Long live the kingdom of ${h.name}! You rule the continent.`)
         : tr(`${h.name} a conquis le monde entier ! Plus aucun royaume ne te résiste.`, `${h.name} has conquered the whole world! No kingdom stands against you anymore.`))
       : tr(`Le royaume de ${h.name} est tombé. Les chroniques s'en souviendront...`, `The kingdom of ${h.name} has fallen. The chronicles will remember...`);
+    if (kind === 'helm') {
+      $('endTitle').textContent = tr('🌅 Le Gouffre a tenu !', '🌅 The Deep has held!');
+      $('endText').textContent = tr(`L'aube du 4 mars se lève sur Fort-le-Cor. L'armée de Saroumane est brisée, et la forêt des Huorns a englouti les fuyards : le Rohan est sauvé ! (${fmt(Game.hd.kills)} orques abattus)`,
+        `Dawn on 4 March rises over the Hornburg. Saruman's army is broken, and the forest of the Huorns has swallowed the fleeing orcs: Rohan is saved! (${fmt(Game.hd.kills)} orcs slain)`);
+    }
+    if (kind === 'helmLost') {
+      $('endTitle').textContent = tr('💀 Le Gouffre est tombé...', '💀 The Deep has fallen...');
+      $('endText').textContent = tr(`Fort-le-Cor et les Cavernes Scintillantes sont tombés avant l'aube. La Main Blanche règne sur le Rohan... (${fmt(Game.hd.kills)} orques abattus)`,
+        `The Hornburg and the Glittering Caves fell before dawn. The White Hand rules over Rohan... (${fmt(Game.hd.kills)} orcs slain)`);
+    }
     if (kind === 'empire') {
       $('endTitle').textContent = tr('👑 Couronné empereur !', '👑 Crowned emperor!');
       $('endText').textContent = tr('Noël 800, à Rome : le pape pose la couronne sur la tête de Charles. Saxons, Lombards, Bavarois et Avars sont soumis : l\'Empire d\'Occident renaît, et l\'histoire l\'appellera Charlemagne !',
@@ -1079,14 +1128,18 @@ const UI = {
     box.classList.toggle('hidden', !list.length);
     if (!list.length) { $('log').style.top = ''; return; }
     if (this.objFolded === undefined) this.objFolded = window.innerWidth < 760; // (replié d'office sur un petit écran)
-    const key = list.map(o => (o.done ? 1 : 0)).join('') + (this.objFolded ? 'f' : '');
+    // (le titre et l'aide dépendent du scénario ; on ne redessine que si un objectif ou un texte a changé)
+    const title = Game.hd ? Game.helmTitle() : tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives');
+    const key = list.map(o => (o.done ? 1 : 0) + o.text).join('|') + title + (this.objFolded ? 'f' : '');
     if (box.dataset.key !== key) {
       box.dataset.key = key;
       const n = list.filter(o => o.done).length;
-      box.innerHTML = `<div class="t"><span>${tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives')}</span>` +
+      box.innerHTML = `<div class="t"><span>${escapeHtml(title)}</span>` +
         `<span>${n}/${list.length} ${this.objFolded ? '▸' : '▾'}</span></div>` +
         (this.objFolded ? '' : `<ul>${list.map(o => `<li class="${o.done ? 'done' : ''}">${escapeHtml(o.text)}</li>`).join('')}</ul>`);
-      box.title = tr('Tous remplis : tu es couronné empereur ! (clic : replier ou déplier)', 'All complete: you are crowned emperor! (click: fold or unfold)');
+      box.title = Game.hd ? tr('Tiens Fort-le-Cor (ou les Cavernes) jusqu\'à l\'aube ; les autres objectifs t\'apportent des renforts (clic : replier ou déplier)',
+        'Hold the Hornburg (or the Caves) until dawn; the other objectives bring you reinforcements (click: fold or unfold)')
+        : tr('Tous remplis : tu es couronné empereur ! (clic : replier ou déplier)', 'All complete: you are crowned emperor! (click: fold or unfold)');
     }
     $('log').style.top = Math.round(box.getBoundingClientRect().bottom + 6) + 'px';
   },
@@ -1128,7 +1181,11 @@ const UI = {
       btn.classList.toggle('poor', h.gold < cost);
       // Château : petit compteur « construits / maximum » (le maximum monte avec les églises)
       const count = btn.querySelector('.count');
-      if (count) {
+      if (count && +btn.dataset.type === B_TOWER) {
+        const n = G.hd ? G.towersBuilt(h) : 0;
+        count.textContent = `${n}/${HELM.TOWERS_TO_BUILD}`;
+        count.classList.toggle('full', n >= HELM.TOWERS_TO_BUILD);
+      } else if (count) {
         const max = G.maxCastles(h);
         count.textContent = `${h.castlesBuilt}/${max}`;
         count.classList.toggle('full', h.castlesBuilt >= max);
@@ -1138,6 +1195,10 @@ const UI = {
     this.refreshCrusadeBar();
     this.refreshLevyBar();
     this.refreshVikingBar();
+    if (G.hd) {
+      this.hornBar.querySelector('.cost').textContent = `×${Math.max(0, G.hd.horns)}`;
+      this.hornBar.classList.toggle('poor', G.hd.horns <= 0);
+    }
 
     const ranking = G.players.filter(p => p.alive && p.tiles > 0).sort((a, b) => b.tiles - a.tiles);
     const row = p => {
