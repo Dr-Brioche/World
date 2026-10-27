@@ -388,7 +388,7 @@ const TERRAIN_INFO = [
 // Le terrain le plus long à traverser (une armée doit toujours pouvoir avancer d'une case)
 const MAX_LAND_COST = Math.max(...TERRAIN_INFO.filter(t => t.cost < Infinity).map(t => t.cost));
 
-const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTPOST = 6, B_MINE = 7;
+const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTPOST = 6, B_MINE = 7, B_TOWER = 8;
 
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
@@ -508,7 +508,21 @@ const MINES = {
 };
 const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond'];
 
-const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS, CHURCH_LEVELS, PORT_LEVELS, null, MINE_LEVELS];
+// 🗼 Les 5 niveaux de la tour de garde (seulement dans le scénario « Gouffre de Helm », voir helm.js) : chaque seconde,
+// elle abat damage soldats des armées ennemies qui se battent à moins de range cases d'elle (la plus proche d'abord).
+// Une tour prise par l'ennemi retombe au niveau 1. Elle se construit partout sur ses terres (pas de muraille),
+// à TOWER_DISTANCE cases au moins de ses autres tours.
+const TOWER_LEVELS = [
+  null,
+  { name: tr('Tour de guet', 'Watchtower'),          range: 9,  damage: 3,  img: 'img/tour1.webp', size: 2.6 },
+  { name: tr('Tour de garde', 'Guard tower'),        range: 11, damage: 6,  img: 'img/tour2.webp', size: 3.0, upgradeCost: 250 },
+  { name: tr('Tour d\'archers', 'Archer tower'),     range: 13, damage: 10, img: 'img/tour3.webp', size: 3.4, upgradeCost: 700 },
+  { name: tr('Tour fortifiée', 'Fortified tower'),   range: 15, damage: 16, img: 'img/tour4.webp', size: 3.8, upgradeCost: 1600 },
+  { name: tr('Grande tour du Cor', 'Great horn tower'), range: 18, damage: 25, img: 'img/tour5.webp', size: 4.3, upgradeCost: 3500 },
+];
+const TOWER_DISTANCE = 10;
+
+const BUILDING_LEVELS = [null, MILL_LEVELS, BARRACKS_LEVELS, CASTLE_LEVELS, CHURCH_LEVELS, PORT_LEVELS, null, MINE_LEVELS, TOWER_LEVELS];
 
 // L'index dans ce tableau correspond au numéro du bâtiment (0 = aucun).
 // tiles = côté du carré occupé sur la carte (2 → 2x2 cases, 4 → 4x4 cases)
@@ -533,11 +547,14 @@ const BUILDINGS = [
   { name: tr('Mine', 'Mine'), icon: '⛏️', tiles: 2, baseCost: 600,
     desc: tr('sur un filon : fer (troupes plus fortes), or (beaucoup d\'or, mais il s\'épuise), pierre (améliorations moins chères) ou diamant (un trésor) (2 niveaux)',
       'on an ore vein: iron (stronger troops), gold (lots of gold, but it runs out), stone (cheaper upgrades) or diamond (a treasure) (2 levels)') },
+  { name: tr('Tour de garde', 'Guard tower'), icon: '🗼', tiles: 2, baseCost: 150,
+    desc: tr('tire sur les armées ennemies proches ; prise, elle retombe au niveau 1 (5 niveaux)',
+      'shoots enemy armies nearby; if taken, it drops back to level 1 (5 levels)') },
 ];
 
 // Bâtiments que l'on peut viser directement avec un assaut (un royaume qui en a ne s'attaque que comme ça)
 // (une mine aussi ; mais dans la zone d'une ville ou d'une église prise, elle part avec elle, comme un moulin)
-const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST, B_MINE];
+const TARGET_TYPES = [B_CASTLE, B_CHURCH, B_PORT, B_OUTPOST, B_MINE, B_TOWER];
 
 // Les bannières des royaumes (une par couleur) : la bannière choisie donne sa couleur au royaume.
 // img = le drapeau entier, sur sa hampe (carte) ; icon = son tissu et ses rubans (petites icônes du classement, des messages…) ;
@@ -599,7 +616,7 @@ AZEROTH_BANNERS.forEach((b, k) => {
 });
 // Les numéros (dans BANNERS) des bannières proposées sur une carte : les écus sur la carte Azeroth, les drapeaux ailleurs
 function bannersForMap(mapType) {
-  const set = mapType === 'azeroth' ? 'azeroth' : mapType === 'charlemagne' ? 'charlemagne' : undefined;
+  const set = mapType === 'azeroth' ? 'azeroth' : mapType === 'charlemagne' ? 'charlemagne' : mapType === 'helm' ? 'helm' : undefined;
   return BANNERS.map((b, k) => k).filter(k => BANNERS[k].set === set);
 }
 // ⚔️ Mode « Factions » (carte Azeroth seulement) : 3 camps, chacun un pacte éternel (il ne se rompt jamais, pas de

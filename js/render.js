@@ -2084,6 +2084,48 @@ const Render = {
     }
   },
 
+  // 🗼 Une tour de garde (case a) vient de tirer sur une armée (case tile) : une volée de flèches part vers elle
+  towerShot(a, tile) {
+    (this.towerShots = this.towerShots || []).push({ a, tile, start: performance.now() });
+  },
+  drawTowerShots(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W, now = performance.now(), LIFE = 600;
+    // Portée de la tour survolée (ou de celle qu'on s'apprête à poser) : un cercle en pointillés
+    const h = this.hover, hovered = h >= 0 && G.building[h] === B_TOWER ? G.anchor[h] : -1;
+    const ring = (x, y, r) => {
+      ctx.beginPath();
+      ctx.arc(ox + x * s, oy + y * s, r * s, 0, Math.PI * 2);
+      ctx.setLineDash([6, 5]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,214,110,0.85)';
+      ctx.stroke();
+      ctx.setLineDash([]);
+    };
+    if (hovered >= 0) ring(hovered % W + 1, ((hovered / W) | 0) + 1, TOWER_LEVELS[G.level[hovered]].range);
+    else if (UI.selectedBuild === B_TOWER && h >= 0) ring(h % W + 0.5, ((h / W) | 0) + 0.5, TOWER_LEVELS[1].range);
+    if (!this.towerShots || !this.towerShots.length) return;
+    this.towerShots = this.towerShots.filter(f => now - f.start < LIFE);
+    ctx.lineCap = 'round';
+    for (const f of this.towerShots) {
+      const t = (now - f.start) / LIFE; // 0 → 1 : les flèches volent de la tour à l'armée
+      const x1 = ox + (f.a % W + 1) * s, y1 = oy + (((f.a / W) | 0) - 0.5) * s;
+      const x2 = ox + (f.tile % W + 0.5) * s, y2 = oy + (((f.tile / W) | 0) + 0.5) * s;
+      for (let k = 0; k < 3; k++) {
+        const u = Math.min(1, t * 1.4 - k * 0.12);
+        if (u <= 0) continue;
+        const arc = Math.sin(u * Math.PI) * Math.max(10, s * 3); // (une courbe, comme une vraie volée)
+        const x = x1 + (x2 - x1) * u + (k - 1) * 3, y = y1 + (y2 - y1) * u - arc;
+        const dx = (x2 - x1) / 40, dy = (y2 - y1) / 40 - Math.cos(u * Math.PI) * Math.max(1, s * 0.3);
+        ctx.beginPath();
+        ctx.moveTo(x - dx, y - dy);
+        ctx.lineTo(x + dx, y + dy);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(40,26,10,${1 - t * 0.6})`;
+        ctx.stroke();
+      }
+    }
+  },
+
   // Fait apparaître un petit chiffre qui monte au-dessus d'un bâtiment (production)
   floatText(a, type, text) {
     const half = Game.sizeOf(type) / 2;
@@ -2783,7 +2825,10 @@ const Render = {
       this.drawFloaters(ox, oy);
     }
 
+    // (👑 Gouffre de Helm : la nuit, la pluie, puis l'aube, voir helm.js)
+    if (G.hd) this.drawHelmSky(ox, oy);
     // Par-dessus tout le reste, pour bien les voir
+    this.drawTowerShots(ox, oy);
     this.drawLandingWarnings(ox, oy);
     this.drawExpeditions(ox, oy);
     this.drawDefendersOnTheWay(ox, oy);
