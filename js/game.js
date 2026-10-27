@@ -1783,6 +1783,19 @@ const GameRules = {
         for (const type of [B_MILL, B_MILL, B_BARRACKS]) this.placeOnLand(p, type, cx, cy, 2, inside);
       }
     }
+    // Les mines célèbres de l'époque : une mine déjà creusée, chez la faction qui tient ces terres
+    for (const [lon, lat, kind] of C.HISTORIC_MINES) {
+      const [x, y] = at(lon, lat), i = Math.round(y) * W + Math.round(x), p = this.players[this.owner[i]];
+      if (!p) continue;
+      // (on retire les filons posés au hasard trop près de là)
+      for (const d of this.deposits.filter(d => Math.hypot(d.a % W - x, ((d.a / W) | 0) - y) < CONFIG.MINE_SPACING)) this.removeDeposit(d.a);
+      const a = this.placeOnLand(p, B_MINE, x, y, 1);
+      if (a < 0) continue;
+      const d = { a, kind, left: MINES.gold.time * TPS, progress: 0, paid: 0 };
+      this.deposits.push(d);
+      this.depositAt.set(a, d);
+      for (const j of [a, a + 1, a + W, a + W + 1]) this.depositTile[j] = 1;
+    }
     // Ce qui n'est tenu par aucune ville (îlots, bouts de côte…) redevient une terre libre
     const r = this.regions(true), loose = [];
     for (let k = 0; k < r.size.length; k++) {
@@ -1893,7 +1906,7 @@ const GameRules = {
   // 👑 Les objectifs des Francs (voir OBJECTIVES dans charlemagne.js) : l'objectif k est-il rempli en ce moment ?
   objectiveMet(o) {
     const cm = this.cm, h = this.human;
-    if (o.kind === 'capital') return !this.players[cm.role[o.role]].alive || this.owner[cm.capital[o.role]] === h.id;
+    if (o.kind === 'capital') return this.owner[cm.capital[o.role]] === h.id;
     if (o.kind === 'site') { const a = cm.sites.get(o.at.join(',')); return a !== undefined && this.owner[a] === h.id; }
     if (o.kind === 'citadel') return this.castles.some(c => this.owner[c] === h.id && this.level[c] >= o.goal[cm.diff]);
     if (o.kind === 'faith') {
@@ -1909,22 +1922,25 @@ const GameRules = {
   objectiveText(o) {
     return o.goal ? o.text.replace('{n}', o.goal[this.cm.diff]) : o.text;
   },
-  // Chaque seconde : les objectifs remplis le restent (sauf Rome, qui doit tenir jusqu'au bout) ; un message pour chacun
+  // Chaque seconde : on regarde chaque objectif ; s'il vient d'être rempli (ou perdu : une ville reprise, Rome tombée…),
+  // un message le dit. (Au premier passage, on note l'état de départ sans message : Rome est déjà au pape.)
   stepObjectives() {
     const cm = this.cm;
     if (!cm || this.human.role !== 'francs' || this.tick % CONFIG.TICKS_PER_SECOND) return;
     CHARLEMAGNE.OBJECTIVES.forEach((o, k) => {
-      if (o.kind === 'rome' || cm.done[k] || !this.objectiveMet(o)) return;
-      cm.done[k] = true;
+      const met = this.objectiveMet(o), was = cm.done[k];
+      cm.done[k] = met;
+      if (was === undefined || was === met) return;
       const t = this.objectiveText(o);
-      UI.log(tr(`✔️ Objectif rempli : ${t}`, `✔️ Objective complete: ${t}`), 'good');
+      if (met) UI.log(tr(`✔️ Objectif rempli : ${t}`, `✔️ Objective complete: ${t}`), 'good');
+      else UI.log(tr(`❌ Objectif perdu : ${t}`, `❌ Objective lost: ${t}`), 'warn');
     });
   },
   // L'état des objectifs, pour le cadre en haut à gauche : [{ text, done }]
   objectives() {
     const cm = this.cm;
     if (!cm || this.human.role !== 'francs') return [];
-    return CHARLEMAGNE.OBJECTIVES.map((o, k) => ({ text: this.objectiveText(o), done: o.kind === 'rome' ? this.objectiveMet(o) : !!cm.done[k] }));
+    return CHARLEMAGNE.OBJECTIVES.map((o, k) => ({ text: this.objectiveText(o), done: !!cm.done[k] }));
   },
 
   // 👑 Charlemagne couronné empereur : tous ses objectifs sont remplis (et Rome est toujours au pape, ou à lui)
