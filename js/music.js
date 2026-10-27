@@ -91,6 +91,16 @@ const Music = {
     a.addEventListener('ended', () => { if (this.jingle === a) this.jingle = null; });
     a.play().catch(() => { this.jingle = null; });
   },
+  // 🔔 Un petit son du jeu (voir CONFIG.MUSIC.SOUNDS), par-dessus la musique d'ambiance (rien si le joueur a coupé
+  // la musique, ni si un autre vient de se jouer)
+  sound(key) {
+    const M = CONFIG.MUSIC, src = M.SOUNDS[key], now = performance.now();
+    if (!this.on || !src || now - (this.lastSound || -Infinity) < M.SOUND_GAP * 1000) return;
+    this.lastSound = now;
+    const a = new Audio(src);
+    a.volume = Math.min(1, this.volume * M.VICTORY_GAIN);
+    a.play().catch(() => { /* (lecture refusée par le navigateur : tant pis) */ });
+  },
   // La partie continue après la victoire : la musique d'ambiance reprend (après un moment de silence)
   resume() {
     if (this.on && !this.audio && !this.timer) this.afterTrack();

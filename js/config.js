@@ -381,6 +381,12 @@ const CONFIG = {
     // d'ambiance) ; VICTORY_GAIN : son volume, par rapport à celui de la musique (2 = deux fois plus fort, au plus 1)
     VICTORY: 'sons/musique/victoire.mp3',
     VICTORY_GAIN: 2,
+    // 🔔 Les petits sons du jeu (de dr_brioche), joués par-dessus la musique, au même volume que le son de la victoire
+    // (et pas plus d'un toutes les SOUND_GAP secondes : plusieurs villes perdues d'un coup ne font qu'un son)
+    SOUNDS: {
+      cityLost: 'sons/perte-ville.mp3', // une de nos villes est prise (ou rasée)
+    },
+    SOUND_GAP: 3,
   },
 
   // --- 📽️ Résumé de la partie (bouton « Résumé » de l'écran de fin, voir replay.js) ---
