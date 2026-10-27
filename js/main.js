@@ -404,7 +404,8 @@ const UI = {
   },
 
   // ⬆️ La souris d'amélioration (touche U) : un clic sur un de ses bâtiments l'améliore directement, sans passer par
-  // son menu (pour aller vite quand on a beaucoup d'or). Elle reste active jusqu'à U ou Échap.
+  // son menu (pour aller vite quand on a beaucoup d'or). Elle reste active jusqu'à U, Échap, un clic droit, ou un clic
+  // ailleurs que sur un de ses bâtiments.
   setUpgradeMode(on) {
     if (on) { this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelVikingAim(); this.closeBuildingMenus(); }
     this.upgradeMode = on;
@@ -414,12 +415,12 @@ const UI = {
     const cost = a >= 0 ? G.upgradeCost(a) : null;
     return tr('⬆️ Amélioration rapide : clique sur tes bâtiments pour les améliorer', '⬆️ Quick upgrade: click your buildings to upgrade them') +
       (cost !== null ? ` · ${BUILDINGS[G.building[a]].name} → ${tr('niveau', 'level')} ${G.level[a] + 1} : 💰 ${fmt(cost)}` : '') +
-      tr(' · U ou Échap : arrêter', ' · U or Esc: stop');
+      tr(' · clic ailleurs, clic droit, U ou Échap : arrêter', ' · click elsewhere, right-click, U or Esc: stop');
   },
   // Clic avec la souris d'amélioration : on améliore le bâtiment visé (ou on dit pourquoi on ne peut pas)
   quickUpgrade(i) {
     const G = Game, h = G.human;
-    if (!G.building[i] || G.owner[i] !== h.id) return;
+    if (!G.building[i] || G.owner[i] !== h.id) return this.setUpgradeMode(false); // (un clic ailleurs : on arrête)
     const a = G.anchor[i], err = G.upgradeBuilding(h, a);
     if (err) return this.log(err, 'warn');
     Render.floatText(a, G.building[a], '⬆️');
@@ -2251,6 +2252,7 @@ function setupInput(canvas) {
   canvas.addEventListener('contextmenu', e => {
     e.preventDefault();
     if (UI.selectedBuild || UI.plan || UI.wallFor >= 0 || UI.tradeFor >= 0) { UI.selectBuild(0); UI.cancelPlan(); UI.cancelWall(); UI.cancelTrade(); return; }
+    if (UI.upgradeMode) return UI.setUpgradeMode(false); // (⬆️ le clic droit arrête aussi la souris d'amélioration)
     UI.openActionMenu(e.clientX, e.clientY);
   });
 
