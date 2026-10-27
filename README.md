@@ -752,6 +752,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.104** : 🖥️ dans une fenêtre étroite, la barre d'aide (en bas à gauche) ne recouvre plus le curseur « Envoyer » : elle se range sous la barre du bas, au centre
 - **v0.92.103** : 🤝 fini le spam de demandes d'alliance : au plus une demande toutes les 20 s, et un royaume refusé ne redemande pas avant 2 minutes (ni à toi, ni à un autre membre de ton pacte, ce qui la renvoyait au fondateur) · 🐛 une demande d'alliance ne reste plus bloquée à l'écran : elle disparaît si son royaume tombe, à la fin de la partie ou au début d'une nouvelle
 - **v0.92.102** : 🤝 si le fondateur d'un pacte le quitte (ou tombe), le plus grand royaume du pacte devient le fondateur et le pacte prend son nom
 - **v0.92.101** : ⛺ un avant-poste en construction est vraiment affaibli : ses soldats, occupés à bâtir, n'ont plus le bonus du terrain (une montagne les rendait presque 3 fois plus forts) et ne se battent qu'à 60 %

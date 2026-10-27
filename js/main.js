@@ -1003,8 +1003,21 @@ const UI = {
     return txt;
   },
 
+  // Fenêtre étroite : la barre d'aide (en bas à gauche) passerait par-dessus la barre du bas (curseur « Envoyer »,
+  // constructions) ; elle se range alors juste en dessous de cette barre, au centre
+  placeHint() {
+    const hint = $('hint'), wrap = $('bottomwrap'), bar = $('bottombar');
+    if (!bar.offsetWidth) return; // (barre cachée : menu de départ)
+    const narrow = window.innerWidth < bar.offsetWidth + 2 * (340 + 24); // (340 : largeur maximum de la barre d'aide)
+    if (narrow === hint.classList.contains('under')) return;
+    hint.classList.toggle('under', narrow);
+    if (narrow) wrap.appendChild(hint);
+    else document.body.insertBefore(hint, $('log'));
+  },
+
   refresh() {
     this.dropAllianceRequests();
+    if (!this.hintCheck || performance.now() - this.hintCheck > 500) { this.hintCheck = performance.now(); this.placeHint(); }
     const G = Game, h = G.human;
     if (!h) return;
     $('kName').textContent = h.name;
