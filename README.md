@@ -20,7 +20,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
   avec 3 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**, et
-  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 13 factions historiques, et **Gouffre de Helm (3019)** :
+  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, et **Gouffre de Helm (3019)** :
   défendre Fort-le-Cor jusqu'à l'aube contre l'armée de Saroumane)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 21 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
@@ -102,16 +102,20 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      tiennent que par un isthme étroit.
    👑 **Scénario « Charlemagne (768) »** (rubrique 📜 Scénarios) : octobre 768, Pépin le Bref vient de mourir. La carte
      couvre l'**Europe de l'Ouest et la Méditerranée**, de l'Irlande et du Portugal jusqu'à **Constantinople** (les mêmes
-     côtes, fleuves et reliefs que la carte Europe, en 780 x 620 cases). **13 factions** y sont déjà installées, sur
-     leurs terres de l'époque, avec leurs vraies villes (niveau 1, sans moulin ni caserne) et 1 à 3 **églises** aux
-     bourgades notables : les **Francs** de Charles (Noyon, Paris, Rouen, Tours, Bordeaux, Cologne, Wurtzbourg),
+     côtes, fleuves et reliefs que la carte Europe, en 780 x 620 cases ; au bord de la carte, la terre finit sur des
+     sommets, pas sur une ligne de mer). **15 factions** y sont déjà installées, sur leurs terres de l'époque, avec leurs
+     vraies villes (niveau 1, sans moulin ni caserne ; chaque capitale au moins au **niveau 2**, Pavie et Vannes au
+     niveau 3) et 1 à 5 **églises** aux bourgades notables : les **Francs** de Charles (Noyon, Paris, Tours, Cologne,
+     et le château isolé de **Fronsac** ; églises à Rouen, Wurtzbourg, Orléans, Mayence et Poitiers), l'**Aquitaine**
+     révoltée du duc Hunald II (Bordeaux, Périgueux),
      **Carloman**, son frère (Reims, Lyon, Strasbourg, Toulouse, Marseille), les **Lombards** du roi Didier (Pavie,
      Vérone, Cividale, Lucques, Spolète, Turin), la **Papauté** (Rome, Ravenne), **Byzance** (Constantinople,
      Thessalonique, Athènes, Syracuse, Reggio, Nicée, Smyrne), la **Bavière** de Tassilon III (Ratisbonne, Salzbourg),
      les **Saxons** de Widukind (Eresburg, Minden, Bardowick), les **Danois** (Hedeby, Ribe, Lejre), les **Avars**
      (le Ring, Győr, Sirmium), l'émirat de **Cordoue** (Cordoue, Tolède, Saragosse, Séville, Lisbonne), les
      **Asturies** (Oviedo, Lugo), les **Bretons** (Vannes, Quimper) et les **Anglo-Saxons** d'Offa (Tamworth, Londres,
-     Winchester, York). Le reste (Irlande, Écosse, Afrique du Nord, terres slaves…) est libre.
+     Winchester, York), et au nord-est les **Slaves** (les Wendes : Brenna, Prague, Gniezno). Le reste (Irlande,
+     Écosse, Afrique du Nord…) est libre.
      **Rome et Constantinople** sont des cités de niveau 4, avec déjà deux moulins et une caserne de niveau 2.
      ⛏️ **16 mines historiques** (en plus des filons au hasard), là où on les exploitait : **chaque faction a la sienne**,
      déjà creusée, et son nom s'affiche au survol. L'argent de Melle (Francs), le fer de l'Ariège (Carloman), le fer de
@@ -124,6 +128,16 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Tu choisis ta faction dans le menu (tout le monde sauf Rome, Byzance et Carloman), mais le but est surtout de jouer
      les **Francs** et de bâtir l'empire de Charlemagne. Règles du scénario :
      - **pas de nouvelles villes** : on améliore les siennes, on prend celles des autres (le bouton Château disparaît) ;
+     - ⚔️ **769, la révolte d'Aquitaine** : dès le départ, le duc Hunald II tient le sud-ouest (Bordeaux, Périgueux),
+       et les Francs n'y gardent que le **château isolé de Fronsac** (il ne compte que sur sa garnison : tiens-le, et
+       relie-le à ton royaume en soumettant l'Aquitaine) ;
+     - ⚔️ **les Slaves, pillards du nord-est** : leurs terres sont **imprenables** (on ne peut que se défendre contre
+       eux) et ils ne s'étendent pas, mais ils lancent des **razzias** sur un voisin au hasard (toutes les 150 s en
+       Facile, 110 s en Normal, 80 s en Difficile, après 2 min 30), de plus en plus grosses (600 guerriers en Normal,
+       puis +20 % à chaque fois). Une razzia qui prend sa cible la **rase** (avec ses moulins et casernes), pille de l'or
+       et rentre : les terres restent au défenseur ;
+     - ✝️ **succès « Empire chrétien »** : quand les terres des Francs touchent celles de Rome, leur Croyance gagne
+       **+100 pour toujours** ;
      - les **Francs, Carloman et le pape** forment un **pacte éternel** (l'« Alliance de Rome ») ; au bout de quelques
        minutes (3 en Facile, 6 en Normal, 10 en Difficile), **Carloman meurt** et son royaume revient aux Francs ;
      - **Byzance et Rome** sont des puissances défensives : elles se défendent mais ne partent pas en conquête ;
@@ -846,6 +860,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.116** : 👑 Charlemagne : ⚔️ la **révolte d'Aquitaine** (Hunald II, Bordeaux) avec le **château isolé de Fronsac** · ⚔️ les **Slaves**, pillards du nord-est : terres imprenables, **razzias** de plus en plus grosses qui rasent leur cible · ✝️ succès **« Empire chrétien »** (terres franques reliées à Rome : +100 de Croyance pour toujours) · capitales au moins au niveau 2, Pavie et Vannes au niveau 3, Rouen et Wurtzbourg deviennent des églises · 🗺️ au bord des cartes Charlemagne et Europe, la terre finit sur des sommets (plus de ligne de mer que suivent les bateaux)
 - **v0.92.115** : 📊 en posant un bâtiment, une petite bulle donne son bonus de production à l'endroit visé (« +30 % », « −20 % ») · ⬆️ touche **U** : la souris d'amélioration (un clic sur un de ses bâtiments l'améliore directement) · 🧹 plus d'icône à côté du choix de la langue, au menu
 - **v0.92.114** : 🏰 nouveau scénario **Gouffre de Helm (3019)** : défendre Fort-le-Cor jusqu'à l'aube contre les vagues d'Isengard (petite carte du Gouffre, Digue, Mur, Fort-le-Cor, Cavernes Scintillantes), avec les Dunlendings, les wargs, le ponceau, le feu de Saroumane, le Cor de Helm, la nuit et l'orage, puis l'aube (Gandalf, Erkenbrand, les Huorns) ; des succès font venir les elfes de la Lórien et les nains d'Aglarond · 🗼 nouveau bâtiment, la **tour de garde** (5 niveaux, elle tire sur les armées ennemies proches ; prise, elle retombe au niveau 1)
 - **v0.92.113** : 🗺️ carte **Europe** redessinée comme celle de Charlemagne : relief naturel (crêtes qui serpentent et se ramifient, vallées de collines, sommets en massifs, piémonts irréguliers), 28 massifs de collines en plus (dont, à l'est et au nord, le plateau central russe, la Podolie, le Valdaï, le Småland, la Laponie finlandaise, les Khibiny), forêts plus denses en Germanie

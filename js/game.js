@@ -695,6 +695,8 @@ const GameRules = {
     }
     // Croisades en cours : +CRUSADE_FAITH chacune (tant que la cathédrale est au royaume)
     for (const c of this.crusades) if (this.tick < c.end && this.owner[c.church] === c.owner) f[c.owner] += CONFIG.CRUSADE_FAITH;
+    // (✝️ un bonus pour toujours : l'« Empire chrétien » des Francs, voir stepCharlemagne)
+    for (const p of this.players) if (p.faithBonus && p.alive) f[p.id] += p.faithBonus;
     this.faithCache = f;
     return f;
   },
@@ -898,8 +900,16 @@ const GameRules = {
     const p = this.players[a.attacker], d = this.players[a.target];
     const ruins = [c, ...this.linkedBuildings(c)];
     const city = this.building[c] === B_CASTLE, what = city ? tr('une ville', 'a city') : tr('un port fortifié', 'a fortified port');
+    // (une cible déjà passée au pillard, comme une église prise d'un coup : ses cases reviennent au défenseur)
+    for (const j of this.footprint(c, this.building[c])) if (this.owner[j] === a.attacker) this.setOwner(j, a.target);
     for (const b of ruins) this.removeBuilding(b);
-    const loot = ruins.length * CONFIG.VIKING_LOOT;
+    const loot = ruins.length * (a.raid ? CHARLEMAGNE.RAIDS.LOOT : CONFIG.VIKING_LOOT);
+    if (a.raid) { // (⚔️ une razzia des Slaves : son propre message)
+      p.gold += loot;
+      if (d.isHuman) UI.log(tr(`⚔️ Les ${p.name} ont razzié ${this.targetLabel(c)} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} rasé${ruins.length > 1 ? 's' : ''} ! Ils rentrent chez eux avec leur butin.`,
+        `⚔️ The ${p.name} have raided ${this.targetLabel(c)}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} razed! They head home with their loot.`), 'warn', p);
+      return this.endAttack(a);
+    }
     p.gold += loot;
     this.warEffects(a);
     if (p.isHuman) UI.log(tr(`🔥 Tes Vikings ont rasé ${what} ${this.deName(d.name)} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} détruit${ruins.length > 1 ? 's' : ''}, 💰 ${fmt(loot)} de butin ! Ils rembarquent.`,
@@ -1759,6 +1769,7 @@ const GameRules = {
       p.role = f.id;
       p.defensive = !!f.defensive; // (Rome et Byzance : elles se défendent, mais ne partent pas en conquête)
       p.noArmy = !!f.noArmy;       // (Rome : pas d'armée, seulement la garnison de ses villes)
+      p.raiders = !!f.raiders;     // (⚔️ les Slaves : des pillards, voir stepRaids)
       p.gold = C.START_GOLD;
       cm.role[f.id] = p.id;
     }
@@ -1776,10 +1787,21 @@ const GameRules = {
       const q = polys.find(q => x >= q.x0 && x <= q.x1 && y >= q.y0 && y <= q.y1 && insidePolygon(q.pts, x, y));
       if (q) this.setOwner(i, q.pid);
     }
+    // Les enclaves : des terres d'une faction au milieu de celles d'une autre (Fronsac, au cœur de l'Aquitaine)
+    for (const f of C.factions) {
+      for (const [lon, lat, R] of f.enclaves || []) {
+        const [ex, ey] = at(lon, lat);
+        for (let y = Math.floor(ey - R); y <= ey + R; y++) for (let x = Math.floor(ex - R); x <= ex + R; x++) {
+          const i = y * W + x;
+          if (x >= 0 && y >= 0 && x < W && y < H && Math.hypot(x + 0.5 - ex, y + 0.5 - ey) <= R && this.claimable(i)) this.setOwner(i, cm.role[f.id]);
+        }
+      }
+    }
     // Les villes et les églises, au plus près de leur vraie place
     for (const f of C.factions) {
       const p = this.players[cm.role[f.id]];
-      const cap = this.placeOnLand(p, B_CASTLE, ...at(f.capital[0], f.capital[1]), f.capitalLevel || 1);
+      // (une capitale est au moins au niveau 2)
+      const cap = this.placeOnLand(p, B_CASTLE, ...at(f.capital[0], f.capital[1]), Math.max(2, f.capitalLevel || 2));
       if (cap >= 0) { p.capital = cap; cm.capital[f.id] = cap; p.castlesBuilt = 1; }
       // (chaque ville ou église est notée à son point [longitude, latitude] : voir les objectifs « site »)
       for (const c of f.cities) cm.sites.set(c[0] + ',' + c[1], this.placeOnLand(p, B_CASTLE, ...at(c[0], c[1]), 1));
@@ -1890,6 +1912,17 @@ const GameRules = {
           `⚠️ Desiderius, king of the Lombards, is raising an army of ${fmt(army)} soldiers to march on Rome! The pope calls the Franks for help`) +
           (this.areAllied(this.human.id, pope.id) ? tr(' : frappe les Lombards avant qu\'ils n\'arrivent, ou libère Rome ensuite !', ': strike the Lombards before they arrive, or free Rome afterwards!') : '.'), 'warn', lomb);
     }
+    this.stepRaids();
+    // ✝️ Succès « Empire chrétien » : les terres des Francs touchent celles de Rome
+    if (!cm.christian && franks.alive && pope.alive && this.neighborStats(franks.id).has(pope.id)) {
+      cm.christian = true;
+      franks.faithBonus = (franks.faithBonus || 0) + C.CHRISTIAN_EMPIRE;
+      this.faithCache = null;
+      UI.log(franks.isHuman ? tr(`✝️ Succès : « Empire chrétien » ! Tes terres touchent enfin celles de Rome : ta Croyance gagne +${C.CHRISTIAN_EMPIRE} pour toujours.`,
+        `✝️ Achievement: "Christian Empire"! Your lands finally reach those of Rome: your Faith gains +${C.CHRISTIAN_EMPIRE} forever.`)
+        : tr(`✝️ Les terres des Francs touchent celles de Rome : c'est l'« Empire chrétien » (+${C.CHRISTIAN_EMPIRE} de Croyance).`,
+          `✝️ The Franks' lands reach those of Rome: the "Christian Empire" is born (+${C.CHRISTIAN_EMPIRE} Faith).`), franks.isHuman ? 'good' : '', franks);
+    }
     if (!cm.lombardMarched && this.tick >= cm.lombardTick) {
       cm.lombardMarched = true;
       if (lomb.alive && pope.alive && this.owner[cm.capital.papaute] === pope.id) {
@@ -1898,6 +1931,35 @@ const GameRules = {
         else if (!this.launchAttack(lomb.id, pope.id, lomb.troops * 0.85, cm.capital.papaute)) {
           UI.log(tr('⚔️ Les Lombards marchent sur Rome ! Défends le pape, ton allié.', '⚔️ The Lombards are marching on Rome! Defend the pope, your ally.'), 'warn', lomb);
         }
+      }
+    }
+  },
+
+  // ⚔️ Les razzias des pillards (les Slaves) : régulièrement, de plus en plus grosses, sur un voisin au hasard.
+  // Ils lèvent leur armée pour l'occasion (ils n'en ont pas le reste du temps), visent la cible la plus proche de ce
+  // voisin et la rasent s'ils la prennent (voir vikingRaid).
+  stepRaids() {
+    const cm = this.cm, R = CHARLEMAGNE.RAIDS, TPS = CONFIG.TICKS_PER_SECOND;
+    if (cm.nextRaid === undefined) cm.nextRaid = R.FIRST * TPS;
+    if (this.tick < cm.nextRaid) return;
+    cm.nextRaid = this.tick + R.EVERY[cm.diff] * TPS;
+    for (const p of this.players) {
+      if (!p.raiders || !p.alive) continue;
+      p.raids = (p.raids || 0) + 1;
+      const army = Math.round(R.ARMY[cm.diff] * (1 + R.GROWTH * (p.raids - 1)));
+      const victims = [...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders)
+        .sort(() => Math.random() - 0.5);
+      for (const o of victims) {
+        const plan = this.planAssault(p.id, o);
+        if (plan.castle === null || plan.castle < 0) continue;
+        p.troops = army;
+        if (this.launchAttack(p.id, o, army, plan.castle)) continue;
+        const a = this.attacks.find(a => !a.done && a.attacker === p.id && a.target === o);
+        if (a) a.raid = true;
+        if (!this.players[o].isHuman && this.neighborStats(this.human.id).has(o)) {
+          UI.log(tr(`⚔️ Les ${p.name} lancent une razzia de ${fmt(army)} guerriers sur ${this.players[o].name} !`, `⚔️ The ${p.name} launch a raid of ${fmt(army)} warriors on ${this.players[o].name}!`), '', p);
+        }
+        break;
       }
     }
   },
@@ -3232,6 +3294,9 @@ const GameRules = {
       return tr(`${this.players[target].name} est ton allié ! Romps l'alliance d'abord.`, `${this.players[target].name} is your ally! Break the alliance first.`);
     }
     if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
+    // (⚔️ les terres des pillards, comme les Slaves, sont imprenables : on ne peut que se défendre contre eux)
+    if (target >= 0 && this.players[target].raiders) return tr(`On ne peut pas prendre les terres des ${this.players[target].name} : ce sont des pillards insaisissables. Défends-toi contre leurs razzias !`,
+      `The ${this.players[target].name}' lands cannot be taken: they are elusive raiders. Defend yourself against their raids!`);
     const frontier = this.buildFrontier(pid, target, source);
     // (pas de frontière directe, mais on vise un de ses bâtiments : l'armée peut l'atteindre en passant un fleuve à gué)
     const aimsBuilding = target >= 0 && aimTile !== undefined && TARGET_TYPES.includes(this.building[aimTile]) && this.owner[aimTile] === target;
@@ -5037,7 +5102,7 @@ const GameRules = {
       const sb = this.building[a.siege.tile];
       if (sb !== B_CASTLE && sb !== B_OUTPOST && sb !== B_PORT) return this.endAttack(a); // (il n'existe plus)
       if (this.tick < a.siege.end) return;
-      if (a.viking !== undefined) return this.vikingRaid(a, this.anchor[a.siege.tile]); // (🔥 un raid viking détruit sa cible)
+      if (a.viking !== undefined || a.raid) return this.vikingRaid(a, this.anchor[a.siege.tile]); // (🔥 un raid viking ou une razzia détruit sa cible)
       return sb === B_OUTPOST ? this.takeOutpost(a, a.siege.tile) : sb === B_PORT ? this.takePort(a, this.anchor[a.siege.tile])
         : this.takeCastle(a, a.siege.tile);
     }
@@ -5126,6 +5191,7 @@ const GameRules = {
       // Prise de l'église, du port ou de l'avant-poste visé : l'assaut s'arrête là
       const b = this.building[t];
       if (a.targetCastle >= 0 && b && b !== B_CASTLE && this.anchor[t] === a.targetCastle) {
+        if (a.raid) return this.vikingRaid(a, a.targetCastle); // (⚔️ une razzia rase sa cible, sans la garder)
         if (linked) this.takeLinked(a, linked);
         this.onTargetTaken(a, b, !!linked);
         return this.endAttack(a);

@@ -3,6 +3,7 @@
 
 const AI = {
   update(p) {
+    if (p.raiders) return; // (⚔️ des pillards, comme les Slaves de Charlemagne : ils ne font que leurs razzias, voir stepRaids)
     if (--p.aiTimer > 0) return;
     p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Math.random() * 2));
 
@@ -85,7 +86,7 @@ const AI = {
     let best = null, bestScore = 0, bestAim = -1;
     const alive = Game.players.filter(q => q.alive).length;
     for (const [o] of nb) {
-      if (o < 0 || Game.areAllied(p.id, o)) continue;
+      if (o < 0 || Game.areAllied(p.id, o) || Game.players[o].raiders) continue; // (les terres des pillards sont imprenables)
       const e = Game.players[o];
       // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
       const plan = Game.planAssault(p.id, o), aim = plan.castle;
