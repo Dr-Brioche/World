@@ -221,6 +221,10 @@ const CONFIG = {
   //  2000 : 7 par seconde, 3000 : 8,5, et 5000 et plus : 10 cases par seconde, le maximum)
   FAITH_PACE: [[20, 30], [100, 5], [200, 1], [500, 0.5], [1000, 0.2], [2000, 1 / 7], [3000, 1 / 8.5], [5000, 0.1]],
   FAITH_SPEED: 1.25,         // ...et tout ce tableau va 25 % plus vite (1 = vitesse du tableau, 1.5 = +50 %)
+  // ...mais un écart mince par rapport à sa propre Croyance avance moins vite : pleine vitesse (celle du tableau) à
+  // partir de 2 fois plus de Croyance que le voisin (0.5 : l'écart fait la moitié de sa Croyance) ; 1,5 fois plus :
+  // 2/3 de la vitesse ; 1,2 fois plus : 1/3 ; 1,1 fois plus : moins d'1/5
+  FAITH_DOMINANCE: 0.5,
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   // Distances minimum (de centre à centre, en cases) entre ses grands bâtiments : cercles rouges à la construction
