@@ -89,7 +89,7 @@ const CHARLEMAGNE = {
 
   factions: [
     {
-      id: 'papaute', name: tr('Papauté', 'Papacy'), leader: tr('le pape Étienne III', 'Pope Stephen III'), flag: 'b15', color: [238, 226, 170],
+      id: 'papaute', name: tr('Papauté', 'Papacy'), leader: tr('le pape Étienne III', 'Pope Stephen III'), flag: 'cm_papaute', color: [150, 26, 56],
       defensive: true, production: true, noArmy: true,
       capital: [12.48, 41.90, tr('Rome', 'Rome')], capitalLevel: 4,
       cities: [[12.20, 44.42, tr('Ravenne', 'Ravenna')]],
