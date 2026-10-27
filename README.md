@@ -584,7 +584,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      avec 100 contre 80, ta Croyance vaut 20 face à lui. Plus l'écart est grand, plus ça va vite : environ une case
      toutes les **24 s** avec 20 d'écart, toutes les **16 s** avec 50, toutes les **4 s** avec 100, **1,25 par seconde**
      avec 200, **2,5 par seconde** avec 500, **6 par seconde** avec 1000 ; au-delà, ça accélère **de moins en moins** :
-     **9 par seconde** avec 2000, **10,5** avec 3000, et **12,5 par seconde** à partir de **5000** (le maximum). Plusieurs
+     **9 par seconde** avec 2000, **10,5** avec 3000, et **12,5 par seconde** à partir de **5000** (le maximum).
+     Ces vitesses sont celles d'une **vraie domination** : il faut avoir **au moins 2 fois plus** de Croyance que le
+     voisin. Un écart mince par rapport à ta Croyance avance moins vite : avec 1,5 fois plus que lui, aux 2/3 de la
+     vitesse ; avec 1,2 fois plus, au tiers (1 200 contre 1 000 convertit 3 fois moins vite que 250 contre 50, pour le
+     même écart de 200). Réglage : `FAITH_DOMINANCE` dans `js/config.js`. Plusieurs
      croisades en même temps (une par cathédrale) servent donc encore. Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
      s'avancent dans le tien : les frontières deviennent plus nettes, et ses routes trop fines se referment.
      La foi avance **en courbes**, pas en ligne droite : comme elle gagne les villages, elle s'étire en pointe vers les
@@ -893,6 +897,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.122** : ✝️ la Croyance convertit moins vite quand l'avance est mince : pleine vitesse à partir de 2 fois plus de Croyance que le voisin, 2/3 avec 1,5 fois plus, 1/3 avec 1,2 fois plus (une vraie domination avance comme avant)
 - **v0.92.121** : ⬆️ souris d'amélioration (touche **U**) : un clic droit l'arrête (un clic gauche à côté ne fait rien)
 - **v0.92.120** : ⌨️ la **barre Espace** met la partie en pause (et la relance), comme la touche `P`
 - **v0.92.119** : 📜 **Les grands événements sur parchemin** (Charlemagne) : un parchemin se déroule au milieu de l'écran, en écriture médiévale, met la partie en pause, raconte l'événement et dit ce qu'il faut faire (la mort de Pépin, la trahison d'Aquitaine, la mort de Carloman, la marche de Didier, la chute de Rome, l'Empire chrétien, les razzias slaves) · ⚔️ l'Aquitaine se révolte maintenant **entre la 1ʳᵉ et la 3ᵉ minute** (ses terres sont franques au départ) · 7 nouveaux événements historiques : 🗡️ **Roncevaux**, ⚔️ **Widukind**, 🤝 **Tassilon et les Avars**, 👑 **Irène**, 🐘 **l'éléphant du calife**, ✝️ **Léon III agressé**, 🔥 **les premiers Vikings** · 🏷️ **les noms des villes** historiques écrits en lettres médiévales courbées sous elles (Charlemagne, Gouffre de Helm, et les capitales d'Azeroth) · 🇬🇧 « the Danes' » au lieu de « the Danes's » dans les messages anglais
