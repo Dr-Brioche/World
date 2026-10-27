@@ -109,6 +109,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **Asturies** (Oviedo, Lugo), les **Bretons** (Vannes, Quimper) et les **Anglo-Saxons** d'Offa (Tamworth, Londres,
      Winchester, York). Le reste (Irlande, Écosse, Afrique du Nord, terres slaves…) est libre.
      **Rome et Constantinople** sont des cités de niveau 4, avec déjà deux moulins et une caserne de niveau 2.
+     Trois **mines célèbres** sont déjà creusées (en plus des filons au hasard) : les mines d'**argent de Melle**
+     (une mine d'or, chez les Francs), le **fer d'Amberg** (en Bavière) et l'**or de Las Médulas** (dans les Asturies).
      Tu choisis ta faction dans le menu (tout le monde sauf Rome, Byzance et Carloman), mais le but est surtout de jouer
      les **Francs** et de bâtir l'empire de Charlemagne. Règles du scénario :
      - **pas de nouvelles villes** : on améliore les siennes, on prend celles des autres (le bouton Château disparaît) ;
@@ -127,10 +129,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        soumettre la **Bavière** (prendre Ratisbonne, 788), devenir **roi des Lombards** (prendre Pavie, 774), soumettre
        les **Saxons** (prendre Eresburg et abattre l'Irminsul, 772), abattre le **Ring des Avars** (796), créer la
        **Marche d'Espagne** (prendre Barcelone, 801), bâtir une **capitale impériale** comme Aix-la-Chapelle (une ville de
-       niveau 3 en Facile, 4 en Normal et Difficile), **christianiser l'empire** (250 de Croyance en Facile, 600 en
-       Normal, 1 000 en Difficile, sans compter une croisade en cours) et **protéger Rome**
-       (qu'elle reste au pape, ou à toi s'il n'est plus là). Une faction anéantie compte comme soumise. Les objectifs
-       restent acquis, sauf Rome, qu'il faut garder jusqu'au bout. Tout est rempli : tu es **couronné empereur** !
+       niveau 3 en Facile, 4 en Normal et Difficile), **christianiser l'empire** (350 de Croyance en Facile, 700 en
+       Normal, 1 200 en Difficile : le pacte avec Rome en donne déjà 150, sans compter une croisade en cours) et **protéger Rome**
+       (qu'elle reste au pape, ou à toi s'il n'est plus là). Un objectif **se perd** (le ✔ disparaît, un message
+       prévient) si tu **perds la ville** (ou ta ville de haut niveau, ta Croyance, Rome) : il faut tout tenir en même
+       temps. Tout est rempli : tu es **couronné empereur** !
        (Sinon, la victoire normale à 70 % des terres reste possible.)
      Les bannières des factions sont provisoires (des drapeaux du jeu) : les vraies bannières historiques arriveront.
      Tous les réglages du scénario sont dans `js/charlemagne.js`.
@@ -797,6 +800,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.110** : 👑 Charlemagne : un objectif rempli **se perd** si on perd la ville (ou le niveau, la Croyance, Rome) ; il faut tout tenir en même temps pour être couronné · objectif de Croyance relevé à 350, 700 ou 1 200 (le pacte avec Rome en donne déjà 150) · ⛏️ 3 mines historiques déjà creusées : l'argent de Melle (Francs), le fer d'Amberg (Bavière), l'or de Las Médulas (Asturies)
 - **v0.92.109** : 👑 Charlemagne : un **cadre d'objectifs** en haut à gauche (8 objectifs historiques : Bavière, Pavie, Saxons et Irminsul, Ring des Avars, Marche d'Espagne, capitale impériale de niveau 3 à 4 et Croyance de 250 à 1 000 selon la difficulté, Rome), barrés en gris avec un ✔ une fois remplis ; les remplir tous fait couronner empereur
 - **v0.92.108** : 👑 nouveau scénario **Charlemagne (768)** : l'Europe de l'Ouest et la Méditerranée, 13 factions historiques à leurs vraies places (Francs, Carloman, Lombards, Papauté, Byzance, Bavière, Saxons, Danois, Avars, Cordoue, Asturies, Bretons, Anglo-Saxons), Rome et Constantinople au niveau 4, mort de Carloman, marche des Lombards sur Rome (siège de 2 minutes), victoire « Couronné empereur » · 🎁 on n'envoie plus de soldats qu'à un allié dont les terres touchent les tiennes
 - **v0.92.107** : 🎨 menu de départ dans le style du jeu : la liste des cartes devient un panneau rangé par sortes, avec des icônes dessinées (dés, carte, parchemin, plume), le bouton « Création de carte » a son pinceau, et la langue son globe crucigère (plus d'emojis)

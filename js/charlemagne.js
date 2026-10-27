@@ -33,8 +33,8 @@ const CHARLEMAGNE = {
   // envoyés au pape (il faut que leurs terres se touchent) entrent dans la garnison de Rome
   ROME_SIEGE: 120,
   // 👑 Les objectifs des Francs (dans un cadre, en haut à gauche) : tous remplis, Charles est couronné empereur.
-  // Une fois rempli, un objectif reste acquis (barré, avec un ✔), sauf celui de Rome, qui doit tenir jusqu'au bout.
-  //  - capital : tenir la capitale de cette faction (ou l'avoir anéantie) ;
+  // Un objectif rempli est barré, avec un ✔ ; il se perd si on perd la ville (ou le niveau, la Croyance, Rome).
+  //  - capital : tenir la capitale de cette faction ;
   //  - site : tenir la ville ou l'église posée à ce point [longitude, latitude] (voir la liste des factions) ;
   //  - citadel : avoir une ville de ce niveau ; faith : avoir cette Croyance (sans compter les croisades) ;
   //    (ces deux-là dépendent de la difficulté : goal = { facile, normal, difficile } ; « {n} » dans le texte devient ce nombre)
@@ -46,8 +46,16 @@ const CHARLEMAGNE = {
     { kind: 'capital', role: 'avars', text: tr('Abattre le Ring des Avars et piller son trésor (796)', 'Bring down the Avar Ring and plunder its treasure (796)') },
     { kind: 'site', at: [2.17, 41.39], text: tr('Créer la Marche d\'Espagne : prendre Barcelone (801)', 'Create the Spanish March: take Barcelona (801)') },
     { kind: 'citadel', goal: { facile: 3, normal: 4, difficile: 4 }, text: tr('Bâtir une capitale impériale, comme Aix-la-Chapelle : une ville de niveau {n}', 'Build an imperial capital, like Aachen: a level {n} city') },
-    { kind: 'faith', goal: { facile: 250, normal: 600, difficile: 1000 }, text: tr('Christianiser l\'empire : atteindre {n} de Croyance (sans croisade)', 'Christianise the empire: reach {n} Faith (without a crusade)') },
+    { kind: 'faith', goal: { facile: 350, normal: 700, difficile: 1200 }, text: tr('Christianiser l\'empire : atteindre {n} de Croyance (sans croisade)', 'Christianise the empire: reach {n} Faith (without a crusade)') },
     { kind: 'rome', text: tr('Protéger Rome : qu\'elle reste au pape (ou à toi)', 'Protect Rome: it must stay with the pope (or with you)') },
+  ],
+
+  // ⛏️ Quelques mines célèbres de l'époque, déjà creusées (niveau 1) par la faction qui tient ces terres en 768,
+  // en plus des filons posés au hasard. [longitude, latitude, sorte de filon (voir MINES dans config.js), nom]
+  HISTORIC_MINES: [
+    [-0.14, 46.22, 'gold', 'Melle'],         // les mines d'argent de Melle, qui fournissaient les ateliers monétaires francs
+    [11.86, 49.44, 'iron', 'Amberg'],        // le fer du Haut-Palatinat (Amberg), en Bavière, la « Ruhr du Moyen Âge »
+    [-6.77, 42.47, 'gold', 'Las Médulas'],   // les vieilles mines d'or romaines de Las Médulas, au sud des Asturies
   ],
 
   factions: [
