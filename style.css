@@ -253,6 +253,8 @@ button:hover { background: #e8d6a8; }
   pointer-events: none;
 }
 #hint:empty { display: none; }
+/* fenêtre étroite : sous la barre du bas, au centre (voir UI.placeHint) */
+#hint.under { max-width: min(760px, calc(100vw - 16px)); text-align: center; padding: 3px 10px; }
 
 #log {
   position: fixed;
