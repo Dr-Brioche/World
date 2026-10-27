@@ -265,25 +265,9 @@ const EUROPE_RIVERS = [
   [[[43.0, 41.8], [44.8, 41.7], [45.5, 41.3], [47.0, 40.8]], -1],                            // Koura
 ];
 
-// La carte « Europe » : 1000 x 1000 cases
-function generateEuropeMap(seed) {
-  return buildGeoMap(seed, CONFIG.EUROPE_MAP_WIDTH, CONFIG.EUROPE_MAP_HEIGHT, {
-    proj: EUROPE_PROJ, lands: EUROPE_LANDS, lakes: EUROPE_LAKES, deserts: EUROPE_DESERTS, glaciers: EUROPE_GLACIERS,
-    mountains: EUROPE_MOUNTAINS, rivers: EUROPE_RIVERS, detail: 2.5, coastAmp: 4, widthScale: 1, meander: 4,
-    // forêts : la taïga au nord (Scandinavie, Finlande, Russie), moins autour de la Méditerranée,
-    // aucune en Islande ni dans le Grand Nord
-    forestLevel: (lat, lon) => (lon < -12 && lat > 62) || lat > 69 ? Infinity : lat > 58 ? 0.45 : lat > 45 ? 0.51 : 0.6,
-  });
-}
-
-// 👑 Carte du scénario « Charlemagne » : la même Europe (mêmes côtes, montagnes et fleuves), recadrée sur l'Europe de
-// l'Ouest et la Méditerranée, de l'Irlande et du Portugal jusqu'à Constantinople et l'ouest de l'Anatolie
-// (voir charlemagne.js). Un peu plus détaillée que la carte « Europe » (une case fait environ 3,5 km).
-const CHARLEMAGNE_PROJ = { lon0: -11, lonSpan: 44, latTop: 58.5, latBottom: 34, wrap: false };
-
-// En plus des montagnes de la carte Europe : les vieux massifs de collines et les petites chaînes de l'Ouest
+// En plus des grandes montagnes : les vieux massifs de collines et les petites chaînes (cartes Europe et Charlemagne)
 // ([demi-largeur en cases, sommets ?, crête, 'hills' = tout en collines])
-const CHARLEMAGNE_HIGHLANDS = [
+const EUROPE_HIGHLANDS = [
   [8, false, [[-4.4, 48.35], [-3.2, 48.25], [-1.8, 48.05], [-0.7, 47.7]], 'hills'],              // Massif armoricain
   [9, false, [[2.4, 45.6], [2.9, 45.1], [3.3, 44.6]], 'hills'],                                  // cœur du Massif central
   [4, false, [[4.0, 47.45], [4.15, 47.0]], 'hills'],                                             // Morvan
@@ -303,7 +287,37 @@ const CHARLEMAGNE_HIGHLANDS = [
   [8, false, [[20.4, 43.9], [21.4, 43.2], [22.0, 42.5]], 'hills'],                              // collines de Serbie
   [5, false, [[21.9, 37.95], [22.3, 37.4], [22.4, 36.8]]],                                       // Péloponnèse
   [6, false, [[27.4, 39.2], [28.7, 39.05], [29.8, 38.6]]],                                       // ouest de l'Anatolie
+  // (l'Est et le Nord : surtout sur la carte Europe)
+  [6, false, [[13.9, 56.9], [15.0, 57.3], [15.8, 57.6]], 'hills'],                              // hautes terres du Småland
+  [7, false, [[28.6, 66.6], [29.4, 65.2], [29.9, 63.8]], 'hills'],                              // Maanselkä (Finlande)
+  [4, false, [[33.4, 67.75], [34.3, 67.65]]],                                                    // Khibiny (presqu'île de Kola)
+  [6, false, [[32.3, 57.6], [33.4, 57.0], [34.0, 56.4]], 'hills'],                              // collines du Valdaï
+  [12, false, [[36.4, 54.6], [37.3, 53.2], [37.9, 51.8], [38.6, 50.5]], 'hills'],               // plateau central russe
+  [9, false, [[45.2, 55.3], [46.0, 53.6], [45.8, 51.8]], 'hills'],                              // hauteurs de la Volga
+  [9, false, [[23.6, 50.6], [25.6, 49.8], [27.6, 49.1], [29.0, 48.5]], 'hills'],                // plateaux de Volhynie et de Podolie
+  [5, false, [[37.6, 48.45], [39.6, 48.2]], 'hills'],                                            // crête du Donets
+  [6, false, [[-17.2, 64.6], [-15.6, 65.3]], 'hills'],                                           // hautes terres d'Islande (est)
 ];
+
+// La carte « Europe » : 1000 x 1000 cases, avec un relief naturel (crêtes qui serpentent, vallées, piémonts,
+// vieux massifs de collines : voir naturalRelief)
+function generateEuropeMap(seed) {
+  return buildGeoMap(seed, CONFIG.EUROPE_MAP_WIDTH, CONFIG.EUROPE_MAP_HEIGHT, {
+    proj: EUROPE_PROJ, lands: EUROPE_LANDS, lakes: EUROPE_LAKES, deserts: EUROPE_DESERTS, glaciers: EUROPE_GLACIERS,
+    mountains: EUROPE_MOUNTAINS.concat(EUROPE_HIGHLANDS), rivers: EUROPE_RIVERS, detail: 2.5, coastAmp: 4, widthScale: 1,
+    meander: 4, natural: true,
+    // forêts : la taïga au nord (Scandinavie, Finlande, Russie), la grande forêt de Germanie, moins autour de la
+    // Méditerranée, aucune en Islande ni dans le Grand Nord
+    forestLevel: (lat, lon) => (lon < -12 && lat > 62) || lat > 69 ? Infinity : lat > 58 ? 0.45
+      : lat > 47 && lat < 55.5 && lon > 6 && lon < 25 ? 0.47 : lat > 45 ? 0.51 : 0.6,
+  });
+}
+
+// 👑 Carte du scénario « Charlemagne » : la même Europe (mêmes côtes, montagnes et fleuves), recadrée sur l'Europe de
+// l'Ouest et la Méditerranée, de l'Irlande et du Portugal jusqu'à Constantinople et l'ouest de l'Anatolie
+// (voir charlemagne.js). Un peu plus détaillée que la carte « Europe » (une case fait environ 3,5 km).
+const CHARLEMAGNE_PROJ = { lon0: -11, lonSpan: 44, latTop: 58.5, latBottom: 34, wrap: false };
+
 
 // La carte Charlemagne a un relief plus naturel (crêtes qui serpentent, vallées, piémonts : voir naturalRelief),
 // à sa vraie taille (widthScale : ses cases sont plus petites que celles de la carte Europe), et des forêts plus
@@ -311,7 +325,7 @@ const CHARLEMAGNE_HIGHLANDS = [
 function generateCharlemagneMap(seed) {
   return buildGeoMap(seed, CONFIG.CHARLEMAGNE_MAP_WIDTH, CONFIG.CHARLEMAGNE_MAP_HEIGHT, {
     proj: CHARLEMAGNE_PROJ, lands: EUROPE_LANDS, lakes: EUROPE_LAKES, deserts: EUROPE_DESERTS, glaciers: EUROPE_GLACIERS,
-    mountains: EUROPE_MOUNTAINS.concat(CHARLEMAGNE_HIGHLANDS), rivers: EUROPE_RIVERS, detail: 2.5, coastAmp: 4,
+    mountains: EUROPE_MOUNTAINS.concat(EUROPE_HIGHLANDS), rivers: EUROPE_RIVERS, detail: 2.5, coastAmp: 4,
     widthScale: 1.2, meander: 4, natural: true,
     forestLevel: (lat, lon) => lat > 47 && lat < 55.5 && lon > 6 && lon < 25 ? 0.47 : lat > 45 ? 0.51 : 0.6,
   });
