@@ -184,6 +184,7 @@ const UI = {
       this.log(tr('⚔️ La conquête continue ! Élimine les derniers royaumes si tu le souhaites.', '⚔️ The conquest goes on! Wipe out the last kingdoms if you wish.'), 'good');
     });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
+    $('musicBtn').addEventListener('click', () => Music.toggle()); // (🎵 la musique d'ambiance : voir music.js)
     $('speedBtn').addEventListener('click', () => this.nextSpeed());
     // (seul celui qui héberge la partie peut la mettre en pause ou changer sa vitesse : voir isHost)
     document.querySelectorAll('.hostOnly').forEach(b => b.classList.toggle('hidden', !this.isHost()));
@@ -260,6 +261,8 @@ const UI = {
     };
 
     window.addEventListener('keydown', e => {
+      // (🎵 touche M : couper ou remettre la musique, à tout moment de la partie, même au choix de la capitale)
+      if (e.code === 'KeyM' && Game.phase !== 'menu' && !typing(e.target)) return Music.toggle();
       if (Game.phase !== 'playing' || typing(e.target)) return;
       // Touche 1, 2 ou 3 : le bâtiment suit la souris, un clic le pose (même touche = annuler)
       // On regarde la touche physique (e.code) : sur un clavier AZERTY, la touche « 1 » du haut
@@ -346,6 +349,7 @@ const UI = {
 
   start() {
     this.dropAllianceRequests(true);
+    Music.start(); // (🎵 la musique d'ambiance démarre avec la partie : le clic sur « Commencer » l'autorise)
     Game.init({
       factions: this.factionMode(),
       name: $('name').value.trim() || tr('Mon Royaume', 'My Kingdom'),

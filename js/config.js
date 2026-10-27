@@ -365,6 +365,20 @@ const CONFIG = {
   // --- Victoire ---
   WIN_RATIO: 0.7,          // posséder 70 % des terres = victoire
 
+  // --- 🎵 Musique d'ambiance (voir music.js) ---
+  // Les morceaux (dans sons/musique/) : le jeu en choisit un au hasard (jamais deux fois de suite le même), le joue en
+  // entier (en fondu au début et à la fin), puis laisse souvent un moment de silence avant le suivant :
+  // SILENCE_CHANCE = la chance d'un vrai silence (de SILENCE secondes, au hasard), sinon une courte pause (GAP secondes).
+  // Elle démarre avec la partie ; le bouton 🎵 de la barre du haut (ou la touche M) la coupe ou la remet.
+  MUSIC: {
+    TRACKS: ['sons/musique/M1.mp3'],
+    VOLUME: 0.35,            // volume (de 0 à 1)
+    FADE: 4,                 // secondes de fondu au début et à la fin d'un morceau
+    SILENCE_CHANCE: 0.5,
+    SILENCE: [45, 150],
+    GAP: [3, 10],
+  },
+
   // --- 📽️ Résumé de la partie (bouton « Résumé » de l'écran de fin, voir replay.js) ---
   // Pendant la partie, une photo de la carte (qui tient quoi) toutes les EVERY secondes, en petit (au plus CELLS cases) ;
   // au-delà de MAX_FRAMES photos, on en garde une sur deux (et on espace les suivantes). Le résumé rejoue toute la
