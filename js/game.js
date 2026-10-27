@@ -862,6 +862,7 @@ const GameRules = {
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(plan.time * TPS)) });
     const d = this.players[plan.target];
     if (d.isHuman) {
+      Music.sound('enemyAssault'); // (🔔 l'alerte : un assaut viking vient sur nous)
       UI.log(tr(`🔥 ${p.name} lance un assaut viking (${fmt(troops)} soldats) vers ${this.targetLabel(plan.castle)} ! Ses bateaux arrivent dans ${Math.ceil(plan.time)} s.`,
         `🔥 ${p.name} launches a Viking assault (${fmt(troops)} soldiers) at ${this.targetLabel(plan.castle)}! Their ships arrive in ${Math.ceil(plan.time)} s.`), 'warn', p);
     }
@@ -892,7 +893,8 @@ const GameRules = {
     const d = this.players[o];
     if (p.isHuman) UI.log(tr(`🔥 Tes Vikings (${fmt(e.troops)} soldats) débarquent chez ${d.name} et marchent sur ${this.targetLabel(c)} !`,
       `🔥 Your Vikings (${fmt(e.troops)} soldiers) land in ${possessive(d.name)} land and march on ${this.targetLabel(c)}!`), 'good', d);
-    else if (d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} (${fmt(e.troops)} soldats) ont débarqué ! Clique sur leur bannière pour envoyer tes défenseurs.`,
+    else if (d.isHuman) Music.sound('enemyAssault'); // (🔔 l'alerte : des Vikings débarquent chez nous)
+    if (!p.isHuman && d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} (${fmt(e.troops)} soldats) ont débarqué ! Clique sur leur bannière pour envoyer tes défenseurs.`,
       `🔥 ${possessive(p.name)} Vikings (${fmt(e.troops)} soldiers) have landed! Click their banner to send your defenders.`), 'warn', p);
   },
   // 🔥 Fin du siège d'un assaut viking : c'est un raid. La cible (ville ou port fortifié) est détruite, avec les moulins
@@ -3570,6 +3572,7 @@ const GameRules = {
         if (path) this.entryFromPath(a, path, source);
         const secs = this.startMarch(a, a.startTile, troops);
         if (this.players[target].isHuman) {
+          Music.sound('enemyAssault'); // (🔔 l'alerte : un ennemi marche sur nous)
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
           UI.log(tr(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! `,
             `⚠️ ${possessive(p.name)} army (${fmt(troops)} soldiers) is marching to your border: it attacks in ${secs} s! `) +

@@ -387,8 +387,10 @@ const CONFIG = {
       cityLost: 'sons/perte-ville.mp3', // une de nos villes est prise (ou rasée)
       assault: 'sons/assaut-depart.mp3', // notre armée part à l'assaut d'un ennemi (pas pour les terres libres)
       upgrade: 'sons/amelioration.mp3', // un de nos bâtiments vient de finir son amélioration
+      enemyAssault: 'sons/assaut-ennemi.mp3', // un ennemi lance un assaut sur nous (ou des Vikings débarquent chez nous)
     },
     SOUND_GAP: 3,
+    SOUND_QUEUE: 3,          // un petit son qui arrive pendant qu'un autre joue attend sa fin (3 en attente au plus)
   },
 
   // --- 📽️ Résumé de la partie (bouton « Résumé » de l'écran de fin, voir replay.js) ---
