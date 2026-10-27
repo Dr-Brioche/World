@@ -1005,7 +1005,7 @@ const GameRules = {
         // (FAITH_SPEED : réglage général de la vitesse de conversion)
         // (un écart mince par rapport à sa propre Croyance avance moins vite : il faut vraiment dominer son voisin
         //  pour le convertir à pleine vitesse, voir FAITH_DOMINANCE)
-        const dominance = Math.min(1, diff / Math.max(1, this.faithOf(p.id)) / CONFIG.FAITH_DOMINANCE);
+        const dominance = Math.min(1, diff / Math.max(1, this.faithOf(p.id)) / CONFIG.FAITH_DOMINANCE) ** CONFIG.FAITH_DOMINANCE_POWER;
         const mult = (this.isProtected(o) ? 1 : CONFIG.FAITH_DISORGANIZED) * CONFIG.FAITH_SPEED * dominance;
         const prog = (this.faithProgress.get(key) || 0) + mult / this.faithInterval(diff), n = Math.floor(prog);
         this.faithProgress.set(key, prog - n);

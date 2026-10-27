@@ -84,7 +84,10 @@ html, body {
 }
 
 #lb .pct { display: inline-block; width: 42px; text-align: right; }
-#lb .faithB { display: inline-block; width: 16px; text-align: center; }
+#lb .faithB { position: relative; display: inline-block; width: 16px; text-align: center; }
+/* (l'écart de Croyance, en petit et en haut, juste à gauche de la bible : sur la place des carrés d'alliés, presque
+   toujours vide, pour ne pas élargir la ligne) */
+#lb .faithB sup { position: absolute; right: 100%; top: -4px; font-size: 10px; font-weight: bold; white-space: nowrap; }
 #lb .faithB.good { color: #2f8a2a; }
 #lb .faithB.bad { color: #b8322a; }
 /* Un pacte : ses membres regroupés dans un cadre, avec la part des terres du pacte entier */
