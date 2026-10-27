@@ -134,8 +134,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      - ⚔️ **les Slaves, pillards du nord-est** : leurs terres sont **imprenables** (on ne peut que se défendre contre
        eux) et ils ne s'étendent pas, mais ils lancent des **razzias** sur un voisin au hasard (toutes les 150 s en
        Facile, 110 s en Normal, 80 s en Difficile, après 2 min 30), de plus en plus grosses (600 guerriers en Normal,
-       puis +20 % à chaque fois). Une razzia qui prend sa cible la **rase** (avec ses moulins et casernes), pille de l'or
-       et rentre : les terres restent au défenseur ;
+       puis +20 % à chaque fois, jusqu'à **5 000 guerriers** au plus ; la première épargne la Bavière). Une razzia qui
+       prend sa cible la **rase** (avec ses moulins et casernes), pille de l'or et rentre : les terres restent au
+       défenseur. Leurs terres ne comptent pas dans les parts du classement ni pour la victoire (les 70 % se comptent
+       sur les terres à conquérir), et il n'est pas nécessaire de les anéantir ;
+     - 🛡️ **les petits royaumes résistent** : la Bavière (Ratisbonne au niveau 3), l'Aquitaine (Bordeaux au niveau 3) et
+       les Asturies ont des garnisons 50 % plus fortes tant qu'elles tiennent leurs villes, et Cordoue s'attaque moins
+       volontiers aux Asturies, dans leurs montagnes ;
      - ✝️ **succès « Empire chrétien »** : quand les terres des Francs touchent celles de Rome, leur Croyance gagne
        **+100 pour toujours** ;
      - les **Francs, Carloman et le pape** forment un **pacte éternel** (l'« Alliance de Rome ») ; au bout de quelques
@@ -781,6 +786,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    (jusqu'à 3 fois moins) : l'expansion en terre vierge garde le même rythme qu'au début, toute la partie.
    Et elle va encore **30 % plus vite** (`FREE_LAND_BOOST`) : chaque armée avance plus vite et perd moins de soldats par case libre.
 6. **Gagne** en possédant 70 % des terres, ou en éliminant tous les autres royaumes.
+   À la fin (victoire ou défaite), le bouton **📽️ Résumé** rejoue toute la partie en accéléré, sur la carte
+   entière et sans détail : on voit les royaumes grandir, se battre et disparaître (avec l'heure de la partie et
+   les plus grands royaumes du moment ; ▶️/⏸️ et une réglette pour revenir à un moment précis).
    **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
 
@@ -861,6 +869,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.118** : 📽️ **Résumé de la partie** : sur l'écran de fin, un bouton rejoue toute la partie en accéléré (la carte entière, juste les couleurs des royaumes, l'heure et les plus grands royaumes du moment) · 👑 Charlemagne, après des dizaines de parties testées en accéléré : 🏆 la victoire aux 70 % (et la victoire par anéantissement) ne bloque plus sur les Slaves : leurs terres imprenables ne comptent plus, et ils sont classés à part (⚔️) au lieu d'être 1ᵉʳˢ avec 28 % · ⚔️ les razzias plafonnent à 5 000 guerriers, et la première épargne la Bavière · 🛡️ la Bavière, l'Aquitaine et les Asturies, qui disparaissaient en quelques minutes, résistent (Ratisbonne et Bordeaux au niveau 3, garnisons +50 %, Cordoue moins acharnée sur les Asturies) · 🐛 un assaut dont la cible venait d'être rasée pouvait planter la partie · 💬 après une razzia réussie, plus de message « l'assaut a échoué »
 - **v0.92.117** : 👑 Charlemagne : les **15 factions ont leurs vraies bannières** (monogramme KAROLUS des Francs et de Carloman, clés de saint Pierre du pape, aigle bicéphale de Byzance, guivre lombarde, cheval saxon, corbeau danois, triskèle breton, croix des Asturies…) et chaque royaume prend la couleur de son drapeau : Carloman en violet, les Lombards en vert, la Bavière en orange, les Saxons en noir… (Rome, les Francs et Carloman se distinguent enfin au premier coup d'œil)
 - **v0.92.116** : 👑 Charlemagne : ⚔️ la **révolte d'Aquitaine** (Hunald II, Bordeaux) avec le **château isolé de Fronsac** · ⚔️ les **Slaves**, pillards du nord-est : terres imprenables, **razzias** de plus en plus grosses qui rasent leur cible · ✝️ succès **« Empire chrétien »** (terres franques reliées à Rome : +100 de Croyance pour toujours) · capitales au moins au niveau 2, Pavie et Vannes au niveau 3, Rouen et Wurtzbourg deviennent des églises · 🗺️ au bord des cartes Charlemagne et Europe, la terre finit sur des sommets (plus de ligne de mer que suivent les bateaux)
 - **v0.92.115** : 📊 en posant un bâtiment, une petite bulle donne son bonus de production à l'endroit visé (« +30 % », « −20 % ») · ⬆️ touche **U** : la souris d'amélioration (un clic sur un de ses bâtiments l'améliore directement) · 🧹 plus d'icône à côté du choix de la langue, au menu
@@ -1226,5 +1235,6 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/icons.js` | Les icônes médiévales dessinées (elles remplacent les emojis partout) |
 | `js/render.js` | Le dessin de la carte |
+| `js/replay.js` | 📽️ Le résumé de fin de partie (les photos de la carte, et leur lecture en accéléré) |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
 | `img/` | Les images des bâtiments (2 niveaux de mine, 4 niveaux de château, de caserne, d'église et de port, 2 de moulin, et l'avant-poste) , des bannières (`img/bannieres/`), le décor marin (`decor_mer.webp`) et le cadre brodé (`cadre.webp`) |

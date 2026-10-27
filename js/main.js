@@ -172,6 +172,11 @@ const UI = {
     modeChange();
     $('startBtn').addEventListener('click', () => this.start());
     $('replayBtn').addEventListener('click', () => location.reload());
+    // 📽️ Le résumé de la partie (voir replay.js)
+    $('summaryBtn').addEventListener('click', () => Replay.open());
+    $('replayClose').addEventListener('click', () => Replay.close());
+    $('replayPlay').addEventListener('click', () => Replay.togglePlay());
+    $('replaySlider').addEventListener('input', e => { Replay.playing = false; Replay.seek(+e.target.value); });
     $('continueBtn').addEventListener('click', () => {
       $('endscreen').classList.add('hidden');
       Game.continueAfterVictory();
@@ -473,7 +478,7 @@ const UI = {
       ` · <span title="${tr('Soldats (épées : sans caserne ou niveau 1 · casque : caserne niveau 2 · bouclier : niveau 3)', 'Soldiers (swords: no barracks or level 1 · helmet: level 2 barracks · shield: level 3)')}">${G.troopIcon(o)} ${fmt(p.troops)}</span>` +
       types.filter(t => p.bCount[t] > 0).map(t => ` · <span title="${BUILDINGS[t].name}">${BUILDINGS[t].icon} ${p.bCount[t]}</span>`).join('') +
       this.minesText(o) +
-      ` · <span title="${tr('Part des terres', 'Share of the land')}">🗺️ ${(p.tiles / G.landCount * 100).toFixed(1)}${tr(' %', '%')}</span>` +
+      ` · <span title="${tr('Part des terres', 'Share of the land')}">🗺️ ${p.raiders ? '⚔️' : G.landPct(p.tiles) + tr(' %', '%')}</span>` +
       ` · <span title="${tr('Croyance', 'Faith')}">✝️ ${fmt(Math.round(G.faithOf(o)))}</span>`;
     // (on compare avec le dernier texte écrit : innerHTML, lui, a déjà vu ses emojis remplacés par des icônes)
     if (this.tipHtml !== html) { this.tipHtml = html; tip.innerHTML = html; }
@@ -1008,7 +1013,7 @@ const UI = {
       $('endText').textContent = tr('Noël 800, à Rome : le pape pose la couronne sur la tête de Charles. Saxons, Lombards, Bavarois et Avars sont soumis : l\'Empire d\'Occident renaît, et l\'histoire l\'appellera Charlemagne !',
         'Christmas 800, in Rome: the pope sets the crown on Charles\'s head. Saxons, Lombards, Bavarians and Avars are subdued: the Western Empire is reborn, and history will call him Charlemagne!');
     }
-    const best = (h.maxTiles / Game.landCount * 100).toFixed(1);
+    const best = Game.landPct(h.maxTiles);
     $('endStats').innerHTML = tr(
       `⏱️ Durée : ${Math.floor(secs / 60)} min ${secs % 60} s<br>` +
       `🗺️ Plus grand territoire : ${best} %<br>` +
@@ -1017,6 +1022,7 @@ const UI = {
       `🗺️ Largest territory: ${best}%<br>` +
       `☠️ Kingdoms destroyed: ${h.kills}`);
     $('continueBtn').classList.toggle('hidden', !canContinue);
+    $('summaryBtn').classList.toggle('hidden', !Replay.available());
     $('endscreen').classList.remove('hidden');
   },
 
@@ -1181,7 +1187,7 @@ const UI = {
     $('kName').style.color = `rgb(${h.color})`;
     $('gold').textContent = fmt(h.gold);
     this.refreshTroopGauge();
-    $('land').textContent = (h.tiles / G.landCount * 100).toFixed(1) + tr(' %', '%');
+    $('land').textContent = G.landPct(h.tiles) + tr(' %', '%');
     $('faith').textContent = fmt(Math.round(G.faithOf(h.id)));
     // ⛏️ Nos mines : leur nombre (le détail par minerai au survol), seulement quand on en a
     const mines = MINE_KINDS.map(k => [k, G.minesOf(h.id, k).length]).filter(([, n]) => n);
@@ -1241,7 +1247,8 @@ const UI = {
         `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${escapeHtml(p.name)}</span>` +
         `<span class="allies" title="${this.alliesTitle(p)}">` +
         G.allies(p.id).map(o => `<i style="background:rgb(${o.color})"></i>`).join('') + `</span>` +
-        `${this.faithBadge(p)}<span class="pct">${(p.tiles / G.landCount * 100).toFixed(1)}%</span>${btn}</li>`;
+        `${this.faithBadge(p)}${p.raiders ? `<span class="pct" title="${tr('Pillards : leurs terres sont imprenables, elles ne comptent pas dans les parts', 'Raiders: their lands cannot be taken and do not count in the shares')}">⚔️</span>`
+          : `<span class="pct">${G.landPct(p.tiles)}%</span>`}${btn}</li>`;
     };
     // Les membres d'un même pacte sont regroupés dans un cadre, avec la part des terres du pacte entier.
     // Les groupes (pactes et royaumes seuls) sont classés selon leurs terres.
@@ -1253,7 +1260,8 @@ const UI = {
       groups.push(g);
     }
     const tilesOf = g => g.members.reduce((s, p) => s + p.tiles, 0);
-    groups.sort((a, b) => tilesOf(b) - tilesOf(a));
+    // (⚔️ les pillards, aux terres imprenables, toujours en dernier)
+    groups.sort((a, b) => !!a.members[0].raiders - !!b.members[0].raiders || tilesOf(b) - tilesOf(a));
     // (les 10 premiers ; et toujours ton royaume, à son vrai rang, s'il n'en fait pas partie)
     const top = groups.slice(0, 10), mineAt = groups.findIndex(g => g.members.includes(h));
     if (mineAt >= 10) top.push(groups[mineAt]);
@@ -1263,7 +1271,7 @@ const UI = {
       if (g.members.length < 2) return row(g.members[0]);
       const mine = g.members.includes(h);
       return `<li class="pactGroup${mine ? ' mine' : ''}"><div class="pactHead"><span>🤝 ${escapeHtml(G.pacts.get(g.pact).name)}</span>` +
-        `<span class="pct">${(tilesOf(g) / G.landCount * 100).toFixed(1)}%</span></div>` +
+        `<span class="pct">${G.landPct(tilesOf(g))}%</span></div>` +
         `<ul>${g.members.map(row).join('')}</ul></li>`;
     }).join('');
 

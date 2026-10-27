@@ -46,6 +46,7 @@ const GameRules = {
     this.buildingTiles = [];
     this.castles = [];
     this.tick = 0;
+    Replay.reset(); // (📽️ les photos du résumé de la partie : voir replay.js)
     this.version = 0; // augmente à chaque changement de la carte
     // (calculs gardés en mémoire d'une partie à l'autre : on les oublie)
     this.regionsCache = null; this.regionsVersion = -1; this.nbStatsVersion = -1; this.nbStatsTick = undefined; this.assaultPlans = new Map();
@@ -897,6 +898,7 @@ const GameRules = {
   // et casernes qui en dépendent ; chaque bâtiment détruit rapporte VIKING_LOOT pièces au pillard. Les terres restent
   // au défenseur (la route des Vikings lui revient), et les survivants rembarquent (voir endAttack).
   vikingRaid(a, c) {
+    if (!this.building[c]) return this.endAttack(a); // (la cible n'existe plus : rasée entre-temps)
     const p = this.players[a.attacker], d = this.players[a.target];
     const ruins = [c, ...this.linkedBuildings(c)];
     const city = this.building[c] === B_CASTLE, what = city ? tr('une ville', 'a city') : tr('un port fortifié', 'a fortified port');
@@ -906,6 +908,7 @@ const GameRules = {
     const loot = ruins.length * (a.raid ? CHARLEMAGNE.RAIDS.LOOT : CONFIG.VIKING_LOOT);
     if (a.raid) { // (⚔️ une razzia des Slaves : son propre message)
       p.gold += loot;
+      a.razed = true; // (ils rentrent : les terres de leur passage reviennent au défenseur, sans « assaut échoué »)
       if (d.isHuman) UI.log(tr(`⚔️ Les ${p.name} ont razzié ${this.targetLabel(c)} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} rasé${ruins.length > 1 ? 's' : ''} ! Ils rentrent chez eux avec leur butin.`,
         `⚔️ The ${p.name} have raided ${this.targetLabel(c)}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} razed! They head home with their loot.`), 'warn', p);
       return this.endAttack(a);
@@ -1288,7 +1291,7 @@ const GameRules = {
       a.limitZone = this.corridor(a.link, route.path, route.passable);
     } else {
       const c = a.targetCastle;
-      if (c < 0 || this.owner[c] !== a.target) return false;
+      if (c < 0 || this.owner[c] !== a.target || !this.building[c]) return false; // (sa cible a pu être rasée entre-temps)
       const src = this.sourceOfAttack(a);
       let path;
       if (this.isPreparing(a)) path = this.castlePath(a.attacker, c, src);
@@ -1770,6 +1773,8 @@ const GameRules = {
       p.defensive = !!f.defensive; // (Rome et Byzance : elles se défendent, mais ne partent pas en conquête)
       p.noArmy = !!f.noArmy;       // (Rome : pas d'armée, seulement la garnison de ses villes)
       p.raiders = !!f.raiders;     // (⚔️ les Slaves : des pillards, voir stepRaids)
+      p.garrisonBoost = f.garrison || 1; // (les garnisons de ses villes, plus fortes : voir garrisonMax)
+      p.spare = f.spare || [];     // (des voisins qu'elle attaque moins volontiers : voir AI.update)
       p.gold = C.START_GOLD;
       cm.role[f.id] = p.id;
     }
@@ -1946,8 +1951,9 @@ const GameRules = {
     for (const p of this.players) {
       if (!p.raiders || !p.alive) continue;
       p.raids = (p.raids || 0) + 1;
-      const army = Math.round(R.ARMY[cm.diff] * (1 + R.GROWTH * (p.raids - 1)));
-      const victims = [...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders)
+      const army = Math.min(R.MAX, Math.round(R.ARMY[cm.diff] * (1 + R.GROWTH * (p.raids - 1))));
+      const victims = [...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders
+        && !(p.raids === 1 && R.SPARE_FIRST.includes(this.players[o].role)))
         .sort(() => Math.random() - 0.5);
       for (const o of victims) {
         const plan = this.planAssault(p.id, o);
@@ -2653,7 +2659,9 @@ const GameRules = {
     // (👑 Charlemagne : Rome, tant qu'elle est au pape, a une grande garnison : voir ROME_GARRISON)
     if (t === B_CASTLE && this.cm && a === this.cm.capital.papaute && this.owner[a] === this.cm.role.papaute) return CHARLEMAGNE.ROME_GARRISON;
     // (🏰 Gouffre de Helm : les nains d'Aglarond agrandissent les garnisons du Rohan, voir helm.js)
-    if (t === B_CASTLE) return (this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0)) * (this.hd ? this.helmGarrison(a) : 1);
+    // (👑 Charlemagne : les villes de la Bavière, de l'Aquitaine et des Asturies, tant qu'elles les tiennent, voir garrison)
+    if (t === B_CASTLE) return (this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0))
+      * (this.hd ? this.helmGarrison(a) : 1) * (this.cm && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1);
     if (t === B_PORT) return this.buildingInfo(a).garrison || 0;
     return 0;
   },
@@ -3443,6 +3451,7 @@ const GameRules = {
   // chez l'ennemi est choisi en comptant aussi sa marche sur ses propres terres depuis cette ville (plus rapide,
   // MARCH_OWN_LAND_BONUS), et pas seulement le bout de frontière le plus proche de la cible.
   castlePath(pid, c, source) {
+    if (!this.building[c]) return null; // (plus de bâtiment là : rasé, démoli…)
     const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
     const h = this.sizeOf(this.building[c]) / 2;
     const dep = this.departurePoint(pid, c % this.W + h, ((c / this.W) | 0) + h, source), W = this.W;
@@ -5510,7 +5519,8 @@ const GameRules = {
     a.route = null;
     if (!back) return;
     const p = this.players[a.attacker], d = this.players[a.target];
-    if (d.isHuman) UI.log(tr(`🛡️ L'assaut ${this.deName(p.name)} a échoué : tu reprends les terres de son passage (${fmt(back)} cases).`, `🛡️ ${p.name}'s assault has failed: you take back the land along its way (${fmt(back)} tiles).`), 'good', p);
+    if (d.isHuman && a.razed) UI.log(tr(`⚔️ Les ${p.name} repartent : tu reprends les terres de leur passage (${fmt(back)} cases).`, `⚔️ The ${p.name} leave: you take back the land along their way (${fmt(back)} tiles).`), '', p);
+    else if (d.isHuman) UI.log(tr(`🛡️ L'assaut ${this.deName(p.name)} a échoué : tu reprends les terres de son passage (${fmt(back)} cases).`, `🛡️ ${p.name}'s assault has failed: you take back the land along its way (${fmt(back)} tiles).`), 'good', p);
     else if (p.isHuman) UI.log(tr(`🏳️ Ton assaut a échoué : ${d.name} reprend les terres de ton passage (${fmt(back)} cases).`, `🏳️ Your assault has failed: ${d.name} takes back the land along your way (${fmt(back)} tiles).`), 'warn', d);
   },
 
@@ -5854,6 +5864,7 @@ const GameRules = {
     this.stepObjectives();
     this.stepHelm();
 
+    Replay.record(this); // (📽️ une photo de la carte de temps en temps, pour le résumé de fin de partie)
     if (this.tick % TPS === 0) this.checkEnd();
   },
 
@@ -5866,7 +5877,8 @@ const GameRules = {
     }
     // (mode « Factions » : les royaumes de son camp ne comptent pas comme rivaux, et les terres du camp comptent ensemble ;
     //  scénario « Charlemagne » : ses alliés ne comptent pas comme rivaux non plus)
-    const botsAlive = this.players.some(p => !p.isHuman && p.alive && !((this.factions || this.cm) && this.areAllied(p.id, h.id)));
+    // (⚔️ des pillards, comme les Slaves de Charlemagne, ne comptent pas : on ne peut pas les anéantir)
+    const botsAlive = this.players.some(p => !p.isHuman && p.alive && !p.raiders && !((this.factions || this.cm) && this.areAllied(p.id, h.id)));
     // 👑 Charlemagne couronné empereur (une seule fois : on peut ensuite continuer à jouer)
     if (!this.empireShown && this.empireWon()) {
       this.empireShown = this.victoryShown = true;
@@ -5875,7 +5887,7 @@ const GameRules = {
       return;
     }
     const share = (this.factions ? this.players.filter(p => p === h || this.areAllied(p.id, h.id)) : [h])
-      .reduce((s, p) => s + p.tiles, 0) / this.landCount;
+      .reduce((s, p) => s + p.tiles, 0) / this.conquerableLand();
     // Victoire : 70 % des terres (WIN_RATIO ; une seule fois, on peut ensuite continuer à jouer),
     // ou plus aucun royaume rival (fin de la partie)
     if (!botsAlive || (!this.victoryShown && share >= CONFIG.WIN_RATIO)) {
@@ -5884,6 +5896,14 @@ const GameRules = {
       UI.showEnd(true, botsAlive);
     }
   },
+
+  // Les terres à conquérir : toutes, sauf celles des pillards (⚔️ les Slaves de Charlemagne : leurs terres sont
+  // imprenables, elles ne comptent ni pour la victoire ni dans les parts des terres du classement)
+  conquerableLand() {
+    return Math.max(1, this.landCount - this.players.reduce((s, p) => s + (p.raiders && p.alive ? p.tiles : 0), 0));
+  },
+  // La part des terres à conquérir que font ces cases, en % (avec une décimale, pour l'affichage)
+  landPct(tiles) { return (tiles / this.conquerableLand() * 100).toFixed(1); },
 
   // --- 🗼 Tours de garde (voir TOWER_LEVELS) ---
   // Chaque seconde, chaque tour tire sur l'armée ennemie la plus proche qui se bat à sa portée (pas sur une armée qui

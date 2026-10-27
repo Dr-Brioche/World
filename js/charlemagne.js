@@ -14,7 +14,10 @@
 //  - enclaves : des terres à elle au milieu de celles d'une autre ([longitude, latitude, rayon en cases]).
 // playable : le joueur peut l'incarner (pas Rome, ni Byzance, ni Carloman) ; defensive : elle se défend, s'étend sur
 // les terres libres, mais ne lance pas de conquêtes ; production : moulins et casernes de niveau 2 autour de la capitale.
-// flag : la bannière (img/bannieres/cm_<faction> : les vraies bannières des factions ; en attendant, un des drapeaux du jeu).
+// garrison : les garnisons de ses villes valent garrison fois plus, tant qu'elle les tient (les petits royaumes qui ont
+// historiquement longtemps résisté : la Bavière, l'Aquitaine, les Asturies) ;
+// spare : des voisins qu'elle attaque moins volontiers (Cordoue et les Asturies, dans leurs montagnes).
+// flag : la bannière (img/bannieres/cm_<faction> : la vraie bannière de la faction) ; color : la couleur de son royaume.
 // raiders : des pillards (les Slaves) : leurs terres sont imprenables, ils ne s'étendent pas, mais lancent des razzias
 // (voir RAIDS).
 
@@ -40,8 +43,10 @@ const CHARLEMAGNE = {
   // secondes, puis toutes les EVERY secondes, sur un voisin au hasard ; ARMY guerriers pour la première, et GROWTH de
   // plus à chaque razzia (0.2 = +20 %). Une razzia qui prend sa cible la rase (avec les moulins et casernes qui en
   // dépendent), pille LOOT pièces par bâtiment, et rentre : les terres restent au défenseur.
+  // Elles plafonnent à MAX guerriers. La première épargne les factions de SPARE_FIRST (la Bavière, trop petite pour
+  // l'encaisser dès le début).
   RAIDS: { FIRST: 150, EVERY: { facile: 150, normal: 110, difficile: 80 }, ARMY: { facile: 400, normal: 600, difficile: 900 },
-    GROWTH: 0.2, LOOT: 150 },
+    GROWTH: 0.2, MAX: 5000, LOOT: 150, SPARE_FIRST: ['baviere'] },
   // ✝️ Succès « Empire chrétien » : quand les terres des Francs touchent celles de Rome, leur Croyance gagne
   // CHRISTIAN_EMPIRE pour toujours
   CHRISTIAN_EMPIRE: 100,
@@ -119,7 +124,7 @@ const CHARLEMAGNE = {
     {
       id: 'baviere', name: tr('Bavière', 'Bavaria'), leader: tr('le duc Tassilon III', 'Duke Tassilo III'), flag: 'cm_baviere', color: [218, 112, 40],
       playable: true,
-      capital: [12.10, 49.02, tr('Ratisbonne', 'Regensburg')],
+      capital: [12.10, 49.02, tr('Ratisbonne', 'Regensburg')], capitalLevel: 3, garrison: 1.5,
       cities: [[13.04, 47.80, tr('Salzbourg', 'Salzburg')]],
       churches: [[11.75, 48.40, tr('Freising', 'Freising')]],
       lands: [[[10.9, 48.6], [11.0, 49.55], [12.4, 49.8], [13.6, 48.95], [14.5, 48.3], [14.6, 47.6], [13.6, 47.0],
@@ -138,7 +143,7 @@ const CHARLEMAGNE = {
     {
       id: 'asturies', name: tr('Asturies', 'Asturias'), leader: tr('le roi Aurelio', 'King Aurelius'), flag: 'cm_asturies', color: [158, 158, 168],
       playable: true,
-      capital: [-5.84, 43.36, tr('Oviedo', 'Oviedo')],
+      capital: [-5.84, 43.36, tr('Oviedo', 'Oviedo')], garrison: 1.5,
       cities: [[-7.56, 43.01, tr('Lugo', 'Lugo')]],
       churches: [[-5.13, 43.35, tr('Cangas de Onís', 'Cangas de Onís')]],
       lands: [[[-9.5, 43.3], [-8.9, 42.1], [-7.4, 42.2], [-6.0, 42.65], [-4.0, 42.85], [-3.15, 43.3], [-3.15, 43.8], [-9.5, 43.9]]],
@@ -147,7 +152,7 @@ const CHARLEMAGNE = {
     {
       id: 'aquitaine', name: tr('Aquitaine', 'Aquitaine'), leader: tr('le duc Hunald II', 'Duke Hunald II'), flag: 'cm_aquitaine', color: [224, 198, 36],
       playable: true,
-      capital: [-0.58, 44.84, tr('Bordeaux', 'Bordeaux')],
+      capital: [-0.58, 44.84, tr('Bordeaux', 'Bordeaux')], capitalLevel: 3, garrison: 1.5,
       cities: [[0.72, 45.18, tr('Périgueux', 'Périgueux')]],
       churches: [[0.16, 45.65, tr('Angoulême', 'Angoulême')]],
       // 769 : le duc Hunald II soulève l'Aquitaine contre les fils de Pépin (le sud-ouest, entre la Charente et la Garonne)
@@ -235,7 +240,7 @@ const CHARLEMAGNE = {
     {
       id: 'cordoue', name: tr('Cordoue', 'Córdoba'), leader: tr('l\'émir Abd al-Rahman Ier', 'Emir Abd al-Rahman I'), flag: 'cm_cordoue', color: [226, 112, 170],
       playable: true,
-      capital: [-4.78, 37.89, tr('Cordoue', 'Córdoba')],
+      capital: [-4.78, 37.89, tr('Cordoue', 'Córdoba')], spare: ['asturies'],
       cities: [[-4.02, 39.86, tr('Tolède', 'Toledo')], [-0.88, 41.65, tr('Saragosse', 'Zaragoza')], [-5.98, 37.39, tr('Séville', 'Seville')],
         [-9.14, 38.72, tr('Lisbonne', 'Lisbon')]],
       churches: [[-0.38, 39.47, tr('Valence', 'Valencia')], [2.17, 41.39, tr('Barcelone', 'Barcelona')], [-6.34, 38.92, tr('Mérida', 'Mérida')]],
@@ -284,7 +289,7 @@ function insidePolygon(pts, x, y) {
   return inside;
 }
 
-// Les bannières des factions (en attendant les vraies bannières historiques : un des drapeaux du jeu, avec sa couleur)
+// Les bannières des factions (leur vraie bannière, avec la couleur de leur royaume)
 for (const f of CHARLEMAGNE.factions) {
   BANNERS.push({ id: f.id, name: f.name, kingdom: f.name, set: 'charlemagne', color: f.color,
     img: `img/bannieres/${f.flag}.webp`, icon: `img/bannieres/${f.flag}s.webp`, logo: `img/bannieres/${f.flag}m.webp` });

@@ -357,6 +357,12 @@ const CONFIG = {
 
   // --- Victoire ---
   WIN_RATIO: 0.7,          // posséder 70 % des terres = victoire
+
+  // --- 📽️ Résumé de la partie (bouton « Résumé » de l'écran de fin, voir replay.js) ---
+  // Pendant la partie, une photo de la carte (qui tient quoi) toutes les EVERY secondes, en petit (au plus CELLS cases) ;
+  // au-delà de MAX_FRAMES photos, on en garde une sur deux (et on espace les suivantes). Le résumé rejoue toute la
+  // partie en DURATION secondes (plus vite pour une partie courte : au plus FRAME_MS millisecondes par photo).
+  REPLAY: { EVERY: 2, CELLS: 40000, MAX_FRAMES: 600, DURATION: 20, FRAME_MS: 120 },
 };
 
 const TERRAIN = { WATER: 0, PLAINS: 1, FOREST: 2, HILLS: 3, MOUNTAIN: 4, RIVER: 5, GREAT_RIVER: 6, PEAK: 7, DESERT: 8,

@@ -454,3 +454,25 @@ button:disabled .ico { opacity: 0.6; }
 /* le choix de la langue, en haut à droite du menu de départ */
 .langRow { display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin: -14px -16px -6px 0; }
 .card .langRow select { font-size: 13px; padding: 2px 4px; max-width: none; }
+
+/* 📽️ Résumé de la partie : la carte rejouée en accéléré, et les plus grands royaumes du moment */
+.replayCard { max-width: 980px; }
+.replayView { display: flex; gap: 12px; align-items: flex-start; }
+#replayCanvas {
+  flex: 1; min-width: 0; width: 100%; height: auto;
+  image-rendering: pixelated;
+  border: 2px solid var(--wood); border-radius: 6px;
+}
+#replayTop { list-style: none; margin: 0; padding: 0; width: 190px; text-align: left; font-size: 14px; }
+#replayTop li { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+#replayTop li.me { font-weight: bold; }
+#replayTop i { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid rgba(0, 0, 0, 0.4); }
+#replayTop span { margin-left: auto; }
+.replayBar { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+.replayBar input { flex: 1; }
+.replayBar button { font-size: 18px; cursor: pointer; background: none; border: none; }
+#replayTime { min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .replayView { flex-direction: column; }
+  #replayTop { width: 100%; }
+}
