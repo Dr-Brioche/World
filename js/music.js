@@ -29,6 +29,9 @@ const Music = {
   // première touche.
   menu() {
     this.loadPrefs();
+    const bar = document.getElementById('musicVol');
+    if (bar) bar.value = Math.round(this.volume * 100);
+    this.refreshButton();
     if (!this.on || !CONFIG.MUSIC.MENU || this.menuAudio) return;
     const a = this.menuAudio = new Audio(CONFIG.MUSIC.MENU);
     a.loop = true;
@@ -40,8 +43,8 @@ const Music = {
       if (this.menuAudio !== a) return forget();
       if (a.paused) a.play().then(forget, () => { /* (pas encore autorisée : au prochain geste) */ });
     };
-    const forget = () => gestures.forEach(g => removeEventListener(g, retry, true));
-    a.play().catch(() => gestures.forEach(g => addEventListener(g, retry, true)));
+    const forget = () => { this.menuBlocked = false; gestures.forEach(g => removeEventListener(g, retry, true)); };
+    a.play().catch(() => { this.menuBlocked = true; gestures.forEach(g => addEventListener(g, retry, true)); });
   },
   // La musique du menu s'arrête, en fondu rapide (la partie commence, ou le joueur coupe la musique)
   stopMenu() {
@@ -71,6 +74,9 @@ const Music = {
 
   // 🎵 / 🔇 : couper ou remettre la musique
   toggle() {
+    // (dans le menu, la musique attendait le premier geste du joueur : ce clic sur 🎵 (ou la touche M) la lance,
+    //  au lieu de la couper alors qu'on ne l'entendait pas encore)
+    if (this.menuBlocked && this.menuAudio) return;
     this.on = !this.on;
     try { localStorage.setItem('medievalEmperor.music', this.on ? 'on' : 'off'); } catch (e) { /* (navigateur sans stockage) */ }
     this.refreshButton();
@@ -89,6 +95,7 @@ const Music = {
   setVolume(pct) {
     this.volume = Math.max(0, Math.min(1, pct / 100));
     try { localStorage.setItem('medievalEmperor.musicVolume', String(this.volume)); } catch (e) { /* (navigateur sans stockage) */ }
+    if (this.menuAudio) this.menuAudio.volume = this.volume; // (la musique du menu suit tout de suite)
   },
   stop() {
     if (this.jingle) { this.jingle.pause(); this.jingle = null; }
