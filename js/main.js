@@ -541,7 +541,8 @@ const UI = {
   },
 
   // ✝️ Croyance face à un voisin ennemi, dans le classement : une bible verte si on convertit ses terres,
-  // rouge si c'est lui qui convertit les nôtres (rien sinon)
+  // rouge si c'est lui qui convertit les nôtres (rien sinon) ; en petit, à côté, l'écart de Croyance entre nous deux
+  // (« +180 » en vert : on gagne ; « −420 » en rouge : on perd)
   faithBadge(p) {
     const G = Game, h = G.human;
     if (p.isHuman || !h.alive) return '<span class="faithB"></span>';
@@ -551,7 +552,8 @@ const UI = {
     const title = tr(`Croyance : toi ${mine}, ${p.name} ${theirs} : `, `Faith: you ${mine}, ${p.name} ${theirs}: `) +
       (win ? tr('tes prêcheurs convertissent peu à peu ses terres', 'your preachers are slowly converting their lands')
         : tr('ses prêcheurs convertissent peu à peu tes terres (bâtis ou améliore des églises !)', 'their preachers are slowly converting your lands (build or upgrade churches!)'));
-    return `<span class="faithB ${win ? 'good' : 'bad'}" title="${escapeHtml(title)}">📖</span>`;
+    const gap = mine - theirs;
+    return `<span class="faithB ${win ? 'good' : 'bad'}" title="${escapeHtml(title)}">📖<sup>${win ? '+' : '−'}${fmt(Math.abs(gap))}</sup></span>`;
   },
 
   // Petite image de la bannière d'un royaume, pour les messages et les listes

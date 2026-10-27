@@ -586,9 +586,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      avec 200, **2,5 par seconde** avec 500, **6 par seconde** avec 1000 ; au-delà, ça accélère **de moins en moins** :
      **9 par seconde** avec 2000, **10,5** avec 3000, et **12,5 par seconde** à partir de **5000** (le maximum).
      Ces vitesses sont celles d'une **vraie domination** : il faut avoir **au moins 2 fois plus** de Croyance que le
-     voisin. Un écart mince par rapport à ta Croyance avance moins vite : avec 1,5 fois plus que lui, aux 2/3 de la
-     vitesse ; avec 1,2 fois plus, au tiers (1 200 contre 1 000 convertit 3 fois moins vite que 250 contre 50, pour le
-     même écart de 200). Réglage : `FAITH_DOMINANCE` dans `js/config.js`. Plusieurs
+     voisin. Un écart mince par rapport à ta Croyance avance moins vite : avec 1,5 fois plus que lui, à 85 % de la
+     vitesse ; avec 1,2 fois plus, à 55 % (1 200 contre 1 000 convertit 1,8 fois moins vite que 250 contre 50, pour le
+     même écart de 200). Réglages : `FAITH_DOMINANCE` et `FAITH_DOMINANCE_POWER` dans `js/config.js`. Plusieurs
      croisades en même temps (une par cathédrale) servent donc encore. Les prêcheurs visent d'abord les **couloirs étroits** et les **pointes** de son royaume qui
      s'avancent dans le tien : les frontières deviennent plus nettes, et ses routes trop fines se referment.
      La foi avance **en courbes**, pas en ligne droite : comme elle gagne les villages, elle s'étire en pointe vers les
@@ -600,7 +600,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ses moulins et casernes passent avec lui.
      Un royaume **désorganisé** (sans ville ni port fortifié) se fait convertir **2 fois plus vite**.
      Ça marche dans les deux sens : un voisin plus croyant convertit **tes** terres ! Dans le classement, une **📖 bible verte**
-     à côté d'un voisin veut dire que tu convertis ses terres, une **bible rouge** que c'est lui qui convertit les tiennes.
+     à côté d'un voisin veut dire que tu convertis ses terres, une **bible rouge** que c'est lui qui convertit les tiennes ;
+     le petit chiffre à côté donne l'**écart de Croyance** entre vous deux (« +180 » en vert : tu gagnes ; « −420 » en
+     rouge : tu perds ; plus il est gros, plus ça va vite).
      Ce n'est **pas une agression** (pas d'alerte, pas d'après-guerre). Ce que la Croyance **ne convertit jamais** : les
      **villes** et les **ports fortifiés** (niveau 3), tout ce qui est **dans leur muraille**, les **avant-postes** et leur zone,
      les **murs** 🧱, les **terres libres**, et la route d'un **assaut en cours**. Elle ne part que d'une **zone de royaume**
@@ -897,6 +899,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.123** : ✝️ dans le classement, à côté de la bible verte ou rouge, un petit chiffre donne l'écart de Croyance avec ce voisin (« +180 », « −420 ») · la conversion ralentit moins pour une avance mince : 1,2 fois plus de Croyance convertit 1,8 fois moins vite (au lieu de 3)
 - **v0.92.122** : ✝️ la Croyance convertit moins vite quand l'avance est mince : pleine vitesse à partir de 2 fois plus de Croyance que le voisin, 2/3 avec 1,5 fois plus, 1/3 avec 1,2 fois plus (une vraie domination avance comme avant)
 - **v0.92.121** : ⬆️ souris d'amélioration (touche **U**) : un clic droit l'arrête (un clic gauche à côté ne fait rien)
 - **v0.92.120** : ⌨️ la **barre Espace** met la partie en pause (et la relance), comme la touche `P`
