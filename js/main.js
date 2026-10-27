@@ -181,6 +181,7 @@ const UI = {
     $('continueBtn').addEventListener('click', () => {
       $('endscreen').classList.add('hidden');
       Game.continueAfterVictory();
+      Music.resume(); // (🎵 la musique d'ambiance reprend)
       this.log(tr('⚔️ La conquête continue ! Élimine les derniers royaumes si tu le souhaites.', '⚔️ The conquest goes on! Wipe out the last kingdoms if you wish.'), 'good');
     });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
@@ -1074,6 +1075,7 @@ const UI = {
       `☠️ Kingdoms destroyed: ${h.kills}`);
     $('continueBtn').classList.toggle('hidden', !canContinue);
     $('summaryBtn').classList.toggle('hidden', !Replay.available());
+    if (win) Music.victory(); // (🏆 le son de la victoire, à la place de la musique d'ambiance)
     $('endscreen').classList.remove('hidden');
   },
 

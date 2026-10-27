@@ -377,6 +377,10 @@ const CONFIG = {
     VOLUME: 0.15,            // volume de départ (de 0 à 1) ; le joueur le règle avec la petite barre, en bas à droite
     FADE: 4,                 // secondes de fondu au début et à la fin d'un morceau
     PAUSE: [20, 120],        // silence entre deux morceaux (secondes, au hasard entre les deux)
+    // 🏆 Le son de la victoire (de dr_brioche), joué une fois sur l'écran de victoire (à la place de la musique
+    // d'ambiance) ; VICTORY_GAIN : son volume, par rapport à celui de la musique (2 = deux fois plus fort, au plus 1)
+    VICTORY: 'sons/musique/victoire.mp3',
+    VICTORY_GAIN: 2,
   },
 
   // --- 📽️ Résumé de la partie (bouton « Résumé » de l'écran de fin, voir replay.js) ---
