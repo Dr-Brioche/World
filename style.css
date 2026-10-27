@@ -152,6 +152,11 @@ html, body {
 }
 #bottomwrap .panel { position: static; }
 
+/* 🎵 La musique d'ambiance, en bas à droite : le bouton (couper / remettre) et la petite barre de volume */
+#musicBox { bottom: 8px; right: 8px; display: flex; align-items: center; gap: 6px; padding: 4px 8px; }
+#musicBox button { padding: 2px 6px; }
+#musicVol { width: 80px; accent-color: #7a4a1a; cursor: pointer; }
+
 /* Jauge des soldats */
 #troopGauge {
   width: min(420px, calc(100vw - 32px));
@@ -407,6 +412,9 @@ button:hover { background: #e8d6a8; }
   .build { min-width: 56px; padding: 4px; }
   #hint { display: none; }
   #log { top: 80px; width: calc(100% - 16px); }
+  /* (🎵 sur un téléphone, la barre du bas prend toute la largeur : la musique passe en haut à droite, sous la barre du haut) */
+  #musicBox { bottom: auto; top: 96px; right: 8px; padding: 2px 6px; }
+  #musicVol { width: 60px; }
 }
 
 /* Menu d'actions (clic droit sur la carte) */

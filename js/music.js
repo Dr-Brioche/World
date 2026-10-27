@@ -1,12 +1,13 @@
 // 🎵 MUSIQUE D'AMBIANCE
 // Pendant la partie, des morceaux choisis au hasard (CONFIG.MUSIC.TRACKS), en fondu, avec de temps en temps un moment
-// de silence entre deux. Le bouton 🎵 de la barre du haut (ou la touche M) la coupe ou la remet ; ce choix est gardé
-// dans le navigateur pour les parties suivantes.
+// de silence entre deux. Le bouton 🎵 en bas à droite (ou la touche M) la coupe ou la remet, et la petite barre à
+// côté règle son volume ; ces choix sont gardés dans le navigateur pour les parties suivantes.
 // (Un navigateur ne joue pas de son avant que le joueur ait cliqué : la musique démarre avec la partie, au clic sur
 // « Commencer ».)
 
 const Music = {
   on: true,        // le joueur veut-il de la musique ?
+  volume: 0,       // son volume (de 0 à 1 ; au départ CONFIG.MUSIC.VOLUME, puis celui de la petite barre)
   audio: null,     // le morceau en cours
   last: -1,        // le dernier morceau joué (pour ne pas le rejouer tout de suite)
   timer: null,     // le prochain morceau (après un silence)
@@ -15,6 +16,11 @@ const Music = {
   // La partie commence : la musique démarre (si le joueur ne l'a pas coupée)
   start() {
     try { this.on = localStorage.getItem('medievalEmperor.music') !== 'off'; } catch (e) { this.on = true; }
+    let v = null;
+    try { v = localStorage.getItem('medievalEmperor.musicVolume'); } catch (e) { /* (navigateur sans stockage) */ }
+    this.volume = v !== null && !isNaN(+v) ? +v : CONFIG.MUSIC.VOLUME;
+    const bar = document.getElementById('musicVol');
+    if (bar) bar.value = Math.round(this.volume * 100);
     this.refreshButton();
     if (this.on && !this.audio && !this.timer) this.next();
   },
@@ -33,6 +39,11 @@ const Music = {
     b.textContent = this.on ? '🎵' : '🔇'; // (l'emoji devient une icône dessinée : voir icons.js)
     b.title = this.on ? tr('Musique : clique pour la couper (touche M)', 'Music: click to turn it off (M key)')
       : tr('Musique coupée : clique pour la remettre (touche M)', 'Music off: click to turn it back on (M key)');
+  },
+  // La petite barre de volume (de 0 à 100) : le morceau en cours change tout de suite de volume
+  setVolume(pct) {
+    this.volume = Math.max(0, Math.min(1, pct / 100));
+    try { localStorage.setItem('medievalEmperor.musicVolume', String(this.volume)); } catch (e) { /* (navigateur sans stockage) */ }
   },
   stop() {
     clearTimeout(this.timer); this.timer = null;
@@ -63,7 +74,7 @@ const Music = {
       const a = this.audio;
       if (!a) return;
       const t = a.currentTime, left = (a.duration || Infinity) - t;
-      a.volume = M.VOLUME * Math.max(0, Math.min(1, t / M.FADE, left / M.FADE));
+      a.volume = this.volume * Math.max(0, Math.min(1, t / M.FADE, left / M.FADE));
     }, 100);
   },
 
