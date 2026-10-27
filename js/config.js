@@ -372,7 +372,7 @@ const CONFIG = {
   // Elle démarre avec la partie ; le bouton 🎵 en bas à droite (ou la touche M) la coupe ou la remet, et la petite barre
   // à côté règle son volume.
   MUSIC: {
-    TRACKS: ['sons/musique/M1.mp3'],
+    TRACKS: ['sons/musique/M1.mp3', 'sons/musique/M2.mp3'],
     VOLUME: 0.15,            // volume de départ (de 0 à 1) ; le joueur le règle avec la petite barre, en bas à droite
     FADE: 4,                 // secondes de fondu au début et à la fin d'un morceau
     SILENCE_CHANCE: 0.5,
