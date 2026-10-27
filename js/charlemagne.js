@@ -14,7 +14,7 @@
 //  - enclaves : des terres à elle au milieu de celles d'une autre ([longitude, latitude, rayon en cases]).
 // playable : le joueur peut l'incarner (pas Rome, ni Byzance, ni Carloman) ; defensive : elle se défend, s'étend sur
 // les terres libres, mais ne lance pas de conquêtes ; production : moulins et casernes de niveau 2 autour de la capitale.
-// flag : la bannière (en attendant les vraies bannières historiques, un des drapeaux du jeu).
+// flag : la bannière (img/bannieres/cm_<faction> : les vraies bannières des factions ; en attendant, un des drapeaux du jeu).
 // raiders : des pillards (les Slaves) : leurs terres sont imprenables, ils ne s'étendent pas, mais lancent des razzias
 // (voir RAIDS).
 
@@ -258,7 +258,7 @@ const CHARLEMAGNE = {
     {
       // ⚔️ Les pillards du nord-est : leurs terres sont imprenables, ils ne s'étendent pas, mais lancent des razzias de
       // plus en plus grosses sur leurs voisins (voir RAIDS)
-      id: 'slaves', name: tr('Slaves', 'Slavs'), leader: tr('les chefs wendes', 'the Wendish chieftains'), flag: 'b16', color: [120, 96, 70],
+      id: 'slaves', name: tr('Slaves', 'Slavs'), leader: tr('les chefs wendes', 'the Wendish chieftains'), flag: 'cm_slaves', color: [40, 150, 148],
       raiders: true, noArmy: true,
       capital: [12.55, 52.41, tr('Brenna', 'Brenna')],
       cities: [[14.42, 50.08, tr('Prague', 'Prague')], [17.6, 52.54, tr('Gniezno', 'Gniezno')]],
