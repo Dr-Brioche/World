@@ -2561,6 +2561,55 @@ const Render = {
     ctx.restore();
   },
 
+  // 🏷️ Les noms des villes historiques (scénarios : voir Game.placeNames) : en petites lettres médiévales, courbées
+  // sous la ville comme sur une vieille carte. Seulement d'assez près (la carte entière serait encombrée), et tant que
+  // la ville existe (une ville rasée perd son nom ; une ville bâtie ensuite n'en a pas).
+  drawPlaceNames(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    if (!G.placeNames.size || s < (this.fitScale || 1) * CONFIG.PLACE_NAME_ZOOM) return;
+    const size = Math.min(17, Math.max(10, 7 + s * 1.6)), ink = this.parch ? this.parchmentAlpha() > 0.5 : false;
+    // (sous le bâtiment : sous sa grande image quand on est près, sinon sous son petit anneau)
+    const below = CONFIG.BUILDING_DRAW_SCALE * (s >= 3 ? 0.85 : 0.58);
+    ctx.font = `${size}px 'Uncial Antiqua', 'IM Fell English', Georgia, serif`;
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = Math.max(2.5, size / 3.5);
+    ctx.strokeStyle = ink ? 'rgba(240,226,190,0.85)' : 'rgba(20,12,4,0.75)';
+    ctx.fillStyle = ink ? '#3b2a17' : '#f6e7c1';
+    for (const [a, name] of G.placeNames) {
+      const b = G.building[a];
+      if (G.anchor[a] !== a || (b !== B_CASTLE && b !== B_CHURCH && b !== B_PORT)) continue;
+      const n = G.sizeOf(b), cx = ox + (a % W + n / 2) * s, cy = oy + (((a / W) | 0) + n / 2) * s + n * s * below + size * 0.8;
+      if (cx < -200 || cy < -50 || cx > this.vw + 200 || cy > this.vh + 50) continue;
+      this.drawArcText(name, cx, cy, size);
+    }
+  },
+  // Écrit le texte le long d'un petit arc qui sourit (ses bouts remontent, comme pour entourer la ville au-dessus),
+  // centré sur (cx, cy)
+  drawArcText(text, cx, cy, size) {
+    const ctx = this.ctx, chars = [...text], gap = size * 0.04;
+    const widths = chars.map(c => ctx.measureText(c).width);
+    const total = widths.reduce((a, w) => a + w, 0) + gap * (chars.length - 1);
+    const R = Math.max(total * 1.3, size * 5); // (rayon de l'arc : plus il est grand, moins le texte est courbé)
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // (d'abord le contour de toutes les lettres, puis leur couleur, pour qu'elles ne se chevauchent pas)
+    for (const pass of [0, 1]) {
+      let x = -total / 2;
+      chars.forEach((c, k) => {
+        const mid = x + widths[k] / 2, phi = mid / R;
+        ctx.save();
+        ctx.translate(R * Math.sin(phi), -(R - R * Math.cos(phi)));
+        ctx.rotate(-phi);
+        if (pass === 0) ctx.strokeText(c, 0, 0); else ctx.fillText(c, 0, 0);
+        ctx.restore();
+        x += widths[k] + gap;
+      });
+    }
+    ctx.restore();
+  },
+
   // Survol d'un château ennemi : on montre le chemin de l'assaut (pointillés dorés),
   // ou une croix rouge si d'autres fortifications bloquent le passage.
   // Trace un chemin d'assaut (pointillés), case par case
@@ -2793,6 +2842,8 @@ const Render = {
       }
     }
 
+
+    this.drawPlaceNames(ox, oy);
 
     // Noms des royaumes : en lettres espacées, dans le sens du royaume (en oblique) et un peu courbés, comme sur
     // une vieille carte ; en dessous, sa bannière et ses soldats. Sur la carte parchemin, ils sont écrits à l'encre.

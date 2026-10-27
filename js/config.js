@@ -38,6 +38,7 @@ const CONFIG = {
   // Vue de très loin : en dézoomant presque au maximum, la carte devient une carte parchemin. Elle commence à apparaître
   // en dessous de 85 % du zoom « toute la carte », elle est complète à 60 % ; on peut dézoomer jusqu'à 45 %
   PARCHMENT_ZOOM: [0.85, 0.6, 0.45],
+  PLACE_NAME_ZOOM: 1.4,      // 🏷️ les noms des villes historiques s'écrivent à partir de ce zoom (× le zoom de la carte entière)
   // Décor autour de la carte (une vieille carte marine) : on le voit en dézoomant ; la vue ne va jamais plus loin
   DECOR_IMAGE: 'img/decor_mer.webp',
   DECOR_SIZE: 2.6,           // largeur du décor, en largeurs de carte (la carte est au milieu)
@@ -634,19 +635,26 @@ const AZEROTH_FACTIONS = [
   { name: tr('Pacte sauvage', 'Wild Pact'), races: ['Défias', 'Gnolls', 'Ogres', 'Murlocs'] },
 ];
 const AZEROTH_CAPITALS = {
-  'Humains': { at: [547, 402], place: tr('Hurlevent', 'Stormwind') },
-  'Nains': { at: [591, 329], place: tr('Forgefer', 'Ironforge') },
-  'Gnomes': { at: [543, 325], place: tr('Gnomeregan', 'Gnomeregan') },
-  'Elfes de la nuit': { at: [38, 68], place: tr('Darnassus', 'Darnassus') },
-  'Orcs': { at: [180, 236], place: tr('Orgrimmar', 'Orgrimmar') },
-  'Trolls': { at: [194, 288], place: tr('les îles de l\'Écho (Durotar)', 'the Echo Isles (Durotar)') },
-  'Morts-vivants': { at: [563, 171], place: tr('Fossoyeuse', 'the Undercity') },
-  'Taurens': { at: [91, 305], place: tr('les Pitons-du-Tonnerre', 'Thunder Bluff') },
-  'Défias': { at: [531, 448], place: tr('la Mine de la Mort (Marche de l\'Ouest)', 'the Deadmines (Westfall)') },
-  'Gnolls': { at: [614, 414], place: tr('les Carmines', 'the Redridge Mountains') },
-  'Ogres': { at: [64, 347], place: tr('Hache-Tripes (Féralas)', 'Dire Maul (Feralas)') },
-  'Murlocs': { at: [81, 155], place: tr('Sombrivage', 'Darkshore') },
+  // (place : où, dans les phrases ; name : le nom écrit sur la carte, sous la capitale)
+  'Humains': { at: [547, 402], place: tr('Hurlevent', 'Stormwind'), name: tr('Hurlevent', 'Stormwind') },
+  'Nains': { at: [591, 329], place: tr('Forgefer', 'Ironforge'), name: tr('Forgefer', 'Ironforge') },
+  'Gnomes': { at: [543, 325], place: tr('Gnomeregan', 'Gnomeregan'), name: tr('Gnomeregan', 'Gnomeregan') },
+  'Elfes de la nuit': { at: [38, 68], place: tr('Darnassus', 'Darnassus'), name: tr('Darnassus', 'Darnassus') },
+  'Orcs': { at: [180, 236], place: tr('Orgrimmar', 'Orgrimmar'), name: tr('Orgrimmar', 'Orgrimmar') },
+  'Trolls': { at: [194, 288], place: tr('les îles de l\'Écho (Durotar)', 'the Echo Isles (Durotar)'), name: tr('Îles de l\'Écho', 'Echo Isles') },
+  'Morts-vivants': { at: [563, 171], place: tr('Fossoyeuse', 'the Undercity'), name: tr('Fossoyeuse', 'Undercity') },
+  'Taurens': { at: [91, 305], place: tr('les Pitons-du-Tonnerre', 'Thunder Bluff'), name: tr('Pitons-du-Tonnerre', 'Thunder Bluff') },
+  'Défias': { at: [531, 448], place: tr('la Mine de la Mort (Marche de l\'Ouest)', 'the Deadmines (Westfall)'), name: tr('Mine de la Mort', 'Deadmines') },
+  'Gnolls': { at: [614, 414], place: tr('les Carmines', 'the Redridge Mountains'), name: tr('Les Carmines', 'Redridge') },
+  'Ogres': { at: [64, 347], place: tr('Hache-Tripes (Féralas)', 'Dire Maul (Feralas)'), name: tr('Hache-Tripes', 'Dire Maul') },
+  'Murlocs': { at: [81, 155], place: tr('Sombrivage', 'Darkshore'), name: tr('Sombrivage', 'Darkshore') },
 };
+
+// 🏷️ Le nom d'un lieu tel qu'on l'écrit sur la carte : sans article au début (« la Digue de Helm » → « Digue de Helm »)
+function placeLabel(name) {
+  const s = name.replace(/^(le |la |les |l'|the )/i, '');
+  return s[0].toUpperCase() + s.slice(1);
+}
 
 // Sur la carte, un écu est dessiné à cette taille (il n'a pas de longue hampe : pas besoin de l'agrandir autant)
 const SHIELD_SCALE = 1.0;

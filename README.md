@@ -128,9 +128,33 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Tu choisis ta faction dans le menu (tout le monde sauf Rome, Byzance et Carloman), mais le but est surtout de jouer
      les **Francs** et de bâtir l'empire de Charlemagne. Règles du scénario :
      - **pas de nouvelles villes** : on améliore les siennes, on prend celles des autres (le bouton Château disparaît) ;
-     - ⚔️ **769, la révolte d'Aquitaine** : dès le départ, le duc Hunald II tient le sud-ouest (Bordeaux, Périgueux),
-       et les Francs n'y gardent que le **château isolé de Fronsac** (il ne compte que sur sa garnison : tiens-le, et
-       relie-le à ton royaume en soumettant l'Aquitaine) ;
+     - 📜 **les grands événements** s'ouvrent sur un **parchemin** au milieu de l'écran, en écriture médiévale : la
+       partie se met en pause, le parchemin raconte ce qui se passe et dit **ce qu'il faut faire** (Poursuivre, Entrée
+       ou Échap pour reprendre). Les réglages sont dans `js/charlemagne.js` (avec les textes, dans `EVENTS`) :
+       - 👑 **768, la mort de Pépin** : le parchemin d'ouverture, qui présente la situation et les objectifs ;
+       - ⚔️ **769, la trahison d'Aquitaine**, entre la 1ʳᵉ et la 3ᵉ minute (au hasard) : le duc Hunald II soulève
+         le sud-ouest (Bordeaux, Périgueux, Angoulême, jusque-là aux Francs), et les Francs n'y gardent que le
+         **château isolé de Fronsac** (il ne compte que sur sa garnison : tiens-le, et relie-le à ton royaume en
+         soumettant l'Aquitaine) ;
+       - ⚱️ **771, la mort de Carloman** ; ⚔️ **773, Didier marche sur Rome** (30 s avant), puis **Rome est tombée**
+         si les Lombards la prennent ; ✝️ le succès **« Empire chrétien »** ; ⚔️ la **première razzia** des Slaves ;
+       - 🗡️ **778, Roncevaux** : la première ville que les Francs prennent en Espagne, leur arrière-garde est
+         massacrée au retour (Roland meurt) : **−30 %** de leurs soldats ;
+       - ⚔️ **782, la révolte de Widukind** : 2 min après la prise d'Eresburg, les Saxons lèvent une armée
+         (1 500, 2 500 ou 3 500 soldats selon la difficulté) et marchent sur elle ;
+       - 🤝 **787, Tassilon trahit** : à la 16ᵉ, 13ᵉ ou 10ᵉ minute, si les Francs n'ont pas encore pris Ratisbonne, la
+         Bavière et les Avars s'allient pour de bon (ils se défendent l'un l'autre) ;
+       - 👑 **797, Irène, impératrice** : à la 14ᵉ, 18ᵉ ou 22ᵉ minute, Byzance perd la moitié de ses soldats et de
+         ses garnisons, et ne recrute plus pendant 2 minutes (le moment de l'attaquer) ;
+       - 🐘 **802, l'éléphant du calife** : quand les Francs prennent Barcelone, Haroun al-Rachid leur offre
+         **💰 1 000** et **+50 de Croyance** pour toujours ;
+       - ✝️ **799, le pape Léon III agressé** : quand tu as rempli 5 objectifs, la garnison de Rome tombe de moitié et
+         ne se reconstitue plus : remplis-la en envoyant des soldats au pape (clic droit sur ses terres) dans les
+         **2 minutes**, sinon l'objectif « Rome » est perdu tant qu'elle n'est pas pleine ;
+       - 🔥 **799, les premiers Vikings** : à partir de la 25ᵉ, 20ᵉ ou 16ᵉ minute, toutes les 2 min 30, les Danois
+         débarquent (500, 800 ou 1 200 guerriers) près d'une ville côtière des Francs, et la rasent s'ils la prennent ;
+     - 🏷️ **les noms des villes** : de près, chaque ville et église historique porte son nom, écrit en lettres
+       médiévales sous elle (Paris, Aix, Pavie, Rome…) ; aussi au survol de la ville ;
      - ⚔️ **les Slaves, pillards du nord-est** : leurs terres sont **imprenables** (on ne peut que se défendre contre
        eux) et ils ne s'étendent pas, mais ils lancent des **razzias** sur un voisin au hasard (toutes les 150 s en
        Facile, 110 s en Normal, 80 s en Difficile, après 2 min 30), de plus en plus grosses (600 guerriers en Normal,
@@ -869,6 +893,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.119** : 📜 **Les grands événements sur parchemin** (Charlemagne) : un parchemin se déroule au milieu de l'écran, en écriture médiévale, met la partie en pause, raconte l'événement et dit ce qu'il faut faire (la mort de Pépin, la trahison d'Aquitaine, la mort de Carloman, la marche de Didier, la chute de Rome, l'Empire chrétien, les razzias slaves) · ⚔️ l'Aquitaine se révolte maintenant **entre la 1ʳᵉ et la 3ᵉ minute** (ses terres sont franques au départ) · 7 nouveaux événements historiques : 🗡️ **Roncevaux**, ⚔️ **Widukind**, 🤝 **Tassilon et les Avars**, 👑 **Irène**, 🐘 **l'éléphant du calife**, ✝️ **Léon III agressé**, 🔥 **les premiers Vikings** · 🏷️ **les noms des villes** historiques écrits en lettres médiévales courbées sous elles (Charlemagne, Gouffre de Helm, et les capitales d'Azeroth) · 🇬🇧 « the Danes' » au lieu de « the Danes's » dans les messages anglais
 - **v0.92.118** : 📽️ **Résumé de la partie** : sur l'écran de fin, un bouton rejoue toute la partie en accéléré (la carte entière, juste les couleurs des royaumes, l'heure et les plus grands royaumes du moment) · 👑 Charlemagne, après des dizaines de parties testées en accéléré : 🏆 la victoire aux 70 % (et la victoire par anéantissement) ne bloque plus sur les Slaves : leurs terres imprenables ne comptent plus, et ils sont classés à part (⚔️) au lieu d'être 1ᵉʳˢ avec 28 % · ⚔️ les razzias plafonnent à 5 000 guerriers, et la première épargne la Bavière · 🛡️ la Bavière, l'Aquitaine et les Asturies, qui disparaissaient en quelques minutes, résistent (Ratisbonne et Bordeaux au niveau 3, garnisons +50 %, Cordoue moins acharnée sur les Asturies) · 🐛 un assaut dont la cible venait d'être rasée pouvait planter la partie · 💬 après une razzia réussie, plus de message « l'assaut a échoué »
 - **v0.92.117** : 👑 Charlemagne : les **15 factions ont leurs vraies bannières** (monogramme KAROLUS des Francs et de Carloman, clés de saint Pierre du pape, aigle bicéphale de Byzance, guivre lombarde, cheval saxon, corbeau danois, triskèle breton, croix des Asturies…) et chaque royaume prend la couleur de son drapeau : Carloman en violet, les Lombards en vert, la Bavière en orange, les Saxons en noir… (Rome, les Francs et Carloman se distinguent enfin au premier coup d'œil)
 - **v0.92.116** : 👑 Charlemagne : ⚔️ la **révolte d'Aquitaine** (Hunald II, Bordeaux) avec le **château isolé de Fronsac** · ⚔️ les **Slaves**, pillards du nord-est : terres imprenables, **razzias** de plus en plus grosses qui rasent leur cible · ✝️ succès **« Empire chrétien »** (terres franques reliées à Rome : +100 de Croyance pour toujours) · capitales au moins au niveau 2, Pavie et Vannes au niveau 3, Rouen et Wurtzbourg deviennent des églises · 🗺️ au bord des cartes Charlemagne et Europe, la terre finit sur des sommets (plus de ligne de mer que suivent les bateaux)

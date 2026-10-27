@@ -47,7 +47,10 @@ Object.assign(GameRules, {
       const h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
       for (const [type, lvl] of types) this.placeOnLand(p, type, cx, cy, lvl, j => this.inWalls(c, j));
     };
-    for (const [key, level] of H.ROHAN_CITIES) city(rohan, key, level);
+    for (const [key, level, name] of H.ROHAN_CITIES) {
+      const a = city(rohan, key, level);
+      if (a >= 0) this.placeNames.set(a, placeLabel(name)); // (🏷️ son nom, écrit sur la carte)
+    }
     rohan.capital = hd.place.hornburg;
     inside(hd.place.hornburg, rohan, [[B_BARRACKS, 3], [B_MILL, 2], [B_MILL, 2]]);
     inside(hd.place.caves, rohan, [[B_MILL, 1]]);

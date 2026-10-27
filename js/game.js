@@ -47,6 +47,7 @@ const GameRules = {
     this.castles = [];
     this.tick = 0;
     Replay.reset(); // (📽️ les photos du résumé de la partie : voir replay.js)
+    this.placeNames = new Map(); // (les villes historiques des scénarios : case d'ancrage → nom, écrit sur la carte)
     this.version = 0; // augmente à chaque changement de la carte
     // (calculs gardés en mémoire d'une partie à l'autre : on les oublie)
     this.regionsCache = null; this.regionsVersion = -1; this.nbStatsVersion = -1; this.nbStatsTick = undefined; this.assaultPlans = new Map();
@@ -178,7 +179,7 @@ const GameRules = {
       for (const j of this.footprint(a, this.building[a])) if (this.owner[j] !== pid) this.setOwner(j, pid);
     }
     if (old >= 0 && pid >= 0) this.players[old].lastHitBy = pid; // (pour savoir qui l'a anéanti, voir outpostsOnly)
-    if (old >= 0 && this.players[old].tiles === 0) this.eliminate(old, pid);
+    if (old >= 0 && this.players[old].tiles === 0 && !this.players[old].dormant) this.eliminate(old, pid);
   },
 
   // Côté du carré occupé par un type de bâtiment
@@ -890,9 +891,9 @@ const GameRules = {
     this.attacks.push(a);
     const d = this.players[o];
     if (p.isHuman) UI.log(tr(`🔥 Tes Vikings (${fmt(e.troops)} soldats) débarquent chez ${d.name} et marchent sur ${this.targetLabel(c)} !`,
-      `🔥 Your Vikings (${fmt(e.troops)} soldiers) land in ${d.name}'s land and march on ${this.targetLabel(c)}!`), 'good', d);
+      `🔥 Your Vikings (${fmt(e.troops)} soldiers) land in ${possessive(d.name)} land and march on ${this.targetLabel(c)}!`), 'good', d);
     else if (d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} (${fmt(e.troops)} soldats) ont débarqué ! Clique sur leur bannière pour envoyer tes défenseurs.`,
-      `🔥 ${p.name}'s Vikings (${fmt(e.troops)} soldiers) have landed! Click their banner to send your defenders.`), 'warn', p);
+      `🔥 ${possessive(p.name)} Vikings (${fmt(e.troops)} soldiers) have landed! Click their banner to send your defenders.`), 'warn', p);
   },
   // 🔥 Fin du siège d'un assaut viking : c'est un raid. La cible (ville ou port fortifié) est détruite, avec les moulins
   // et casernes qui en dépendent ; chaque bâtiment détruit rapporte VIKING_LOOT pièces au pillard. Les terres restent
@@ -918,7 +919,7 @@ const GameRules = {
     if (p.isHuman) UI.log(tr(`🔥 Tes Vikings ont rasé ${what} ${this.deName(d.name)} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} détruit${ruins.length > 1 ? 's' : ''}, 💰 ${fmt(loot)} de butin ! Ils rembarquent.`,
       `🔥 Your Vikings razed ${what} of ${d.name}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} destroyed, 💰 ${fmt(loot)} of loot! They set sail home.`), 'good', d);
     else if (d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} ont rasé une de tes ${city ? 'villes' : 'places fortes'} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} détruit${ruins.length > 1 ? 's' : ''} !`,
-      `🔥 ${p.name}'s Vikings razed one of your ${city ? 'cities' : 'strongholds'}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} destroyed!`), 'warn', p);
+      `🔥 ${possessive(p.name)} Vikings razed one of your ${city ? 'cities' : 'strongholds'}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} destroyed!`), 'warn', p);
     return this.endAttack(a);
   },
   // Des soldats rembarquent sur la côte `from` et rentrent au port le plus proche (ils rejoignent l'armée en arrivant)
@@ -1259,11 +1260,11 @@ const GameRules = {
         const p = this.players[a.attacker];
         if (this.rerouteAssault(a)) {
           if (p.isHuman) UI.log(tr(`🧱 Un mur ${this.deName(o.name)} barre la route de ton armée : elle le contourne.`, `🧱 A wall of ${o.name} blocks your army's route: it goes around it.`), 'warn', o);
-          else if (o.isHuman) UI.log(tr(`🧱 Ton mur barre la route de l'armée ${this.deName(p.name)} : elle doit faire le tour !`, `🧱 Your wall blocks ${p.name}'s army: it has to go around!`), 'good', p);
+          else if (o.isHuman) UI.log(tr(`🧱 Ton mur barre la route de l'armée ${this.deName(p.name)} : elle doit faire le tour !`, `🧱 Your wall blocks ${possessive(p.name)} army: it has to go around!`), 'good', p);
           continue;
         }
         if (p.isHuman) UI.log(tr(`🧱 Un mur ${this.deName(o.name)} ferme le seul passage de ton armée : elle rebrousse chemin.`, `🧱 A wall of ${o.name} closes your army's only way through: it turns back.`), 'warn', o);
-        else if (o.isHuman) UI.log(tr(`🧱 Ton mur ferme le seul passage de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, `🧱 Your wall closes ${p.name}'s army's only way through: it turns back!`), 'good', p);
+        else if (o.isHuman) UI.log(tr(`🧱 Ton mur ferme le seul passage de l'armée ${this.deName(p.name)} : elle rebrousse chemin !`, `🧱 Your wall closes ${possessive(p.name)} army's only way through: it turns back!`), 'good', p);
         this.wallRetreatLoss(a);
         this.endAttack(a);
       }
@@ -1750,6 +1751,7 @@ const GameRules = {
     for (const p of this.players) {
       const [x, y] = AZEROTH_CAPITALS[race(p)].at;
       this.spawnPlayer(p, this.nearestSpawn(x, y));
+      if (p.capital >= 0) this.placeNames.set(p.capital, AZEROTH_CAPITALS[race(p)].name); // (🏷️ son nom, sur la carte)
     }
     this.phase = 'playing';
     this.paused = true;
@@ -1807,10 +1809,15 @@ const GameRules = {
       const p = this.players[cm.role[f.id]];
       // (une capitale est au moins au niveau 2)
       const cap = this.placeOnLand(p, B_CASTLE, ...at(f.capital[0], f.capital[1]), Math.max(2, f.capitalLevel || 2));
-      if (cap >= 0) { p.capital = cap; cm.capital[f.id] = cap; p.castlesBuilt = 1; }
-      // (chaque ville ou église est notée à son point [longitude, latitude] : voir les objectifs « site »)
-      for (const c of f.cities) cm.sites.set(c[0] + ',' + c[1], this.placeOnLand(p, B_CASTLE, ...at(c[0], c[1]), 1));
-      for (const c of f.churches) cm.sites.set(c[0] + ',' + c[1], this.placeOnLand(p, B_CHURCH, ...at(c[0], c[1]), 1));
+      if (cap >= 0) { p.capital = cap; cm.capital[f.id] = cap; p.castlesBuilt = 1; this.placeNames.set(cap, f.capital[2]); }
+      // (chaque ville ou église est notée à son point [longitude, latitude] : voir les objectifs « site » ; et son nom)
+      for (const [type, list] of [[B_CASTLE, f.cities], [B_CHURCH, f.churches]]) {
+        for (const c of list) {
+          const a = this.placeOnLand(p, type, ...at(c[0], c[1]), 1);
+          cm.sites.set(c[0] + ',' + c[1], a);
+          if (a >= 0) this.placeNames.set(a, c[2]);
+        }
+      }
       // (Rome et Constantinople : 2 moulins et une caserne de niveau 2 dans leur muraille, qui grandiront avec le temps)
       if (f.production && cap >= 0) {
         const h = this.sizeOf(B_CASTLE) / 2, cx = cap % W + h, cy = ((cap / W) | 0) + h, inside = j => this.inWalls(cap, j);
@@ -1839,6 +1846,21 @@ const GameRules = {
       if (this.building[t] && this.anchor[t] === t) this.removeBuilding(t);
       this.setOwner(t, -1);
     }
+    // 769 : l'Aquitaine se révoltera un peu plus tard (voir aquitaineRevolt) : d'ici là, ses terres et ses villes sont
+    // aux Francs, et le duc Hunald attend son heure (« en sommeil » : pas de terres, il ne joue pas)
+    // (si le joueur incarne l'Aquitaine, la révolte a déjà eu lieu)
+    const aq = this.players[cm.role.aquitaine], fr = this.players[cm.role.francs];
+    if (!aq.isHuman) {
+      aq.dormant = true;
+      cm.aquitaineLand = [];
+      for (let i = 0; i < this.N; i++) if (this.owner[i] === aq.id) cm.aquitaineLand.push(i);
+      for (const i of cm.aquitaineLand) this.setOwner(i, fr.id);
+      for (const c of this.castles) if (this.owner[c] === fr.id) this.garrison[c] = this.garrisonMax(c);
+      const [lo, hi] = C.AQUITAINE_REVOLT;
+      cm.aquitaineTick = Math.round((lo + Math.random() * (hi - lo)) * TPS);
+    }
+    // (778 : au sud des Pyrénées, c'est l'Espagne : voir Roncevaux)
+    cm.spain = at(C.RONCEVAUX.LON, C.RONCEVAUX.LAT);
     // Les armées, le pacte de Rome, et les dates du scénario (selon la difficulté)
     for (const p of this.players) p.troops = p.noArmy ? 0 : Math.round(this.maxTroops(p) * C.START_ARMY);
     if (cm.capital.papaute >= 0) this.garrison[cm.capital.papaute] = C.ROME_GARRISON;
@@ -1892,6 +1914,8 @@ const GameRules = {
     if (!cm || this.tick % TPS) return;
     const P = role => this.players[cm.role[role]];
     const franks = P('francs'), carl = P('carloman'), pope = P('papaute'), lomb = P('lombards');
+    // 769 : la révolte d'Aquitaine
+    if (P('aquitaine').dormant && this.tick >= cm.aquitaineTick) this.aquitaineRevolt();
     // 771 : Carloman meurt, son royaume revient à Charlemagne
     if (carl.alive && this.tick >= cm.carlomanTick && franks.alive) {
       const keep = this.castles.filter(c => this.owner[c] === carl.id).map(c => [c, this.garrison[c]]);
@@ -1902,8 +1926,8 @@ const GameRules = {
       for (let i = 0; i < this.N; i++) if (this.owner[i] === carl.id) this.setOwner(i, franks.id);
       for (const [c, g] of keep) this.garrison[c] = g; // (ses garnisons restent en place)
       for (const w of this.works.values()) if (w.pid === carl.id) w.pid = franks.id;
-      UI.log(tr('⚱️ Carloman est mort : son royaume revient à Charles, désormais seul roi des Francs !',
-        '⚱️ Carloman is dead: his kingdom passes to Charles, now sole king of the Franks!'), franks.isHuman ? 'good' : '', franks);
+      this.cmEvent('carloman', {}, tr('⚱️ Carloman est mort : son royaume revient à Charles, désormais seul roi des Francs !',
+        '⚱️ Carloman is dead: his kingdom passes to Charles, now sole king of the Franks!'), '', franks);
     }
     // 773 : les Lombards marchent sur Rome (on prévient un peu avant). Leur grande armée dépend des villes qu'ils
     // tiennent encore : un royaume lombard déjà entamé par les Francs en lève bien moins
@@ -1911,7 +1935,8 @@ const GameRules = {
     const army = Math.round(cm.lombardArmy * Math.min(1, cities / Math.max(1, cm.lombardCities)));
     if (!cm.lombardWarned && this.tick >= cm.lombardTick - C.LOMBARDS_WARNING * TPS && lomb.alive && pope.alive) {
       cm.lombardWarned = true;
-      UI.log(lomb.isHuman
+      if (this.human === franks) this.cmEvent('lombards', { army: fmt(army), secs: C.LOMBARDS_WARNING });
+      else UI.log(lomb.isHuman
         ? tr('⚔️ Ton armée se rassemble : bientôt, les Lombards pourront marcher sur Rome !', '⚔️ Your army is gathering: soon the Lombards will be able to march on Rome!')
         : tr(`⚠️ Didier, roi des Lombards, lève une armée de ${fmt(army)} soldats pour marcher sur Rome ! Le pape appelle les Francs au secours`,
           `⚠️ Desiderius, king of the Lombards, is raising an army of ${fmt(army)} soldiers to march on Rome! The pope calls the Franks for help`) +
@@ -1923,10 +1948,8 @@ const GameRules = {
       cm.christian = true;
       franks.faithBonus = (franks.faithBonus || 0) + C.CHRISTIAN_EMPIRE;
       this.faithCache = null;
-      UI.log(franks.isHuman ? tr(`✝️ Succès : « Empire chrétien » ! Tes terres touchent enfin celles de Rome : ta Croyance gagne +${C.CHRISTIAN_EMPIRE} pour toujours.`,
-        `✝️ Achievement: "Christian Empire"! Your lands finally reach those of Rome: your Faith gains +${C.CHRISTIAN_EMPIRE} forever.`)
-        : tr(`✝️ Les terres des Francs touchent celles de Rome : c'est l'« Empire chrétien » (+${C.CHRISTIAN_EMPIRE} de Croyance).`,
-          `✝️ The Franks' lands reach those of Rome: the "Christian Empire" is born (+${C.CHRISTIAN_EMPIRE} Faith).`), franks.isHuman ? 'good' : '', franks);
+      this.cmEvent('christian', { faith: C.CHRISTIAN_EMPIRE }, tr(`✝️ Les terres des Francs touchent celles de Rome : c'est l'« Empire chrétien » (+${C.CHRISTIAN_EMPIRE} de Croyance).`,
+        `✝️ The Franks' lands reach those of Rome: the "Christian Empire" is born (+${C.CHRISTIAN_EMPIRE} Faith).`), '', franks);
     }
     if (!cm.lombardMarched && this.tick >= cm.lombardTick) {
       cm.lombardMarched = true;
@@ -1938,6 +1961,139 @@ const GameRules = {
         }
       }
     }
+    // Rome tombe (au premier qui la prend au pape, s'il n'est ni lui ni un allié qui la lui rendra)
+    const rome = this.owner[cm.capital.papaute];
+    if (!cm.romeFell && rome >= 0 && rome !== pope.id && !this.areAllied(rome, pope.id)) {
+      cm.romeFell = true;
+      this.cmEvent('romeFalls', {}, null);
+    }
+    this.stepCmEvents(P, franks, pope);
+  },
+
+  // 📜 Un grand événement du scénario : un parchemin pour le joueur des Francs (voir EVENTS dans charlemagne.js),
+  // ou un simple message (log, s'il y en a un) pour les autres
+  cmEvent(key, vars, log, kind = 'warn', who) {
+    if (this.human.role === 'francs') UI.parchment(CHARLEMAGNE.EVENTS[key], vars);
+    else if (log) UI.log(log, kind, who);
+  },
+
+  // ⚔️ 769 : le duc Hunald II soulève l'Aquitaine. Ses anciennes terres encore aux Francs passent à lui (avec ce qui y
+  // est bâti), sauf l'enclave de Fronsac, qui reste aux Francs, isolée ; il lève une armée.
+  aquitaineRevolt() {
+    const cm = this.cm, aq = this.players[cm.role.aquitaine], fr = this.players[cm.role.francs];
+    aq.dormant = false;
+    for (const i of cm.aquitaineLand) if (this.owner[i] === fr.id) this.setOwner(i, aq.id);
+    for (const [a, w] of this.works) if (w.pid === fr.id && this.owner[a] === aq.id) w.pid = aq.id;
+    if (!aq.tiles) return this.eliminate(aq.id, -1, true); // (les Francs ont perdu ces terres : plus de révolte possible)
+    for (const c of this.castles) if (this.owner[c] === aq.id) this.garrison[c] = this.garrisonMax(c);
+    aq.troops = Math.max(aq.troops, Math.round(this.maxTroops(aq) * 0.5));
+    this.cmEvent('aquitaine', {}, tr('⚔️ 769 : le duc Hunald II soulève l\'Aquitaine contre les Francs !', '⚔️ 769: Duke Hunald II raises Aquitaine against the Franks!'), '', aq);
+  },
+
+  // Les autres grands événements de Charlemagne (chaque seconde ; voir les réglages dans charlemagne.js)
+  stepCmEvents(P, franks, pope) {
+    const cm = this.cm, C = CHARLEMAGNE, TPS = CONFIG.TICKS_PER_SECOND, t = this.tick, diff = cm.diff;
+    if (!franks.alive) return;
+    // 782 : Widukind. Un moment après la prise d'Eresburg, les Saxons lèvent une armée et marchent sur elle
+    const sax = P('saxons'), eres = cm.capital.saxons;
+    if (cm.widukindTick === undefined && sax.alive && this.owner[eres] === franks.id) cm.widukindTick = t + C.WIDUKIND.DELAY * TPS;
+    if (cm.widukindTick !== undefined && !cm.widukind && t >= cm.widukindTick) {
+      cm.widukind = true;
+      const army = C.WIDUKIND.ARMY[diff];
+      if (sax.alive && this.owner[eres] === franks.id) {
+        sax.troops += army;
+        if (!this.launchAttack(sax.id, franks.id, army, eres)) {
+          this.cmEvent('widukind', { army: fmt(army) }, tr(`⚔️ 782 : Widukind soulève les Saxons (${fmt(army)} soldats) contre les Francs !`, `⚔️ 782: Widukind raises the Saxons (${fmt(army)} soldiers) against the Franks!`), '', sax);
+        }
+      }
+    }
+    // 787 : Tassilon s'allie aux Avars (si les Francs n'ont pas encore pris Ratisbonne)
+    const bav = P('baviere'), avars = P('avars');
+    if (!cm.tassilo && t >= C.TASSILO[diff] * 60 * TPS) {
+      cm.tassilo = true;
+      if (bav.alive && avars.alive && this.owner[cm.capital.baviere] === bav.id && !this.areAllied(bav.id, avars.id) && bav.pact < 0 && avars.pact < 0) {
+        this.makeAlliance(bav.id, avars.id);
+        if (bav.pact >= 0) this.pacts.get(bav.pact).eternal = true; // (un serment qu'ils ne rompront pas)
+        this.cmEvent('tassilo', {}, null);
+      }
+    }
+    // 797 : Irène s'empare du trône de Byzance : la moitié de ses soldats et de ses garnisons désertent, et elle ne
+    // recrute plus pendant un moment (voir troopRate)
+    const byz = P('byzance');
+    if (!cm.irene && t >= C.IRENE.AT[diff] * 60 * TPS) {
+      cm.irene = true;
+      if (byz.alive) {
+        byz.troops *= 0.5;
+        for (const c of this.castles) if (this.owner[c] === byz.id) this.garrison[c] *= 0.5;
+        byz.crisisUntil = t + C.IRENE.TIME * TPS;
+        this.cmEvent('irene', { secs: C.IRENE.TIME }, tr('👑 797 : Irène s\'empare du trône de Byzance, l\'empire est déchiré !', '👑 797: Irene seizes the throne of Byzantium, the empire is torn apart!'), '', byz);
+      }
+    }
+    // 802 : l'éléphant du calife, quand les Francs tiennent Barcelone
+    const barca = cm.sites.get(C.OBJECTIVES.find(o => o.kind === 'site').at.join(','));
+    if (!cm.elephant && barca >= 0 && this.owner[barca] === franks.id) {
+      cm.elephant = true;
+      franks.gold += C.ELEPHANT.GOLD;
+      franks.faithBonus = (franks.faithBonus || 0) + C.ELEPHANT.FAITH;
+      this.faithCache = null;
+      this.cmEvent('elephant', { gold: fmt(C.ELEPHANT.GOLD), faith: C.ELEPHANT.FAITH }, null);
+    }
+    // 799 : le pape Léon III agressé (le joueur des Francs, quand il a déjà rempli beaucoup d'objectifs)
+    const romeTile = cm.capital.papaute, R = C.LEO;
+    if (!cm.leo && this.human === franks && pope.alive && this.owner[romeTile] === pope.id
+      && Object.values(cm.done).filter(Boolean).length >= R.OBJECTIVES) {
+      cm.leo = { end: t + R.TIME * TPS };
+      this.garrison[romeTile] *= 0.5;
+      this.cmEvent('leo', { secs: R.TIME }, null);
+    }
+    if (cm.leo && !cm.leo.done) {
+      if (this.owner[romeTile] !== pope.id || this.garrison[romeTile] >= C.ROME_GARRISON - 1) {
+        cm.leo.done = true; // (la garnison est pleine : l'émeute est matée ; ou Rome a changé de mains)
+        if (this.owner[romeTile] === pope.id) UI.log(tr('✝️ Tes soldats ont rétabli l\'ordre dans Rome : le pape Léon III retrouve son trône, et te bénit !', '✝️ Your soldiers have restored order in Rome: Pope Leo III regains his throne, and blesses you!'), 'good', pope);
+      } else if (!cm.leo.late && t >= cm.leo.end) {
+        cm.leo.late = true; // (l'objectif « Rome » est perdu tant que sa garnison n'est pas pleine : voir objectiveMet)
+        UI.log(tr('⚠️ Les conjurés tiennent Rome : remplis sa garnison (envoie des soldats au pape) pour la reprendre en main.', '⚠️ The conspirators hold Rome: fill its garrison (send soldiers to the pope) to bring it back under control.'), 'warn', pope);
+      }
+    }
+    // 799 : les premiers Vikings. Les Danois débarquent régulièrement près d'une ville côtière des Francs
+    const danes = P('danois'), V = C.VIKINGS;
+    if (cm.nextVikings === undefined) cm.nextVikings = V.START[diff] * 60 * TPS;
+    if (t >= cm.nextVikings) {
+      cm.nextVikings = t + V.EVERY * TPS;
+      if (danes.alive && !this.areAllied(danes.id, franks.id)) {
+        const c = this.cmVikingRaid(danes, franks, V.ARMY[diff]);
+        if (c >= 0 && !cm.vikings) {
+          cm.vikings = true;
+          this.cmEvent('vikings', { army: fmt(V.ARMY[diff]), city: this.placeNames.get(c) || tr('une de tes villes côtières', 'one of your coastal cities') }, null);
+        }
+      }
+    }
+  },
+
+  // 🔥 Les Danois débarquent army guerriers près d'une ville côtière (au hasard) du royaume victim, et marchent sur elle
+  // (comme un assaut viking, sans bateaux à suivre ; les survivants ne rentrent pas grossir l'armée danoise).
+  // Renvoie la ville visée, ou -1 s'il n'y en a aucune à portée de côte.
+  cmVikingRaid(danes, victim, army) {
+    const W = this.W, R = CONFIG.VIKING_RANGE;
+    const cities = this.castles.filter(c => this.owner[c] === victim.id && this.holdsAlone(c)).sort(() => Math.random() - 0.5);
+    for (const c of cities.slice(0, 8)) {
+      const h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h, coasts = [];
+      for (let y = Math.max(0, Math.floor(cy - R)); y <= Math.min(this.H - 1, Math.ceil(cy + R)); y++) {
+        for (let x = Math.max(0, Math.floor(cx - R)); x <= Math.min(W - 1, Math.ceil(cx + R)); x++) {
+          const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
+          if (d <= R && this.owner[j] === victim.id && !this.building[j] && !this.wallAt[j] && this.isCoastal(j)) coasts.push([d, j]);
+        }
+      }
+      coasts.sort((a, b) => a[0] - b[0]);
+      for (const [, j] of coasts.slice(0, 6)) {
+        if (!this.vikingRoute(danes.id, c, j)) continue;
+        const n = this.attacks.length;
+        this.vikingLands({ pid: danes.id, viking: c, victim: victim.id, landing: j, troops: army });
+        if (this.attacks.length > n) this.attacks[this.attacks.length - 1].eventArmy = true;
+        return c;
+      }
+    }
+    return -1;
   },
 
   // ⚔️ Les razzias des pillards (les Slaves) : régulièrement, de plus en plus grosses, sur un voisin au hasard.
@@ -1962,6 +2118,8 @@ const GameRules = {
         if (this.launchAttack(p.id, o, army, plan.castle)) continue;
         const a = this.attacks.find(a => !a.done && a.attacker === p.id && a.target === o);
         if (a) a.raid = true;
+        // (📜 la toute première razzia : un parchemin présente les pillards)
+        if (!cm.raidShown) { cm.raidShown = true; this.cmEvent('raids', { army: fmt(army), victim: this.players[o].name }, null); }
         if (!this.players[o].isHuman && this.neighborStats(this.human.id).has(o)) {
           UI.log(tr(`⚔️ Les ${p.name} lancent une razzia de ${fmt(army)} guerriers sur ${this.players[o].name} !`, `⚔️ The ${p.name} launch a raid of ${fmt(army)} warriors on ${this.players[o].name}!`), '', p);
         }
@@ -1973,7 +2131,16 @@ const GameRules = {
   // Une ville vient d'être prise : si c'est Rome, libérée par les Francs (ou un allié du pape), elle est rendue au pape
   scenarioCastleTaken(a, castle) {
     const cm = this.cm;
-    if (!cm || castle !== cm.capital.papaute) return;
+    if (!cm) return;
+    // 778 : Roncevaux. La première ville que les Francs prennent en Espagne : leur arrière-garde est massacrée
+    const fr = this.players[cm.role.francs], W = this.W;
+    if (!cm.roncevaux && a.attacker === fr.id && castle % W < cm.spain[0] && ((castle / W) | 0) > cm.spain[1]) {
+      cm.roncevaux = true;
+      const lost = Math.round(fr.troops * CHARLEMAGNE.RONCEVAUX.LOSS);
+      fr.troops -= lost;
+      this.cmEvent('roncevaux', { lost: fmt(lost) }, null);
+    }
+    if (castle !== cm.capital.papaute) return;
     const pope = this.players[cm.role.papaute];
     if (!pope.alive || a.attacker === pope.id || !this.areAllied(a.attacker, pope.id)) return;
     for (let i = 0; i < this.N; i++) if (this.owner[i] === a.attacker && this.inWalls(castle, i)) this.setOwner(i, pope.id);
@@ -1996,6 +2163,7 @@ const GameRules = {
     }
     // Rome : au pape, ou aux Francs s'il n'est plus là (ils l'ont libérée)
     const rome = this.owner[cm.capital.papaute], pope = this.players[cm.role.papaute];
+    if (cm.leo && cm.leo.late && !cm.leo.done) return false; // (799 : les conjurés tiennent Rome, voir stepCmEvents)
     return (pope.alive && rome === pope.id) || rome === h.id;
   },
   // Le texte d'un objectif, avec le nombre à atteindre selon la difficulté
@@ -2370,7 +2538,7 @@ const GameRules = {
       'cuts the way (a bridge opens a passage).');
     const other = this.routeTiles(free).find(i => this.owner[i] !== pid && this.owner[i] !== o && this.terrain[i] !== TERRAIN.RIVER);
     const who = other === undefined ? null : this.owner[other] < 0 ? tr('des terres libres', 'free land')
-      : tr(`les terres ${this.deName(this.players[this.owner[other]].name)}`, `${this.players[this.owner[other]].name}'s land`);
+      : tr(`les terres ${this.deName(this.players[this.owner[other]].name)}`, `${possessive(this.players[this.owner[other]].name)} land`);
     return tr('La route commerciale doit rester sur vos deux territoires', 'The trade route must stay on your two territories') +
       (who ? tr(` : ici, elle passerait par ${who}. Prends-les d'abord.`, `: here, it would go through ${who}. Take it first.`) : '.');
   },
@@ -2719,7 +2887,7 @@ const GameRules = {
 
   troopRate(p) {
     const max = this.maxTroops(p), army = this.armySize(p);
-    if (army >= max) return 0;
+    if (army >= max || p.crisisUntil > this.tick) return 0; // (👑 797 : Byzance en crise ne recrute plus)
     const base = CONFIG.BASE_TROOP_GROWTH + Math.sqrt(p.tiles) * CONFIG.TROOP_GROWTH_SQRT;
     return base * this.growthFactor(army / max) * this.warFactor(p) * this.earlyBoost() * this.botBonus(p, 'troops') * this.levyFactor(p);
   },
@@ -3364,7 +3532,7 @@ const GameRules = {
       if (!path) {
         return frontier.length ? tr(`Impossible d'atteindre ${this.targetLabel(castle)} : ` +
           `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`,
-          `Cannot reach ${this.targetLabel(castle)}: ${name}'s fortifications block the way. First take the border castles.`)
+          `Cannot reach ${this.targetLabel(castle)}: ${possessive(name)} fortifications block the way. First take the border castles.`)
           : tr(`Impossible d'atteindre ${this.targetLabel(castle)} : tu n'as pas de frontière avec ${name} (ni de fleuve à passer à gué jusqu'à lui).`,
             `Cannot reach ${this.targetLabel(castle)}: you have no border with ${name} (nor a river to ford up to it).`);
       }
@@ -3399,7 +3567,7 @@ const GameRules = {
         if (this.players[target].isHuman) {
           const alone = castle >= 0 && this.building[castle] === B_OUTPOST;
           UI.log(tr(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) marche vers ta frontière : elle attaque dans ${secs} s ! `,
-            `⚠️ ${p.name}'s army (${fmt(troops)} soldiers) is marching to your border: it attacks in ${secs} s! `) +
+            `⚠️ ${possessive(p.name)} army (${fmt(troops)} soldiers) is marching to your border: it attacks in ${secs} s! `) +
             (unlinked ? tr('Il vise ton territoire coupé de tous tes châteaux : personne ne peut le défendre !', 'It targets your territory cut off from all your castles: no one can defend it!')
               : alone ? tr('Il vise ton avant-poste : seuls les soldats débarqués le défendront.', 'It targets your outpost: only the landed soldiers will defend it.')
               : !this.isProtected(target) ? tr('Sans ville ni port fortifié, toutes tes troupes défendront d\'office, désorganisées.', 'With no city or fortified port, all your troops will defend automatically, disorganized.')
@@ -3904,7 +4072,7 @@ const GameRules = {
     const o = this.owner[i];
     if (o >= 0 && this.seaAssaultsOn(pid, o) >= CONFIG.MAX_SEA_ASSAULTS) {
       return { error: tr(`Tu as déjà ${CONFIG.MAX_SEA_ASSAULTS} débarquements chez ${this.players[o].name} (en mer ou avant-postes) : pas plus à la fois.`,
-        `You already have ${CONFIG.MAX_SEA_ASSAULTS} landings at ${this.players[o].name}'s (at sea or outposts): no more at once.`) };
+        `You already have ${CONFIG.MAX_SEA_ASSAULTS} landings at ${possessive(this.players[o].name)} (at sea or outposts): no more at once.`) };
     }
     const zone = this.landingZone(pid, i);
     if (zone.anchor < 0) return { error: tr('Pas assez de place sur cette côte pour un avant-poste.', 'Not enough room on this coast for an outpost.') };
@@ -4503,7 +4671,7 @@ const GameRules = {
     if (a.troops < 1) {
       const p = this.players[a.attacker], d = this.players[a.target];
       if (p.isHuman) UI.log(tr(`💥 Ton assaut contre ${d.name} a été repoussé !`, `💥 Your assault against ${d.name} was repelled!`), 'warn', d);
-      else if (d.isHuman) UI.log(tr(`🛡️ Tu as repoussé l'assaut de ${p.name} !`, `🛡️ You repelled ${p.name}'s assault!`), 'good', p);
+      else if (d.isHuman) UI.log(tr(`🛡️ Tu as repoussé l'assaut de ${p.name} !`, `🛡️ You repelled ${possessive(p.name)} assault!`), 'good', p);
       this.defenseRally(d);
       this.endAttack(a);
     } else if (a.defenders + a.garrison < 1) {
@@ -5036,7 +5204,7 @@ const GameRules = {
     if (a.unlinked && this.tick % CONFIG.TICKS_PER_SECOND === 0 && this.unlinkedRelinked(a)) {
       const p = this.players[a.attacker], d = this.players[a.target];
       if (p.isHuman) UI.log(tr(`🔗 ${d.name} a relié ses terres coupées à un château : ton assaut s'arrête.`, `🔗 ${d.name} has linked their cut-off land to a castle: your assault stops.`), 'warn', d);
-      else if (d.isHuman) UI.log(tr(`🔗 Tes terres coupées sont de nouveau reliées à un château : l'assaut ${this.deName(p.name)} s'arrête !`, `🔗 Your cut-off land is linked to a castle again: ${p.name}'s assault stops!`), 'good', p);
+      else if (d.isHuman) UI.log(tr(`🔗 Tes terres coupées sont de nouveau reliées à un château : l'assaut ${this.deName(p.name)} s'arrête !`, `🔗 Your cut-off land is linked to a castle again: ${possessive(p.name)} assault stops!`), 'good', p);
       return this.endAttack(a);
     }
     // Assaut de front contre un royaume désorganisé : s'il rebâtit (ou reprend) un château entre-temps,
@@ -5044,7 +5212,7 @@ const GameRules = {
     if (a.disorganized && this.tick % CONFIG.TICKS_PER_SECOND === 0 && this.isProtected(a.target)) {
       const p = this.players[a.attacker], d = this.players[a.target];
       if (p.isHuman) UI.log(tr(`🏰 ${d.name} a de nouveau une ville (ou un port fortifié) : il n'est plus désorganisé, ton assaut s'arrête.`, `🏰 ${d.name} has a city (or a fortified port) again: no longer disorganized, your assault stops.`), 'warn', d);
-      else if (d.isHuman) UI.log(tr(`🏰 Tu as de nouveau une ville (ou un port fortifié) : l'assaut ${this.deName(p.name)} contre tes terres désorganisées s'arrête !`, `🏰 You have a city (or a fortified port) again: ${p.name}'s assault on your disorganized land stops!`), 'good', p);
+      else if (d.isHuman) UI.log(tr(`🏰 Tu as de nouveau une ville (ou un port fortifié) : l'assaut ${this.deName(p.name)} contre tes terres désorganisées s'arrête !`, `🏰 You have a city (or a fortified port) again: ${possessive(p.name)} assault on your disorganized land stops!`), 'good', p);
       return this.endAttack(a);
     }
     if (a.prepTicks && this.tick === a.startTick) {
@@ -5377,7 +5545,7 @@ const GameRules = {
           for (const [x, y] of [[a, b], [b, a]]) {
             if (this.players[x.attacker].isHuman) {
               UI.log(tr(`⚔️ Ton armée affronte celle ${this.deName(this.players[y.attacker].name)} au pied du château ! La gagnante reprendra le siège.`,
-                `⚔️ Your army is fighting ${this.players[y.attacker].name}'s at the foot of the castle! The winner will resume the siege.`), 'warn', this.players[y.attacker]);
+                `⚔️ Your army is fighting ${possessive(this.players[y.attacker].name)} at the foot of the castle! The winner will resume the siege.`), 'warn', this.players[y.attacker]);
             }
           }
         }
@@ -5392,8 +5560,8 @@ const GameRules = {
         for (const [x, y] of [[a, b], [b, a]]) {
           if (x.troops >= 1) continue;
           const px = this.players[x.attacker], py = this.players[y.attacker];
-          if (px.isHuman) UI.log(tr(`💥 Ton armée a été battue par celle de ${py.name} au pied du château.`, `💥 Your army was beaten by ${py.name}'s at the foot of the castle.`), 'warn', py);
-          else if (py.isHuman) UI.log(tr(`⚔️ Tu as battu l'armée de ${px.name} : ton siège reprend !`, `⚔️ You beat ${px.name}'s army: your siege resumes!`), 'good', px);
+          if (px.isHuman) UI.log(tr(`💥 Ton armée a été battue par celle de ${py.name} au pied du château.`, `💥 Your army was beaten by ${possessive(py.name)} at the foot of the castle.`), 'warn', py);
+          else if (py.isHuman) UI.log(tr(`⚔️ Tu as battu l'armée de ${px.name} : ton siège reprend !`, `⚔️ You beat ${possessive(px.name)} army: your siege resumes!`), 'good', px);
           this.endAttack(x);
         }
       }
@@ -5480,7 +5648,8 @@ const GameRules = {
     // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste) ;
     // des Vikings qui n'ont pas pris leur cible rembarquent là où ils ont débarqué
     const back = a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
-    if (a.viking !== undefined && !a.won && !a.castleTaken) this.sailHome(a.attacker, a.viking, back);
+    if (a.eventArmy) { /* (👑 des Vikings levés pour un événement : ils repartent chez eux, sans grossir l'armée danoise) */ }
+    else if (a.viking !== undefined && !a.won && !a.castleTaken) this.sailHome(a.attacker, a.viking, back);
     else this.giveTroops(a.attacker, this.sourceOfAttack(a), back);
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château. Ceux qui étaient encore
     // en route font demi-tour : ils rentrent à pied jusqu'à la ville la plus proche (voir sendHome)
@@ -5520,7 +5689,7 @@ const GameRules = {
     if (!back) return;
     const p = this.players[a.attacker], d = this.players[a.target];
     if (d.isHuman && a.razed) UI.log(tr(`⚔️ Les ${p.name} repartent : tu reprends les terres de leur passage (${fmt(back)} cases).`, `⚔️ The ${p.name} leave: you take back the land along their way (${fmt(back)} tiles).`), '', p);
-    else if (d.isHuman) UI.log(tr(`🛡️ L'assaut ${this.deName(p.name)} a échoué : tu reprends les terres de son passage (${fmt(back)} cases).`, `🛡️ ${p.name}'s assault has failed: you take back the land along its way (${fmt(back)} tiles).`), 'good', p);
+    else if (d.isHuman) UI.log(tr(`🛡️ L'assaut ${this.deName(p.name)} a échoué : tu reprends les terres de son passage (${fmt(back)} cases).`, `🛡️ ${possessive(p.name)} assault has failed: you take back the land along its way (${fmt(back)} tiles).`), 'good', p);
     else if (p.isHuman) UI.log(tr(`🏳️ Ton assaut a échoué : ${d.name} reprend les terres de ton passage (${fmt(back)} cases).`, `🏳️ Your assault has failed: ${d.name} takes back the land along your way (${fmt(back)} tiles).`), 'warn', d);
   },
 
@@ -5591,7 +5760,7 @@ const GameRules = {
     p.gold = 0;
     if (killer && killer.alive) {
       killer.gold += CONFIG.ELIMINATION_BOUNTY + treasure;
-      if (killer.isHuman) UI.log(tr(`💰 Prime de conquête : +${fmt(CONFIG.ELIMINATION_BOUNTY)} pièces, et le trésor ${this.deName(p.name)} : +${fmt(treasure)} !`, `💰 Conquest bounty: +${fmt(CONFIG.ELIMINATION_BOUNTY)} gold, plus ${p.name}'s treasury: +${fmt(treasure)}!`), 'good', p);
+      if (killer.isHuman) UI.log(tr(`💰 Prime de conquête : +${fmt(CONFIG.ELIMINATION_BOUNTY)} pièces, et le trésor ${this.deName(p.name)} : +${fmt(treasure)} !`, `💰 Conquest bounty: +${fmt(CONFIG.ELIMINATION_BOUNTY)} gold, plus ${possessive(p.name)} treasury: +${fmt(treasure)}!`), 'good', p);
     }
   },
 
@@ -5744,7 +5913,7 @@ const GameRules = {
     const p = this.players[pid], q = this.players[ally];
     if (!q || !q.alive || !this.areAllied(pid, ally)) return tr('On ne peut envoyer des soldats qu\'à un allié.', 'Soldiers can only be sent to an ally.');
     // (les soldats marchent : il faut que ses terres touchent les nôtres)
-    if (!this.neighborStats(pid).has(ally)) return tr(`Les terres ${this.deName(q.name)} ne touchent pas les tiennes : tes soldats ne peuvent pas les rejoindre.`, `${q.name}'s land does not touch yours: your soldiers cannot reach it.`);
+    if (!this.neighborStats(pid).has(ally)) return tr(`Les terres ${this.deName(q.name)} ne touchent pas les tiennes : tes soldats ne peuvent pas les rejoindre.`, `${possessive(q.name)} land does not touch yours: your soldiers cannot reach it.`);
     // (un allié sans armée, comme Rome : les soldats renforcent la garnison de sa capitale, même pendant un siège)
     const fort = q.noArmy ? this.castles.find(c => c === q.capital && this.owner[c] === q.id) : undefined;
     if (q.noArmy && fort === undefined) return tr(`${q.name} n'a plus de ville où recevoir tes soldats.`, `${q.name} no longer has a city to receive your soldiers.`);
@@ -5752,7 +5921,7 @@ const GameRules = {
     // pas plus que la place qu'il lui reste dans son armée (sauf pour une garnison)
     const room = fort !== undefined ? Infinity : Math.max(0, this.maxTroops(q) - this.armySize(q));
     troops = Math.min(troops, Math.floor(room / CONFIG.ALLY_GIFT_RATIO));
-    if (troops < 1) return room < 1 ? tr(`L'armée ${this.deName(q.name)} est déjà pleine.`, `${q.name}'s army is already full.`) : tr('Pas assez de soldats !', 'Not enough soldiers!');
+    if (troops < 1) return room < 1 ? tr(`L'armée ${this.deName(q.name)} est déjà pleine.`, `${possessive(q.name)} army is already full.`) : tr('Pas assez de soldats !', 'Not enough soldiers!');
     const got = troops * CONFIG.ALLY_GIFT_RATIO;
     p.troops -= troops;
     if (fort !== undefined) this.garrison[fort] += got;
@@ -5816,6 +5985,7 @@ const GameRules = {
       if (this.building[c] === B_OUTPOST) continue; // (la garnison d'un avant-poste ne se reconstitue pas : voir stepOutposts)
       const max = this.garrisonMax(c);
       if (!max || max === Infinity || this.owner[c] < 0 || besieged.has(c)) continue;
+      if (this.cm && this.cm.leo && !this.cm.leo.done && c === this.cm.capital.papaute) continue; // (799 : émeute à Rome)
       // (une garnison renforcée au-delà de son maximum, par des soldats alliés, n'est pas réduite)
       if (this.garrison[c] < max) this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);
     }
@@ -5976,6 +6146,9 @@ function fmt(n) {
   if (n >= 1000) return (Math.floor(n / 100) / 10).toFixed(1) + 'k';
   return String(n);
 }
+
+// En anglais, le possessif d'un nom : « Bavaria's », mais « the Danes' » (un nom au pluriel, en -s)
+function possessive(name) { return name + (/s$/i.test(name) ? "'" : "'s"); }
 
 // Une durée en secondes, écrite « 2:05 »
 function clock(secs) {
