@@ -899,6 +899,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.129** : 🎵 un cinquième morceau d'ambiance, *M5* (de dr_brioche)
 - **v0.92.128** : 🎵 un quatrième morceau d'ambiance, *M4* (de dr_brioche)
 - **v0.92.127** : 🎵 un troisième morceau d'ambiance, *M3* (de dr_brioche) · entre deux morceaux, toujours un moment de silence, d'une durée tirée au hasard (de 20 s à 2 min)
 - **v0.92.126** : 🎵 un deuxième morceau d'ambiance, *M2* (de dr_brioche) : le jeu tire au hasard entre les deux, sans jouer deux fois de suite le même
