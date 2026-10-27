@@ -617,8 +617,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 4. **Forme des pactes** (ils sont **interdits par défaut** : chacun pour soi ; autorise-les dans le menu de départ pour jouer avec) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
    pour lui proposer de t'allier.
    Les alliés forment un **pacte** (jusqu'à 3 royaumes) : si l'un d'eux est déjà dans un pacte, l'autre le rejoint.
-   **Seul le fondateur** du pacte (celui qui l'a proposé) accepte les nouveaux membres : une demande pour rejoindre le pacte
-   va à lui, et les autres membres ne peuvent pas inviter (s'il quitte le pacte, un autre membre prend sa place).
+   **Seul le fondateur** du pacte (celui qui l'a proposé) accepte les nouveaux membres ; s'il quitte le pacte (ou tombe), le
+   **plus grand royaume** qui reste devient le fondateur, et le pacte prend son nom (« Pacte de … ») : une demande pour rejoindre le pacte
+   va à lui, et les autres membres ne peuvent pas inviter.
    **On ne peut faire partie que d'un seul pacte** : impossible de s'allier avec un royaume d'un autre pacte.
    Les membres d'un pacte ne peuvent pas s'attaquer. Les royaumes peuvent aussi te proposer un pacte : accepte ou refuse.
    **Qui est allié avec qui ?** Chaque pacte est entouré d'une **frontière en pointillés**, **or** et **couleur de son fondateur**,
@@ -750,6 +751,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.102** : 🤝 si le fondateur d'un pacte le quitte (ou tombe), le plus grand royaume du pacte devient le fondateur et le pacte prend son nom
 - **v0.92.101** : ⛺ un avant-poste en construction est vraiment affaibli : ses soldats, occupés à bâtir, n'ont plus le bonus du terrain (une montagne les rendait presque 3 fois plus forts) et ne se battent qu'à 60 %
 - **v0.92.100** : 🔥 un seul assaut viking par minute au plus (réglage `VIKING_COOLDOWN`) ; le bouton Viking affiche le temps restant
 - **v0.92.99** : 🔥 l'assaut viking devient un **raid** : il part forcément d'un port royal, et s'il l'emporte, la ville visée est **détruite** (avec ses moulins et casernes) au lieu d'être prise ; 💰 300 de butin par bâtiment détruit, puis les Vikings rentrent par bateau
