@@ -100,7 +100,7 @@ const CHARLEMAGNE = {
       desc: tr('Le pape, allié des Francs, tient Rome et Ravenne.', 'The pope, ally of the Franks, holds Rome and Ravenna.'),
     },
     {
-      id: 'byzance', name: tr('Byzance', 'Byzantium'), leader: tr("l'empereur Constantin V", 'Emperor Constantine V'), flag: 'b06', color: [214, 170, 40],
+      id: 'byzance', name: tr('Byzance', 'Byzantium'), leader: tr("l'empereur Constantin V", 'Emperor Constantine V'), flag: 'cm_byzance', color: [196, 134, 52],
       defensive: true, production: true,
       capital: [28.98, 41.01, tr('Constantinople', 'Constantinople')], capitalLevel: 4,
       cities: [[22.94, 40.64, tr('Thessalonique', 'Thessalonica')], [23.73, 37.98, tr('Athènes', 'Athens')],
