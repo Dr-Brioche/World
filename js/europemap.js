@@ -281,10 +281,38 @@ function generateEuropeMap(seed) {
 // (voir charlemagne.js). Un peu plus détaillée que la carte « Europe » (une case fait environ 3,5 km).
 const CHARLEMAGNE_PROJ = { lon0: -11, lonSpan: 44, latTop: 58.5, latBottom: 34, wrap: false };
 
+// En plus des montagnes de la carte Europe : les vieux massifs de collines et les petites chaînes de l'Ouest
+// ([demi-largeur en cases, sommets ?, crête, 'hills' = tout en collines])
+const CHARLEMAGNE_HIGHLANDS = [
+  [8, false, [[-4.4, 48.35], [-3.2, 48.25], [-1.8, 48.05], [-0.7, 47.7]], 'hills'],              // Massif armoricain
+  [9, false, [[2.4, 45.6], [2.9, 45.1], [3.3, 44.6]], 'hills'],                                  // cœur du Massif central
+  [4, false, [[4.0, 47.45], [4.15, 47.0]], 'hills'],                                             // Morvan
+  [8, false, [[4.4, 49.9], [5.6, 50.15], [6.6, 50.3], [7.6, 50.45], [8.4, 50.75]], 'hills'],    // Ardennes, Eifel, massif rhénan
+  [5, false, [[8.9, 51.1], [9.9, 50.8], [10.9, 50.6], [11.8, 50.4]], 'hills'],                  // Hesse, forêt de Thuringe
+  [4, false, [[8.7, 48.05], [9.7, 48.45], [10.7, 48.9], [11.2, 49.6]], 'hills'],                // Jura souabe et franconien
+  [6, false, [[12.3, 50.1], [12.9, 49.45], [13.7, 48.9], [14.6, 48.65]]],                        // forêt de Bohême
+  [7, false, [[-7.7, 42.0], [-6.8, 42.45], [-6.0, 42.85]]],                                      // monts de León
+  [6, false, [[-7.2, 38.0], [-5.6, 38.2], [-4.2, 38.35], [-3.0, 38.4]], 'hills'],               // Sierra Morena
+  [4, false, [[-5.3, 39.4], [-4.0, 39.5]], 'hills'],                                             // monts de Tolède
+  [5, false, [[-4.7, 55.15], [-3.6, 55.4], [-2.6, 55.5]], 'hills'],                             // Southern Uplands
+  [3, false, [[-3.3, 54.55], [-2.9, 54.45]]],                                                    // Lake District
+  [3, false, [[-4.8, 50.45], [-3.85, 50.6]], 'hills'],                                           // Cornouailles, Dartmoor
+  [3, false, [[-6.45, 53.15], [-6.4, 52.75]], 'hills'],                                          // monts de Wicklow
+  [4, false, [[-9.9, 51.95], [-9.3, 51.9]]],                                                     // Kerry
+  [4, false, [[13.2, 37.9], [14.1, 37.85], [14.9, 37.95]], 'hills'],                             // Sicile
+  [8, false, [[20.4, 43.9], [21.4, 43.2], [22.0, 42.5]], 'hills'],                              // collines de Serbie
+  [5, false, [[21.9, 37.95], [22.3, 37.4], [22.4, 36.8]]],                                       // Péloponnèse
+  [6, false, [[27.4, 39.2], [28.7, 39.05], [29.8, 38.6]]],                                       // ouest de l'Anatolie
+];
+
+// La carte Charlemagne a un relief plus naturel (crêtes qui serpentent, vallées, piémonts : voir naturalRelief),
+// à sa vraie taille (widthScale : ses cases sont plus petites que celles de la carte Europe), et des forêts plus
+// denses dans la Germanie (la grande forêt hercynienne).
 function generateCharlemagneMap(seed) {
   return buildGeoMap(seed, CONFIG.CHARLEMAGNE_MAP_WIDTH, CONFIG.CHARLEMAGNE_MAP_HEIGHT, {
     proj: CHARLEMAGNE_PROJ, lands: EUROPE_LANDS, lakes: EUROPE_LAKES, deserts: EUROPE_DESERTS, glaciers: EUROPE_GLACIERS,
-    mountains: EUROPE_MOUNTAINS, rivers: EUROPE_RIVERS, detail: 2.5, coastAmp: 4, widthScale: 1, meander: 4,
-    forestLevel: lat => lat > 45 ? 0.51 : 0.6, // (moins de forêts autour de la Méditerranée)
+    mountains: EUROPE_MOUNTAINS.concat(CHARLEMAGNE_HIGHLANDS), rivers: EUROPE_RIVERS, detail: 2.5, coastAmp: 4,
+    widthScale: 1.2, meander: 4, natural: true,
+    forestLevel: (lat, lon) => lat > 47 && lat < 55.5 && lon > 6 && lon < 25 ? 0.47 : lat > 45 ? 0.51 : 0.6,
   });
 }

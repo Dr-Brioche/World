@@ -454,12 +454,39 @@ function meanderPoints(pts, noise, amp, scale) {
     y + (fbm(noise, x / scale + 77, y / scale + 33, 3) - 0.5) * 2 * amp, k]);
 }
 
+// Un relief plus naturel (carte Charlemagne, option natural) : la crête serpente, la chaîne s'élargit et se resserre,
+// des sous-chaînes (le bruit « en arêtes ») alternent avec des vallées de collines, et le piémont s'effiloche en
+// collines éparses. hillsOnly : un massif ancien, tout en collines (avec quelques sommets ronds au cœur).
+function naturalRelief(terrain, W, H, crest, width, peaks, hillsOnly, noise, k) {
+  const pts = meanderPoints(crest, noise, width * 0.45 + 2, 7 * k); // (une crête qui serpente)
+  const T = TERRAIN, isLow = t => t !== T.MOUNTAIN && t !== T.PEAK;
+  const hill = i => { if (isLow(terrain[i]) && terrain[i] !== T.HILLS && terrain[i] !== T.WOODED_HILLS) terrain[i] = terrain[i] === T.FOREST ? T.WOODED_HILLS : T.HILLS; };
+  nearPolyline(W, H, pts, width * 1.7, (i, d) => {
+    if (terrain[i] === T.WATER) return;
+    const x = i % W, y = (i / W) | 0;
+    const wide = 0.65 + 0.7 * fbm(noise, x / (16 * k) + 11, y / (16 * k) + 5, 2);      // largeur qui varie
+    const r = d / (width * wide) + (fbm(noise, x / (3 * k), y / (3 * k), 3) - 0.5) * 0.7; // bords irréguliers
+    // (1 = sur une arête : le long d'une « ligne de niveau » du bruit, qui tourne et se ramifie comme une crête)
+    const ridge = 1 - Math.min(1, Math.abs(fbm(noise, x / (3.2 * k) + 30, y / (3.2 * k) + 70, 3) - 0.48) * 5);
+    const blob = fbm(noise, x / (6 * k) + 90, y / (6 * k), 2);
+    if (hillsOnly) {
+      if (r < 0.35 && ridge > 0.8 && blob > 0.5 && isLow(terrain[i])) terrain[i] = T.MOUNTAIN;
+      else if (r < 0.8 || (r < 1.3 && ridge > 0.62)) hill(i);
+      return;
+    }
+    if (peaks && r < 0.45 && ridge > 0.4 && blob > 0.44) terrain[i] = T.PEAK;
+    else if (r < 0.85 && ridge > 0.18 + r * 0.6) { if (terrain[i] !== T.PEAK) terrain[i] = T.MOUNTAIN; }
+    else if (r < 1.2 || (r < 1.7 && ridge > 0.6 && blob > 0.45)) hill(i);
+  });
+}
+
 // Fabrique une carte prédéfinie de W x H cases à partir de ses données géographiques (geo) :
 //   proj : la projection · lands / lakes / deserts / glaciers : des contours · mountains : [largeur, sommets ?, crête]
 //   rivers : [cours, n° du point où il devient un grand fleuve (-1 = jamais)]
 //   detail : taille du bruit (plus grand = des taches plus grandes) · coastAmp : décalage des côtes (en cases)
 //   widthScale : multiplie la largeur des montagnes · forestLevel(lat, lon) : seuil de forêt (plus bas = plus de forêt)
 //   iceCaps : [ouest, est, latitude min] : au cœur de ces terres (loin de la côte), un glacier infranchissable
+//   natural : un relief plus naturel (voir naturalRelief) ; une montagne peut alors finir par 'hills' (massif de collines)
 function buildGeoMap(seed, W, H, geo) {
   const N = W * H, P = geo.proj, k = geo.detail;
   const rand = mulberry32(seed);
@@ -494,15 +521,18 @@ function buildGeoMap(seed, W, H, geo) {
     }
     if (terrain[i] !== TERRAIN.PLAINS) continue;
     const lat = P.latTop - (y + 0.5) / H * (P.latTop - P.latBottom), lon = P.lon0 + (x + 0.5) / W * P.lonSpan;
-    const f = fbm(forestNoise, x / (10 * k), y / (10 * k), 3);
-    if (f > geo.forestLevel(lat, lon > 180 ? lon - 360 : lon)) terrain[i] = TERRAIN.FOREST;
-    else if (f < 0.3) terrain[i] = TERRAIN.HILLS; // quelques collines éparses
+    // (relief naturel : des bords de forêt plus fins, et des collines en petites taches, indépendantes des forêts)
+    const f = geo.natural ? fbm(forestNoise, x / (8 * k), y / (8 * k), 4) : fbm(forestNoise, x / (10 * k), y / (10 * k), 3);
+    const h = geo.natural ? fbm(reliefNoise, x / (4 * k) + 200, y / (4 * k) + 50, 3) : f;
+    if (f > geo.forestLevel(lat, lon > 180 ? lon - 360 : lon)) terrain[i] = geo.natural && h < 0.3 ? TERRAIN.WOODED_HILLS : TERRAIN.FOREST;
+    else if (h < 0.3) terrain[i] = TERRAIN.HILLS; // quelques collines éparses
   }
 
   // 4. Les montagnes : collines au pied, montagnes, et des sommets infranchissables au cœur (pas partout :
   //    il reste des cols pour passer)
-  for (const [w, peaks, line] of geo.mountains) {
+  for (const [w, peaks, line, kind] of geo.mountains) {
     const width = w * geo.widthScale;
+    if (geo.natural) { naturalRelief(terrain, W, H, geoPoints(P, line, W, H), width, peaks, kind === 'hills', reliefNoise, k); continue; }
     nearPolyline(W, H, geoPoints(P, line, W, H), width, (i, d) => {
       if (terrain[i] === TERRAIN.WATER) return;
       const x = i % W, y = (i / W) | 0;
