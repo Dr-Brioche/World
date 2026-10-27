@@ -117,7 +117,7 @@ const CHARLEMAGNE = {
       desc: tr('Le vieil Empire romain d\'Orient, riche et bien défendu.', 'The old Eastern Roman Empire, rich and well defended.'),
     },
     {
-      id: 'baviere', name: tr('Bavière', 'Bavaria'), leader: tr('le duc Tassilon III', 'Duke Tassilo III'), flag: 'b10', color: [40, 200, 210],
+      id: 'baviere', name: tr('Bavière', 'Bavaria'), leader: tr('le duc Tassilon III', 'Duke Tassilo III'), flag: 'cm_baviere', color: [218, 112, 40],
       playable: true,
       capital: [12.10, 49.02, tr('Ratisbonne', 'Regensburg')],
       cities: [[13.04, 47.80, tr('Salzbourg', 'Salzburg')]],
