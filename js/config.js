@@ -367,17 +367,15 @@ const CONFIG = {
 
   // --- 🎵 Musique d'ambiance (voir music.js) ---
   // Les morceaux (dans sons/musique/) : le jeu en choisit un au hasard (jamais deux fois de suite le même), le joue en
-  // entier (en fondu au début et à la fin), puis laisse souvent un moment de silence avant le suivant :
-  // SILENCE_CHANCE = la chance d'un vrai silence (de SILENCE secondes, au hasard), sinon une courte pause (GAP secondes).
+  // entier (en fondu au début et à la fin), puis laisse toujours un moment de silence avant le suivant : PAUSE secondes,
+  // au hasard entre ces deux valeurs.
   // Elle démarre avec la partie ; le bouton 🎵 en bas à droite (ou la touche M) la coupe ou la remet, et la petite barre
   // à côté règle son volume.
   MUSIC: {
-    TRACKS: ['sons/musique/M1.mp3', 'sons/musique/M2.mp3'],
+    TRACKS: ['sons/musique/M1.mp3', 'sons/musique/M2.mp3', 'sons/musique/M3.mp3'],
     VOLUME: 0.15,            // volume de départ (de 0 à 1) ; le joueur le règle avec la petite barre, en bas à droite
     FADE: 4,                 // secondes de fondu au début et à la fin d'un morceau
-    SILENCE_CHANCE: 0.5,
-    SILENCE: [45, 150],
-    GAP: [3, 10],
+    PAUSE: [20, 120],        // silence entre deux morceaux (secondes, au hasard entre les deux)
   },
 
   // --- 📽️ Résumé de la partie (bouton « Résumé » de l'écran de fin, voir replay.js) ---
