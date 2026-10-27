@@ -140,6 +140,15 @@ const ICON_DEFS = {
   dice: [{ d: 'M4 4h16v16H4z', f: '#f3e3bf', s: 'c', w: 1.6 }, { d: 'M8.5 7a1.5 1.5 0 1 1-.01 0zM15.5 14a1.5 1.5 0 1 1-.01 0zM12 10.5a1.5 1.5 0 1 1-.01 0z', f: 'c' }],
   mouse: [{ d: 'M12 3a6 6 0 0 1 6 6v6a6 6 0 0 1-12 0V9a6 6 0 0 1 6-6zM12 3v6M6 9h12', s: 'c', w: 1.6 }],
   keys: [{ d: 'M2 7h20v11H2z', s: 'c', w: 1.6 }, { d: 'M5 10h2M9 10h2M13 10h2M17 10h2M6 14h12', s: 'c', w: 1.6 }],
+  // plume d'oie (les cartes dessinées)
+  quill: [{ d: 'M20.5 3C14 4 9.5 8.5 8 14.5l1.5 1.5C15.5 14.5 20 10 20.5 3z', f: '#f3e3bf', s: 'c', w: 1.4 },
+    { d: 'M19 5.5L9 15.5M3.5 20.5L8.5 15.5', s: 'c', w: 1.4 }, { d: 'M13 10.5l3 .5M11 13l2.5.5', s: 'c', w: 1, o: 0.7 }],
+  // pinceau (l'éditeur de cartes)
+  brush: [{ d: 'M20.5 3.5L11.5 12.5', s: 'c', w: 2.4 }, { d: 'M20.5 3.5L18 6', s: '#7a4a1a', w: 2.4 },
+    { d: 'M10.5 11.5c-2.5-.5-4.5 1-5 3.5-.4 2-1.2 3.5-3 4.5 3.5 1 7 .5 8.6-1.6 1.2-1.6 1-4.2-.6-6.4z', f: '#8b2d1f', s: 'c', w: 1.2 }],
+  // globe crucigère (la langue du jeu)
+  orb: [{ d: 'M12 9a6 6 0 1 1-.01 0z', f: '#d9a520', s: '#6b4a12', w: 1.3 }, { d: 'M6 15h12M12 9v12', s: '#6b4a12', w: 1.1 },
+    { d: 'M12 2v7M9.5 4.5h5', s: '#6b4a12', w: 1.7 }],
 };
 
 // Emojis → icônes. (Les emojis des « title » et des listes déroulantes restent : là, on ne peut pas dessiner.)
@@ -153,6 +162,7 @@ const EMOJI_ICONS = {
   '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
   '⛏': 'pickaxe', '⚒': 'ore_iron', '🪙': 'ore_gold', '🪨': 'ore_stone', '💎': 'ore_diamond', '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
+  '🖌': 'brush', '✏': 'quill', '🌍': 'orb',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 

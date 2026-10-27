@@ -60,9 +60,10 @@
     <div class="card">
       <!-- (la langue du jeu, en haut à droite : l'anglais par défaut, ou le français) -->
       <div class="langRow">
+        <span class="langIco">🌍</span>
         <select id="langSelect" title="Language / Langue">
-          <option value="en">🇬🇧 English</option>
-          <option value="fr">🇫🇷 Français</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
         </select>
       </div>
       <h1>⚔️ Medieval Emperor ⚔️</h1>
@@ -72,25 +73,29 @@
       <!-- (une liste déroulante : le drapeau choisi, en grand ; un clic ouvre la liste de tous les drapeaux) -->
       <button type="button" id="bannerBtn" title="Changer de bannière" data-en-title="Change banner"><img id="bannerCur" alt=""><span data-en="▾ change">▾ changer</span></button>
       <div id="bannerPick" class="hidden"></div>
+      <!-- (la liste des cartes : une vraie liste, cachée, qui garde le choix ; on la montre avec un bouton et un panneau
+           à nous, pour y dessiner les icônes de chaque sorte de carte : voir UI.setupMapPick) -->
       <label><span data-en="Map">Carte</span>
-        <select id="mapType">
-          <optgroup label="🎲 Cartes aléatoires" data-en-label="🎲 Random maps">
+        <button type="button" id="mapBtn"></button>
+        <select id="mapType" class="ghost">
+          <optgroup label="Cartes aléatoires" data-en-label="Random maps" data-icon="dice">
             <option value="normal" selected data-en="Normal">Normale</option>
             <option value="continental" data-en="Continental">Continentale</option>
             <option value="naval" data-en="Naval base">Base navale</option>
           </optgroup>
-          <optgroup label="🗺️ Cartes prédéfinies" data-en-label="🗺️ Preset maps">
+          <optgroup label="Cartes prédéfinies" data-en-label="Preset maps" data-icon="map">
             <option value="world" data-en="World">Monde</option>
             <option value="europe">Europe</option>
             <option value="azeroth">Azeroth</option>
           </optgroup>
           <!-- (un scénario : une carte prédéfinie, avec des camps et des positions de départ imposés) -->
-          <optgroup label="📜 Scénarios" data-en-label="📜 Scenarios">
+          <optgroup label="Scénarios" data-en-label="Scenarios" data-icon="scroll">
             <option value="factions" data-en="Azeroth: the Factions">Azeroth : les Factions</option>
           </optgroup>
-          <optgroup id="customMaps" label="✏️ Cartes dessinées" data-en-label="✏️ Drawn maps"></optgroup>
+          <optgroup id="customMaps" label="Cartes dessinées" data-en-label="Drawn maps" data-icon="quill"></optgroup>
         </select>
       </label>
+      <div id="mapPick" class="hidden"></div>
       <div id="factionInfo" class="factionInfo hidden"></div>
       <label><span data-en="Map size">Taille de la carte</span>
         <select id="mapSize">
