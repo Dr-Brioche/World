@@ -109,6 +109,7 @@ const AI = {
       // (les bots ne se liguent pas tous contre le même, ils se battent aussi entre eux)
       if (Game.attacks.some(a => !a.done && a.target === o && a.attacker !== p.id)) score *= 0.5;
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
+      if (p.spare && p.spare.includes(e.role)) score *= 0.5; // (👑 Charlemagne : un voisin qu'il attaque moins volontiers)
       if (score > bestScore) { bestScore = score; best = o; bestAim = plan.tile !== undefined ? plan.tile : aim; }
     }
     const full = Game.armySize(p) >= max * 0.95; // (sans les garnisons)
