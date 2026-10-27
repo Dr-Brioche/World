@@ -193,6 +193,11 @@ const CONFIG = {
   LEVY_BOOST: 2,
   LEVY_FROM: 0.35,
   LEVY_TO: 0.65,
+  // ... et il favorise les petits royaumes : son bonus est multiplié selon la taille de l'armée maximum du royaume,
+  // comparée à celle du plus grand : x LEVY_SMALL pour un tout petit royaume (jusqu'à x5 de recrutement, armée vide),
+  // x LEVY_BIG pour le plus grand (au plus x1,6), et entre les deux en proportion
+  LEVY_SMALL: 2,
+  LEVY_BIG: 0.3,
   // 🔥 Assaut viking (port royal, niveau 3) : on l'achète VIKING_COST pièces, il est alors prêt (un seul à la fois) ;
   // on le lance quand on veut, depuis un port royal, sur une ville (ou un port fortifié) ennemie de l'autre côté de
   // la mer, à VIKING_RANGE cases au plus d'une de ses côtes : les bateaux traversent sans pertes, l'armée débarque et

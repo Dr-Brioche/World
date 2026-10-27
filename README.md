@@ -342,8 +342,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      ⚔️ **Recrutement de masse** (avec une **grande caserne**, niveau 3 : bouton dans son menu, et dans la barre des
      constructions) : pour **💰 3000**, ton royaume recrute **bien plus vite pendant 60 s** (un seul à la fois). C'est
-     d'autant plus fort que ton armée est **petite** : jusqu'à **x3** quand elle est presque vide, encore x2,6 à 35 % de ton
-     armée maximum ; puis l'effet tombe vite (x1,4 à 50 %, plus rien à 65 %). Idéal pour se refaire après une grosse bataille.
+     d'autant plus fort que ton armée est **petite** : au plus fort quand elle est presque vide, encore 80 % de l'effet à 35 % de
+     ton armée maximum ; puis l'effet tombe vite (plus rien à 65 %). Idéal pour se refaire après une grosse bataille.
+     Et il **favorise les petits royaumes** : son effet dépend de ton armée maximum comparée à celle du **plus grand royaume**.
+     Un tout petit royaume recrute jusqu'à **x5** (armée vide), un royaume moitié moins grand que le plus grand environ x3,3,
+     et le plus grand **x1,6** au plus (réglages `LEVY_SMALL` et `LEVY_BIG`).
      Son bonus est **amplifié par la galvanisation** et **diminué par l'après-guerre** : il avantage la **défense** (un royaume
      galvanisé +50 % voit son bonus monter de moitié), bien plus que l'attaquant qui vient de gagner.
 
@@ -752,6 +755,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.105** : ⚔️ le recrutement de masse favorise les petits royaumes : jusqu'à x5 pour un tout petit royaume (armée vide), x1,6 au plus pour le plus grand, selon l'armée maximum comparée à celle du plus grand royaume
 - **v0.92.104** : 🖥️ dans une fenêtre étroite, la barre d'aide (en bas à gauche) ne recouvre plus le curseur « Envoyer » : elle se range sous la barre du bas, au centre
 - **v0.92.103** : 🤝 fini le spam de demandes d'alliance : au plus une demande toutes les 20 s, et un royaume refusé ne redemande pas avant 2 minutes (ni à toi, ni à un autre membre de ton pacte, ce qui la renvoyait au fondateur) · 🐛 une demande d'alliance ne reste plus bloquée à l'écran : elle disparaît si son royaume tombe, à la fin de la partie ou au début d'une nouvelle
 - **v0.92.102** : 🤝 si le fondateur d'un pacte le quitte (ou tombe), le plus grand royaume du pacte devient le fondateur et le pacte prend son nom

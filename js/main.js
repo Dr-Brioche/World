@@ -1724,10 +1724,13 @@ const UI = {
 
   // --- ⚔️ Recrutement de masse (grande caserne, niveau 3) ---
   levyText() {
+    const best = (1 + CONFIG.LEVY_BOOST * Game.levySize(Game.human)).toFixed(1); // (armée vide)
     return tr(`Recrutement de masse (💰 ${fmt(CONFIG.LEVY_COST)}) : ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s ` +
-      '(jusqu\'à 3 fois plus vite quand elle est presque vide ; plus guère d\'effet au-delà de la moitié de ton armée maximum)',
+      `(pour toi, jusqu'à x${best.replace('.', ',')} quand elle est presque vide ; plus guère d'effet au-delà de la moitié de ton armée maximum). ` +
+      'Plus ton royaume est petit face au plus grand, plus il est fort.',
       `Mass recruitment (💰 ${fmt(CONFIG.LEVY_COST)}): your army rebuilds much faster for ${CONFIG.LEVY_TIME} s ` +
-      '(up to 3 times faster when it is nearly empty; hardly any effect above half of your max army)');
+      `(for you, up to x${best} when it is nearly empty; hardly any effect above half of your max army). ` +
+      'The smaller your kingdom compared to the largest one, the stronger it is.');
   },
   // « Recrutement de masse en cours : encore 42 s (recrutement x2,4) »
   levyRunning(left) {
