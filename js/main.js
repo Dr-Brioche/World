@@ -75,6 +75,7 @@ const UI = {
     if (!drawn.length) $('customMaps').remove();
     const wanted = new URLSearchParams(location.search).get('carte');
     if (wanted && drawn.some(m => m.name === wanted)) $('mapType').value = 'custom:' + wanted;
+    this.setupMapPick();
     // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe, Azeroth et les cartes dessinées ont leur taille)
     const sizeForType = () => {
       const t = this.mapType();
@@ -257,6 +258,32 @@ const UI = {
     // (et pas plus de rivaux que de bannières de cette carte, moins celle du joueur ; sur les drapeaux, que de noms de royaumes)
     const banners = bannersForMap(t), names = BANNERS[banners[0]].kingdom ? banners.length : KINGDOMS.length;
     return Math.max(C.MIN_OPPONENTS, Math.min(banners.length - 1, names, byMap));
+  },
+
+  // La liste des cartes du menu, à la façon du choix de bannière : un bouton (l'icône de la sorte de carte et son nom),
+  // et un panneau rangé par sortes, chacune avec son icône dessinée (dés, carte, parchemin, plume). La vraie liste
+  // (#mapType, cachée) garde le choix : le reste du jeu la lit, comme avant.
+  setupMapPick() {
+    const sel = $('mapType'), btn = $('mapBtn'), panel = $('mapPick');
+    const groups = [...sel.querySelectorAll('optgroup')].filter(g => g.querySelector('option'));
+    panel.innerHTML = groups.map(g => `<div class="grp">${iconSVG(g.dataset.icon)}${escapeHtml(g.label)}</div>` +
+      `<div class="opts">${[...g.querySelectorAll('option')].map(o =>
+        `<button type="button" data-map="${escapeHtml(o.value)}">${escapeHtml(o.textContent)}</button>`).join('')}</div>`).join('');
+    const show = () => {
+      const o = sel.selectedOptions[0];
+      btn.innerHTML = `${iconSVG(o.parentNode.dataset.icon)}<span>${escapeHtml(o.textContent)}</span><span>▾</span>`;
+      panel.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.map === sel.value));
+    };
+    btn.addEventListener('click', e => { e.preventDefault(); panel.classList.toggle('hidden'); });
+    panel.addEventListener('click', e => {
+      const b = e.target.closest('button[data-map]');
+      if (!b) return;
+      sel.value = b.dataset.map;
+      sel.dispatchEvent(new Event('change'));
+      panel.classList.add('hidden');
+    });
+    sel.addEventListener('change', show);
+    show();
   },
 
   // Les cartes du menu sont rangées en 3 sortes : aléatoires, prédéfinies (Monde, Europe, Azeroth : départ classique,

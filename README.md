@@ -757,6 +757,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.107** : 🎨 menu de départ dans le style du jeu : la liste des cartes devient un panneau rangé par sortes, avec des icônes dessinées (dés, carte, parchemin, plume), le bouton « Création de carte » a son pinceau, et la langue son globe crucigère (plus d'emojis)
 - **v0.92.106** : 📜 une 3ᵉ sorte de cartes dans le menu, les **scénarios** : « Azeroth : les Factions » (camps et capitales imposés) y remplace le choix « Mode de jeu » ; dans les cartes prédéfinies, Azeroth se joue désormais en départ classique, comme Monde et Europe
 - **v0.92.105** : ⚔️ le recrutement de masse favorise les petits royaumes : jusqu'à x5 pour un tout petit royaume (armée vide), x1,6 au plus pour le plus grand, selon l'armée maximum comparée à celle du plus grand royaume
 - **v0.92.104** : 🖥️ dans une fenêtre étroite, la barre d'aide (en bas à gauche) ne recouvre plus le curseur « Envoyer » : elle se range sous la barre du bas, au centre

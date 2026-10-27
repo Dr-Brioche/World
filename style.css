@@ -117,6 +117,20 @@ html, body {
 #bannerPick button:hover { background: var(--parchment-dark); }
 #bannerPick button.active { border-color: var(--wood); background: var(--gold); }
 #bannerPick img { height: 148px; display: block; }
+/* la liste des cartes : la vraie liste reste là (cachée), un bouton et un panneau la montrent avec des icônes */
+.ghost { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+#mapBtn { display: flex; align-items: center; gap: 6px; font-size: 15px; background: #fffaf0; padding: 4px 10px; }
+#mapBtn .ico { width: 1.4em; height: 1.4em; }
+#mapPick { margin: -4px 0 8px; border: 2px solid var(--wood); border-radius: 6px; padding: 6px 8px; text-align: left;
+  background: #fffaf0; max-height: 320px; overflow-y: auto; }
+#mapPick.hidden { display: none; }
+#mapPick .grp { display: flex; align-items: center; gap: 6px; margin: 6px 0 2px; font-family: Cinzel, Georgia, serif;
+  font-weight: bold; color: var(--wood); }
+#mapPick .grp .ico { width: 1.5em; height: 1.5em; }
+#mapPick .opts { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 28px; }
+#mapPick .opts button { background: var(--parchment-dark); }
+#mapPick .opts button.active { background: var(--gold); box-shadow: 0 0 0 2px var(--ink) inset; }
+.langIco .ico { width: 1.7em; height: 1.7em; }
 .nm {
   display: inline-block;
   width: 105px;
@@ -429,5 +443,5 @@ button:disabled .ico { opacity: 0.6; }
 /* 🌍 LANGUE : seul le passage de la langue choisie s'affiche (voir js/lang.js) */
 .lang-en .fr, .lang-fr .en { display: none !important; }
 /* le choix de la langue, en haut à droite du menu de départ */
-.langRow { text-align: right; margin: -14px -16px -6px 0; }
+.langRow { display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin: -14px -16px -6px 0; }
 .card .langRow select { font-size: 13px; padding: 2px 4px; max-width: none; }
