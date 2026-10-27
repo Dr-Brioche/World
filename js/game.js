@@ -906,6 +906,7 @@ const GameRules = {
     // (une cible déjà passée au pillard, comme une église prise d'un coup : ses cases reviennent au défenseur)
     for (const j of this.footprint(c, this.building[c])) if (this.owner[j] === a.attacker) this.setOwner(j, a.target);
     for (const b of ruins) this.removeBuilding(b);
+    if (d.isHuman && city) Music.sound('cityLost'); // (🔔 une de nos villes rasée : le son de la ville perdue)
     const loot = ruins.length * (a.raid ? CHARLEMAGNE.RAIDS.LOOT : CONFIG.VIKING_LOOT);
     if (a.raid) { // (⚔️ une razzia des Slaves : son propre message)
       p.gold += loot;
@@ -5607,7 +5608,10 @@ const GameRules = {
     a.cut = true; // la zone prise peut couper le royaume du défenseur (voir captureEnclaves)
     const p = this.players[a.attacker], d = this.players[a.target];
     if (p.isHuman) UI.log(tr(`🏰 Tu as pris un château ${this.deName(d.name)}, avec toute sa zone et ses bâtiments !`, `🏰 You took a castle of ${d.name}, with its whole zone and buildings!`), 'good', d);
-    else if (d.isHuman) UI.log(tr(`🏰 ${p.name} a pris un de tes châteaux !`, `🏰 ${p.name} took one of your castles!`), 'warn', p);
+    else if (d.isHuman) {
+      UI.log(tr(`🏰 ${p.name} a pris un de tes châteaux !`, `🏰 ${p.name} took one of your castles!`), 'warn', p);
+      Music.sound('cityLost'); // (🔔 le son de la ville perdue)
+    }
   },
 
   // Église (ou port) pris : sa zone passe à l'attaquant, avec les moulins et casernes construits grâce à elle.
