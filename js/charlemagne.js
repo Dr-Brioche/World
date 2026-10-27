@@ -178,7 +178,7 @@ const CHARLEMAGNE = {
         'and the pope is your ally. Subdue the Saxons, the Lombards, Bavaria and the Avars to be crowned emperor!'),
     },
     {
-      id: 'carloman', name: tr('Carloman', 'Carloman'), leader: tr('Carloman', 'Carloman'), flag: 'b11', color: [120, 170, 230],
+      id: 'carloman', name: tr('Carloman', 'Carloman'), leader: tr('Carloman', 'Carloman'), flag: 'cm_carloman', color: [128, 56, 156],
       capital: [4.03, 49.26, tr('Reims', 'Reims')],
       cities: [[4.83, 45.76, tr('Lyon', 'Lyon')], [7.75, 48.58, tr('Strasbourg', 'Strasbourg')], [1.44, 43.60, tr('Toulouse', 'Toulouse')],
         [5.37, 43.30, tr('Marseille', 'Marseille')]],
