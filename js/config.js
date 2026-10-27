@@ -385,6 +385,7 @@ const CONFIG = {
     // (et pas plus d'un toutes les SOUND_GAP secondes : plusieurs villes perdues d'un coup ne font qu'un son)
     SOUNDS: {
       cityLost: 'sons/perte-ville.mp3', // une de nos villes est prise (ou rasée)
+      assault: 'sons/assaut-depart.mp3', // notre armée part à l'assaut d'un ennemi (pas pour les terres libres)
     },
     SOUND_GAP: 3,
   },
