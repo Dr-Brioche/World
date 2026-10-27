@@ -127,7 +127,7 @@ const CHARLEMAGNE = {
       desc: tr('Un petit duché, vassal rebelle des Francs : leur première cible.', 'A small duchy, rebel vassal of the Franks: their first target.'),
     },
     {
-      id: 'bretons', name: tr('Bretons', 'Bretons'), leader: tr('les chefs bretons', 'the Breton chiefs'), flag: 'b07', color: [150, 182, 118],
+      id: 'bretons', name: tr('Bretons', 'Bretons'), leader: tr('les chefs bretons', 'the Breton chiefs'), flag: 'cm_bretons', color: [126, 160, 204],
       playable: true,
       capital: [-2.76, 47.66, tr('Vannes', 'Vannes')], capitalLevel: 3,
       cities: [[-4.10, 48.00, tr('Quimper', 'Quimper')]],
