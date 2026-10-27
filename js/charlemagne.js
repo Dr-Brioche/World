@@ -8,11 +8,15 @@
 // Chaque faction a :
 //  - lands : son territoire en 768, en un ou plusieurs contours [longitude, latitude] (une case appartient à la
 //    première faction de la liste qui la contient : l'ordre compte là où deux contours se chevauchent) ;
-//  - capital et cities : ses villes (châteaux de niveau 1, sans moulin ni caserne ; capitalLevel pour la capitale) ;
-//  - churches : 1 à 3 églises, aux bourgades notables de l'époque.
+//  - capital et cities : ses villes (châteaux de niveau 1, sans moulin ni caserne ; la capitale au niveau 2, ou
+//    capitalLevel) ;
+//  - churches : 1 à 3 églises, aux bourgades notables de l'époque ;
+//  - enclaves : des terres à elle au milieu de celles d'une autre ([longitude, latitude, rayon en cases]).
 // playable : le joueur peut l'incarner (pas Rome, ni Byzance, ni Carloman) ; defensive : elle se défend, s'étend sur
 // les terres libres, mais ne lance pas de conquêtes ; production : moulins et casernes de niveau 2 autour de la capitale.
 // flag : la bannière (en attendant les vraies bannières historiques, un des drapeaux du jeu).
+// raiders : des pillards (les Slaves) : leurs terres sont imprenables, ils ne s'étendent pas, mais lancent des razzias
+// (voir RAIDS).
 
 const CHARLEMAGNE = {
   // Minutes de jeu avant la mort de Carloman (son royaume passe à Charlemagne, comme en 771), selon la difficulté
@@ -32,6 +36,15 @@ const CHARLEMAGNE = {
   // ... et le siège de Rome dure 2 minutes (au lieu de 24 s), pour laisser aux Francs le temps de réagir : les soldats
   // envoyés au pape (il faut que leurs terres se touchent) entrent dans la garnison de Rome
   ROME_SIEGE: 120,
+  // ⚔️ Les razzias des Slaves (les pillards du nord-est, voir la faction « slaves ») : la première au bout de FIRST
+  // secondes, puis toutes les EVERY secondes, sur un voisin au hasard ; ARMY guerriers pour la première, et GROWTH de
+  // plus à chaque razzia (0.2 = +20 %). Une razzia qui prend sa cible la rase (avec les moulins et casernes qui en
+  // dépendent), pille LOOT pièces par bâtiment, et rentre : les terres restent au défenseur.
+  RAIDS: { FIRST: 150, EVERY: { facile: 150, normal: 110, difficile: 80 }, ARMY: { facile: 400, normal: 600, difficile: 900 },
+    GROWTH: 0.2, LOOT: 150 },
+  // ✝️ Succès « Empire chrétien » : quand les terres des Francs touchent celles de Rome, leur Croyance gagne
+  // CHRISTIAN_EMPIRE pour toujours
+  CHRISTIAN_EMPIRE: 100,
   // 👑 Les objectifs des Francs (dans un cadre, en haut à gauche) : tous remplis, Charles est couronné empereur.
   // Un objectif rempli est barré, avec un ✔ ; il se perd si on perd la ville (ou le niveau, la Croyance, Rome).
   //  - capital : tenir la capitale de cette faction ;
@@ -116,7 +129,7 @@ const CHARLEMAGNE = {
     {
       id: 'bretons', name: tr('Bretons', 'Bretons'), leader: tr('les chefs bretons', 'the Breton chiefs'), flag: 'b07', color: [150, 182, 118],
       playable: true,
-      capital: [-2.76, 47.66, tr('Vannes', 'Vannes')],
+      capital: [-2.76, 47.66, tr('Vannes', 'Vannes')], capitalLevel: 3,
       cities: [[-4.10, 48.00, tr('Quimper', 'Quimper')]],
       churches: [[-3.98, 48.68, tr('Saint-Pol-de-Léon', 'Saint-Pol-de-Léon')]],
       lands: [[[-2.05, 47.25], [-2.0, 48.65], [-5.6, 49.0], [-5.6, 47.3]]],
@@ -132,12 +145,26 @@ const CHARLEMAGNE = {
       desc: tr('Le dernier royaume chrétien d\'Espagne, dans ses montagnes.', 'The last Christian kingdom of Spain, in its mountains.'),
     },
     {
+      id: 'aquitaine', name: tr('Aquitaine', 'Aquitaine'), leader: tr('le duc Hunald II', 'Duke Hunald II'), flag: 'b04', color: [214, 140, 30],
+      playable: true,
+      capital: [-0.58, 44.84, tr('Bordeaux', 'Bordeaux')],
+      cities: [[0.72, 45.18, tr('Périgueux', 'Périgueux')]],
+      churches: [[0.16, 45.65, tr('Angoulême', 'Angoulême')]],
+      // 769 : le duc Hunald II soulève l'Aquitaine contre les fils de Pépin (le sud-ouest, entre la Charente et la Garonne)
+      lands: [[[-1.3, 43.6], [-1.25, 44.4], [-1.2, 45.6], [-1.5, 46.2], [0.2, 46.3], [1.0, 45.9], [1.2, 45.1], [0.6, 44.2], [0.0, 43.9]]],
+      desc: tr('769 : le duc Hunald II soulève l\'Aquitaine contre les Francs, qui n\'y tiennent plus que le château isolé de Fronsac.',
+        '769: Duke Hunald II raises Aquitaine against the Franks, who hold only the isolated castle of Fronsac there.'),
+    },
+    {
       id: 'francs', name: tr('Francs', 'Franks'), leader: tr('Charlemagne', 'Charlemagne'), flag: 'b12', color: [30, 60, 165],
       playable: true,
       capital: [3.00, 49.58, tr('Noyon', 'Noyon')],
-      cities: [[2.35, 48.86, tr('Paris', 'Paris')], [1.10, 49.44, tr('Rouen', 'Rouen')], [0.69, 47.39, tr('Tours', 'Tours')],
-        [-0.58, 44.84, tr('Bordeaux', 'Bordeaux')], [6.96, 50.94, tr('Cologne', 'Cologne')], [9.93, 49.79, tr('Wurtzbourg', 'Würzburg')]],
-      churches: [[1.91, 47.90, tr('Orléans', 'Orléans')], [8.27, 50.00, tr('Mayence', 'Mainz')], [0.34, 46.58, tr('Poitiers', 'Poitiers')]],
+      cities: [[2.35, 48.86, tr('Paris', 'Paris')], [0.69, 47.39, tr('Tours', 'Tours')], [6.96, 50.94, tr('Cologne', 'Cologne')],
+        [-0.05, 45.0, tr('Fronsac', 'Fronsac')]],
+      churches: [[1.91, 47.90, tr('Orléans', 'Orléans')], [8.27, 50.00, tr('Mayence', 'Mainz')], [0.34, 46.58, tr('Poitiers', 'Poitiers')],
+        [1.10, 49.44, tr('Rouen', 'Rouen')], [9.93, 49.79, tr('Wurtzbourg', 'Würzburg')]],
+      // (769 : Charles bâtit le château de Fronsac au cœur de l'Aquitaine révoltée : il y est isolé)
+      enclaves: [[-0.05, 45.0, 7]],
       // la part de Charles : la Neustrie, l'Austrasie et la Frise, la Hesse et la Thuringe, l'ouest de l'Aquitaine
       lands: [[[-1.3, 43.5], [-1.25, 44.4], [-1.2, 45.6], [-2.2, 47.0], [-1.95, 47.6], [-1.85, 48.65], [-1.95, 49.75],
         [0.2, 49.75], [1.6, 50.4], [2.5, 51.1], [3.5, 51.6], [4.5, 52.6], [5.0, 53.5], [7.0, 53.65], [7.1, 52.6],
@@ -185,7 +212,7 @@ const CHARLEMAGNE = {
     {
       id: 'lombards', name: tr('Lombards', 'Lombards'), leader: tr('le roi Didier', 'King Desiderius'), flag: 'b01', color: [180, 25, 25],
       playable: true,
-      capital: [9.16, 45.19, tr('Pavie', 'Pavia')],
+      capital: [9.16, 45.19, tr('Pavie', 'Pavia')], capitalLevel: 3,
       cities: [[10.99, 45.44, tr('Vérone', 'Verona')], [13.43, 46.09, tr('Cividale', 'Cividale')], [10.50, 43.84, tr('Lucques', 'Lucca')],
         [12.73, 42.73, tr('Spolète', 'Spoleto')], [7.68, 45.07, tr('Turin', 'Turin')]],
       churches: [[10.21, 45.54, tr('Brescia', 'Brescia')], [11.25, 43.77, tr('Florence', 'Florence')]],
@@ -227,6 +254,22 @@ const CHARLEMAGNE = {
       lands: [[[-2.5, 56.05], [-1.6, 55.9], [0.0, 53.6], [1.9, 52.8], [1.6, 51.2], [-1.0, 50.65], [-3.0, 50.55], [-4.3, 50.35],
         [-4.3, 51.2], [-3.1, 51.5], [-3.0, 52.0], [-3.1, 53.0], [-2.9, 53.4], [-3.2, 54.0], [-3.5, 54.9], [-2.8, 55.6]]],
       desc: tr('Les royaumes anglais, sous le grand roi Offa de Mercie.', 'The English kingdoms, under the great King Offa of Mercia.'),
+    },
+    {
+      // ⚔️ Les pillards du nord-est : leurs terres sont imprenables, ils ne s'étendent pas, mais lancent des razzias de
+      // plus en plus grosses sur leurs voisins (voir RAIDS)
+      id: 'slaves', name: tr('Slaves', 'Slavs'), leader: tr('les chefs wendes', 'the Wendish chieftains'), flag: 'b16', color: [120, 96, 70],
+      raiders: true, noArmy: true,
+      capital: [12.55, 52.41, tr('Brenna', 'Brenna')],
+      cities: [[14.42, 50.08, tr('Prague', 'Prague')], [17.6, 52.54, tr('Gniezno', 'Gniezno')]],
+      churches: [],
+      // les terres libres du nord-est : de l'Elbe et de la Bohême jusqu'au bord de la carte (les Wendes, les Sorabes,
+      // les Bohémiens, les Polanes…)
+      lands: [[[11.0, 53.9], [12.0, 52.5], [12.0, 51.8], [12.6, 50.6], [12.3, 50.1], [13.6, 48.95], [14.6, 48.3], [16.0, 48.8],
+        [17.6, 48.6], [19.0, 48.4], [22.0, 48.4], [22.8, 47.5], [26.0, 47.5], [33.0, 47.5], [33.0, 58.5], [21.0, 58.5],
+        [21.0, 54.4], [14.0, 54.2], [12.6, 54.4]]],
+      desc: tr('Les Wendes et les peuples slaves de l\'Elbe et de la Bohême : des pillards qui razzient leurs voisins.',
+        'The Wends and the Slavic peoples of the Elbe and Bohemia: raiders who plunder their neighbours.'),
     },
   ],
 };

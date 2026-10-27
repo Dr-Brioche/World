@@ -487,6 +487,7 @@ function naturalRelief(terrain, W, H, crest, width, peaks, hillsOnly, noise, k) 
 //   widthScale : multiplie la largeur des montagnes · forestLevel(lat, lon) : seuil de forêt (plus bas = plus de forêt)
 //   iceCaps : [ouest, est, latitude min] : au cœur de ces terres (loin de la côte), un glacier infranchissable
 //   natural : un relief plus naturel (voir naturalRelief) ; une montagne peut alors finir par 'hills' (massif de collines)
+//   landEdge : au bord de la carte, la terre finit sur une ligne de sommets (et non sur une ligne de mer)
 function buildGeoMap(seed, W, H, geo) {
   const N = W * H, P = geo.proj, k = geo.detail;
   const rand = mulberry32(seed);
@@ -508,7 +509,10 @@ function buildGeoMap(seed, W, H, geo) {
       const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
       // (le bord des déserts est plus irrégulier : un décalage plus grand)
       const qx = clampX(x + nx * A * 2.2), qy = clampY(y + ny * A * 2.2);
-      terrain[y * W + x] = edge || !mask[sy * W + sx] ? TERRAIN.WATER : dryMask[qy * W + qx] ? TERRAIN.DESERT : TERRAIN.PLAINS;
+      // (landEdge : au bord de la carte, la terre finit sur des sommets infranchissables, pas sur une ligne de mer
+      //  que les bateaux suivraient tout autour de la carte)
+      terrain[y * W + x] = !mask[sy * W + sx] ? TERRAIN.WATER : edge ? (geo.landEdge ? TERRAIN.PEAK : TERRAIN.WATER)
+        : dryMask[qy * W + qx] ? TERRAIN.DESERT : TERRAIN.PLAINS;
     }
   }
 

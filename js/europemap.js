@@ -326,7 +326,7 @@ function generateCharlemagneMap(seed) {
   return buildGeoMap(seed, CONFIG.CHARLEMAGNE_MAP_WIDTH, CONFIG.CHARLEMAGNE_MAP_HEIGHT, {
     proj: CHARLEMAGNE_PROJ, lands: EUROPE_LANDS, lakes: EUROPE_LAKES, deserts: EUROPE_DESERTS, glaciers: EUROPE_GLACIERS,
     mountains: EUROPE_MOUNTAINS.concat(EUROPE_HIGHLANDS), rivers: EUROPE_RIVERS, detail: 2.5, coastAmp: 4,
-    widthScale: 1.2, meander: 4, natural: true,
+    widthScale: 1.2, meander: 4, natural: true, landEdge: true,
     forestLevel: (lat, lon) => lat > 47 && lat < 55.5 && lon > 6 && lon < 25 ? 0.47 : lat > 45 ? 0.51 : 0.6,
   });
 }

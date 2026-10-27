@@ -383,6 +383,9 @@ const UI = {
       $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
       this.log(tr(`👑 Octobre 768 : tu es ${f.leader} (${f.name}), à ${f.capital[2]}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou P) pour commencer !`,
         `👑 October 768: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or P) to start!`), 'good');
+      // (769 : la révolte d'Aquitaine, avec le château isolé de Fronsac)
+      if (f.id === 'francs') this.log(tr('⚔️ 769 : le duc Hunald II soulève l\'Aquitaine contre toi ! Ton château de Fronsac est isolé au milieu de ses terres : ses soldats ne peuvent compter que sur sa garnison. Tiens-le, et relie-le à ton royaume en soumettant l\'Aquitaine.',
+        '⚔️ 769: Duke Hunald II raises Aquitaine against you! Your castle of Fronsac is isolated in the middle of his lands: it can only count on its garrison. Hold it, and link it to your kingdom by subduing Aquitaine.'), 'warn');
     }
   },
 
