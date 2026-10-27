@@ -19,7 +19,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
   avec 3 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
-  et des **📜 scénarios** : une carte prédéfinie avec des camps et des départs imposés (**Azeroth : les Factions**)
+  et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**, et
+  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 13 factions historiques)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 21 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
@@ -95,6 +96,37 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Strangleronce) et le **Norfendre** au nord, entre les deux (la Couronne de glace, infranchissable, les pics Foudroyés,
      Sholazar, Zul'Drak, les Grisonnes, le fjord Hurlant). Au pont de Thandol, les deux moitiés des Royaumes de l'Est ne
      tiennent que par un isthme étroit.
+   👑 **Scénario « Charlemagne (768) »** (rubrique 📜 Scénarios) : octobre 768, Pépin le Bref vient de mourir. La carte
+     couvre l'**Europe de l'Ouest et la Méditerranée**, de l'Irlande et du Portugal jusqu'à **Constantinople** (les mêmes
+     côtes, montagnes et fleuves que la carte Europe, en 780 x 620 cases). **13 factions** y sont déjà installées, sur
+     leurs terres de l'époque, avec leurs vraies villes (niveau 1, sans moulin ni caserne) et 1 à 3 **églises** aux
+     bourgades notables : les **Francs** de Charles (Noyon, Paris, Rouen, Tours, Bordeaux, Cologne, Wurtzbourg),
+     **Carloman**, son frère (Reims, Lyon, Strasbourg, Toulouse, Marseille), les **Lombards** du roi Didier (Pavie,
+     Vérone, Cividale, Lucques, Spolète, Turin), la **Papauté** (Rome, Ravenne), **Byzance** (Constantinople,
+     Thessalonique, Athènes, Syracuse, Reggio, Nicée, Smyrne), la **Bavière** de Tassilon III (Ratisbonne, Salzbourg),
+     les **Saxons** de Widukind (Eresburg, Minden, Bardowick), les **Danois** (Hedeby, Ribe, Lejre), les **Avars**
+     (le Ring, Győr, Sirmium), l'émirat de **Cordoue** (Cordoue, Tolède, Saragosse, Séville, Lisbonne), les
+     **Asturies** (Oviedo, Lugo), les **Bretons** (Vannes, Quimper) et les **Anglo-Saxons** d'Offa (Tamworth, Londres,
+     Winchester, York). Le reste (Irlande, Écosse, Afrique du Nord, terres slaves…) est libre.
+     **Rome et Constantinople** sont des cités de niveau 4, avec déjà deux moulins et une caserne de niveau 2.
+     Tu choisis ta faction dans le menu (tout le monde sauf Rome, Byzance et Carloman), mais le but est surtout de jouer
+     les **Francs** et de bâtir l'empire de Charlemagne. Règles du scénario :
+     - **pas de nouvelles villes** : on améliore les siennes, on prend celles des autres (le bouton Château disparaît) ;
+     - les **Francs, Carloman et le pape** forment un **pacte éternel** (l'« Alliance de Rome ») ; au bout de quelques
+       minutes (3 en Facile, 6 en Normal, 10 en Difficile), **Carloman meurt** et son royaume revient aux Francs ;
+     - **Byzance et Rome** sont des puissances défensives : elles se défendent mais ne partent pas en conquête ;
+     - **Rome** n'a **pas d'armée**, seulement une **grande garnison** (320 soldats, qui se reconstitue) qui repousse
+       les assauts du début ; les Francs ne peuvent pas la prendre (c'est leur allié) ;
+     - au bout d'un moment (18 min en Facile, 12 en Normal, 7 en Difficile ; un message prévient 30 s avant), les
+       **Lombards marchent sur Rome** avec une **grande armée** (5 000, 5 500 ou 6 500 soldats, moins s'ils ont déjà
+       perdu des villes). Le **siège de Rome dure 2 minutes** : les soldats envoyés au pape (clic droit sur ses terres,
+       si elles touchent les tiennes) **renforcent sa garnison**, et 1 500 suffisent à la sauver. Si Rome tombe, les
+       Francs peuvent la **libérer** : elle est **rendue au pape** ;
+     - **victoire des Francs** : tenir les capitales des **Saxons**, des **Lombards**, de la **Bavière** et des **Avars**
+       (ou les avoir anéantis), avec **Rome au pape** (ou à toi, s'il n'est plus là) : tu es **couronné empereur** !
+       (Sinon, la victoire normale à 70 % des terres reste possible.)
+     Les bannières des factions sont provisoires (des drapeaux du jeu) : les vraies bannières historiques arriveront.
+     Tous les réglages du scénario sont dans `js/charlemagne.js`.
    🖌️ **Dessine tes cartes** : le bouton **« 🖌️ Création de carte »**, en bas à droite du menu (en face des règles), ouvre l'**éditeur de cartes**
    (`editeur.html`). Pars d'une carte toute en mer, toute en terre, ou d'une carte au hasard, puis peins les terrains
    (mer, plaine, forêt, colline, montagne, sommet, désert, fleuve, grand fleuve, colline boisée) au **pinceau** (taille réglable) ou
@@ -613,7 +645,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
    **🖱️ Clic droit** sur la carte : un menu d'actions s'ouvre (⚔️ Attaquer · 🤝 Proposer une alliance · ⛵ Attaque navale · 🛶 Traverser le fleuve · 🌉 Construire un pont).
    Pour construire un bâtiment, utilise la barre du bas (ou les touches 1 à 5).
-   Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
+   Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer » ; seulement si ses terres
+   **touchent les tiennes** : tes soldats y vont à pied) : il n'en reçoit que
    **75 %**, le reste se perd en route, et sans dépasser son armée maximum. Et **💰 Envoyer de l'or** (le même %
    de ton trésor) : lui le reçoit **en entier**, tout de suite.
    Ça marche aussi avec les alliés de ton camp dans le scénario **Azeroth : les Factions**. Un allié ne se bat jamais à ta place sur tes
@@ -757,6 +790,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.108** : 👑 nouveau scénario **Charlemagne (768)** : l'Europe de l'Ouest et la Méditerranée, 13 factions historiques à leurs vraies places (Francs, Carloman, Lombards, Papauté, Byzance, Bavière, Saxons, Danois, Avars, Cordoue, Asturies, Bretons, Anglo-Saxons), Rome et Constantinople au niveau 4, mort de Carloman, marche des Lombards sur Rome (siège de 2 minutes), victoire « Couronné empereur » · 🎁 on n'envoie plus de soldats qu'à un allié dont les terres touchent les tiennes
 - **v0.92.107** : 🎨 menu de départ dans le style du jeu : la liste des cartes devient un panneau rangé par sortes, avec des icônes dessinées (dés, carte, parchemin, plume), le bouton « Création de carte » a son pinceau, et la langue son globe crucigère (plus d'emojis)
 - **v0.92.106** : 📜 une 3ᵉ sorte de cartes dans le menu, les **scénarios** : « Azeroth : les Factions » (camps et capitales imposés) y remplace le choix « Mode de jeu » ; dans les cartes prédéfinies, Azeroth se joue désormais en départ classique, comme Monde et Europe
 - **v0.92.105** : ⚔️ le recrutement de masse favorise les petits royaumes : jusqu'à x5 pour un tout petit royaume (armée vide), x1,6 au plus pour le plus grand, selon l'armée maximum comparée à celle du plus grand royaume

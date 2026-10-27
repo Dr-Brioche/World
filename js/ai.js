@@ -77,6 +77,8 @@ const AI = {
     }
 
     if (p.troops < max * p.aggression) return;
+    // (une puissance défensive, comme Rome ou Byzance dans le scénario « Charlemagne » : elle ne part pas en conquête)
+    if (p.defensive) return;
 
     // Sinon on cherche le voisin le plus faible : on compare notre assaut (70 % de nos soldats)
     // à ce qu'il pourra nous opposer (la moitié de ses soldats + la garnison du château visé).
@@ -267,7 +269,8 @@ const AI = {
     }
     if (freeFirst) return;
     // Une campagne par la mer : il faut une armée bien remplie, et pas déjà un avant-poste à utiliser
-    if (bases >= 1 || p.troops < G.maxTroops(p) * 0.5) return;
+    // (une puissance défensive n'en lance pas)
+    if (p.defensive || bases >= 1 || p.troops < G.maxTroops(p) * 0.5) return;
     const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.areAllied(p.id, o.id) && o.troops < p.troops * 0.8);
     if (!foes.length) return;
     const foe = foes[(Math.random() * foes.length) | 0];
@@ -289,6 +292,7 @@ const AI = {
   // le lance sur une ville d'un ennemi plus faible que nous, de l'autre côté de la mer
   tryViking(p) {
     const G = Game, max = G.maxTroops(p);
+    if (p.defensive) return;
     if (!p.vikingReady) {
       if (p.gold >= CONFIG.VIKING_COST + 1000 && p.troops > max * 0.6) G.buyViking(p);
       return;
