@@ -210,7 +210,7 @@ const CHARLEMAGNE = {
       desc: tr('Les Danois du Jutland et des îles, marins redoutables.', 'The Danes of Jutland and the islands, fearsome seafarers.'),
     },
     {
-      id: 'lombards', name: tr('Lombards', 'Lombards'), leader: tr('le roi Didier', 'King Desiderius'), flag: 'b01', color: [180, 25, 25],
+      id: 'lombards', name: tr('Lombards', 'Lombards'), leader: tr('le roi Didier', 'King Desiderius'), flag: 'cm_lombards', color: [36, 104, 68],
       playable: true,
       capital: [9.16, 45.19, tr('Pavie', 'Pavia')], capitalLevel: 3,
       cities: [[10.99, 45.44, tr('Vérone', 'Verona')], [13.43, 46.09, tr('Cividale', 'Cividale')], [10.50, 43.84, tr('Lucques', 'Lucca')],
