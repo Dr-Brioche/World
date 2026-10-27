@@ -77,7 +77,7 @@ const UI = {
     if (wanted && drawn.some(m => m.name === wanted)) $('mapType').value = 'custom:' + wanted;
     // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe, Azeroth et les cartes dessinées ont leur taille)
     const sizeForType = () => {
-      const t = $('mapType').value;
+      const t = this.mapType();
       $('mapSize').disabled = ['world', 'europe', 'azeroth'].includes(t) || t.startsWith('custom:');
     };
     $('mapType').addEventListener('change', sizeForType);
@@ -104,7 +104,7 @@ const UI = {
     const fillBanners = () => {
       // (mode « Factions » : seulement les 12 races des 3 camps)
       const races = this.factionMode() ? AZEROTH_FACTIONS.flatMap(f => f.races) : null;
-      const list = bannersForMap($('mapType').value).filter(k => !races || races.includes(BANNERS[k].id));
+      const list = bannersForMap(this.mapType()).filter(k => !races || races.includes(BANNERS[k].id));
       const set = BANNERS[list[0]].set || 'base';
       $('bannerPick').innerHTML = list.map(k =>
         `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
@@ -134,16 +134,14 @@ const UI = {
       const btn = e.target.closest('button[data-banner]');
       if (btn) { pick(+btn.dataset.banner); $('bannerPick').classList.add('hidden'); }
     });
-    // Mode de jeu (carte Azeroth seulement) : en « Factions », 12 royaumes (les 3 camps), pactes et nombre de rivaux imposés
+    // Scénario « Azeroth : les Factions » : 12 royaumes (les 3 camps), pactes et nombre de rivaux imposés
     const modeChange = () => {
-      const az = $('mapType').value === 'azeroth', fac = this.factionMode();
-      $('gameModeRow').classList.toggle('hidden', !az);
+      const fac = this.factionMode();
       $('opponents').disabled = fac;
       $('pacts').disabled = fac;
       fillBanners();
     };
     $('mapType').addEventListener('change', modeChange);
-    $('gameMode').addEventListener('change', modeChange);
     modeChange();
     $('startBtn').addEventListener('click', () => this.start());
     $('replayBtn').addEventListener('click', () => location.reload());
@@ -246,7 +244,7 @@ const UI = {
 
   // Nombre de rivaux le plus grand possible sur la carte choisie dans le menu (voir CELLS_PER_OPPONENT)
   maxOpponents() {
-    const t = $('mapType').value, C = CONFIG;
+    const t = this.mapType(), C = CONFIG;
     let W, H;
     if (t === 'world') [W, H] = [C.WORLD_MAP_WIDTH, C.WORLD_MAP_HEIGHT];
     else if (t === 'europe') [W, H] = [C.EUROPE_MAP_WIDTH, C.EUROPE_MAP_HEIGHT];
@@ -261,8 +259,12 @@ const UI = {
     return Math.max(C.MIN_OPPONENTS, Math.min(banners.length - 1, names, byMap));
   },
 
-  // Le mode « Factions » est-il choisi ? (carte Azeroth seulement)
-  factionMode() { return $('mapType').value === 'azeroth' && $('gameMode').value === 'factions'; },
+  // Les cartes du menu sont rangées en 3 sortes : aléatoires, prédéfinies (Monde, Europe, Azeroth : départ classique,
+  // chacun choisit où fonder sa capitale) et scénarios (une carte prédéfinie avec des camps et des départs imposés).
+  // Le scénario choisi est-il « Azeroth : les Factions » ?
+  factionMode() { return $('mapType').value === 'factions'; },
+  // La carte à générer pour le choix du menu (un scénario se joue sur une carte prédéfinie)
+  mapType() { return this.factionMode() ? 'azeroth' : $('mapType').value; },
 
   start() {
     this.dropAllianceRequests(true);
@@ -272,7 +274,7 @@ const UI = {
       banner: this.banner,
       difficulty: $('difficulty').value,
       opponents: +$('opponents').value,
-      mapType: $('mapType').value,
+      mapType: this.mapType(),
       mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
     });

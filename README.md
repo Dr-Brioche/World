@@ -17,8 +17,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec **6 cartes** au choix : 3 cartes **aléatoires** (Normale, Continentale, Base navale) et 3 cartes **prédéfinies**
-  (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre)
+  avec 3 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 3 cartes **prédéfinies**
+  (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
+  et des **📜 scénarios** : une carte prédéfinie avec des camps et des départs imposés (**Azeroth : les Factions**)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 21 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
@@ -73,7 +74,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (Humains, Nains, Elfes de la nuit, Gnomes, Orcs, Morts-vivants, Taurens, Trolls, Gnolls, Ogres, Murlocs, Démons,
      Défias, Monastère Écarlate, La Main d'Argent) : tu choisis le tien dans le menu, et chaque royaume rival prend le nom
      de son écu (14 rivaux au plus).
-     ⚔️ **Mode « Factions »** (choix « Mode de jeu » du menu, sur cette carte seulement) : 12 royaumes répartis en
+     📜 **Scénario « Azeroth : les Factions »** (dans la liste des cartes, rubrique 📜 Scénarios ; choisie dans les cartes
+     prédéfinies, Azeroth se joue en départ classique, comme les autres cartes) : 12 royaumes répartis en
      **3 camps** qui sont des **pactes éternels** (on ne peut ni les quitter, ni trahir, ni attaquer son propre camp) :
      **l'Alliance** (Humains, Nains, Gnomes, Elfes de la nuit), **la Horde** (Orcs, Trolls, Morts-vivants, Taurens) et
      **le Pacte sauvage** (Défias, Gnolls, Ogres, Murlocs). Tu choisis ta race (donc ton camp), mais pas où tu commences :
@@ -614,7 +616,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Chez un **allié**, il propose aussi **🎁 Envoyer des soldats** (le % choisi avec « Envoyer ») : il n'en reçoit que
    **75 %**, le reste se perd en route, et sans dépasser son armée maximum. Et **💰 Envoyer de l'or** (le même %
    de ton trésor) : lui le reçoit **en entier**, tout de suite.
-   Ça marche aussi avec les alliés de ton camp en mode **Factions**. Un allié ne se bat jamais à ta place sur tes
+   Ça marche aussi avec les alliés de ton camp dans le scénario **Azeroth : les Factions**. Un allié ne se bat jamais à ta place sur tes
    terres : quand tu te fais attaquer, les royaumes de ton pacte t'envoient parfois des soldats, qui **rejoignent ton
    armée** (un message te prévient) ; à toi de les envoyer se défendre. Les royaumes rivaux font de même entre eux.
 4. **Forme des pactes** (ils sont **interdits par défaut** : chacun pour soi ; autorise-les dans le menu de départ pour jouer avec) : clique sur 🤝 à côté d'un royaume dans le classement (ou fais un **clic droit** sur ses terres)
@@ -755,6 +757,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.106** : 📜 une 3ᵉ sorte de cartes dans le menu, les **scénarios** : « Azeroth : les Factions » (camps et capitales imposés) y remplace le choix « Mode de jeu » ; dans les cartes prédéfinies, Azeroth se joue désormais en départ classique, comme Monde et Europe
 - **v0.92.105** : ⚔️ le recrutement de masse favorise les petits royaumes : jusqu'à x5 pour un tout petit royaume (armée vide), x1,6 au plus pour le plus grand, selon l'armée maximum comparée à celle du plus grand royaume
 - **v0.92.104** : 🖥️ dans une fenêtre étroite, la barre d'aide (en bas à gauche) ne recouvre plus le curseur « Envoyer » : elle se range sous la barre du bas, au centre
 - **v0.92.103** : 🤝 fini le spam de demandes d'alliance : au plus une demande toutes les 20 s, et un royaume refusé ne redemande pas avant 2 minutes (ni à toi, ni à un autre membre de ton pacte, ce qui la renvoyait au fondateur) · 🐛 une demande d'alliance ne reste plus bloquée à l'écran : elle disparaît si son royaume tombe, à la fin de la partie ou au début d'une nouvelle

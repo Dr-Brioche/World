@@ -84,14 +84,11 @@
             <option value="europe">Europe</option>
             <option value="azeroth">Azeroth</option>
           </optgroup>
+          <!-- (un scénario : une carte prédéfinie, avec des camps et des positions de départ imposés) -->
+          <optgroup label="📜 Scénarios" data-en-label="📜 Scenarios">
+            <option value="factions" data-en="Azeroth: the Factions">Azeroth : les Factions</option>
+          </optgroup>
           <optgroup id="customMaps" label="✏️ Cartes dessinées" data-en-label="✏️ Drawn maps"></optgroup>
-        </select>
-      </label>
-      <!-- (seulement pour la carte Azeroth) -->
-      <label id="gameModeRow" class="hidden"><span data-en="Game mode">Mode de jeu</span>
-        <select id="gameMode">
-          <option value="libre" data-en="Free">Libre</option>
-          <option value="factions">Factions</option>
         </select>
       </label>
       <div id="factionInfo" class="factionInfo hidden"></div>
@@ -127,7 +124,8 @@
           <ul class="rules fr">
             <li>🖌️ <b>Cartes dessinées</b> : le bouton « Création de carte » (en bas du menu) ouvre l'éditeur ; une carte enregistrée apparaît dans la liste des cartes (✏️ Cartes dessinées).</li>
             <li>👑 <b>Départ</b> : les royaumes rivaux sont déjà installés. Regarde qui est où, puis clique sur une terre libre pour fonder ta capitale.</li>
-            <li>⚔️ <b>Factions</b> (carte Azeroth) : 3 camps éternels (Alliance, Horde, Pacte sauvage), chacun à ses capitales du jeu ; on choisit sa race, pas son point de départ, et la partie démarre en pause.</li>
+            <li>🗺️ <b>Cartes</b> : 3 sortes dans le menu. 🎲 <b>Aléatoires</b> (différentes à chaque partie), 🗺️ <b>prédéfinies</b> (Monde, Europe, Azeroth : départ classique, chacun choisit où fonder sa capitale) et 📜 <b>scénarios</b> (une carte prédéfinie avec des camps et des départs imposés).</li>
+            <li>⚔️ <b>Azeroth : les Factions</b> (scénario) : 3 camps éternels (Alliance, Horde, Pacte sauvage), chacun à ses capitales du jeu ; on choisit sa race, pas son point de départ, et la partie démarre en pause.</li>
             <li>🎚️ <b>Difficulté</b> : en Difficile, les bots sont plus nombreux, plus agressifs et un peu avantagés : +25 % d'or, recrutement 20 % plus rapide et soldats 10 % plus forts.</li>
             <li>⚔️ <b>Puissance</b> : en haut, la force de tes soldats en % (100 % = ordinaires). Ta meilleure caserne, tes mines de fer et ta cité impériale la font monter.</li>
             <li>⏩ <b>Vitesse</b> : en jeu, le bouton ⏩ en haut change la vitesse de la partie (x1, x1,5, x2, x3) ; ⏸ la met en pause.</li>
@@ -183,7 +181,8 @@
           <ul class="rules en">
             <li>🖌️ <b>Drawn maps</b>: the « Map editor » button (at the bottom of the menu) opens the editor; a saved map appears in the list of maps (✏️ Drawn maps).</li>
             <li>👑 <b>Start</b>: the rival kingdoms are already settled. Look at who is where, then click on free land to found your capital.</li>
-            <li>⚔️ <b>Factions</b> (Azeroth map): 3 eternal factions (Alliance, Horde, Wild Pact), each one at its capitals from the game; you choose your race, not your starting point, and the game starts paused.</li>
+            <li>🗺️ <b>Maps</b>: 3 kinds in the menu. 🎲 <b>Random</b> (different every game), 🗺️ <b>preset</b> (World, Europe, Azeroth: classic start, everyone chooses where to found their capital) and 📜 <b>scenarios</b> (a preset map with imposed factions and starting points).</li>
+            <li>⚔️ <b>Azeroth: the Factions</b> (scenario): 3 eternal factions (Alliance, Horde, Wild Pact), each one at its capitals from the game; you choose your race, not your starting point, and the game starts paused.</li>
             <li>🎚️ <b>Difficulty</b>: in Hard, the bots are more numerous, more aggressive and slightly favoured: +25% gold, 20% faster recruitment and 10% stronger soldiers.</li>
             <li>⚔️ <b>Strength</b>: at the top, the strength of your soldiers in % (100% = ordinary). Your best barracks, your iron mines and your imperial city raise it.</li>
             <li>⏩ <b>Speed</b>: in game, the ⏩ button at the top changes the game speed (x1, x1.5, x2, x3); ⏸ pauses it.</li>
