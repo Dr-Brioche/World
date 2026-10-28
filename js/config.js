@@ -359,6 +359,7 @@ const CONFIG = {
   OUTPOST_BUILDING_DEFENSE: 0.6, // pendant sa construction, ses défenseurs, occupés à bâtir, ne sont pas retranchés :
                                // pas de bonus du terrain (montagne, colline…), et ils ne se battent qu'à 60 %
   OUTPOST_SIEGE: 10,         // secondes de siège pour prendre un avant-poste (le défenseur peut encore le renforcer)
+  SIEGE_RING_COLOR: '#ffd34d', // la jauge ronde d'un siège : toujours jaune (bien visible, quelle que soit la couleur de l'assaillant)
   PORT_SIEGE: 10,            // secondes de siège d'un port fortifié (niveau 3) : l'armée s'arrête à sa petite muraille
   OUTPOST_CASTLE_DISTANCE: 12, // pas de château à moins de 12 cases d'un de ses avant-postes (il faut conquérir avant)
   OUTPOST_GARRISON: 5,       // une fois bâti : soldats en garnison (fixe) ; les autres stationnent et peuvent attaquer
