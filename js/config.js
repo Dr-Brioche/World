@@ -418,7 +418,8 @@ const CONFIG = {
     // secondes (plusieurs villes perdues d'un coup ne font qu'un son)
     SOUNDS: {
       cityLost: 'sons/perte-ville.mp3', // une de nos villes est prise (ou rasée)
-      assault: 'sons/assaut-depart.mp3', // notre armée part à l'assaut d'un ennemi (pas pour les terres libres)
+      assault: 'sons/assaut-depart.mp3', // notre armée part à l'assaut d'un ennemi (pas pour les terres libres), nos défenseurs
+                                         // partent intercepter un assaut, ou un assaut part relier une ville isolée
       build: 'sons/construction.mp3', // un de nos bâtiments vient d'être construit, ou de finir son amélioration
       diamond: 'sons/diamant.mp3',     // une de nos mines de diamant rapporte son or (à chaque quart, et le trésor final)
       crusade: 'sons/croisade.mp3',    // on lance une croisade religieuse
