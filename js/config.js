@@ -275,6 +275,10 @@ const CONFIG = {
                                // le plus rapide de leurs terres (comme un assaut : vite en plaine, lentement dans le
                                // relief, et plus lentement s'ils sont nombreux), mais 18 % plus vite qu'un assaut
                                // de même taille, car ils sont chez eux (même chose pour ceux qui rentrent)
+  DEFEND_DIRECT: 15,           // défenseurs à moins de 15 cases de l'armée ennemie : ils foncent droit sur elle (sans
+                               // chercher un chemin par leurs terres, qui ferait des détours autour des cases qu'elle
+                               // vient de leur prendre)...
+  DEFEND_CONTACT: 3,           // ...et à moins de 3 cases, ils l'attaquent tout de suite
   DEFEND_COOLDOWN: 5,          // secondes à attendre entre deux envois d'aide à un allié contre un même assaut
   DEFEND_REINFORCE_DELAY: 3,   // défenseurs envoyés en plus : ils rejoignent l'armée de défense déjà partie en 3 s
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
