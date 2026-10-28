@@ -477,7 +477,15 @@ const GameRules = {
 
   // Bâtiments visables par un assaut (château, église, port, avant-poste) d'un royaume
   targetsOf(pid) {
-    return this.buildingTiles.filter(a => TARGET_TYPES.includes(this.building[a]) && this.owner[a] === pid);
+    return this.buildingTiles.filter(a => TARGET_TYPES.includes(this.building[a]) && this.owner[a] === pid && !this.romeShielded(a));
+  },
+  // 👑 Charlemagne : Rome, tant qu'elle est au pape, ne peut être prise par personne… sauf par la grande marche des
+  // Lombards (voir stepCharlemagne ; un joueur lombard peut la lancer lui-même quand sa grande levée est prête)
+  romeShielded(a, pid = -1) {
+    const cm = this.cm;
+    if (!cm || this.anchor[a] !== cm.capital.papaute || this.owner[cm.capital.papaute] !== cm.role.papaute) return false;
+    if (pid >= 0 && pid === cm.role.lombards && (cm.romeOpen || (this.players[pid].human && cm.lombardMarched))) return false;
+    return true;
   },
 
   // « ce château », « cette église »… pour les messages
@@ -882,6 +890,7 @@ const GameRules = {
     }
     const name = this.players[o].name;
     if (this.areAllied(pid, o)) return { error: tr(`${name} est ton allié !`, `${name} is your ally!`) };
+    if (this.romeShielded(c, pid)) return { error: tr('Rome est sous la protection de saint Pierre : personne ne peut la prendre au pape.', 'Rome is under the protection of Saint Peter: no one can take it from the pope.') };
     if (this.truceLeft(c) > 0) return { error: tr(`${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} vient de changer de mains : attends un peu.`, `${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} has just changed hands: wait a little.`) };
     const ports = this.royalPorts(pid); // (les Vikings ne partent que d'un port royal)
     if (!ports.length) return { error: tr('Il te faut un port royal (niveau 3) d\'où partir.', 'You need a royal port (level 3) to sail from.') };
@@ -1854,7 +1863,7 @@ const GameRules = {
     const C = CHARLEMAGNE, W = this.W, H = this.H, P = CHARLEMAGNE_PROJ, TPS = CONFIG.TICKS_PER_SECOND;
     const at = (lon, lat) => [geoX(P, lon, W), geoY(P, lat, H)];
     this.pactsAllowed = false; // (pas d'autres pactes que celui de Rome)
-    const cm = this.cm = { role: {}, capital: {}, sites: new Map(), done: {} };
+    const cm = this.cm = { role: {}, capital: {}, sites: new Map(), strong: new Map(), done: {} };
     // Les factions (le joueur incarne celle de sa bannière)
     for (const f of C.factions) {
       const b = BANNERS.findIndex(x => x.set === 'charlemagne' && x.id === f.id);
@@ -1902,9 +1911,11 @@ const GameRules = {
       // (chaque ville ou église est notée à son point [longitude, latitude] : voir les objectifs « site » ; et son nom)
       for (const [type, list] of [[B_CASTLE, f.cities], [B_CHURCH, f.churches]]) {
         for (const c of list) {
-          const a = this.placeOnLand(p, type, ...at(c[0], c[1]), 1);
+          const opt = c[3] || {}, a = this.placeOnLand(p, type, ...at(c[0], c[1]), opt.level || 1);
           cm.sites.set(c[0] + ',' + c[1], a);
           if (a >= 0) this.placeNames.set(a, c[2]);
+          // (une ville à la garnison renforcée tant que sa faction la tient, comme Barcelone : voir garrisonMax)
+          if (a >= 0 && opt.garrison) { cm.strong.set(a, { pid: p.id, boost: opt.garrison }); this.garrison[a] = this.garrisonMax(a); }
         }
       }
       // (Rome et Constantinople : 2 moulins et une caserne de niveau 2 dans leur muraille, qui grandiront avec le temps)
@@ -2029,7 +2040,7 @@ const GameRules = {
         ? tr('⚔️ Ton armée se rassemble : bientôt, les Lombards pourront marcher sur Rome !', '⚔️ Your army is gathering: soon the Lombards will be able to march on Rome!')
         : tr(`⚠️ Didier, roi des Lombards, lève une armée de ${fmt(army)} soldats pour marcher sur Rome ! Le pape appelle les Francs au secours`,
           `⚠️ Desiderius, king of the Lombards, is raising an army of ${fmt(army)} soldiers to march on Rome! The pope calls the Franks for help`) +
-          (this.areAllied(this.human.id, pope.id) ? tr(' : frappe les Lombards avant qu\'ils n\'arrivent, ou libère Rome ensuite !', ': strike the Lombards before they arrive, or free Rome afterwards!') : '.'), 'warn', lomb);
+          (this.areAllied(this.human.id, pope.id) ? tr(' : frappe les Lombards avant qu\'ils n\'arrivent, ou défends Rome pendant le siège !', ': strike the Lombards before they arrive, or defend Rome during the siege!') : '.'), 'warn', lomb);
     }
     this.stepRaids();
     // ✝️ Succès « Empire chrétien » : les terres des Francs touchent celles de Rome
@@ -2045,9 +2056,10 @@ const GameRules = {
       if (lomb.alive && pope.alive && this.owner[cm.capital.papaute] === pope.id) {
         lomb.troops = Math.max(lomb.troops, army / 0.85); // (une grande levée, pour cette guerre)
         if (lomb.isHuman) UI.log(tr('⚔️ Ta grande levée est prête : à toi de marcher sur Rome !', '⚔️ Your great levy is ready: it is up to you to march on Rome!'), 'good');
-        else if (!this.launchAttack(lomb.id, pope.id, lomb.troops * 0.85, cm.capital.papaute)) {
+        else if ((cm.romeOpen = true) && !this.launchAttack(lomb.id, pope.id, lomb.troops * 0.85, cm.capital.papaute)) {
           UI.log(tr('⚔️ Les Lombards marchent sur Rome ! Défends le pape, ton allié.', '⚔️ The Lombards are marching on Rome! Defend the pope, your ally.'), 'warn', lomb);
         }
+        cm.romeOpen = false; // (cette marche seulement : les Lombards ne pourront pas relancer d'assaut sur Rome)
       }
     }
     // Rome tombe (au premier qui la prend au pape, s'il n'est ni lui ni un allié qui la lui rendra)
@@ -2249,7 +2261,8 @@ const GameRules = {
       const crusades = this.crusades.filter(c => this.tick < c.end && c.owner === h.id && this.owner[c.church] === h.id).length;
       return this.faithOf(h.id) - crusades * CONFIG.CRUSADE_FAITH >= o.goal[cm.diff];
     }
-    // Rome : au pape, ou aux Francs s'il n'est plus là (ils l'ont libérée)
+    // Rome : au pape, ou aux Francs s'il n'est plus là ; perdu pour de bon si les Lombards l'ont prise (même libérée ensuite)
+    if (cm.romeFell) return false;
     const rome = this.owner[cm.capital.papaute], pope = this.players[cm.role.papaute];
     if (cm.leo && cm.leo.late && !cm.leo.done) return false; // (799 : les conjurés tiennent Rome, voir stepCmEvents)
     return (pope.alive && rome === pope.id) || rome === h.id;
@@ -2278,7 +2291,8 @@ const GameRules = {
     if (this.hy) return this.hyObjectives();
     const cm = this.cm;
     if (!cm || this.human.role !== 'francs') return [];
-    return CHARLEMAGNE.OBJECTIVES.map((o, k) => ({ text: this.objectiveText(o), done: !!cm.done[k] }));
+    // (l'objectif « Rome » perdu pour de bon : barré en rouge, voir drawObjectives)
+    return CHARLEMAGNE.OBJECTIVES.map((o, k) => ({ text: this.objectiveText(o), done: !!cm.done[k], gone: o.kind === 'rome' && !!cm.romeFell }));
   },
 
   // 👑 Charlemagne couronné empereur : tous ses objectifs sont remplis (et Rome est toujours au pape, ou à lui)
@@ -3011,8 +3025,10 @@ const GameRules = {
     // (👑 Charlemagne : Rome, tant qu'elle est au pape, a une grande garnison : voir ROME_GARRISON)
     if (t === B_CASTLE && this.cm && a === this.cm.capital.papaute && this.owner[a] === this.cm.role.papaute) return CHARLEMAGNE.ROME_GARRISON;
     // (👑 Charlemagne : les villes de la Bavière, de l'Aquitaine et des Asturies, tant qu'elles les tiennent, voir garrison)
+    // (👑 Charlemagne : une ville à la garnison renforcée, comme Barcelone, tant que sa faction la tient : voir cm.strong)
+    const strong = this.cm && this.cm.strong.get(a), boost = strong && strong.pid === this.owner[a] ? strong.boost : 1;
     if (t === B_CASTLE) return (this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0))
-      * ((this.cm || this.hy) && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1);
+      * ((this.cm || this.hy) && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1) * boost;
     if (t === B_PORT) return this.buildingInfo(a).garrison || 0;
     return 0;
   },
@@ -3642,6 +3658,35 @@ const GameRules = {
     return list;
   },
 
+  // 🛶 Les cases de target juste de l'autre côté d'un fleuve (passable à gué) qui borde les terres de pid (dans zone, si
+  // on la donne) : { tiles, time (secondes pour passer le fleuve à gué ; 0 sur un pont), bankNear(i) (notre rive la
+  // plus proche de la case i) }, ou null s'il n'y en a pas
+  fordFrontier(pid, target, source, zone) {
+    const W = this.W, tiles = [], seen = new Set(), banks = [];
+    let gapMin = Infinity, bridgedAny = false;
+    this.riverTiles(); // (prépare riverSide)
+    for (let i = 0; i < this.N; i++) {
+      if (this.owner[i] !== pid || !this.riverSide[i]) continue;
+      if (!(source < 0 ? this.isBase(i) : this.sourceOf(i) === source)) continue;
+      this.fordAcross(i, pid, (n, gap, bridged) => {
+        if (bridged) bridgedAny = true; else gapMin = Math.min(gapMin, gap);
+        banks.push(i);
+        if (!seen.has(n)) { seen.add(n); tiles.push(n); }
+      }, j => this.owner[j] === target && this.claimable(j) && (!zone || zone.has(j)));
+    }
+    if (!tiles.length) return null;
+    const time = bridgedAny ? 0 : CONFIG.CROSSING_TIME_FIRST + (gapMin - 1) * CONFIG.CROSSING_TIME_NEXT;
+    const bankNear = t => {
+      let best = banks[0], bestD = Infinity;
+      for (const b of banks) {
+        const d = (b % W - t % W) ** 2 + (((b / W) | 0) - ((t / W) | 0)) ** 2;
+        if (d < bestD) { bestD = d; best = b; }
+      }
+      return best;
+    };
+    return { tiles, time, bankNear };
+  },
+
   // target = -1 pour les terres libres. aimTile = case visée (pour la flèche sur la carte).
   // source = d'où part l'armée : -1 = le royaume (par défaut), sinon un avant-poste et ses soldats stationnés.
   // Renvoie un message d'erreur, ou null.
@@ -3658,12 +3703,29 @@ const GameRules = {
     if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     const blocked = this.attackBlocked(pid, target); // (⚜️ une trêve entre les deux rois)
     if (blocked) return blocked;
+    // (👑 Charlemagne : Rome ne se prend pas, sauf par la marche des Lombards ; ni son assaut de front)
+    const cmc = this.cm && this.cm.capital.papaute;
+    if (this.cm && target >= 0 && target === this.cm.role.papaute && this.romeShielded(cmc, pid)
+      && (aimTile === undefined || this.anchor[aimTile] === cmc || !this.isProtected(target))) {
+      return tr('Rome est sous la protection de saint Pierre : personne ne peut la prendre au pape.', 'Rome is under the protection of Saint Peter: no one can take it from the pope.');
+    }
     // (⚔️ les terres des pillards, comme les Slaves, sont imprenables : on ne peut que se défendre contre eux)
     if (target >= 0 && this.players[target].raiders) return tr(`On ne peut pas prendre les terres des ${this.players[target].name} : ce sont des pillards insaisissables. Défends-toi contre leurs razzias !`,
       `The ${this.players[target].name}' lands cannot be taken: they are elusive raiders. Defend yourself against their raids!`);
-    const frontier = this.buildFrontier(pid, target, source);
+    let frontier = this.buildFrontier(pid, target, source);
     // (pas de frontière directe, mais on vise un de ses bâtiments : l'armée peut l'atteindre en passant un fleuve à gué)
     const aimsBuilding = target >= 0 && aimTile !== undefined && TARGET_TYPES.includes(this.building[aimTile]) && this.owner[aimTile] === target;
+    // 🛶 Un territoire désorganisé (un royaume sans ville, ou un morceau coupé de ses villes) juste de l'autre côté d'un
+    // fleuve qui borde nos terres : l'armée passe le fleuve à gué (lentement), et l'attaque depuis l'autre rive
+    let ford = null;
+    if (target >= 0 && !aimsBuilding && aimTile !== undefined && this.owner[aimTile] === target
+      && (!this.isProtected(target) || this.isUnlinked(aimTile))) {
+      const zone = this.isProtected(target) ? this.unlinkedPiece(aimTile) : null;
+      if (!frontier.some(t => !zone || zone.has(t))) {
+        ford = this.fordFrontier(pid, target, source, zone);
+        if (ford) frontier = ford.tiles;
+      }
+    }
     if (frontier.length === 0 && !aimsBuilding) {
       // (un avant-poste en construction ne sert pas encore de base : ses soldats bâtissent)
       const building = [...this.outposts.keys()].some(a => this.owner[a] === pid && !this.outpostReady(a));
@@ -3758,6 +3820,15 @@ const GameRules = {
         // Assaut sur un château (une église…) : l'armée entre chez l'ennemi là où commence son chemin ;
         // elle marche jusque-là depuis sa cité la plus proche (et la flèche part de là)
         if (path) this.entryFromPath(a, path, source);
+        // (🛶 de l'autre côté d'un fleuve : l'armée part de notre rive, et le passe à gué avant d'attaquer)
+        if (ford) {
+          a.fordFront = true;
+          a.fordTime = ford.time;
+          const bank = ford.bankNear(aimTile);
+          a.startTile = bank;
+          a.fromX = bank % this.W + 0.5;
+          a.fromY = ((bank / this.W) | 0) + 0.5;
+        }
         const secs = this.startMarch(a, a.startTile, troops);
         if (this.players[target].isHuman) {
           Music.sound('enemyAssault'); // (🔔 l'alerte : un ennemi marche sur nous)
@@ -4824,7 +4895,8 @@ const GameRules = {
       const t = a.list[idx];
       let around = this.countFriendNeighbors(t, a.attacker);
       // (un assaut vers un objectif peut commencer de l'autre côté d'un fleuve, passé à gué : sa rive compte)
-      if (!around && a.targetCastle >= 0 && this.riverSide[t]) this.fordAcross(t, a.attacker, () => { around = 1; });
+      // (🛶 de même pour un territoire désorganisé de l'autre côté d'un fleuve, voir fordFrontier)
+      if (!around && (a.targetCastle >= 0 || a.fordFront) && this.riverSide[t]) this.fordAcross(t, a.attacker, () => { around = 1; });
       // (🔥 des Vikings prennent pied sur la côte où ils débarquent, depuis leurs bateaux)
       if (!around && a.viking === t) around = 1;
       // (🤝 une armée venue par les terres d'un allié entre chez l'ennemi par la case collée à ces terres)
@@ -5577,6 +5649,11 @@ const GameRules = {
     } else if (a.prepTicks && this.tick === a.startTick) {
       // Fin de la préparation : la frontière a pu bouger entre-temps
       a.list = this.buildFrontier(a.attacker, a.target, this.sourceOfAttack(a));
+      // (🛶 un territoire désorganisé de l'autre côté d'un fleuve : l'armée l'a passé à gué, elle attaque l'autre rive)
+      if (a.fordFront && !a.list.some(t => !a.limitZone || a.limitZone.has(t))) {
+        const ford = this.fordFrontier(a.attacker, a.target, this.sourceOfAttack(a), a.limitZone || null);
+        a.list = ford ? ford.tiles : [];
+      }
       a.set = new Set(a.list);
       // Assaut sur un château : le chemin est-il toujours libre ?
       if (a.targetCastle >= 0 && !a.castleTaken) {
@@ -5826,7 +5903,7 @@ const GameRules = {
     const outpost = this.building[t] === B_OUTPOST, port = this.building[t] === B_PORT;
     let secs = outpost ? CONFIG.OUTPOST_SIEGE : port ? CONFIG.PORT_SIEGE : this.castleInfo(this.anchor[t]).siege;
     // (👑 Charlemagne : le siège de Rome dure ROME_SIEGE secondes, le temps que les Francs viennent au secours)
-    if (this.cm && this.anchor[t] === this.cm.capital.papaute && this.owner[t] === this.cm.role.papaute) secs = CHARLEMAGNE.ROME_SIEGE;
+    if (this.cm && this.anchor[t] === this.cm.capital.papaute && this.owner[t] === this.cm.role.papaute) secs = CHARLEMAGNE.ROME_SIEGE[this.cm.diff];
     // (⚜️ les canons du roi de France, Jeanne d'Arc : voir hySiege)
     if (this.hy && !outpost) secs = this.hySiege(a, secs);
     a.siege = { tile: t, start: this.tick, end: this.tick + secs * CONFIG.TICKS_PER_SECOND }; // (start : pour la jauge)

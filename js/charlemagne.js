@@ -9,7 +9,8 @@
 //  - lands : son territoire en 768, en un ou plusieurs contours [longitude, latitude] (une case appartient à la
 //    première faction de la liste qui la contient : l'ordre compte là où deux contours se chevauchent) ;
 //  - capital et cities : ses villes (châteaux de niveau 1, sans moulin ni caserne ; la capitale au niveau 2, ou
-//    capitalLevel) ;
+//    capitalLevel) ; une ville peut avoir { level, garrison } : son niveau, et sa garnison (garrison fois plus forte
+//    tant que la faction la tient) ;
 //  - churches : 1 à 3 églises, aux bourgades notables de l'époque ;
 //  - enclaves : des terres à elle au milieu de celles d'une autre ([longitude, latitude, rayon en cases]).
 // playable : le joueur peut l'incarner (pas Rome, ni Byzance, ni Carloman) ; defensive : elle se défend, s'étend sur
@@ -28,7 +29,9 @@ const CHARLEMAGNE = {
   LOMBARDS_MARCH: { facile: 18, normal: 12, difficile: 7 },
   LOMBARDS_WARNING: 30,     // secondes : on prévient le joueur un peu avant
   // Pour cette marche, Didier lève une grande armée (soldats, selon la difficulté), qui vient à bout de la garnison
-  // de Rome (en Facile, une fois sur deux) : aux Francs de soumettre les Lombards avant, ou de libérer Rome après.
+  // de Rome (en Facile, une fois sur deux) : aux Francs de soumettre les Lombards avant, ou de défendre Rome pendant
+  // le siège. Si Rome tombe, l'objectif « Rome » est perdu pour de bon (même si on la libère ensuite).
+  // (Rome, tant qu'elle est au pape, ne peut être prise par personne d'autre : seulement par cette marche des Lombards)
   // (cette armée suit le nombre de villes qu'ils tiennent encore : 2 villes sur 6, c'est 3 fois moins de soldats)
   LOMBARDS_ARMY: { facile: 5000, normal: 5500, difficile: 6500 },
   START_ARMY: 0.35,         // au départ, chaque faction a 35 % de son armée maximum
@@ -36,9 +39,10 @@ const CHARLEMAGNE = {
   // Rome n'a pas d'armée (le pape ne recrute pas) : seulement une grande garnison, qui se reconstitue d'elle-même,
   // assez pour repousser les assauts du début (2500 soldats n'y suffisent pas), mais pas la grande armée lombarde
   ROME_GARRISON: 320,
-  // ... et le siège de Rome dure 2 minutes (au lieu de 24 s), pour laisser aux Francs le temps de réagir : les soldats
-  // envoyés au pape (il faut que leurs terres se touchent) entrent dans la garnison de Rome
-  ROME_SIEGE: 120,
+  // ... et le siège de Rome dure longtemps (secondes, selon la difficulté : 10, 6 ou 2 minutes, au lieu de 24 s), pour
+  // laisser aux Francs le temps de réagir : les soldats envoyés au pape (il faut que leurs terres se touchent) entrent
+  // dans la garnison de Rome
+  ROME_SIEGE: { facile: 600, normal: 360, difficile: 120 },
   // ⚔️ Les razzias des Slaves (les pillards du nord-est, voir la faction « slaves ») : la première au bout de FIRST
   // secondes, puis toutes les EVERY secondes, sur un voisin au hasard ; ARMY guerriers pour la première, et GROWTH de
   // plus à chaque razzia (0.2 = +20 %). Une razzia qui prend sa cible la rase (avec les moulins et casernes qui en
@@ -119,8 +123,8 @@ const CHARLEMAGNE = {
       title: tr('Rome est tombée', 'Rome has fallen'),
       text: tr('Les Lombards sont entrés dans Rome ! Le pape a perdu sa ville, et la chrétienté tout entière regarde vers toi, le protecteur de l\'Église.',
         'The Lombards have entered Rome! The pope has lost his city, and all of Christendom looks to you, the protector of the Church.'),
-      todo: tr('La ville de saint Pierre attend son libérateur.',
-        'The city of Saint Peter awaits its liberator.'),
+      todo: tr('La couronne que Rome te promettait s\'est envolée avec elle : nul pape ne sacrera un roi qui n\'a pas su le défendre. Ton règne, lui, continue.',
+        'The crown Rome promised you has flown away with it: no pope will crown a king who could not defend him. Your reign, however, goes on.'),
     },
     christian: {
       date: tr('Succès', 'Achievement'),
@@ -201,7 +205,7 @@ const CHARLEMAGNE = {
   //  - site : tenir la ville ou l'église posée à ce point [longitude, latitude] (voir la liste des factions) ;
   //  - citadel : avoir une ville de ce niveau ; faith : avoir cette Croyance (sans compter les croisades) ;
   //    (ces deux-là dépendent de la difficulté : goal = { facile, normal, difficile } ; « {n} » dans le texte devient ce nombre)
-  //  - rome : Rome au pape (ou aux Francs, s'il n'est plus là).
+  //  - rome : Rome au pape (ou aux Francs, s'il n'est plus là) ; perdu pour de bon si les Lombards l'ont prise.
   OBJECTIVES: [
     { kind: 'capital', role: 'baviere', text: tr('Soumettre la Bavière : prendre Ratisbonne (788)', 'Subdue Bavaria: take Regensburg (788)') },
     { kind: 'capital', role: 'lombards', text: tr('Devenir roi des Lombards : prendre Pavie (774)', 'Become king of the Lombards: take Pavia (774)') },
@@ -211,7 +215,7 @@ const CHARLEMAGNE = {
     { kind: 'citadel', goal: { facile: 3, normal: 4, difficile: 4 }, text: tr('Bâtir une capitale impériale, comme Aix-la-Chapelle : une ville de niveau {n}', 'Build an imperial capital, like Aachen: a level {n} city') },
     { kind: 'mines', goal: { facile: 4, normal: 6, difficile: 8 }, text: tr('Tenir les richesses de l\'Occident : {n} mines historiques (⛏️ au nom célèbre)', 'Hold the riches of the West: {n} historic mines (⛏️ with a famous name)') },
     { kind: 'faith', goal: { facile: 350, normal: 700, difficile: 1200 }, text: tr('Christianiser l\'empire : atteindre {n} de Croyance (sans croisade)', 'Christianise the empire: reach {n} Faith (without a crusade)') },
-    { kind: 'rome', text: tr('Protéger Rome : qu\'elle reste au pape (ou à toi)', 'Protect Rome: it must stay with the pope (or with you)') },
+    { kind: 'rome', text: tr('Protéger Rome : que les Lombards ne la prennent jamais', 'Protect Rome: the Lombards must never take it') },
   ],
 
   // ⛏️ Les mines célèbres de l'époque, en plus des filons posés au hasard : déjà creusées (niveau 1) par la faction
@@ -387,8 +391,11 @@ const CHARLEMAGNE = {
       playable: true,
       capital: [-4.78, 37.89, tr('Cordoue', 'Córdoba')], spare: ['asturies'],
       cities: [[-4.02, 39.86, tr('Tolède', 'Toledo')], [-0.88, 41.65, tr('Saragosse', 'Zaragoza')], [-5.98, 37.39, tr('Séville', 'Seville')],
-        [-9.14, 38.72, tr('Lisbonne', 'Lisbon')]],
-      churches: [[-0.38, 39.47, tr('Valence', 'Valencia')], [2.17, 41.39, tr('Barcelone', 'Barcelona')], [-6.34, 38.92, tr('Mérida', 'Mérida')]],
+        [-9.14, 38.72, tr('Lisbonne', 'Lisbon')],
+        // (Barcelone, la porte de l'Espagne : une ville de niveau 2, à la garnison 4 fois plus forte tant que Cordoue la
+        //  tient : dure à prendre en début de partie)
+        [2.17, 41.39, tr('Barcelone', 'Barcelona'), { level: 2, garrison: 4 }]],
+      churches: [[-0.38, 39.47, tr('Valence', 'Valencia')], [-6.34, 38.92, tr('Mérida', 'Mérida')]],
       // presque toute l'Espagne, au sud du « désert du Douro » (des terres vides, entre l'émirat et les Asturies)
       lands: [[[-9.7, 41.0], [-6.5, 41.0], [-4.0, 40.8], [-2.5, 41.3], [-1.6, 42.3], [0.5, 42.55], [2.0, 42.45], [3.4, 42.3],
         [4.5, 40.0], [1.0, 38.0], [-1.5, 36.7], [-5.3, 36.03], [-6.5, 36.4], [-9.7, 36.9]]],
