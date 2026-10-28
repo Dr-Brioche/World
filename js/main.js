@@ -1439,13 +1439,15 @@ const UI = {
     if (this.objFolded === undefined) this.objFolded = window.innerWidth < 760; // (replié d'office sur un petit écran)
     // (le titre et l'aide dépendent du scénario ; on ne redessine que si un objectif ou un texte a changé)
     const title = Game.hy ? Game.hyObjTitle() : tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives');
-    const key = list.map(o => (o.done ? 1 : 0) + o.text).join('|') + title + (this.objFolded ? 'f' : '');
+    const key = list.map(o => (o.done ? 1 : 0) + (o.gone ? 'x' : '') + o.text).join('|') + title + (this.objFolded ? 'f' : '');
     if (box.dataset.key !== key) {
       box.dataset.key = key;
       const n = list.filter(o => o.done).length;
       box.innerHTML = `<div class="t"><span>${escapeHtml(title)}</span>` +
         `<span>${n}/${list.length} ${this.objFolded ? '▸' : '▾'}</span></div>` +
-        (this.objFolded ? '' : `<ul>${list.map(o => `<li class="${o.done ? 'done' : ''}">${escapeHtml(o.text)}</li>`).join('')}</ul>`);
+        // (un objectif perdu pour de bon, comme Rome prise par les Lombards : barré, en rouge, avec ✖)
+        (this.objFolded ? '' : `<ul>${list.map(o => `<li class="${o.gone ? 'gone' : o.done ? 'done' : ''}">${escapeHtml(o.text)}` +
+          `${o.gone ? tr(' (perdu à jamais)', ' (lost forever)') : ''}</li>`).join('')}</ul>`);
       box.title = Game.hy ? tr('Tous remplis en même temps : la victoire ! (clic : replier ou déplier)', 'All complete at the same time: victory! (click: fold or unfold)')
         : tr('Tous remplis : tu es couronné empereur ! (clic : replier ou déplier)', 'All complete: you are crowned emperor! (click: fold or unfold)');
     }
@@ -1914,6 +1916,10 @@ const UI = {
     if (c >= 0 && G.truceLeft(c)) {
       return this.log(tr(`⏳ ${G.targetLabel(c)[0].toUpperCase()}${G.targetLabel(c).slice(1)} vient de changer de mains : impossible de l'attaquer avant ${Math.ceil(G.truceLeft(c))} s.`,
         `⏳ ${G.targetLabel(c)[0].toUpperCase()}${G.targetLabel(c).slice(1)} just changed hands: it cannot be attacked for ${Math.ceil(G.truceLeft(c))} s.`), 'warn');
+    }
+    // (👑 Charlemagne : Rome, au pape, ne se prend pas, voir Game.romeShielded)
+    if (c >= 0 && G.romeShielded(c, h.id)) {
+      return this.log(tr('✝️ Rome est sous la protection de saint Pierre : personne ne peut la prendre au pape.', '✝️ Rome is under the protection of Saint Peter: no one can take it from the pope.'), 'warn');
     }
     let source = null;
     if (c >= 0) {

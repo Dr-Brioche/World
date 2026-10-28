@@ -286,6 +286,8 @@ button:hover { background: #e8d6a8; }
 #objectives li::before { content: '•'; position: absolute; left: 4px; }
 #objectives li.done { text-decoration: line-through; opacity: 0.55; }
 #objectives li.done::before { content: '✔'; left: 0; color: var(--good); font-weight: bold; }
+#objectives li.gone { text-decoration: line-through; color: var(--danger); opacity: 0.75; } /* (perdu pour de bon) */
+#objectives li.gone::before { content: '✖'; left: 0; color: var(--danger); font-weight: bold; }
 /* fenêtre étroite : sous la barre du bas, au centre (voir UI.placeHint) */
 #hint.under { max-width: min(760px, calc(100vw - 16px)); text-align: center; padding: 3px 10px; }
 
