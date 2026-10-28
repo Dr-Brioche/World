@@ -2885,8 +2885,6 @@ const Render = {
       this.drawFloaters(ox, oy);
     }
 
-    // (👑 Gouffre de Helm : la nuit, la pluie, puis l'aube, voir helm.js)
-    if (G.hd) this.drawHelmSky(ox, oy);
     // Par-dessus tout le reste, pour bien les voir
     this.drawTowerShots(ox, oy);
     this.drawLandingWarnings(ox, oy);

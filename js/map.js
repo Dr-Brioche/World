@@ -56,7 +56,6 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
   if (type === 'world') return generateWorldMap(seed); // la carte du monde (voir worldmap.js)
   if (type === 'europe') return generateEuropeMap(seed); // la carte d'Europe (voir europemap.js)
   if (type === 'charlemagne') return generateCharlemagneMap(seed); // l'Europe de Charlemagne (voir europemap.js)
-  if (type === 'helm') return generateHelmMap(seed); // le Gouffre de Helm (voir helmmap.js)
   if (type === 'azeroth') return generateAzerothMap(seed); // le monde d'Azeroth (voir azerothmap.js)
   // une carte dessinée avec l'éditeur (voir custommaps.js) ; si elle n'existe plus, une carte normale
   if (type.startsWith('custom:')) {
