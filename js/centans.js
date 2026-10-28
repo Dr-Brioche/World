@@ -21,6 +21,9 @@ const CENTANS = {
   YEAR_START: 1337,
   YEAR_END: 1453,
   GAME_MINUTES: 45,
+  // Les frontières de 1337 serpentent un peu (au lieu de suivre les lignes droites des contours, voir lands) : chaque
+  // case est décalée de AMP cases au plus, par un bruit doux qui ondule sur environ SCALE cases (voir claimLands)
+  BORDER_WARP: { AMP: 8, SCALE: 26 },
   START_ARMY: 0.35,         // au départ, chaque faction a 35 % de son armée maximum
   START_GOLD: 400,
 
