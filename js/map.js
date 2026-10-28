@@ -191,7 +191,7 @@ function sinkDisk(elev, W, H, waterLvl, cx, cy, r, rand) {
   for (let y = Math.max(1, Math.floor(cy - R)); y <= Math.min(H - 2, Math.ceil(cy + R)); y++) {
     for (let x = Math.max(1, Math.floor(cx - R)); x <= Math.min(W - 2, Math.ceil(cx + R)); x++) {
       const k = coastNoise ? 0.55 + 0.9 * fbm(coastNoise, x / 7, y / 7, 3) : 1;
-      if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r * k + (rand() - 0.5) * 0.8) {
+      if (DMath.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r * k + (rand() - 0.5) * 0.8) {
         const i = y * W + x;
         elev[i] = Math.min(elev[i], waterLvl - 0.04);
       }
@@ -221,7 +221,7 @@ function addBigIslands(elev, W, H, waterLvl, rand, fs) {
     let free = true;
     for (let y = Math.max(0, Math.floor(cy - F)); y <= Math.min(H - 1, cy + F) && free; y += 2) {
       for (let x = Math.max(0, Math.floor(cx - F)); x <= Math.min(W - 1, cx + F); x += 2) {
-        if (Math.hypot(x - cx, y - cy) <= F && land(y * W + x)) { free = false; break; }
+        if (DMath.hypot(x - cx, y - cy) <= F && land(y * W + x)) { free = false; break; }
       }
     }
     if (!free) continue;
@@ -230,9 +230,9 @@ function addBigIslands(elev, W, H, waterLvl, rand, fs) {
     for (let y = Math.max(1, Math.floor(cy - R * 1.5)); y <= Math.min(H - 2, cy + R * 1.5); y++) {
       for (let x = Math.max(1, Math.floor(cx - R * 1.5)); x <= Math.min(W - 2, cx + R * 1.5); x++) {
         const dx = x - cx, dy = y - cy;
-        const u = dx * Math.cos(rot) + dy * Math.sin(rot), v = (-dx * Math.sin(rot) + dy * Math.cos(rot)) / stretch;
+        const u = dx * DMath.cos(rot) + dy * DMath.sin(rot), v = (-dx * DMath.sin(rot) + dy * DMath.cos(rot)) / stretch;
         const shape = 0.7 + 0.6 * fbm(noise, x / 9 + ox, y / 9 + oy, 3);
-        const f = Math.hypot(u, v) / (R * shape); // (0 au centre, 1 sur la côte)
+        const f = DMath.hypot(u, v) / (R * shape); // (0 au centre, 1 sur la côte)
         if (f < 1) elev[y * W + x] = Math.max(elev[y * W + x], waterLvl + 0.02 + 0.3 * (1 - f));
       }
     }
@@ -252,14 +252,14 @@ function addCoves(elev, W, H, waterLvl, rand, fs, [lo, hi]) {
     const i0 = y0 * W + x0;
     if (!land(i0) || (land(i0 - 1) && land(i0 + 1) && land(i0 - W) && land(i0 + W))) continue;
     // vers l'intérieur des terres (un peu au hasard)
-    const a = Math.atan2(my - y0, mx - x0) + (rand() - 0.5) * 1.2, len = (5 + rand() * 11) * Math.sqrt(fs);
+    const a = DMath.atan2(my - y0, mx - x0) + (rand() - 0.5) * 1.2, len = (5 + rand() * 11) * Math.sqrt(fs);
     const cove = rand() < 0.45, r0 = cove ? 1.4 + rand() * 0.8 : 2.5 + rand() * 3;
     let x = x0, y = y0;
     for (let d = 0; d < len; d += 0.7) {
       const t = d / len;
       sinkDisk(elev, W, H, waterLvl, x, y, cove ? r0 : Math.max(1, r0 * (1 - t * 0.8)), rand);
-      x += Math.cos(a) * 0.7 + (rand() - 0.5) * 0.5;
-      y += Math.sin(a) * 0.7 + (rand() - 0.5) * 0.5;
+      x += DMath.cos(a) * 0.7 + (rand() - 0.5) * 0.5;
+      y += DMath.sin(a) * 0.7 + (rand() - 0.5) * 0.5;
     }
     // (le bassin de la crique : quelques ronds qui se chevauchent, pour une forme irrégulière)
     if (cove) for (let k = 0; k < 4; k++) sinkDisk(elev, W, H, waterLvl, x + (rand() - 0.5) * 4, y + (rand() - 0.5) * 4, 1.8 + rand() * 1.8, rand);
@@ -278,15 +278,15 @@ function addGulfs(elev, W, H, waterLvl, rand, count) {
     // les deux côtes, de part et d'autre du point, sur cette ligne
     const ends = [1, -1].map(s => {
       let x = cx, y = cy;
-      while (land(x, y)) { x += Math.cos(th) * s; y += Math.sin(th) * s; }
+      while (land(x, y)) { x += DMath.cos(th) * s; y += DMath.sin(th) * s; }
       return [x, y];
     });
-    const L = Math.hypot(ends[0][0] - ends[1][0], ends[0][1] - ends[1][1]);
+    const L = DMath.hypot(ends[0][0] - ends[1][0], ends[0][1] - ends[1][1]);
     if (L < 70) continue; // (trop étroit : un golfe le couperait complètement)
     const isthmus = Math.max(7, L * (0.1 + rand() * 0.08)); // (la bande de terre qui reste)
     for (const [ex, ey] of ends) {
       // le bras de mer part de la côte et va vers le point, en s'arrêtant à la moitié de l'isthme
-      const reach = L / 2 - isthmus / 2 + Math.hypot(ex - cx, ey - cy) - L / 2, a0 = Math.atan2(cy - ey, cx - ex);
+      const reach = L / 2 - isthmus / 2 + DMath.hypot(ex - cx, ey - cy) - L / 2, a0 = DMath.atan2(cy - ey, cx - ex);
       // (large à l'entrée, plus étroit au fond, avec des renflements : pas un canal tout droit)
       let x = ex, y = ey, a = a0;
       const r = (7 + rand() * 4) * Math.sqrt(L / 150), ph = rand() * 6.3, wob = 6 + rand() * 6;
@@ -295,8 +295,8 @@ function addGulfs(elev, W, H, waterLvl, rand, count) {
         a = a0 + (fbm(coastNoise, d / (wob * 3) + ph, ph) - 0.5) * 1.4;
         const bulge = 0.6 + 0.8 * fbm(coastNoise, d / 9 + ph * 3, ph + 7, 2);
         sinkDisk(elev, W, H, waterLvl, x, y, Math.max(2.5, r * (1 - 0.55 * d / reach) * bulge), rand);
-        x += Math.cos(a) * 0.7;
-        y += Math.sin(a) * 0.7;
+        x += DMath.cos(a) * 0.7;
+        y += DMath.sin(a) * 0.7;
       }
     }
     g++;
@@ -329,9 +329,9 @@ function addMountainChains(terrain, relief, W, H, rand, fs) {
     for (let y = Math.floor(cy - R); y <= Math.ceil(cy + R); y++) {
       for (let x = Math.floor(cx - R); x <= Math.ceil(cx + R); x++) {
         if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) continue;
-        const dx = x + 0.5 - cx, dy = y + 0.5 - cy, t = Math.atan2(dy, dx);
-        const f = 1 + 0.26 * Math.sin(2 * t + p1) + 0.16 * Math.sin(3 * t + p2) + 0.08 * Math.sin(5 * t + p3);
-        if (Math.hypot(dx, dy) <= r * f) raise(y * W + x, to);
+        const dx = x + 0.5 - cx, dy = y + 0.5 - cy, t = DMath.atan2(dy, dx);
+        const f = 1 + 0.26 * DMath.sin(2 * t + p1) + 0.16 * DMath.sin(3 * t + p2) + 0.08 * DMath.sin(5 * t + p3);
+        if (DMath.hypot(dx, dy) <= r * f) raise(y * W + x, to);
       }
     }
   };
@@ -347,7 +347,7 @@ function addMountainChains(terrain, relief, W, H, rand, fs) {
     // Départ : dans un massif (relief déjà haut), loin des autres chaînes
     const x0 = 4 + rand() * (W - 8), y0 = 4 + rand() * (H - 8), i0 = (y0 | 0) * W + (x0 | 0);
     if (!isLand(x0, y0) || relief[i0] < CONFIG.HILLS_LEVEL) continue;
-    if (starts.some(([x, y]) => Math.hypot(x - x0, y - y0) < 35 * fs)) continue;
+    if (starts.some(([x, y]) => DMath.hypot(x - x0, y - y0) < 35 * fs)) continue;
     starts.push([x0, y0]);
     made++;
     const len = between(CONFIG.CHAIN_LENGTH) * Math.sqrt(fs);
@@ -358,14 +358,14 @@ function addMountainChains(terrain, relief, W, H, rand, fs) {
       // elle serpente : son virage change doucement (jamais de demi-tour brusque)
       turn = turn * 0.9 + (rand() - 0.5) * 0.06;
       a += turn;
-      x += Math.cos(a) * 0.8;
-      y += Math.sin(a) * 0.8;
+      x += DMath.cos(a) * 0.8;
+      y += DMath.sin(a) * 0.8;
       walked += 0.8;
       next -= 0.8;
       if (!isLand(x, y)) break; // (elle s'arrête à la mer)
       if (next > 0) continue;
       // Le sommet, un peu décalé sur le côté (la crête n'est pas une ligne droite)
-      const side = (rand() - 0.5) * Math.min(1.6, r), nx = -Math.sin(a), ny = Math.cos(a);
+      const side = (rand() - 0.5) * Math.min(1.6, r), nx = -DMath.sin(a), ny = DMath.cos(a);
       summit(x + nx * side, y + ny * side, r);
       // parfois un contrefort : un petit sommet sur le côté, relié à la crête par des montagnes
       if (rand() < 0.2) {
@@ -379,7 +379,7 @@ function addMountainChains(terrain, relief, W, H, rand, fs) {
         next = r + r2 + between(CONFIG.CHAIN_PASS_WIDTH); // (le col : un passage de montagnes, entre deux sommets)
         nextPass = walked + next + between(CONFIG.CHAIN_PASS_EVERY);
         // (les montagnes du col, pour qu'on voie bien le passage entre les deux sommets)
-        for (let t = 0.3; t < 1; t += 0.2) blob(x + Math.cos(a) * next * t, y + Math.sin(a) * next * t, 1.8 + rand(), TERRAIN.MOUNTAIN);
+        for (let t = 0.3; t < 1; t += 0.2) blob(x + DMath.cos(a) * next * t, y + DMath.sin(a) * next * t, 1.8 + rand(), TERRAIN.MOUNTAIN);
       } else next = (r + r2) * (0.55 + rand() * 0.25);
       r = r2;
     }
@@ -468,8 +468,8 @@ function addRivers(terrain, elev, W, H, rand) {
     for (let y = Math.max(1, cy - 8); y <= Math.min(H - 2, cy + 8); y++) {
       for (let x = Math.max(1, cx - 8); x <= Math.min(W - 2, cx + 8); x++) {
         const dx = x - cx, dy = y - cy;
-        const u = (dx * Math.cos(rot) + dy * Math.sin(rot)) / stretch, v = -dx * Math.sin(rot) + dy * Math.cos(rot);
-        if (Math.hypot(u, v) <= r * (0.55 + 0.9 * fbm(noise, x / 4, y / 4, 2))) terrain[y * W + x] = TERRAIN.WATER;
+        const u = (dx * DMath.cos(rot) + dy * DMath.sin(rot)) / stretch, v = -dx * DMath.sin(rot) + dy * DMath.cos(rot);
+        if (DMath.hypot(u, v) <= r * (0.55 + 0.9 * fbm(noise, x / 4, y / 4, 2))) terrain[y * W + x] = TERRAIN.WATER;
       }
     }
     lakes++;
@@ -573,7 +573,7 @@ function addLakes(terrain, elev, W, H, rand) {
     let best = null;
     for (let t = 0; t < 40; t++) {
       const x = 30 + Math.floor(rand() * (W - 60)), y = 30 + Math.floor(rand() * (H - 60));
-      if (lakes.some(([lx, ly]) => Math.hypot(x - lx, y - ly) < 55)) continue;
+      if (lakes.some(([lx, ly]) => DMath.hypot(x - lx, y - ly) < 55)) continue;
       if (!best || elev[y * W + x] < elev[best[1] * W + best[0]]) best = [x, y];
     }
     if (!best) continue;
@@ -583,7 +583,7 @@ function addLakes(terrain, elev, W, H, rand) {
       for (let x = Math.max(1, Math.floor(cx - r * 2.2)); x <= Math.min(W - 2, cx + r * 2.2); x++) {
         // un lac allongé dans un sens au hasard, aux bords découpés par le bruit (des anses, des pointes)
         const dx = x - cx, dy = y - cy;
-        const d = Math.hypot((dx * Math.cos(rot) + dy * Math.sin(rot)) / stretch, -dx * Math.sin(rot) + dy * Math.cos(rot));
+        const d = DMath.hypot((dx * DMath.cos(rot) + dy * DMath.sin(rot)) / stretch, -dx * DMath.sin(rot) + dy * DMath.cos(rot));
         if (d <= r * (0.5 + 0.9 * fbm(noise, x / 9, y / 9, 3)) && terrain[y * W + x] !== TERRAIN.PEAK) terrain[y * W + x] = TERRAIN.WATER;
       }
     }
@@ -626,8 +626,8 @@ function addIslets(terrain, W, H, rand, count, rMin, rMax, margin) {
     const p1 = rand() * 6.3, p2 = rand() * 6.3, forest = rand() < 0.5;
     for (let y = Math.floor(cy - r * 1.3 - 1); y <= cy + r * 1.3 + 1; y++) {
       for (let x = Math.floor(cx - r * 1.3 - 1); x <= cx + r * 1.3 + 1; x++) {
-        const a = Math.atan2(y - cy, x - cx), re = r * (1 + 0.16 * Math.sin(3 * a + p1) + 0.1 * Math.sin(5 * a + p2));
-        const f = Math.hypot(x - cx, y - cy) / re; // (0 au centre, 1 sur la côte)
+        const a = DMath.atan2(y - cy, x - cx), re = r * (1 + 0.16 * DMath.sin(3 * a + p1) + 0.1 * DMath.sin(5 * a + p2));
+        const f = DMath.hypot(x - cx, y - cy) / re; // (0 au centre, 1 sur la côte)
         if (f > 1 + (rand() - 0.5) * 0.12) continue;
         terrain[y * W + x] = f < 0.2 ? TERRAIN.PEAK : f < 0.42 ? TERRAIN.MOUNTAIN
           : f < 0.65 ? (forest && rand() < 0.6 ? TERRAIN.WOODED_HILLS : TERRAIN.HILLS)

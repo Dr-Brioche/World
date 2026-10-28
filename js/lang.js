@@ -34,5 +34,7 @@ function translatePage(root = document) {
   for (const el of root.querySelectorAll('[data-en-value]')) el.value = el.dataset.enValue; // (texte déjà écrit dans un champ)
 }
 // (ce fichier est chargé en bas de la page : elle est déjà là, on la traduit tout de suite, avant les autres scripts)
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => translatePage());
-else translatePage();
+// (document.readyState vaut encore « loading » à ce moment-là : on ne l'attend pas, sinon le menu, construit juste
+//  après par main.js, recopierait les textes encore en français, comme le nom de la carte choisie)
+if (document.body) translatePage();
+else document.addEventListener('DOMContentLoaded', () => translatePage());

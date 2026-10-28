@@ -397,7 +397,7 @@ function nearPolyline(W, H, pts, reach, fn) {
         const [ax, ay] = pts[k], [bx, by] = pts[k + 1];
         const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
         const t = len ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len)) : 0;
-        best = Math.min(best, Math.hypot(px - ax - t * dx, py - ay - t * dy));
+        best = Math.min(best, DMath.hypot(px - ax - t * dx, py - ay - t * dy));
       }
       if (best <= reach) fn(y * W + x, best);
     }
@@ -426,7 +426,7 @@ function drawGeoRiver(terrain, W, H, pts, greatFrom) {
     }
   }
   // L'embouchure doit toucher l'eau (les côtes ont été un peu déplacées) : on prolonge le fleuve tout droit
-  const n = pts.length, [ax, ay] = pts[n - 2], [bx, by] = pts[n - 1], len = Math.hypot(bx - ax, by - ay) || 1;
+  const n = pts.length, [ax, ay] = pts[n - 2], [bx, by] = pts[n - 1], len = DMath.hypot(bx - ax, by - ay) || 1;
   for (let step = 1; step < 30; step++) {
     const x = Math.floor(bx + (bx - ax) / len * step), y = Math.floor(by + (by - ay) / len * step);
     if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1 || terrain[y * W + x] === TERRAIN.WATER) break;
@@ -446,7 +446,7 @@ function drawGeoRiver(terrain, W, H, pts, greatFrom) {
 function meanderPoints(pts, noise, amp, scale) {
   const out = [];
   for (let k = 0; k + 1 < pts.length; k++) {
-    const [ax, ay] = pts[k], [bx, by] = pts[k + 1], steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 1.5));
+    const [ax, ay] = pts[k], [bx, by] = pts[k + 1], steps = Math.max(1, Math.ceil(DMath.hypot(bx - ax, by - ay) / 1.5));
     for (let t = 0; t < steps; t++) out.push([ax + (bx - ax) * t / steps, ay + (by - ay) * t / steps, k]);
   }
   out.push([...pts[pts.length - 1], pts.length - 2]);

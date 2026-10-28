@@ -133,6 +133,18 @@
         <select id="opponents"></select> <!-- (rempli par main.js : de MIN_OPPONENTS à un par drapeau) -->
       </label>
       <button id="startBtn" class="big" data-en="Start the conquest">Commencer la conquête</button>
+      <!-- 🌐 Jouer en ligne (voir net.js) : la partie publique (elle part toutes les 2 min avec ceux qui sont là), ou un
+           salon privé (avec un code, l'hôte choisit les réglages ci-dessus). Caché s'il n'y a pas de serveur de jeu. -->
+      <div id="netBox" class="netBox">
+        <div class="netTitle" data-en="🌐 Play online">🌐 Jouer en ligne</div>
+        <div id="netBtns" class="netBtns">
+          <button type="button" id="netPublic" data-en="🌍 Public game" data-en-title="A game starts every 2 minutes with everyone connected (and bots)" title="Une partie part toutes les 2 minutes avec tous ceux qui sont connectés (et des bots)">🌍 Partie publique</button>
+          <button type="button" id="netCreate" data-en="🔒 Create a private room" data-en-title="Play with your friends: you choose the settings, they join with the code" title="Jouer entre amis : tu choisis les réglages, ils te rejoignent avec le code">🔒 Créer un salon privé</button>
+          <span class="netJoin"><input id="netCode" maxlength="6" placeholder="Code" data-en-placeholder="Code" autocomplete="off"><button type="button" id="netJoin" data-en="Join">Rejoindre</button></span>
+        </div>
+        <div id="netRoom" class="hidden"></div>
+        <div id="netStatus"></div>
+      </div>
       <div class="menuFoot">
         <!-- (en bas à droite, en face des règles : ouvre l'éditeur de cartes) -->
         <button type="button" id="editorBtn" onclick="location.href='editeur.html'" data-en="🖌️ Map editor">🖌️ Création de carte</button>
@@ -148,6 +160,7 @@
             <li>🎚️ <b>Difficulté</b> : en Difficile, les bots sont plus nombreux, plus agressifs et un peu avantagés : +25 % d'or, recrutement 20 % plus rapide et soldats 10 % plus forts.</li>
             <li>⚔️ <b>Puissance</b> : en haut, la force de tes soldats en % (100 % = ordinaires). Ta meilleure caserne, tes mines de fer et ta cité impériale la font monter.</li>
             <li>⏩ <b>Vitesse</b> : en jeu, le bouton ⏩ en haut change la vitesse de la partie (x1, x1,5, x2, x3) ; ⏸ la met en pause.</li>
+            <li>🌐 <b>En ligne</b> (quand le jeu vient d'un serveur de jeu) : 🌍 la <b>partie publique</b> part toutes les 2 minutes avec tous ceux qui attendent, sur une carte au hasard, complétée par des bots ; personne ne la met en pause. 🔒 Un <b>salon privé</b> se rejoint avec son code : l'hôte 👑 choisit les réglages, la pause et la vitesse ; les autres peuvent faire une pause de 15 s toutes les 5 minutes. Chacun a 15 s pour fonder sa capitale (sinon, au hasard) ; les autres joueurs ont un 👤 dans le classement ; un joueur qui s'en va est remplacé par un bot. Les scénarios se jouent en solo.</li>
             <li>🖱️ <b>S'étendre</b> : clique deux fois de suite sur une terre libre voisine (le curseur « Envoyer » choisit le % de soldats). Les terres libres se prennent vite toute la partie, et au début ton royaume recrute plus vite.</li>
             <li>🎯 <b>Attaquer un royaume</b> : clique sur un de ses <b>châteaux, églises, ports, mines ou avant-postes</b> pour le viser (chemin doré), puis <b>une 2e fois</b> pour lancer. 🏛️ C'est une muraille avec sa garnison (une ville ou un port fortifié) qui maintient le pouvoir : sans aucune ville ni port fortifié, c'est l'anarchie, il est désorganisé et s'attaque de front, n'importe où (plus l'armée est grande, plus elle avance vite), mais tu peux aussi viser une de ses églises ou un de ses ports pour prendre sa zone d'un coup (avec une citadelle : les deux à la fois). 👑 Au niveau 4, une ville devient une <b>cité impériale</b> (une seule par partie) : troupes plus fortes, routes de pierre… ; de même pour un morceau de son royaume qui n'a ni ville ni port fortifié (personne ne le défend, jusqu'à ce qu'il soit relié à un château).</li>
             <li>⚔️ <b>L'assaut</b> part de ta cité la plus proche et marche sur tes terres jusqu'à ta frontière (sans ralentir dans la muraille de tes villes, quel que soit le terrain), par le chemin le plus rapide (lent dans le relief et pour une grosse armée, mais 60 % plus vite qu'en terre ennemie) : reclique sur la cible pour lui ajouter des soldats tout de suite. Chez l'ennemi, il avance lentement (surtout dans le relief, et d'autant plus que l'armée est grande), et tes renforts marchent depuis ta cité : plus l'armée est loin, plus ils mettent de temps. L'armée ne traverse pas la muraille d'un château : arrivée au pied du mur, elle doit tenir un <b>siège</b> (8, 13 ou 18 s selon son niveau ; 10 s pour un avant-poste), et c'est seulement là que sa garnison sort se battre. Le siège se met en pause tant que ses défenseurs se battent contre l'armée. Une ville, une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant 30 s. Un territoire désorganisé se prend 25 % plus vite. Prendre un château, une église ou un port donne toute sa zone et ses bâtiments ; mais un assaut qui échoue rend au défenseur la route qu'il avait tracée.</li>
@@ -207,6 +220,7 @@
             <li>🎚️ <b>Difficulty</b>: in Hard, the bots are more numerous, more aggressive and slightly favoured: +25% gold, 20% faster recruitment and 10% stronger soldiers.</li>
             <li>⚔️ <b>Strength</b>: at the top, the strength of your soldiers in % (100% = ordinary). Your best barracks, your iron mines and your imperial city raise it.</li>
             <li>⏩ <b>Speed</b>: in game, the ⏩ button at the top changes the game speed (x1, x1.5, x2, x3); ⏸ pauses it.</li>
+            <li>🌐 <b>Online</b> (when the game comes from a game server): 🌍 the <b>public game</b> starts every 2 minutes with everyone waiting, on a random map, filled with bots; nobody can pause it. 🔒 A <b>private room</b> is joined with its code: the host 👑 chooses the settings, the pause and the speed; the others can pause for 15 s every 5 minutes. Everyone has 15 s to found their capital (otherwise, a random spot); other players have a 👤 in the rankings; a player who leaves is replaced by a bot. Scenarios are solo only.</li>
             <li>🖱️ <b>Expand</b>: click twice in a row on neighbouring free land (the « Send » slider chooses the % of soldiers). Free land is taken quickly for the whole game, and at the start your kingdom recruits faster.</li>
             <li>🎯 <b>Attack a kingdom</b>: click on one of its <b>castles, churches, ports, mines or outposts</b> to target it (golden path), then <b>a 2nd time</b> to launch. 🏛️ Power is held by walls with their garrison (a city or a fortified port): without any city or fortified port, it is anarchy, the kingdom is disorganized and can be attacked head-on, anywhere (the bigger the army, the faster it advances), but you can also target one of its churches or ports to take its whole area at once (with a citadel: both at once). 👑 At level 4, a city becomes an <b>imperial city</b> (only one per game): stronger troops, stone roads…; the same goes for a piece of a kingdom with no city and no fortified port (nobody defends it, until it is linked to a castle).</li>
             <li>⚔️ <b>The assault</b> leaves from your nearest city and marches across your land to your border (without slowing down inside the walls of your cities, whatever the terrain), by the fastest path (slow in rough terrain and for a big army, but 60% faster than in enemy land): click the target again to add soldiers right away. In enemy land it advances slowly (especially in rough terrain, and all the more so as the army is big), and your reinforcements march from your city: the farther the army, the longer they take. The army does not cross the walls of a castle: once at the foot of the wall, it must hold a <b>siege</b> (8, 13 or 18 s depending on its level; 10 s for an outpost), and only then does its garrison come out to fight. The siege pauses while its defenders are fighting the army. A city, church or port that has just been conquered cannot be attacked for 30 s. Disorganized land is taken 25% faster. Taking a castle, a church or a port gives its whole area and its buildings; but a failed assault gives back to the defender the path it had cut.</li>
@@ -330,6 +344,7 @@
   <script src="js/charlemagne.js"></script>
   <script src="js/centans.js"></script>
   <script src="js/icons.js"></script>
+  <script src="js/dmath.js"></script>
   <script src="js/map.js"></script>
   <script src="js/worldmap.js"></script>
   <script src="js/europemap.js"></script>
@@ -341,6 +356,7 @@
   <script src="js/music.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/render.js"></script>
+  <script src="js/net.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

@@ -98,6 +98,20 @@ const CONFIG = {
   TICKS_PER_SECOND: 10,
   GAME_SPEEDS: [1, 1.5, 2, 3], // vitesses de la partie, au choix en jeu (bouton ⏩ en haut)    // nombre de "tours" de jeu par seconde
 
+  // --- 🌐 Parties en ligne (voir net.js, et le serveur : serveur/serveur.js, serveur/PROTOCOLE.md) ---
+  NET: {
+    // Adresse du serveur de jeu. Vide : le serveur qui a envoyé la page (le jeu ouvert depuis le serveur lui-même).
+    // Pour jouer en ligne depuis GitHub Pages, mettre ici l'adresse du serveur, par exemple 'wss://mon-serveur.fr/ws'.
+    // (on peut aussi l'essayer sans toucher au code : index.html?serveur=wss://mon-serveur.fr/ws)
+    SERVER: '',
+    PROTOCOL: 1,              // version du protocole : le serveur refuse un jeu trop vieux (ou trop récent)
+    HASH_EVERY: 50,           // tous les combien de tours on compare l'empreinte de la partie entre joueurs
+    // Cartes possibles en ligne (pas encore les scénarios, ni les cartes dessinées, qui n'existent que sur un ordinateur)
+    MAPS: ['normal', 'continental', 'naval', 'world', 'europe', 'azeroth'],
+    // (les autres règles des parties en ligne, que le serveur fait respecter, sont en haut de serveur/serveur.js :
+    //  partie publique toutes les 2 min, temps pour choisir sa place, pauses de 15 s toutes les 5 min en salon privé…)
+  },
+
   // --- Départ ---
   START_TROOPS: 10,       // soldats au départ (on commence petit !)
   START_GOLD: 10,

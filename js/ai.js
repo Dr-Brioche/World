@@ -6,17 +6,17 @@ const AI = {
     if (p.raiders) return; // (⚔️ des pillards, comme les Slaves de Charlemagne : ils ne font que leurs razzias, voir stepRaids)
     if (p.dormant) return; // (👑 l'Aquitaine, avant sa révolte : elle n'a encore ni terres ni armée)
     if (--p.aiTimer > 0) return;
-    p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Math.random() * 2));
+    p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Game.rand() * 2));
 
-    if (Math.random() < 0.4) this.tryBuild(p);
-    if (Math.random() < 0.1) this.tryWall(p);
-    if (Math.random() < 0.05 * (Game.difficulty.zeal || 1)) this.tryCrusade(p);
-    if (Math.random() < 0.1) this.tryLevy(p);
-    if (Math.random() < (p.bridgeSaving ? 0.3 : 0.05)) this.tryBridge(p);
-    if (Math.random() < 0.05) this.tryExpedition(p);
-    if (Math.random() < 0.05) this.tryViking(p);
+    if (Game.rand() < 0.4) this.tryBuild(p);
+    if (Game.rand() < 0.1) this.tryWall(p);
+    if (Game.rand() < 0.05 * (Game.difficulty.zeal || 1)) this.tryCrusade(p);
+    if (Game.rand() < 0.1) this.tryLevy(p);
+    if (Game.rand() < (p.bridgeSaving ? 0.3 : 0.05)) this.tryBridge(p);
+    if (Game.rand() < 0.05) this.tryExpedition(p);
+    if (Game.rand() < 0.05) this.tryViking(p);
     if (this.stuckOnIsland(p)) this.goToSea(p);
-    if (Math.random() < 0.08) this.tryAlliance(p);
+    if (Game.rand() < 0.08) this.tryAlliance(p);
 
     this.reactToThreats(p);
 
@@ -48,7 +48,7 @@ const AI = {
       // (contre un royaume désorganisé attaqué de front : sur une de ses églises ou un de ses ports)
       const all = Game.attacks.filter(a => !a.done && a.attacker === p.id && a.target === mine.target && a.link === undefined);
       if (mine.target >= 0 && all.length < Game.maxAssaults(p.id)
-        && p.troops > Game.maxTroops(p) * 0.4 && Math.random() < 0.3) {
+        && p.troops > Game.maxTroops(p) * 0.4 && Game.rand() < 0.3) {
         const other = Game.nearestTargets(p.id, mine.target).find(c => !all.some(a => a.targetCastle === c));
         if (other !== undefined) Game.launchAttack(p.id, mine.target, p.troops * 0.5, other);
       }
@@ -62,18 +62,18 @@ const AI = {
     if (this.useOutposts(p)) return;
 
     // Un de nos châteaux (ou ports de niveau 3) est isolé : de temps en temps, on tente de le relier au royaume
-    if (p.troops > max * 0.4 && Math.random() < 0.2) {
+    if (p.troops > max * 0.4 && Game.rand() < 0.2) {
       const lost = Game.buildingTiles.find(c => Game.owner[c] === p.id && Game.holdsAlone(c) && Game.isIsolated(c));
       if (lost !== undefined && !Game.launchLink(p.id, lost, p.troops * 0.5)) return;
     }
 
     // De temps en temps, des terres libres de l'autre côté d'un fleuve : on le traverse à gué
     // (souvent s'il n'y a plus de terre libre à notre frontière : c'est le seul moyen de passer)
-    if (p.troops > max * 0.3 && Math.random() < (nb.has(-1) ? 0.1 : 0.3) && this.tryCrossing(p)) return;
+    if (p.troops > max * 0.3 && Game.rand() < (nb.has(-1) ? 0.1 : 0.3) && this.tryCrossing(p)) return;
 
     // S'il reste des terres libres, on s'étend en priorité
     // (il attend d'avoir assez de soldats, puis envoie un gros morceau, plutôt que de petits paquets sans arrêt)
-    if (nb.has(-1) && p.troops > max * 0.4 && Math.random() < 0.85) {
+    if (nb.has(-1) && p.troops > max * 0.4 && Game.rand() < 0.85) {
       Game.launchAttack(p.id, -1, p.troops * 0.6);
       return;
     }
@@ -104,9 +104,9 @@ const AI = {
       const helpers = plan.tile !== undefined ? 0 : aim === null ? strength * CONFIG.LEADERLESS_DEFENSE
         : Game.isIsolated(aim) ? 0 : strength * 0.5;
       const power = Game.troopPower(o) / Game.troopPower(p.id); // force des soldats des deux camps
-      let score = p.troops * 0.7 / ((helpers + garrison) * plan.D * power + 1) + Math.random() * 0.3;
+      let score = p.troops * 0.7 / ((helpers + garrison) * plan.D * power + 1) + Game.rand() * 0.3;
       // (quand il ne reste que quelques royaumes, les bots n'ont plus de préférence contre le joueur)
-      if (e.isHuman && alive > 4) score += Game.difficulty.hateHuman;
+      if (e.human && alive > 4) score += Game.difficulty.hateHuman;
       // Pas d'acharnement : une cible déjà attaquée par un autre royaume est moins tentante
       // (les bots ne se liguent pas tous contre le même, ils se battent aussi entre eux)
       if (Game.attacks.some(a => !a.done && a.target === o && a.attacker !== p.id)) score *= 0.5;
@@ -120,7 +120,7 @@ const AI = {
       Game.launchAttack(p.id, best, p.troops * 0.7, bestAim === null ? undefined : bestAim);
     } else if (nb.has(-1)) {
       Game.launchAttack(p.id, -1, p.troops * 0.3);
-    } else if (best === null && full && Math.random() < 0.15) {
+    } else if (best === null && full && Game.rand() < 0.15) {
       this.betray(p, nb);
     }
   },
@@ -146,7 +146,7 @@ const AI = {
       }
       return false;
     };
-    const seen = new Set([fords[(Math.random() * fords.length) | 0]]);
+    const seen = new Set([fords[(Game.rand() * fords.length) | 0]]);
     for (const r of seen) {
       if (seen.size > 200) break;
       let bank = -1;
@@ -196,7 +196,7 @@ const AI = {
     for (const a of Game.attacks) {
       if (a.done || a.target < 0 || a.attacker === p.id || !Game.areAllied(p.id, a.target) || Game.isPreparing(a)) continue;
       const need = a.troops / Game.combatRatio(a) - a.defenders - Game.garrisonFor(a) * Game.garrisonPower(a);
-      if (need <= 0 || p.troops < Game.maxTroops(p) * 0.3 || Math.random() > 0.3) continue;
+      if (need <= 0 || p.troops < Game.maxTroops(p) * 0.3 || Game.rand() > 0.3) continue;
       a.aiHelped = a.aiHelped || {};
       if (Game.tick - (a.aiHelped[p.id] ?? -1e9) < CONFIG.DEFEND_COOLDOWN * CONFIG.TICKS_PER_SECOND) continue;
       a.aiHelped[p.id] = Game.tick;
@@ -209,7 +209,7 @@ const AI = {
     }
     // Une armée se prépare contre nous : parfois, on tente de faire la paix (un pacte)
     const threats = Game.attacks.filter(a => !a.done && a.target === p.id && Game.isPreparing(a));
-    if (threats.length && Math.random() < 0.3) Game.proposeAlliance(p.id, threats[0].attacker);
+    if (threats.length && Game.rand() < 0.3) Game.proposeAlliance(p.id, threats[0].attacker);
   },
 
   // Propose une alliance à un voisin
@@ -217,7 +217,7 @@ const AI = {
     const candidates = [...Game.neighborStats(p.id).keys()]
       .filter(o => o >= 0 && !Game.areAllied(p.id, o) && !Game.pactBlock(p.id, o) && !Game.isTraitor(Game.players[o])
         && !Game.attacks.some(a => !a.done && a.attacker === p.id && a.target === o));
-    if (candidates.length) Game.proposeAlliance(p.id, candidates[(Math.random() * candidates.length) | 0]);
+    if (candidates.length) Game.proposeAlliance(p.id, candidates[(Game.rand() * candidates.length) | 0]);
   },
 
   // Entouré uniquement d'alliés et à l'étroit : trahison du plus faible !
@@ -250,7 +250,7 @@ const AI = {
       if (Game.upgradeCost(port) !== null && p.gold >= Game.upgradeCost(port)) Game.upgradeBuilding(p, port);
       return;
     }
-    if (Math.random() < 0.3) this.tryExpedition(p, true);
+    if (Game.rand() < 0.3) this.tryExpedition(p, true);
   },
 
   // ⛵ Avec un grand port : une expédition, mais seulement avec un but (un seul débarquement en mer à la fois,
@@ -267,7 +267,7 @@ const AI = {
     // Des terres libres au-delà de la mer
     if (freeFirst || !G.neighborStats(p.id).has(-1)) {
       for (let k = 0; k < 60; k++) {
-        const i = (Math.random() * G.N) | 0;
+        const i = (Game.rand() * G.N) | 0;
         if (G.owner[i] !== -1 || !G.isCoastal(i) || !G.landable(p.id, i)) continue;
         if (!G.launchExpedition(p.id, i, Math.max(p.troops * 0.2, 12))) return;
       }
@@ -278,13 +278,13 @@ const AI = {
     if (p.defensive || bases >= 1 || p.troops < G.maxTroops(p) * 0.5) return;
     const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.areAllied(p.id, o.id) && o.troops < p.troops * 0.8);
     if (!foes.length) return;
-    const foe = foes[(Math.random() * foes.length) | 0];
-    const targets = G.targetsOf(foe.id).sort(() => Math.random() - 0.5).slice(0, 5);
+    const foe = foes[(Game.rand() * foes.length) | 0];
+    const targets = Game.shuffle(G.targetsOf(foe.id)).slice(0, 5);
     for (const t of targets) {
       // une côte de cet ennemi à moins de 10 cases de sa cible
       const tx = t % W, ty = (t / W) | 0;
       for (let k = 0; k < 40; k++) {
-        const x = tx + Math.round((Math.random() * 2 - 1) * 10), y = ty + Math.round((Math.random() * 2 - 1) * 10);
+        const x = tx + Math.round((Game.rand() * 2 - 1) * 10), y = ty + Math.round((Game.rand() * 2 - 1) * 10);
         if (x < 0 || y < 0 || x >= W || y >= G.H) continue;
         const i = y * W + x;
         if (G.owner[i] !== foe.id || !G.isCoastal(i) || !G.landable(p.id, i)) continue;
@@ -305,8 +305,8 @@ const AI = {
     if (p.troops < max * 0.5 || G.expeditions.some(e => !e.done && e.pid === p.id && e.viking !== undefined)) return;
     const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.areAllied(p.id, o.id) && o.troops < p.troops * 0.8);
     if (!foes.length) return;
-    const foe = foes[(Math.random() * foes.length) | 0];
-    const cities = G.castles.filter(c => G.owner[c] === foe.id).sort(() => Math.random() - 0.5).slice(0, 3);
+    const foe = foes[(Game.rand() * foes.length) | 0];
+    const cities = Game.shuffle(G.castles.filter(c => G.owner[c] === foe.id)).slice(0, 3);
     for (const c of cities) if (!G.launchViking(p.id, c, p.troops * 0.5)) return;
   },
 
@@ -322,7 +322,7 @@ const AI = {
       if (G.owner[op] !== p.id || !G.outpostReady(op)) continue;
       const v = o.victim;
       if (v < 0 || !G.players[v].alive || G.areAllied(p.id, v)) {
-        if (o.stationed >= 10 && Math.random() < 0.3 && !G.launchAttack(p.id, -1, o.stationed * 0.7, undefined, op)) return true;
+        if (o.stationed >= 10 && Game.rand() < 0.3 && !G.launchAttack(p.id, -1, o.stationed * 0.7, undefined, op)) return true;
         continue;
       }
       // la cible de l'ennemi la plus proche de l'avant-poste, et de quoi la prendre (sa garnison, avec une marge)
@@ -361,7 +361,7 @@ const AI = {
         if (!G.planWall(p.id, c, aim).error && !G.buildWall(p, c, aim)) return true;
       }
       // le chemin qu'un ennemi (pris au hasard parmi les voisins) suivrait pour assiéger cette ville
-      const e = enemies[(Math.random() * enemies.length) | 0];
+      const e = enemies[(Game.rand() * enemies.length) | 0];
       const path = G.castlePath(e, c);
       if (!path) continue;
       const route = new Set(path);
@@ -373,7 +373,7 @@ const AI = {
       for (let k = 0; k < 32; k++) {
         const ang = k / 32 * Math.PI * 2;
         for (let d = R + 3; d <= R + CONFIG.WALL_MAX_REACH; d += 3) {
-          const x = Math.round(cx + Math.cos(ang) * d), y = Math.round(cy + Math.sin(ang) * d);
+          const x = Math.round(cx + DMath.cos(ang) * d), y = Math.round(cy + DMath.sin(ang) * d);
           if (x < 0 || y < 0 || x >= W || y >= G.H) continue;
           const plan = G.planWall(p.id, c, y * W + x);
           if (plan.error || !plan.tiles.some(t => route.has(t))) continue;
@@ -411,12 +411,12 @@ const AI = {
     const G = Game, W = G.W;
     p.bridgeSaving = false;
     if (G.tick < CONFIG.AI_BRIDGE_AFTER * CONFIG.TICKS_PER_SECOND) return false;
-    if (p.bridgeGoal === undefined) p.bridgeGoal = Math.random() < 0.5 ? 1 : 2;
+    if (p.bridgeGoal === undefined) p.bridgeGoal = Game.rand() < 0.5 ? 1 : 2;
     const mine = G.bridges.filter(b => b.owner === p.id);
     if (mine.length >= p.bridgeGoal) return false;
     const cities = G.castles.filter(c => G.owner[c] === p.id);
     if (!cities.length) return false;
-    const dist = (a, b) => Math.hypot(a % W - b % W, ((a / W) | 0) - ((b / W) | 0));
+    const dist = (a, b) => DMath.hypot(a % W - b % W, ((a / W) | 0) - ((b / W) | 0));
     let best = -1, bestD = Infinity;
     for (const t of G.riverTiles()) {
       // (seulement un fleuve qui touche nos terres)
@@ -444,29 +444,29 @@ const AI = {
 
   tryBuild(p, forced) {
     // (il économise pour un pont : il ne dépense pas tout de suite, la plupart du temps)
-    if (!forced && p.bridgeSaving && p.gold < Game.bridgeCost(p.id) && Math.random() < 0.7) return;
+    if (!forced && p.bridgeSaving && p.gold < Game.bridgeCost(p.id) && Game.rand() < 0.7) return;
     // ✝️ Un voisin ennemi a plus de Croyance (il convertit nos terres) : on mise un peu plus sur les églises
     // (zeal : un peu en facile, plus en difficile)
     const zeal = Game.difficulty.zeal || 1;
     const behind = [...Game.neighborStats(p.id).keys()].some(o => o >= 0 && Game.faithEdge(o, p.id) > 0);
     // Parfois, améliorer un château ou un moulin plutôt que construire
-    if (Math.random() < 0.3) {
+    if (Game.rand() < 0.3) {
       const mine = Game.buildingTiles.filter(a => Game.owner[a] === p.id && !Game.works.has(a)
         && Game.upgradeCost(a) !== null && p.gold >= Game.upgradeCost(a) && !Game.upgradeBlocker(p, a));
       // (en retard de Croyance : une église d'abord, s'il y en a une à améliorer)
-      const church = behind && Math.random() < 0.4 * zeal ? mine.find(a => Game.building[a] === B_CHURCH) : undefined;
+      const church = behind && Game.rand() < 0.4 * zeal ? mine.find(a => Game.building[a] === B_CHURCH) : undefined;
       if (church !== undefined) { Game.upgradeBuilding(p, church); return; }
-      if (mine.length) { Game.upgradeBuilding(p, mine[(Math.random() * mine.length) | 0]); return; }
+      if (mine.length) { Game.upgradeBuilding(p, mine[(Game.rand() * mine.length) | 0]); return; }
     }
     // ⛏️ Un filon libre sur nos terres : on y bâtit une mine (le diamant et l'or d'abord)
-    if (!forced && Math.random() < 0.7 && p.gold >= Game.buildCost(p, B_MINE) && this.tryMine(p)) return;
+    if (!forced && Game.rand() < 0.7 && p.gold >= Game.buildCost(p, B_MINE) && this.tryMine(p)) return;
     const c = p.bCount;
     let type = B_MILL;
     if (c[B_BARRACKS] < c[B_MILL] / 2) type = B_BARRACKS;
-    else if (Math.random() < 0.2 && p.castlesBuilt < Game.maxCastles(p)) type = B_CASTLE;
-    else if (behind && Math.random() < 0.15 * zeal && c[B_CHURCH] < 2 + Math.round(zeal)) type = B_CHURCH;
-    else if (Math.random() < 0.1 && c[B_CHURCH] < 2) type = B_CHURCH;
-    else if (Math.random() < 0.1 && c[B_PORT] < 2) type = B_PORT;
+    else if (Game.rand() < 0.2 && p.castlesBuilt < Game.maxCastles(p)) type = B_CASTLE;
+    else if (behind && Game.rand() < 0.15 * zeal && c[B_CHURCH] < 2 + Math.round(zeal)) type = B_CHURCH;
+    else if (Game.rand() < 0.1 && c[B_CHURCH] < 2) type = B_CHURCH;
+    else if (Game.rand() < 0.1 && c[B_PORT] < 2) type = B_PORT;
     if (forced) type = forced;
     if (p.gold < Game.buildCost(p, type)) return;
 
@@ -483,7 +483,7 @@ const AI = {
       const own = [];
       for (let i = 0; i < Game.N; i++) if (Game.owner[i] === p.id) own.push(i);
       for (let k = 0; k < 600 && tiles.length < 12 && own.length; k++) {
-        const i = own[(Math.random() * own.length) | 0];
+        const i = own[(Game.rand() * own.length) | 0];
         if (Game.canPlace(p.id, i, type)) tiles.push(i);
       }
     }
@@ -491,7 +491,7 @@ const AI = {
     // parmi quelques emplacements tirés au hasard, le meilleur terrain pour produire (pas le désert, si possible)
     let best = -1, bestF = -1;
     for (let k = 0; k < 6; k++) {
-      const i = tiles[(Math.random() * tiles.length) | 0], f = Game.terrainFactor(i, type);
+      const i = tiles[(Game.rand() * tiles.length) | 0], f = Game.terrainFactor(i, type);
       if (f > bestF) { bestF = f; best = i; }
     }
     Game.tryBuild(p, best, type);

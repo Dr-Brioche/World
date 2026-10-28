@@ -49,7 +49,7 @@ Object.assign(GameRules, {
         const [ex, ey] = at(lon, lat);
         for (let y = Math.floor(ey - R); y <= ey + R; y++) for (let x = Math.floor(ex - R); x <= ex + R; x++) {
           const i = y * W + x;
-          if (x >= 0 && y >= 0 && x < W && y < H && Math.hypot(x + 0.5 - ex, y + 0.5 - ey) <= R && this.claimable(i)) this.setOwner(i, hy.role[f.id]);
+          if (x >= 0 && y >= 0 && x < W && y < H && DMath.hypot(x + 0.5 - ex, y + 0.5 - ey) <= R && this.claimable(i)) this.setOwner(i, hy.role[f.id]);
         }
       }
     }
@@ -343,7 +343,7 @@ Object.assign(GameRules, {
       if (this.owner[i] !== em.id) continue;
       const x = i % W, y = (i / W) | 0;
       // (le Dauphiné : autour de Grenoble, au sud de Lyon et à l'ouest des Alpes ; pas au-delà de la Durance)
-      if (Math.hypot(x - gx, y - gy) <= R && x < gx + 25) this.setOwner(i, fr.id);
+      if (DMath.hypot(x - gx, y - gy) <= R && x < gx + 25) this.setOwner(i, fr.id);
     }
     this.hyEvent('dauphine', {}, tr('🐬 1349 : le Dauphiné passe au roi de France.', '🐬 1349: the Dauphiné passes to the King of France.'), 'good', fr);
   },
@@ -520,14 +520,14 @@ Object.assign(GameRules, {
       // (elle saute vers les villes voisines, sauf celles qui ont fermé leurs portes)
       const cx = c % W, cy = (c / W) | 0;
       for (const d of this.castles) {
-        if (d === c || hy.sick.has(d) || Math.random() >= P.SPREAD_CHANCE) continue;
-        if (Math.hypot(d % W - cx, ((d / W) | 0) - cy) <= P.SPREAD_RANGE) this.hyInfect(d);
+        if (d === c || hy.sick.has(d) || this.rand() >= P.SPREAD_CHANCE) continue;
+        if (DMath.hypot(d % W - cx, ((d / W) | 0) - cy) <= P.SPREAD_RANGE) this.hyInfect(d);
       }
       // (un roi bot ferme de temps en temps les portes d'une ville voisine menacée)
       for (const d of this.castles) {
         const q = this.owner[d];
-        if (q < 0 || this.players[q].isHuman || hy.sick.has(d) || Math.random() >= 0.01) continue;
-        if (Math.hypot(d % W - cx, ((d / W) | 0) - cy) <= P.SPREAD_RANGE) this.hyCloseGates(q, d);
+        if (q < 0 || this.players[q].isHuman || hy.sick.has(d) || this.rand() >= 0.01) continue;
+        if (DMath.hypot(d % W - cx, ((d / W) | 0) - cy) <= P.SPREAD_RANGE) this.hyCloseGates(q, d);
       }
     }
     // (chaque royaume perd des soldats, selon la part de ses villes malades)
@@ -573,9 +573,9 @@ Object.assign(GameRules, {
     // (surtout chez le roi de France : c'est son royaume que les routiers ravagent)
     const victims = ['france', 'france', 'france', 'bourgogne', 'bretagne', 'navarre', 'angleterre'].map(r => this.hyP(r)).filter(p => p.alive);
     for (let k = 0; k < 4 && victims.length; k++) {
-      const v = victims[Math.floor(Math.random() * victims.length)];
+      const v = victims[Math.floor(this.rand() * victims.length)];
       const cities = this.castles.filter(c => this.owner[c] === v.id && c !== v.capital && this.holdsAlone(c));
-      const c = cities[Math.floor(Math.random() * cities.length)];
+      const c = cities[Math.floor(this.rand() * cities.length)];
       if (c === undefined) continue;
       const land = this.hyLanding(comp.id, v.id, c, false);
       if (land < 0) continue;
@@ -603,10 +603,9 @@ Object.assign(GameRules, {
     if (en.troops < C.MIN / C.SHARE || this.attacks.some(a => !a.done && a.attacker === en.id && a.chevauchee)) return;
     // (une chevauchée pille le plat pays et les petites villes : pas les capitales ni les grandes villes du royaume)
     const big = new Set(CENTANS.KEY_CITIES.map(n => hy.cities.get(n)));
-    const foes = [...this.neighborStats(en.id).keys()].filter(o => o >= 0 && this.hyCampOf(o) === 'france').sort(() => Math.random() - 0.5);
+    const foes = this.shuffle([...this.neighborStats(en.id).keys()].filter(o => o >= 0 && this.hyCampOf(o) === 'france'));
     for (const o of foes) {
-      const cities = this.targetsOf(o).filter(c => this.building[c] === B_CASTLE && c !== this.players[o].capital && !big.has(c))
-        .sort(() => Math.random() - 0.5).slice(0, 4);
+      const cities = this.shuffle(this.targetsOf(o).filter(c => this.building[c] === B_CASTLE && c !== this.players[o].capital && !big.has(c))).slice(0, 4);
       for (const c of cities) if (!this.hyChevauchee(en.id, c, en.troops * C.SHARE)) return;
     }
   },
@@ -687,9 +686,9 @@ Object.assign(GameRules, {
     const [lo, hi] = coast ? [0, CONFIG.VIKING_RANGE] : [9, 16], spots = [];
     for (let y = Math.max(0, Math.floor(cy - hi)); y <= Math.min(this.H - 1, Math.ceil(cy + hi)); y++) {
       for (let x = Math.max(0, Math.floor(cx - hi)); x <= Math.min(W - 1, Math.ceil(cx + hi)); x++) {
-        const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
+        const d = DMath.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
         if (d < lo || d > hi || this.owner[j] !== victim || this.building[j] || this.wallAt[j]) continue;
-        if (coast ? this.isCoastal(j) : this.terrain[j] !== TERRAIN.RIVER) spots.push([coast ? d : Math.random(), j]);
+        if (coast ? this.isCoastal(j) : this.terrain[j] !== TERRAIN.RIVER) spots.push([coast ? d : this.rand(), j]);
       }
     }
     spots.sort((a, b) => a[0] - b[0]);
