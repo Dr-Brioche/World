@@ -108,6 +108,12 @@ const CONFIG = {
     HASH_EVERY: 50,           // tous les combien de tours on compare l'empreinte de la partie entre joueurs
     // Cartes possibles en ligne (pas encore les scénarios, ni les cartes dessinées, qui n'existent que sur un ordinateur)
     MAPS: ['normal', 'continental', 'naval', 'world', 'europe', 'azeroth'],
+    // Un joueur qui n'a pas écrit le nom de son royaume en reçoit un au hasard dans cette liste (sinon, tout le monde
+    // s'appellerait « Mon Royaume ») ; le serveur ajoute « II », « III »… si deux joueurs ont le même nom
+    NAMES: ['Aldoria', 'Brumeval', 'Castelroc', 'Dunmor', 'Eldrance', 'Faucombe', 'Grisemont', 'Hautbois', 'Isembourg',
+      'Joncval', 'Kerlann', 'Lunebourg', 'Montargent', 'Noirval', 'Orvande', 'Pierrefeu', 'Querrec', 'Rocheblanche',
+      'Sombreval', 'Tourneroc', 'Ulmont', 'Valdor', 'Vertefosse', 'Wyrmont', 'Ystrel', 'Belcastel', 'Corbemont',
+      'Dorvelle', 'Fiercombe', 'Gardelune', 'Hurlevaux', 'Malgrive', 'Ombrecoeur', 'Rougemarche', 'Sainteloup'],
     // (les autres règles des parties en ligne, que le serveur fait respecter, sont en haut de serveur/serveur.js :
     //  partie publique toutes les 2 min, temps pour choisir sa place, pauses de 15 s toutes les 5 min en salon privé…)
   },
@@ -408,7 +414,7 @@ const CONFIG = {
     VICTORY: 'sons/musique/victoire.mp3',
     VICTORY_GAIN: 2,
     // 🔔 Les petits sons du jeu (de dr_brioche), joués par-dessus la musique, au même volume que le son de la victoire ;
-    // un seul à la fois (un nouveau son coupe net le précédent), et pas plus d'un même son toutes les SOUND_GAP
+    // ils se superposent (un nouveau son ne coupe pas le précédent), et pas plus d'un même son toutes les SOUND_GAP
     // secondes (plusieurs villes perdues d'un coup ne font qu'un son)
     SOUNDS: {
       cityLost: 'sons/perte-ville.mp3', // une de nos villes est prise (ou rasée)

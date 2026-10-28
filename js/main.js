@@ -540,7 +540,16 @@ const UI = {
     $('mapType').dispatchEvent(new Event('change'));
   },
   // Ce que le serveur sait de nous (notre nom et notre bannière), et les réglages du salon (choisis par l'hôte)
-  netProfile() { return { name: $('name').value.trim() || tr('Mon Royaume', 'My Kingdom'), banner: this.banner }; },
+  netProfile() { return { name: this.netName(), banner: this.banner }; },
+  // Le nom de notre royaume en ligne : celui qu'on a écrit ; sinon (nom vide, ou laissé à « Mon Royaume »), un nom
+  // tiré au hasard (le même tant qu'on ne recharge pas la page)
+  netName() {
+    const n = $('name').value.trim();
+    if (n && n !== 'Mon Royaume' && n !== 'My Kingdom') return n;
+    const L = CONFIG.NET.NAMES;
+    if (!this.randomName) this.randomName = L[Math.floor(Math.random() * L.length)];
+    return this.randomName;
+  },
   netSettings() {
     const m = $('mapType').value;
     return { mapType: CONFIG.NET.MAPS.includes(m) ? m : 'normal', mapSize: $('mapSize').value, pacts: $('pacts').value === 'oui',
@@ -1915,6 +1924,8 @@ const UI = {
         const path = G.castlePath(h.id, c, src);
         if (path && path.length < best) { best = path.length; source = src; }
       }
+      // (🤝 pas de chemin depuis nos terres : l'armée peut passer par les terres d'un allié, voir Game.passagePlan)
+      if (source === null && G.passagePlan(h.id, c)) source = -1;
       if (source === null) {
         return this.log(tr(`Impossible d'atteindre ${G.targetLabel(c)} : ` +
           'des fortifications bloquent le passage. Prends d\'abord les châteaux de la frontière.',
@@ -1931,7 +1942,11 @@ const UI = {
     const G = Game, p = this.plan, b = p.castle >= 0 ? BUILDINGS[G.building[p.castle]] : null;
     const def = p.castle >= 0 ? this.fortDefense(p.castle) : null;
     const who = `${b ? b.icon + ' ' : ''}${G.players[p.target].name}`, n = fmt(G.troopsAt(G.human.id, p.source) * this.ratio);
+    // (🤝 l'armée passera par les terres d'un allié)
+    const pass = p.castle >= 0 && !G.castlePath(G.human.id, p.castle, p.source) ? G.passagePlan(G.human.id, p.castle) : null;
+    const ally = pass ? G.players[G.owner[pass.entry]].name : '';
     return tr(`🎯 Assaut sur ${who} avec ${n} soldats`, `🎯 Assault on ${who} with ${n} soldiers`) +
+      (pass ? tr(` · 🤝 en passant par les terres ${G.deName(ally)}`, ` · 🤝 through ${possessive(ally)} land`) : '') +
       (def !== null ? tr(` · 🛡️ défense globale ${pct(def)}`, ` · 🛡️ overall defense ${pct(def)}`) : '') +
       tr(' : clique encore une fois sur la cible pour lancer · Échap pour annuler', ': click the target once more to launch · Esc to cancel');
   },
