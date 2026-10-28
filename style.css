@@ -508,16 +508,41 @@ button:disabled .ico { opacity: 0.6; }
 }
 #parchment.hidden { display: none; }
 #parchment .scroll { width: min(600px, 100%); filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.6)); }
+/* Les deux rouleaux : le parchemin enroulé (couleur du papier, en volume, ses tours visibles aux deux bouts) autour
+   d'une baguette de bois tourné, qui dépasse de chaque côté : un collier, puis un pommeau rond */
 #parchment .rod {
-  position: relative; z-index: 2; height: 24px; margin: 0 -12px; border-radius: 12px;
-  background: linear-gradient(#4a2c10, #b07a3e 45%, #6b4219 70%, #3a220c);
+  position: relative; z-index: 2; height: 30px; margin: 0 -8px; border-radius: 15px;
+  /* (aux deux bouts, la tranche du rouleau : les tours de la feuille, en anneaux) */
+  background:
+    repeating-radial-gradient(ellipse 6px 14px at 50% 50%, #4a2e10 0 1.5px, #e9d4a4 1.5px 3.5px) left center / 12px 28px no-repeat,
+    repeating-radial-gradient(ellipse 6px 14px at 50% 50%, #4a2e10 0 1.5px, #e9d4a4 1.5px 3.5px) right center / 12px 28px no-repeat,
+    linear-gradient(90deg, rgba(90, 55, 20, 0.5), transparent 6%, transparent 94%, rgba(90, 55, 20, 0.5)),
+    linear-gradient(#7d5a2c 0%, #c9a66b 14%, #efdcae 36%, #f9edcb 47%, #e6cd97 64%, #b48c55 85%, #634421 100%);
+  box-shadow: 0 4px 7px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 244, 210, 0.35);
 }
 #parchment .rod::before, #parchment .rod::after {
-  content: ''; position: absolute; top: -5px; width: 22px; height: 34px; border-radius: 9px;
-  background: linear-gradient(90deg, #3a220c, #8a5a2a 50%, #3a220c);
+  content: ''; position: absolute; top: 50%; width: 46px; height: 34px; transform: translateY(-50%);
+  background-repeat: no-repeat;
 }
-#parchment .rod::before { left: -14px; }
-#parchment .rod::after { right: -14px; }
+/* (de l'intérieur vers l'extérieur : la baguette, le collier, le pommeau) */
+#parchment .rod::after {
+  right: -40px;
+  background-image:
+    radial-gradient(circle at 42% 34%, #e8b273 0 2px, #b8763c 6px, #74421a 11px, #3a1e06 15px, transparent 16px),
+    linear-gradient(#2e1806, #94602e 32%, #d0955a 50%, #6a3c14 76%, #2a1505),
+    linear-gradient(#2a1505, #7e4c22 30%, #b07842 50%, #5a3410 78%, #241204);
+  background-size: 32px 32px, 7px 26px, 22px 14px;
+  background-position: right center, 13px center, left center;
+}
+#parchment .rod::before {
+  left: -40px;
+  background-image:
+    radial-gradient(circle at 42% 34%, #e8b273 0 2px, #b8763c 6px, #74421a 11px, #3a1e06 15px, transparent 16px),
+    linear-gradient(#2e1806, #94602e 32%, #d0955a 50%, #6a3c14 76%, #2a1505),
+    linear-gradient(#2a1505, #7e4c22 30%, #b07842 50%, #5a3410 78%, #241204);
+  background-size: 32px 32px, 7px 26px, 22px 14px;
+  background-position: left center, 26px center, right center;
+}
 #parchment .sheet {
   margin: -6px 0; padding: 22px 34px 18px; overflow-y: auto;
   max-height: calc(100vh - 110px);
@@ -553,6 +578,7 @@ button:disabled .ico { opacity: 0.6; }
 }
 #parchment .sealBtn:hover { filter: brightness(1.12); }
 @media (max-width: 640px) {
+  #parchment { padding: 16px 40px; } /* (de la place sur les côtés pour les pommeaux des rouleaux) */
   #parchment .sheet { padding: 16px 18px 14px; font-size: 16px; }
   #parchment .pTitle { font-size: 22px; }
 }
