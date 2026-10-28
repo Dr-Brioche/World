@@ -460,7 +460,7 @@ const UI = {
   },
 
   // 📜 Un grand événement d'un scénario : un parchemin se déroule au milieu de l'écran et met la partie en pause.
-  // ev = { date, title, text, todo } (todo : ce qu'il faut faire ; « {clé} » dans les textes devient vars.clé).
+  // ev = { date, title, text, todo } (todo : le conseil des conseillers du roi ; « {clé} » dans les textes devient vars.clé).
   // Plusieurs événements à la fois : ils attendent leur tour. Une fois le dernier refermé, la partie reprend
   // (si elle tournait avant le premier).
   parchment(ev, vars = {}) {
@@ -476,7 +476,7 @@ const UI = {
     $('pDate').textContent = ev.date;
     $('pTitle').textContent = ev.title;
     $('pText').textContent = ev.text;
-    $('pTodo').innerHTML = ev.todo ? `<b>${tr('Ce qu\'il faut faire :', 'What to do:')}</b> ${escapeHtml(ev.todo)}` : '';
+    $('pTodo').innerHTML = ev.todo ? `<b>${tr('Tes conseillers murmurent :', 'Your counsellors whisper:')}</b> ${escapeHtml(ev.todo)}` : '';
     // (on relance l'animation : la feuille se déroule à chaque parchemin)
     const sheet = document.querySelector('#parchment .sheet');
     sheet.style.animation = 'none'; void sheet.offsetWidth; sheet.style.animation = '';

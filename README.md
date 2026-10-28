@@ -128,7 +128,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      les **Francs** et de bâtir l'empire de Charlemagne. Règles du scénario :
      - **pas de nouvelles villes** : on améliore les siennes, on prend celles des autres (le bouton Château disparaît) ;
      - 📜 **les grands événements** s'ouvrent sur un **parchemin** au milieu de l'écran, en écriture médiévale : la
-       partie se met en pause, le parchemin raconte ce qui se passe et dit **ce qu'il faut faire** (Poursuivre, Entrée
+       partie se met en pause, le parchemin raconte ce qui se passe, et **tes conseillers murmurent** un conseil à mots
+       couverts (pas de mode d'emploi : à toi de comprendre comment t'en sortir) (Poursuivre, Entrée
        ou Échap pour reprendre). Les réglages sont dans `js/charlemagne.js` (avec les textes, dans `EVENTS`) :
        - 👑 **768, la mort de Pépin** : le parchemin d'ouverture, qui présente la situation et les objectifs ;
        - ⚔️ **769, la trahison d'Aquitaine**, entre la 1ʳᵉ et la 3ᵉ minute (au hasard) : le duc Hunald II soulève
@@ -871,6 +872,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.145** : 📜 Charlemagne : les parchemins ne disent plus exactement quoi faire ; ils racontent l'événement, et **tes conseillers murmurent** un conseil à mots couverts (« veille sur tes marches de l'Est »…), pour rester dans l'histoire
 - **v0.92.144** : 🏰 le scénario **Gouffre de Helm** est retiré du jeu (la tour de garde, faite pour lui, reste prête mais pas encore disponible dans les parties)
 - **v0.92.143** : 🛡️ correction : tes défenseurs qui interceptent une armée ne tournent plus autour quand ils arrivent près d'elle (ils recalculaient sans cesse un chemin par tes terres, que l'ennemi grignotait, et faisaient des détours) : à moins de 15 cases, ils foncent droit sur elle, et à 3 cases ils l'attaquent tout de suite
 - **v0.92.142** : ⏸ quand la partie est en **pause**, la musique d'ambiance se met en pause aussi, et reprend au même endroit (sauf pendant la lecture d'un parchemin d'événement)
