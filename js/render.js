@@ -2729,8 +2729,6 @@ const Render = {
       // (🤝 pas de chemin depuis nos terres : par les terres d'un allié du pacte ?)
       this.previewPass = this.previewPath ? null : G.passagePlan(G.human.id, c);
       if (this.previewPass) this.previewPath = this.previewPass.path;
-      // (👑 Charlemagne : Rome, au pape, ne se prend pas : une croix rouge, voir Game.romeShielded)
-      if (G.romeShielded(c, G.human.id)) this.previewPath = this.previewPass = null;
     }
     this.castlePreview = { castle: c, path: this.previewPath };
     const ctx = this.ctx, s = this.cam.scale, W = G.W;

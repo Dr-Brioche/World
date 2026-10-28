@@ -1919,10 +1919,6 @@ const UI = {
       return this.log(tr(`⏳ ${G.targetLabel(c)[0].toUpperCase()}${G.targetLabel(c).slice(1)} vient de changer de mains : impossible de l'attaquer avant ${Math.ceil(G.truceLeft(c))} s.`,
         `⏳ ${G.targetLabel(c)[0].toUpperCase()}${G.targetLabel(c).slice(1)} just changed hands: it cannot be attacked for ${Math.ceil(G.truceLeft(c))} s.`), 'warn');
     }
-    // (👑 Charlemagne : Rome, au pape, ne se prend pas, voir Game.romeShielded)
-    if (c >= 0 && G.romeShielded(c, h.id)) {
-      return this.log(tr('✝️ Rome est sous la protection de saint Pierre : personne ne peut la prendre au pape.', '✝️ Rome is under the protection of Saint Peter: no one can take it from the pope.'), 'warn');
-    }
     let source = null;
     if (c >= 0) {
       // D'où part l'armée : du royaume ou d'un avant-poste bâti (le chemin le plus court)

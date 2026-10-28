@@ -30,10 +30,13 @@ const CHARLEMAGNE = {
   LOMBARDS_WARNING: 30,     // secondes : on prévient le joueur un peu avant
   // Pour cette marche, Didier lève une grande armée (soldats, selon la difficulté), qui vient à bout de la garnison
   // de Rome (en Facile, une fois sur deux) : aux Francs de soumettre les Lombards avant, ou de défendre Rome pendant
-  // le siège. Si Rome tombe, l'objectif « Rome » est perdu pour de bon (même si on la libère ensuite).
-  // (Rome, tant qu'elle est au pape, ne peut être prise par personne d'autre : seulement par cette marche des Lombards)
+  // le siège. Si Rome tombe (aux mains des Lombards ou de n'importe qui d'autre), l'objectif « Rome » est perdu pour
+  // de bon (même si on la libère ensuite).
   // (cette armée suit le nombre de villes qu'ils tiennent encore : 2 villes sur 6, c'est 3 fois moins de soldats)
   LOMBARDS_ARMY: { facile: 5000, normal: 5500, difficile: 6500 },
+  // Leur marche repoussée, les Lombards retentent leur chance, s'ils en ont les moyens : au plus une fois toutes les
+  // EVERY secondes, quand leur armée atteint MIN fois celle de leur grande marche (2500 soldats sur 5000 : ils repartent)
+  LOMBARDS_RETRY: { EVERY: 180, MIN: 0.5 },
   START_ARMY: 0.35,         // au départ, chaque faction a 35 % de son armée maximum
   START_GOLD: 400,
   // Rome n'a pas d'armée (le pape ne recrute pas) : seulement une grande garnison, qui se reconstitue d'elle-même,
@@ -121,8 +124,8 @@ const CHARLEMAGNE = {
     romeFalls: {
       date: tr('Les terres de saint Pierre', 'The lands of Saint Peter'),
       title: tr('Rome est tombée', 'Rome has fallen'),
-      text: tr('Les Lombards sont entrés dans Rome ! Le pape a perdu sa ville, et la chrétienté tout entière regarde vers toi, le protecteur de l\'Église.',
-        'The Lombards have entered Rome! The pope has lost his city, and all of Christendom looks to you, the protector of the Church.'),
+      text: tr('Rome est tombée aux mains {who} ! Le pape a perdu sa ville, et la chrétienté tout entière regarde vers toi, le protecteur de l\'Église, qui n\'a pas su la garder.',
+        'Rome has fallen into the hands of {who}! The pope has lost his city, and all of Christendom looks to you, the protector of the Church, who could not keep it.'),
       todo: tr('La couronne que Rome te promettait s\'est envolée avec elle : nul pape ne sacrera un roi qui n\'a pas su le défendre. Ton règne, lui, continue.',
         'The crown Rome promised you has flown away with it: no pope will crown a king who could not defend him. Your reign, however, goes on.'),
     },
@@ -205,7 +208,7 @@ const CHARLEMAGNE = {
   //  - site : tenir la ville ou l'église posée à ce point [longitude, latitude] (voir la liste des factions) ;
   //  - citadel : avoir une ville de ce niveau ; faith : avoir cette Croyance (sans compter les croisades) ;
   //    (ces deux-là dépendent de la difficulté : goal = { facile, normal, difficile } ; « {n} » dans le texte devient ce nombre)
-  //  - rome : Rome au pape (ou aux Francs, s'il n'est plus là) ; perdu pour de bon si les Lombards l'ont prise.
+  //  - rome : Rome au pape (ou aux Francs, s'il n'est plus là) ; perdu pour de bon si quelqu'un l'a prise.
   OBJECTIVES: [
     { kind: 'capital', role: 'baviere', text: tr('Soumettre la Bavière : prendre Ratisbonne (788)', 'Subdue Bavaria: take Regensburg (788)') },
     { kind: 'capital', role: 'lombards', text: tr('Devenir roi des Lombards : prendre Pavie (774)', 'Become king of the Lombards: take Pavia (774)') },
@@ -215,7 +218,7 @@ const CHARLEMAGNE = {
     { kind: 'citadel', goal: { facile: 3, normal: 4, difficile: 4 }, text: tr('Bâtir une capitale impériale, comme Aix-la-Chapelle : une ville de niveau {n}', 'Build an imperial capital, like Aachen: a level {n} city') },
     { kind: 'mines', goal: { facile: 4, normal: 6, difficile: 8 }, text: tr('Tenir les richesses de l\'Occident : {n} mines historiques (⛏️ au nom célèbre)', 'Hold the riches of the West: {n} historic mines (⛏️ with a famous name)') },
     { kind: 'faith', goal: { facile: 350, normal: 700, difficile: 1200 }, text: tr('Christianiser l\'empire : atteindre {n} de Croyance (sans croisade)', 'Christianise the empire: reach {n} Faith (without a crusade)') },
-    { kind: 'rome', text: tr('Protéger Rome : que les Lombards ne la prennent jamais', 'Protect Rome: the Lombards must never take it') },
+    { kind: 'rome', text: tr('Protéger Rome : qu\'elle ne tombe jamais', 'Protect Rome: it must never fall') },
   ],
 
   // ⛏️ Les mines célèbres de l'époque, en plus des filons posés au hasard : déjà creusées (niveau 1) par la faction
