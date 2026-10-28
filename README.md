@@ -942,6 +942,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.148** : 📜 les rouleaux des parchemins, encore retouchés : de vrais pommeaux de bois tourné (un collier, un col, un bouton bombé et sa pointe, dessinés en SVG, plus de formes carrées) et des bouts de rouleau nets (sans les tours de la feuille)
 - **v0.92.147** : 📜 de plus beaux rouleaux pour les parchemins d'événements : le parchemin enroulé, en volume, avec ses tours visibles aux deux bouts, sur une baguette de bois tourné qui dépasse de chaque côté (un collier et un pommeau)
 - **v0.92.146** : ⚜️ nouveau scénario **La guerre de Cent Ans (1337-1453)** : la France, les îles Britanniques et le nord de l'Espagne, 12 factions, le récit du roi de France en parchemins (de l'Écluse à Castillon), et des mécaniques à lui : la Légitimité, les grands vassaux qui changent de camp, les trêves, la peste noire, les chevauchées et les Grandes Compagnies, les arcs longs et les canons, les rançons, le roi Jean captif, la folie de Charles VI, les ports de la Manche et Jeanne d'Arc ; jouable aussi en Angleterre, Bourgogne, Bretagne ou Écosse
 - **v0.92.145** : 📜 Charlemagne : les parchemins ne disent plus exactement quoi faire ; ils racontent l'événement, et **tes conseillers murmurent** un conseil à mots couverts (« veille sur tes marches de l'Est »…), pour rester dans l'histoire
