@@ -1044,6 +1044,7 @@ const GameRules = {
   faithEdge(pid, o) {
     const P = this.players[pid], O = this.players[o];
     if (pid === o || !P.alive || !O.alive || this.areAllied(pid, o) || !this.isProtected(pid) || this.hy) return 0;
+    if (O.raiders) return 0; // (⚔️ les terres des pillards, comme les Slaves, sont imprenables : la Croyance non plus ne les prend pas)
     if (!this.neighborStats(pid).has(o)) return 0;
     return Math.max(0, this.faithOf(pid) - this.faithOf(o));
   },
