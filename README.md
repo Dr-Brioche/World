@@ -298,6 +298,20 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Les bannières des factions sont provisoires (des drapeaux du jeu, à leurs couleurs). Les données du scénario
      (factions, objectifs, réglages, textes des parchemins) sont dans `js/centans.js`, ses règles dans `js/centansrules.js`,
      et sa carte dans `js/europemap.js` (`generateCentAnsMap`).
+   ⭐ **Les défis des campagnes** (Charlemagne et la guerre de Cent Ans) : **chaque faction jouable** (les 11 de
+     Charlemagne, les 5 de la guerre de Cent Ans) a **4 défis**, des objectifs en plus, historiques, drôles ou très durs.
+     Ils ne comptent pas pour la victoire, mais chacun rapporte sa **récompense** (de l'or, de la Croyance ou de la
+     Légitimité) dès qu'il est réussi. Ils s'affichent sous les objectifs, dans le cadre en haut à gauche (✔ réussi,
+     ✖ manqué : certains ont une limite de temps, d'autres se jouent dans la durée, comme « ne perdre aucune ville
+     pendant 20 min »). Quelques exemples : les Lombards veulent **prendre Paris**, les Saxons bâtir 4 églises
+     « au cas où », les Danois **raser 3 villes** et prendre Londres un siècle d'avance, Cordoue **venger 732** en
+     prenant Tours, les Asturies prendre Cordoue ; le roi de France **prendre Londres** ou bouter l'Anglais sans
+     Jeanne, avant 1429 ; le roi d'Angleterre tenir le **vœu du héron** (Paris avant 1360), l'Écosse jouer à
+     **Braveheart** à Londres, la Bretagne prendre Cherbourg et Harfleur comme la **Lionne de Bretagne**…
+     🙏 **Le vœu solennel** : au début de la partie, un parchemin te propose de **jurer** un de tes défis (ou rien).
+     Tenu, il rapporte **le double** ; trahi (manqué, ou pas tenu avant 30 min de jeu, ou l'an 1420), il coûte
+     **1 000 pièces** et **40 de Croyance** (de Légitimité). Les défis sont dans `CHALLENGES` (`js/charlemagne.js`,
+     `js/centans.js`), le vœu et les règles dans `js/defis.js`.
    🗼 **Tour de garde** (pas encore disponible dans les parties : le bâtiment est prêt, il s'active avec `TOWERS` dans
      `js/config.js` ; touche **8**, 💰 150 puis plus cher à chaque tour) : elle tire chaque
      seconde sur l'armée ennemie la plus proche qui se bat à sa portée (une volée de flèches), et lui abat des soldats.
@@ -1010,6 +1024,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.160** : ⭐ **les défis des campagnes** : chaque faction jouable de Charlemagne et de la guerre de Cent Ans a 4 défis, historiques, drôles ou très durs (prendre Paris avec les Lombards, raser 3 villes avec les Danois, venger 732 avec Cordoue, Braveheart à Londres avec l'Écosse, le vœu du héron pour le roi d'Angleterre…), avec une récompense chacun, affichés sous les objectifs · 🙏 **le vœu solennel** : au début, jure un de tes défis ; tenu, double récompense ; trahi, 1 000 pièces et 40 de Croyance (ou de Légitimité) perdues · les factions de Charlemagne sans objectifs ont maintenant leur cadre de défis
 - **v0.92.159** : 🦁 guerre de Cent Ans : **la campagne du roi d'Angleterre**, avec ses propres parchemins (la même guerre vue de Londres) et des événements à elle : les débarquements de 1346 et 1415 sont de vraies armées, Neville's Cross et la rançon du roi d'Écosse, l'ordre de la Jarretière (rançons doublées), l'Étape de Calais, les rois d'Angleterre (Henri IV l'usurpateur…), et deux **parchemins à choix** : signer ou non la paix de Brétigny, et que faire de la révolte des paysans ; la rançon du roi Jean revient au roi d'Angleterre
 - **v0.92.158** : 👑 Charlemagne : les **Slaves** ne razzient plus jamais les **lieux des objectifs** (le Ring des Avars, Pavie, Barcelone, Rome…), et aucun assaut viking ne peut les raser : la partie reste toujours gagnable · les Slaves visent **les Francs en premier**, d'autant plus souvent et plus fort que la partie est difficile
 - **v0.92.157** : 🔥 les Vikings **rentrent au port 2 fois plus vite** qu'à l'aller (après leur raid, un échec ou un rappel)
@@ -1417,6 +1432,7 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/game.js` | Règles : économie, attaques, victoire |
 | `js/charlemagne.js` | 👑 Le scénario « Charlemagne » : ses factions, objectifs, réglages et textes (ses règles sont dans `js/game.js`) |
 | `js/centans.js`, `js/centansrules.js` | ⚜️ Le scénario « La guerre de Cent Ans » : ses données (factions, objectifs, réglages, parchemins), puis ses règles |
+| `js/defis.js` | ⭐ Les défis des campagnes et le vœu solennel (les défis de chaque faction sont dans `CHALLENGES`) |
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/icons.js` | Les icônes médiévales dessinées (elles remplacent les emojis partout) |
 | `js/render.js` | Le dessin de la carte |

@@ -434,6 +434,7 @@ const UI = {
         `👑 October 768: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or Space) to start!`), 'good');
       // 📜 (les Francs : un parchemin raconte le contexte ; les grands événements suivront, voir stepCharlemagne)
       if (f.id === 'francs') this.parchment(CHARLEMAGNE.EVENTS.intro);
+      Game.offerVow(); // (🙏 le vœu solennel : jurer un des défis de sa faction, voir defis.js)
     }
     // ⚜️ Scénario « La guerre de Cent Ans » : chacun est déjà dans son royaume de 1337 ; la partie attend en pause
     // (la Croyance devient la Légitimité : voir hyLegitAll)
@@ -452,6 +453,7 @@ const UI = {
       // 📜 (le roi de France : un parchemin raconte le contexte ; les grands événements suivront, voir stepHyEvents)
       if (f.id === 'france') this.parchment(CENTANS.EVENTS.intro);
       if (f.id === 'angleterre') this.parchment(CENTANS.ENGLAND_EVENTS.intro); // (🦁 sa campagne à lui)
+      Game.offerVow(); // (🙏 le vœu solennel : jurer un des défis de sa faction, voir defis.js)
     }
   },
 
@@ -691,8 +693,8 @@ const UI = {
   // ev = { date, title, text, todo } (todo : le conseil des conseillers du roi ; « {clé} » dans les textes devient vars.clé).
   // Plusieurs événements à la fois : ils attendent leur tour. Une fois le dernier refermé, la partie reprend
   // (si elle tournait avant le premier).
-  // choices (facultatif) : un parchemin à choix (🦁 la campagne du roi d'Angleterre) : des boutons [{ key, pick, label }]
-  // à la place de « Poursuivre » ; le choix est un ordre « hyChoice » (voir Game.hyChoose)
+  // choices (facultatif) : un parchemin à choix (🦁 la campagne du roi d'Angleterre, 🙏 le vœu) : des boutons
+  // [{ key, pick, label }] à la place de « Poursuivre » ; le choix est un ordre « hyChoice » (voir Game.hyChoose, Game.chooseVow)
   parchment(ev, vars = {}, choices = null) {
     const fill = t => (t || '').replace(/\{(\w+)\}/g, (m, k) => vars[k] !== undefined ? vars[k] : m);
     (this.parchments = this.parchments || []).push({ date: fill(ev.date), title: fill(ev.title), text: fill(ev.text), todo: fill(ev.todo),
@@ -1302,13 +1304,17 @@ const UI = {
         'Christmas 800, in Rome: the pope sets the crown on Charles\'s head. Saxons, Lombards, Bavarians and Avars are subdued: the Western Empire is reborn, and history will call him Charlemagne!');
     }
     const best = Game.landPct(h.maxTiles);
+    // (⭐ les défis de la campagne : combien sont réussis, et le vœu)
+    const defis = Game.challenges(), vow = defis.find(o => o.vow);
+    const defisLine = defis.length ? `<br>${tr('⭐ Défis réussis : ', '⭐ Challenges complete: ')}${defis.filter(o => o.done).length}/${defis.length}` +
+      (vow ? ` · 🙏 ${vow.done ? tr('vœu tenu', 'vow kept') : vow.gone ? tr('vœu trahi', 'vow broken') : tr('vœu en cours', 'vow pending')}` : '') : '';
     $('endStats').innerHTML = tr(
       `⏱️ Durée : ${Math.floor(secs / 60)} min ${secs % 60} s<br>` +
       `🗺️ Plus grand territoire : ${best} %<br>` +
       `☠️ Royaumes anéantis : ${h.kills}`,
       `⏱️ Duration: ${Math.floor(secs / 60)} min ${secs % 60} s<br>` +
       `🗺️ Largest territory: ${best}%<br>` +
-      `☠️ Kingdoms destroyed: ${h.kills}`);
+      `☠️ Kingdoms destroyed: ${h.kills}`) + defisLine;
     $('continueBtn').classList.toggle('hidden', !canContinue && kind !== 'spectate');
     $('continueBtn').textContent = kind === 'spectate' ? tr('👁️ Regarder la suite', '👁️ Watch the rest') : tr('Continuer', 'Continue');
     $('summaryBtn').classList.toggle('hidden', !Replay.available());
@@ -1447,26 +1453,31 @@ const UI = {
   // 👑 Le cadre des objectifs (en haut à gauche) : redessiné seulement quand un objectif change ; les messages
   // s'affichent juste en dessous (voir placeTopPanels)
   refreshObjectives() {
-    const box = $('objectives'), list = Game.objectives();
-    box.classList.toggle('hidden', !list.length);
-    if (list.length) this.drawObjectives(box, list);
-    this.placeTopPanels(box, list.length > 0);
+    const box = $('objectives'), list = Game.objectives(), defis = Game.challenges(), shown = list.length + defis.length > 0;
+    box.classList.toggle('hidden', !shown);
+    if (shown) this.drawObjectives(box, list, defis);
+    this.placeTopPanels(box, shown);
   },
-  drawObjectives(box, list) {
+  // list : les objectifs de la victoire ; defis : les ⭐ défis de la faction (voir defis.js), en dessous
+  drawObjectives(box, list, defis = []) {
     if (this.objFolded === undefined) this.objFolded = window.innerWidth < 760; // (replié d'office sur un petit écran)
     // (le titre et l'aide dépendent du scénario ; on ne redessine que si un objectif ou un texte a changé)
-    const title = Game.hy ? Game.hyObjTitle() : tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives');
-    const key = list.map(o => (o.done ? 1 : 0) + (o.gone ? 'x' : '') + o.text).join('|') + title + (this.objFolded ? 'f' : '');
+    const title = !list.length ? tr('⭐ Défis', '⭐ Challenges') : Game.hy ? Game.hyObjTitle() : tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives');
+    const key = [...list, ...defis].map(o => (o.done ? 1 : 0) + (o.gone ? 'x' : '') + (o.vow ? 'v' : '') + o.text).join('|') + title + (this.objFolded ? 'f' : '');
     if (box.dataset.key !== key) {
       box.dataset.key = key;
-      const n = list.filter(o => o.done).length;
+      const count = list.length ? list : defis, n = count.filter(o => o.done).length;
+      // (un objectif perdu pour de bon, comme Rome prise par les Lombards, ou un défi manqué : barré, en rouge, avec ✖)
+      const items = (l, lost) => l.map(o => `<li class="${o.gone ? 'gone' : o.done ? 'done' : ''}">${o.vow ? '🙏 ' : ''}${escapeHtml(o.text)}` +
+        `${o.gone ? lost : ''}</li>`).join('');
       box.innerHTML = `<div class="t"><span>${escapeHtml(title)}</span>` +
-        `<span>${n}/${list.length} ${this.objFolded ? '▸' : '▾'}</span></div>` +
-        // (un objectif perdu pour de bon, comme Rome prise par les Lombards : barré, en rouge, avec ✖)
-        (this.objFolded ? '' : `<ul>${list.map(o => `<li class="${o.gone ? 'gone' : o.done ? 'done' : ''}">${escapeHtml(o.text)}` +
-          `${o.gone ? tr(' (perdu à jamais)', ' (lost forever)') : ''}</li>`).join('')}</ul>`);
-      box.title = Game.hy ? tr('Tous remplis en même temps : la victoire ! (clic : replier ou déplier)', 'All complete at the same time: victory! (click: fold or unfold)')
-        : tr('Tous remplis : tu es couronné empereur ! (clic : replier ou déplier)', 'All complete: you are crowned emperor! (click: fold or unfold)');
+        `<span>${n}/${count.length} ${this.objFolded ? '▸' : '▾'}</span></div>` +
+        (this.objFolded ? '' : (list.length ? `<ul>${items(list, tr(' (perdu à jamais)', ' (lost forever)'))}</ul>` : '') +
+          (defis.length ? (list.length ? `<div class="t defisT"><span>${tr('⭐ Défis', '⭐ Challenges')}</span><span>${defis.filter(o => o.done).length}/${defis.length}</span></div>` : '') +
+            `<ul class="defis">${items(defis, tr(' (manqué)', ' (failed)'))}</ul>` : ''));
+      box.title = !list.length ? tr('Des défis en plus, pour la gloire et une récompense (🙏 : ton vœu) · clic : replier ou déplier', 'Extra challenges, for glory and a reward (🙏: your vow) · click: fold or unfold')
+        : Game.hy ? tr('Tous remplis en même temps : la victoire ! (⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All complete at the same time: victory! (⭐ challenges: for glory) · click: fold or unfold')
+        : tr('Tous remplis : tu es couronné empereur ! (⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All complete: you are crowned emperor! (⭐ challenges: for glory) · click: fold or unfold');
     }
   },
   // Sous la barre du haut (qui peut tenir sur 2 lignes sur un écran étroit) : les objectifs, puis (sur un téléphone)

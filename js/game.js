@@ -33,6 +33,7 @@ const GameRules = {
     this.attacks = [];
     this.expeditions = []; // bateaux en route vers une côte
     this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up' ou 'down', start, end, pid, paid }
+    this.defis = null;       // ⭐ les défis de la campagne et le vœu (voir defis.js)
     this.walls = [];         // murs bâtis par les villes : { castle, owner, tiles, start, ready, done }
     this.faithProgress = new Map(); this.faithCache = null; // (Croyance : voir stepFaith)
     this.crusades = []; // croisades religieuses en cours : { church, owner, end } (voir startCrusade)
@@ -929,6 +930,7 @@ const GameRules = {
     p.troops -= troops;
     p.vikingReady = false; // (l'assaut est utilisé : il faudra en racheter un)
     p.lastViking = this.tick; // (le suivant pas avant VIKING_COOLDOWN secondes)
+    p.vikingsLaunched = (p.vikingsLaunched || 0) + 1; // (⭐ pour les défis : voir defis.js)
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, viking: plan.castle, victim: plan.target, landing: plan.landing,
       path: plan.path, port: plan.port, cost: 0, sent: troops, troops, // (aucune perte en mer)
@@ -981,6 +983,7 @@ const GameRules = {
     // (une cible déjà passée au pillard, comme une église prise d'un coup : ses cases reviennent au défenseur)
     for (const j of this.footprint(c, this.building[c])) if (this.owner[j] === a.attacker) this.setOwner(j, a.target);
     for (const b of ruins) this.removeBuilding(b);
+    if (city) p.razedCount = (p.razedCount || 0) + 1; // (⭐ les villes rasées, pour les défis : voir defis.js)
     if (d.isHuman && city) Music.sound('cityLost'); // (🔔 une de nos villes rasée : le son de la ville perdue)
     const loot = ruins.length * (a.loot !== undefined ? a.loot : a.raid ? CHARLEMAGNE.RAIDS.LOOT : CONFIG.VIKING_LOOT);
     if (a.raid) { // (⚔️ une razzia des Slaves, une chevauchée anglaise, les Grandes Compagnies : leur propre message)
@@ -2432,7 +2435,8 @@ const GameRules = {
         case 'hyGates': return this.hyCloseGates(pid, o.a);
         case 'hyChev': return this.hyChevauchee(pid, o.a, o.troops);
         case 'hyJoan': return this.hyArmJoan();
-        case 'hyChoice': return this.hyChoose(pid, o.key, o.pick); // (🦁 un choix d'un parchemin du roi d'Angleterre)
+        case 'hyChoice': // (🦁 un choix d'un parchemin du roi d'Angleterre, ou 🙏 le vœu du début de partie)
+          return o.key === 'vow' ? this.chooseVow(pid, o.pick) : this.hyChoose(pid, o.key, o.pick);
       }
       return null;
     } finally { this.inUpdate = false; }
@@ -6539,6 +6543,7 @@ const GameRules = {
     this.stepCharlemagne();
     this.stepCentAns();
     this.stepObjectives();
+    this.stepChallenges(); // (⭐ les défis des campagnes : voir defis.js)
 
     Replay.record(this); // (📽️ une photo de la carte de temps en temps, pour le résumé de fin de partie)
     if (this.tick % TPS === 0) this.checkEnd();
