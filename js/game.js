@@ -64,13 +64,10 @@ const GameRules = {
     this.factions = !!opts.factions && this.mapType === 'azeroth';
     if (this.factions) this.pactsAllowed = false; // (pas d'autres pactes que les 3 camps)
     this.cm = null; // (le scénario « Charlemagne » en cours, voir startCharlemagne)
-    this.hd = null; // (le scénario « Gouffre de Helm » en cours, voir helm.js)
     this.human = this.addPlayer(opts.name, opts.banner, true);
     if (this.factions) return this.startFactions(opts);
     // 👑 Scénario « Charlemagne » : l'Europe de 768, avec ses factions déjà en place (voir startCharlemagne)
     if (this.mapType === 'charlemagne') return this.startCharlemagne(opts);
-    // 🏰 Scénario « Gouffre de Helm » : la nuit de la bataille, le joueur défend le Rohan (voir helm.js)
-    if (this.mapType === 'helm') return this.startHelm(opts);
     const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
     // Les bots reçoivent au hasard les bannières de la carte que le joueur n'a pas prises (sur Azeroth : les écus, et
     // chaque royaume prend le nom de son écu : les Orcs, les Nains…)
@@ -2196,7 +2193,6 @@ const GameRules = {
   },
   // L'état des objectifs, pour le cadre en haut à gauche : [{ text, done }]
   objectives() {
-    if (this.hd) return this.helmObjectives(); // (🏰 Gouffre de Helm : voir helm.js)
     const cm = this.cm;
     if (!cm || this.human.role !== 'francs') return [];
     return CHARLEMAGNE.OBJECTIVES.map((o, k) => ({ text: this.objectiveText(o), done: !!cm.done[k] }));
@@ -2836,10 +2832,9 @@ const GameRules = {
     // (une ville reliée par un mur à d'autres villes du royaume : WALL_LINK_GARRISON soldats de plus par ville reliée)
     // (👑 Charlemagne : Rome, tant qu'elle est au pape, a une grande garnison : voir ROME_GARRISON)
     if (t === B_CASTLE && this.cm && a === this.cm.capital.papaute && this.owner[a] === this.cm.role.papaute) return CHARLEMAGNE.ROME_GARRISON;
-    // (🏰 Gouffre de Helm : les nains d'Aglarond agrandissent les garnisons du Rohan, voir helm.js)
     // (👑 Charlemagne : les villes de la Bavière, de l'Aquitaine et des Asturies, tant qu'elles les tiennent, voir garrison)
     if (t === B_CASTLE) return (this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0))
-      * (this.hd ? this.helmGarrison(a) : 1) * (this.cm && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1);
+      * (this.cm && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1);
     if (t === B_PORT) return this.buildingInfo(a).garrison || 0;
     return 0;
   },
@@ -2994,12 +2989,12 @@ const GameRules = {
   tryBuild(p, i, type) {
     if (BUILDINGS[type].hidden) return tr('Ce bâtiment ne se construit pas.', 'This building cannot be built.');
     // (👑 scénario « Charlemagne » : les villes de 768 sont toutes là ; on les améliore, on les prend, mais on n'en bâtit pas)
-    if (type === B_CASTLE && (this.cm || this.hd)) return tr('Dans ce scénario, on ne bâtit pas de nouvelle ville : améliore les tiennes, ou prends celles des autres.', 'In this scenario, no new city can be built: upgrade yours, or take other kingdoms\' cities.');
-    // (🗼 les tours de garde : seulement dans le scénario « Gouffre de Helm », et en nombre limité, voir helm.js)
+    if (type === B_CASTLE && this.cm) return tr('Dans ce scénario, on ne bâtit pas de nouvelle ville : améliore les tiennes, ou prends celles des autres.', 'In this scenario, no new city can be built: upgrade yours, or take other kingdoms\' cities.');
+    // (🗼 les tours de garde : en nombre limité, et pas encore disponibles, voir CONFIG.TOWERS)
     if (type === B_TOWER) {
-      if (!this.hd) return tr('Les tours de garde ne se bâtissent que dans le scénario « Gouffre de Helm ».', 'Guard towers can only be built in the "Helm\'s Deep" scenario.');
-      if (this.towersBuilt(p) >= HELM.TOWERS_TO_BUILD) return tr(`Tu as déjà bâti ${HELM.TOWERS_TO_BUILD} tours de garde : c'est le maximum (améliore-les, ou reprends celles de l'ennemi).`,
-        `You have already built ${HELM.TOWERS_TO_BUILD} guard towers: that is the maximum (upgrade them, or take back the enemy's).`);
+      if (!CONFIG.TOWERS) return tr('Les tours de garde ne sont pas encore disponibles.', 'Guard towers are not available yet.');
+      if (this.towersBuilt(p) >= CONFIG.TOWERS) return tr(`Tu as déjà bâti ${CONFIG.TOWERS} tours de garde : c'est le maximum (améliore-les, ou reprends celles de l'ennemi).`,
+        `You have already built ${CONFIG.TOWERS} guard towers: that is the maximum (upgrade them, or take back the enemy's).`);
     }
     if (type === B_CASTLE && p.castlesBuilt >= this.maxCastles(p)) {
       return tr(`Tu as déjà construit ${this.maxCastles(p)} châteaux : c'est le maximum pour l'instant ` +
@@ -4600,8 +4595,6 @@ const GameRules = {
     if (pid >= 0) best *= 1 + this.mineBonus(pid, 'iron');
     // (🤖 en Difficile, les bots ont des soldats un peu plus forts)
     if (pid >= 0) best *= this.botBonus(this.players[pid], 'power');
-    // (📯 Gouffre de Helm : pendant que le Cor de Helm sonne, les soldats du Rohan sont plus forts)
-    if (pid >= 0 && this.hd) best *= this.helmPower(pid);
     return pid >= 0 && this.hasImperial(pid) ? best * (1 + IMPERIAL.troopPower) : best;
   },
 
@@ -5489,8 +5482,6 @@ const GameRules = {
     let secs = outpost ? CONFIG.OUTPOST_SIEGE : port ? CONFIG.PORT_SIEGE : this.castleInfo(this.anchor[t]).siege;
     // (👑 Charlemagne : le siège de Rome dure ROME_SIEGE secondes, le temps que les Francs viennent au secours)
     if (this.cm && this.anchor[t] === this.cm.capital.papaute && this.owner[t] === this.cm.role.papaute) secs = CHARLEMAGNE.ROME_SIEGE;
-    // (🏰 Gouffre de Helm : des sièges plus longs, sauf derrière une muraille éventrée par le feu de Saroumane)
-    if (this.hd && !outpost && !port) secs = Math.max(2, Math.round(this.helmSiege(this.anchor[t], secs)));
     a.siege = { tile: t, start: this.tick, end: this.tick + secs * CONFIG.TICKS_PER_SECOND }; // (start : pour la jauge)
     a.frontTile = t; // on se bat au pied des murs (avec leur bonus de défense)
     // L'ennemi est à la muraille : la garnison du château entre enfin en jeu (elle n'en sort pas avant)
@@ -6041,7 +6032,7 @@ const GameRules = {
     // Toutes les 2 secondes : un royaume qui n'a plus que des avant-postes est perdu (voir outpostsOnly)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && this.outpostsOnly(p)) this.loseKingdom(p);
     // ... et un royaume qui a perdu tous ses ports perd aussi tous ses avant-postes (voir dropOutposts)
-    if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && !p.bCount[B_PORT] && p.bCount[B_OUTPOST] && !this.hd) this.dropOutposts(p);
+    if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && !p.bCount[B_PORT] && p.bCount[B_OUTPOST]) this.dropOutposts(p);
     // Le joueur vient de perdre le lien entre son territoire et ses châteaux : on le prévient (une fois)
     const h = this.human;
     if (this.tick % (2 * TPS) === 0 && h && h.alive) {
@@ -6059,7 +6050,6 @@ const GameRules = {
     for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
     this.stepCharlemagne();
     this.stepObjectives();
-    this.stepHelm();
 
     Replay.record(this); // (📽️ une photo de la carte de temps en temps, pour le résumé de fin de partie)
     if (this.tick % TPS === 0) this.checkEnd();
@@ -6104,8 +6094,7 @@ const GameRules = {
 
   // --- 🗼 Tours de garde (voir TOWER_LEVELS) ---
   // Chaque seconde, chaque tour tire sur l'armée ennemie la plus proche qui se bat à sa portée (pas sur une armée qui
-  // marche encore sur ses propres terres) : elle lui abat ses soldats (« damage » par seconde, plus avec un bonus du
-  // scénario : voir towerBoost)
+  // marche encore sur ses propres terres) : elle lui abat ses soldats (« damage » par seconde)
   stepTowers() {
     const TPS = CONFIG.TICKS_PER_SECOND, W = this.W;
     if (this.tick % TPS || !this.attacks.length) return;
@@ -6119,13 +6108,11 @@ const GameRules = {
         if (d <= info.range && d < bestD) { best = a; bestD = d; }
       }
       if (!best) continue;
-      best.troops -= Math.min(best.troops, info.damage * this.towerBoost(o));
+      best.troops -= Math.min(best.troops, info.damage);
       Render.towerShot(t, best.frontTile);
       if (best.troops < 1) this.endAttack(best); // (l'armée est anéantie)
     }
   },
-  // Bonus de dégâts des tours d'un royaume (👑 Gouffre de Helm : les archers elfes de la Lórien, voir helm.js)
-  towerBoost(pid) { return this.hd ? this.helmTowerBoost(pid) : 1; },
   // Tours de garde que le royaume a bâties lui-même et possède encore
   towersBuilt(p) { return this.builtCount(p, B_TOWER); },
 

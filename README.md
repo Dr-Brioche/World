@@ -20,8 +20,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
   avec 3 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**, et
-  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, et **Gouffre de Helm (3019)** :
-  défendre Fort-le-Cor jusqu'à l'aube contre l'armée de Saroumane)
+  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 21 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
@@ -192,40 +191,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Chaque faction porte sa **propre bannière** (le monogramme de Charlemagne pour les Francs, les clés de saint Pierre
      pour le pape, l'aigle bicéphale de Byzance, la guivre des Lombards, le corbeau des Danois…) et la couleur de son royaume.
      Tous les réglages du scénario sont dans `js/charlemagne.js`.
-   🏰 **Scénario « Gouffre de Helm (3019) »** (rubrique 📜 Scénarios, d'après *Les Deux Tours*) : la nuit du 3 au 4 mars
-     3019 du Tiers Âge. Tu es le roi **Théoden** : les Rohirrim se sont retranchés au Gouffre de Helm, et l'armée de
-     **Saroumane** (Uruk-hai et orques d'**Isengard**, et les hommes sauvages du **Pays de Dun**) monte à l'assaut toute la
-     nuit. La petite carte (320 x 200 cases) suit le livre : les plaines de l'**Ouestfolde** (le camp d'Isengard), la
-     **Combe du Gouffre** qui se resserre en entonnoir, la **Digue de Helm** sur un étranglement, le « pré vert », puis
-     **Fort-le-Cor** (sur son éperon, niveau 4) et le **Mur du Gouffre** (niveau 3) qui ferment l'entrée de la gorge, et au
-     fond du **Gouffre**, les **Cavernes Scintillantes** (Aglarond, avec ses gemmes : une mine de diamant). Tout autour,
-     les Montagnes Blanches : une crête infranchissable, sans passage. Règles du scénario :
-     - **tiens jusqu'à l'aube** (14 min en Facile, 18 en Normal, 22 en Difficile ; le compte à rebours est en haut à
-       gauche) : si tu tiens encore **Fort-le-Cor ou les Cavernes**, le Gouffre a tenu ! Si les deux tombent, c'est perdu ;
-     - **pas de nouvelles villes** (ni églises ni ports) : on améliore les siennes, et on bâtit des **tours de garde** 🗼 ;
-     - **les vagues d'Isengard** : toutes les 70 s, Saroumane lance une vague de plus en plus grosse, d'abord sur les
-       défenses avancées (tours, Digue, Mur, Cavernes), et Fort-le-Cor en dernier. Les sièges durent plus longtemps
-       qu'ailleurs : envoie tes soldats défendre chaque muraille assiégée ;
-     - au fil de la nuit : les **Dunlendings** descendent des collines (au quart de la nuit), les **chevaucheurs de
-       wargs** fondent sur le Gouffre, des orques se glissent par le **ponceau** sous le Mur et plantent un avant-poste
-       derrière lui (à détruire vite !), et deux fois le **feu de Saroumane** éventre une muraille (sa garnison est
-       soufflée, son siège bien plus court) ;
-     - 📯 le **Cor de Helm** (bouton en bas) : une fois par nuit, les assaillants perdent 25 % de leurs soldats et les
-       tiens se battent 50 % plus fort pendant 30 s. Il sonne aussi tout seul à l'aube ;
-     - 🌅 **à l'aube** : Théoden charge, **Gandalf et Erkenbrand** arrivent avec 1 000 hommes, et la forêt des **Huorns**
-       engloutit l'armée d'Isengard. 30 s plus tard, la victoire est annoncée ;
-     - 🏆 des **succès** qui font venir des renforts (dans le cadre en haut à gauche) : **tenir la Digue de Helm** 3 min
-       (2 en Facile, 4 en Difficile) fait venir **Haldir et 500 archers elfes de la Lórien** (tes tours tirent 50 % plus
-       fort) ; le **concours de Gimli et Legolas** (abattre 4 200 orques, 2 500 en Facile, 6 000 en Difficile) fait venir
-       **300 nains d'Aglarond** (garnisons 50 % plus grandes, et chaque tour gagne un niveau) ; une **Grande tour du Cor**
-       (une tour de niveau 5) permet de sonner le Cor une fois de plus.
-     Les réglages du scénario sont dans `js/helmmap.js` (avec la carte), ses règles dans `js/helm.js`.
-   🗼 **Tour de garde** (touche **8**, seulement au Gouffre de Helm, 💰 150 puis plus cher à chaque tour) : elle tire chaque
+   🗼 **Tour de garde** (pas encore disponible dans les parties : le bâtiment est prêt, il s'active avec `TOWERS` dans
+     `js/config.js` ; touche **8**, 💰 150 puis plus cher à chaque tour) : elle tire chaque
      seconde sur l'armée ennemie la plus proche qui se bat à sa portée (une volée de flèches), et lui abat des soldats.
      5 niveaux : tour de guet en bois (portée 9 cases, 3 soldats par seconde), tour de garde (11, 6 ; 💰 250), tour
-     d'archers (13, 10 ; 💰 700), tour fortifiée (15, 16 ; 💰 1 600) et Grande tour du Cor (18, 25 ; 💰 3 500). Sa portée
+     d'archers (13, 10 ; 💰 700), tour fortifiée (15, 16 ; 💰 1 600) et Grande tour (18, 25 ; 💰 3 500). Sa portée
      s'affiche en pointillés quand on la survole. Elle se bâtit partout sur ses terres, à 10 cases au moins d'une autre de
-     ses tours ; on en bâtit 3 au plus (en plus de celles déjà là). L'ennemi peut la viser et la prendre : elle
+     ses tours ; on en bâtit `TOWERS` au plus. L'ennemi peut la viser et la prendre : elle
      **retombe alors au niveau 1** (une tour dans la muraille d'une ville tombe avec la ville).
    🖌️ **Dessine tes cartes** : le bouton **« 🖌️ Création de carte »**, en bas à droite du menu (en face des règles), ouvre l'**éditeur de cartes**
    (`editeur.html`). Pars d'une carte toute en mer, toute en terre, ou d'une carte au hasard, puis peins les terrains
@@ -899,6 +871,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.144** : 🏰 le scénario **Gouffre de Helm** est retiré du jeu (la tour de garde, faite pour lui, reste prête mais pas encore disponible dans les parties)
 - **v0.92.143** : 🛡️ correction : tes défenseurs qui interceptent une armée ne tournent plus autour quand ils arrivent près d'elle (ils recalculaient sans cesse un chemin par tes terres, que l'ennemi grignotait, et faisaient des détours) : à moins de 15 cases, ils foncent droit sur elle, et à 3 cases ils l'attaquent tout de suite
 - **v0.92.142** : ⏸ quand la partie est en **pause**, la musique d'ambiance se met en pause aussi, et reprend au même endroit (sauf pendant la lecture d'un parchemin d'événement)
 - **v0.92.141** : 🔔 4 nouveaux sons (de dr_brioche) : quand tu **prends une ville**, lances une **croisade**, un **assaut viking** ou un **recrutement de masse** (les renforts de la grande caserne)
@@ -1265,7 +1238,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 ## 💡 Idées pour la suite
 
 - 🤝 Plus de diplomatie : demandes d'aide aux membres du pacte
-- 🗼 Nouveaux bâtiments : tours de guet
+- 🗼 Activer la tour de garde dans les parties (le bâtiment est prêt : `TOWERS` dans `js/config.js`)
 - 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
 - 👑 Héros ou rois avec des pouvoirs spéciaux
 - 🌐 Multijoueur en ligne

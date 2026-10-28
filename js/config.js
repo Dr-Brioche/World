@@ -271,6 +271,8 @@ const CONFIG = {
   RALLY_MAX: 1,        // au mieux +100 %
   ENCLAVE_LOG_MIN: 50,         // un message n'annonce un morceau englobé que s'il fait au moins 50 cases
   CITADEL_ASSAULTS: 2,         // avec une citadelle (château niveau 3) : 2 assauts en même temps contre un même royaume
+  TOWERS: 0,                   // 🗼 tours de garde (voir TOWER_LEVELS) qu'un royaume peut bâtir : 0 = pas encore disponibles
+                               // dans les parties (le bâtiment est prêt : mettre 3 pour l'essayer)
   DEFENDER_SPEED_BONUS: 1.18,  // les défenseurs partent du château le plus proche et marchent vers l'ennemi par le chemin
                                // le plus rapide de leurs terres (comme un assaut : vite en plaine, lentement dans le
                                // relief, et plus lentement s'ils sont nombreux), mais 18 % plus vite qu'un assaut
@@ -562,7 +564,7 @@ const MINES = {
 };
 const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond'];
 
-// 🗼 Les 5 niveaux de la tour de garde (seulement dans le scénario « Gouffre de Helm », voir helm.js) : chaque seconde,
+// 🗼 Les 5 niveaux de la tour de garde (pas encore disponible : voir CONFIG.TOWERS) : chaque seconde,
 // elle abat damage soldats des armées ennemies qui se battent à moins de range cases d'elle (la plus proche d'abord).
 // Une tour prise par l'ennemi retombe au niveau 1. Elle se construit partout sur ses terres (pas de muraille),
 // à TOWER_DISTANCE cases au moins de ses autres tours.
@@ -572,7 +574,7 @@ const TOWER_LEVELS = [
   { name: tr('Tour de garde', 'Guard tower'),        range: 11, damage: 6,  img: 'img/tour2.webp', size: 3.0, upgradeCost: 250 },
   { name: tr('Tour d\'archers', 'Archer tower'),     range: 13, damage: 10, img: 'img/tour3.webp', size: 3.4, upgradeCost: 700 },
   { name: tr('Tour fortifiée', 'Fortified tower'),   range: 15, damage: 16, img: 'img/tour4.webp', size: 3.8, upgradeCost: 1600 },
-  { name: tr('Grande tour du Cor', 'Great horn tower'), range: 18, damage: 25, img: 'img/tour5.webp', size: 4.3, upgradeCost: 3500 },
+  { name: tr('Grande tour', 'Great tower'), range: 18, damage: 25, img: 'img/tour5.webp', size: 4.3, upgradeCost: 3500 },
 ];
 const TOWER_DISTANCE = 10;
 
@@ -670,7 +672,7 @@ AZEROTH_BANNERS.forEach((b, k) => {
 });
 // Les numéros (dans BANNERS) des bannières proposées sur une carte : les écus sur la carte Azeroth, les drapeaux ailleurs
 function bannersForMap(mapType) {
-  const set = mapType === 'azeroth' ? 'azeroth' : mapType === 'charlemagne' ? 'charlemagne' : mapType === 'helm' ? 'helm' : undefined;
+  const set = mapType === 'azeroth' ? 'azeroth' : mapType === 'charlemagne' ? 'charlemagne' : undefined;
   return BANNERS.map((b, k) => k).filter(k => BANNERS[k].set === set);
 }
 // ⚔️ Mode « Factions » (carte Azeroth seulement) : 3 camps, chacun un pacte éternel (il ne se rompt jamais, pas de
@@ -697,7 +699,7 @@ const AZEROTH_CAPITALS = {
   'Murlocs': { at: [81, 155], place: tr('Sombrivage', 'Darkshore'), name: tr('Sombrivage', 'Darkshore') },
 };
 
-// 🏷️ Le nom d'un lieu tel qu'on l'écrit sur la carte : sans article au début (« la Digue de Helm » → « Digue de Helm »)
+// 🏷️ Le nom d'un lieu tel qu'on l'écrit sur la carte : sans article au début (« la Marche de Bretagne » → « Marche de Bretagne »)
 function placeLabel(name) {
   const s = name.replace(/^(le |la |les |l'|the )/i, '');
   return s[0].toUpperCase() + s.slice(1);
