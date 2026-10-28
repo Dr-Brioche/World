@@ -737,8 +737,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      de soldats du curseur « Envoyer », traversent **sans aucune perte en mer**, débarquent sur la côte la plus proche de la
      cible et l'armée marche droit sur elle, **sans avant-poste**, avec des soldats **50 % plus forts**. C'est un **raid** :
      à la fin du siège, la ville n'est pas prise mais **détruite**, avec ses moulins et casernes, et chaque bâtiment détruit
-     te rapporte **💰 300 de butin** ; les terres restent à l'ennemi. Puis les survivants rembarquent et rentrent au port (de
-     même s'il échoue ou si tu le rappelles). **Un seul assaut viking par minute** au plus. Bateaux et assauts vikings portent une **🔥 flamme** pour les reconnaître.
+     te rapporte **💰 300 de butin** ; les terres restent à l'ennemi. Puis les survivants rembarquent et rentrent au port, **2 fois plus vite** qu'à l'aller (de
+     même s'il échoue ou si tu le rappelles ; réglage `VIKING_RETURN_SPEED`). **Un seul assaut viking par minute** au plus. Bateaux et assauts vikings portent une **🔥 flamme** pour les reconnaître.
      Une fois lancé, il faut en racheter un. Les bots s'en servent aussi (réglages `VIKING_...` dans `js/config.js`).
 
      Zoome sur la carte pour voir apparaître l'image de chaque bâtiment !
@@ -984,6 +984,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.157** : 🔥 les Vikings **rentrent au port 2 fois plus vite** qu'à l'aller (après leur raid, un échec ou un rappel)
 - **v0.92.156** : 🗺️ scénarios (Charlemagne, guerre de Cent Ans) : les frontières de départ entre les factions (et avec les terres libres, comme chez les Slaves) **serpentent** naturellement au lieu de suivre de longues lignes droites (réglage `BORDER_WARP`)
 - **v0.92.155** : 🏰 la jauge ronde d'un siège est toujours **jaune**, quelle que soit la couleur de l'assaillant : elle reste bien visible
 - **v0.92.154** : ✝️ les terres des pillards (les **Slaves** de Charlemagne) ne se prennent plus non plus par la **Croyance**
