@@ -1869,6 +1869,7 @@ const UI = {
       if (G.building[op] === B_OUTPOST) {
         // Avant-poste : ses soldats stationnés peuvent le défendre (pas ceux du royaume, au-delà des mers)
         return this.act({ k: 'defend', attack: attackId, troops: G.troopsAt(h.id, op) * this.ratio }, (a, before) => {
+          if (a) Music.sound('assault'); // (🔔 le son du départ à l'assaut : les défenseurs partent intercepter l'ennemi)
           if (a) return this.log(tr(`🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldats stationnés à ton avant-poste partent le défendre ` +
             '(seuls eux peuvent le rejoindre, au-delà des mers).',
             `🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldiers stationed at your outpost set out to defend it ` +
@@ -1889,6 +1890,7 @@ const UI = {
         'Click on it to launch an assault that links it to your kingdom.'), 'warn');
     }
     this.act({ k: 'defend', attack: attackId, troops: h.troops * this.ratio }, (a, before) => {
+      if (a) Music.sound('assault'); // (🔔 le son du départ à l'assaut : les défenseurs partent intercepter l'ennemi)
       if (a && a.reinforced) this.log(tr(`🛡️ ${fmt(before - h.troops)} soldats renforcent ton armée de défense contre ${G.players[a.attacker].name} (ils la rejoignent dans ${CONFIG.DEFEND_REINFORCE_DELAY} s).`,
         `🛡️ ${fmt(before - h.troops)} soldiers reinforce your defending army against ${G.players[a.attacker].name} (they join it in ${CONFIG.DEFEND_REINFORCE_DELAY} s).`), 'good');
       else if (a) this.log(tr(`🛡️ ${fmt(before - h.troops)} défenseurs partent de ton château le plus proche à la rencontre de ${G.players[a.attacker].name} !`,
