@@ -14,7 +14,7 @@ const Music = {
   timer: null,     // le prochain morceau (après un silence)
   fader: null,
   jingle: null,    // le son de la victoire, quand il se joue
-  effect: null,    // le petit son en train de se jouer (voir sound)
+  effects: null,   // les petits sons en train de se jouer (ils se superposent, voir sound)
   held: false,     // ⏸ la partie est en pause : la musique d'ambiance aussi (voir hold)
   waiting: false,  // un morceau devait commencer pendant la pause : il commencera à la reprise
 
@@ -101,7 +101,8 @@ const Music = {
   },
   stop() {
     if (this.jingle) { this.jingle.pause(); this.jingle = null; }
-    if (!this.on && this.effect) { this.effect.pause(); this.effect = null; } // (musique coupée : les petits sons aussi)
+    // (musique coupée : les petits sons aussi)
+    if (!this.on && this.effects) { for (const a of this.effects) a.pause(); this.effects.clear(); }
     clearTimeout(this.timer); this.timer = null;
     clearInterval(this.fader); this.fader = null;
     this.waiting = false;
@@ -155,10 +156,13 @@ const Music = {
     const M = CONFIG.MUSIC, src = M.SOUNDS[key], now = performance.now(), last = this.lastSound = this.lastSound || {};
     if (!this.on || !src || now - (last[key] || -Infinity) < M.SOUND_GAP * 1000) return;
     last[key] = now;
-    if (this.effect) this.effect.pause(); // (le son précédent est coupé net)
-    const a = this.effect = new Audio(src);
+    // (les sons se superposent : un nouveau son ne coupe pas le précédent ; on garde la liste de ceux qui jouent,
+    //  pour pouvoir tous les couper avec la musique)
+    this.effects = this.effects || new Set();
+    const a = new Audio(src);
     a.volume = Math.min(1, this.volume * M.VICTORY_GAIN);
-    a.addEventListener('ended', () => { if (this.effect === a) this.effect = null; });
+    this.effects.add(a);
+    a.addEventListener('ended', () => this.effects.delete(a));
     a.play().catch(() => { /* (lecture refusée par le navigateur : tant pis) */ });
   },
   // La partie continue après la victoire : la musique d'ambiance reprend (après un moment de silence)

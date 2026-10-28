@@ -2683,7 +2683,11 @@ const Render = {
       if (this.planKey !== key || (this.planVersion !== G.version && now - this.planTime > 300)) {
         this.planKey = key; this.planVersion = G.version; this.planTime = now;
         this.planPath = G.castlePath(G.human.id, p.castle, p.source);
+        // (🤝 par les terres d'un allié : sa marche chez l'allié, puis son chemin chez l'ennemi)
+        this.planPass = this.planPath ? null : G.passagePlan(G.human.id, p.castle);
+        if (this.planPass) this.planPath = this.planPass.path;
       }
+      if (this.planPass) this.strokePath(ox, oy, this.planPass.walk, '#9fd8ff', 2);
       if (this.planPath) this.strokePath(ox, oy, this.planPath, '#ffd34d', 3);
       const n = G.sizeOf(G.building[p.castle]);
       cx = ox + (p.castle % W + n / 2) * s;
@@ -2722,9 +2726,13 @@ const Render = {
         const path = G.castlePath(G.human.id, c, src);
         if (path && (!this.previewPath || path.length < this.previewPath.length)) this.previewPath = path;
       }
+      // (🤝 pas de chemin depuis nos terres : par les terres d'un allié du pacte ?)
+      this.previewPass = this.previewPath ? null : G.passagePlan(G.human.id, c);
+      if (this.previewPass) this.previewPath = this.previewPass.path;
     }
     this.castlePreview = { castle: c, path: this.previewPath };
     const ctx = this.ctx, s = this.cam.scale, W = G.W;
+    if (this.previewPass) this.strokePath(ox, oy, this.previewPass.walk, '#9fd8ff', 2);
     if (this.previewPath) {
       this.strokePath(ox, oy, this.previewPath, '#ffd34d', 2.5);
     } else {

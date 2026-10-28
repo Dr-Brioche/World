@@ -50,6 +50,9 @@ const CHARLEMAGNE = {
   // ✝️ Succès « Empire chrétien » : quand les terres des Francs touchent celles de Rome, leur Croyance gagne
   // CHRISTIAN_EMPIRE pour toujours
   CHRISTIAN_EMPIRE: 100,
+  // ✝️ La Croyance prend les terres 2 fois moins vite que dans une partie classique (FAITH_SPEED) : chacun commence
+  // déjà avec beaucoup d'églises
+  FAITH_SPEED: 0.5,
 
   // 📜 Les grands événements (un parchemin s'ouvre au milieu de l'écran et met la partie en pause : voir EVENTS)
   // 769 : la révolte d'Aquitaine éclate entre ces deux moments (secondes, au hasard) ; d'ici là, ses terres sont franques

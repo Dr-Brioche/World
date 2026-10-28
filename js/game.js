@@ -1086,7 +1086,9 @@ const GameRules = {
         // (un écart mince par rapport à sa propre Croyance avance moins vite : il faut vraiment dominer son voisin
         //  pour le convertir à pleine vitesse, voir FAITH_DOMINANCE)
         const dominance = Math.min(1, diff / Math.max(1, this.faithOf(p.id)) / CONFIG.FAITH_DOMINANCE) ** CONFIG.FAITH_DOMINANCE_POWER;
-        const mult = (this.isProtected(o) ? 1 : CONFIG.FAITH_DISORGANIZED) * CONFIG.FAITH_SPEED * dominance;
+        // (👑 Charlemagne : la Croyance y convertit moins vite, voir CHARLEMAGNE.FAITH_SPEED)
+        const speed = CONFIG.FAITH_SPEED * (this.cm ? CHARLEMAGNE.FAITH_SPEED : 1);
+        const mult = (this.isProtected(o) ? 1 : CONFIG.FAITH_DISORGANIZED) * speed * dominance;
         const prog = (this.faithProgress.get(key) || 0) + mult / this.faithInterval(diff), n = Math.floor(prog);
         this.faithProgress.set(key, prog - n);
         if (n <= 0) continue;
@@ -1378,7 +1380,7 @@ const GameRules = {
       if (c < 0 || this.owner[c] !== a.target || !this.building[c]) return false; // (sa cible a pu être rasée entre-temps)
       const src = this.sourceOfAttack(a);
       let path;
-      if (this.isPreparing(a)) path = this.castlePath(a.attacker, c, src);
+      if (this.isPreparing(a)) path = a.passage !== undefined ? this.passageRoute(a) : this.castlePath(a.attacker, c, src);
       else {
         // on repart du front : la case ennemie, collée à nos terres, la plus proche de la suite de l'ancien chemin
         const passable = this.castlePassable(c), old = a.pathTiles, next = old[Math.min(old.length - 1, this.pathPassed(a))];
@@ -3363,12 +3365,13 @@ const GameRules = {
   pieceUnlinked(r, k) {
     return k >= 0 && !r.held[k] && !r.anyOutpost[k] && this.isProtected(r.owner[k]) && !this.vikingTiles().has(r.order[r.start[k]]);
   },
-  // Cases prises par les assauts vikings en cours (leur route depuis la côte du débarquement)
+  // Cases prises par les assauts vikings en cours (leur route depuis la côte du débarquement), et par les assauts
+  // venus par les terres d'un allié (🤝 voir passagePlan)
   vikingTiles() {
     if (this.vikingTilesVersion !== this.version) {
       this.vikingTilesVersion = this.version;
       this.vikingTilesSet = new Set();
-      for (const a of this.attacks) if (!a.done && a.viking !== undefined && a.route) for (const t of a.route) this.vikingTilesSet.add(t);
+      for (const a of this.attacks) if (!a.done && (a.viking !== undefined || a.passage !== undefined) && a.route) for (const t of a.route) this.vikingTilesSet.add(t);
     }
     return this.vikingTilesSet;
   },
@@ -3714,6 +3717,13 @@ const GameRules = {
     if (castle >= 0) {
       const name = this.players[target].name;
       path = this.castlePath(pid, castle, source);
+      // 🤝 Pas de chemin depuis nos terres : l'armée passe par les terres d'un allié du pacte (voir passagePlan) ;
+      // un assaut qui y passe déjà reçoit des renforts
+      if (!path && source < 0 && !(a && a.passage !== undefined)) {
+        const pass = this.passagePlan(pid, castle);
+        if (pass) return this.launchPassage(pid, target, castle, troops, pass);
+      }
+      if (!path && a && a.passage !== undefined) path = a.pathTiles;
       if (!path) {
         return frontier.length ? tr(`Impossible d'atteindre ${this.targetLabel(castle)} : ` +
           `des fortifications ${this.deName(name)} bloquent le passage. Prends d'abord les châteaux de la frontière.`,
@@ -3848,7 +3858,9 @@ const GameRules = {
       if (d < dist[i]) { dist[i] = d; prev[i] = -1; heap.push(d, i); }
     };
     if (allowFord) this.riverTiles(); // (prépare riverSide)
-    if (from >= 0) start(from);
+    // (from peut aussi être une liste de départs [case, coût pour y arriver] : voir passagePlan)
+    if (Array.isArray(from)) for (const [i, extra] of from) start(i, extra);
+    else if (from >= 0) start(from);
     else {
       // départ : les cases passables qui touchent nos terres (on part de nos cases, bien moins nombreuses que la carte)
       const W = this.W, N = this.N, own = this.owner;
@@ -4638,6 +4650,124 @@ const GameRules = {
   // L'armée est-elle encore en marche sur ses propres terres (pas encore entrée chez l'ennemi) ?
   isPreparing(a) { return this.tick < a.startTick; },
 
+  // --- 🤝 Passer par les terres d'un allié ---
+  // Un objectif (ville, église, port, mine, avant-poste) qu'on ne peut pas atteindre depuis ses terres, mais qui touche
+  // les terres d'un allié du pacte : l'armée part de sa ville, traverse ses terres puis celles de ses alliés (sans
+  // pertes, comme chez elle), et attaque depuis le bord des terres de l'allié. Si le pacte est rompu (ou si ces terres
+  // changent de mains) pendant qu'elle les traverse, elle rentre, sans perte (voir stepAttack).
+  // Renvoie { walk (le chemin de la marche, de sa ville au bord des terres de l'allié), entry (sa dernière case),
+  // path (le chemin chez l'ennemi jusqu'à l'objectif) }, ou null.
+  passagePlan(pid, c) {
+    const key = pid + ':' + c + ':' + this.version;
+    if (this.passageKey === key) return this.passageCache;
+    const plan = this.computePassage(pid, c);
+    this.passageKey = key;
+    this.passageCache = plan;
+    return plan;
+  },
+  computePassage(pid, c) {
+    if (!this.building[c]) return null;
+    const target = this.owner[c], allies = new Set(this.allies(pid).map(p => p.id));
+    if (target < 0 || target === pid || !allies.size || allies.has(target)) return null;
+    const W = this.W, h = this.sizeOf(this.building[c]) / 2;
+    const dep = this.departurePoint(pid, c % W + h, ((c / W) | 0) + h, -1), from = Math.floor(dep.y) * W + Math.floor(dep.x);
+    if (this.owner[from] !== pid) return null;
+    const field = this.allyLandField(pid, from, allies), passable = this.castlePassable(c);
+    // Les cases de l'ennemi collées aux terres d'un allié (qu'on atteint à pied) : de là, l'armée peut entrer chez lui
+    const starts = [], via = new Map();
+    for (let i = 0; i < this.N; i++) {
+      if (!allies.has(this.owner[i]) || field.dist[i] === Infinity) continue;
+      const cost = field.dist[i] / CONFIG.MARCH_OWN_LAND_BONUS;
+      this.forNeighbors(i, n => {
+        if (this.owner[n] !== target || !passable(n)) return;
+        if (!via.has(n) || field.dist[via.get(n)] > field.dist[i]) via.set(n, i);
+        starts.push([n, cost]);
+      });
+    }
+    if (!starts.length) return null;
+    const path = this.stopAtWalls(c, this.searchPath(pid, starts, new Set(this.footprint(c, this.building[c])), passable, target, undefined, undefined, true));
+    if (!path) return null;
+    const entry = via.get(path[0]), walk = [];
+    for (let j = entry; j >= 0; j = field.prev[j]) walk.push(j);
+    walk.reverse();
+    return { walk, entry, path };
+  },
+  // Le plus court chemin à pied depuis la case from, sur les terres de pid et celles de ses alliés (gués compris) :
+  // { dist, prev } (prev : la case d'où l'on vient ; -1 au départ)
+  allyLandField(pid, from, allies) {
+    const N = this.N, W = this.W, own = this.owner, dist = new Float64Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1);
+    const done = new Uint8Array(N), heap = new MinHeap(), cost = this.marchCost(pid), ford = this.fordCost(this.defenderSpeed(500));
+    const ok = j => (own[j] === pid || allies.has(own[j])) && this.isLand(j);
+    this.riverTiles(); // (prépare riverSide)
+    dist[from] = 0;
+    heap.push(0, from);
+    const visit = (n, nd, i) => { if (!done[n] && nd < dist[n]) { dist[n] = nd; prev[n] = i; heap.push(nd, n); } };
+    while (heap.size) {
+      const [d, i] = heap.pop();
+      if (done[i]) continue;
+      done[i] = 1;
+      const x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+        if (n >= 0 && ok(n)) visit(n, d + cost(n), i);
+      }
+      if (this.riverSide[i]) this.fordAcross(i, pid, (n, gap, bridged) => visit(n, d + (bridged ? gap : gap * ford) + cost(n), i), ok);
+    }
+    return { dist, prev };
+  },
+  // Lancer l'assaut a, qui passe par les terres d'un allié (pass : voir passagePlan). Renvoie null.
+  launchPassage(pid, target, c, troops, pass) {
+    const W = this.W, TPS = CONFIG.TICKS_PER_SECOND, p = this.players[pid], h = this.sizeOf(this.building[c]) / 2;
+    const at = t => ({ x: t % W + 0.5, y: ((t / W) | 0) + 0.5 }), from = at(pass.walk[0]), end = at(pass.entry);
+    const a = {
+      id: this.nextAttackId++, attacker: pid, target, troops, done: false, startTick: this.tick,
+      targetCastle: c, source: -1, defenders: 0, pending: [], frontTile: pass.path[0],
+      passage: pass.entry,          // (la dernière case de l'allié : l'armée entre chez l'ennemi juste à côté)
+      passageStart: pass.path[0],   // (sa première case chez l'ennemi)
+      passageWalk: pass.walk,       // (le chemin de sa marche, à travers ses terres et celles de ses alliés)
+      startTile: pass.entry, fromX: end.x, fromY: end.y, toX: c % W + h, toY: ((c / W) | 0) + h,
+    };
+    a.list = [pass.path[0]];
+    a.set = new Set(a.list);
+    a.pathTiles = pass.path;
+    a.limitZone = this.corridor(c, pass.path);
+    // (la marche, comme sur ses terres : 60 % plus vite qu'en terre ennemie, et sans pertes)
+    const march = this.walkRoute(pid, from, end, troops, CONFIG.MARCH_OWN_LAND_BONUS, false, pass.walk);
+    march.arrive = Math.max(march.arrive, this.tick + Math.round(CONFIG.MARCH_MIN_TIME * TPS));
+    a.march = march;
+    a.marchFrom = from;
+    a.startTick = march.arrive;
+    a.prepTicks = a.startTick - this.tick;
+    this.takeTroops(pid, -1, troops);
+    this.attacks.push(a);
+    const secs = Math.ceil(a.prepTicks / TPS), ally = this.players[this.owner[pass.entry]], d = this.players[target];
+    if (p.isHuman) UI.log(tr(`🤝 Ton armée (${fmt(troops)} soldats) traverse les terres ${this.deName(ally.name)}, sans pertes : elle attaque ${this.targetLabel(c)} dans ${secs} s.`,
+      `🤝 Your army (${fmt(troops)} soldiers) crosses ${possessive(ally.name)} land, with no losses: it attacks ${this.targetLabel(c)} in ${secs} s.`), 'good', ally);
+    if (d.isHuman) {
+      Music.sound('enemyAssault'); // (🔔 l'alerte : un ennemi marche sur nous)
+      UI.log(tr(`⚠️ L'armée ${this.deName(p.name)} (${fmt(troops)} soldats) traverse les terres ${this.deName(ally.name)} vers ta frontière : elle attaque dans ${secs} s ! Dès qu'elle entre sur tes terres, clique sur sa bannière ou sur « Défendre ».`,
+        `⚠️ ${possessive(p.name)} army (${fmt(troops)} soldiers) is crossing ${possessive(ally.name)} land towards your border: it attacks in ${secs} s! As soon as it enters your land, click its banner or "Defend".`), 'warn', p);
+    }
+    return null;
+  },
+  // Le passage de l'assaut a est-il encore ouvert ? (toutes les cases de sa marche à lui ou à ses alliés)
+  passageOpen(a) {
+    const pid = a.attacker;
+    for (const t of a.passageWalk) {
+      const o = this.owner[t];
+      if (o !== pid && (o < 0 || !this.areAllied(pid, o))) return false;
+    }
+    return true;
+  },
+  // Le chemin de l'assaut a chez l'ennemi, depuis le bord des terres de l'allié où il est arrivé (null s'il n'y en a plus)
+  passageRoute(a) {
+    const c = a.targetCastle;
+    if (!this.building[c] || !this.passageOpen(a)) return null;
+    const passable = this.castlePassable(c), starts = [];
+    this.forNeighbors(a.passage, n => { if (this.owner[n] === a.target && passable(n)) starts.push([n, 0]); });
+    if (!starts.length) return null;
+    return this.stopAtWalls(c, this.searchPath(a.attacker, starts, new Set(this.footprint(c, this.building[c])), passable, a.target, undefined, undefined, true));
+  },
+
   // Départ d'un assaut contre un royaume : l'armée part de la cité (château) de son royaume la plus proche
   // de la frontière visée (ou de son avant-poste) et marche sur ses terres jusqu'à la case edge, par le chemin
   // le plus rapide (walkRoute) : vite en plaine, lentement dans le relief, et plus lentement si elle est grande
@@ -4697,6 +4827,8 @@ const GameRules = {
       if (!around && a.targetCastle >= 0 && this.riverSide[t]) this.fordAcross(t, a.attacker, () => { around = 1; });
       // (🔥 des Vikings prennent pied sur la côte où ils débarquent, depuis leurs bateaux)
       if (!around && a.viking === t) around = 1;
+      // (🤝 une armée venue par les terres d'un allié entre chez l'ennemi par la case collée à ces terres)
+      if (!around && a.passageStart === t && this.owner[a.passage] !== a.target) around = 1;
       const score = around / TERRAIN_INFO[this.terrain[t]].cost;
       // Un assaut vers un objectif ne sort pas de son couloir (limitZone)
       const outside = a.limitZone && !a.limitZone.has(t);
@@ -4990,10 +5122,11 @@ const GameRules = {
   // (pas de chemin sur ses terres : ils vont tout droit, comme en plaine)
   // Un fleuve qui coupe ses terres se passe à gué (voir ownLandPath) : FORD_TIME secondes par case de fleuve.
   // (direct : tout droit, sans chercher de chemin, pour les derniers pas jusqu'à l'ennemi : voir arriveDefenders)
-  walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS, direct = false) {
+  // (given : le chemin à suivre, déjà calculé, comme celui qui traverse les terres d'un allié : voir passagePlan)
+  walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS, direct = false, given = null) {
     const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x), W = this.W;
     const speed = this.defenderSpeed(troops, bonus), ford = this.fordCost(speed);
-    const path = direct ? null : this.ownLandPath(pid, tile(from), tile(to), ford), march = this.marchCost(pid);
+    const path = given || (direct ? null : this.ownLandPath(pid, tile(from), tile(to), ford)), march = this.marchCost(pid);
     const pts = [from], cum = [0];
     const add = (q, extra = 0) => {
       const last = pts[pts.length - 1];
@@ -5404,6 +5537,14 @@ const GameRules = {
           `was taken${o >= 0 ? ' by ' + this.players[o].name : ''} before you arrived: your army turns back.`), 'warn');
       return this.endAttack(a);
     }
+    // 🤝 L'armée traverse les terres d'un allié : si ce n'est plus un allié (pacte rompu), ou si ces terres ont changé
+    // de mains, elle rentre tout de suite, sans perte
+    if (a.passage !== undefined && this.isPreparing(a) && this.tick % CONFIG.TICKS_PER_SECOND === 0 && !this.passageOpen(a)) {
+      if (this.players[a.attacker].isHuman) UI.log(tr('🤝 Ton armée traversait les terres d\'un allié, mais le passage n\'est plus possible (pacte rompu, ou terres passées à un autre) : elle rentre, sans perte.',
+        '🤝 Your army was crossing an ally\'s land, but the way is no longer open (pact broken, or land taken by someone else): it comes back, with no losses.'), 'warn');
+      a.calledBack = true;
+      return this.endAttack(a);
+    }
     if (this.isPreparing(a)) return;
     // Assaut sur un morceau coupé de ses châteaux : si son royaume l'a relié à un château entre-temps, il s'arrête
     if (a.unlinked && this.tick % CONFIG.TICKS_PER_SECOND === 0 && this.unlinkedRelinked(a)) {
@@ -5420,7 +5561,20 @@ const GameRules = {
       else if (d.isHuman) UI.log(tr(`🏰 Tu as de nouveau une ville (ou un port fortifié) : l'assaut ${this.deName(p.name)} contre tes terres désorganisées s'arrête !`, `🏰 You have a city (or a fortified port) again: ${possessive(p.name)} assault on your disorganized land stops!`), 'good', p);
       return this.endAttack(a);
     }
-    if (a.prepTicks && this.tick === a.startTick) {
+    // 🤝 L'armée arrive au bout des terres de l'allié : elle entre chez l'ennemi (le chemin a pu changer entre-temps)
+    if (a.passage !== undefined && a.prepTicks && this.tick === a.startTick && !a.castleTaken) {
+      const path = this.owner[a.targetCastle] === a.target ? this.passageRoute(a) : null;
+      if (!path) {
+        if (this.players[a.attacker].isHuman) UI.log(tr('🚫 Le passage vers ta cible est bloqué : ton armée rentre, sans perte.', '🚫 The way to your target is blocked: your army comes back, with no losses.'), 'warn');
+        a.calledBack = true;
+        return this.endAttack(a);
+      }
+      a.pathTiles = path;
+      a.limitZone = this.corridor(a.targetCastle, path);
+      a.frontTile = a.passageStart = path[0];
+      a.list = [path[0]];
+      a.set = new Set(a.list);
+    } else if (a.prepTicks && this.tick === a.startTick) {
       // Fin de la préparation : la frontière a pu bouger entre-temps
       a.list = this.buildFrontier(a.attacker, a.target, this.sourceOfAttack(a));
       a.set = new Set(a.list);

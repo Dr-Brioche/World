@@ -184,10 +184,20 @@ function openPublicRoom() {
   broadcastRoom(publicRoom);
 }
 
+// Les noms des joueurs, sans doublon : le 2e « Valdor » devient « Valdor II », le 3e « Valdor III »…
+function uniqueNames(members) {
+  const seen = new Map(), R = ['', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII', ' IX', ' X'];
+  return members.map(c => {
+    const k = (seen.get(c.name) || 0) + 1;
+    seen.set(c.name, k);
+    return c.name + (R[k - 1] !== undefined ? R[k - 1] : ' ' + k);
+  });
+}
 function roomInfo(room, conn) {
+  const names = uniqueNames(room.members);
   return {
     t: 'room', code: room.code, public: room.public, host: room.host, you: conn.id,
-    players: room.members.map(c => ({ id: c.id, name: c.name, banner: c.banner })),
+    players: room.members.map((c, k) => ({ id: c.id, name: names[k], banner: c.banner })),
     // (partie publique : les bots qui compléteront la partie, d'après le nombre de joueurs qui attendent)
     settings: room.public ? { ...room.settings, opponents: Math.max(0, PUBLIC_KINGDOMS - room.members.length) } : room.settings,
     startsIn: room.public ? Math.max(0, room.startsAt - Date.now()) : null,
@@ -236,7 +246,7 @@ function startGame(room) {
     hashes: new Map(), desync: false,
   };
   const seed = crypto.randomBytes(4).readUInt32BE(0);
-  const players = humans.map(c => ({ name: c.name, banner: c.banner }));
+  const names = uniqueNames(humans), players = humans.map((c, k) => ({ name: names[k], banner: c.banner }));
   humans.forEach((c, k) => send(c, {
     t: 'start', seed, settings, players, me: k, host: hostSlot, public: room.public,
     spawnTurns: room.game.spawnTurns, rules: { pauseTime: PAUSE_TIME, pauseEvery: PAUSE_EVERY },
