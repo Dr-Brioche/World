@@ -1208,7 +1208,9 @@ const Render = {
         const shift = a.clash !== undefined ? (a.attacker < a.clash ? -30 : 30) : 0;
         this.drawArmyBanner(a, bx + shift, by, `${siege}${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
         // 🔥 un assaut viking : une flamme au-dessus de sa bannière
-        if (a.viking !== undefined) this.drawFlame(bx + shift - 14, by - 52);
+        if (a.viking !== undefined && !a.landed) this.drawFlame(bx + shift - 14, by - 52);
+        // ⚜️ Jeanne d'Arc chevauche avec cette armée : son étendard au-dessus de la bannière
+        if (a.joan) this.drawJoan(bx + shift + 14, by - 52);
         continue;
       }
       // Marche sur ses propres terres : pas de flèche. Le front menacé scintille à la couleur de l'attaquant,
@@ -1227,6 +1229,7 @@ const Render = {
       const bx = m ? ox + m.x * s : st >= 0 ? ox + (st % G.W + 0.5) * s : x1;
       const by = m ? oy + m.y * s : st >= 0 ? oy + (((st / G.W) | 0) + 0.5) * s : y1;
       this.drawArmyBanner(a, bx, by, a.retreatEnd !== undefined ? `${tr('🏳️ retraite', '🏳️ retreat')} · ${fmt(a.troops)}` : `${G.troopIcon(a.attacker)} ${fmt(a.troops)}${extra}`);
+      if (a.joan) this.drawJoan(bx + 14, by - 52); // (⚜️ Jeanne d'Arc marche avec cette armée)
     }
   },
 
@@ -1585,6 +1588,44 @@ const Render = {
   },
 
   // 🔥 La flamme des Vikings (bateaux et assauts vikings), sur un rond sombre pour bien se voir
+  // ⚜️ L'étendard de Jeanne d'Arc (la guerre de Cent Ans) : une fleur de lys dorée sur un rond blanc
+  drawJoan(x, y) {
+    const ctx = this.ctx;
+    ctx.beginPath();
+    ctx.arc(x, y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(250,246,232,0.92)';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#c8a028';
+    ctx.stroke();
+    ctx.font = '18px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#b8901c';
+    ctx.fillText('⚜', x, y + 1);
+  },
+  // ☠️ La peste (la guerre de Cent Ans) : une tête de mort sur les villes malades, une porte sur celles qui ont fermé
+  // leurs portes
+  drawPlague(ox, oy) {
+    const G = Game, hy = G.hy;
+    if (!hy || (!hy.sick.size && !hy.closed.size)) return;
+    const ctx = this.ctx, s = this.cam.scale, n = G.sizeOf(B_CASTLE);
+    // (à droite de la ville, en haut : pas sur son niveau)
+    const mark = (c, icon, ring) => {
+      const x = ox + (c % G.W + n) * s + 6, y = oy + ((c / G.W) | 0) * s - 4;
+      ctx.beginPath();
+      ctx.arc(x, y, 13, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(20,12,4,0.75)';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = ring;
+      ctx.stroke();
+      Icons.draw(ctx, icon, x, y, 19, '#f3e3bf');
+    };
+    for (const c of hy.sick.keys()) if (G.building[c]) mark(c, 'skull', '#9acd32');
+    for (const [c, until] of hy.closed) if (G.building[c] && until > G.tick) mark(c, 'forbid', '#d9a520');
+  },
+
   drawFlame(x, y) {
     const ctx = this.ctx;
     ctx.beginPath();
@@ -2887,6 +2928,7 @@ const Render = {
 
     // Par-dessus tout le reste, pour bien les voir
     this.drawTowerShots(ox, oy);
+    this.drawPlague(ox, oy);
     this.drawLandingWarnings(ox, oy);
     this.drawExpeditions(ox, oy);
     this.drawDefendersOnTheWay(ox, oy);

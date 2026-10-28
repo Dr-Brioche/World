@@ -330,3 +330,26 @@ function generateCharlemagneMap(seed) {
     forestLevel: (lat, lon) => lat > 47 && lat < 55.5 && lon > 6 && lon < 25 ? 0.47 : lat > 45 ? 0.51 : 0.6,
   });
 }
+
+// ⚜️ Carte du scénario « La guerre de Cent Ans » : la même Europe, recadrée sur le royaume de France et ses voisins de
+// 1337 : les îles Britanniques (Angleterre, Écosse, Irlande), la Flandre et la rive gauche du Rhin, et le nord de
+// l'Espagne (voir centans.js). Bien plus détaillée que la carte « Europe » (une case fait environ 2,5 km).
+const CENTANS_PROJ = { lon0: -11, lonSpan: 20, latTop: 59.2, latBottom: 41.2, wrap: false };
+// (quelques rivières de plus, qui ont compté dans cette guerre : la Dordogne de Castillon, la Somme de Crécy et
+//  d'Azincourt, la Charente, l'Escaut de la Flandre)
+const CENTANS_RIVERS = [
+  [[[2.8, 45.55], [2.2, 45.2], [1.5, 44.9], [0.75, 44.85], [0.2, 44.9], [-0.25, 44.92], [-0.55, 45.0]], -1], // Dordogne
+  [[[3.3, 49.85], [2.85, 49.9], [2.3, 49.9], [1.85, 50.1], [1.6, 50.2]], -1],                             // Somme
+  [[[0.25, 46.15], [0.15, 45.75], [-0.3, 45.75], [-0.65, 45.85], [-1.05, 45.95]], -1],                   // Charente
+  [[[3.3, 49.95], [3.45, 50.4], [3.6, 50.8], [3.75, 51.05], [4.2, 51.25]], -1],                          // Escaut
+];
+// La carte : relief naturel, bord de carte en montagne (comme Charlemagne), et des forêts un peu plus denses au nord
+// de la Loire (les grandes forêts royales)
+function generateCentAnsMap(seed) {
+  return buildGeoMap(seed, CONFIG.CENTANS_MAP_WIDTH, CONFIG.CENTANS_MAP_HEIGHT, {
+    proj: CENTANS_PROJ, lands: EUROPE_LANDS, lakes: EUROPE_LAKES, deserts: EUROPE_DESERTS, glaciers: EUROPE_GLACIERS,
+    mountains: EUROPE_MOUNTAINS.concat(EUROPE_HIGHLANDS), rivers: EUROPE_RIVERS.concat(CENTANS_RIVERS), detail: 2.5,
+    coastAmp: 10, coastScale: 3.5, widthScale: 2.1, meander: 4, natural: true, landEdge: true,
+    forestLevel: (lat, lon) => lat > 46.5 && lat < 52 && lon > -2 ? 0.49 : 0.53,
+  });
+}

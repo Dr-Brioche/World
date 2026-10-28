@@ -88,6 +88,7 @@ const AI = {
     const alive = Game.players.filter(q => q.alive).length;
     for (const [o] of nb) {
       if (o < 0 || Game.areAllied(p.id, o) || Game.players[o].raiders) continue; // (les terres des pillards sont imprenables)
+      if (Game.attackBlocked(p.id, o)) continue; // (⚜️ une trêve)
       const e = Game.players[o];
       // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
       const plan = Game.planAssault(p.id, o), aim = plan.castle;
@@ -111,6 +112,7 @@ const AI = {
       if (Game.attacks.some(a => !a.done && a.target === o && a.attacker !== p.id)) score *= 0.5;
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
       if (p.spare && p.spare.includes(e.role)) score *= 0.5; // (👑 Charlemagne : un voisin qu'il attaque moins volontiers)
+      if (Game.hy) score *= Game.hyTargetBonus(p, e); // (⚜️ la guerre de Cent Ans : plutôt l'autre camp)
       if (score > bestScore) { bestScore = score; best = o; bestAim = plan.tile !== undefined ? plan.tile : aim; }
     }
     const full = Game.armySize(p) >= max * 0.95; // (sans les garnisons)

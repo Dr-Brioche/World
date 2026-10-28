@@ -484,6 +484,7 @@ function naturalRelief(terrain, W, H, crest, width, peaks, hillsOnly, noise, k) 
 //   proj : la projection · lands / lakes / deserts / glaciers : des contours · mountains : [largeur, sommets ?, crête]
 //   rivers : [cours, n° du point où il devient un grand fleuve (-1 = jamais)]
 //   detail : taille du bruit (plus grand = des taches plus grandes) · coastAmp : décalage des côtes (en cases)
+//   coastScale : taille des festons de la côte (6 par défaut ; plus petit = une côte plus découpée)
 //   widthScale : multiplie la largeur des montagnes · forestLevel(lat, lon) : seuil de forêt (plus bas = plus de forêt)
 //   iceCaps : [ouest, est, latitude min] : au cœur de ces terres (loin de la côte), un glacier infranchissable
 //   natural : un relief plus naturel (voir naturalRelief) ; une montagne peut alors finir par 'hills' (massif de collines)
@@ -502,9 +503,10 @@ function buildGeoMap(seed, W, H, geo) {
   // 2. Côtes plus naturelles : chaque case regarde le masque un peu à côté d'elle (décalage par le bruit)
   const terrain = new Uint8Array(N), A = geo.coastAmp, clampX = v => Math.min(W - 1, Math.max(0, Math.round(v)));
   const clampY = v => Math.min(H - 1, Math.max(0, Math.round(v)));
+  const cs = geo.coastScale || 6; // (taille des festons de la côte : plus petit = une côte plus découpée)
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      const nx = (fbm(coastNoise, x / (6 * k), y / (6 * k), 3) - 0.5), ny = (fbm(coastNoise, x / (6 * k) + 40, y / (6 * k) + 40, 3) - 0.5);
+      const nx = (fbm(coastNoise, x / (cs * k), y / (cs * k), 3) - 0.5), ny = (fbm(coastNoise, x / (cs * k) + 40, y / (cs * k) + 40, 3) - 0.5);
       const sx = clampX(x + nx * A), sy = clampY(y + ny * A);
       const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
       // (le bord des déserts est plus irrégulier : un décalage plus grand)

@@ -19,8 +19,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
   avec 3 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
-  et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**, et
-  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques)
+  et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**,
+  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, et **La guerre de Cent Ans (1337)** :
+  la France contre l'Angleterre, de Crécy à Jeanne d'Arc)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 21 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
@@ -192,6 +193,75 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Chaque faction porte sa **propre bannière** (le monogramme de Charlemagne pour les Francs, les clés de saint Pierre
      pour le pape, l'aigle bicéphale de Byzance, la guivre des Lombards, le corbeau des Danois…) et la couleur de son royaume.
      Tous les réglages du scénario sont dans `js/charlemagne.js`.
+   ⚜️ **Scénario « La guerre de Cent Ans (1337) »** (rubrique 📜 Scénarios) : mai 1337, Philippe VI de Valois confisque
+     la Guyenne au roi d'Angleterre Édouard III, qui se proclame roi de France. La carte : la **France, les îles
+     Britanniques et le nord de l'Espagne** (600 x 780 cases, une case fait environ 2,5 km), avec **12 factions** déjà en
+     place : la **France**, l'**Angleterre** (avec la Guyenne, le Ponthieu et Dublin), l'**Écosse**, la **Bourgogne**, la
+     **Bretagne**, la **Flandre**, la **Navarre** (et son comté d'Évreux, en Normandie), la **Castille**, l'**Aragon**,
+     le **Saint-Empire** (des Pays-Bas à la Provence), les **clans irlandais** et le **pape d'Avignon** ; leurs villes
+     portent leur nom sur la carte. Le récit suit le **roi de France** (des parchemins à chaque grand événement), mais tu
+     peux aussi jouer l'**Angleterre**, la **Bourgogne**, la **Bretagne** ou l'**Écosse**, chacune avec ses objectifs.
+     Règles du scénario :
+     - **pas de nouvelles villes** (on améliore les siennes, on prend celles des autres) et **pas de nouveaux pactes** :
+       deux camps, la **Couronne de France** (avec l'Écosse : l'Auld Alliance) et le **Parti anglais** ;
+     - 📅 **le calendrier** : la guerre dure de **1337 à 1453** en environ **45 minutes** ; l'année, le roi de France et le
+       roi d'Angleterre s'affichent en haut (avec la trêve en cours, la rançon du roi, ses crises de folie, la peste) ;
+     - 👑 **la Légitimité** remplace la Croyance : qui est le vrai roi ? Elle vient de tes villes (plus pour les grandes :
+       Paris, Reims, Rouen, Orléans, Calais, Bordeaux, Londres), de tes églises (leur Croyance, à moitié : améliore-les !)
+       et des événements ; un roi **pas sacré à Reims**, **captif** ou **fou** en perd. Le roi d'Angleterre qui prend
+       Reims s'y fait sacrer roi de France (+80) ;
+     - ⚖️ **les grands vassaux** (Bourgogne, Bretagne, Flandre, Navarre) ont une **fidélité** (de −100, pour l'Anglais, à
+       +100, pour le roi de France) qui glisse vers le roi le plus légitime : au-delà de ±35, ils rejoignent son camp, et
+       le quittent sous ±15. Le roi qui attaque un vassal le perd (−25) ; clic droit sur ses terres : **acheter sa
+       fidélité** (💰 500 = ±15). Elle s'affiche au survol de ses terres. Les rois bots achètent aussi leurs vassaux ;
+     - 🏹 **les arcs longs** : en rase campagne (pas pendant un siège), l'armée du roi d'Angleterre se bat 30 % mieux,
+       jusqu'en 1450 ; 💣 à partir de **1439**, les **canons des frères Bureau** rendent les sièges du roi de France plus
+       de 2 fois plus courts ;
+     - 🕊️ **les trêves** (Malestroit 1343, Brétigny 1360, Leulinghem 1389) : 1 à 3 minutes sans aucun assaut entre les
+       deux camps ;
+     - ☠️ **la peste noire** (1348) part de Marseille et saute de ville en ville : une ville malade perd des soldats, sa
+       garnison fond et ses moulins et casernes tournent au ralenti, pendant 45 s. Clic droit sur une de tes villes :
+       **fermer ses portes** (40 s : la peste n'y entre pas, mais elle ne produit plus rien) ;
+     - 🔥 **les chevauchées** : l'armée anglaise pille et rase une ville du camp français (sans la garder) et rentre
+       avec son butin ; le joueur anglais en lance d'un clic droit sur une ville ennemie. 🗡️ **les Grandes Compagnies**
+       (de 1357 à 1445, deux fois plus pendant les trêves ; parties en Castille de 1366 à 1369) surgissent dans le pays
+       et razzient une ville ;
+     - 💰 **les rançons** : une armée battue d'au moins 300 soldats paie rançon au vainqueur pour ses chevaliers tombés ;
+     - 👑 **les rois de France** : Philippe VI, **Jean II** (s'il perd une grande bataille contre les Anglais, il est
+       **capturé** : sa rançon, de 2 000 à 4 000 pièces, se paie toute seule avec la moitié de ton or), **Charles V le
+       Sage** (améliorations 25 % moins chères, et **Du Guesclin** : soldats 15 % plus forts), **Charles VI** (à partir de
+       1392, des **crises de folie** : recrutement divisé par 2) et **Charles VII** ; chaque nouveau roi doit être sacré à
+       Reims. **Henri V** rend les soldats anglais 15 % plus forts ;
+     - ⚓ **les ports de la Manche** (Calais, Harfleur, Cherbourg, Abbeville, Dunkerque) : chacun que tient l'Anglais
+       ravitaille son armée (+8 % de recrutement). Après une défaite navale (l'Écluse 1340 pour la France, La Rochelle
+       1372 pour l'Angleterre), ses ports retombent au niveau 1 et elle ne peut plus traverser la mer pendant 2 minutes ;
+     - ⚜️ **Jeanne d'Arc** (1429) : un bouton ⚜️ la confie à ton prochain assaut (son étendard flotte au-dessus de son
+       armée) : il se bat 40 % mieux et assiège 2 fois plus vite, et chaque ville prise grandit ta Légitimité (+15). Si
+       son armée est battue, elle est **prise**. (Les rois de France bots l'emmènent aussi) ;
+     - 📜 **les grands événements** (parchemins pour le roi de France, messages pour les autres) : la Flandre choisit
+       l'Angleterre (1339), l'Écluse, la guerre de Succession de Bretagne, Édouard III débarque en Normandie et le siège
+       de Calais (1346), la peste noire, le Dauphiné (1349), Charles le Mauvais, la chevauchée du Prince Noir (1356), la
+       Jacquerie, la paix de Brétigny, les Compagnies en Castille, la guerre reprend (la Castille rejoint la France,
+       1369), La Rochelle, la Flandre bourguignonne (1384 : elle passe à la Bourgogne), la folie du roi, Armagnacs et
+       Bourguignons (1407), Henri V débarque à Harfleur (1415), le pont de Montereau (la Bourgogne passe aux Anglais),
+       le traité de Troyes, le petit roi de Bourges, le siège d'Orléans, Jeanne d'Arc, le traité d'Arras (1435 : la
+       Bourgogne revient, si le roi de France est le plus légitime), les canons des frères Bureau et Castillon (1453) ;
+     - 🏆 **les objectifs** (dans le cadre en haut à gauche, tous à remplir en même temps : sinon, la victoire normale à
+       70 % des terres reste possible) :
+       - ⚜️ **France** : Paris, le sacre à Reims, la Normandie (Rouen et Caen), Bordeaux, Calais, rallier ou soumettre la
+         Bourgogne et la Bretagne, 400 / 480 / 560 de Légitimité, et plus une terre anglaise sur le continent ;
+       - 🦁 **Angleterre** (une armée plus grande quand c'est un bot : +10 / 30 / 50 %) : Londres, la Guyenne (Bordeaux
+         et Bayonne), 2 ou 3 ports de la Manche, la Normandie, Paris, le sacre à Reims, la Bourgogne, et 350 / 420 / 500
+         de Légitimité ;
+       - 🍇 **Bourgogne** : Dijon, la Flandre (Gand et Bruges), Bruxelles, Luxembourg, Nancy, Paris, une ville de niveau
+         3 ou 4, et de la Légitimité ;
+       - 🐾 **Bretagne** : Rennes, Nantes, Brest, ses 6 villes, le Mont-Saint-Michel, une ville de niveau 3 ou 4, et de la
+         Légitimité ;
+       - 🦄 **Écosse** : Édimbourg, Stirling et Perth, Berwick, Carlisle et Newcastle, York, que Paris reste au roi de
+         France (l'Auld Alliance), et de la Légitimité.
+     Les bannières des factions sont provisoires (des drapeaux du jeu, à leurs couleurs). Les données du scénario
+     (factions, objectifs, réglages, textes des parchemins) sont dans `js/centans.js`, ses règles dans `js/centansrules.js`,
+     et sa carte dans `js/europemap.js` (`generateCentAnsMap`).
    🗼 **Tour de garde** (pas encore disponible dans les parties : le bâtiment est prêt, il s'active avec `TOWERS` dans
      `js/config.js` ; touche **8**, 💰 150 puis plus cher à chaque tour) : elle tire chaque
      seconde sur l'armée ennemie la plus proche qui se bat à sa portée (une volée de flèches), et lui abat des soldats.
@@ -872,6 +942,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.146** : ⚜️ nouveau scénario **La guerre de Cent Ans (1337-1453)** : la France, les îles Britanniques et le nord de l'Espagne, 12 factions, le récit du roi de France en parchemins (de l'Écluse à Castillon), et des mécaniques à lui : la Légitimité, les grands vassaux qui changent de camp, les trêves, la peste noire, les chevauchées et les Grandes Compagnies, les arcs longs et les canons, les rançons, le roi Jean captif, la folie de Charles VI, les ports de la Manche et Jeanne d'Arc ; jouable aussi en Angleterre, Bourgogne, Bretagne ou Écosse
 - **v0.92.145** : 📜 Charlemagne : les parchemins ne disent plus exactement quoi faire ; ils racontent l'événement, et **tes conseillers murmurent** un conseil à mots couverts (« veille sur tes marches de l'Est »…), pour rester dans l'histoire
 - **v0.92.144** : 🏰 le scénario **Gouffre de Helm** est retiré du jeu (la tour de garde, faite pour lui, reste prête mais pas encore disponible dans les parties)
 - **v0.92.143** : 🛡️ correction : tes défenseurs qui interceptent une armée ne tournent plus autour quand ils arrivent près d'elle (ils recalculaient sans cesse un chemin par tes terres, que l'ennemi grignotait, et faisaient des détours) : à moins de 15 cases, ils foncent droit sur elle, et à 3 cases ils l'attaquent tout de suite
@@ -1241,8 +1312,9 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 - 🤝 Plus de diplomatie : demandes d'aide aux membres du pacte
 - 🗼 Activer la tour de garde dans les parties (le bâtiment est prêt : `TOWERS` dans `js/config.js`)
-- 🌦️ Événements médiévaux : peste, famine, croisades, hivers rigoureux
-- 👑 Héros ou rois avec des pouvoirs spéciaux
+- 🌦️ Événements médiévaux dans les parties normales : famine, hivers rigoureux (la peste existe déjà dans la guerre de Cent Ans)
+- 👑 Héros ou rois avec des pouvoirs spéciaux dans les parties normales (comme Jeanne d'Arc et les rois de la guerre de Cent Ans)
+- ⚜️ Les vraies bannières des factions de la guerre de Cent Ans
 - 🌐 Multijoueur en ligne
 
 ---
@@ -1262,6 +1334,8 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/custommaps.js` | Les cartes dessinées avec l'éditeur (celles du navigateur, et la liste `CUSTOM_MAPS` des cartes ajoutées au jeu) |
 | `editeur.html`, `js/editor.js` | L'éditeur de cartes |
 | `js/game.js` | Règles : économie, attaques, victoire |
+| `js/charlemagne.js` | 👑 Le scénario « Charlemagne » : ses factions, objectifs, réglages et textes (ses règles sont dans `js/game.js`) |
+| `js/centans.js`, `js/centansrules.js` | ⚜️ Le scénario « La guerre de Cent Ans » : ses données (factions, objectifs, réglages, parchemins), puis ses règles |
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/icons.js` | Les icônes médiévales dessinées (elles remplacent les emojis partout) |
 | `js/render.js` | Le dessin de la carte |
