@@ -945,7 +945,7 @@ const GameRules = {
     const ok = o >= 0 && o === e.victim && this.players[o].alive && !this.areAllied(e.pid, o) && this.holdsAlone(c) && this.owner[e.landing] === o;
     const route = ok ? this.vikingRoute(e.pid, c, e.landing) : null;
     if (!route) {
-      this.sailHome(e.pid, e.landing, e.troops);
+      this.sailHome(e.pid, e.landing, e.troops, CONFIG.VIKING_RETURN_SPEED);
       if (p.isHuman) UI.log(tr('🔥 La cible de ton assaut viking n\'est plus possible : tes Vikings rentrent au port.', '🔥 The target of your Viking assault is no longer possible: your Vikings sail back to port.'), 'warn');
       return;
     }
@@ -1002,11 +1002,12 @@ const GameRules = {
     return this.endAttack(a);
   },
   // Des soldats rembarquent sur la côte `from` et rentrent au port le plus proche (ils rejoignent l'armée en arrivant)
-  sailHome(pid, from, troops) {
+  // (speed : plus vite que d'habitude, comme les Vikings qui rentrent : voir VIKING_RETURN_SPEED)
+  sailHome(pid, from, troops, speed = 1) {
     const best = this.homePort(pid, from), TPS = CONFIG.TICKS_PER_SECOND;
     if (!best || troops < 1) { this.players[pid].troops += Math.max(0, troops); return; }
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: from, home: best.port, path: best.path.slice().reverse(),
-      sent: troops, troops, start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
+      sent: troops, troops, start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time / speed * TPS)) });
   },
 
   // Croisade religieuse en cours de la cathédrale a (ou null)
@@ -6102,7 +6103,7 @@ const GameRules = {
     // des Vikings qui n'ont pas pris leur cible rembarquent là où ils ont débarqué
     const back = a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
     if (a.eventArmy) { /* (👑 des Vikings levés pour un événement : ils repartent chez eux, sans grossir l'armée danoise) */ }
-    else if (a.viking !== undefined && !a.won && !a.castleTaken) this.sailHome(a.attacker, a.viking, back);
+    else if (a.viking !== undefined && !a.won && !a.castleTaken) this.sailHome(a.attacker, a.viking, back, CONFIG.VIKING_RETURN_SPEED);
     else this.giveTroops(a.attacker, this.sourceOfAttack(a), back);
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château. Ceux qui étaient encore
     // en route font demi-tour : ils rentrent à pied jusqu'à la ville la plus proche (voir sendHome)
