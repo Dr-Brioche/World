@@ -164,7 +164,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        Facile, 110 s en Normal, 80 s en Difficile, après 2 min 30), de plus en plus grosses (600 guerriers en Normal,
        puis +20 % à chaque fois, jusqu'à **5 000 guerriers** au plus ; la première épargne la Bavière). Une razzia qui
        prend sa cible la **rase** (avec ses moulins et casernes), pille de l'or et rentre : les terres restent au
-       défenseur. Leurs terres ne comptent pas dans les parts du classement ni pour la victoire (les 70 % se comptent
+       défenseur. Quand leurs terres touchent celles des **Francs**, ils les visent **en premier**, d'autant plus souvent
+       et plus fort que la partie est difficile (une razzia sur cinq en Facile, une sur deux en Normal, quatre sur cinq en
+       Difficile, avec 20 % puis 40 % de guerriers en plus). Ils ne razzient **jamais les lieux des objectifs** de
+       Charlemagne (Ratisbonne, Pavie, Eresburg, le Ring des Avars, Barcelone, Rome, les mines historiques) : la partie
+       reste toujours gagnable (de même, aucun assaut viking ne peut les raser). Leurs terres ne comptent pas dans les parts du classement ni pour la victoire (les 70 % se comptent
        sur les terres à conquérir), et il n'est pas nécessaire de les anéantir ;
      - 🛡️ **les petits royaumes résistent** : la Bavière (Ratisbonne au niveau 3), l'Aquitaine (Bordeaux au niveau 3) et
        les Asturies ont des garnisons 50 % plus fortes tant qu'elles tiennent leurs villes, et Cordoue s'attaque moins
@@ -984,6 +988,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.158** : 👑 Charlemagne : les **Slaves** ne razzient plus jamais les **lieux des objectifs** (le Ring des Avars, Pavie, Barcelone, Rome…), et aucun assaut viking ne peut les raser : la partie reste toujours gagnable · les Slaves visent **les Francs en premier**, d'autant plus souvent et plus fort que la partie est difficile
 - **v0.92.157** : 🔥 les Vikings **rentrent au port 2 fois plus vite** qu'à l'aller (après leur raid, un échec ou un rappel)
 - **v0.92.156** : 🗺️ scénarios (Charlemagne, guerre de Cent Ans) : les frontières de départ entre les factions (et avec les terres libres, comme chez les Slaves) **serpentent** naturellement au lieu de suivre de longues lignes droites (réglage `BORDER_WARP`)
 - **v0.92.155** : 🏰 la jauge ronde d'un siège est toujours **jaune**, quelle que soit la couleur de l'assaillant : elle reste bien visible

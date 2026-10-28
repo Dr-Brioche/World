@@ -55,8 +55,13 @@ const CHARLEMAGNE = {
   // dépendent), pille LOOT pièces par bâtiment, et rentre : les terres restent au défenseur.
   // Elles plafonnent à MAX guerriers. La première épargne les factions de SPARE_FIRST (la Bavière, trop petite pour
   // l'encaisser dès le début).
+  // Les Francs, quand leurs terres touchent celles des pillards, sont visés en premier, d'autant plus souvent que la partie
+  // est difficile (FRANKS.CHANCE : la chance qu'une razzia soit pour eux), et par une plus grosse troupe (FRANKS.ARMY).
+  // Les lieux des objectifs de Charlemagne (Ratisbonne, Pavie, Eresburg, le Ring, Barcelone, Rome, les mines historiques)
+  // ne sont jamais razziés : sinon, la partie ne pourrait plus être gagnée.
   RAIDS: { FIRST: 150, EVERY: { facile: 150, normal: 110, difficile: 80 }, ARMY: { facile: 400, normal: 600, difficile: 900 },
-    GROWTH: 0.2, MAX: 5000, LOOT: 150, SPARE_FIRST: ['baviere'] },
+    GROWTH: 0.2, MAX: 5000, LOOT: 150, SPARE_FIRST: ['baviere'],
+    FRANKS: { facile: { CHANCE: 0.2, ARMY: 1 }, normal: { CHANCE: 0.5, ARMY: 1.2 }, difficile: { CHANCE: 0.8, ARMY: 1.4 } } },
   // ✝️ Succès « Empire chrétien » : quand les terres des Francs touchent celles de Rome, leur Croyance gagne
   // CHRISTIAN_EMPIRE pour toujours
   CHRISTIAN_EMPIRE: 100,
