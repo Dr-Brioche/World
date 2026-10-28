@@ -410,7 +410,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (elle ne la traverse pas, la muraille reste entière) et l'assiège : il ne tombe pas tout de suite. Elle doit
      tenir **8 s** (fort en bois), **13 s** (château) ou **18 s** (citadelle) : pendant ce temps, sa garnison sort,
      et le défenseur peut encore **envoyer des soldats** le défendre ; tous se battent avec le bonus de ses murs.
-     Une **jauge ronde**, à la couleur de l'assaillant, se remplit autour de la ville assiégée : quand le cercle est plein, elle tombe.
+     Une **jauge ronde**, toujours **jaune** (bien visible, quel que soit l'assaillant ; réglage `SIEGE_RING_COLOR`), se remplit autour de la ville assiégée : quand le cercle est plein, elle tombe.
      ⏸️ Le siège se met **en pause** tant que les défenseurs (garnison ou renforts) se battent contre l'armée : la jauge
      ne reprend qu'une fois qu'ils sont tous battus.
      ⚓ Un **port fortifié** (niveau 3) se défend pareil, comme une petite ville : l'armée s'arrête à sa petite muraille
@@ -984,6 +984,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.155** : 🏰 la jauge ronde d'un siège est toujours **jaune**, quelle que soit la couleur de l'assaillant : elle reste bien visible
 - **v0.92.154** : ✝️ les terres des pillards (les **Slaves** de Charlemagne) ne se prennent plus non plus par la **Croyance**
 - **v0.92.153** : 👑 Charlemagne : **tout le monde peut de nouveau attaquer Rome** ; si elle tombe, aux Lombards ou à n'importe qui, l'objectif « Rome » est perdu pour de bon (plus de couronne d'empereur) · repoussés, les **Lombards retentent leur chance** quand ils en ont les moyens (au plus toutes les 3 minutes)
 - **v0.92.152** : 🔔 le son du départ à l'assaut se joue aussi quand tes **défenseurs partent intercepter** un assaut ennemi (il se jouait déjà pour un assaut qui part relier une ville isolée)

@@ -1233,8 +1233,8 @@ const Render = {
     }
   },
 
-  // Jauge du siège de l'assaut a : un anneau autour du bâtiment assiégé, qui se remplit (couleur de l'attaquant)
-  // à mesure que le siège avance ; plein, la cible tombe
+  // Jauge du siège de l'assaut a : un anneau autour du bâtiment assiégé, qui se remplit à mesure que le siège avance ;
+  // plein, la cible tombe (toujours jaune, bien visible quel que soit l'assaillant : voir SIEGE_RING_COLOR)
   drawSiegeRing(ox, oy, a) {
     const G = Game, ctx = this.ctx, s = this.cam.scale, c = G.anchor[a.siege.tile], type = G.building[c];
     if (!type) return;
@@ -1249,7 +1249,7 @@ const Render = {
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.stroke();
     ctx.lineWidth = Math.max(3, s * 0.35);
-    ctx.strokeStyle = `rgb(${G.players[a.attacker].color.join(',')})`;
+    ctx.strokeStyle = CONFIG.SIEGE_RING_COLOR;
     ctx.beginPath();
     ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2);
     ctx.stroke();
