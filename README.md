@@ -175,14 +175,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        minutes (3 en Facile, 6 en Normal, 10 en Difficile), **Carloman meurt** et son royaume revient aux Francs ;
      - **Byzance et Rome** sont des puissances défensives : elles se défendent mais ne partent pas en conquête ;
      - **Rome** n'a **pas d'armée**, seulement une **grande garnison** (320 soldats, qui se reconstitue) qui repousse
-       les assauts du début ; tant qu'elle est au pape, **personne ne peut la prendre** (ni les Francs, ses alliés, ni
-       aucun autre royaume) : seule la grande marche des Lombards peut la menacer ;
+       les assauts du début ; les Francs ne peuvent pas la prendre (c'est leur allié), mais **tous les autres royaumes
+       peuvent l'attaquer** ;
      - au bout d'un moment (18 min en Facile, 12 en Normal, 7 en Difficile ; un message prévient 30 s avant), les
        **Lombards marchent sur Rome** avec une **grande armée** (5 000, 5 500 ou 6 500 soldats, moins s'ils ont déjà
        perdu des villes). Le **siège de Rome dure 10 minutes en Facile, 6 en Normal, 2 en Difficile** : les soldats
        envoyés au pape (clic droit sur ses terres, si elles touchent les tiennes) **renforcent sa garnison**, et 1 500
-       suffisent à la sauver. Si Rome tombe, l'objectif « Rome » est **perdu pour de bon** (barré en rouge, ✖) : on peut
-       continuer à jouer, mais plus être couronné empereur (même en la libérant ensuite : elle est alors rendue au pape) ;
+       suffisent à la sauver (ce siège long vaut pour tout royaume qui attaque Rome). Repoussés, les Lombards
+       **retentent leur chance** quand leur armée a retrouvé la moitié de celle de leur grande marche (au plus une fois
+       toutes les 3 minutes ; réglage `LOMBARDS_RETRY`). Si Rome tombe, **aux Lombards ou à n'importe quel autre royaume**,
+       l'objectif « Rome » est **perdu pour de bon** (barré en rouge, ✖) : on peut continuer à jouer, mais plus être
+       couronné empereur (même en la libérant ensuite : elle est alors rendue au pape) ;
      - 🏰 **Barcelone** est une **ville de niveau 2** à la **garnison 4 fois plus forte** (200 soldats) tant que Cordoue
        la tient : dure à prendre en début de partie ;
      - **victoire des Francs** : remplir les **9 objectifs de Charlemagne**, listés dans un **cadre en haut à gauche**
@@ -193,7 +196,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        niveau 3 en Facile, 4 en Normal et Difficile), tenir les **richesses de l'Occident** (4, 6 ou 8 **mines
        historiques** selon la difficulté), **christianiser l'empire** (350 de Croyance en Facile, 700 en
        Normal, 1 200 en Difficile : le pacte avec Rome en donne déjà 150, sans compter une croisade en cours) et **protéger Rome**
-       (que les Lombards ne la prennent jamais). Un objectif **se perd** (le ✔ disparaît, un message
+       (qu'elle ne tombe jamais). Un objectif **se perd** (le ✔ disparaît, un message
        prévient) si tu **perds la ville** (ou ta ville de haut niveau, ta Croyance, Rome) : il faut tout tenir en même
        temps. Tout est rempli : tu es **couronné empereur** !
        (Sinon, la victoire normale à 70 % des terres reste possible.)
@@ -981,6 +984,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.153** : 👑 Charlemagne : **tout le monde peut de nouveau attaquer Rome** ; si elle tombe, aux Lombards ou à n'importe qui, l'objectif « Rome » est perdu pour de bon (plus de couronne d'empereur) · repoussés, les **Lombards retentent leur chance** quand ils en ont les moyens (au plus toutes les 3 minutes)
 - **v0.92.152** : 🔔 le son du départ à l'assaut se joue aussi quand tes **défenseurs partent intercepter** un assaut ennemi (il se jouait déjà pour un assaut qui part relier une ville isolée)
 - **v0.92.151** : 🛶 un territoire **désorganisé** (sans ville, ou coupé de ses villes) juste de l'autre côté d'un fleuve qui borde ton royaume s'attaque en **passant le fleuve à gué** · 👑 Charlemagne : le **siège de Rome** dure 10, 6 ou 2 minutes selon la difficulté ; si les Lombards la prennent, l'objectif « Rome » est **perdu pour de bon** ; tant qu'elle est au pape, **personne d'autre ne peut la prendre** · 🏰 **Barcelone** devient une ville de niveau 2 à la garnison 4 fois plus forte tant que Cordoue la tient
 - **v0.92.150** : 🚶 **traverser les terres d'un allié** : une cible qu'on ne peut pas atteindre depuis ses terres, mais qui touche celles d'un allié du pacte, s'attaque en passant par chez lui (sans perdre de soldats en route ; pacte rompu en chemin : l'armée rentre sans perte) · 🔔 les petits sons se superposent au lieu de se couper · 👑 Charlemagne : la Croyance prend les terres 2 fois moins vite (chacun commence avec beaucoup d'églises) · 🌐 en ligne, un joueur qui n'a pas écrit le nom de son royaume en reçoit un au hasard (et deux noms pareils deviennent « Valdor » et « Valdor II »)

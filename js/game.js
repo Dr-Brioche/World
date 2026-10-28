@@ -477,15 +477,7 @@ const GameRules = {
 
   // Bâtiments visables par un assaut (château, église, port, avant-poste) d'un royaume
   targetsOf(pid) {
-    return this.buildingTiles.filter(a => TARGET_TYPES.includes(this.building[a]) && this.owner[a] === pid && !this.romeShielded(a));
-  },
-  // 👑 Charlemagne : Rome, tant qu'elle est au pape, ne peut être prise par personne… sauf par la grande marche des
-  // Lombards (voir stepCharlemagne ; un joueur lombard peut la lancer lui-même quand sa grande levée est prête)
-  romeShielded(a, pid = -1) {
-    const cm = this.cm;
-    if (!cm || this.anchor[a] !== cm.capital.papaute || this.owner[cm.capital.papaute] !== cm.role.papaute) return false;
-    if (pid >= 0 && pid === cm.role.lombards && (cm.romeOpen || (this.players[pid].human && cm.lombardMarched))) return false;
-    return true;
+    return this.buildingTiles.filter(a => TARGET_TYPES.includes(this.building[a]) && this.owner[a] === pid);
   },
 
   // « ce château », « cette église »… pour les messages
@@ -890,7 +882,6 @@ const GameRules = {
     }
     const name = this.players[o].name;
     if (this.areAllied(pid, o)) return { error: tr(`${name} est ton allié !`, `${name} is your ally!`) };
-    if (this.romeShielded(c, pid)) return { error: tr('Rome est sous la protection de saint Pierre : personne ne peut la prendre au pape.', 'Rome is under the protection of Saint Peter: no one can take it from the pope.') };
     if (this.truceLeft(c) > 0) return { error: tr(`${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} vient de changer de mains : attends un peu.`, `${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} has just changed hands: wait a little.`) };
     const ports = this.royalPorts(pid); // (les Vikings ne partent que d'un port royal)
     if (!ports.length) return { error: tr('Il te faut un port royal (niveau 3) d\'où partir.', 'You need a royal port (level 3) to sail from.') };
@@ -2053,20 +2044,33 @@ const GameRules = {
     }
     if (!cm.lombardMarched && this.tick >= cm.lombardTick) {
       cm.lombardMarched = true;
+      cm.lombardRetry = this.tick + C.LOMBARDS_RETRY.EVERY * TPS; // (leur prochaine tentative, s'ils échouent)
       if (lomb.alive && pope.alive && this.owner[cm.capital.papaute] === pope.id) {
         lomb.troops = Math.max(lomb.troops, army / 0.85); // (une grande levée, pour cette guerre)
         if (lomb.isHuman) UI.log(tr('⚔️ Ta grande levée est prête : à toi de marcher sur Rome !', '⚔️ Your great levy is ready: it is up to you to march on Rome!'), 'good');
-        else if ((cm.romeOpen = true) && !this.launchAttack(lomb.id, pope.id, lomb.troops * 0.85, cm.capital.papaute)) {
+        else if (!this.launchAttack(lomb.id, pope.id, lomb.troops * 0.85, cm.capital.papaute)) {
           UI.log(tr('⚔️ Les Lombards marchent sur Rome ! Défends le pape, ton allié.', '⚔️ The Lombards are marching on Rome! Defend the pope, your ally.'), 'warn', lomb);
         }
-        cm.romeOpen = false; // (cette marche seulement : les Lombards ne pourront pas relancer d'assaut sur Rome)
       }
     }
-    // Rome tombe (au premier qui la prend au pape, s'il n'est ni lui ni un allié qui la lui rendra)
+    // Leur marche repoussée, les Lombards retentent leur chance s'ils en ont les moyens (voir LOMBARDS_RETRY)
+    const R = C.LOMBARDS_RETRY;
+    if (cm.lombardMarched && !lomb.isHuman && lomb.alive && pope.alive && this.owner[cm.capital.papaute] === pope.id
+      && this.tick >= (cm.lombardRetry || 0) && lomb.troops >= army * R.MIN
+      && !this.attacks.some(a => !a.done && a.attacker === lomb.id && a.targetCastle === cm.capital.papaute)) {
+      cm.lombardRetry = this.tick + R.EVERY * TPS;
+      if (!this.launchAttack(lomb.id, pope.id, lomb.troops * 0.85, cm.capital.papaute) && this.areAllied(this.human.id, pope.id)) {
+        UI.log(tr('⚔️ Les Lombards marchent de nouveau sur Rome ! Défends le pape, ton allié.', '⚔️ The Lombards are marching on Rome again! Defend the pope, your ally.'), 'warn', lomb);
+      }
+    }
+    // Rome tombe (au premier qui la prend au pape, s'il n'est ni lui ni un allié qui la lui rendra) : l'objectif « Rome »
+    // est perdu pour de bon
     const rome = this.owner[cm.capital.papaute];
     if (!cm.romeFell && rome >= 0 && rome !== pope.id && !this.areAllied(rome, pope.id)) {
       cm.romeFell = true;
-      this.cmEvent('romeFalls', {}, null);
+      // (« des Lombards », « de Byzance », « d'Aquitaine » ; « of the Lombards », « of Byzantium »)
+      const who = this.players[rome].name, many = /s$/.test(who);
+      this.cmEvent('romeFalls', { who: tr(many ? `des ${who}` : this.deName(who), many ? `the ${who}` : who) }, null);
     }
     this.stepCmEvents(P, franks, pope);
   },
@@ -3703,12 +3707,6 @@ const GameRules = {
     if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     const blocked = this.attackBlocked(pid, target); // (⚜️ une trêve entre les deux rois)
     if (blocked) return blocked;
-    // (👑 Charlemagne : Rome ne se prend pas, sauf par la marche des Lombards ; ni son assaut de front)
-    const cmc = this.cm && this.cm.capital.papaute;
-    if (this.cm && target >= 0 && target === this.cm.role.papaute && this.romeShielded(cmc, pid)
-      && (aimTile === undefined || this.anchor[aimTile] === cmc || !this.isProtected(target))) {
-      return tr('Rome est sous la protection de saint Pierre : personne ne peut la prendre au pape.', 'Rome is under the protection of Saint Peter: no one can take it from the pope.');
-    }
     // (⚔️ les terres des pillards, comme les Slaves, sont imprenables : on ne peut que se défendre contre eux)
     if (target >= 0 && this.players[target].raiders) return tr(`On ne peut pas prendre les terres des ${this.players[target].name} : ce sont des pillards insaisissables. Défends-toi contre leurs razzias !`,
       `The ${this.players[target].name}' lands cannot be taken: they are elusive raiders. Defend yourself against their raids!`);
