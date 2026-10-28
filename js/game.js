@@ -2432,6 +2432,7 @@ const GameRules = {
         case 'hyGates': return this.hyCloseGates(pid, o.a);
         case 'hyChev': return this.hyChevauchee(pid, o.a, o.troops);
         case 'hyJoan': return this.hyArmJoan();
+        case 'hyChoice': return this.hyChoose(pid, o.key, o.pick); // (🦁 un choix d'un parchemin du roi d'Angleterre)
       }
       return null;
     } finally { this.inUpdate = false; }
