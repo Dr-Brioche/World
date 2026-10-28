@@ -37,12 +37,7 @@ Object.assign(GameRules, {
         polys.push({ pid: hy.role[f.id], pts, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) });
       }
     }
-    for (let i = 0; i < this.N; i++) {
-      if (!this.claimable(i)) continue;
-      const x = i % W + 0.5, y = ((i / W) | 0) + 0.5;
-      const q = polys.find(q => x >= q.x0 && x <= q.x1 && y >= q.y0 && y <= q.y1 && insidePolygon(q.pts, x, y));
-      if (q) this.setOwner(i, q.pid);
-    }
+    this.claimLands(polys, C.BORDER_WARP); // (des frontières qui serpentent : voir claimLands)
     // Les enclaves : le comté d'Évreux (Navarre), le Ponthieu (Angleterre)
     for (const f of C.factions) {
       for (const [lon, lat, R] of f.enclaves || []) {

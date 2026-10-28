@@ -984,6 +984,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.156** : 🗺️ scénarios (Charlemagne, guerre de Cent Ans) : les frontières de départ entre les factions (et avec les terres libres, comme chez les Slaves) **serpentent** naturellement au lieu de suivre de longues lignes droites (réglage `BORDER_WARP`)
 - **v0.92.155** : 🏰 la jauge ronde d'un siège est toujours **jaune**, quelle que soit la couleur de l'assaillant : elle reste bien visible
 - **v0.92.154** : ✝️ les terres des pillards (les **Slaves** de Charlemagne) ne se prennent plus non plus par la **Croyance**
 - **v0.92.153** : 👑 Charlemagne : **tout le monde peut de nouveau attaquer Rome** ; si elle tombe, aux Lombards ou à n'importe qui, l'objectif « Rome » est perdu pour de bon (plus de couronne d'empereur) · repoussés, les **Lombards retentent leur chance** quand ils en ont les moyens (au plus toutes les 3 minutes)

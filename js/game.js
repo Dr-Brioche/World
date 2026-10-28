@@ -1878,12 +1878,7 @@ const GameRules = {
         polys.push({ pid: cm.role[f.id], pts, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) });
       }
     }
-    for (let i = 0; i < this.N; i++) {
-      if (!this.claimable(i)) continue;
-      const x = i % W + 0.5, y = ((i / W) | 0) + 0.5;
-      const q = polys.find(q => x >= q.x0 && x <= q.x1 && y >= q.y0 && y <= q.y1 && insidePolygon(q.pts, x, y));
-      if (q) this.setOwner(i, q.pid);
-    }
+    this.claimLands(polys, C.BORDER_WARP);
     // Les enclaves : des terres d'une faction au milieu de celles d'une autre (Fronsac, au cœur de l'Aquitaine)
     for (const f of C.factions) {
       for (const [lon, lat, R] of f.enclaves || []) {
@@ -1998,6 +1993,22 @@ const GameRules = {
       if (best >= 0) return best;
     }
     return -1;
+  },
+
+  // Les terres d'un scénario (Charlemagne, la guerre de Cent Ans) : chaque case va à la première faction dont le contour
+  // la contient (polys : [{ pid, pts, x0, x1, y0, y1 }]). Les frontières serpentent (au lieu de suivre les lignes droites
+  // des contours) : on cherche le contour d'un point un peu décalé par un bruit doux (warp : { AMP, SCALE }, en cases).
+  // Ce bruit a son propre hasard, tiré de la graine de la partie : la même carte chez tout le monde.
+  claimLands(polys, warp) {
+    const W = this.W, nx = makeValueNoise(mulberry32(this.seed ^ 0x3c6ef372)), ny = makeValueNoise(mulberry32(this.seed ^ 0x6a09e667));
+    for (let i = 0; i < this.N; i++) {
+      if (!this.claimable(i)) continue;
+      const gx = i % W + 0.5, gy = ((i / W) | 0) + 0.5;
+      const x = gx + (fbm(nx, gx / warp.SCALE, gy / warp.SCALE, 3) - 0.5) * 2 * warp.AMP;
+      const y = gy + (fbm(ny, gx / warp.SCALE, gy / warp.SCALE, 3) - 0.5) * 2 * warp.AMP;
+      const q = polys.find(q => x >= q.x0 && x <= q.x1 && y >= q.y0 && y <= q.y1 && insidePolygon(q.pts, x, y));
+      if (q) this.setOwner(i, q.pid);
+    }
   },
 
   // Chaque seconde : les grands moments du scénario

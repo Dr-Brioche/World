@@ -37,6 +37,9 @@ const CHARLEMAGNE = {
   // Leur marche repoussée, les Lombards retentent leur chance, s'ils en ont les moyens : au plus une fois toutes les
   // EVERY secondes, quand leur armée atteint MIN fois celle de leur grande marche (2500 soldats sur 5000 : ils repartent)
   LOMBARDS_RETRY: { EVERY: 180, MIN: 0.5 },
+  // Les frontières de 768 serpentent un peu (au lieu de suivre les lignes droites des contours, voir lands) : chaque
+  // case est décalée de AMP cases au plus, par un bruit doux qui ondule sur environ SCALE cases
+  BORDER_WARP: { AMP: 10, SCALE: 30 },
   START_ARMY: 0.35,         // au départ, chaque faction a 35 % de son armée maximum
   START_GOLD: 400,
   // Rome n'a pas d'armée (le pape ne recrute pas) : seulement une grande garnison, qui se reconstitue d'elle-même,
