@@ -288,6 +288,10 @@ button:hover { background: #e8d6a8; }
 #objectives li.done::before { content: '✔'; left: 0; color: var(--good); font-weight: bold; }
 #objectives li.gone { text-decoration: line-through; color: var(--danger); opacity: 0.75; } /* (perdu pour de bon) */
 #objectives li.gone::before { content: '✖'; left: 0; color: var(--danger); font-weight: bold; }
+#objectives .defisT { margin-top: 6px; padding-top: 4px; border-top: 1px solid rgba(255, 215, 120, 0.3); font-size: 11px; } /* (⭐ les défis, sous les objectifs) */
+#objectives ul.defis li::before { content: '⭐'; left: 0; font-size: 10px; }
+#objectives ul.defis li.done::before { content: '✔'; }
+#objectives ul.defis li.gone::before { content: '✖'; }
 /* fenêtre étroite : sous la barre du bas, au centre (voir UI.placeHint) */
 #hint.under { max-width: min(760px, calc(100vw - 16px)); text-align: center; padding: 3px 10px; }
 

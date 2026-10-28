@@ -800,6 +800,42 @@ const CENTANS = {
     },
   },
 
+  // ⭐ Les défis de chaque faction jouable (voir defis.js) : des objectifs en plus, historiques, drôles ou très durs,
+  // qui ne comptent pas pour la victoire mais rapportent leur récompense dès qu'ils sont réussis (faith : de la
+  // Légitimité). Un lieu (places) : le nom français d'une ville. byYear / untilYear : l'année.
+  CHALLENGES: {
+    france: [
+      { kind: 'hold', places: ['Londres'], text: tr('L\'arroseur arrosé : prendre Londres', 'The tables turned: take London'), reward: { gold: 6000, faith: 60 } },
+      { kind: 'keep', places: ['Calais'], untilYear: 1360, text: tr('Les bourgeois tiennent bon : garder Calais jusqu\'en 1360', 'The burghers hold firm: keep Calais until 1360'), reward: { gold: 2500 } },
+      { kind: 'noCapture', untilYear: 1364, text: tr('Père, gardez-vous à droite ! Le roi jamais capturé jusqu\'en 1364', 'Father, guard your right! The king never captured until 1364'), reward: { faith: 50 } },
+      { kind: 'obj', obj: { kind: 'noEnglish' }, byYear: 1429, text: tr('Sans Jeanne : bouter l\'Anglais hors du royaume avant 1429', 'Without Joan: drive the English out before 1429'), reward: { gold: 5000, faith: 80 } },
+    ],
+    angleterre: [
+      { kind: 'hold', places: ['Paris'], byYear: 1360, text: tr('Le vœu du héron : entrer dans Paris avant 1360', 'The Vow of the Heron: enter Paris before 1360'), reward: { gold: 5000, faith: 60 } },
+      { kind: 'king', text: tr('Un roi en cage : capturer le roi de France', 'A king in a cage: capture the King of France'), reward: { gold: 2000 } },
+      { kind: 'joan', text: tr('Brûlez la sorcière ! Capturer Jeanne d\'Arc', 'Burn the witch! Capture Joan of Arc'), reward: { faith: 40 } },
+      { kind: 'hold', places: ['Édimbourg'], text: tr('Le marteau des Écossais : prendre Édimbourg', 'Hammer of the Scots: take Edinburgh'), reward: { gold: 3000 } },
+    ],
+    bourgogne: [
+      { kind: 'gold', n: 10000, text: tr('La Toison d\'or : amasser 10 000 pièces d\'or', 'The Golden Fleece: hoard 10,000 gold'), reward: { faith: 50 } },
+      { kind: 'joan', text: tr('Vendre Jeanne aux Anglais : qu\'elle soit capturée', 'Sell Joan to the English: let her be captured'), reward: { gold: 3000 } },
+      { kind: 'level', n: 4, byYear: 1400, text: tr('Le duc magnifique : une ville de niveau 4 avant 1400', 'The magnificent duke: a level 4 city before 1400'), reward: { gold: 4000 } },
+      { kind: 'hold', places: ['Lyon', 'Genève'], text: tr('Le Rhône bourguignon : prendre Lyon et Genève', 'The Burgundian Rhône: take Lyon and Geneva'), reward: { gold: 4000 } },
+    ],
+    bretagne: [
+      { kind: 'noLoss', untilYear: 1380, text: tr('Ni Blois ni Montfort : ne perdre aucune ville jusqu\'en 1380', 'Neither Blois nor Montfort: lose no city until 1380'), reward: { gold: 3000, faith: 30 } },
+      { kind: 'count', b: 'port', n: 4, text: tr('Corsaires de Saint-Malo : avoir 4 ports', 'Corsairs of Saint-Malo: own 4 ports'), reward: { gold: 2500 } },
+      { kind: 'hold', places: ['Cherbourg', 'Harfleur'], text: tr('La Lionne de Bretagne : prendre Cherbourg et Harfleur, comme Jeanne de Clisson', 'The Lioness of Brittany: take Cherbourg and Harfleur, like Jeanne de Clisson'), reward: { gold: 4000 } },
+      { kind: 'land', pct: 6, text: tr('La grande Bretagne (la petite) : tenir 6 % des terres', 'Great Britt… any: hold 6% of the land'), reward: { gold: 3000 } },
+    ],
+    ecosse: [
+      { kind: 'hold', places: ['Londres'], text: tr('Braveheart : prendre Londres', 'Braveheart: take London'), reward: { gold: 6000, faith: 60 } },
+      { kind: 'hold', places: ['Newcastle'], byYear: 1350, text: tr('Avant Neville\'s Cross : prendre Newcastle avant 1350', 'Before Neville\'s Cross: take Newcastle before 1350'), reward: { gold: 2500 } },
+      { kind: 'noLoss', untilYear: 1400, text: tr('Les Highlands indomptables : ne perdre aucune ville jusqu\'en 1400', 'The untamed Highlands: lose no city until 1400'), reward: { gold: 3000, faith: 30 } },
+      { kind: 'gold', n: 5000, text: tr('L\'eau-de-vie des moines : amasser 5 000 pièces d\'or (en whisky)', 'The monks\' water of life: hoard 5,000 gold (in whisky)'), reward: { faith: 30 } },
+    ],
+  },
+
   // Les factions de 1337 (l'ordre compte : une case va à la première dont un contour la contient)
   factions: [
     {
