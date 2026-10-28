@@ -159,8 +159,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
          débarquent (500, 800 ou 1 200 guerriers) près d'une ville côtière des Francs, et la rasent s'ils la prennent ;
      - 🏷️ **les noms des villes** : de près, chaque ville et église historique porte son nom, écrit en lettres
        médiévales sous elle (Paris, Aix, Pavie, Rome…) ; aussi au survol de la ville ;
-     - ⚔️ **les Slaves, pillards du nord-est** : leurs terres sont **imprenables** (on ne peut que se défendre contre
-       eux) et ils ne s'étendent pas, mais ils lancent des **razzias** sur un voisin au hasard (toutes les 150 s en
+     - ⚔️ **les Slaves, pillards du nord-est** : leurs terres sont **imprenables**, ni par les armes ni par la Croyance
+       (on ne peut que se défendre contre eux) et ils ne s'étendent pas, mais ils lancent des **razzias** sur un voisin au hasard (toutes les 150 s en
        Facile, 110 s en Normal, 80 s en Difficile, après 2 min 30), de plus en plus grosses (600 guerriers en Normal,
        puis +20 % à chaque fois, jusqu'à **5 000 guerriers** au plus ; la première épargne la Bavière). Une razzia qui
        prend sa cible la **rase** (avec ses moulins et casernes), pille de l'or et rentre : les terres restent au
@@ -984,6 +984,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.154** : ✝️ les terres des pillards (les **Slaves** de Charlemagne) ne se prennent plus non plus par la **Croyance**
 - **v0.92.153** : 👑 Charlemagne : **tout le monde peut de nouveau attaquer Rome** ; si elle tombe, aux Lombards ou à n'importe qui, l'objectif « Rome » est perdu pour de bon (plus de couronne d'empereur) · repoussés, les **Lombards retentent leur chance** quand ils en ont les moyens (au plus toutes les 3 minutes)
 - **v0.92.152** : 🔔 le son du départ à l'assaut se joue aussi quand tes **défenseurs partent intercepter** un assaut ennemi (il se jouait déjà pour un assaut qui part relier une ville isolée)
 - **v0.92.151** : 🛶 un territoire **désorganisé** (sans ville, ou coupé de ses villes) juste de l'autre côté d'un fleuve qui borde ton royaume s'attaque en **passant le fleuve à gué** · 👑 Charlemagne : le **siège de Rome** dure 10, 6 ou 2 minutes selon la difficulté ; si les Lombards la prennent, l'objectif « Rome » est **perdu pour de bon** ; tant qu'elle est au pape, **personne d'autre ne peut la prendre** · 🏰 **Barcelone** devient une ville de niveau 2 à la garnison 4 fois plus forte tant que Cordoue la tient
