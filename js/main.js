@@ -2380,6 +2380,8 @@ function main() {
       acc += dt * Game.speed; // (partie accélérée : x2 = 2 tours de jeu au lieu d'un, tout va 2 fois plus vite)
       while (acc >= step) { Game.update(); acc -= step; }
     }
+    // (⏸ la musique d'ambiance se met en pause avec la partie ; pas pendant la lecture d'un parchemin)
+    Music.hold(Game.phase === 'playing' && Game.paused && !UI.parchmentOn);
     Render.flush();
     Render.draw();
     uiTimer += dt;
