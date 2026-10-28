@@ -15,6 +15,8 @@ const Music = {
   fader: null,
   jingle: null,    // le son de la victoire, quand il se joue
   effect: null,    // le petit son en train de se jouer (voir sound)
+  held: false,     // ⏸ la partie est en pause : la musique d'ambiance aussi (voir hold)
+  waiting: false,  // un morceau devait commencer pendant la pause : il commencera à la reprise
 
   // Les choix du joueur, gardés dans le navigateur : musique coupée ou non, et son volume
   loadPrefs() {
@@ -102,6 +104,7 @@ const Music = {
     if (!this.on && this.effect) { this.effect.pause(); this.effect = null; } // (musique coupée : les petits sons aussi)
     clearTimeout(this.timer); this.timer = null;
     clearInterval(this.fader); this.fader = null;
+    this.waiting = false;
     if (this.audio) { this.audio.pause(); this.audio = null; }
   },
 
@@ -110,6 +113,7 @@ const Music = {
     this.stop();
     const list = CONFIG.MUSIC.TRACKS;
     if (!this.on || !list.length) return;
+    if (this.held) { this.waiting = true; return; } // (⏸ partie en pause : il attendra la reprise)
     let k = Math.floor(Math.random() * list.length);
     if (list.length > 1 && k === this.last) k = (k + 1 + Math.floor(Math.random() * (list.length - 1))) % list.length;
     this.last = k;
@@ -117,7 +121,8 @@ const Music = {
     a.volume = 0;
     a.addEventListener('ended', () => this.afterTrack());
     a.addEventListener('error', () => this.afterTrack()); // (fichier introuvable : on passe au suivant, plus tard)
-    a.play().then(() => this.fade(), () => { this.audio = null; }); // (lecture refusée par le navigateur : tant pis)
+    // (lecture refusée par le navigateur : tant pis ; ou interrompue tout de suite par la pause : à la reprise)
+    a.play().then(() => this.fade(), () => { if (this.audio === a) { this.audio = null; this.waiting = this.held; } });
   },
 
   // Le volume monte en fondu au début, et redescend dans les FADE dernières secondes du morceau
@@ -159,6 +164,16 @@ const Music = {
   // La partie continue après la victoire : la musique d'ambiance reprend (après un moment de silence)
   resume() {
     if (this.on && !this.audio && !this.timer) this.afterTrack();
+  },
+
+  // ⏸ La partie se met en pause (ou repart) : le morceau en cours s'arrête là où il en est, et reprend au même
+  // endroit. Appelé à chaque image (voir main.js) : il ne fait quelque chose que quand la pause change.
+  hold(h) {
+    if (h === this.held) return;
+    this.held = h;
+    if (h) { if (this.audio) this.audio.pause(); return; }
+    if (this.audio) this.audio.play().catch(() => {});
+    else if (this.waiting) this.next();
   },
 
   // Le morceau est fini : un moment de silence (de durée tirée au hasard, voir PAUSE), puis le suivant
