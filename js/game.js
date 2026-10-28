@@ -882,6 +882,8 @@ const GameRules = {
     }
     const name = this.players[o].name;
     if (this.areAllied(pid, o)) return { error: tr(`${name} est ton allié !`, `${name} is your ally!`) };
+    // (👑 Charlemagne : un raid viking rase sa cible ; les lieux des objectifs, eux, doivent rester debout)
+    if (this.cm && this.cmObjectiveSites().has(c)) return { error: tr('Ce lieu est un des grands desseins de Charlemagne : on ne peut pas le raser (prends-le par un assaut).', 'This place is one of Charlemagne\'s great designs: it cannot be razed (take it with an assault).') };
     if (this.truceLeft(c) > 0) return { error: tr(`${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} vient de changer de mains : attends un peu.`, `${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} has just changed hands: wait a little.`) };
     const ports = this.royalPorts(pid); // (les Vikings ne partent que d'un port royal)
     if (!ports.length) return { error: tr('Il te faut un port royal (niveau 3) d\'où partir.', 'You need a royal port (level 3) to sail from.') };
@@ -2193,7 +2195,9 @@ const GameRules = {
   // Renvoie la ville visée, ou -1 s'il n'y en a aucune à portée de côte.
   cmVikingRaid(danes, victim, army) {
     const W = this.W, R = CONFIG.VIKING_RANGE;
-    const cities = this.shuffle(this.castles.filter(c => this.owner[c] === victim.id && this.holdsAlone(c)));
+    // (jamais le lieu d'un objectif de Charlemagne, comme Barcelone prise par les Francs : voir cmObjectiveSites)
+    const keep = this.cmObjectiveSites();
+    const cities = this.shuffle(this.castles.filter(c => this.owner[c] === victim.id && this.holdsAlone(c) && !keep.has(c)));
     for (const c of cities.slice(0, 8)) {
       const h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h, coasts = [];
       for (let y = Math.max(0, Math.floor(cy - R)); y <= Math.min(this.H - 1, Math.ceil(cy + R)); y++) {
@@ -2225,14 +2229,18 @@ const GameRules = {
     for (const p of this.players) {
       if (!p.raiders || !p.alive) continue;
       p.raids = (p.raids || 0) + 1;
-      const army = Math.min(R.MAX, Math.round(R.ARMY[cm.diff] * (1 + R.GROWTH * (p.raids - 1))));
-      const victims = this.shuffle([...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders
+      const base = Math.min(R.MAX, Math.round(R.ARMY[cm.diff] * (1 + R.GROWTH * (p.raids - 1))));
+      let victims = this.shuffle([...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders
         && !(p.raids === 1 && R.SPARE_FIRST.includes(this.players[o].role))));
+      // (les Francs, s'ils sont voisins, passent en premier, d'autant plus souvent que la partie est difficile)
+      const F = R.FRANKS[cm.diff], fr = cm.role.francs;
+      if (victims.includes(fr) && this.rand() < F.CHANCE) victims = [fr, ...victims.filter(o => o !== fr)];
       for (const o of victims) {
-        const plan = this.planAssault(p.id, o);
-        if (plan.castle === null || plan.castle < 0) continue;
+        const castle = this.raidTarget(p.id, o);
+        if (castle < 0) continue;
+        const army = Math.min(R.MAX * F.ARMY, Math.round(base * (o === fr ? F.ARMY : 1)));
         p.troops = army;
-        if (this.launchAttack(p.id, o, army, plan.castle)) continue;
+        if (this.launchAttack(p.id, o, army, castle)) continue;
         const a = this.attacks.find(a => !a.done && a.attacker === p.id && a.target === o);
         if (a) a.raid = true;
         // (📜 la toute première razzia : un parchemin présente les pillards)
@@ -2243,6 +2251,34 @@ const GameRules = {
         break;
       }
     }
+  },
+
+  // La cible d'une razzia des pillards pid chez o : la plus proche (au plus court chemin, parmi les 3 plus proches à vol
+  // d'oiseau), mais jamais le lieu d'un objectif de Charlemagne (voir cmObjectiveSites). -1 s'il n'y en a pas.
+  raidTarget(pid, o) {
+    if (!this.isProtected(o)) return -1;
+    const p = this.players[pid], cx = p.sumX / p.tiles, cy = p.sumY / p.tiles, keep = this.cmObjectiveSites();
+    const d = a => (a % this.W - cx) ** 2 + (((a / this.W) | 0) - cy) ** 2;
+    const near = this.targetsOf(o).filter(a => !this.truceLeft(a) && !keep.has(a)).sort((a, b) => d(a) - d(b)).slice(0, 3);
+    let best = -1, bestLen = Infinity;
+    for (const c of near) {
+      const path = this.castlePath(pid, c, -1);
+      if (path && path.length < bestLen) { bestLen = path.length; best = c; }
+    }
+    return best;
+  },
+  // 👑 Les lieux des objectifs de Charlemagne (les capitales à prendre, Barcelone, Rome, les mines historiques) : on ne
+  // peut pas les raser (razzias, assauts vikings), sinon la partie ne pourrait plus être gagnée
+  cmObjectiveSites() {
+    const cm = this.cm, set = new Set();
+    if (!cm) return set;
+    for (const o of CHARLEMAGNE.OBJECTIVES) {
+      if (o.kind === 'capital' && cm.capital[o.role] >= 0) set.add(cm.capital[o.role]);
+      if (o.kind === 'site' && cm.sites.get(o.at.join(',')) >= 0) set.add(cm.sites.get(o.at.join(',')));
+    }
+    if (cm.capital.papaute >= 0) set.add(cm.capital.papaute);
+    for (const d of this.deposits) if (d.historic) set.add(d.a);
+    return set;
   },
 
   // Une ville vient d'être prise : si c'est Rome, libérée par les Francs (ou un allié du pape), elle est rendue au pape
