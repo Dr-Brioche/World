@@ -175,6 +175,15 @@ const UI = {
     // 📽️ Le résumé de la partie (voir replay.js)
     $('summaryBtn').addEventListener('click', () => Replay.open());
     $('pClose').addEventListener('click', () => this.closeParchment()); // (📜 parchemin d'un grand événement)
+    // (🦁 un parchemin à choix : le bouton choisi part comme un ordre, puis le parchemin se referme)
+    $('pChoices').addEventListener('click', e => {
+      const b = e.target.closest('button[data-k]');
+      if (!b || !this.parchmentChoices) return;
+      const c = this.parchmentChoices[+b.dataset.k];
+      this.parchmentChoices = null;
+      this.act({ k: 'hyChoice', key: c.key, pick: c.pick });
+      this.closeParchment();
+    });
     $('replayClose').addEventListener('click', () => Replay.close());
     $('replayPlay').addEventListener('click', () => Replay.togglePlay());
     $('replaySlider').addEventListener('input', e => { Replay.playing = false; Replay.seek(+e.target.value); });
@@ -442,6 +451,7 @@ const UI = {
         `⚜️ 1337: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or Space) to start!`), 'good');
       // 📜 (le roi de France : un parchemin raconte le contexte ; les grands événements suivront, voir stepHyEvents)
       if (f.id === 'france') this.parchment(CENTANS.EVENTS.intro);
+      if (f.id === 'angleterre') this.parchment(CENTANS.ENGLAND_EVENTS.intro); // (🦁 sa campagne à lui)
     }
   },
 
@@ -681,9 +691,12 @@ const UI = {
   // ev = { date, title, text, todo } (todo : le conseil des conseillers du roi ; « {clé} » dans les textes devient vars.clé).
   // Plusieurs événements à la fois : ils attendent leur tour. Une fois le dernier refermé, la partie reprend
   // (si elle tournait avant le premier).
-  parchment(ev, vars = {}) {
+  // choices (facultatif) : un parchemin à choix (🦁 la campagne du roi d'Angleterre) : des boutons [{ key, pick, label }]
+  // à la place de « Poursuivre » ; le choix est un ordre « hyChoice » (voir Game.hyChoose)
+  parchment(ev, vars = {}, choices = null) {
     const fill = t => (t || '').replace(/\{(\w+)\}/g, (m, k) => vars[k] !== undefined ? vars[k] : m);
-    (this.parchments = this.parchments || []).push({ date: fill(ev.date), title: fill(ev.title), text: fill(ev.text), todo: fill(ev.todo) });
+    (this.parchments = this.parchments || []).push({ date: fill(ev.date), title: fill(ev.title), text: fill(ev.text), todo: fill(ev.todo),
+      choices: choices && choices.map(c => ({ key: c.key, pick: c.pick, label: fill(c.label) })) });
     if (!this.parchmentOn) this.nextParchment();
   },
   nextParchment() {
@@ -695,6 +708,10 @@ const UI = {
     $('pTitle').textContent = ev.title;
     $('pText').textContent = ev.text;
     $('pTodo').innerHTML = ev.todo ? `<b>${tr('Tes conseillers murmurent :', 'Your counsellors whisper:')}</b> ${escapeHtml(ev.todo)}` : '';
+    // (un parchemin à choix : ses boutons à la place de « Poursuivre », et il ne se referme qu'en choisissant)
+    this.parchmentChoices = ev.choices || null;
+    $('pClose').classList.toggle('hidden', !!ev.choices);
+    $('pChoices').innerHTML = (ev.choices || []).map((c, k) => `<button type="button" class="sealBtn" data-k="${k}">${escapeHtml(c.label)}</button>`).join('');
     // (on relance l'animation : la feuille se déroule à chaque parchemin)
     const sheet = document.querySelector('#parchment .sheet');
     sheet.style.animation = 'none'; void sheet.offsetWidth; sheet.style.animation = '';
@@ -702,7 +719,7 @@ const UI = {
     $('parchment').classList.remove('hidden');
   },
   closeParchment() {
-    if (!this.parchmentOn) return;
+    if (!this.parchmentOn || this.parchmentChoices) return; // (un parchemin à choix attend une réponse)
     if (this.parchments.length) return this.nextParchment();
     $('parchment').classList.add('hidden');
     this.parchmentOn = false;

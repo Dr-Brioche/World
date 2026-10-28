@@ -213,8 +213,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      place : la **France**, l'**Angleterre** (avec la Guyenne, le Ponthieu et Dublin), l'**Écosse**, la **Bourgogne**, la
      **Bretagne**, la **Flandre**, la **Navarre** (et son comté d'Évreux, en Normandie), la **Castille**, l'**Aragon**,
      le **Saint-Empire** (des Pays-Bas à la Provence), les **clans irlandais** et le **pape d'Avignon** ; leurs villes
-     portent leur nom sur la carte. Le récit suit le **roi de France** (des parchemins à chaque grand événement), mais tu
-     peux aussi jouer l'**Angleterre**, la **Bourgogne**, la **Bretagne** ou l'**Écosse**, chacune avec ses objectifs.
+     portent leur nom sur la carte. Deux **campagnes** avec leur récit (des parchemins à chaque grand événement) : celle
+     du **roi de France**, et celle du **roi d'Angleterre** (voir plus bas) ; tu peux aussi jouer la **Bourgogne**, la
+     **Bretagne** ou l'**Écosse**, chacune avec ses objectifs.
      Règles du scénario :
      - **pas de nouvelles villes** (on améliore les siennes, on prend celles des autres) et **pas de nouveaux pactes** :
        deux camps, la **Couronne de France** (avec l'Écosse : l'Auld Alliance) et le **Parti anglais** ;
@@ -260,6 +261,27 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        Bourguignons (1407), Henri V débarque à Harfleur (1415), le pont de Montereau (la Bourgogne passe aux Anglais),
        le traité de Troyes, le petit roi de Bourges, le siège d'Orléans, Jeanne d'Arc, le traité d'Arras (1435 : la
        Bourgogne revient, si le roi de France est le plus légitime), les canons des frères Bureau et Castillon (1453) ;
+     - 🦁 **la campagne du roi d'Angleterre** (en jouant l'Angleterre) : la même guerre vue de Londres, avec ses propres
+       parchemins (« Roi de France par ma mère », la victoire de l'Écluse, Crécy, Calais, Poitiers et le roi Jean ton
+       prisonnier, Henri V, Azincourt, le traité de Troyes, la Pucelle…) et des événements à elle :
+       - ⛵ **les débarquements** de 1346 (vers Caen) et 1415 (vers Harfleur) : une vraie armée débarque sur la côte normande
+         et marche sur la ville (sinon, le Parlement te vote les soldats, et tu choisis où frapper) ; pour Calais,
+         Poitiers et Orléans, le Parlement te vote une grande levée ;
+       - ⚔️ **Neville's Cross** (1346) : pendant que tu guerroies en France, le roi d'Écosse envahit le Nord (Newcastle,
+         Carlisle ou York) ; repoussé, il est pris, et sa **rançon** (1 200 à 2 000 pièces) est pour toi ;
+       - 🗡️ **l'ordre de la Jarretière** (1348) : les rançons que tu touches sont **doublées** ;
+       - ⛓️ la rançon du **roi Jean** captif (Poitiers 1356 : une chevauchée lancée juste après l'appel du Prince Noir
+         peut le capturer) est **pour toi** ;
+       - 🕊️ **la paix de Brétigny** (1360) est **un choix** : la signer (la trêve, +2 000 d'or, mais tu renonces à la
+         couronne de France : −50 de Légitimité) ou la refuser (la guerre continue, +30) ;
+       - 💰 **l'Étape de Calais** (1363) : tant que tu tiens Calais, +60 d'or toutes les 10 s ;
+       - 👑 **tes rois** : Richard II, un enfant (1377) ; **Henri IV l'usurpateur** (1399 : −40 de Légitimité) ;
+         **Henri V** (1413 : ta Légitimité revient, et ses soldats sont 15 % plus forts) ; Henri VI et le duc de Bedford (1422) ;
+       - ⚔️ **la révolte des paysans** (1381) est **un choix** : rencontrer les rebelles à Smithfield (−800 d'or) ou
+         réprimer la révolte (−20 % de tes soldats) ;
+       - ⚜️ **Jeanne d'Arc prise** : ta Légitimité grandit (+20) ;
+       - les parchemins à choix ont un bouton par choix (la partie attend ta décision). Les réglages sont dans
+         `js/centans.js` (`ENGLAND`, `ENGLAND_EVENTS`, `CHOICES`) ;
      - 🏆 **les objectifs** (dans le cadre en haut à gauche, tous à remplir en même temps : sinon, la victoire normale à
        70 % des terres reste possible) :
        - ⚜️ **France** : Paris, le sacre à Reims, la Normandie (Rouen et Caen), Bordeaux, Calais, rallier ou soumettre la
@@ -988,6 +1010,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.159** : 🦁 guerre de Cent Ans : **la campagne du roi d'Angleterre**, avec ses propres parchemins (la même guerre vue de Londres) et des événements à elle : les débarquements de 1346 et 1415 sont de vraies armées, Neville's Cross et la rançon du roi d'Écosse, l'ordre de la Jarretière (rançons doublées), l'Étape de Calais, les rois d'Angleterre (Henri IV l'usurpateur…), et deux **parchemins à choix** : signer ou non la paix de Brétigny, et que faire de la révolte des paysans ; la rançon du roi Jean revient au roi d'Angleterre
 - **v0.92.158** : 👑 Charlemagne : les **Slaves** ne razzient plus jamais les **lieux des objectifs** (le Ring des Avars, Pavie, Barcelone, Rome…), et aucun assaut viking ne peut les raser : la partie reste toujours gagnable · les Slaves visent **les Francs en premier**, d'autant plus souvent et plus fort que la partie est difficile
 - **v0.92.157** : 🔥 les Vikings **rentrent au port 2 fois plus vite** qu'à l'aller (après leur raid, un échec ou un rappel)
 - **v0.92.156** : 🗺️ scénarios (Charlemagne, guerre de Cent Ans) : les frontières de départ entre les factions (et avec les terres libres, comme chez les Slaves) **serpentent** naturellement au lieu de suivre de longues lignes droites (réglage `BORDER_WARP`)

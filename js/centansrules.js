@@ -121,10 +121,12 @@ Object.assign(GameRules, {
   // Le roi de France du moment (voir KINGS)
   hyKing() { return CENTANS.KINGS[this.hy.kingIdx]; },
   hyEngKing() { return CENTANS.ENGLISH_KINGS[this.hy.engIdx]; },
-  // 📜 Un grand événement : un parchemin pour le joueur du roi de France (voir EVENTS dans centans.js), un simple
-  // message (log, s'il y en a un) pour les autres
+  // 📜 Un grand événement : un parchemin pour le joueur du roi de France (voir EVENTS dans centans.js) ou du roi
+  // d'Angleterre (ENGLAND_EVENTS : sa campagne à lui), un simple message (log, s'il y en a un) pour les autres
   hyEvent(key, vars, log, kind = 'warn', who) {
-    if (this.human.role === 'france') UI.parchment(CENTANS.EVENTS[key], vars);
+    const role = this.human.role;
+    const ev = role === 'france' ? CENTANS.EVENTS[key] : role === 'angleterre' ? CENTANS.ENGLAND_EVENTS[key] : null;
+    if (ev) UI.parchment(ev, vars);
     else if (log) UI.log(log, kind, who);
   },
 
@@ -165,6 +167,7 @@ Object.assign(GameRules, {
     this.stepRansom();
     this.stepSacre();
     this.stepJoan(y);
+    this.stepHyEngland(y);
     // 🤪 Charles VI : une crise de folie de temps en temps (voir MAD)
     if (hy.madFrom !== undefined && this.hyP('france').alive && this.tick >= hy.nextFit) {
       hy.fitUntil = this.tick + CENTANS.MAD.TIME * TPS;
@@ -194,8 +197,13 @@ Object.assign(GameRules, {
     }
     while (hy.engIdx + 1 < C.ENGLISH_KINGS.length && y >= C.ENGLISH_KINGS[hy.engIdx + 1].from) {
       hy.engIdx++;
-      const en = this.hyP('angleterre');
-      if (en.alive) UI.log(tr(`🦁 ${this.hyEngKing().name} est le nouveau roi d'Angleterre.`, `🦁 ${this.hyEngKing().name} is the new King of England.`), '', en);
+      const en = this.hyP('angleterre'), E = C.ENGLAND;
+      if (!en.alive) continue;
+      // (Henri IV l'usurpateur coûte de la Légitimité, qu'Henri V, le roi victorieux, rend : voir USURPER)
+      if (hy.engIdx === 2) this.hyAddLegit(en.id, -E.USURPER);
+      if (hy.engIdx === 3) this.hyAddLegit(en.id, E.USURPER);
+      this.hyEvent(['richard2', 'henri4', 'henri5', 'henri6'][hy.engIdx - 1], {},
+        tr(`🦁 ${this.hyEngKing().name} est le nouveau roi d'Angleterre.`, `🦁 ${this.hyEngKing().name} is the new King of England.`), '', en);
     }
   },
 
@@ -213,6 +221,7 @@ Object.assign(GameRules, {
       else this.faithCache = null;
       const late = this.tick - (hy.reignStart || 0) > 3 * CONFIG.TICKS_PER_SECOND;
       if (p.isHuman && role === 'france' && late) UI.parchment(CENTANS.EVENTS.sacre, { legit: -L.UNCROWNED });
+      else if (p.isHuman && role === 'angleterre') UI.parchment(CENTANS.ENGLAND_EVENTS.sacre, { legit: L.SACRE });
       else UI.log(role === 'france' ? tr(`⛪ ${this.hyKing().name} est sacré à Reims.`, `⛪ ${this.hyKing().name} is crowned at Reims.`)
         : tr(`⛪ Le roi d'Angleterre se fait sacrer roi de France à Reims ! (+${L.SACRE} de Légitimité)`, `⛪ The King of England has himself crowned King of France at Reims! (+${L.SACRE} Legitimacy)`), p.isHuman ? 'good' : 'warn', p);
     }
@@ -237,7 +246,12 @@ Object.assign(GameRules, {
         this.hyEvent('bretagne', {}, tr('⚔️ 1341 : la guerre de Succession de Bretagne éclate ; Jean de Montfort appelle les Anglais.', '⚔️ 1341: the War of the Breton Succession breaks out; John of Montfort calls in the English.'), '', br);
       }
     }
-    for (const t of C.TRUCES) if (once(t.key, t.year)) this.hyStartTruce(t);
+    for (const t of C.TRUCES) {
+      if (!once(t.key, t.year)) continue;
+      // (🦁 le joueur anglais choisit de signer, ou non, la paix de Brétigny : voir hyChoose)
+      if (t.key === 'bretigny' && en.isHuman && en.alive && fr.alive) this.hyOffer('bretigny', { truce: t });
+      else this.hyStartTruce(t);
+    }
     // 1346 : Édouard III débarque en Normandie et pille Caen (une chevauchée), puis assiège Calais
     if (once('crecy', 1346)) this.hyEnglishLanding('crecy', 'Caen', army, true);
     if (once('calais', 1346.7)) this.hyEnglishAssault('calais', 'Calais', army);
@@ -359,12 +373,14 @@ Object.assign(GameRules, {
   },
 
   // --- 🕊️ Les trêves ---
-  hyStartTruce(t) {
+  hyStartTruce(t, quiet = false) {
     const hy = this.hy, TPS = CONFIG.TICKS_PER_SECOND;
     hy.truceUntil = this.tick + t.time * TPS;
     // (les assauts en cours entre les deux camps s'arrêtent : les soldats rentrent)
     for (const a of this.attacks) if (!a.done && a.target >= 0 && this.hyEnemies(a.attacker, a.target)) this.endAttack(a);
-    this.hyEvent(t.key, {}, tr(`🕊️ ${t.year} : trêve entre les rois de France et d'Angleterre (${t.time} s).`, `🕊️ ${t.year}: truce between the Kings of France and England (${t.time} s).`), 'good');
+    const log = tr(`🕊️ ${t.year} : trêve entre les rois de France et d'Angleterre (${t.time} s).`, `🕊️ ${t.year}: truce between the Kings of France and England (${t.time} s).`);
+    if (quiet) UI.log(log, 'good');
+    else this.hyEvent(t.key, {}, log, 'good');
   },
   hyTruce() { return this.tick < this.hy.truceUntil; },
   // Les deux royaumes sont-ils dans les deux camps ennemis ?
@@ -614,6 +630,8 @@ Object.assign(GameRules, {
     if (!a) return tr('La chevauchée n\'a pas pu partir.', 'The chevauchée could not set out.');
     a.raid = true;
     a.chevauchee = true;
+    // (🦁 1356 : la chevauchée lancée par le joueur anglais juste après l'appel du Prince Noir peut prendre le roi Jean)
+    if (this.players[pid].isHuman && this.tick < (this.hy.poitiersUntil || 0)) a.poitiers = true;
     a.loot = CENTANS.CHEVAUCHEE.LOOT;
     a.raidWho = tr('Les chevaliers anglais', 'The English knights');
     const d = this.players[o];
@@ -628,7 +646,15 @@ Object.assign(GameRules, {
     const en = this.hyP('angleterre'), c = this.hyCity(cityName);
     if (!en.alive) return;
     const d = c >= 0 ? this.owner[c] : -1;
-    if (en.isHuman) return this.hyLevy(en, army, key);
+    // (🦁 le joueur anglais : son armée débarque vraiment sur la côte et marche sur la ville, s'il le peut ; sinon,
+    //  il reçoit les soldats et choisit lui-même où frapper)
+    if (en.isHuman) {
+      const spot = d >= 0 && this.hyCampOf(d) === 'france' && !this.hyTruce() ? this.hyLanding(en.id, d, c, true) : -1;
+      const landed = spot >= 0 && this.hyLandArmy(en.id, c, spot, army, {});
+      if (!landed) return this.hyLevy(en, army, key, c);
+      this.hyEvent(key, { army: fmt(army), city: this.hyCityName(c) }, null);
+      return UI.log(tr(`⛵ Ton armée (${fmt(army)} hommes) débarque près de ${this.hyCityName(c)} et marche sur elle !`, `⛵ Your army (${fmt(army)} men) lands near ${this.hyCityName(c)} and marches on it!`), 'good');
+    }
     if (d < 0 || this.hyCampOf(d) !== 'france' || this.hyTruce()) return;
     const land = this.hyLanding(en.id, d, c, true);
     if (land < 0) return;
@@ -643,7 +669,7 @@ Object.assign(GameRules, {
   hyEnglishAssault(key, cityName, army) {
     const en = this.hyP('angleterre'), c = this.hyCity(cityName);
     if (!en.alive) return;
-    if (en.isHuman) return this.hyLevy(en, army, key);
+    if (en.isHuman) return this.hyLevy(en, army, key, c);
     const d = c >= 0 ? this.owner[c] : -1;
     if (d < 0 || this.hyCampOf(d) !== 'france' || this.hyTruce()) return;
     en.troops += army;
@@ -655,7 +681,10 @@ Object.assign(GameRules, {
   hyEnglishRaidFrom(key, cityName, army) {
     const en = this.hyP('angleterre'), c = this.hyCity(cityName);
     if (!en.alive) return;
-    if (en.isHuman) return this.hyLevy(en, army, key);
+    if (en.isHuman) {
+      this.hy.poitiersUntil = this.tick + CENTANS.ENGLAND.POITIERS * CONFIG.TICKS_PER_SECOND; // (voir hyChevauchee)
+      return this.hyLevy(en, army, key, c);
+    }
     const d = c >= 0 ? this.owner[c] : -1;
     if (d < 0 || this.hyCampOf(d) !== 'france' || this.hyTruce()) return;
     en.troops += army;
@@ -666,8 +695,9 @@ Object.assign(GameRules, {
       tr(`🔥 Le Prince Noir lance une chevauchée de ${fmt(army)} hommes vers ${this.hyCityName(c)} !`, `🔥 The Black Prince launches a chevauchée of ${fmt(army)} men towards ${this.hyCityName(c)}!`), 'warn', en);
   },
   // Le joueur anglais : une grande levée de soldats pour la campagne de l'année
-  hyLevy(en, army, key) {
+  hyLevy(en, army, key, c = -1) {
     en.troops += army;
+    if (CENTANS.ENGLAND_EVENTS[key]) return this.hyEvent(key, { army: fmt(army), city: c >= 0 ? this.hyCityName(c) : '' }, null); // (📜 sa campagne)
     const what = { crecy: tr('la campagne de Normandie', 'the Normandy campaign'), calais: tr('le siège de Calais', 'the siege of Calais'),
       poitiers: tr('la chevauchée du Prince Noir', 'the Black Prince\'s chevauchée'), azincourt: tr('la campagne d\'Henri V', 'Henry V\'s campaign'),
       orleans: tr('le siège d\'Orléans', 'the siege of Orléans') }[key];
@@ -774,12 +804,23 @@ Object.assign(GameRules, {
     const lostA = a.lostA || 0, lostD = a.lostD || 0;
     const loser = won ? d : p, winner = won ? p : d, lost = won ? lostD : lostA;
     if (lost >= C.RANSOM_MIN && loser.alive && winner.alive && !loser.raiders && !winner.raiders) {
-      const pay = Math.round(Math.min(loser.gold, lost * C.KNIGHT_RANSOM));
+      // (🦁 l'ordre de la Jarretière : les rançons que touche le roi d'Angleterre sont plus fortes, voir ENGLAND.GARTER)
+      const garter = hy.garter && winner.role === 'angleterre' ? C.ENGLAND.GARTER.RANSOM : 1;
+      const pay = Math.round(Math.min(loser.gold, lost * C.KNIGHT_RANSOM * garter));
       if (pay >= 1) {
         loser.gold -= pay;
         winner.gold += pay;
         if (winner.isHuman) UI.log(tr(`💰 Les chevaliers captifs ${this.deName(loser.name)} paient rançon : +${fmt(pay)} d'or !`, `💰 ${possessive(loser.name)} captive knights pay ransom: +${fmt(pay)} gold!`), 'good', loser);
         else if (loser.isHuman) UI.log(tr(`💰 Tes chevaliers captifs paient rançon à ${winner.name} : −${fmt(pay)} d'or.`, `💰 Your captive knights pay ransom to ${winner.name}: −${fmt(pay)} gold.`), 'warn', winner);
+      }
+    }
+    // ⛓️ 1346 : le roi David II d'Écosse, repoussé à Neville's Cross, est pris : sa rançon va au roi d'Angleterre
+    if (a.neville && !won && p.alive) {
+      const en = this.hyP('angleterre'), gold = C.ENGLAND.NEVILLE.RANSOM[hy.diff];
+      if (en.alive) {
+        en.gold += gold;
+        if (en.isHuman) UI.log(tr(`⛓️ Le roi David II d'Écosse est pris à Neville's Cross : sa rançon te rapporte ${fmt(gold)} d'or !`, `⛓️ King David II of Scotland is taken at Neville's Cross: his ransom brings you ${fmt(gold)} gold!`), 'good', p);
+        else if (p.isHuman) UI.log(tr(`⛓️ Ton roi David II est pris par les Anglais : ${fmt(gold)} d'or de rançon pour eux.`, `⛓️ Your King David II is taken by the English: ${fmt(gold)} gold of ransom for them.`), 'warn', en);
       }
     }
     // ⛓️ le roi Jean pris dans une défaite française contre le camp anglais (une seule fois, sous son règne)
@@ -799,6 +840,8 @@ Object.assign(GameRules, {
         if (a.castleTaken) this.hyAddLegit(fr.id, C.LEGIT.JOAN_CITY);
       } else if (a.troops < 1) {
         hy.joan.state = 'captured';
+        const en = this.hyP('angleterre');
+        if (en.alive) this.hyAddLegit(en.id, C.ENGLAND.JOAN_LEGIT); // (🦁 la cause anglaise y gagne)
         this.hyEvent('joanCaptured', {}, tr('⚜️ Jeanne d\'Arc a été prise par l\'ennemi.', '⚜️ Joan of Arc has been captured by the enemy.'), '', fr);
       } else {
         hy.joan.state = 'back';
@@ -806,12 +849,104 @@ Object.assign(GameRules, {
       }
     }
   },
+  // --- 🦁 La campagne du roi d'Angleterre (voir ENGLAND et ENGLAND_EVENTS dans centans.js) ---
+  stepHyEngland(y) {
+    const hy = this.hy, E = CENTANS.ENGLAND, TPS = CONFIG.TICKS_PER_SECOND, en = this.hyP('angleterre');
+    const once = (key, year) => { if (y < year || hy.fired.has(key)) return false; hy.fired.add(key); return true; };
+    // 1346 : les Écossais envahissent le Nord pendant qu'Édouard est en France
+    if (once('neville', E.NEVILLE.YEAR)) this.hyNeville();
+    // 1348 : l'ordre de la Jarretière (des rançons plus fortes, voir hyAfterBattle)
+    if (once('jarretiere', E.GARTER.YEAR) && en.alive) {
+      hy.garter = true;
+      this.hyEvent('jarretiere', {}, null);
+    }
+    // 1363 : l'Étape de Calais (de l'or, tant que l'Angleterre tient Calais)
+    if (once('etape', E.STAPLE.YEAR) && en.alive) {
+      hy.staple = true;
+      this.hyEvent('etape', {}, null);
+    }
+    if (hy.staple && en.alive && this.tick % (E.STAPLE.EVERY * TPS) === 0) {
+      const c = this.hyCity('Calais');
+      if (c >= 0 && this.owner[c] === en.id) en.gold += E.STAPLE.GOLD;
+    }
+    // 1381 : la révolte des paysans (un choix pour le joueur anglais ; un bot réprime)
+    if (once('paysans', E.PEASANTS.YEAR) && en.alive) {
+      if (en.isHuman) this.hyOffer('paysans', {});
+      else this.hyApplyChoice('paysans', 'repress');
+    }
+  },
+  // ⚔️ 1346 : le roi David II d'Écosse marche sur une ville du nord de l'Angleterre (Neville's Cross). Repoussé, il est
+  // pris (voir hyAfterBattle). Pas si l'Écosse est le joueur, ou alliée de l'Angleterre, ou pendant une trêve.
+  hyNeville() {
+    const hy = this.hy, E = CENTANS.ENGLAND.NEVILLE, sc = this.hyP('ecosse'), en = this.hyP('angleterre');
+    if (!sc.alive || !en.alive || sc.isHuman || this.areAllied(sc.id, en.id) || this.hyTruce()) return;
+    const army = Math.round(CENTANS.EVENT_ARMY[hy.diff] * E.ARMY);
+    for (const name of E.CITIES) {
+      const c = this.hyCity(name);
+      if (c < 0 || this.owner[c] !== en.id) continue;
+      sc.troops += army;
+      if (this.launchAttack(sc.id, en.id, army, c)) { sc.troops -= army; continue; }
+      const a = this.attacks.find(a => !a.done && a.attacker === sc.id && a.targetCastle === c);
+      if (a) a.neville = true;
+      this.hyEvent('neville', { army: fmt(army), city: this.hyCityName(c) },
+        tr(`⚔️ 1346 : les Écossais envahissent le nord de l'Angleterre et marchent sur ${this.hyCityName(c)} !`, `⚔️ 1346: the Scots invade the north of England and march on ${this.hyCityName(c)}!`), '', sc);
+      if (en.isHuman) Music.sound('enemyAssault');
+      return;
+    }
+  },
+  // 📜 Un parchemin à choix pour le joueur anglais (la paix de Brétigny, la révolte des paysans) : la partie attend sa
+  // réponse (voir UI.parchment et hyChoose) ; data : ce qu'il faut garder pour appliquer le choix (la trêve…)
+  hyOffer(key, data) {
+    const E = CENTANS.ENGLAND, hy = this.hy;
+    (hy.offers = hy.offers || {})[key] = data;
+    const vars = key === 'bretigny' ? { gold: fmt(E.BRETIGNY.GOLD), legit: E.BRETIGNY.LEGIT, legit2: E.BRETIGNY.REFUSE_LEGIT }
+      : { gold: fmt(E.PEASANTS.GOLD), pct: Math.round(E.PEASANTS.TROOPS * 100) };
+    UI.parchment(CENTANS.ENGLAND_EVENTS[key], vars, CENTANS.CHOICES[key].map(c => ({ key, pick: c.pick, label: c.label })));
+  },
+  // Le joueur anglais a choisi (ordre « hyChoice »)
+  hyChoose(pid, key, pick) {
+    const hy = this.hy, offers = hy.offers || {};
+    if (!offers[key] || this.players[pid] !== this.hyP('angleterre')) return null;
+    if (!CENTANS.CHOICES[key].some(c => c.pick === pick)) return null;
+    this.hyApplyChoice(key, pick, offers[key]);
+    delete offers[key];
+    return null;
+  },
+  hyApplyChoice(key, pick, data = {}) {
+    const E = CENTANS.ENGLAND, en = this.hyP('angleterre');
+    if (key === 'bretigny') {
+      if (pick === 'accept') {
+        this.hyStartTruce(data.truce, true);
+        en.gold += E.BRETIGNY.GOLD;
+        this.hyAddLegit(en.id, -E.BRETIGNY.LEGIT);
+        if (en.isHuman) UI.log(tr(`🕊️ La paix de Brétigny est signée : +${fmt(E.BRETIGNY.GOLD)} d'or, mais tu renonces à la couronne de France (−${E.BRETIGNY.LEGIT} de Légitimité).`,
+          `🕊️ The peace of Brétigny is signed: +${fmt(E.BRETIGNY.GOLD)} gold, but you renounce the crown of France (−${E.BRETIGNY.LEGIT} Legitimacy).`), 'good');
+      } else {
+        this.hyAddLegit(en.id, E.BRETIGNY.REFUSE_LEGIT);
+        if (en.isHuman) UI.log(tr(`⚔️ Tu refuses la paix : la guerre continue, et tes partisans te savent gré de ne rien céder (+${E.BRETIGNY.REFUSE_LEGIT} de Légitimité).`,
+          `⚔️ You refuse the peace: the war goes on, and your supporters are grateful that you yield nothing (+${E.BRETIGNY.REFUSE_LEGIT} Legitimacy).`), 'good');
+      }
+    }
+    if (key === 'paysans') {
+      if (pick === 'smithfield') {
+        const pay = Math.min(en.gold, E.PEASANTS.GOLD);
+        en.gold -= pay;
+        if (en.isHuman) UI.log(tr(`🤝 À Smithfield, le roi apaise les rebelles (−${fmt(pay)} d'or) : ils rentrent chez eux.`, `🤝 At Smithfield, the king appeases the rebels (−${fmt(pay)} gold): they go home.`), 'good');
+      } else {
+        const lost = Math.round(en.troops * E.PEASANTS.TROOPS);
+        en.troops -= lost;
+        if (en.isHuman) UI.log(tr(`⚔️ La révolte est écrasée, mais elle t'a coûté ${fmt(lost)} soldats.`, `⚔️ The revolt is crushed, but it cost you ${fmt(lost)} soldiers.`), 'warn');
+      }
+    }
+  },
+
   // ⛓️ La rançon du roi Jean : une part de l'or du royaume y part, jusqu'à ce qu'elle soit payée
   stepRansom() {
     const hy = this.hy, r = hy.ransom, fr = this.hyP('france');
     if (!r || r.paid || !fr.alive) return;
-    const pay = Math.min(r.left, fr.gold * CENTANS.RANSOM_SHARE);
+    const pay = Math.min(r.left, fr.gold * CENTANS.RANSOM_SHARE), en = this.hyP('angleterre');
     fr.gold -= pay;
+    if (en.alive) en.gold += pay; // (🦁 la rançon va au roi d'Angleterre)
     r.left -= pay;
     if (r.left < 1) {
       r.paid = true;

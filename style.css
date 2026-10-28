@@ -579,6 +579,10 @@ button:disabled .ico { opacity: 0.6; }
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45), inset 0 0 0 3px rgba(255, 200, 160, 0.15);
 }
 #parchment .sealBtn:hover { filter: brightness(1.12); }
+/* (un parchemin à choix : un sceau par choix, l'un sous l'autre) */
+#parchment .pChoices { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+#parchment .pChoices:empty { display: none; }
+#parchment .pChoices .sealBtn { font-size: 15px; max-width: 100%; }
 @media (max-width: 640px) {
   #parchment { padding: 16px 46px; } /* (de la place sur les côtés pour les pommeaux des rouleaux) */
   #parchment .sheet { padding: 16px 18px 14px; font-size: 16px; }
