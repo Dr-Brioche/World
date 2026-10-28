@@ -4806,10 +4806,11 @@ const GameRules = {
   // Renvoie { troops, from, pts, cum, start, arrive } : pts = les points du chemin, cum = le coût cumulé jusqu'à chacun.
   // (pas de chemin sur ses terres : ils vont tout droit, comme en plaine)
   // Un fleuve qui coupe ses terres se passe à gué (voir ownLandPath) : FORD_TIME secondes par case de fleuve.
-  walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS) {
+  // (direct : tout droit, sans chercher de chemin, pour les derniers pas jusqu'à l'ennemi : voir arriveDefenders)
+  walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS, direct = false) {
     const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x), W = this.W;
     const speed = this.defenderSpeed(troops, bonus), ford = this.fordCost(speed);
-    const path = this.ownLandPath(pid, tile(from), tile(to), ford), march = this.marchCost(pid);
+    const path = direct ? null : this.ownLandPath(pid, tile(from), tile(to), ford), march = this.marchCost(pid);
     const pts = [from], cum = [0];
     const add = (q, extra = 0) => {
       const last = pts[pts.length - 1];
@@ -5182,16 +5183,25 @@ const GameRules = {
       a.defReinf = a.defReinf.filter(r => !r.done);
     }
     if (!a.defPending || !a.defPending.length) return;
-    if (this.tick % CONFIG.TICKS_PER_SECOND === 0) {
+    const C = CONFIG, front = this.attackFront(a), near = r => {
+      const pos = this.walkPosition(r);
+      return { pos, d: Math.hypot(pos.x - front.x, pos.y - front.y) };
+    };
+    if (this.tick % C.TICKS_PER_SECOND === 0) {
       const goal = this.defenseGoal(a);
       for (const r of a.defPending) {
-        const end = r.pts[r.pts.length - 1];
-        if (r.arrive <= this.tick || Math.hypot(end.x - goal.x, end.y - goal.y) < 2) continue;
-        const pos = this.walkPosition(r);
-        Object.assign(r, this.walkRoute(a.target, { x: pos.x, y: pos.y }, goal, r.troops));
+        if (r.arrive <= this.tick) continue;
+        // Tout près de l'ennemi (DEFEND_DIRECT) : droit sur lui ; plus loin : vers la case de leurs terres la plus
+        // proche de lui, par leurs terres
+        const { pos, d } = near(r), direct = d <= C.DEFEND_DIRECT, to = direct ? front : goal, end = r.pts[r.pts.length - 1];
+        if (Math.hypot(end.x - to.x, end.y - to.y) < 2 && direct === !!r.direct) continue;
+        Object.assign(r, this.walkRoute(a.target, { x: pos.x, y: pos.y }, to, r.troops, undefined, direct), { direct });
       }
     }
-    for (const r of a.defPending) if (r.arrive <= this.tick) { a.defenders += r.troops; r.done = true; }
+    for (const r of a.defPending) {
+      if (r.arrive > this.tick && near(r).d <= C.DEFEND_CONTACT) r.arrive = this.tick; // (au contact : ils attaquent)
+      if (r.arrive <= this.tick) { a.defenders += r.troops; r.done = true; }
+    }
     a.defPending = a.defPending.filter(r => !r.done);
   },
 

@@ -899,6 +899,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.143** : 🛡️ correction : tes défenseurs qui interceptent une armée ne tournent plus autour quand ils arrivent près d'elle (ils recalculaient sans cesse un chemin par tes terres, que l'ennemi grignotait, et faisaient des détours) : à moins de 15 cases, ils foncent droit sur elle, et à 3 cases ils l'attaquent tout de suite
 - **v0.92.142** : ⏸ quand la partie est en **pause**, la musique d'ambiance se met en pause aussi, et reprend au même endroit (sauf pendant la lecture d'un parchemin d'événement)
 - **v0.92.141** : 🔔 4 nouveaux sons (de dr_brioche) : quand tu **prends une ville**, lances une **croisade**, un **assaut viking** ou un **recrutement de masse** (les renforts de la grande caserne)
 - **v0.92.140** : ↩ un bouton **Menu** dans la barre du haut pour quitter la partie (avec confirmation : la partie se met en pause, « Non » la reprend) · 🔔 un **son de construction** (de dr_brioche) quand un de tes bâtiments est construit ou finit son amélioration ; l'ancien son d'amélioration se joue maintenant quand une de tes **mines de diamant** verse son or · 📱 sur un écran étroit (téléphone, petite fenêtre), la barre du haut passe sur 2 lignes au lieu de déborder : Pause, vitesse, Menu et Règles restent accessibles, et les objectifs, la musique et les messages se rangent juste en dessous
