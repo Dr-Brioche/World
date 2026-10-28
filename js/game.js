@@ -12,7 +12,12 @@ const GameRules = {
   init(opts) {
     this.mapType = opts.mapType || 'normal';
     this.mapSize = opts.mapSize || 'moyen';
-    const map = generateMap((Math.random() * 1e9) | 0, this.mapType, this.mapSize);
+    // 🎲 Le hasard de la partie vient d'une « graine » : la même graine donne la même carte et les mêmes tirages
+    // (en ligne, tous les navigateurs reçoivent la même graine du serveur, et calculent ainsi la même partie ;
+    //  en solo, une graine au hasard). Dans les règles et l'IA : this.rand() / Game.rand(), jamais Math.random().
+    this.seed = opts.seed !== undefined ? opts.seed >>> 0 : (Math.random() * 4294967296) >>> 0;
+    this.rand = mulberry32(this.seed ^ 0x5bd1e995);
+    const map = generateMap(this.seed, this.mapType, this.mapSize);
     this.map = map;
     this.W = map.W; this.H = map.H; this.N = map.N;
     this.terrain = map.terrain;
@@ -65,19 +70,35 @@ const GameRules = {
     if (this.factions) this.pactsAllowed = false; // (pas d'autres pactes que les 3 camps)
     this.cm = null; // (le scénario « Charlemagne » en cours, voir startCharlemagne)
     this.hy = null; // (le scénario « La guerre de Cent Ans » en cours, voir centansrules.js)
-    this.human = this.addPlayer(opts.name, opts.banner, true);
+    // 🌐 Les joueurs humains : en solo, un seul ; en ligne, tous ceux de la partie (opts.humans, dans le même ordre
+    // chez tout le monde), dont celui de ce navigateur (opts.me). Game.human, c'est toujours le joueur de CE navigateur
+    // (pour les messages et l'affichage : isHuman) ; p.human, c'est tout royaume tenu par un humain (pour les règles :
+    // la même valeur chez tout le monde).
+    this.online = !!opts.online;
+    const humans = opts.humans || [{ name: opts.name, banner: opts.banner }], me = opts.me || 0, taken = new Set();
+    humans.forEach((hp, k) => {
+      // (deux joueurs avec la même bannière : le second prend la première bannière libre de la carte)
+      let b = hp.banner;
+      // (… et une bannière d'une autre sorte de carte, comme un drapeau sur Azeroth, aussi)
+      if (taken.has(b) || !bannersForMap(this.mapType).includes(b)) b = bannersForMap(this.mapType).find(x => !taken.has(x));
+      taken.add(b);
+      const p = this.addPlayer(hp.name, b, k === me);
+      p.human = true;
+      if (k === me) this.human = p;
+    });
     if (this.factions) return this.startFactions(opts);
     // 👑 Scénario « Charlemagne » : l'Europe de 768, avec ses factions déjà en place (voir startCharlemagne)
     if (this.mapType === 'charlemagne') return this.startCharlemagne(opts);
     // ⚜️ Scénario « La guerre de Cent Ans » : la France de 1337 (voir centansrules.js)
     if (this.mapType === 'centans') return this.startCentAns(opts);
-    const names = KINGDOMS.slice().sort(() => Math.random() - 0.5);
+    const names = this.shuffle(KINGDOMS.slice());
     // Les bots reçoivent au hasard les bannières de la carte que le joueur n'a pas prises (sur Azeroth : les écus, et
     // chaque royaume prend le nom de son écu : les Orcs, les Nains…)
-    const banners = bannersForMap(this.mapType).filter(k => k !== opts.banner).sort(() => Math.random() - 0.5);
+    const banners = this.shuffle(bannersForMap(this.mapType).filter(k => !taken.has(k)));
     banners.forEach((b, k) => { if (BANNERS[b].kingdom) names[k] = BANNERS[b].kingdom; });
     // Nombre de royaumes rivaux : choisi dans le menu (au moins MIN_OPPONENTS), sinon celui de la difficulté
-    const bots = Math.max(CONFIG.MIN_OPPONENTS, opts.opponents || this.difficulty.bots);
+    // (en ligne : le nombre de bots est choisi par le salon, même 0)
+    const bots = this.online ? Math.max(0, opts.opponents || 0) : Math.max(CONFIG.MIN_OPPONENTS, opts.opponents || this.difficulty.bots);
     for (let k = 0; k < bots && k < banners.length && names[k]; k++) {
       this.addPlayer(names[k], banners[k], false);
     }
@@ -88,7 +109,7 @@ const GameRules = {
   addPlayer(name, banner, isHuman) {
     const [lo, hi] = this.difficulty.aggression;
     const p = {
-      id: this.players.length, name, isHuman,
+      id: this.players.length, name, isHuman, human: isHuman, // (isHuman : le joueur de ce navigateur ; human : tout humain)
       banner,                        // numéro de la bannière (BANNERS)
       color: BANNERS[banner].color,  // la couleur du royaume vient de sa bannière
       alive: true, troops: CONFIG.START_TROOPS, gold: CONFIG.START_GOLD,
@@ -99,11 +120,56 @@ const GameRules = {
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
       castlesBuilt: 0,  // châteaux construits dans la partie (capitale comprise), limité à MAX_CASTLES
       refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
-      aiTimer: Math.floor(Math.random() * 20),
-      aggression: lo + Math.random() * (hi - lo),
+      aiTimer: Math.floor(this.rand() * 20),
+      aggression: lo + this.rand() * (hi - lo),
     };
     this.players.push(p);
     return p;
+  },
+
+  // Empreinte de la partie : un nombre qui résume l'état du jeu (terres, bâtiments, soldats, or…). En ligne, les
+  // navigateurs comparent leurs empreintes : si elles diffèrent, leurs parties se sont « désynchronisées » (voir net.js)
+  stateHash() {
+    let h = 2166136261 >>> 0;
+    const mix = v => { h = Math.imul(h ^ (v | 0), 16777619) >>> 0; };
+    mix(this.tick);
+    for (let i = 0; i < this.N; i += 7) { mix(this.owner[i]); mix(this.building[i]); }
+    for (const a of this.buildingTiles) { mix(a); mix(this.level[a]); mix(Math.round(this.garrison[a] || 0)); }
+    for (const p of this.players) { mix(p.alive ? 1 : 0); mix(p.tiles); mix(Math.round(p.troops)); mix(Math.round(p.gold)); mix(p.pact); }
+    for (const a of this.attacks) { mix(a.attacker); mix(a.target); mix(Math.round(a.troops)); }
+    return h;
+  },
+
+  // --- 🌐 Mémoires des règles et affichage (pour les parties en ligne) ---
+  // Certains calculs coûteux sont gardés en mémoire un moment (le découpage des royaumes, la Croyance, les voisins,
+  // les plans d'assaut, les routes…). En ligne, tous les navigateurs doivent les renouveler au même moment, sinon les
+  // règles ne voient plus les mêmes nombres. Règle : seules les règles du jeu (pendant un tour, inUpdate, ou en
+  // exécutant un ordre) renouvellent ces mémoires ; l'affichage lit la mémoire telle qu'elle est, ou calcule à part
+  // (uiCall), sans rien y garder.
+  MEMO_KEYS: ['slotCache', 'slotCheckTick', 'slotSig', 'slotTick', 'slotVersion', 'faithCache', 'faithVersion', 'faithTick',
+    'regionsCache', 'regionsVersion', 'regionsTick', 'cityCache', 'cityCacheTick', 'nbStatsCache', 'nbStatsVersion', 'nbStatsTick',
+    'assaultPlans', 'routeCache', 'roadsCache', 'roadsVersion', 'roadChurches', 'mineBonusKey', 'mineBonusCache'],
+  uiCall(fn) {
+    const keys = this.MEMO_KEYS, saved = keys.map(k => this[k]);
+    // (comme si rien n'avait encore été calculé : « calculé il y a très longtemps », « pour aucune version »)
+    for (const k of keys) this[k] = k === 'routeCache' ? new Map() : k.endsWith('Tick') ? -Infinity : k.endsWith('Version') ? -1 : undefined;
+    this.peeking = true;
+    try { return fn(); } finally {
+      this.peeking = false;
+      keys.forEach((k, i) => { this[k] = saved[i]; });
+    }
+  },
+  // Sommes-nous dans l'affichage (et pas dans les règles) ? Alors ne pas toucher aux mémoires (voir uiCall)
+  inUI() { return !this.inUpdate && !this.peeking; },
+
+  // Mélange un tableau (sur place) avec le hasard de la partie, et le renvoie (le même mélange dans tous les
+  // navigateurs, contrairement à sort(() => Math.random() - 0.5))
+  shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(this.rand() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
   },
 
   // --- Outils sur les cases ---
@@ -315,6 +381,7 @@ const GameRules = {
   // compte que pour une : la ville d'abord, puis le port, puis l'église (s'il leur reste de la place).
   // Renvoie une Map : bâtiment → ville/port/église. (recalculé seulement quand la carte change)
   slotHosts() {
+    if (this.inUI()) return this.slotCache || this.uiCall(() => this.slotHosts()); // (🌐 voir uiCall)
     if (this.slotCache && this.slotCheckTick === this.tick) return this.slotCache; // (vérifié une fois par tour)
     this.slotCheckTick = this.tick;
     // (signature des bâtiments : on recalcule s'ils ont changé, sinon au plus une fois par seconde)
@@ -490,7 +557,7 @@ const GameRules = {
     const W = this.W, H = this.H, T = this.terrain, scale = Math.sqrt(this.N / (650 * 366)), TPS = CONFIG.TICKS_PER_SECOND;
     const fits = (kind, t) => MINES[kind].terrain === 'hills' ? t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS : t === TERRAIN.MOUNTAIN;
     for (const kind of MINE_KINDS) {
-      const [lo, hi] = MINES[kind].count, want = Math.max(1, Math.round((lo + Math.floor(Math.random() * (hi - lo + 1))) * scale));
+      const [lo, hi] = MINES[kind].count, want = Math.max(1, Math.round((lo + Math.floor(this.rand() * (hi - lo + 1))) * scale));
       // les emplacements possibles : 4 cases de terre (pas de fleuve), dont au moins 3 du bon terrain
       const spots = [];
       for (let y = 1; y < H - 2; y++) {
@@ -500,8 +567,8 @@ const GameRules = {
         }
       }
       for (let tries = 0, made = 0; made < want && tries < 400 && spots.length; tries++) {
-        const a = spots[(Math.random() * spots.length) | 0], x = a % W, y = (a / W) | 0;
-        if (this.deposits.some(d => Math.hypot(d.a % W - x, ((d.a / W) | 0) - y) < CONFIG.MINE_SPACING)) continue;
+        const a = spots[(this.rand() * spots.length) | 0], x = a % W, y = (a / W) | 0;
+        if (this.deposits.some(d => DMath.hypot(d.a % W - x, ((d.a / W) | 0) - y) < CONFIG.MINE_SPACING)) continue;
         const d = { a, kind, left: (MINES.gold.time) * TPS, progress: 0, paid: 0 };
         this.deposits.push(d);
         this.depositAt.set(a, d);
@@ -547,7 +614,7 @@ const GameRules = {
     let best = -1, bestD = Infinity;
     for (const c of this.castles) {
       if (this.owner[c] !== pid || land[c] !== land[a]) continue;
-      const [cx, cy] = mid(c, this.sizeOf(B_CASTLE)), d = Math.hypot(cx - px, cy - py);
+      const [cx, cy] = mid(c, this.sizeOf(B_CASTLE)), d = DMath.hypot(cx - px, cy - py);
       if (d < bestD && d <= this.roadReach(c, CONFIG.MINE_ROAD_DISTANCE) && this.roadPoints(a, c, B_MINE)) { bestD = d; best = c; }
     }
     return best;
@@ -681,6 +748,7 @@ const GameRules = {
   // propre territoire. C'est passif : pas un acte de guerre (ni alerte, ni après-guerre).
   // Croyance de chaque royaume (recalculée au plus une fois par seconde)
   faithAll() {
+    if (this.inUI()) return this.faithCache || this.uiCall(() => this.faithAll()); // (🌐 voir uiCall)
     if (this.faithCache && (this.faithVersion === this.version || this.tick - this.faithTick < CONFIG.TICKS_PER_SECOND)) {
       return this.faithCache;
     }
@@ -821,7 +889,7 @@ const GameRules = {
     const h = this.sizeOf(this.building[c]) / 2, cx = c % W + h, cy = ((c / W) | 0) + h, coasts = [];
     for (let y = Math.max(0, Math.floor(cy - R)); y <= Math.min(this.H - 1, Math.ceil(cy + R)); y++) {
       for (let x = Math.max(0, Math.floor(cx - R)); x <= Math.min(W - 1, Math.ceil(cx + R)); x++) {
-        const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
+        const d = DMath.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
         if (d <= R && this.owner[j] === o && !this.building[j] && !this.wallAt[j] && this.isCoastal(j)) coasts.push([d, j]);
       }
     }
@@ -1078,11 +1146,11 @@ const GameRules = {
       // pas des lignes droites.
       let lure = 0;
       for (const [lx, ly] of lures.get(o) || []) {
-        const d = Math.hypot(lx - x, ly - y);
+        const d = DMath.hypot(lx - x, ly - y);
         if (d < R) lure = Math.max(lure, 1 - d / R);
       }
-      const wave = Math.sin(x * 0.19 + Math.sin(y * 0.11 + pid) * 2.5) + Math.sin(y * 0.17 + Math.sin(x * 0.13 + pid * 2) * 2.5);
-      const score = mine + (4 - theirs) * 2 + lure * CONFIG.FAITH_LURE + wave * CONFIG.FAITH_WAVE / 2 + Math.random();
+      const wave = DMath.sin(x * 0.19 + DMath.sin(y * 0.11 + pid) * 2.5) + DMath.sin(y * 0.17 + DMath.sin(x * 0.13 + pid * 2) * 2.5);
+      const score = mine + (4 - theirs) * 2 + lure * CONFIG.FAITH_LURE + wave * CONFIG.FAITH_WAVE / 2 + this.rand();
       const key = pid * 1000 + o, n = preachers.get(pid);
       let list = best.get(key);
       if (list && list.length >= n && list[list.length - 1].score >= score) continue;
@@ -1174,7 +1242,7 @@ const GameRules = {
     for (const o of this.castles) {
       if (o === c || this.owner[o] !== pid) continue;
       const ox = o % W + h, oy = ((o / W) | 0) + h, Ro = this.castleInfo(o).radius;
-      if (Math.hypot(target % W + 0.5 - ox, ((target / W) | 0) + 0.5 - oy) <= Ro + CONFIG.WALL_SNAP) {
+      if (DMath.hypot(target % W + 0.5 - ox, ((target / W) | 0) + 0.5 - oy) <= Ro + CONFIG.WALL_SNAP) {
         city = o; Rcity = Ro;
         target = Math.floor(oy) * W + Math.floor(ox); // (on vise son centre ; le mur s'arrête à sa muraille)
         break;
@@ -1191,11 +1259,11 @@ const GameRules = {
         return { error: tr('Le mur doit partir de la muraille de la ville, ou d\'un point de son premier mur déjà bâti.', 'The wall must start from the city walls, or from a point of its first wall already built.') };
       }
       sx = from % W; sy = (from / W) | 0;
-      const reach = Math.hypot(tx - sx - 0.5, ty - sy - 0.5) - Rcity;
+      const reach = DMath.hypot(tx - sx - 0.5, ty - sy - 0.5) - Rcity;
       if (reach < 2) return { error: tr('Vise un endroit plus loin de ton mur.', 'Aim at a spot further from your wall.') };
       if (reach > CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: tr(`Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de son point de départ.`, `Too far: a wall reaches at most ${CONFIG.WALL_MAX_REACH} tiles from its starting point.`) };
     } else {
-      const dist = Math.hypot(tx - cx, ty - cy), reach = dist - Rcity; // (jusqu'à la muraille de l'autre ville)
+      const dist = DMath.hypot(tx - cx, ty - cy), reach = dist - Rcity; // (jusqu'à la muraille de l'autre ville)
       if (reach < R + 2) return { error: city >= 0 ? tr('Ces deux villes se touchent déjà : pas besoin de mur entre elles.', 'These two cities already touch: no need for a wall between them.') : tr('Vise un endroit hors de la muraille de la ville.', 'Aim at a spot outside the city walls.') };
       if (reach > R + CONFIG.WALL_MAX_REACH + (sealed ? CONFIG.WALL_SNAP : 0)) return { error: tr(`Trop loin : un mur va au plus à ${CONFIG.WALL_MAX_REACH} cases de la muraille de la ville.`, `Too far: a wall reaches at most ${CONFIG.WALL_MAX_REACH} tiles from the city walls.`) };
       // le mur part du bord de la muraille de la ville, vers la case visée (tracé case par case, sans trou)
@@ -1349,7 +1417,7 @@ const GameRules = {
     const behind = new Set(route.slice(0, this.pathPassed(a)));
     const n = this.walls.filter(w => w.done && w.owner === a.target && w.tiles.some(t => behind.has(t))).length;
     if (!n) return;
-    const keep = Math.pow(1 - CONFIG.WALL_RETREAT_LOSS, n);
+    const keep = DMath.pow(1 - CONFIG.WALL_RETREAT_LOSS, n);
     a.troops *= keep;
     for (const r of a.pending) r.troops *= keep;
     if (this.players[a.attacker].isHuman) {
@@ -1732,10 +1800,10 @@ const GameRules = {
   // avant de choisir où fonder sa capitale (comme au début d'une partie d'OpenFront)
   spawnBots() {
     for (const p of this.players) {
-      if (p.isHuman) continue;
+      if (p.human) continue;
       let placed = false;
       for (let tries = 0; tries < 3000 && !placed; tries++) {
-        const i = (Math.random() * this.N) | 0;
+        const i = (this.rand() * this.N) | 0;
         const minDist = CONFIG.MIN_SPAWN_DISTANCE * (tries < 1500 ? 1 : 0.5);
         if (this.canSpawnAt(i, minDist)) { this.spawnPlayer(p, i); placed = true; }
       }
@@ -1819,7 +1887,7 @@ const GameRules = {
         const [ex, ey] = at(lon, lat);
         for (let y = Math.floor(ey - R); y <= ey + R; y++) for (let x = Math.floor(ex - R); x <= ex + R; x++) {
           const i = y * W + x;
-          if (x >= 0 && y >= 0 && x < W && y < H && Math.hypot(x + 0.5 - ex, y + 0.5 - ey) <= R && this.claimable(i)) this.setOwner(i, cm.role[f.id]);
+          if (x >= 0 && y >= 0 && x < W && y < H && DMath.hypot(x + 0.5 - ex, y + 0.5 - ey) <= R && this.claimable(i)) this.setOwner(i, cm.role[f.id]);
         }
       }
     }
@@ -1848,7 +1916,7 @@ const GameRules = {
     for (const [lon, lat, kind, name, role] of C.HISTORIC_MINES) {
       const [x, y] = at(lon, lat), p = role ? this.players[cm.role[role]] : null;
       // (on retire les filons posés au hasard trop près de là)
-      for (const d of this.deposits.filter(d => !d.historic && Math.hypot(d.a % W - x, ((d.a / W) | 0) - y) < CONFIG.MINE_SPACING)) this.removeDeposit(d.a);
+      for (const d of this.deposits.filter(d => !d.historic && DMath.hypot(d.a % W - x, ((d.a / W) | 0) - y) < CONFIG.MINE_SPACING)) this.removeDeposit(d.a);
       const a = p ? this.placeOnLand(p, B_MINE, x, y, 1) : this.spotNear(-1, B_MINE, x, y);
       if (a < 0) continue;
       const d = { a, kind, name, historic: true, left: MINES.gold.time * TPS, progress: 0, paid: 0 };
@@ -1876,7 +1944,7 @@ const GameRules = {
       for (const i of cm.aquitaineLand) this.setOwner(i, fr.id);
       for (const c of this.castles) if (this.owner[c] === fr.id) this.garrison[c] = this.garrisonMax(c);
       const [lo, hi] = C.AQUITAINE_REVOLT;
-      cm.aquitaineTick = Math.round((lo + Math.random() * (hi - lo)) * TPS);
+      cm.aquitaineTick = Math.round((lo + this.rand() * (hi - lo)) * TPS);
     }
     // (778 : au sud des Pyrénées, c'est l'Espagne : voir Roncevaux)
     cm.spain = at(C.RONCEVAUX.LON, C.RONCEVAUX.LAT);
@@ -2094,12 +2162,12 @@ const GameRules = {
   // Renvoie la ville visée, ou -1 s'il n'y en a aucune à portée de côte.
   cmVikingRaid(danes, victim, army) {
     const W = this.W, R = CONFIG.VIKING_RANGE;
-    const cities = this.castles.filter(c => this.owner[c] === victim.id && this.holdsAlone(c)).sort(() => Math.random() - 0.5);
+    const cities = this.shuffle(this.castles.filter(c => this.owner[c] === victim.id && this.holdsAlone(c)));
     for (const c of cities.slice(0, 8)) {
       const h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h, coasts = [];
       for (let y = Math.max(0, Math.floor(cy - R)); y <= Math.min(this.H - 1, Math.ceil(cy + R)); y++) {
         for (let x = Math.max(0, Math.floor(cx - R)); x <= Math.min(W - 1, Math.ceil(cx + R)); x++) {
-          const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
+          const d = DMath.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
           if (d <= R && this.owner[j] === victim.id && !this.building[j] && !this.wallAt[j] && this.isCoastal(j)) coasts.push([d, j]);
         }
       }
@@ -2127,9 +2195,8 @@ const GameRules = {
       if (!p.raiders || !p.alive) continue;
       p.raids = (p.raids || 0) + 1;
       const army = Math.min(R.MAX, Math.round(R.ARMY[cm.diff] * (1 + R.GROWTH * (p.raids - 1))));
-      const victims = [...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders
-        && !(p.raids === 1 && R.SPARE_FIRST.includes(this.players[o].role)))
-        .sort(() => Math.random() - 0.5);
+      const victims = this.shuffle([...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders
+        && !(p.raids === 1 && R.SPARE_FIRST.includes(this.players[o].role))));
       for (const o of victims) {
         const plan = this.planAssault(p.id, o);
         if (plan.castle === null || plan.castle < 0) continue;
@@ -2242,6 +2309,98 @@ const GameRules = {
     return y * W + x;
   },
 
+  // --- 🌐 Les ordres des joueurs ---
+  // Toute action d'un joueur (attaquer, construire, améliorer…) est un « ordre » : { k: 'attack', … }. En solo, il
+  // s'exécute tout de suite ; en ligne, il part au serveur, qui le renvoie à tous les joueurs dans un « tour » : chaque
+  // navigateur l'exécute au même moment, et la partie reste la même partout. Renvoie le résultat de l'action (un
+  // message d'erreur, l'assaut lancé…), que l'interface du joueur qui l'a donné peut afficher (voir UI.act).
+  runOrder(pid, o) {
+    const p = this.players[pid];
+    if (!p || !o) return null;
+    // (un joueur parti : un bot prend sa place ; parti avant d'avoir choisi sa place, il sera posé au hasard)
+    if (o.k === 'leave') { p.human = false; p.left = true; p.aiTimer = 0; return null; }
+    if (o.k === 'begin') return this.beginOnline();
+    if (o.k === 'spawn') return this.spawnHuman(p, o.i);
+    if (o.k === 'continue') return this.continueAfterVictory(); // (solo : on continue après la victoire)
+    if (!p.alive || this.phase !== 'playing') return null;
+    this.inUpdate = true; // (les ordres font partie des règles : voir uiCall)
+    try {
+      switch (o.k) {
+        case 'attack': return this.launchAttack(pid, o.target, o.troops, o.aim, o.src === undefined ? -1 : o.src);
+        case 'build': return this.tryBuild(p, o.i, o.type);
+        case 'upgrade': return this.upgradeBuilding(p, o.a);
+        case 'cancelWorks': return this.cancelWorks(p, o.a);
+        case 'demolish': return this.demolishBuilding(p, o.a);
+        case 'defend': return this.sendDefenders(pid, o.attack, o.troops);
+        case 'cancelAttack': return this.cancelAttack(pid, o.attack);
+        case 'recall': return this.recallExpedition(pid, o.id);
+        case 'link': return this.launchLink(pid, o.c, o.troops);
+        case 'expedition': return this.launchExpedition(pid, o.i, o.troops);
+        case 'crossing': return this.launchCrossing(pid, o.i);
+        case 'bridge': return this.buildBridge(p, o.i);
+        case 'reinforce': return this.reinforceOutpost(pid, o.a, o.troops);
+        case 'repatriate': return this.repatriate(pid, o.a);
+        case 'abandon': return this.abandonOutpost(pid, o.a);
+        case 'buyViking': return this.buyViking(p);
+        case 'viking': return this.launchViking(pid, o.i, o.troops);
+        case 'crusade': return this.startCrusade(p, o.a);
+        case 'levy': return this.startLevy(p, o.a);
+        case 'wall': return this.buildWall(p, o.c, o.i, o.from);
+        case 'trade': return this.buildTrade(p, o.a, o.i);
+        case 'ally': return this.proposeAlliance(pid, o.to);
+        case 'allyAnswer': { // (réponse d'un humain à une demande d'alliance)
+          const from = this.players[o.from];
+          if (!from || !from.alive) return null;
+          const block = this.pactBlock(o.from, pid);
+          if (o.yes && !block) this.makeAlliance(o.from, pid);
+          else this.refuseAlliance(o.from, pid);
+          return o.yes ? block : null;
+        }
+        case 'betray': return this.breakAlliance(pid, o.other);
+        case 'troops': return this.sendTroopsToAlly(pid, o.to, o.n);
+        case 'gold': return this.sendGoldToAlly(pid, o.to, o.g);
+        case 'hyBribe': return this.hyBribe(pid, o.to);
+        case 'hyGates': return this.hyCloseGates(pid, o.a);
+        case 'hyChev': return this.hyChevauchee(pid, o.a, o.troops);
+        case 'hyJoan': return this.hyArmJoan();
+      }
+      return null;
+    } finally { this.inUpdate = false; }
+  },
+
+  // 🌐 En ligne : un joueur fonde sa capitale (pendant le moment prévu pour ça, au début de la partie)
+  spawnHuman(p, i) {
+    if (this.phase !== 'spawn' || p.spawned || !p.alive) return null;
+    const err = this.spawnError(i);
+    if (err) return err;
+    this.inUpdate = true;
+    try { this.spawnPlayer(p, i); } finally { this.inUpdate = false; }
+    p.spawned = true;
+    return null;
+  },
+  // 🌐 En ligne : la partie commence pour de bon. Ceux qui n'ont pas encore choisi leur place sont posés au hasard
+  // (le hasard de la partie : la même place chez tout le monde)
+  beginOnline() {
+    if (this.phase !== 'spawn') return null;
+    this.inUpdate = true;
+    try {
+      for (const p of this.players) {
+        if (!(p.human || p.left) || p.spawned || !p.alive) continue;
+        let placed = false;
+        for (let tries = 0; tries < 4000 && !placed; tries++) {
+          const i = (this.rand() * this.N) | 0;
+          if (this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE * (tries < 2000 ? 1 : 0.5)) && this.landSize()[i] >= CONFIG.MIN_SPAWN_LAND) {
+            this.spawnPlayer(p, i); placed = true;
+          }
+        }
+        if (!placed) p.alive = false;
+        p.spawned = true;
+      }
+    } finally { this.inUpdate = false; }
+    this.phase = 'playing';
+    return null;
+  },
+
   // Le joueur fonde sa capitale : la partie commence
   startGame(humanTile) {
     this.spawnPlayer(this.human, humanTile);
@@ -2274,7 +2433,7 @@ const GameRules = {
     }
     if (t === B_CHURCH) { // (par chemin ; une route de pierre, vers une cité impériale, rapporte plus)
       this.roads();
-      return (this.roadChurches.get(a) || []).reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0)
+      return ((this.roadChurches && this.roadChurches.get(a)) || []).reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0)
         * this.terrainFactor(a, B_CHURCH);
     }
     const eff = !owner ? 1 : t === B_BARRACKS ? this.barracksEfficiency(owner) : this.goldEfficiency(owner);
@@ -2336,6 +2495,7 @@ const GameRules = {
   // qui sont dans sa muraille. Et tout château (une « ville ») relie par un chemin de terre un port proche. Renvoie une Map : bâtiment → { castle, bonus, road }.
   // Recalculé seulement quand la carte change.
   roads() {
+    if (this.inUI() && this.roadsCache) return this.roadsCache; // (🌐 l'affichage lit la mémoire : voir uiCall)
     if (this.roadsVersion === this.version) return this.roadsCache;
     const links = new Map();
     // Un moulin ou une caserne dans la muraille d'une ville de niveau 2 ou 3 : une route le relie à elle.
@@ -2456,7 +2616,7 @@ const GameRules = {
     const [px, py] = mid(a, this.sizeOf(B_PORT)), list = [];
     for (const c of this.castles) {
       if (this.owner[c] !== pid || land[c] !== land[a]) continue;
-      const [cx, cy] = mid(c, this.sizeOf(B_CASTLE)), d = Math.hypot(cx - px, cy - py);
+      const [cx, cy] = mid(c, this.sizeOf(B_CASTLE)), d = DMath.hypot(cx - px, cy - py);
       if (d <= this.roadReach(c, CONFIG.PORT_ROAD_DISTANCE) && this.roadPoints(a, c, B_PORT)) list.push([d, c]);
     }
     return list.sort((p, q) => p[0] - q[0]).slice(0, CONFIG.ROAD_MAX_CITIES).map(([, c]) => c);
@@ -2478,7 +2638,7 @@ const GameRules = {
   // Longueur d'un tracé (en cases)
   tradeLength(pts) {
     let len = 0;
-    for (let k = 0; k + 1 < pts.length; k++) len += Math.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]);
+    for (let k = 0; k + 1 < pts.length; k++) len += DMath.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]);
     return len;
   },
   // Prix et revenu (à chaque versement) d'une route commerciale de cette longueur
@@ -2645,6 +2805,7 @@ const GameRules = {
   // avec le moins de virages) ; et s'il est bien trop long (ou impossible), pas de route du tout.
   // (gardé en mémoire : le même tracé est demandé très souvent ; un nouveau pont peut ouvrir un passage)
   roadRoute(x1, y1, x2, y2, first) {
+    if (this.inUI()) return this.uiCall(() => this.roadRoute(x1, y1, x2, y2, first)); // (🌐 voir uiCall)
     const key = `${x1},${y1},${x2},${y2},${first ? 1 : 0},${this.bridges.length}`;
     if (this.routeCache.has(key)) return this.routeCache.get(key);
     if (this.routeCache.size > 20000) this.routeCache.clear();
@@ -2663,7 +2824,7 @@ const GameRules = {
   routeTiles(pts) {
     const W = this.W, H = this.H, tiles = new Set();
     for (let k = 0; k + 1 < pts.length; k++) {
-      const [ax, ay] = pts[k], [bx, by] = pts[k + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) * 4));
+      const [ax, ay] = pts[k], [bx, by] = pts[k + 1], n = Math.max(1, Math.ceil(DMath.hypot(bx - ax, by - ay) * 4));
       for (let s = 0; s <= n; s++) {
         const x = Math.floor(ax + (bx - ax) * s / n), y = Math.floor(ay + (by - ay) * s / n);
         if (x < 0 || y < 0 || x >= W || y >= H) return null;
@@ -2729,7 +2890,7 @@ const GameRules = {
     for (let k = 0; k + 1 < pts.length; k++) {
       const [ax, ay] = pts[k], [bx, by] = pts[k + 1], dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
       const t = len ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / len)) : 0;
-      const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(x - px, y - py);
+      const px = ax + t * dx, py = ay + t * dy, d = DMath.hypot(x - px, y - py);
       if (d < best.d) best = { x: px, y: py, d };
     }
     return best;
@@ -2761,7 +2922,7 @@ const GameRules = {
     const list = road ? [road] : [], hc = this.sizeOf(B_CASTLE) / 2;
     for (const c of this.castles) {
       if (this.owner[c] !== pid || land[c] !== land[a] || served.includes(c)) continue;
-      const cx = c % W + hc, cy = ((c / W) | 0) + hc, d = Math.hypot(cx - x, cy - y);
+      const cx = c % W + hc, cy = ((c / W) | 0) + hc, d = DMath.hypot(cx - x, cy - y);
       if (d > this.roadReach(c, CONFIG.CHURCH_CITY_DISTANCE)) continue;
       const pts = corner(cx, cy);
       if (pts) list.push({ castle: c, pts, d, stone: !!this.castleInfo(c).imperial });
@@ -2782,7 +2943,7 @@ const GameRules = {
       let best = null;
       for (const c of this.castles) {
         if (this.owner[c] !== pid || land[c] !== land[a]) continue;
-        const [cx, cy] = mid(c, B_CASTLE), d = Math.hypot(cx - x, cy - y);
+        const [cx, cy] = mid(c, B_CASTLE), d = DMath.hypot(cx - x, cy - y);
         if (!best || d < best.d) best = { pts: [[cx, cy], [x, y]], d, max: this.roadReach(c, base) };
       }
       return best;
@@ -2818,7 +2979,7 @@ const GameRules = {
       const level = upgrading ? Math.min(CASTLE_LEVELS.length - 1, this.level[a] + 1) : 1, info = CASTLE_LEVELS[level];
       for (const b of this.buildingTiles) {
         if (this.owner[b] !== pid || land[b] !== land[a]) continue;
-        const type = this.building[b], [bx, by] = mid(b, type), d = Math.hypot(bx - x, by - y);
+        const type = this.building[b], [bx, by] = mid(b, type), d = DMath.hypot(bx - x, by - y);
         let pts = null, road = info.imperial && (type === B_PORT || type === B_CHURCH) ? 'paved' : 'dirt'; // (routes de pierre)
         if (type === B_PORT && d <= this.roadReach(a, CONFIG.PORT_ROAD_DISTANCE, level)) {
           pts = this.roadPoints(b, a);
@@ -2973,7 +3134,7 @@ const GameRules = {
   // Avantage des bots selon la difficulté (voir DIFFICULTIES.botBonus) : 1 pour le joueur, ou sans bonus
   botBonus(p, key) {
     const b = this.difficulty.botBonus;
-    return !b || !p || p.isHuman ? 1 : b[key] || 1;
+    return !b || !p || p.human ? 1 : b[key] || 1;
   },
 
   // Solde des troupes : multiplicateur de l'or gagné (1 = rien à payer). Au-delà de UPKEEP_FROM de l'armée
@@ -2989,7 +3150,7 @@ const GameRules = {
     // (une mine coûte toujours le même prix ; les moulins et casernes montent moins vite : MILL_COST_GROWTH)
     const growth = type === B_MINE ? 1 : type === B_CHURCH || type === B_PORT ? CONFIG.RARE_COST_GROWTH
       : type === B_MILL || type === B_BARRACKS ? CONFIG.MILL_COST_GROWTH : CONFIG.BUILDING_COST_GROWTH;
-    return Math.round(BUILDINGS[type].baseCost * Math.pow(growth, this.builtCount(p, type)));
+    return Math.round(BUILDINGS[type].baseCost * DMath.pow(growth, this.builtCount(p, type)));
   },
 
   // Bâtiments de ce type que le royaume a construits lui-même et possède encore : ce sont eux (et eux seuls)
@@ -3087,6 +3248,7 @@ const GameRules = {
   //  ont changé de mains entre-temps : sur une grande carte, le refaire à chaque tour ralentirait le jeu.
   //  fresh = true : toujours à jour, pour décider des encerclements.)
   regions(fresh = false) {
+    if (this.inUI()) return this.regionsCache || this.uiCall(() => this.regions(fresh)); // (🌐 voir uiCall)
     if (this.regionsCache && this.regionsVersion === this.version) return this.regionsCache;
     if (!fresh && this.regionsCache && this.tick - this.regionsTick < CONFIG.REGIONS_REUSE && this.tick >= this.regionsTick) return this.regionsCache;
     this.regionsTick = this.tick;
@@ -3652,7 +3814,7 @@ const GameRules = {
     // une entrée « proche » sur la carte, mais qu'elle n'atteint qu'en faisant tout le tour. (Une case qu'on ne peut
     // pas rejoindre à pied compte 3 fois sa distance à vol d'oiseau.)
     const field = this.ownLandField(pid, Math.floor(dep.y) * W + Math.floor(dep.x));
-    const walk = i => (field(i) < Infinity ? field(i) : 3 * Math.hypot(i % W + 0.5 - dep.x, ((i / W) | 0) + 0.5 - dep.y))
+    const walk = i => (field(i) < Infinity ? field(i) : 3 * DMath.hypot(i % W + 0.5 - dep.x, ((i / W) | 0) + 0.5 - dep.y))
       / CONFIG.MARCH_OWN_LAND_BONUS;
     // (-1 = on part de la frontière ; true : on peut passer un fleuve à gué pour l'atteindre)
     return this.stopAtWalls(c, this.searchPath(pid, -1, foot, passable, this.owner[c], source, walk, true));
@@ -3801,6 +3963,7 @@ const GameRules = {
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
   // (gardé 2 secondes en mémoire : chercher les chemins coûte cher sur une grande carte)
   planAssault(pid, target) {
+    if (this.inUI()) return this.uiCall(() => this.planAssault(pid, target)); // (🌐 voir uiCall)
     if (!this.isProtected(target)) return { castle: null, D: 1.3 };
     const key = pid * 1000 + target, old = (this.assaultPlans = this.assaultPlans || new Map()).get(key);
     if (old && this.tick - old.tick < 2 * CONFIG.TICKS_PER_SECOND && (old.plan.castle === null || old.plan.castle < 0 || this.owner[old.plan.castle] === target)) return old.plan;
@@ -4421,7 +4584,7 @@ const GameRules = {
     a.startTile = start; // case de la frontière d'où partira l'assaut (sa bannière s'y plante pendant la préparation)
     if (start < 0) { a.fromX = cx + 0.5; a.fromY = cy + 0.5; return; }
     // ...puis on recule de quelques cases vers l'intérieur (si ces cases sont encore à nous)
-    const sx = start % W, sy = (start / W) | 0, len = Math.hypot(sx - ax, sy - ay) || 1;
+    const sx = start % W, sy = (start / W) | 0, len = DMath.hypot(sx - ax, sy - ay) || 1;
     for (let back = CONFIG.ARROW_INSIDE; back >= 0; back--) {
       const x = Math.round(sx + (sx - ax) / len * back), y = Math.round(sy + (sy - ay) / len * back);
       if (x >= 0 && y >= 0 && x < W && y < this.H && this.owner[y * W + x] === a.attacker) {
@@ -4462,7 +4625,7 @@ const GameRules = {
   reinforceTicks(a) {
     const TPS = CONFIG.TICKS_PER_SECOND, p = this.players[a.attacker];
     const from = a.marchFrom || { x: p.sumX / Math.max(1, p.tiles) + 0.5, y: p.sumY / Math.max(1, p.tiles) + 0.5 };
-    const to = this.attackFront(a), dist = Math.hypot(to.x - from.x, to.y - from.y);
+    const to = this.attackFront(a), dist = DMath.hypot(to.x - from.x, to.y - from.y);
     return Math.round(Math.max(CONFIG.REINFORCE_MIN_TIME, dist / CONFIG.MARCH_SPEED) * TPS);
   },
 
@@ -4527,7 +4690,7 @@ const GameRules = {
   pickFrontier(a) {
     let best = -1, bestScore = -1;
     for (let k = 0; k < 4 && a.list.length > 0; k++) {
-      const idx = (Math.random() * a.list.length) | 0;
+      const idx = (this.rand() * a.list.length) | 0;
       const t = a.list[idx];
       let around = this.countFriendNeighbors(t, a.attacker);
       // (un assaut vers un objectif peut commencer de l'autre côté d'un fleuve, passé à gué : sa rive compte)
@@ -4836,7 +4999,7 @@ const GameRules = {
       const last = pts[pts.length - 1];
       const t = tile(q), cost = this.isLand(t) ? march(t) : 1;
       pts.push(q);
-      cum.push(cum[cum.length - 1] + Math.hypot(q.x - last.x, q.y - last.y) * cost + extra);
+      cum.push(cum[cum.length - 1] + DMath.hypot(q.x - last.x, q.y - last.y) * cost + extra);
     };
     // (deux cases du chemin qui ne se touchent pas : on passe un fleuve à gué entre les deux)
     // (sur un pont : chaque case de fleuve compte comme une plaine)
@@ -4876,6 +5039,7 @@ const GameRules = {
   // MARCH_OWN_LAND_BONUS fois plus lentement. Renvoie -1 si aucune ville n'y mène à pied (de l'autre côté de la mer).
   // (gardé en mémoire une seconde : les bots et les aperçus le demandent souvent)
   fastestCity(pid, start, cands, enemy = -2) {
+    if (this.inUI()) return this.uiCall(() => this.fastestCity(pid, start, cands, enemy)); // (🌐 voir uiCall)
     const N = this.N, W = this.W, own = this.owner, TPS = CONFIG.TICKS_PER_SECOND;
     if (start < 0 || start >= N || !cands.length) return -1;
     if (cands.length === 1) return cands[0];
@@ -5205,7 +5369,7 @@ const GameRules = {
     if (!a.defPending || !a.defPending.length) return;
     const C = CONFIG, front = this.attackFront(a), near = r => {
       const pos = this.walkPosition(r);
-      return { pos, d: Math.hypot(pos.x - front.x, pos.y - front.y) };
+      return { pos, d: DMath.hypot(pos.x - front.x, pos.y - front.y) };
     };
     if (this.tick % C.TICKS_PER_SECOND === 0) {
       const goal = this.defenseGoal(a);
@@ -5214,7 +5378,7 @@ const GameRules = {
         // Tout près de l'ennemi (DEFEND_DIRECT) : droit sur lui ; plus loin : vers la case de leurs terres la plus
         // proche de lui, par leurs terres
         const { pos, d } = near(r), direct = d <= C.DEFEND_DIRECT, to = direct ? front : goal, end = r.pts[r.pts.length - 1];
-        if (Math.hypot(end.x - to.x, end.y - to.y) < 2 && direct === !!r.direct) continue;
+        if (DMath.hypot(end.x - to.x, end.y - to.y) < 2 && direct === !!r.direct) continue;
         Object.assign(r, this.walkRoute(a.target, { x: pos.x, y: pos.y }, to, r.troops, undefined, direct), { direct });
       }
     }
@@ -5443,7 +5607,7 @@ const GameRules = {
     if (!list.length) {
       const path = this.castlePath(a.attacker, c, src), f = a.frontTile, W = this.W;
       // (le nouveau chemin doit partir près de là où se trouve l'armée : elle ne se téléporte pas)
-      if (!path || (f >= 0 && Math.hypot(path[0] % W - f % W, ((path[0] / W) | 0) - ((f / W) | 0)) > 8)) return false;
+      if (!path || (f >= 0 && DMath.hypot(path[0] % W - f % W, ((path[0] / W) | 0) - ((f / W) | 0)) > 8)) return false;
       a.pathTiles = path;
       a.limitZone = this.corridor(c, path);
       list = [path[0]];
@@ -5885,10 +6049,10 @@ const GameRules = {
     if (this.isTraitor(bot) && from.pact >= 0) return false;
     // Un allié puissant est plus intéressant
     let chance = 0.2 + 0.3 * Math.min(from.troops / Math.max(1, bot.troops), 1.5);
-    if (from.isHuman) chance -= this.difficulty.hateHuman * 0.5;
+    if (from.human) chance -= this.difficulty.hateHuman * 0.5;
     if (this.allies(bot.id).length + this.allies(from.id).length >= 2) chance *= 0.5;
     if (this.attacks.some(a => !a.done && a.attacker === from.id && a.target === bot.id)) chance *= 0.3;
-    return Math.random() < chance;
+    return this.rand() < chance;
   },
 
   // Renvoie 'accepted', 'refused', 'pending' (en attente de la réponse du joueur) ou un message d'erreur.
@@ -5911,6 +6075,13 @@ const GameRules = {
     // (un refus récent vaut pour tout le pacte : on ne redemande ni au même royaume, ni à un autre membre de son pacte)
     const wait = Math.max(from.refusedUntil[toId] || 0, from.refusedUntil[judge.id] || 0) - this.tick;
     if (wait > 0) return tr(`${judge.name} a refusé récemment. Réessaie dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`, `${judge.name} refused recently. Try again in ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`);
+    // (🌐 en ligne, un humain répond lui-même, plus tard, par un ordre « allyAnswer » ; la demande ne se répète pas
+    //  avant ALLIANCE_REFUSAL_COOLDOWN secondes)
+    if (judge.human && this.online) {
+      if (judge === this.human) UI.askAlliance(from);
+      from.refusedUntil[judge.id] = this.tick + CONFIG.ALLIANCE_REFUSAL_COOLDOWN * CONFIG.TICKS_PER_SECOND;
+      return 'pending';
+    }
     if (judge.isHuman) return UI.askAlliance(from) ? 'pending' : 'refused';
     if (this.wouldAccept(judge, from)) {
       this.makeAlliance(fromId, toId);
@@ -6018,6 +6189,7 @@ const GameRules = {
   update() {
     if (this.phase !== 'playing' || this.paused) return;
     this.tick++;
+    this.inUpdate = true; // (🌐 les règles travaillent : elles peuvent renouveler leurs mémoires, voir uiCall)
     const TPS = CONFIG.TICKS_PER_SECOND;
 
     for (const p of this.players) {
@@ -6084,16 +6256,18 @@ const GameRules = {
       h.cutWarned = cut;
     }
 
-    for (const p of this.players) if (p.alive && !p.isHuman) AI.update(p);
+    for (const p of this.players) if (p.alive && !p.human) AI.update(p); // (les bots ; un humain parti devient un bot)
     this.stepCharlemagne();
     this.stepCentAns();
     this.stepObjectives();
 
     Replay.record(this); // (📽️ une photo de la carte de temps en temps, pour le résumé de fin de partie)
     if (this.tick % TPS === 0) this.checkEnd();
+    this.inUpdate = false;
   },
 
   checkEnd() {
+    if (this.online) return this.checkEndOnline();
     const h = this.human;
     if (!h.alive) {
       this.phase = 'over';
@@ -6122,6 +6296,21 @@ const GameRules = {
     }
   },
 
+  // 🌐 En ligne : le joueur vaincu regarde la suite (la partie continue pour les autres) ; la partie s'arrête pour
+  // tout le monde quand un royaume (humain ou bot) tient WIN_RATIO des terres, ou qu'il ne reste que lui
+  checkEndOnline() {
+    const h = this.human;
+    if (!h.alive && !this.defeatShown) { this.defeatShown = true; UI.showEnd(false, false, 'spectate'); }
+    if (this.winner !== undefined) return;
+    const alive = this.players.filter(p => p.alive && !p.raiders);
+    let w = alive.find(p => p.tiles / this.conquerableLand() >= CONFIG.WIN_RATIO);
+    if (!w && alive.length === 1) w = alive[0];
+    if (!w) return;
+    this.winner = w.id;
+    this.phase = 'over';
+    UI.showEnd(w === h, false, 'online');
+  },
+
   // Les terres à conquérir : toutes, sauf celles des pillards (⚔️ les Slaves de Charlemagne : leurs terres sont
   // imprenables, elles ne comptent ni pour la victoire ni dans les parts des terres du classement)
   conquerableLand() {
@@ -6142,7 +6331,7 @@ const GameRules = {
       let best = null, bestD = Infinity;
       for (const a of this.attacks) {
         if (a.done || a.frontTile < 0 || a.troops < 1 || this.isFriend(o, a.attacker) || this.isPreparing(a)) continue;
-        const d = Math.hypot(a.frontTile % W + 0.5 - tx, ((a.frontTile / W) | 0) + 0.5 - ty);
+        const d = DMath.hypot(a.frontTile % W + 0.5 - tx, ((a.frontTile / W) | 0) + 0.5 - ty);
         if (d <= info.range && d < bestD) { best = a; bestD = d; }
       }
       if (!best) continue;
@@ -6162,6 +6351,7 @@ const GameRules = {
   // Combien de cases de frontière avec chaque voisin (-1 = terres libres).
   // Calculé pour tous les royaumes d'un coup (les bots le demandent souvent).
   neighborStats(pid) {
+    if (this.inUI()) return this.nbStatsCache ? this.nbStatsCache[pid] : this.uiCall(() => this.neighborStats(pid)); // (🌐 voir uiCall)
     // (au plus une fois par seconde : les bots n'ont pas besoin d'un compte exact à chaque instant)
     if (this.nbStatsVersion !== this.version && !(this.tick - this.nbStatsTick < CONFIG.TICKS_PER_SECOND)) {
       this.nbStatsVersion = this.version;

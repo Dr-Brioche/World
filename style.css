@@ -125,6 +125,7 @@ html, body {
 .ghost { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 #mapBtn { display: flex; align-items: center; gap: 6px; font-size: 15px; background: #fffaf0; padding: 4px 10px; }
 #mapBtn .ico { width: 1.4em; height: 1.4em; }
+#mapBtn:disabled { opacity: 0.55; cursor: default; } /* (🌐 salon : seul l'hôte choisit la carte) */
 #mapPick { margin: -4px 0 8px; border: 2px solid var(--wood); border-radius: 6px; padding: 6px 8px; text-align: left;
   background: #fffaf0; max-height: 320px; overflow-y: auto; }
 #mapPick.hidden { display: none; }
@@ -374,6 +375,25 @@ button:hover { background: #e8d6a8; }
   background: #fffaf0;
 }
 .card select { max-width: 62%; }
+/* 🌐 Jouer en ligne (sous « Commencer la conquête ») : la partie publique, les salons privés */
+.netBox { margin: 14px 0 4px; padding: 8px 10px; border: 2px dashed var(--parchment-dark); border-radius: 8px; }
+.netTitle { font-family: Cinzel, Georgia, serif; font-weight: bold; margin-bottom: 6px; }
+.netBtns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; }
+.netBtns button, #netRoom button { font-family: inherit; font-size: 14px; padding: 5px 10px; cursor: pointer;
+  border: 2px solid var(--wood); border-radius: 5px; background: #fffaf0; color: var(--ink); }
+.netBtns button:hover, #netRoom button:hover { background: var(--parchment-dark); }
+.netJoin { display: inline-flex; gap: 4px; }
+.card .netJoin input { width: 82px; text-transform: uppercase; text-align: center; letter-spacing: 2px; }
+#netRoom { text-align: left; }
+#netRoom small { display: block; opacity: 0.8; margin: 4px 0; }
+#netRoom .choices { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+#netRoom #netGo { background: var(--good); color: #fff; font-weight: bold; }
+.netCode { font-size: 18px; letter-spacing: 3px; }
+.netPlayers { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.netPlayers li { display: flex; align-items: center; gap: 4px; }
+.netPlayers img { width: 20px; height: 20px; object-fit: contain; }
+#netStatus { font-size: 13px; margin-top: 4px; min-height: 0; }
+#netStatus.warn { color: var(--danger); }
 /* lien vers l'éditeur de cartes, sous le choix de la carte */
 /* le bouton de l'éditeur de cartes : en bas à droite du menu, à la hauteur du titre des règles (en face) */
 /* (sur la ligne du titre des règles, même quand elles sont dépliées) */

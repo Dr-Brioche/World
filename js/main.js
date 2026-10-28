@@ -72,7 +72,7 @@ const UI = {
     const jb = document.createElement('button');
     jb.className = 'build crusade hidden';
     jb.innerHTML = `<span class="icon">⚜️</span><span>${tr('Jeanne', 'Joan')}</span><span class="cost"></span>`;
-    jb.addEventListener('click', () => { const err = Game.hyArmJoan(); if (err) this.log(err, 'warn'); else this.refreshJoanBar(); });
+    jb.addEventListener('click', () => this.act({ k: 'hyJoan' }, err => { if (err) this.log(err, 'warn'); else this.refreshJoanBar(); }));
     builds.appendChild(jb);
     this.joanBar = jb;
 
@@ -170,6 +170,7 @@ const UI = {
     $('mapType').addEventListener('change', modeChange);
     modeChange();
     $('startBtn').addEventListener('click', () => this.start());
+    this.initNet(); // (🌐 les parties en ligne)
     $('replayBtn').addEventListener('click', () => location.reload());
     // 📽️ Le résumé de la partie (voir replay.js)
     $('summaryBtn').addEventListener('click', () => Replay.open());
@@ -179,7 +180,8 @@ const UI = {
     $('replaySlider').addEventListener('input', e => { Replay.playing = false; Replay.seek(+e.target.value); });
     $('continueBtn').addEventListener('click', () => {
       $('endscreen').classList.add('hidden');
-      Game.continueAfterVictory();
+      if (this.endKind === 'spectate') return; // (🌐 vaincu en ligne : on regarde la suite de la partie)
+      this.act({ k: 'continue' });
       Music.resume(); // (🎵 la musique d'ambiance reprend)
       this.log(tr('⚔️ La conquête continue ! Élimine les derniers royaumes si tu le souhaites.', '⚔️ The conquest goes on! Wipe out the last kingdoms if you wish.'), 'good');
     });
@@ -215,19 +217,21 @@ const UI = {
       // Croix d'un transport en mer : il fait demi-tour vers le port
       const rec = e.target.closest('[data-recall]');
       if (rec) {
-        const boat = Game.recallExpedition(Game.human.id, +rec.dataset.recall);
-        if (boat) this.log(tr(`Ton bateau fait demi-tour vers le port : environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % des soldats à bord se perdront.`,
-          `Your ship turns back to port: about ${Math.round(CONFIG.RETREAT_LOSS * 100)}% of the soldiers on board will be lost.`), 'warn');
-        return this.refreshAttacks();
+        return this.act({ k: 'recall', id: +rec.dataset.recall }, boat => {
+          if (boat) this.log(tr(`Ton bateau fait demi-tour vers le port : environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % des soldats à bord se perdront.`,
+            `Your ship turns back to port: about ${Math.round(CONFIG.RETREAT_LOSS * 100)}% of the soldiers on board will be lost.`), 'warn');
+          this.refreshAttacks();
+        });
       }
       const cancel = e.target.closest('[data-cancel]');
       if (!cancel) return;
       const id = cancel.dataset.cancel;
-      const a = Game.cancelAttack(Game.human.id, +id);
-      if (a && a.calledBack) this.log(tr('↩️ Ton armée n\'avait pas encore quitté tes terres : elle rentre tout de suite, sans perte.', '↩️ Your army had not left your lands yet: it comes straight back, with no losses.'), 'good');
-      else if (a) this.log(tr(`🏳️ Retraite ordonnée : tes soldats décrochent en ${CONFIG.RETREAT_TIME} s, et environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdront.`,
-        `🏳️ Retreat ordered: your soldiers pull back in ${CONFIG.RETREAT_TIME} s, and about ${Math.round(CONFIG.RETREAT_LOSS * 100)}% will be lost.`), 'warn');
-      this.refreshAttacks();
+      this.act({ k: 'cancelAttack', attack: +id }, a => {
+        if (a && a.calledBack) this.log(tr('↩️ Ton armée n\'avait pas encore quitté tes terres : elle rentre tout de suite, sans perte.', '↩️ Your army had not left your lands yet: it comes straight back, with no losses.'), 'good');
+        else if (a) this.log(tr(`🏳️ Retraite ordonnée : tes soldats décrochent en ${CONFIG.RETREAT_TIME} s, et environ ${Math.round(CONFIG.RETREAT_LOSS * 100)} % se perdront.`,
+          `🏳️ Retreat ordered: your soldiers pull back in ${CONFIG.RETREAT_TIME} s, and about ${Math.round(CONFIG.RETREAT_LOSS * 100)}% will be lost.`), 'warn');
+        this.refreshAttacks();
+      });
     });
 
     // pointerdown plutôt que click : le classement est redessiné souvent
@@ -355,9 +359,7 @@ const UI = {
   mapType() { return this.factionMode() ? 'azeroth' : $('mapType').value; },
 
   start() {
-    this.dropAllianceRequests(true);
-    Music.start(); // (🎵 la musique d'ambiance démarre avec la partie : le clic sur « Commencer » l'autorise)
-    Game.init({
+    this.launch({
       factions: this.factionMode(),
       name: $('name').value.trim() || tr('Mon Royaume', 'My Kingdom'),
       banner: this.banner,
@@ -366,7 +368,33 @@ const UI = {
       mapType: this.mapType(),
       mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
+      seed: this.nextSeed, // (en solo : rien, une graine au hasard ; voir Game.init)
     });
+  },
+  // 🌐 Une partie en ligne commence (voir Net.start) : la même partie chez tous les joueurs du salon
+  startOnline(m) {
+    const s = m.settings || {};
+    this.launch({
+      online: true, seed: m.seed, humans: m.players, me: m.me,
+      mapType: CONFIG.NET.MAPS.includes(s.mapType) ? s.mapType : 'normal',
+      mapSize: ['petit', 'moyen', 'grand'].includes(s.mapSize) ? s.mapSize : 'moyen',
+      difficulty: DIFFICULTIES[s.difficulty] ? s.difficulty : 'normal',
+      opponents: Math.max(0, s.opponents | 0),
+      pacts: !!s.pacts,
+    });
+    this.refreshHostButtons();
+    this.refreshPauseButton();
+    const others = Game.players.filter(p => p.human && !p.isHuman).map(p => p.name);
+    const bots = Game.players.filter(p => !p.human).length;
+    this.log(tr(`🌐 Partie en ligne${others.length ? ` avec ${others.join(', ')}` : ''} (et ${bots} bots). Choisis vite où fonder ta capitale : la partie commence dans ${Net.spawnLeft()} s (sinon, une place au hasard).`,
+      `🌐 Online game${others.length ? ` with ${others.join(', ')}` : ''} (and ${bots} bots). Quickly choose where to found your capital: the game starts in ${Net.spawnLeft()} s (otherwise, a random spot).`), 'good');
+  },
+  // Lance la partie (solo ou en ligne) et prépare l'écran de jeu
+  launch(opts) {
+    this.dropAllianceRequests(true);
+    Music.start(); // (🎵 la musique d'ambiance démarre avec la partie : le clic sur « Commencer » l'autorise)
+    Game.init(opts);
+    this.centeredOnline = false;
     $('kBanner').src = BANNERS[this.banner].icon;
     $('speedBtn').textContent = '⏩ x1'; // (chaque partie commence à vitesse normale)
     Render.setupMap();
@@ -435,9 +463,11 @@ const UI = {
   quickUpgrade(i) {
     const G = Game, h = G.human;
     if (!G.building[i] || G.owner[i] !== h.id) return; // (un clic à côté ne fait rien)
-    const a = G.anchor[i], err = G.upgradeBuilding(h, a);
-    if (err) return this.log(err, 'warn');
-    Render.floatText(a, G.building[a], '⬆️');
+    const a = G.anchor[i];
+    this.act({ k: 'upgrade', a }, err => {
+      if (err) return this.log(err, 'warn');
+      Render.floatText(a, G.building[a], '⬆️');
+    });
   },
 
   selectBuild(t) {
@@ -455,7 +485,8 @@ const UI = {
 
   openRules() {
     if (!$('rulesBody').firstChild) $('rulesBody').appendChild(document.querySelector('.rulesBox .rules.' + LANG).cloneNode(true));
-    this.rulesPaused = !Game.paused; // (on ne remet le jeu en marche en fermant que si c'est nous qui l'avons arrêté)
+    // (on ne remet le jeu en marche en fermant que si c'est nous qui l'avons arrêté ; 🌐 en ligne, la partie continue)
+    this.rulesPaused = !Game.online && !Game.paused;
     if (this.rulesPaused) this.togglePause();
     $('rulesScreen').classList.remove('hidden');
   },
@@ -466,7 +497,7 @@ const UI = {
   },
   // ↩ Quitter la partie ? (comme les règles : le jeu se met en pause, et ne repart que si c'est nous qui l'avons arrêté)
   openQuit() {
-    this.quitPaused = Game.phase === 'playing' && !Game.paused;
+    this.quitPaused = !Game.online && Game.phase === 'playing' && !Game.paused;
     if (this.quitPaused) this.togglePause();
     $('quitScreen').classList.remove('hidden');
   },
@@ -476,12 +507,154 @@ const UI = {
     this.quitPaused = false;
   },
 
-  // Celui qui héberge la partie : lui seul peut la mettre en pause et changer sa vitesse.
-  // (en solo, c'est toujours le joueur ; pour une future partie à plusieurs, seul l'hôte aura ces boutons)
-  isHost() { return true; },
+  // --- 🌐 Le menu des parties en ligne (voir net.js) ---
+  initNet() {
+    // (pas de serveur de jeu : pas de bouton ; voir CONFIG.NET.SERVER)
+    if (!Net.available()) return $('netBox').classList.add('hidden');
+    $('netPublic').addEventListener('click', () => Net.joinPublic());
+    $('netCreate').addEventListener('click', () => { this.netSafeMap(); Net.createRoom(); });
+    $('netJoin').addEventListener('click', () => { if ($('netCode').value.trim()) Net.joinRoom($('netCode').value); });
+    $('netCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('netJoin').click(); });
+    // (l'hôte d'un salon privé change un réglage : tout le salon le voit ; les scénarios restent pour le jeu en solo)
+    for (const id of ['mapType', 'mapSize', 'pacts', 'difficulty', 'opponents']) {
+      $(id).addEventListener('change', () => {
+        if (!Net.room) return;
+        if (id === 'mapType' && !CONFIG.NET.MAPS.includes($('mapType').value)) {
+          this.netStatus(tr('📜 Les scénarios et les cartes dessinées se jouent en solo, pour l\'instant.', '📜 Scenarios and drawn maps are solo only, for now.'), 'warn');
+          return this.netSafeMap();
+        }
+        Net.sendSettings();
+      });
+    }
+    $('name').addEventListener('change', () => Net.sendProfile());
+    $('bannerPick').addEventListener('click', () => Net.sendProfile());
+    setInterval(() => this.refreshNetCount(), 250);
+    // (lien d'invitation à un salon privé : index.html?salon=CODE)
+    const code = new URLSearchParams(location.search).get('salon');
+    if (code) Net.joinRoom(code);
+  },
+  // Pas de scénario en ligne : on revient à une carte normale
+  netSafeMap() {
+    if (CONFIG.NET.MAPS.includes($('mapType').value)) return;
+    $('mapType').value = 'normal';
+    $('mapType').dispatchEvent(new Event('change'));
+  },
+  // Ce que le serveur sait de nous (notre nom et notre bannière), et les réglages du salon (choisis par l'hôte)
+  netProfile() { return { name: $('name').value.trim() || tr('Mon Royaume', 'My Kingdom'), banner: this.banner }; },
+  netSettings() {
+    const m = $('mapType').value;
+    return { mapType: CONFIG.NET.MAPS.includes(m) ? m : 'normal', mapSize: $('mapSize').value, pacts: $('pacts').value === 'oui',
+      difficulty: $('difficulty').value, opponents: +$('opponents').value };
+  },
+  netStatus(text, kind = '') {
+    $('netStatus').textContent = text;
+    $('netStatus').className = kind;
+  },
+  // Le salon où l'on attend (r = null : on n'est plus dans un salon). Les réglages du menu restent sous les yeux :
+  // seul l'hôte d'un salon privé peut les changer ; dans une partie publique, c'est le serveur qui les choisit.
+  showRoom(r) {
+    const host = !!r && !r.public && r.host === r.you;
+    $('netRoom').classList.toggle('hidden', !r);
+    $('netBtns').classList.toggle('hidden', !!r);
+    $('startBtn').classList.toggle('hidden', !!r);
+    const lock = !!r && !host;
+    for (const id of ['mapBtn', 'mapSize', 'pacts', 'difficulty', 'opponents']) $(id).disabled = lock;
+    if (!r) {
+      this.netStatus('');
+      $('mapType').dispatchEvent(new Event('change')); // (les réglages reprennent leur état habituel)
+      return;
+    }
+    if (!host && r.settings) this.applyNetSettings(r.settings);
+    if (lock) for (const id of ['mapBtn', 'mapSize', 'pacts', 'difficulty', 'opponents']) $(id).disabled = true;
+    this.netStatus('');
+    const you = tr(' (toi)', ' (you)');
+    const players = r.players.map(p => `<li>${BANNERS[p.banner] ? `<img src="${BANNERS[p.banner].icon}" alt="">` : ''}` +
+      `${escapeHtml(p.name)}${p.id === r.host ? ' 👑' : ''}${p.id === r.you ? you : ''}</li>`).join('');
+    const head = r.public
+      ? tr('🌍 <b>Partie publique</b> · elle commence dans <b id="netCount"></b>', '🌍 <b>Public game</b> · it starts in <b id="netCount"></b>')
+      : tr(`🔒 <b>Salon privé</b> · code <b class="netCode">${escapeHtml(r.code)}</b>`, `🔒 <b>Private room</b> · code <b class="netCode">${escapeHtml(r.code)}</b>`) +
+        ` <button type="button" id="netCopy">${tr('🔗 Copier le lien', '🔗 Copy link')}</button>`;
+    const help = r.public ? tr('La carte est tirée au hasard ; des bots complètent la partie. Personne ne peut la mettre en pause.',
+      'The map is drawn at random; bots fill the game. Nobody can pause it.')
+      : host ? tr('Tu es l\'hôte : choisis les réglages ci-dessus, puis lance la partie. Tu décideras de la pause et de la vitesse.',
+        'You are the host: choose the settings above, then start the game. You will decide on pause and speed.')
+      : tr(`L'hôte choisit les réglages et lance la partie. Tu pourras la mettre en pause ${r.rules ? Math.round(r.rules.pauseTime / 1000) : 15} s, une fois toutes les ${r.rules ? Math.round(r.rules.pauseEvery / 60000) : 5} min.`,
+        `The host chooses the settings and starts the game. You will be able to pause it for ${r.rules ? Math.round(r.rules.pauseTime / 1000) : 15} s, once every ${r.rules ? Math.round(r.rules.pauseEvery / 60000) : 5} min.`);
+    $('netRoom').innerHTML = `<div>${head}</div><ul class="netPlayers">${players}</ul><small>${help}</small>` +
+      `<div class="choices">${host ? `<button type="button" id="netGo">${tr('⚔️ Lancer la partie', '⚔️ Start the game')}</button>` : ''}` +
+      `<button type="button" id="netLeave">${tr('Quitter le salon', 'Leave the room')}</button></div>`;
+    this.netDeadline = r.startsIn !== undefined && r.startsIn !== null ? performance.now() + r.startsIn : null;
+    this.refreshNetCount();
+    if (host) $('netGo').addEventListener('click', () => Net.startRoom());
+    $('netLeave').addEventListener('click', () => Net.leaveRoom());
+    const copy = $('netCopy');
+    if (copy) copy.addEventListener('click', () => {
+      const link = location.origin + location.pathname + '?salon=' + encodeURIComponent(r.code) + (new URLSearchParams(location.search).get('serveur') ? '&serveur=' + encodeURIComponent(new URLSearchParams(location.search).get('serveur')) : '');
+      const done = () => this.netStatus(tr('🔗 Lien copié : envoie-le à tes amis !', '🔗 Link copied: send it to your friends!'));
+      if (navigator.clipboard) navigator.clipboard.writeText(link).then(done, () => this.netStatus(link));
+      else this.netStatus(link);
+    });
+  },
+  // Les réglages choisis par l'hôte (ou par le serveur, pour une partie publique) s'affichent dans le menu
+  applyNetSettings(st) {
+    if (CONFIG.NET.MAPS.includes(st.mapType) && $('mapType').value !== st.mapType) {
+      $('mapType').value = st.mapType;
+      $('mapType').dispatchEvent(new Event('change'));
+    }
+    if ($('mapSize').value !== st.mapSize && ['petit', 'moyen', 'grand'].includes(st.mapSize)) {
+      $('mapSize').value = st.mapSize;
+      $('mapSize').dispatchEvent(new Event('change'));
+    }
+    $('pacts').value = st.pacts ? 'oui' : 'non';
+    if (DIFFICULTIES[st.difficulty]) $('difficulty').value = st.difficulty;
+    // (le nombre de bots : on l'ajoute à la liste s'il n'y est pas, pour l'afficher tel quel)
+    const n = String(st.opponents | 0);
+    if (![...$('opponents').options].some(o => o.value === n)) {
+      $('opponents').insertAdjacentHTML('beforeend', `<option value="${n}">${tr(`${n} royaumes rivaux`, `${n} rival kingdoms`)}</option>`);
+    }
+    $('opponents').value = n;
+  },
+  // Le compte à rebours de la partie publique
+  refreshNetCount() {
+    const el = $('netCount');
+    if (!el || this.netDeadline === null || this.netDeadline === undefined) return;
+    const s = Math.max(0, Math.ceil((this.netDeadline - performance.now()) / 1000));
+    el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  },
+
+  // --- 🌐 Les actions du joueur ---
+  // Chaque action (attaquer, construire, améliorer…) est un « ordre » (voir Game.runOrder). En solo, il s'exécute tout
+  // de suite ; en ligne, il part au serveur, qui le renvoie à tous les joueurs : chaque navigateur l'exécute au même
+  // tour, et la partie reste la même partout (voir net.js). Une fois l'ordre exécuté, done(résultat, avant) affiche
+  // son message (« Pas assez d'or ! »…) ; before() (facultatif) note juste avant ce qu'il faut comparer (les soldats…).
+  act(o, done, before) {
+    if (Game.online) return Net.sendOrder(o, done, before);
+    this.runMine(o, done, before);
+  },
+  // Exécute un de nos ordres et affiche son résultat (en ligne : au tour où il revient du serveur)
+  runMine(o, done, before) {
+    const G = Game, h = G.human;
+    // (la partie a pris fin, ou on a perdu, entre le clic et l'exécution : l'ordre ne fait rien, pas de message)
+    const live = o.k === 'continue' || (G.phase === 'playing' && h && h.alive);
+    const b = before ? before() : null;
+    const res = G.runOrder(h.id, o);
+    if (done && live) done(res, b);
+  },
+
+  // Celui qui décide de la pause et de la vitesse : en solo, le joueur ; en ligne, l'hôte d'un salon privé (les
+  // autres ont droit à de courtes pauses, voir net.js) ; dans une partie publique, personne
+  isHost() { return !Game.online || (typeof Net !== 'undefined' && Net.isHost()); },
+
+  // Les boutons ⏸ et ⏩ : en ligne, seulement pour qui a le droit de s'en servir (voir net.js)
+  refreshHostButtons() {
+    $('pauseBtn').classList.toggle('hidden', !(this.isHost() || (Game.online && Net.canPause())));
+    $('speedBtn').classList.toggle('hidden', !this.isHost());
+  },
+  refreshPauseButton() { $('pauseBtn').textContent = Game.paused ? tr('▶ Reprendre', '▶ Resume') : '⏸ Pause'; },
 
   // Vitesse suivante de la partie (x1 → x1,5 → x2 → x3 → x1)
   nextSpeed() {
+    if (Game.online) return Net.nextSpeed(); // (🌐 en ligne : demandée au serveur, pour tout le monde)
     if (!this.isHost()) return;
     const S = CONFIG.GAME_SPEEDS, k = S.indexOf(Game.speed);
     Game.speed = S[(k + 1) % S.length];
@@ -489,6 +662,7 @@ const UI = {
   },
 
   togglePause() {
+    if (Game.online) return Net.togglePause(); // (🌐 en ligne : demandée au serveur, pour tout le monde)
     if (!this.isHost() || this.parchmentOn) return; // (📜 pas pendant la lecture d'un parchemin)
     Game.paused = !Game.paused;
     $('pauseBtn').textContent = Game.paused ? tr('▶ Reprendre', '▶ Resume') : '⏸ Pause';
@@ -606,12 +780,15 @@ const UI = {
     if (G.areAllied(h.id, id)) {
       if (G.eternalPact(h.id)) return this.log(tr(`⚔️ ${other.name} et toi êtes du même camp (${G.pactName(h)}) : ce pacte dure toute la partie.`,
         `⚔️ ${other.name} and you are in the same faction (${G.pactName(h)}): this pact lasts the whole game.`), 'warn');
-      this.confirmBetrayal(other, () => G.breakAlliance(h.id, id));
+      this.confirmBetrayal(other, () => this.act({ k: 'betray', other: id }));
       return;
     }
-    const res = G.proposeAlliance(h.id, id);
-    if (res === 'refused') this.log(tr(`🚫 ${other.name} refuse ton alliance.`, `🚫 ${other.name} turns down your alliance.`), 'warn');
-    else if (res !== 'accepted') this.log(res, 'warn');
+    this.act({ k: 'ally', to: id }, res => {
+      if (res === 'refused') this.log(tr(`🚫 ${other.name} refuse ton alliance.`, `🚫 ${other.name} turns down your alliance.`), 'warn');
+      // (🌐 en ligne, un autre joueur humain : il a reçu ta demande, il y répondra)
+      else if (res === 'pending') this.log(tr(`🤝 Ta demande d'alliance part chez ${other.name}.`, `🤝 Your alliance request goes to ${other.name}.`), 'good');
+      else if (res && res !== 'accepted') this.log(res, 'warn');
+    });
   },
 
   // Ce que fait un bâtiment à son niveau : une liste de petits avantages (« Défense des murs +200 % »…)
@@ -793,9 +970,10 @@ const UI = {
         `<div class="choices"><button data-yes${G.human.gold >= cost && !why ? '' : ' disabled'}>${tr('Améliorer', 'Upgrade')} (💰 ${fmt(cost)})</button>` +
         `${del}<button data-no>${tr('Fermer', 'Close')}</button></div>`;
       el.querySelector('[data-yes]').addEventListener('click', () => {
-        const err = G.upgradeBuilding(G.human, a);
-        if (err) return this.log(err, 'warn');
-        close();
+        this.act({ k: 'upgrade', a }, err => {
+          if (err) return this.log(err, 'warn');
+          close();
+        });
       });
     }
     // Ville de niveau 2 ou plus : bouton « Mur » (avant « Détruire »)
@@ -872,9 +1050,10 @@ const UI = {
     el.addEventListener('pointerdown', e => e.stopPropagation());
     el.querySelector('[data-up]').addEventListener('click', () => {
       this.closeActionMenu();
-      const err = G.upgradeBuilding(h, a);
-      if (err) this.log(err, 'warn');
-      else if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
+      this.act({ k: 'upgrade', a }, err => {
+        if (err) this.log(err, 'warn');
+        else if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
+      });
     });
     const wallBtn = el.querySelector('[data-wall]');
     if (wallBtn) {
@@ -905,7 +1084,7 @@ const UI = {
     if (xBtn) xBtn.addEventListener('click', () => {
       this.closeActionMenu();
       if (this.upgradeBox) { this.upgradeBox.remove(); this.upgradeBox = null; }
-      if (work) return G.cancelWorks(h, a);
+      if (work) return this.act({ k: 'cancelWorks', a });
       this.confirmDemolish(a);
     });
     document.body.appendChild(el);
@@ -920,14 +1099,16 @@ const UI = {
     this.closeBuildingMenus();
     const stationed = o ? Math.floor(o.stationed) : 0, send = Math.floor(h.troops * this.ratio);
     const reinforce = () => {
-      const err = G.reinforceOutpost(h.id, a, h.troops * this.ratio);
-      if (err) this.log(err, 'warn');
-      else this.log(tr('⛵ Des renforts partent par la mer vers ton avant-poste !', '⛵ Reinforcements set sail for your outpost!'), 'good');
+      this.act({ k: 'reinforce', a, troops: h.troops * this.ratio }, err => {
+        if (err) this.log(err, 'warn');
+        else this.log(tr('⛵ Des renforts partent par la mer vers ton avant-poste !', '⛵ Reinforcements set sail for your outpost!'), 'good');
+      });
     };
     const repatriate = () => {
-      const err = G.repatriate(h.id, a);
-      if (err) this.log(err, 'warn');
-      else this.log(tr(`🚢 ${fmt(stationed)} soldats rembarquent vers ton port.`, `🚢 ${fmt(stationed)} soldiers re-embark for your port.`), 'good');
+      this.act({ k: 'repatriate', a }, err => {
+        if (err) this.log(err, 'warn');
+        else this.log(tr(`🚢 ${fmt(stationed)} soldats rembarquent vers ton port.`, `🚢 ${fmt(stationed)} soldiers re-embark for your port.`), 'good');
+      });
     };
     // Fenêtre d'info (en haut à gauche)
     const box = document.createElement('div');
@@ -947,10 +1128,11 @@ const UI = {
     // Abandonner l'avant-poste : tous ses soldats (garnison comprise) rentrent automatiquement
     box.querySelector('[data-ab]').addEventListener('click', () => {
       this.closeBuildingMenus();
-      const got = G.abandonOutpost(h.id, a);
-      if (typeof got === 'string') this.log(got, 'warn');
-      else this.log(tr(`🧨 Avant-poste abandonné : ${fmt(got)} soldats rentrent ${G.homePort(h.id, o.landing) === null ? 'au royaume' : 'par la mer vers ton port'}.`,
-        `🧨 Outpost abandoned: ${fmt(got)} soldiers head ${G.homePort(h.id, o.landing) === null ? 'back to the kingdom' : 'home by sea to your port'}.`), 'good');
+      this.act({ k: 'abandon', a }, got => {
+        if (typeof got === 'string') this.log(got, 'warn');
+        else if (got !== null) this.log(tr(`🧨 Avant-poste abandonné : ${fmt(got)} soldats rentrent ${G.homePort(h.id, o.landing) === null ? 'au royaume' : 'par la mer vers ton port'}.`,
+          `🧨 Outpost abandoned: ${fmt(got)} soldiers head ${G.homePort(h.id, o.landing) === null ? 'back to the kingdom' : 'home by sea to your port'}.`), 'good');
+      });
     });
     box.querySelector('[data-no]').addEventListener('click', closeBox);
     $('log').prepend(box);
@@ -984,8 +1166,7 @@ const UI = {
     const close = () => { el.remove(); if (this.demolishBox === el) this.demolishBox = null; };
     el.querySelector('[data-yes]').addEventListener('click', () => {
       close();
-      const err = G.demolishBuilding(G.human, a);
-      if (err) this.log(err, 'warn');
+      this.act({ k: 'demolish', a }, err => { if (err) this.log(err, 'warn'); });
     });
     el.querySelector('[data-no]').addEventListener('click', close);
     $('log').prepend(el);
@@ -1036,10 +1217,8 @@ const UI = {
       el.remove(); // (le message disparaît toujours, même si la demande n'a plus lieu d'être)
       if (!this.pending.has(from.id)) return;
       this.pending.delete(from.id);
-      const block = Game.pactBlock(from.id, Game.human.id);
-      if (yes && block) this.log(block, 'warn'); // la situation a changé entre-temps
-      if (yes && !block && from.alive && Game.human.alive) Game.makeAlliance(from.id, Game.human.id);
-      else Game.refuseAlliance(from.id, Game.human.id);
+      // (oui, mais la situation a changé entre-temps : on prévient pourquoi le pacte ne se fait pas)
+      this.act({ k: 'allyAnswer', from: from.id, yes }, block => { if (block) this.log(block, 'warn'); });
     };
     el.querySelector('[data-yes]').addEventListener('click', () => answer(true));
     el.querySelector('[data-no]').addEventListener('click', () => answer(false));
@@ -1064,6 +1243,7 @@ const UI = {
   // kind = 'empire' : 👑 la victoire du scénario « Charlemagne » (couronné empereur)
   showEnd(win, canContinue = false, kind = '') {
     this.dropAllianceRequests(true);
+    this.endKind = kind;
     const h = Game.human, secs = Math.floor(Game.tick / CONFIG.TICKS_PER_SECOND);
     $('endTitle').textContent = win ? tr('🏆 Victoire !', '🏆 Victory!') : tr('💀 Défaite...', '💀 Defeat...');
     $('endText').textContent = win
@@ -1080,6 +1260,16 @@ const UI = {
       }[Game.human.role];
       if (t) { $('endTitle').textContent = t[0]; $('endText').textContent = t[1]; }
     }
+    // 🌐 En ligne : vaincu, on peut regarder la suite ; la partie finie, on dit qui l'emporte
+    if (kind === 'spectate') {
+      $('endText').textContent = tr(`Le royaume de ${h.name} est tombé. La partie continue pour les autres : tu peux regarder la suite.`,
+        `The kingdom of ${h.name} has fallen. The game goes on for the others: you can watch the rest.`);
+    }
+    const w = kind === 'online' ? Game.players[Game.winner] : null;
+    if (w && !win) {
+      $('endTitle').textContent = tr('🏁 Partie terminée', '🏁 Game over');
+      $('endText').textContent = tr(`${w.name} l'emporte, avec ${Game.landPct(w.tiles)} % des terres.`, `${w.name} wins, with ${Game.landPct(w.tiles)}% of the land.`);
+    }
     if (kind === 'empire') {
       $('endTitle').textContent = tr('👑 Couronné empereur !', '👑 Crowned emperor!');
       $('endText').textContent = tr('Noël 800, à Rome : le pape pose la couronne sur la tête de Charles. Saxons, Lombards, Bavarois et Avars sont soumis : l\'Empire d\'Occident renaît, et l\'histoire l\'appellera Charlemagne !',
@@ -1093,7 +1283,8 @@ const UI = {
       `⏱️ Duration: ${Math.floor(secs / 60)} min ${secs % 60} s<br>` +
       `🗺️ Largest territory: ${best}%<br>` +
       `☠️ Kingdoms destroyed: ${h.kills}`);
-    $('continueBtn').classList.toggle('hidden', !canContinue);
+    $('continueBtn').classList.toggle('hidden', !canContinue && kind !== 'spectate');
+    $('continueBtn').textContent = kind === 'spectate' ? tr('👁️ Regarder la suite', '👁️ Watch the rest') : tr('Continuer', 'Continue');
     $('summaryBtn').classList.toggle('hidden', !Replay.available());
     if (win) Music.victory(); // (🏆 le son de la victoire, à la place de la musique d'ambiance)
     $('endscreen').classList.remove('hidden');
@@ -1354,7 +1545,7 @@ const UI = {
       const blink = attacking ? (Math.floor(performance.now() / 400) % 2 ? ' attacker' : ' attacker on') : '';
       return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}${blink}" data-pid="${p.id}"` +
         `${attacking ? ` title="${tr('Il t\'attaque ! Clique pour voir où.', 'They are attacking you! Click to see where.')}"` : ''}>${this.bannerImg(p, 'lbb')}` +
-        `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${escapeHtml(p.name)}</span>` +
+        `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${p.human && !p.isHuman ? '👤 ' : ''}${escapeHtml(p.name)}</span>` +
         `<span class="allies" title="${this.alliesTitle(p)}">` +
         G.allies(p.id).map(o => `<i style="background:rgb(${o.color})"></i>`).join('') + `</span>` +
         `${this.faithBadge(p)}${p.raiders ? `<span class="pct" title="${tr('Pillards : leurs terres sont imprenables, elles ne comptent pas dans les parts', 'Raiders: their lands cannot be taken and do not count in the shares')}">⚔️</span>`
@@ -1387,6 +1578,13 @@ const UI = {
 
     this.refreshAttacks();
 
+    // (🌐 en ligne, la partie commence : la caméra va sur sa capitale, choisie ou tirée au hasard)
+    if (G.online && G.phase === 'playing' && !this.centeredOnline) {
+      this.centeredOnline = true;
+      const half = G.sizeOf(B_CASTLE) / 2;
+      if (G.human.capital >= 0) Render.centerOn(G.human.capital % G.W + half, ((G.human.capital / G.W) | 0) + half);
+      this.log(tr('⚔️ La partie commence !', '⚔️ The game begins!'), 'good');
+    }
     if (G.phase === 'playing') {
       const freeArm = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
       $('hint').textContent = this.vikingAim ? this.vikingHint() : this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
@@ -1399,7 +1597,10 @@ const UI = {
         : UI.describeTile(Render.hover) || tr('Clique sur une terre voisine pour attaquer · molette = zoom · glisser, ZQSD ou flèches = déplacer',
           'Click on neighbouring land to attack · wheel = zoom · drag, WASD or arrows = move');
     } else if (G.phase === 'spawn') {
-      $('hint').textContent = this.spawnHint(Render.hover);
+      // (🌐 en ligne : le compte à rebours avant le début de la partie)
+      const left = G.online ? `⏳ ${Net.spawnLeft()} s · ` : '';
+      $('hint').textContent = left + (G.online && G.human.spawned ? tr('👑 Ta capitale est fondée : la partie commence à la fin du compte à rebours',
+        '👑 Your capital is founded: the game starts when the countdown ends') : this.spawnHint(Render.hover));
     } else if (G.phase === 'over') {
       $('hint').textContent = '';
     }
@@ -1656,16 +1857,16 @@ const UI = {
       const op = zoneOp >= 0 ? zoneOp : target.targetCastle;
       if (G.building[op] === B_OUTPOST) {
         // Avant-poste : ses soldats stationnés peuvent le défendre (pas ceux du royaume, au-delà des mers)
-        const before = G.troopsAt(h.id, op);
-        const a = G.sendDefenders(h.id, attackId, before * this.ratio);
-        if (a) return this.log(tr(`🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldats stationnés à ton avant-poste partent le défendre ` +
-          '(seuls eux peuvent le rejoindre, au-delà des mers).',
-          `🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldiers stationed at your outpost set out to defend it ` +
-          '(only they can reach it, beyond the seas).'), 'good');
-        return this.log(tr('🚫 Ton avant-poste est au-delà des mers : seuls ses soldats le défendent, et il n\'en a plus de libres. ' +
-          'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.',
-          '🚫 Your outpost is beyond the seas: only its own soldiers defend it, and it has none left to spare. ' +
-          'Click on the outpost to send it reinforcements by sea.'), 'warn');
+        return this.act({ k: 'defend', attack: attackId, troops: G.troopsAt(h.id, op) * this.ratio }, (a, before) => {
+          if (a) return this.log(tr(`🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldats stationnés à ton avant-poste partent le défendre ` +
+            '(seuls eux peuvent le rejoindre, au-delà des mers).',
+            `🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldiers stationed at your outpost set out to defend it ` +
+            '(only they can reach it, beyond the seas).'), 'good');
+          this.log(tr('🚫 Ton avant-poste est au-delà des mers : seuls ses soldats le défendent, et il n\'en a plus de libres. ' +
+            'Clique sur l\'avant-poste pour lui envoyer des renforts par la mer.',
+            '🚫 Your outpost is beyond the seas: only its own soldiers defend it, and it has none left to spare. ' +
+            'Click on the outpost to send it reinforcements by sea.'), 'warn');
+        }, () => G.troopsAt(h.id, op));
       }
       if (target.unlinked) return this.log(tr('🚫 Ce territoire est coupé de tous tes châteaux : personne ne peut le défendre. ' +
         'Relie-le à un château (clique sur ton château isolé) ou bâtis-en un nouveau.',
@@ -1676,21 +1877,22 @@ const UI = {
         '🚫 It is cut off from your kingdom: your defenders cannot reach it. ' +
         'Click on it to launch an assault that links it to your kingdom.'), 'warn');
     }
-    const before = h.troops;
-    const a = G.sendDefenders(h.id, attackId, h.troops * this.ratio);
-    if (a && a.reinforced) this.log(tr(`🛡️ ${fmt(before - h.troops)} soldats renforcent ton armée de défense contre ${G.players[a.attacker].name} (ils la rejoignent dans ${CONFIG.DEFEND_REINFORCE_DELAY} s).`,
-      `🛡️ ${fmt(before - h.troops)} soldiers reinforce your defending army against ${G.players[a.attacker].name} (they join it in ${CONFIG.DEFEND_REINFORCE_DELAY} s).`), 'good');
-    else if (a) this.log(tr(`🛡️ ${fmt(before - h.troops)} défenseurs partent de ton château le plus proche à la rencontre de ${G.players[a.attacker].name} !`,
-      `🛡️ ${fmt(before - h.troops)} defenders set out from your nearest castle to meet ${G.players[a.attacker].name}!`), 'good');
-    else this.log(tr('Pas assez de soldats pour défendre !', 'Not enough soldiers to defend!'), 'warn');
+    this.act({ k: 'defend', attack: attackId, troops: h.troops * this.ratio }, (a, before) => {
+      if (a && a.reinforced) this.log(tr(`🛡️ ${fmt(before - h.troops)} soldats renforcent ton armée de défense contre ${G.players[a.attacker].name} (ils la rejoignent dans ${CONFIG.DEFEND_REINFORCE_DELAY} s).`,
+        `🛡️ ${fmt(before - h.troops)} soldiers reinforce your defending army against ${G.players[a.attacker].name} (they join it in ${CONFIG.DEFEND_REINFORCE_DELAY} s).`), 'good');
+      else if (a) this.log(tr(`🛡️ ${fmt(before - h.troops)} défenseurs partent de ton château le plus proche à la rencontre de ${G.players[a.attacker].name} !`,
+        `🛡️ ${fmt(before - h.troops)} defenders set out from your nearest castle to meet ${G.players[a.attacker].name}!`), 'good');
+      else this.log(tr('Pas assez de soldats pour défendre !', 'Not enough soldiers to defend!'), 'warn');
+    }, () => h.troops);
   },
 
   // Assaut (selon le curseur « Envoyer ») pour relier un château isolé à son royaume
   link(c) {
     const G = Game, h = G.human;
-    const err = G.launchLink(h.id, c, h.troops * this.ratio);
-    if (err) this.log(err, 'warn');
-    else Music.sound('assault'); // (🔔 l'armée part à l'assaut)
+    this.act({ k: 'link', c, troops: h.troops * this.ratio }, err => {
+      if (err) this.log(err, 'warn');
+      else Music.sound('assault'); // (🔔 l'armée part à l'assaut)
+    });
   },
 
   // --- Choisir la cible d'un assaut, puis valider ---
@@ -1745,9 +1947,10 @@ const UI = {
     // (l'avant-poste choisi s'est vidé entre les deux clics : l'assaut part de la ville)
     const src = p.source >= 0 && G.troopsAt(h.id, p.source) < 1 ? -1 : p.source;
     // (assaut de front : on garde la case du 1er clic, pour ne pas viser par erreur une église cliquée au 2e)
-    const err = G.launchAttack(h.id, p.target, G.troopsAt(h.id, src) * this.ratio, p.castle >= 0 ? p.castle : p.tile, src);
-    if (err) this.log(err, 'warn');
-    else Music.sound('assault'); // (🔔 l'armée part à l'assaut)
+    this.act({ k: 'attack', target: p.target, troops: G.troopsAt(h.id, src) * this.ratio, aim: p.castle >= 0 ? p.castle : p.tile, src }, err => {
+      if (err) this.log(err, 'warn');
+      else Music.sound('assault'); // (🔔 l'armée part à l'assaut)
+    });
     return true;
   },
 
@@ -1760,20 +1963,21 @@ const UI = {
       const label = tr(`⚖️ Acheter la fidélité ${G.deName(name)} (💰 ${fmt(V.BRIBE_GOLD)})`, `⚖️ Buy ${possessive(name)} loyalty (💰 ${fmt(V.BRIBE_GOLD)})`);
       if (!camp) items.push({ label, disabled: tr('Seuls les deux rois et leurs alliés achètent la fidélité des vassaux.', 'Only the two kings and their allies buy the loyalty of vassals.') });
       else items.push({ label, run: () => {
-        const err = G.hyBribe(h.id, o);
-        if (err) this.log(err, 'warn');
-        else this.log(tr(`🎁 ${G.players[o].name} apprécie tes présents. ${G.hyLoyaltyText(o)}`, `🎁 ${G.players[o].name} appreciates your gifts. ${G.hyLoyaltyText(o)}`), 'good', G.players[o]);
+        this.act({ k: 'hyBribe', to: o }, err => {
+          if (err) this.log(err, 'warn');
+          else this.log(tr(`🎁 ${G.players[o].name} apprécie tes présents. ${G.hyLoyaltyText(o)}`, `🎁 ${G.players[o].name} appreciates your gifts. ${G.hyLoyaltyText(o)}`), 'good', G.players[o]);
+        });
       } });
     }
     const a = G.building[i] ? G.anchor[i] : -1;
     if (a >= 0 && G.building[a] === B_CASTLE && G.owner[a] === h.id && G.hy.plagueOn && G.hy.sick.size) {
       items.push({ label: tr(`🚪 Fermer les portes (${CENTANS.PLAGUE.CLOSE} s : la peste n'y entre pas, mais la ville ne produit plus)`, `🚪 Close the gates (${CENTANS.PLAGUE.CLOSE} s: the plague cannot enter, but the city produces nothing)`),
-        run: () => { const err = G.hyCloseGates(h.id, a); if (err) this.log(err, 'warn'); else this.log(tr(`🚪 ${G.hyCityName(a)} ferme ses portes.`, `🚪 ${G.hyCityName(a)} closes its gates.`), 'good'); } });
+        run: () => this.act({ k: 'hyGates', a }, err => { if (err) this.log(err, 'warn'); else this.log(tr(`🚪 ${G.hyCityName(a)} ferme ses portes.`, `🚪 ${G.hyCityName(a)} closes its gates.`), 'good'); }) });
     }
     if (a >= 0 && h.role === 'angleterre' && G.building[a] === B_CASTLE && o >= 0 && o !== h.id && !G.areAllied(h.id, o)) {
       const n = Math.floor(h.troops * this.ratio);
       items.push({ label: tr(`🔥 Chevauchée avec ${fmt(n)} soldats (piller et brûler la ville, sans la garder)`, `🔥 Chevauchée with ${fmt(n)} soldiers (plunder and burn the city, without keeping it)`),
-        run: () => { const err = G.hyChevauchee(h.id, a, n); if (err) this.log(err, 'warn'); else { Music.sound('assault'); this.log(tr(`🔥 Ta chevauchée part vers ${G.hyCityName(a)} !`, `🔥 Your chevauchée rides towards ${G.hyCityName(a)}!`), 'good'); } } });
+        run: () => this.act({ k: 'hyChev', a, troops: n }, err => { if (err) this.log(err, 'warn'); else { Music.sound('assault'); this.log(tr(`🔥 Ta chevauchée part vers ${G.hyCityName(a)} !`, `🔥 Your chevauchée rides towards ${G.hyCityName(a)}!`), 'good'); } }) });
     }
   },
 
@@ -1808,23 +2012,26 @@ const UI = {
         // (un allié sans armée, comme Rome : les soldats vont renforcer la garnison de sa capitale)
         else if (G.players[o].noArmy) items.push({ label: tr(`🎁 Envoyer ${fmt(n)} soldats renforcer la garnison ${G.deName(name)} (${fmt(n * CONFIG.ALLY_GIFT_RATIO)} arriveront)`,
           `🎁 Send ${fmt(n)} soldiers to reinforce ${possessive(name)} garrison (${fmt(n * CONFIG.ALLY_GIFT_RATIO)} will arrive)`), run: () => {
-          const got = G.sendTroopsToAlly(h.id, o, n);
+          this.act({ k: 'troops', to: o, n }, got => {
           if (typeof got === 'string') this.log(got, 'warn');
-          else this.log(tr(`🎁 ${fmt(got)} soldats renforcent la garnison ${G.deName(G.players[o].name)} !`, `🎁 ${fmt(got)} soldiers reinforce ${possessive(G.players[o].name)} garrison!`), 'good', G.players[o]);
+          else if (got !== null) this.log(tr(`🎁 ${fmt(got)} soldats renforcent la garnison ${G.deName(G.players[o].name)} !`, `🎁 ${fmt(got)} soldiers reinforce ${possessive(G.players[o].name)} garrison!`), 'good', G.players[o]);
+          });
         } });
         else items.push({ label: tr(`🎁 Envoyer ${fmt(n)} soldats à ${name} (il en recevra ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`,
           `🎁 Send ${fmt(n)} soldiers to ${name} (they will receive ${fmt(n * CONFIG.ALLY_GIFT_RATIO)})`), run: () => {
-          const got = G.sendTroopsToAlly(h.id, o, n);
+          this.act({ k: 'troops', to: o, n }, got => {
           if (typeof got === 'string') this.log(got, 'warn');
-          else this.log(tr(`🎁 ${fmt(got)} soldats arrivent chez ${G.players[o].name} (${Math.round((1 - CONFIG.ALLY_GIFT_RATIO) * 100)} % se sont perdus en route).`,
+          else if (got !== null) this.log(tr(`🎁 ${fmt(got)} soldats arrivent chez ${G.players[o].name} (${Math.round((1 - CONFIG.ALLY_GIFT_RATIO) * 100)} % se sont perdus en route).`,
             `🎁 ${fmt(got)} soldiers reach ${G.players[o].name} (${Math.round((1 - CONFIG.ALLY_GIFT_RATIO) * 100)}% were lost on the way).`), 'good', G.players[o]);
+          });
         } });
         // ... ou de l'or (la même part de son trésor que le curseur « Envoyer »)
         const g = Math.floor(h.gold * this.ratio);
         if (g >= 1) items.push({ label: tr(`💰 Envoyer ${fmt(g)} d'or à ${name}`, `💰 Send ${fmt(g)} gold to ${name}`), run: () => {
-          const err = G.sendGoldToAlly(h.id, o, g);
-          if (err) this.log(err, 'warn');
-          else this.log(tr(`💰 ${fmt(g)} d'or envoyés à ${G.players[o].name} !`, `💰 ${fmt(g)} gold sent to ${G.players[o].name}!`), 'good', G.players[o]);
+          this.act({ k: 'gold', to: o, g }, err => {
+            if (err) this.log(err, 'warn');
+            else this.log(tr(`💰 ${fmt(g)} d'or envoyés à ${G.players[o].name} !`, `💰 ${fmt(g)} gold sent to ${G.players[o].name}!`), 'good', G.players[o]);
+          });
         } });
         // (un camp du mode Factions ne se quitte pas)
         if (!G.eternalPact(h.id)) items.push({ label: tr(`💔 Rompre l'alliance avec ${name}`, `💔 Break the alliance with ${name}`), run: () => this.onAllyButton(o) });
@@ -1838,9 +2045,10 @@ const UI = {
       const op = G.anchor[i], o = G.outposts.get(op), n = o ? Math.floor(o.stationed) : 0;
       if (n < 1) items.push({ label: `${ICONS.boatOut} ${tr('Rapatrier', 'Bring back')}`, disabled: tr('Aucun soldat n\'attend ici (la garnison, elle, reste sur place).', 'No soldiers are waiting here (the garrison stays put).') });
       else items.push({ label: `${ICONS.boatOut} ${tr(`Rapatrier ${fmt(n)} soldats (vers ton port le plus proche)`, `Bring back ${fmt(n)} soldiers (to your nearest port)`)}`, run: () => {
-        const err = G.repatriate(h.id, op);
-        if (err) this.log(err, 'warn');
-        else this.log(tr(`🚢 ${fmt(n)} soldats rembarquent vers ton port.`, `🚢 ${fmt(n)} soldiers re-embark for your port.`), 'good');
+        this.act({ k: 'repatriate', a: op }, err => {
+          if (err) this.log(err, 'warn');
+          else this.log(tr(`🚢 ${fmt(n)} soldats rembarquent vers ton port.`, `🚢 ${fmt(n)} soldiers re-embark for your port.`), 'good');
+        });
       } });
     }
     // Sur un fleuve dont les deux rives sont à nous (ou une à nous, l'autre à un allié) : construire un pont
@@ -1850,9 +2058,10 @@ const UI = {
       if (plan.error) items.push({ label, disabled: plan.error });
       else if (h.gold < G.bridgeCost(h.id)) items.push({ label, disabled: tr(`Pas assez d'or : il faut 💰 ${fmt(G.bridgeCost(h.id))}.`, `Not enough gold: you need 💰 ${fmt(G.bridgeCost(h.id))}.`) });
       else items.push({ label: label + tr(' : tes soldats passent ce fleuve sans perdre de temps à gué', ': your soldiers cross this river without wasting time at a ford'), run: () => {
-        const err = G.buildBridge(h, i);
-        if (err) this.log(err, 'warn');
-        else this.log(tr('🌉 Pont construit : tes soldats passent maintenant ce fleuve sans s\'arrêter !', '🌉 Bridge built: your soldiers now cross this river without stopping!'), 'good');
+        this.act({ k: 'bridge', i }, err => {
+          if (err) this.log(err, 'warn');
+          else this.log(tr('🌉 Pont construit : tes soldats passent maintenant ce fleuve sans s\'arrêter !', '🌉 Bridge built: your soldiers now cross this river without stopping!'), 'good');
+        });
       } });
     }
     // Terre libre de l'autre côté d'un fleuve : la traverser à gué
@@ -1861,9 +2070,10 @@ const UI = {
       if (!plan.error) {
         items.push({ label: tr(`🛶 Traverser le fleuve (${Math.round(plan.time)} s de traversée, sans perdre de soldats)`,
           `🛶 Cross the river (${Math.round(plan.time)} s to cross, without losing soldiers)`), run: () => {
-          const err = G.launchCrossing(h.id, i);
-          if (err) this.log(err, 'warn');
-          else this.log(tr('🛶 Tes soldats passent le fleuve à gué : c\'est long, mais ça ne coûte aucun soldat !', '🛶 Your soldiers ford the river: it is slow, but it costs no soldiers!'), 'good');
+          this.act({ k: 'crossing', i }, err => {
+            if (err) this.log(err, 'warn');
+            else this.log(tr('🛶 Tes soldats passent le fleuve à gué : c\'est long, mais ça ne coûte aucun soldat !', '🛶 Your soldiers ford the river: it is slow, but it costs no soldiers!'), 'good');
+          });
         } });
       }
     }
@@ -1882,9 +2092,10 @@ const UI = {
             `${Math.max(1, Math.round(plan.time))} s de mer, environ ${Math.round(G.seaLoss(plan.time) * 100)} % de pertes)`,
             `Naval attack: land ${fmt(h.troops * this.ratio)} soldiers (💰 ${plan.cost}, ` +
             `${Math.max(1, Math.round(plan.time))} s at sea, about ${Math.round(G.seaLoss(plan.time) * 100)}% losses)`), run: () => {
-          const err = G.launchExpedition(h.id, coast, h.troops * this.ratio);
-          if (err) this.log(err, 'warn');
-          else this.log(tr('⛵ Ton expédition prend la mer ! Ses soldats défendront l\'avant-poste qu\'elle bâtira à l\'arrivée.', '⛵ Your expedition sets sail! Its soldiers will defend the outpost it builds on arrival.'), 'good');
+          this.act({ k: 'expedition', i: coast, troops: h.troops * this.ratio }, err => {
+            if (err) this.log(err, 'warn');
+            else this.log(tr('⛵ Ton expédition prend la mer ! Ses soldats défendront l\'avant-poste qu\'elle bâtira à l\'arrivée.', '⛵ Your expedition sets sail! Its soldiers will defend the outpost it builds on arrival.'), 'good');
+          });
         } });
     }
     if (!items.length) return;
@@ -1971,11 +2182,12 @@ const UI = {
   vikingButton() {
     const G = Game, h = G.human;
     if (h.vikingReady) return this.vikingAim ? this.cancelVikingAim() : this.startVikingAim();
-    const err = G.buyViking(h);
-    if (err) return this.log(err, 'warn');
-    this.log(tr('🔥 Assaut viking prêt ! Clique sur le bouton « Viking », puis sur une ville ennemie de l\'autre côté de la mer (ou clic droit sur elle).',
-      '🔥 Viking assault ready! Click the « Viking » button, then an enemy city across the sea (or right-click it).'), 'good');
-    this.startVikingAim();
+    this.act({ k: 'buyViking' }, err => {
+      if (err) return this.log(err, 'warn');
+      this.log(tr('🔥 Assaut viking prêt ! Clique sur le bouton « Viking », puis sur une ville ennemie de l\'autre côté de la mer (ou clic droit sur elle).',
+        '🔥 Viking assault ready! Click the « Viking » button, then an enemy city across the sea (or right-click it).'), 'good');
+      this.startVikingAim();
+    });
   },
   startVikingAim() {
     this.selectBuild(0);
@@ -1997,12 +2209,13 @@ const UI = {
   // Lancer l'assaut viking sur la cible en i
   viking(i) {
     const G = Game, h = G.human, n = Math.floor(h.troops * this.ratio);
-    const err = G.launchViking(h.id, i, n);
-    if (err) return this.log(err, 'warn');
-    Music.sound('viking'); // (🔔 le son des Vikings)
-    this.cancelVikingAim();
-    this.log(tr(`🔥 Tes Vikings embarquent (${fmt(n)} soldats) : ils traversent la mer sans pertes, débarqueront près de leur cible et la raseront !`,
-      `🔥 Your Vikings set sail (${fmt(n)} soldiers): they cross the sea with no losses, will land near their target and raze it!`), 'good');
+    this.act({ k: 'viking', i, troops: n }, err => {
+      if (err) return this.log(err, 'warn');
+      Music.sound('viking'); // (🔔 le son des Vikings)
+      this.cancelVikingAim();
+      this.log(tr(`🔥 Tes Vikings embarquent (${fmt(n)} soldats) : ils traversent la mer sans pertes, débarqueront près de leur cible et la raseront !`,
+        `🔥 Your Vikings set sail (${fmt(n)} soldiers): they cross the sea with no losses, will land near their target and raze it!`), 'good');
+    });
   },
 
   // --- Croisade religieuse (cathédrale) ---
@@ -2057,11 +2270,12 @@ const UI = {
   },
 
   crusade(a) {
-    const G = Game, err = G.startCrusade(G.human, a);
-    if (err) return this.log(err, 'warn');
-    Music.sound('crusade'); // (🔔 le son de la croisade)
-    this.log(tr(`✝️ Croisade religieuse lancée : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance pendant ${CONFIG.CRUSADE_TIME} s ! Tes prêcheurs vont convertir les terres voisines bien plus vite.`,
-      `✝️ Crusade launched: +${fmt(CONFIG.CRUSADE_FAITH)} Faith for ${CONFIG.CRUSADE_TIME} s! Your preachers will convert neighbouring lands much faster.`), 'good');
+    this.act({ k: 'crusade', a }, err => {
+      if (err) return this.log(err, 'warn');
+      Music.sound('crusade'); // (🔔 le son de la croisade)
+      this.log(tr(`✝️ Croisade religieuse lancée : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance pendant ${CONFIG.CRUSADE_TIME} s ! Tes prêcheurs vont convertir les terres voisines bien plus vite.`,
+        `✝️ Crusade launched: +${fmt(CONFIG.CRUSADE_FAITH)} Faith for ${CONFIG.CRUSADE_TIME} s! Your preachers will convert neighbouring lands much faster.`), 'good');
+    });
   },
 
   // --- ⚔️ Recrutement de masse (grande caserne, niveau 3) ---
@@ -2105,11 +2319,12 @@ const UI = {
     btn.title = left ? this.levyRunning(left) : err || this.levyText();
   },
   levy(a) {
-    const G = Game, err = G.startLevy(G.human, a);
-    if (err) return this.log(err, 'warn');
-    Music.sound('levy'); // (🔔 le son des renforts)
-    this.log(tr(`⚔️ Recrutement de masse lancé : ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s (surtout si elle est petite) !`,
-      `⚔️ Mass recruitment launched: your army rebuilds much faster for ${CONFIG.LEVY_TIME} s (especially if it is small)!`), 'good');
+    this.act({ k: 'levy', a }, err => {
+      if (err) return this.log(err, 'warn');
+      Music.sound('levy'); // (🔔 le son des renforts)
+      this.log(tr(`⚔️ Recrutement de masse lancé : ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s (surtout si elle est petite) !`,
+        `⚔️ Mass recruitment launched: your army rebuilds much faster for ${CONFIG.LEVY_TIME} s (especially if it is small)!`), 'good');
+    });
   },
 
   // --- Murs d'une ville (château de niveau 2 ou plus) ---
@@ -2233,6 +2448,9 @@ const UI = {
     if (G.phase === 'spawn') {
       const err = G.spawnError(i);
       if (err) return this.log(err, 'warn');
+      // (🌐 en ligne : chacun choisit sa place pendant le compte à rebours, la partie commence pour tous ensuite ;
+      //  on peut changer d'avis tant qu'elle n'a pas commencé : voir Net)
+      if (G.online) return Net.chooseSpawn(i);
       G.startGame(i);
       this.log(tr('👑 Ta capitale est fondée ! Clique sur les terres voisines pour t\'étendre.', '👑 Your capital is founded! Click on neighbouring lands to expand.'), 'good');
       return;
@@ -2254,10 +2472,12 @@ const UI = {
         this.wallFrom = i;
         return this.log(tr('🧱 Point de départ choisi sur ton premier mur : clique maintenant où le second mur doit aller.', '🧱 Starting point chosen on your first wall: now click where the second wall should go.'), 'good');
       }
-      const cost = G.wallCost(c), err = G.buildWall(h, c, i, this.wallFrom);
-      if (err) return this.log(err, 'warn');
-      this.cancelWall();
-      this.log(tr(`🧱 Chantier du mur lancé (💰 ${fmt(cost)}) : il sera debout dans ${CONFIG.WALL_BUILD_TIME} s.`, `🧱 Wall construction started (💰 ${fmt(cost)}): it will stand in ${CONFIG.WALL_BUILD_TIME} s.`), 'good');
+      const cost = G.wallCost(c);
+      this.act({ k: 'wall', c, i, from: this.wallFrom }, err => {
+        if (err) return this.log(err, 'warn');
+        this.cancelWall();
+        this.log(tr(`🧱 Chantier du mur lancé (💰 ${fmt(cost)}) : il sera debout dans ${CONFIG.WALL_BUILD_TIME} s.`, `🧱 Wall construction started (💰 ${fmt(cost)}): it will stand in ${CONFIG.WALL_BUILD_TIME} s.`), 'good');
+      });
       return;
     }
     // Assaut viking : le clic choisit la ville ennemie visée
@@ -2265,13 +2485,15 @@ const UI = {
     // Route commerciale : le clic choisit la ville alliée
     if (this.tradeFor >= 0) {
       const a = this.tradeFor, plan = G.planTrade(h.id, a, i);
-      const err = plan.error || G.buildTrade(h, a, i);
-      if (err) return this.log(err, 'warn');
-      this.cancelTrade();
-      this.log(tr(`🛒 Route commerciale ouverte vers ${G.players[G.owner[plan.to]].name} (${Math.round(plan.len)} cases, 💰 ${fmt(plan.cost)}) : ` +
-        `+${fmt(plan.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s pour toi, et la moitié pour ton allié !`,
-        `🛒 Trade route opened to ${G.players[G.owner[plan.to]].name} (${Math.round(plan.len)} tiles, 💰 ${fmt(plan.cost)}): ` +
-        `+${fmt(plan.income)} 💰 every ${CONFIG.PRODUCTION_INTERVAL} s for you, and half as much for your ally!`), 'good');
+      if (plan.error) return this.log(plan.error, 'warn');
+      this.act({ k: 'trade', a, i }, err => {
+        if (err) return this.log(err, 'warn');
+        this.cancelTrade();
+        this.log(tr(`🛒 Route commerciale ouverte vers ${G.players[G.owner[plan.to]].name} (${Math.round(plan.len)} cases, 💰 ${fmt(plan.cost)}) : ` +
+          `+${fmt(plan.income)} 💰 toutes les ${CONFIG.PRODUCTION_INTERVAL} s pour toi, et la moitié pour ton allié !`,
+          `🛒 Trade route opened to ${G.players[G.owner[plan.to]].name} (${Math.round(plan.len)} tiles, 💰 ${fmt(plan.cost)}): ` +
+          `+${fmt(plan.income)} 💰 every ${CONFIG.PRODUCTION_INTERVAL} s for you, and half as much for your ally!`), 'good');
+      });
       return;
     }
     const t = G.building[i];
@@ -2290,9 +2512,10 @@ const UI = {
       return;
     }
     if (this.selectedBuild) {
-      const err = G.tryBuild(h, Render.anchorAt(sx, sy, this.selectedBuild), this.selectedBuild);
-      if (err) this.log(err, 'warn');
-      else this.selectBuild(0);
+      this.act({ k: 'build', i: Render.anchorAt(sx, sy, this.selectedBuild), type: this.selectedBuild }, err => {
+        if (err) this.log(err, 'warn');
+        else this.selectBuild(0);
+      });
       return;
     }
     if (!G.isLand(i) || G.owner[i] === h.id) return;
@@ -2314,9 +2537,10 @@ const UI = {
       if (target >= 0 && !running && !confirmed && (aimed || !G.isProtected(target) || G.isUnlinked(i))) return this.startPlan(target, aimed ? c : -1, i);
       // L'armée part du royaume ou d'un avant-poste bâti (avec ses soldats stationnés)
       const src = running ? G.sourceOfAttack(running) : G.bestSource(h.id, target, i);
-      const err = G.launchAttack(h.id, target, G.troopsAt(h.id, src) * this.ratio, i, src);
-      if (err) this.log(err, 'warn');
-      else if (target >= 0 && !running) Music.sound('assault'); // (🔔 l'armée part à l'assaut d'un ennemi ; pas les terres libres ni les renforts)
+      this.act({ k: 'attack', target, troops: G.troopsAt(h.id, src) * this.ratio, aim: i, src }, err => {
+        if (err) this.log(err, 'warn');
+        else if (target >= 0 && !running) Music.sound('assault'); // (🔔 l'armée part à l'assaut d'un ennemi ; pas les terres libres ni les renforts)
+      });
     };
     // Attaquer un allié = le trahir (après confirmation, qui vaut validation de l'assaut) ; sauf dans un camp du mode
     // « Factions » : on n'attaque jamais son propre camp
@@ -2331,7 +2555,7 @@ const UI = {
       if (!valid) return this.log(aimed ? tr(`Impossible d'atteindre ${G.targetLabel(c)} : des fortifications bloquent le passage.`, `Cannot reach ${G.targetLabel(c)}: fortifications block the way.`)
         : tr(`${G.players[target].name} est protégé : vise un de ses châteaux, églises, ports, mines ou avant-postes.`,
           `${G.players[target].name} is protected: target one of its castles, churches, ports, mines or outposts.`), 'warn');
-      this.confirmBetrayal(G.players[target], () => { G.breakAlliance(h.id, target); attack(true); });
+      this.confirmBetrayal(G.players[target], () => { this.act({ k: 'betray', other: target }); attack(true); });
       return;
     }
     attack(false);
@@ -2430,7 +2654,8 @@ function main() {
     const dt = Math.min(now - last, 1000);
     last = now;
     UI.panCamera(dt); // (caméra au clavier : ZQSD ou flèches)
-    if (Game.phase === 'playing' && !Game.paused) {
+    if (Game.online) Net.pump(); // (🌐 en ligne : la partie avance au rythme des tours du serveur)
+    else if (Game.phase === 'playing' && !Game.paused) {
       acc += dt * Game.speed; // (partie accélérée : x2 = 2 tours de jeu au lieu d'un, tout va 2 fois plus vite)
       while (acc >= step) { Game.update(); acc -= step; }
     }

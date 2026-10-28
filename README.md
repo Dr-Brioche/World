@@ -31,6 +31,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile (en Difficile, les bots ont un petit avantage : **+25 % d'or**, recrutement **20 % plus rapide** et soldats **10 % plus forts**)
 - ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ (en haut) la fait passer à x1, x1,5, x2 ou x3, pour des parties plus courtes
 - ✝️ **La Croyance** : tes églises prêchent chez tes voisins et convertissent peu à peu leurs terres
+- 🌐 **Jouer en ligne, à plusieurs** (avec un serveur de jeu, voir [`serveur/PROTOCOLE.md`](serveur/PROTOCOLE.md)) : la **partie publique**, qui part toutes les 2 minutes avec tous ceux qui attendent (carte au hasard, des bots complètent), ou un **salon privé** entre amis, avec un code
 - 🌍 **En anglais ou en français** : le jeu est en anglais par défaut ; la liste « Langue » en haut à droite du menu le passe en français (le choix est gardé)
 
 ## 🕹️ Comment jouer
@@ -39,7 +40,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **nombre de royaumes rivaux** (de 3 à 20, autant que de drapeaux disponibles ; au plus un rival pour 5 000 cases de carte : 10 sur la petite carte, réglage `CELLS_PER_OPPONENT`) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
-   ou changer sa vitesse (en solo : toi). Sur la carte, **les royaumes rivaux
+   ou changer sa vitesse (en solo : toi ; en ligne, voir « Joue à plusieurs » plus bas). Sur la carte, **les royaumes rivaux
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible).
    🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
@@ -864,6 +865,26 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    les plus grands royaumes du moment ; ▶️/⏸️ et une réglette pour revenir à un moment précis).
    **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
    Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
+7. **Joue à plusieurs, en ligne** 🌐 : quand le jeu vient d'un **serveur de jeu** (voir
+   [`serveur/PROTOCOLE.md`](serveur/PROTOCOLE.md) : `node serveur/serveur.js`, puis http://localhost:8080), le menu
+   affiche **🌐 Jouer en ligne** (sous « Commencer la conquête ») :
+   - 🌍 **Partie publique** : une partie part **toutes les 2 minutes** avec tous ceux qui attendent, sur une carte tirée
+     au hasard (aléatoire ou prédéfinie, annoncée dans le salon avec le compte à rebours) ; des **bots** complètent
+     jusqu'à 10 royaumes. **Personne** ne peut la mettre en pause ni changer sa vitesse.
+   - 🔒 **Salon privé** : « Créer un salon privé » donne un **code** de 4 lettres (et un lien 🔗 à copier) ; tes amis
+     tapent le code et cliquent sur « Rejoindre » (ou ouvrent le lien). L'**hôte** 👑 choisit les réglages du menu (carte,
+     taille, pactes, difficulté, nombre de bots ; les autres les voient changer), puis **⚔️ Lance la partie**. Il décide de
+     la **pause** et de la **vitesse**, pour tout le monde ; chacun des autres joueurs peut mettre la partie en pause
+     **15 s, une fois toutes les 5 minutes**. Si l'hôte s'en va, le joueur suivant prend sa place.
+   - Au début, chacun a **15 secondes** pour fonder sa capitale (sinon, une place au hasard), puis la partie commence pour
+     tous. Les autres joueurs ont un 👤 dans le classement ; on peut leur proposer un pacte (ils répondent eux-mêmes),
+     les aider ou les attaquer comme un bot. Un joueur qui quitte la partie est remplacé par un **bot**. Vaincu, tu peux
+     **👁️ regarder la suite** ; la partie s'arrête quand un royaume tient 70 % des terres (ou reste seul).
+   - Les **scénarios** et les **cartes dessinées** se jouent en solo, pour l'instant. Si la connexion au serveur est
+     perdue, la partie continue en solo (les autres joueurs deviennent des bots).
+   - Comment ça marche : chaque navigateur calcule la partie de son côté (la même graine, les mêmes ordres, dans le
+     même ordre : comme OpenFront) ; le serveur ne fait que relayer les ordres des joueurs, 10 fois par seconde. Il
+     compare de temps en temps les « empreintes » des parties : si elles diffèrent, un avertissement s'affiche.
 
 🌲 Chaque terrain a sa défense : plaine normale, forêt +60 %, colline +120 %, montagne +180 %. La forêt pousse aussi sur les collines : une **colline boisée** cumule les deux bonus (+180 %, comme une montagne) ; on la reconnaît à son vert olive bosselé, parsemé de sapins. Plus elle est haute, plus la case coûte de soldats **et de temps** à conquérir : ton royaume s'étend vite dans les plaines et lentement dans les forêts, collines et montagnes. Sa forme suit donc le relief !
 🎨 **Une carte en pixel art** : chaque case est dessinée en petits pixels carrés. Là où deux terrains se touchent,
@@ -942,6 +963,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.149** : 🌐 **le jeu en ligne, à plusieurs** (comme OpenFront) : la **partie publique** part toutes les 2 minutes avec tous ceux qui attendent (carte au hasard, des bots complètent) ; les **salons privés** se rejoignent avec un code, et leur hôte choisit les réglages, la pause et la vitesse (les autres : une pause de 15 s toutes les 5 min). Avec un **serveur de référence** sans dépendance (`node serveur/serveur.js`) et son protocole (`serveur/PROTOCOLE.md`). Pour ça, la partie est devenue « déterministe » (le même hasard et les mêmes calculs dans tous les navigateurs, `js/dmath.js`), et chaque action du joueur est un « ordre ». Au passage : en anglais, le nom de la carte choisie s'affiche enfin en anglais dans le menu
 - **v0.92.148** : 📜 les rouleaux des parchemins, encore retouchés : de vrais pommeaux de bois tourné (un collier, un col, un bouton bombé et sa pointe, dessinés en SVG, plus de formes carrées) et des bouts de rouleau nets (sans les tours de la feuille)
 - **v0.92.147** : 📜 de plus beaux rouleaux pour les parchemins d'événements : le parchemin enroulé, en volume, avec ses tours visibles aux deux bouts, sur une baguette de bois tourné qui dépasse de chaque côté (un collier et un pommeau)
 - **v0.92.146** : ⚜️ nouveau scénario **La guerre de Cent Ans (1337-1453)** : la France, les îles Britanniques et le nord de l'Espagne, 12 factions, le récit du roi de France en parchemins (de l'Écluse à Castillon), et des mécaniques à lui : la Légitimité, les grands vassaux qui changent de camp, les trêves, la peste noire, les chevauchées et les Grandes Compagnies, les arcs longs et les canons, les rançons, le roi Jean captif, la folie de Charles VI, les ports de la Manche et Jeanne d'Arc ; jouable aussi en Angleterre, Bourgogne, Bretagne ou Écosse
@@ -1317,7 +1339,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 - 🌦️ Événements médiévaux dans les parties normales : famine, hivers rigoureux (la peste existe déjà dans la guerre de Cent Ans)
 - 👑 Héros ou rois avec des pouvoirs spéciaux dans les parties normales (comme Jeanne d'Arc et les rois de la guerre de Cent Ans)
 - ⚜️ Les vraies bannières des factions de la guerre de Cent Ans
-- 🌐 Multijoueur en ligne
+- 🌐 En ligne : les scénarios (Charlemagne, la guerre de Cent Ans, les Factions) à plusieurs, les cartes dessinées, et revenir dans sa partie après une coupure
 
 ---
 
@@ -1344,4 +1366,7 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/music.js`, `sons/` | 🎵 La musique d'ambiance (`sons/musique/`) et les petits sons du jeu (`MUSIC.SOUNDS`) (pour ajouter un morceau : le mettre dans `sons/musique/` et l'ajouter à la liste `MUSIC.TRACKS` de `js/config.js`) |
 | `js/replay.js` | 📽️ Le résumé de fin de partie (les photos de la carte, et leur lecture en accéléré) |
 | `js/main.js` | Souris, clavier, boutons et boucle de jeu |
+| `js/net.js` | 🌐 Le jeu en ligne, côté navigateur : la connexion au serveur, les salons, les tours, la pause et la vitesse |
+| `js/dmath.js` | 🧮 Les calculs (sinus, arc tangente…) qui donnent le même résultat dans tous les navigateurs (pour le jeu en ligne) |
+| `serveur/serveur.js`, `serveur/PROTOCOLE.md` | 🌐 Le serveur de jeu en ligne (Node.js, sans dépendance) et la description de ses messages |
 | `img/` | Les images des bâtiments (2 niveaux de mine, 4 niveaux de château, de caserne, d'église et de port, 2 de moulin, et l'avant-poste) , des bannières (`img/bannieres/`), le décor marin (`decor_mer.webp`) et le cadre brodé (`cadre.webp`) |
