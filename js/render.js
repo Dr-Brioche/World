@@ -1622,7 +1622,8 @@ const Render = {
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = '#fff';
-      Icons.text(ctx, `${G.troopIcon(r.pid)} ${fmt(r.troops)}`, x, y - 19);
+      const pending = G.relicPending(r); // (des renforts en route : « (+N) », comme pour un assaut)
+      Icons.text(ctx, `${G.troopIcon(r.pid)} ${fmt(r.troops)}${pending ? ` (+${fmt(pending)})` : ''}`, x, y - 19);
       if (r.relic && r.phase === 'carry') relicIcon(x, y - 40, 22); // (elle porte la relique : bien visible)
       this.relicHits.push({ id: r.id, x: x + 4, y: y - 10 });
     }

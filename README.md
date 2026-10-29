@@ -712,7 +712,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      puis une autre toutes les **8 à 15 minutes**. Elle brille sur la carte. Le royaume où elle est, et tous ses
      **voisins**, peuvent aller la chercher : il faut une **cathédrale** (église de niveau 3) pour la garder. **Clique sur
      la relique** : une armée (selon le curseur « Envoyer ») part de ta ville la plus proche, avec une **petite croix d'or**
-     pour la reconnaître. Elle ne prend aucune terre en chemin (elle marche sur tes terres, celles de tes alliés, du royaume
+     pour la reconnaître (un nouveau clic lui envoie des renforts : hors de tes terres, ils mettent du temps à la rejoindre, comme ceux d'un assaut). Elle ne prend aucune terre en chemin (elle marche sur tes terres, celles de tes alliés, du royaume
      de la relique et les terres libres). Arrivée, elle s'en empare en **10 secondes** (l'anneau jaune), puis la rapporte
      à ta **cathédrale la plus proche**, **1/3 plus lentement** ; la relique flotte au-dessus d'elle. En chemin, **tous les
      voisins peuvent l'intercepter** (un clic sur sa bannière) : au contact, le plus fort l'emporte, garde ses survivants et
@@ -1039,6 +1039,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.168** : 📿 reliques : les **renforts** envoyés à une armée de relique déjà en territoire étranger **marchent jusqu'à elle** (depuis ta ville la plus proche, au moins 3 s), comme ceux d'un assaut ; ils s'affichent « (+N) » sur sa bannière en attendant (sur tes terres, ils la rejoignent tout de suite)
 - **v0.92.167** : ⚔️ correctif : un assaut sur une cible juste **de l'autre côté d'un fleuve**, en face d'une de tes villes, part maintenant de **cette ville** (l'armée passe le fleuve à gué), au lieu d'une ville lointaine reliée par la terre qui faisait tout le tour par le territoire ennemi
 - **v0.92.166** : ⚡ **le jeu est bien plus rapide sur les grandes cartes** : la guerre de Cent Ans calcule ses règles 2,5 fois plus vite (et ses pires à-coups passent de 3,5 s à moins d'une demi-seconde), Charlemagne 2 fois plus vite ; les bots ne redécoupent plus toute la carte pour chaque bâtiment envisagé, cherchent leurs chemins d'assaut avec une carte des défenses calculée une fois, et étalent leurs plans d'assaut sur plusieurs réflexions ; le dessin ne refait plus les murailles et les frontières des pactes à chaque image · 🐞 revue du code : de longues parties de tous les modes contrôlées seconde par seconde, aucune incohérence trouvée
 - **v0.92.165** : 📿 **les reliques saintes** (parties classiques) : une relique apparaît après 10 à 15 min, puis toutes les 8 à 15 min, plutôt loin des grands royaumes ; le royaume où elle est et ses voisins peuvent l'aller chercher (il faut une cathédrale), 10 s pour s'en emparer, puis l'armée la rapporte à sa cathédrale, plus lentement, et tous les voisins peuvent l'intercepter ; une relique gardée : +20 % de conversion par la Croyance et +50 % d'or pour son église (sans maximum), et elle suit l'église (prise ou détruite)
