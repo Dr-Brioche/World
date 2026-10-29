@@ -158,9 +158,83 @@ const ICON_DEFS = {
   nomusic: [{ d: 'M9 18V5.5l11-2.5V15.5', s: 'c', w: 2, o: 0.45 }, { d: 'M9 8.2l11-2.5', s: 'c', w: 2, o: 0.45 },
     { d: 'M9.5 18a3.2 2.5 0 1 1-6.4 0a3.2 2.5 0 1 1 6.4 0zM20.5 15.5a3.2 2.5 0 1 1-6.4 0a3.2 2.5 0 1 1 6.4 0z', f: 'c', o: 0.45 },
     { d: 'M3 3l18 18', s: '#b8322a', w: 2.4 }],
+  // --- Pour ne laisser aucun emoji dans le jeu ---
+  // 📅 l'almanach : une feuille de parchemin suspendue, sa rubrique rouge et les jours du mois
+  calendar: [{ d: 'M4 5.5h16V21H4z', f: '#f3e3bf', s: 'c', w: 1.5 }, { d: 'M4 5.5h16v4H4z', f: '#8b2d1f', s: 'c', w: 1.5 }, { d: 'M8 3v4.5M16 3v4.5', s: 'c', w: 1.8 }, { d: 'M7.5 13h.01M12 13h.01M16.5 13h.01M7.5 17h.01M12 17h.01', s: 'c', w: 2.2 }],
+  // ⚜ la fleur de lys (d'or)
+  lys: [{ d: 'M12 1.8C9.6 4.6 9.4 8.4 11 11.5h2c1.6-3.1 1.4-6.9-1-9.7z', f: '#efc23e', s: '#6b4a12', w: 1 }, { d: 'M10.6 12.3C7.4 13 3.6 11.4 3.4 8.4c-.1-2 2.3-2.8 3.4-1.2.8 1.2.1 2.8-1.2 2.9M13.4 12.3c3.2.7 7-.9 7.2-3.9.1-2-2.3-2.8-3.4-1.2-.8 1.2-.1 2.8 1.2 2.9', s: '#6b4a12', w: 2.6 }, { d: 'M10.6 12.3C7.4 13 3.6 11.4 3.4 8.4c-.1-2 2.3-2.8 3.4-1.2.8 1.2.1 2.8-1.2 2.9M13.4 12.3c3.2.7 7-.9 7.2-3.9.1-2-2.3-2.8-3.4-1.2-.8 1.2-.1 2.8 1.2 2.9', s: '#efc23e', w: 1.4 }, { d: 'M7 12h10v2.6H7z', f: '#efc23e', s: '#6b4a12', w: 1 }, { d: 'M12 14.6v4.6M9.6 22c.2-1.8 1.2-2.8 2.4-2.8s2.2 1 2.4 2.8M10 14.6c-.6 2.2-2.6 3.4-4.6 3M14 14.6c.6 2.2 2.6 3.4 4.6 3', s: '#6b4a12', w: 1.6 }],
+  // 🌐 le monde (les parties en ligne) : un globe et ses méridiens
+  globe: [{ d: 'M12 3a9 9 0 1 1-.01 0z', s: 'c', w: 1.6 }, { d: 'M3 12h18M4.5 7.5h15M4.5 16.5h15M12 3c-3.2 3.2-3.2 14.8 0 18M12 3c3.2 3.2 3.2 14.8 0 18', s: 'c', w: 1.1 }],
+  // 🔔 la cloche (l'alerte)
+  bell: [{ d: 'M5.5 17.5c1.3-1.2 1.9-3 1.9-6a4.6 4.6 0 0 1 9.2 0c0 3 .6 4.8 1.9 6z', f: 'c' }, { d: 'M4 17.8h16', s: 'c', w: 1.8 }, { d: 'M10.3 19.6a1.7 1.7 0 0 0 3.4 0z', f: 'c' }, { d: 'M12 3.2v3', s: 'c', w: 1.8 }],
+  // ⭐ l'étoile (les défis), d'or
+  star: [{ d: 'M12.0 2.6L14.5 9.2L21.5 9.5L16.0 13.9L17.9 20.7L12.0 16.8L6.1 20.7L8.0 13.9L2.5 9.5L9.5 9.2z', f: '#efc23e', s: '#6b4a12', w: 1.1 }],
+  // 🙏 le vœu : deux mains jointes
+  hands: [{ d: 'M11.5 21V8.6c0-2.4-.9-4.7-2.3-5.9-.9.6-1.4 2.6-1.4 4.7v6.2L4.6 17v4z', f: 'c' }, { d: 'M12.5 21V8.6c0-2.4.9-4.7 2.3-5.9.9.6 1.4 2.6 1.4 4.7v6.2l3.2 3.4v4z', f: 'c', o: 0.75 }],
+  // 🕊 la colombe (la trêve), un rameau dans le bec
+  dove: [{ d: 'M2.5 13.5c3 .3 5.3-.8 7.3-3.6 1.6-2.4 3.6-4 6.2-4 1.6 0 2.6.7 3.1 1.8l2.2.4-2.1 1.4c-.2 4.2-3.3 8-9.2 8.5L7 21l.8-3.3c-2.5-.6-4.2-2.1-5.3-4.2z', f: 'c' }, { d: 'M10.4 9.4C9.3 6.9 9.4 4.4 10.8 2.8c1 2 2.4 3.6 4 4.3', s: 'c', w: 1.4 }, { d: 'M17.4 6.25a0.65 0.65 0 1 1-.01 0z', f: '#f3e3bf' }, { d: 'M21 8.2l2 2.3M22 9.4l1.2-.4', s: '#4a7a2a', w: 1.3 }],
+  // ⚖ la balance (la justice, les rançons)
+  scales: [{ d: 'M12 3.5V20M7 21h10M4 6.5h16', s: 'c', w: 1.7 }, { d: 'M12 2.3a1.3 1.3 0 1 1-.01 0z', f: 'c' }, { d: 'M2.2 13.5L4 6.5l1.8 7M18.2 13.5L20 6.5l1.8 7', s: 'c', w: 1.1 }, { d: 'M1.6 13.5a2.4 2.4 0 0 0 4.8 0zM17.6 13.5a2.4 2.4 0 0 0 4.8 0z', f: 'c' }],
+  // 🦁 la tête du lion (l'Angleterre)
+  lion: [{ d: 'M12.0 1.8L14.0 4.7L17.1 3.2L17.4 6.6L20.8 6.9L19.3 10.0L22.2 12.0L19.3 14.0L20.8 17.1L17.4 17.4L17.1 20.8L14.0 19.3L12.0 22.2L10.0 19.3L6.9 20.8L6.6 17.4L3.2 17.1L4.7 14.0L1.8 12.0L4.7 10.0L3.2 6.9L6.6 6.6L6.9 3.2L10.0 4.7z', f: '#c58a2a', s: '#5a3510', w: 0.9 }, { d: 'M12 6.8c2.7 0 4.3 2 4.3 4.6 0 3-1.9 5.1-4.3 5.1s-4.3-2.1-4.3-5.1c0-2.6 1.6-4.6 4.3-4.6z', f: '#efc23e', s: '#5a3510', w: 0.9 }, { d: 'M10.2 10.8h.01M13.8 10.8h.01', s: '#3a2512', w: 1.7 }, { d: 'M11 13.1h2l-1 1.1zM12 14.2v.9M10.8 15.6c.7.5 1.7.5 2.4 0', s: '#3a2512', w: 0.9 }],
+  // ⏩ avancer vite
+  fast: [{ d: 'M2.5 6l8.5 6-8.5 6zM12 6l8.5 6-8.5 6z', f: 'c' }],
+  // 📽 la chronique (le résumé de la partie) : un livre ouvert
+  book: [{ d: 'M12 6.2C9.5 4.7 6.5 4.2 3 4.7v14c3.5-.5 6.5 0 9 1.5 2.5-1.5 5.5-2 9-1.5v-14c-3.5-.5-6.5 0-9 1.5zM12 6.2v14', f: '#f3e3bf', s: 'c', w: 1.5 }, { d: 'M5.5 8.6c1.5 0 3 .3 4.3.9M5.5 11.6c1.5 0 3 .3 4.3.9M5.5 14.6c1.5 0 3 .3 4.3.9M14.2 9.5c1.3-.6 2.8-.9 4.3-.9M14.2 12.5c1.3-.6 2.8-.9 4.3-.9', s: 'c', w: 1, o: 0.7 }],
+  // ✔ coché
+  check: [{ d: 'M4 12.8l5 5L20.5 6', s: 'c', w: 2.6 }],
+  // 🔒 le cadenas (salon privé)
+  lock: [{ d: 'M8.5 11V8a3.5 3.5 0 0 1 7 0v3', s: 'c', w: 2 }, { d: 'M5.5 11h13v10h-13z', f: 'c' }, { d: 'M12 14.5v3', s: '#f3e3bf', w: 1.8 }],
+  // 🤪 la folie du roi : le bonnet du fou
+  jester: [{ d: 'M3 18.5L4.2 6.8 8.6 13 12 3.8l3.4 9.2 4.4-6.2 1.2 11.7z', f: 'c' }, { d: 'M3 18.5h18v2.8H3z', f: '#8b2d1f', s: 'c', w: 1 }, { d: 'M4.2 4.8a1.5 1.5 0 1 1-.01 0zM12 0.8a1.5 1.5 0 1 1-.01 0zM19.8 4.8a1.5 1.5 0 1 1-.01 0z', f: '#efc23e', s: '#6b4a12', w: 0.8 }],
+  // 🍇 la grappe (la Bourgogne)
+  grapes: [{ d: 'M12.5 7V3.2c1-.8 2.5-1 4-.4', s: '#5a3510', w: 1.4 }, { d: 'M13 4.8c2-2 5-2.2 6.6-.6-1.5 2-4.6 2.3-6.6.6z', f: '#4a7a2a' }, { d: 'M7.5 7a2.5 2.5 0 1 1-.01 0zM12.5 7a2.5 2.5 0 1 1-.01 0zM17.5 7a2.5 2.5 0 1 1-.01 0zM10 11.3a2.5 2.5 0 1 1-.01 0zM15 11.3a2.5 2.5 0 1 1-.01 0zM12.5 15.5a2.5 2.5 0 1 1-.01 0z', f: '#6b2c7a', s: '#2e1033', w: 0.9 }],
+  // 🐾 la moucheture d'hermine (la Bretagne)
+  ermine: [{ d: 'M12 2.5l1.6 3.2L12 7 10.4 5.7zM7 6.2l3.4 2.1-1.1 1.6zM17 6.2l-3.4 2.1 1.1 1.6z', f: 'c' }, { d: 'M12 9c-2.2 3.4-3.4 7.6-5 12h10c-1.6-4.4-2.8-8.6-5-12z', f: 'c' }],
+  // 🦄 le chardon (l'Écosse)
+  thistle: [{ d: 'M8.3 10L6.8 3.8l2.6 4L10.7 2.2 12 7.8l1.3-5.6 1.3 5.6 2.6-4L15.7 10z', f: '#8e4aa0', s: '#3d1a46', w: 0.8 }, { d: 'M7.8 10c0 4 1.9 6.2 4.2 6.2s4.2-2.2 4.2-6.2z', f: '#4a7a2a', s: '#24401a', w: 0.9 }, { d: 'M9 11.8l6 2.6M15 11.8l-6 2.6', s: '#24401a', w: 0.7 }, { d: 'M12 16.2V22M12 19.4l-4-2.2M12 20l4-2.2', s: '#4a7a2a', w: 1.5 }],
+  // 🚪 la porte
+  door: [{ d: 'M4.5 21h15', s: 'c', w: 1.8 }, { d: 'M7 21V3.5h10V21', s: 'c', w: 1.6 }, { d: 'M7 3.5l7 2V21H7z', f: 'c', o: 0.85 }, { d: 'M11.8 13h.01', s: '#f3e3bf', w: 2 }],
+  // 🏷 l'étiquette (un nom)
+  tag: [{ d: 'M3 11V3.5h7.5L21 14l-7 7z', f: 'c' }, { d: 'M6.8 4a1.4 1.4 0 1 1-.01 0z', f: '#f3e3bf' }],
+  // 👤 un joueur
+  person: [{ d: 'M12 3a4.2 4.2 0 1 1-.01 0z', f: 'c' }, { d: 'M3.8 21.5c0-4.8 3.6-7.8 8.2-7.8s8.2 3 8.2 7.8z', f: 'c' }],
+  // ⚱ l'urne (une mort)
+  urn: [{ d: 'M8 3h8', s: 'c', w: 2 }, { d: 'M9.2 3.6c0 2-3.2 3.2-3.2 7.8 0 4.2 2.6 6.4 3 7.8h6c.4-1.4 3-3.6 3-7.8 0-4.6-3.2-5.8-3.2-7.8z', f: 'c' }, { d: 'M8.5 21.2h7', s: 'c', w: 2 }],
+  // 🗑 la corbeille
+  trash: [{ d: 'M4.5 6h15M9 6V3.8h6V6M6.5 6l1.2 15h8.6L17.5 6', s: 'c', w: 1.7 }, { d: 'M10 9.5v8M14 9.5v8', s: 'c', w: 1.3 }],
+  // 📤 exporter / 📥 importer
+  out: [{ d: 'M4 14v6h16v-6', s: 'c', w: 1.8 }, { d: 'M12 15V3.5M7.5 8L12 3.5 16.5 8', s: 'c', w: 1.8 }],
+  in: [{ d: 'M4 14v6h16v-6', s: 'c', w: 1.8 }, { d: 'M12 3.5V15M7.5 10.5L12 15l4.5-4.5', s: 'c', w: 1.8 }],
+  // 🧶 le fil de laine (les drapiers de Flandre) : une pelote
+  yarn: [{ d: 'M11.5 3.5a8.5 8.5 0 1 1-.01 0z', f: '#b8322a', s: '#5a1810', w: 1 }, { d: 'M5 8c3 1 6 4.5 7 11M8.5 5c3 2 6 6 6.5 12.5M3.6 13c3-1 7 0 10.5 5.5M13 4.4c2.5 2.5 5 4 5.8 7', s: '#5a1810', w: 0.9 }, { d: 'M18 18.5c1.5 1 3 1.2 4 .5', s: '#b8322a', w: 1.3 }],
+  // 🐍 le serpent (Charles le Mauvais)
+  snake: [{ d: 'M4.5 20.5c3 0 4.5-2 3.4-4.2S5 13 6.2 10.8s3.6-2 5.6-2 4.4-1 4.4-3-1.8-2.7-3.6-2.3', s: 'c', w: 2.4 }, { d: 'M15.2 2.8c1.6-.9 4-.6 4.6.6s-1.4 2.3-3.2 1.8z', f: 'c' }, { d: 'M19.6 3.9l2.2.4M19.6 3.9l2 1.2', s: '#b8322a', w: 0.9 }],
+  // 💣 le canon (l'artillerie)
+  cannon: [{ d: 'M2.8 14.5l13.5-6.4 2.2 4.3-13.4 6.6z', f: 'c' }, { d: 'M16.3 8.1l1.6-.8 2.4 4.6-1.6.8z', f: 'c' }, { d: 'M7.5 11.2a3.4 3.4 0 1 1-.01 0z', f: '#7a4a1a', s: '#3a2512', w: 1 }, { d: 'M7.5 16.4a0.8 0.8 0 1 1-.01 0z', f: '#3a2512' }, { d: 'M21 3.2a1.4 1.4 0 1 1-.01 0z', f: 'c', o: 0.6 }],
+  // 🐬 le dauphin (le Dauphiné), comme sur les blasons
+  dolphin: [{ d: 'M3 9.5c1.5-3.5 5.5-5.5 9.5-5 4.5.5 8 4 8.5 8.5.3 3.2-1 6-3.5 7.5.8-2.2.5-4.4-1-5.8-1.8-1.6-4.5-1.5-6 .4-1 1.3-.8 3 .3 4.2-2.6-.4-4.5-2.4-4.8-5-.1-1.6.6-3 1.8-3.8-1.6-.3-3.4.1-4.8 1z', f: 'c' }, { d: 'M9.2 5.6a0.8 0.8 0 1 1-.01 0z', f: '#f3e3bf' }, { d: 'M12.5 4.5l1.8-2.5 1.2 2.9', f: 'c' }],
+  // 💍 l'anneau (un mariage)
+  ring: [{ d: 'M12 3.2a6.3 6.3 0 1 1-.01 0z', s: '#d9a520', w: 2.4 }, { d: 'M12 3.2a6.3 6.3 0 1 1-.01 0z', s: '#6b4a12', w: 0.6 }, { d: 'M9.5 6.6l2.5-4.1 2.5 4.1-2.5 2z', f: '#6fb8d8', s: '#2a4a5a', w: 0.8 }],
+  // 👁 l'œil (regarder)
+  eye: [{ d: 'M2 12c3-4.8 6.5-7 10-7s7 2.2 10 7c-3 4.8-6.5 7-10 7s-7-2.2-10-7z', s: 'c', w: 1.6 }, { d: 'M12 9a3 3 0 1 1-.01 0z', f: 'c' }],
+  // 🏹 l'arc et la flèche
+  bow: [{ d: 'M5 3c8.5 1 15 7.5 16 16', s: '#7a4a1a', w: 2.2 }, { d: 'M5 3l16 16', s: 'c', w: 0.8 }, { d: 'M3.5 20.5L17.5 6.5', s: 'c', w: 1.4 }, { d: 'M15.4 5.2l4.6-1.6-1.6 4.6z', f: 'c' }, { d: 'M3.5 20.5l.7-3.2M3.5 20.5l3.2-.7', s: 'c', w: 1.2 }],
+  // 🎚 la difficulté : trois barreaux de plus en plus hauts
+  levels: [{ d: 'M4 21v-5h4v5zM10 21v-9.5h4V21zM16 21V5h4v16z', f: 'c' }],
+  // 🏛 le temple (Rome)
+  temple: [{ d: 'M2.5 9L12 3l9.5 6z', f: 'c' }, { d: 'M5.5 10.5v8M9.8 10.5v8M14.2 10.5v8M18.5 10.5v8', s: 'c', w: 2 }, { d: 'M3.5 20.5h17', s: 'c', w: 2.2 }],
+  // 🏝 l'îlot
+  island: [{ d: 'M3 17.5c2-4.5 5-6.5 9-6.5s7 2 9 6.5z', f: 'c' }, { d: 'M12 11V5.5M12 5.5c-1.5-1.5-4-1.5-5.5 0M12 5.5c1.5-1.5 4-1.5 5.5 0M12 5.5c-.5-1.8 0-3 1.5-3.5', s: 'c', w: 1.4 }, { d: 'M2 20.8c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0', s: 'c', w: 1.3 }],
+  // 🚶 le marcheur (passer chez un allié)
+  walker: [{ d: 'M13.2 1.1a2.1 2.1 0 1 1-.01 0z', f: 'c' }, { d: 'M12.6 7.2l-2 6.2 3 3 1 5.4M10.6 13.4l-3 8M11.6 8.6l-3 3.2M12.6 8.6l3.2 2.6', s: 'c', w: 1.9 }],
+  // 🏠 une maison (une place libre)
+  house: [{ d: 'M3.5 11.5L12 4l8.5 7.5V21H15v-5.5h-6V21H3.5z', f: 'c' }],
 };
 
-// Emojis → icônes. (Les emojis des « title » et des listes déroulantes restent : là, on ne peut pas dessiner.)
+// Emojis → icônes. Le jeu n'affiche jamais d'emoji : chaque emoji d'un texte a ici son icône dessinée (un nouvel emoji
+// dans un texte = une nouvelle icône dans ICON_DEFS). Dans les infobulles (« title ») et les listes déroulantes, où
+// on ne peut pas dessiner, les emojis sont simplement retirés (voir Icons.strip).
 const EMOJI_ICONS = {
   '🏰': 'castle', '⛪': 'church', '🌾': 'mill', '⚔': 'swords', '⛺': 'tent', '⚓': 'anchor',
   '💰': 'gold', '👥': 'spears', '🛡': 'shield', '📜': 'scroll', '🗺': 'map',
@@ -172,6 +246,12 @@ const EMOJI_ICONS = {
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
   '⛏': 'pickaxe', '⚒': 'ore_iron', '🪙': 'ore_gold', '🪨': 'ore_stone', '💎': 'ore_diamond', '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
   '🖌': 'brush', '✏': 'quill', '🌍': 'orb', '🗼': 'tower', '🎵': 'music', '🔇': 'nomusic',
+  '📅': 'calendar', '⚜': 'lys', '🌐': 'globe', '🔔': 'bell', '⭐': 'star', '🙏': 'hands', '🕊': 'dove', '⚖': 'scales',
+  '⛓': 'chain', '🦁': 'lion', '⏩': 'fast', '📽': 'book', '✔': 'check', '❌': 'x', '🔒': 'lock', '🤪': 'jester',
+  '🍇': 'grapes', '🐾': 'ermine', '🦄': 'thistle', '🏁': 'pennant', '🚪': 'door', '🏷': 'tag', '👤': 'person', '⚱': 'urn',
+  '💾': 'chest', '📂': 'scroll', '🗑': 'trash', '📤': 'out', '📥': 'in', '🧶': 'yarn', '🐍': 'snake', '💣': 'cannon',
+  '🐬': 'dolphin', '💍': 'ring', '👁': 'eye', '🏹': 'bow', '🎚': 'levels', '🏛': 'temple', '🏝': 'island', '🚶': 'walker',
+  '🏠': 'house',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 
@@ -186,6 +266,9 @@ function iconSVG(name, cls = 'ico') {
     (l.o ? ` opacity="${l.o}"` : '') + '/>').join('') + '</svg>';
 }
 
+// N'importe quel emoji (pour les retirer là où on ne peut pas dessiner), avec son espace
+const ANY_EMOJI_RE = /(?:[\u2600-\u27BF\u2B50\u2B06\u23E9-\u23FA\u21A9\u2194-\u2199]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF])[\uFE0F\u200D]*\s?/g;
+
 // Remplace les emojis d'un texte HTML par les icônes dessinées
 function iconize(html) {
   return html.replace(EMOJI_RE, (m, e) => iconSVG(EMOJI_ICONS[e]));
@@ -195,8 +278,23 @@ function iconize(html) {
 // icônes. Un « observateur » le refait dès qu'un texte change (messages, barres, menus…).
 const Icons = {
   skip: new Set(['SCRIPT', 'STYLE', 'OPTION', 'SELECT', 'TEXTAREA', 'TITLE', 'svg']),
+  // Un texte sans ses emojis (pour les infobulles et les listes déroulantes)
+  strip(t) { return t.replace(ANY_EMOJI_RE, '').replace(/^\s+/, ''); },
+  // Les infobulles d'un élément et de ceux qu'il contient : sans emoji
+  fixTitles(root) {
+    const list = root.querySelectorAll ? [root, ...root.querySelectorAll('[title]')] : [];
+    for (const el of list) {
+      const t = el.getAttribute && el.getAttribute('title');
+      if (t && this.strip(t) !== t) el.setAttribute('title', this.strip(t));
+    }
+  },
   fixNode(node) {
     const parent = node.parentNode;
+    if (parent && parent.nodeName === 'OPTION') { // (une liste déroulante : on ne peut pas dessiner, on retire l'emoji)
+      const t = this.strip(node.nodeValue);
+      if (t !== node.nodeValue) node.nodeValue = t;
+      return;
+    }
     if (!parent || this.skip.has(parent.nodeName) || parent.closest && parent.closest('svg')) return;
     const text = node.nodeValue;
     EMOJI_RE.lastIndex = 0;
@@ -208,7 +306,10 @@ const Icons = {
   },
   fixTree(root) {
     if (root.nodeType === 3) return this.fixNode(root);
-    if (root.nodeType !== 1 || this.skip.has(root.nodeName)) return;
+    if (root.nodeType !== 1) return;
+    this.fixTitles(root);
+    if (root.nodeName === 'SELECT' || root.nodeName === 'OPTION') { for (const o of root.querySelectorAll('option')) o.textContent = this.strip(o.textContent); }
+    if (this.skip.has(root.nodeName)) return;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     const list = [];
     for (let n = walker.nextNode(); n; n = walker.nextNode()) list.push(n);
@@ -219,9 +320,10 @@ const Icons = {
     new MutationObserver(muts => {
       for (const m of muts) {
         if (m.type === 'characterData') this.fixNode(m.target);
+        else if (m.type === 'attributes') this.fixTitles(m.target);
         else for (const n of m.addedNodes) this.fixTree(n);
       }
-    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['title'] });
   },
 
   // Icône d'un type de bâtiment (d'après son emoji dans BUILDINGS)
