@@ -3955,6 +3955,17 @@ const GameRules = {
 
   sourceOfAttack(a) { return a.source === undefined ? -1 : a.source; },
 
+  // 🤖 L'assaut a d'un bot s'est arrêté de lui-même (passage bloqué, plus rien à prendre) : le bot écarte cette cible
+  // AI_BLOCK_TIME secondes (et oublie son plan d'assaut contre ce royaume), au lieu de relancer le même assaut en
+  // boucle. La cible : le bâtiment visé ('c' + case), ou les terres du royaume attaquées de front ('f' + royaume).
+  aiBlock(a) {
+    const p = this.players[a.attacker];
+    if (!p || p.human || a.target < 0) return;
+    (p.aiBlocked = p.aiBlocked || {})[a.targetCastle >= 0 ? 'c' + a.targetCastle : 'f' + a.target] = this.tick + CONFIG.AI_BLOCK_TIME * CONFIG.TICKS_PER_SECOND;
+    if (this.assaultPlans) this.assaultPlans.delete(a.attacker * 1000 + a.target);
+  },
+  aiBlocked(pid, key) { const p = this.players[pid]; return !!(p.aiBlocked && p.aiBlocked[key] > this.tick); },
+
   // « de Bourgogne » mais « d'Aragon »
   deName(name) { return (/^[AEIOUÉÈÊÂÎÔY]/i.test(name) ? "d'" : 'de ') + name; },
 
@@ -4205,9 +4216,10 @@ const GameRules = {
   },
   computeAssaultPlan(pid, target) {
     // Un morceau de son royaume, coupé de tous ses châteaux, touche nos terres : proie facile (personne ne le défend)
-    const loose = this.hasUnlinked(target) ? this.buildFrontier(pid, target, -1).find(t => this.isUnlinked(t)) : undefined;
+    const loose = this.hasUnlinked(target) && !this.aiBlocked(pid, 'f' + target) ? this.buildFrontier(pid, target, -1).find(t => this.isUnlinked(t)) : undefined;
     if (loose !== undefined) return { castle: null, D: this.tileDefense(target, loose), tile: loose };
-    const castles = this.nearestTargets(pid, target);
+    // (🤖 sans les cibles où son dernier assaut s'est arrêté de lui-même : voir aiBlock)
+    const castles = this.nearestTargets(pid, target).filter(c => !this.aiBlocked(pid, 'c' + c));
     let best = { castle: -1, D: 1 }, bestLen = Infinity;
     for (const c of castles) {
       const path = this.castlePath(pid, c, -1); // (depuis le royaume, comme l'assaut que le bot lancera)
@@ -5793,6 +5805,7 @@ const GameRules = {
       const path = this.owner[a.targetCastle] === a.target ? this.passageRoute(a) : null;
       if (!path) {
         if (this.players[a.attacker].isHuman) UI.log(tr('🚫 Le passage vers ta cible est bloqué : ton armée rentre, sans perte.', '🚫 The way to your target is blocked: your army comes back, with no losses.'), 'warn');
+        this.aiBlock(a);
         a.calledBack = true;
         return this.endAttack(a);
       }
@@ -5816,6 +5829,7 @@ const GameRules = {
           ? this.castlePath(a.attacker, a.targetCastle, this.sourceOfAttack(a)) : null;
         if (!path) {
           if (this.players[a.attacker].isHuman) UI.log(tr('🚫 Le passage vers le château est bloqué : assaut annulé.', '🚫 The way to the castle is blocked: assault cancelled.'), 'warn');
+          this.aiBlock(a);
           return this.endAttack(a);
         }
         a.pathTiles = path;
@@ -5904,6 +5918,7 @@ const GameRules = {
             ? tr(`🚫 Ton armée ne trouve plus de passage vers ${this.targetLabel(c)} : elle rentre.`, `🚫 Your army can no longer find a way to ${this.targetLabel(c)}: it heads home.`)
             : tr(`↩️ Ton assaut contre ${this.players[a.target].name} s'arrête : il n'y a plus rien à prendre de ce côté.`, `↩️ Your assault against ${this.players[a.target].name} stops: there is nothing left to take on this side.`), 'warn', this.players[a.target]);
         }
+        if (a.target >= 0) this.aiBlock(a);
         return this.endAttack(a);
       }
       if (a.troops < this.tileCost(a, t)) return this.endAttack(a); // plus assez de soldats

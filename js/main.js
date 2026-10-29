@@ -1341,7 +1341,7 @@ const UI = {
       const h = G.human, L = CONFIG.RELIC.CHURCH_LEVEL;
       return tr('📿 Relique sainte', '📿 Holy relic') + ' · ' + (relic.run >= 0 ? tr('une armée s\'en empare : clique pour l\'intercepter', 'an army is taking it: click to intercept')
         : !G.relicEligible(h.id, relic.tile, relic.region) ? tr('trop loin : elle doit être sur tes terres ou chez un voisin', 'too far: it must be on your land or a neighbour\'s')
-        : !G.relicChurches(h.id).length ? tr(`il te faut une église de niveau ${L} pour la garder`, `you need a level ${L} church to keep it`)
+        : G.relicRoom(h.id) <= 0 ? tr(`il te faut une église de niveau ${L} libre pour la garder (chacune ne garde qu'une relique)`, `you need a free level ${L} church to keep it (each keeps only one relic)`)
         : tr('clique pour envoyer une armée la chercher (curseur « Envoyer »)', 'click to send an army to fetch it ("Send" slider)')) +
         tr(` · gardée dans une église : +${Math.round(CONFIG.RELIC.FAITH_BONUS * 100)} % de conversion par la Croyance, +${Math.round(CONFIG.RELIC.CHURCH_GOLD * 100)} % d'or pour l'église`,
           ` · kept in a church: +${Math.round(CONFIG.RELIC.FAITH_BONUS * 100)}% Faith conversion, +${Math.round(CONFIG.RELIC.CHURCH_GOLD * 100)}% gold for the church`);
