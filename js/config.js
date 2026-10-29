@@ -433,6 +433,21 @@ const CONFIG = {
     SOUND_GAP: 3,
   },
 
+  // --- 📿 Les reliques saintes (parties classiques seulement, pas les scénarios : voir reliques.js) ---
+  // Une relique apparaît sur les terres d'un royaume (plutôt loin des plus grands), FIRST minutes après le début
+  // (au hasard entre les deux nombres), puis une autre toutes les NEXT minutes. Le royaume où elle est, et ses voisins,
+  // peuvent envoyer une armée la chercher (il faut une église de niveau CHURCH_LEVEL pour la garder) : TAKE_TIME
+  // secondes sur place, puis l'armée la rapporte à son église de ce niveau la plus proche, CARRY_SLOW fois moins vite.
+  // Chaque relique gardée : +FAITH_BONUS à la conversion des terres par la Croyance du royaume, et +CHURCH_GOLD à l'or
+  // de son église (pas de maximum).
+  RELIC: {
+    FIRST: [10, 15], NEXT: [8, 15], TAKE_TIME: 10, CHURCH_LEVEL: 3,
+    SPEED: 1,          // vitesse de marche des armées de relique (1 = comme un assaut ; les défenseurs : 1.18)
+    CARRY_SLOW: 1.5,   // avec la relique : 1/3 plus lente (le trajet prend 1,5 fois plus de temps)
+    FAITH_BONUS: 0.2, CHURCH_GOLD: 0.5,
+    BIG: 3,            // les BIG plus grands royaumes : la relique apparaît plutôt loin d'eux
+  },
+
   // --- 📽️ Résumé de la partie (bouton « Résumé » de l'écran de fin, voir replay.js) ---
   // Pendant la partie, une photo de la carte (qui tient quoi) toutes les EVERY secondes, en petit (au plus CELLS cases) ;
   // au-delà de MAX_FRAMES photos, on en garde une sur deux (et on espace les suivantes). Le résumé rejoue toute la

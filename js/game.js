@@ -34,6 +34,7 @@ const GameRules = {
     this.expeditions = []; // bateaux en route vers une côte
     this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up' ou 'down', start, end, pid, paid }
     this.defis = null;       // ⭐ les défis de la campagne et le vœu (voir defis.js)
+    this.relicReset();       // 📿 les reliques saintes (voir reliques.js)
     this.walls = [];         // murs bâtis par les villes : { castle, owner, tiles, start, ready, done }
     this.faithProgress = new Map(); this.faithCache = null; // (Croyance : voir stepFaith)
     this.crusades = []; // croisades religieuses en cours : { church, owner, end } (voir startCrusade)
@@ -138,6 +139,8 @@ const GameRules = {
     for (const a of this.buildingTiles) { mix(a); mix(this.level[a]); mix(Math.round(this.garrison[a] || 0)); }
     for (const p of this.players) { mix(p.alive ? 1 : 0); mix(p.tiles); mix(Math.round(p.troops)); mix(Math.round(p.gold)); mix(p.pact); }
     for (const a of this.attacks) { mix(a.attacker); mix(a.target); mix(Math.round(a.troops)); }
+    for (const r of this.relics || []) { mix(r.tile); mix(r.run); }
+    for (const r of this.relicRuns || []) { mix(r.pid); mix(Math.round(r.troops)); mix(r.phase.length); }
     return h;
   },
 
@@ -490,6 +493,7 @@ const GameRules = {
   // Retire un bâtiment de la carte (un avant-poste détruit)
   removeBuilding(a) {
     const type = this.building[a], o = this.owner[a];
+    if (type === B_CHURCH && this.relicChurch.size) this.relicChurchGone(a); // (📿 ses reliques disparaissent avec elle)
     for (const j of this.footprint(a, type)) { this.building[j] = 0; this.anchor[j] = -1; Render.markDirty(j); }
     this.level[a] = 0;
     this.garrison[a] = 0;
@@ -1094,7 +1098,8 @@ const GameRules = {
         //  pour le convertir à pleine vitesse, voir FAITH_DOMINANCE)
         const dominance = Math.min(1, diff / Math.max(1, this.faithOf(p.id)) / CONFIG.FAITH_DOMINANCE) ** CONFIG.FAITH_DOMINANCE_POWER;
         // (👑 Charlemagne : la Croyance y convertit moins vite, voir CHARLEMAGNE.FAITH_SPEED)
-        const speed = CONFIG.FAITH_SPEED * (this.cm ? CHARLEMAGNE.FAITH_SPEED : 1);
+        // (📿 ses reliques : il convertit plus vite, voir relicFaithFactor)
+        const speed = CONFIG.FAITH_SPEED * (this.cm ? CHARLEMAGNE.FAITH_SPEED : 1) * this.relicFaithFactor(p.id);
         const mult = (this.isProtected(o) ? 1 : CONFIG.FAITH_DISORGANIZED) * speed * dominance;
         const prog = (this.faithProgress.get(key) || 0) + mult / this.faithInterval(diff), n = Math.floor(prog);
         this.faithProgress.set(key, prog - n);
@@ -2416,6 +2421,8 @@ const GameRules = {
         case 'buyViking': return this.buyViking(p);
         case 'viking': return this.launchViking(pid, o.i, o.troops);
         case 'crusade': return this.startCrusade(p, o.a);
+        case 'relic': return this.launchRelicRun(pid, o.id, o.troops); // (📿 aller chercher une relique)
+        case 'relicChase': return this.launchRelicChase(pid, o.run, o.troops); // (📿 intercepter une armée de relique)
         case 'levy': return this.startLevy(p, o.a);
         case 'wall': return this.buildWall(p, o.c, o.i, o.from);
         case 'trade': return this.buildTrade(p, o.a, o.i);
@@ -2508,7 +2515,7 @@ const GameRules = {
     if (t === B_CHURCH) { // (par chemin ; une route de pierre, vers une cité impériale, rapporte plus)
       this.roads();
       return ((this.roadChurches && this.roadChurches.get(a)) || []).reduce((s, l) => s + CONFIG.CHURCH_ROAD_GOLD * (l.stone ? IMPERIAL.roadFactor : 1), 0)
-        * this.terrainFactor(a, B_CHURCH);
+        * this.terrainFactor(a, B_CHURCH) * this.relicGoldFactor(a); // (📿 ses reliques : voir reliques.js)
     }
     const eff = !owner ? 1 : t === B_BARRACKS ? this.barracksEfficiency(owner) : this.goldEfficiency(owner);
     const v = (t === B_MILL || t === B_PORT ? info.gold : info.troops) * eff;
@@ -6544,6 +6551,7 @@ const GameRules = {
     this.stepCentAns();
     this.stepObjectives();
     this.stepChallenges(); // (⭐ les défis des campagnes : voir defis.js)
+    this.stepRelics(); // (📿 les reliques saintes, dans les parties classiques : voir reliques.js)
 
     Replay.record(this); // (📽️ une photo de la carte de temps en temps, pour le résumé de fin de partie)
     if (this.tick % TPS === 0) this.checkEnd();

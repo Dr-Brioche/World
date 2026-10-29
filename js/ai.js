@@ -17,6 +17,7 @@ const AI = {
     if (Game.rand() < 0.05) this.tryViking(p);
     if (this.stuckOnIsland(p)) this.goToSea(p);
     if (Game.rand() < 0.08) this.tryAlliance(p);
+    if (Game.rand() < 0.15) Game.relicBot(p); // (📿 aller chercher une relique, ou en intercepter une : voir reliques.js)
 
     this.reactToThreats(p);
 
@@ -445,6 +446,8 @@ const AI = {
   tryBuild(p, forced) {
     // (il économise pour un pont : il ne dépense pas tout de suite, la plupart du temps)
     if (!forced && p.bridgeSaving && p.gold < Game.bridgeCost(p.id) && Game.rand() < 0.7) return;
+    // (📿 il économise pour une église de niveau 3, une relique est à sa portée : voir Game.relicBot)
+    if (!forced && p.relicSaving > Game.tick && Game.rand() < 0.7) return;
     // ✝️ Un voisin ennemi a plus de Croyance (il convertit nos terres) : on mise un peu plus sur les églises
     // (zeal : un peu en facile, plus en difficile)
     const zeal = Game.difficulty.zeal || 1;

@@ -1335,6 +1335,17 @@ const UI = {
   describeTile(i) {
     if (i < 0) return '';
     const G = Game, t = TERRAIN_INFO[G.terrain[i]];
+    // (📿 une relique sainte : qui peut aller la chercher, voir reliques.js)
+    const relic = G.relics && G.relics.length ? G.relicNear(i) : null;
+    if (relic && G.human) {
+      const h = G.human, L = CONFIG.RELIC.CHURCH_LEVEL;
+      return tr('📿 Relique sainte', '📿 Holy relic') + ' · ' + (relic.run >= 0 ? tr('une armée s\'en empare : clique pour l\'intercepter', 'an army is taking it: click to intercept')
+        : !G.relicEligible(h.id, relic.tile, relic.region) ? tr('trop loin : elle doit être sur tes terres ou chez un voisin', 'too far: it must be on your land or a neighbour\'s')
+        : !G.relicChurches(h.id).length ? tr(`il te faut une église de niveau ${L} pour la garder`, `you need a level ${L} church to keep it`)
+        : tr('clique pour envoyer une armée la chercher (curseur « Envoyer »)', 'click to send an army to fetch it ("Send" slider)')) +
+        tr(` · gardée dans une église : +${Math.round(CONFIG.RELIC.FAITH_BONUS * 100)} % de conversion par la Croyance, +${Math.round(CONFIG.RELIC.CHURCH_GOLD * 100)} % d'or pour l'église`,
+          ` · kept in a church: +${Math.round(CONFIG.RELIC.FAITH_BONUS * 100)}% Faith conversion, +${Math.round(CONFIG.RELIC.CHURCH_GOLD * 100)}% gold for the church`);
+    }
     if (G.terrain[i] === TERRAIN.GREAT_RIVER) return tr('🌊 Grand fleuve (infranchissable)', '🌊 Great river (impassable)');
     if (G.terrain[i] === TERRAIN.RIVER) return tr('🌊 Fleuve : neutre, personne ne peut le prendre · pour passer, clic droit sur une terre libre en face → 🛶 Traverser le fleuve',
       '🌊 River: neutral, nobody can take it · to cross, right-click on free land on the other bank → 🛶 Cross the river');
@@ -1927,6 +1938,27 @@ const UI = {
     }, () => h.troops);
   },
 
+  // 📿 Envoyer une armée (selon le curseur « Envoyer ») chercher la relique id
+  relicFetch(id) {
+    const G = Game, h = G.human;
+    this.act({ k: 'relic', id, troops: h.troops * this.ratio }, (err, before) => {
+      if (err) return this.log(err, 'warn');
+      Music.sound('assault');
+      this.log(tr(`📿 ${fmt(before - h.troops)} soldats partent chercher la relique ! Il faudra la rapporter à ton église de niveau ${CONFIG.RELIC.CHURCH_LEVEL} : défends-les en chemin.`,
+        `📿 ${fmt(before - h.troops)} soldiers set out to fetch the relic! It must be carried back to your level ${CONFIG.RELIC.CHURCH_LEVEL} church: protect them on the way.`), 'good');
+    }, () => h.troops);
+  },
+  // 📿 Envoyer une armée intercepter l'armée de relique run (d'un autre royaume)
+  relicChase(run) {
+    const G = Game, h = G.human, v = G.players[run.pid];
+    this.act({ k: 'relicChase', run: run.id, troops: h.troops * this.ratio }, (err, before) => {
+      if (err) return this.log(err, 'warn');
+      Music.sound('assault');
+      this.log(tr(`⚔️ ${fmt(before - h.troops)} soldats partent intercepter l'armée ${G.deName(v.name)}${run.relic ? ' et lui prendre la relique' : ''} !`,
+        `⚔️ ${fmt(before - h.troops)} soldiers set out to intercept ${possessive(v.name)} army${run.relic ? ' and seize the relic' : ''}!`), 'good');
+    }, () => h.troops);
+  },
+
   // Assaut (selon le curseur « Envoyer ») pour relier un château isolé à son royaume
   link(c) {
     const G = Game, h = G.human;
@@ -2509,6 +2541,14 @@ const UI = {
     const banner = Render.bannerAt(sx, sy);
     const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;
     if (assault && assault.target === h.id) return this.defend(banner);
+    // 📿 Clic sur la bannière d'une armée de relique (d'un autre royaume) : on l'intercepte ; sur une relique : on
+    // envoie une armée la chercher (voir reliques.js)
+    if (!this.selectedBuild && !this.plan) {
+      const runId = Render.relicRunAt(sx, sy), run = runId >= 0 ? G.relicRuns.find(r => r.id === runId) : null;
+      if (run && run.pid !== h.id) return this.relicChase(run);
+      const relicId = Render.relicSpotAt(sx, sy);
+      if (relicId >= 0) return this.relicFetch(relicId);
+    }
     if (this.plan && this.planClick(i)) return;
     // Pose d'un mur : le clic choisit jusqu'où il va
     if (this.wallFor >= 0) {

@@ -228,6 +228,11 @@ const ICON_DEFS = {
   island: [{ d: 'M3 17.5c2-4.5 5-6.5 9-6.5s7 2 9 6.5z', f: 'c' }, { d: 'M12 11V5.5M12 5.5c-1.5-1.5-4-1.5-5.5 0M12 5.5c1.5-1.5 4-1.5 5.5 0M12 5.5c-.5-1.8 0-3 1.5-3.5', s: 'c', w: 1.4 }, { d: 'M2 20.8c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0', s: 'c', w: 1.3 }],
   // 🚶 le marcheur (passer chez un allié)
   walker: [{ d: 'M13.2 1.1a2.1 2.1 0 1 1-.01 0z', f: 'c' }, { d: 'M12.6 7.2l-2 6.2 3 3 1 5.4M10.6 13.4l-3 8M11.6 8.6l-3 3.2M12.6 8.6l3.2 2.6', s: 'c', w: 1.9 }],
+  // 📿 la relique sainte : un reliquaire d'or surmonté d'une croix, orné de pierres
+  relic: [{ d: 'M12 1.6v6M9.6 3.8h4.8', s: '#6b4a12', w: 2.6 }, { d: 'M12 1.6v6M9.6 3.8h4.8', s: '#f5d36a', w: 1.2 },
+    { d: 'M3.8 12.2l2.6-4.2h11.2l2.6 4.2z', f: '#efc23e', s: '#6b4a12', w: 1 }, { d: 'M5 12.2h14v8.2H5z', f: '#d9a520', s: '#6b4a12', w: 1 },
+    { d: 'M8.5 15.05a1.25 1.25 0 1 1-.01 0zM15.5 15.05a1.25 1.25 0 1 1-.01 0z', f: '#b8322a' }, { d: 'M12 15.05a1.25 1.25 0 1 1-.01 0z', f: '#4a8ac0' },
+    { d: 'M5.4 20.4h2.2v1.9H5.4zM16.4 20.4h2.2v1.9h-2.2z', f: '#6b4a12' }],
   // 🏠 une maison (une place libre)
   house: [{ d: 'M3.5 11.5L12 4l8.5 7.5V21H15v-5.5h-6V21H3.5z', f: 'c' }],
 };
@@ -251,7 +256,7 @@ const EMOJI_ICONS = {
   '🍇': 'grapes', '🐾': 'ermine', '🦄': 'thistle', '🏁': 'pennant', '🚪': 'door', '🏷': 'tag', '👤': 'person', '⚱': 'urn',
   '💾': 'chest', '📂': 'scroll', '🗑': 'trash', '📤': 'out', '📥': 'in', '🧶': 'yarn', '🐍': 'snake', '💣': 'cannon',
   '🐬': 'dolphin', '💍': 'ring', '👁': 'eye', '🏹': 'bow', '🎚': 'levels', '🏛': 'temple', '🏝': 'island', '🚶': 'walker',
-  '🏠': 'house',
+  '🏠': 'house', '📿': 'relic',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 
