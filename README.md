@@ -707,6 +707,21 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      constructions, en bas : un clic la lance tout de suite (depuis une cathédrale libre), et il affiche le temps restant
      quand toutes tes cathédrales ont déjà leur croisade en cours. De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
      en retard de Croyance (un message te prévient si c'est un voisin).
+     📿 **Les reliques saintes** (parties classiques seulement, pas les scénarios) : entre **10 et 15 minutes** après le
+     début, une relique apparaît sur les terres d'un royaume (plutôt **loin des plus grands**, pour rééquilibrer la partie),
+     puis une autre toutes les **8 à 15 minutes**. Elle brille sur la carte. Le royaume où elle est, et tous ses
+     **voisins**, peuvent aller la chercher : il faut une **cathédrale** (église de niveau 3) pour la garder. **Clique sur
+     la relique** : une armée (selon le curseur « Envoyer ») part de ta ville la plus proche, avec une **petite croix d'or**
+     pour la reconnaître. Elle ne prend aucune terre en chemin (elle marche sur tes terres, celles de tes alliés, du royaume
+     de la relique et les terres libres). Arrivée, elle s'en empare en **10 secondes** (l'anneau jaune), puis la rapporte
+     à ta **cathédrale la plus proche**, **1/3 plus lentement** ; la relique flotte au-dessus d'elle. En chemin, **tous les
+     voisins peuvent l'intercepter** (un clic sur sa bannière) : au contact, le plus fort l'emporte, garde ses survivants et
+     prend la relique pour la rapporter chez lui (s'il n'a pas de cathédrale, elle tombe là). Tu perds ta dernière
+     cathédrale en route : ton armée pose la relique là où elle est et rentre. Une fois déposée, la relique reste **liée à
+     cette église** (elle s'affiche à côté d'elle) : ton royaume **convertit 20 % plus vite** par la Croyance (par relique,
+     sans maximum) et l'église rapporte **50 % d'or en plus**. Prise par un autre, l'église lui donne ces bonus ; détruite
+     (un raid viking, une démolition…), elle perd sa relique. Les bots les cherchent aussi (ils économisent pour une
+     cathédrale) et interceptent les armées qui passent. Réglages : `RELIC` dans `js/config.js`, règles dans `js/reliques.js`.
 
    - ⛏️ **Mine** (touche **7**, 💰 **600**, puis 💰 **1200** pour le niveau 2) : elle se bâtit seulement sur un **filon**, une
      petite icône de minerai posée au hasard sur la carte : dans les **montagnes** (fer, or, diamant) ou les **collines**
@@ -1024,6 +1039,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.165** : 📿 **les reliques saintes** (parties classiques) : une relique apparaît après 10 à 15 min, puis toutes les 8 à 15 min, plutôt loin des grands royaumes ; le royaume où elle est et ses voisins peuvent l'aller chercher (il faut une cathédrale), 10 s pour s'en emparer, puis l'armée la rapporte à sa cathédrale, plus lentement, et tous les voisins peuvent l'intercepter ; une relique gardée : +20 % de conversion par la Croyance et +50 % d'or pour son église (sans maximum), et elle suit l'église (prise ou détruite)
 - **v0.92.164** : ⛏️ une **mine d'or épuisée qu'on peut encore relancer** (niveau 1 : l'améliorer au niveau 2 la relance) garde sa croix rouge, avec en plus une **flèche verte d'amélioration** ; la croix seule veut dire « épuisée pour de bon »
 - **v0.92.163** : 🎨 icônes : l'**arc** redessiné (une seule pointe, deux plumes rouges à l'arrière, au lieu d'une flèche qui semblait en avoir deux) ; les troupes de niveau 3 et 4 ne sont plus coupées en haut ou en bas (toutes les icônes tiennent dans leur cadre)
 - **v0.92.162** : ⭐ défis des campagnes : l'**or** qu'ils rapportent est **divisé par deux** (c'était un trop gros bonus) ; la Croyance et la Légitimité ne changent pas
@@ -1437,6 +1453,7 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/charlemagne.js` | 👑 Le scénario « Charlemagne » : ses factions, objectifs, réglages et textes (ses règles sont dans `js/game.js`) |
 | `js/centans.js`, `js/centansrules.js` | ⚜️ Le scénario « La guerre de Cent Ans » : ses données (factions, objectifs, réglages, parchemins), puis ses règles |
 | `js/defis.js` | ⭐ Les défis des campagnes et le vœu solennel (les défis de chaque faction sont dans `CHALLENGES`) |
+| `js/reliques.js` | 📿 Les reliques saintes des parties classiques : apparition, armées de relique, interception, bonus |
 | `js/ai.js` | Le cerveau des royaumes adverses |
 | `js/icons.js` | Les icônes médiévales dessinées (elles remplacent les emojis partout) |
 | `js/render.js` | Le dessin de la carte |

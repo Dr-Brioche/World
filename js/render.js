@@ -1519,6 +1519,119 @@ const Render = {
     ctx.restore();
   },
 
+  // 📿 Les reliques (voir reliques.js) : celles posées sur la carte (un halo doré ; l'anneau jaune de la prise, quand
+  // une armée s'en empare), les églises qui en gardent (la relique à côté, et leur nombre), et les armées de relique :
+  // leur bannière avec une petite croix d'or, la relique au-dessus quand elles la portent (cliquables : voir relicRunAt)
+  drawRelics(ox, oy) {
+    const G = Game, ctx = this.ctx, s = this.cam.scale, W = G.W;
+    this.relicHits = []; this.relicSpots = [];
+    if (!G.relics || (!G.relics.length && !G.relicRuns.length && !G.relicChurch.size)) return;
+    const relicIcon = (x, y, size) => {
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.62, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(30,18,6,0.7)';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#f0c94a';
+      ctx.stroke();
+      Icons.draw(ctx, 'relic', x, y, size * 0.95);
+    };
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // Les églises qui gardent des reliques
+    for (const [c, n] of G.relicChurch) {
+      const h = G.sizeOf(B_CHURCH);
+      const x = ox + (c % W + h) * s + 4, y = oy + ((c / W) | 0) * s - 2;
+      relicIcon(x, y, 18);
+      if (n > 1) {
+        ctx.font = '700 11px Georgia, serif';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+        ctx.fillStyle = '#ffe9a8';
+        ctx.strokeText('x' + n, x + 13, y + 8);
+        ctx.fillText('x' + n, x + 13, y + 8);
+      }
+    }
+    // Les reliques posées sur la carte : un halo qui pulse doucement
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 400);
+    for (const r of G.relics) {
+      const x = ox + (r.tile % W + 0.5) * s, y = oy + (((r.tile / W) | 0) + 0.5) * s;
+      const glow = ctx.createRadialGradient(x, y, 6, x, y, 38);
+      glow.addColorStop(0, `rgba(255,236,160,${0.75 + 0.2 * pulse})`);
+      glow.addColorStop(0.5, `rgba(255,214,90,${0.35 + 0.2 * pulse})`);
+      glow.addColorStop(1, 'rgba(255,214,90,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, 38, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = `rgba(255,240,190,${0.4 + 0.5 * pulse})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 22 + 6 * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      relicIcon(x, y, 26);
+      this.relicSpots.push({ id: r.id, x, y });
+      // (une armée s'en empare : l'anneau jaune qui se remplit, comme un siège)
+      const run = r.run >= 0 ? G.relicRuns.find(q => q.id === r.run) : null;
+      if (run && run.phase === 'take') {
+        const k = 1 - (run.takeEnd - G.tick) / (CONFIG.RELIC.TAKE_TIME * CONFIG.TICKS_PER_SECOND);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(20,12,4,0.6)';
+        ctx.beginPath();
+        ctx.arc(x, y, 21, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = CONFIG.SIEGE_RING_COLOR;
+        ctx.beginPath();
+        ctx.arc(x, y, 21, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, Math.min(1, k)));
+        ctx.stroke();
+      }
+    }
+    // Les armées de relique
+    for (const r of G.relicRuns) {
+      const p = G.players[r.pid];
+      let x, y;
+      if (r.phase === 'take') {
+        const pos = G.relicPos(r);
+        x = ox + pos.x * s + 26; y = oy + pos.y * s + 14;
+      } else {
+        ({ x, y } = this.walkTrail(r.route, ox, oy));
+        ctx.setLineDash([4, 6]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(${p.color.join(',')},0.85)`;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      // (comme une expédition : sa bannière, et à sa place un médaillon sombre avec une croix d'or, l'armée de relique)
+      this.drawBannerImage(p, x + 12, y - 2, 30);
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(30,18,6,0.8)';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#f0c94a';
+      ctx.stroke();
+      Icons.draw(ctx, 'cross', x, y, 13, '#f0c94a');
+      ctx.font = '700 12px Georgia, serif';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(20,12,4,0.85)';
+      ctx.fillStyle = '#fff';
+      Icons.text(ctx, `${G.troopIcon(r.pid)} ${fmt(r.troops)}`, x, y - 19);
+      if (r.relic && r.phase === 'carry') relicIcon(x, y - 40, 22); // (elle porte la relique : bien visible)
+      this.relicHits.push({ id: r.id, x: x + 4, y: y - 10 });
+    }
+  },
+  // La relique sous ce point de l'écran (id), ou -1
+  relicSpotAt(sx, sy) {
+    for (const b of this.relicSpots || []) if (Math.abs(sx - b.x) < 22 && Math.abs(sy - b.y) < 22) return b.id;
+    return -1;
+  },
+  // L'armée de relique sous ce point de l'écran (id), ou -1
+  relicRunAt(sx, sy) {
+    for (const b of this.relicHits || []) if (Math.abs(sx - b.x) < 26 && Math.abs(sy - b.y) < 26) return b.id;
+    return -1;
+  },
+
   // Défenseurs qui rentrent à pied vers leur ville (l'assaut qu'ils allaient contrer est fini)
   drawReturning(ox, oy) {
     const G = Game, ctx = this.ctx;
@@ -2950,6 +3063,7 @@ const Render = {
     this.drawExpeditions(ox, oy);
     this.drawDefendersOnTheWay(ox, oy);
     this.drawReturning(ox, oy);
+    this.drawRelics(ox, oy);
     this.drawAttackArrows(ox, oy);
     this.drawArmyTarget();
     this.drawTradePreview(ox, oy);
