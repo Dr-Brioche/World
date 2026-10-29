@@ -5426,12 +5426,15 @@ const GameRules = {
         const nd = d + cost;
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
       }
-      // (un fleuve qui coupe ses terres : on le passe à gué, voir fordAcross)
-      if (this.riverSide[i] && own[i] === pid) this.fordAcross(i, pid, (n, gap, bridged) => {
+      // (un fleuve qui coupe ses terres : on le passe à gué, voir fordAcross ; pour un assaut, aussi le fleuve qui
+      //  sépare ses terres de celles de l'ennemi : sinon une ville juste en face, de l'autre côté de l'eau, serait
+      //  ignorée au profit d'une ville lointaine, reliée par la terre)
+      const fordable = j => own[j] === pid || (enemy >= 0 && own[j] === enemy);
+      if (this.riverSide[i] && fordable(i)) this.fordAcross(i, pid, (n, gap, bridged) => {
         if (B.seen[n] === -stamp) return;
-        const nd = d + (bridged ? gap : gap * ford) + march(n);
+        const nd = d + (bridged ? gap : gap * ford) + march(n) * (own[n] === pid ? 1 : slow);
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
-      });
+      }, fordable);
     }
     this.cityCache.set(key, found);
     return found;
