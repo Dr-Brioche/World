@@ -326,6 +326,8 @@ const CONFIG = {
   // pertes par case n'augmentent plus (une grosse armée y va plus vite, sans perdre plus d'hommes par case)
   DISORGANIZED_LOSS_FROM: 500,
   REGIONS_REUSE: 5,            // (technique) tours de jeu pendant lesquels le découpage en morceaux peut servir tel quel
+  AI_PLAN_REUSE: 8,            // (technique) secondes pendant lesquelles un bot garde son plan d'assaut contre un voisin
+  AI_PLANS_PER_TURN: 1,        // (technique) plans d'assaut neufs qu'un bot calcule au plus à chaque réflexion (les autres attendent)
   // Prise d'un château : toute sa zone de défense et les bâtiments qui s'y trouvent sont pris d'un coup,
   // puis l'assaut s'arrête (les survivants rentrent).
   // Un royaume sans château (ville) peut être attaqué de front : toutes ses troupes défendent d'office,

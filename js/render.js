@@ -725,8 +725,14 @@ const Render = {
 
   // Recalcule les murailles seulement quand la carte a changé
   updateWalls() {
-    const G = Game;
+    const G = Game, now = performance.now();
     if (this.wallsVersion === G.version) return;
+    // (⏱️ pendant les assauts, la carte change presque à chaque image : on ne refait les murailles qu'au plus toutes
+    //  les 0,25 s, sauf si une ville vient d'apparaître ou de disparaître)
+    const key = G.castles.length + ':' + G.buildingTiles.length;
+    if (this.wallEdges && this.wallsKey === key && now - (this.wallsTime || 0) < 250) return;
+    this.wallsKey = key;
+    this.wallsTime = now;
     this.wallsVersion = G.version;
     if (!this.protOwner || this.protOwner.length !== G.N) this.protOwner = new Int16Array(G.N);
     const prot = this.protOwner;
@@ -2324,9 +2330,16 @@ const Render = {
   updatePactEdges() {
     const G = Game;
     if (this.pactVersion === G.version) return;
+    // (⏱️ la carte change presque à chaque image pendant les assauts : on ne refait ces bords qu'au plus toutes les
+    //  0,4 s, sauf si les pactes eux-mêmes ont changé)
+    const pacts = G.players.map(p => p.alive ? p.pact : -2).join(','), now = performance.now();
+    if (this.pactKey === pacts && this.pactEdges && now - (this.pactTime || 0) < 400) return;
+    this.pactKey = pacts;
+    this.pactTime = now;
     this.pactVersion = G.version;
     if (!G.pacts.size) { this.pactEdges = []; return; } // (aucun pacte : rien à chercher sur la carte)
-    const pactOf = i => (G.owner[i] >= 0 ? G.players[G.owner[i]].pact : -1);
+    const pactBy = G.players.map(p => p.pact), own = G.owner;
+    const pactOf = i => (own[i] >= 0 ? pactBy[own[i]] : -1);
     const byPact = new Map();
     for (let i = 0; i < G.N; i++) {
       const k = pactOf(i);
@@ -2908,7 +2921,18 @@ const Render = {
     // un fin trait sombre autour de la carte (sans le cadre brodé : un cadre plus épais)
     ctx.lineWidth = frame ? 1.5 : 4;
     ctx.strokeStyle = '#3b2a17';
-    ctx.strokeRect(ox - 1, oy - 1, G.W * s + 2, G.H * s + 2);
+    // (⏱️ seulement les bords visibles, raccourcis à l'écran : de près, la carte fait des milliers de pixels de côté)
+    {
+      const cw = this.canvas.width, chh = this.canvas.height, m = 10;
+      const L = ox - 1, T = oy - 1, R = ox + G.W * s + 1, B = oy + G.H * s + 1;
+      const x0 = Math.max(L, -m), x1 = Math.min(R, cw + m), y0 = Math.max(T, -m), y1 = Math.min(B, chh + m);
+      ctx.beginPath();
+      if (T >= -m && T <= chh + m) { ctx.moveTo(x0, T); ctx.lineTo(x1, T); }
+      if (B >= -m && B <= chh + m) { ctx.moveTo(x0, B); ctx.lineTo(x1, B); }
+      if (L >= -m && L <= cw + m) { ctx.moveTo(L, y0); ctx.lineTo(L, y1); }
+      if (R >= -m && R <= cw + m) { ctx.moveTo(R, y0); ctx.lineTo(R, y1); }
+      ctx.stroke();
+    }
     ctx.imageSmoothingEnabled = false;
     // (tout au fond du dézoom, la vieille carte : pas de détails, juste les villes dessinées à l'encre, voir drawMapSymbols)
     const oldMap = pa > 0.5;
