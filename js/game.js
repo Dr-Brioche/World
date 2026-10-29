@@ -295,7 +295,19 @@ const GameRules = {
   // rien construire d'autre qu'un château : il lui faut d'abord une ville pour diriger le royaume.
   commanded(a, type) {
     if (type === B_CASTLE) return true;
-    const r = this.regionsAt(a), k = r.comp[a];
+    // (⏱️ le découpage récent suffit : les bots posent la question pour des centaines de cases ; si la case vient de
+    //  changer de mains, on regarde le morceau d'une case voisine du même royaume, sans tout redécouper)
+    const r = this.regions(), o = this.owner[a];
+    let k = r.comp[a];
+    if (k < 0 || r.owner[k] !== o) {
+      k = -1;
+      const W = this.W, x = a % W;
+      for (const n of [x > 0 ? a - 1 : -1, x < W - 1 ? a + 1 : -1, a - W, a + W]) {
+        if (n < 0 || n >= this.N) continue;
+        const m = r.comp[n];
+        if (m >= 0 && r.owner[m] === o && this.owner[n] === o) { k = m; break; }
+      }
+    }
     return k >= 0 && (r.held[k] || r.anyOutpost[k]);
   },
 
@@ -3331,7 +3343,17 @@ const GameRules = {
   //  ont changé de mains entre-temps : sur une grande carte, le refaire à chaque tour ralentirait le jeu.
   //  fresh = true : toujours à jour, pour décider des encerclements.)
   regions(fresh = false) {
-    if (this.inUI()) return this.regionsCache || this.uiCall(() => this.regions(fresh)); // (🌐 voir uiCall)
+    if (this.inUI()) { // (🌐 voir uiCall)
+      if (this.regionsCache) return this.regionsCache;
+      // (⏱️ la mémoire des règles est vide, par exemple juste après la perte d'un bâtiment : l'affichage garde son
+      //  propre découpage pour cette version de la carte, au lieu de tout redécouper à chaque image ; les règles ne
+      //  le lisent jamais, la partie en ligne reste la même partout)
+      const u = this.uiRegions;
+      if (u && u.version === this.version && u.N === this.N) return u.r;
+      const r = this.uiCall(() => this.regions(fresh));
+      this.uiRegions = { version: this.version, N: this.N, r };
+      return r;
+    }
     if (this.regionsCache && this.regionsVersion === this.version) return this.regionsCache;
     if (!fresh && this.regionsCache && this.tick - this.regionsTick < CONFIG.REGIONS_REUSE && this.tick >= this.regionsTick) return this.regionsCache;
     this.regionsTick = this.tick;
@@ -3344,8 +3366,9 @@ const GameRules = {
     this.riverTiles(); // (prépare riverSide : les cases qui touchent un fleuve)
     const side = this.riverSide;
     const W = this.W, N = this.N, own = this.owner;
-    // (cases d'en face, de l'autre côté d'un fleuve ; pas de fonction qui modifie n ou comp : c'est plus rapide)
-    const across = [], pushAcross = j => { across.push(j); };
+    // (pos[i] : la place de la case i dans order, pour savoir quel bâtiment d'un morceau vient en dernier)
+    if (!this.regionsPos || this.regionsPos.length !== N) this.regionsPos = new Int32Array(N);
+    const pos = this.regionsPos;
     // Routes d'assauts encore en cours vers un objectif : tant que le combat n'est pas joué, elles ne sont que
     // visuelles. Elles ne coupent donc pas le royaume traversé : pour lui, ses morceaux restent reliés à travers
     // elles (bridge[t] = royaume traversé). Si l'assaut prend son objectif, la coupe s'applique ; sinon la
@@ -3365,6 +3388,7 @@ const GameRules = {
       // (les 4 voisins sont écrits à la main : c'est la fonction la plus appelée des grandes cartes)
       const k = size.length, s = n;
       comp[i] = k;
+      pos[i] = n;
       order[n++] = i;
       stamp = (this.bridgeStamp = (this.bridgeStamp || 0) + 1);
       bq.length = 0;
@@ -3372,10 +3396,10 @@ const GameRules = {
       for (let q = s; q < n || b < bq.length;) {
         // (les cases d'une route en cours sont traversées sans faire partie du morceau)
         const t = q < n ? order[q++] : bq[b++], x = t % W;
-        if (x > 0 && comp[t - 1] < 0 && own[t - 1] === o) { comp[t - 1] = k; order[n++] = t - 1; }
-        if (x < W - 1 && comp[t + 1] < 0 && own[t + 1] === o) { comp[t + 1] = k; order[n++] = t + 1; }
-        if (t >= W && comp[t - W] < 0 && own[t - W] === o) { comp[t - W] = k; order[n++] = t - W; }
-        if (t < N - W && comp[t + W] < 0 && own[t + W] === o) { comp[t + W] = k; order[n++] = t + W; }
+        if (x > 0 && comp[t - 1] < 0 && own[t - 1] === o) { comp[t - 1] = k; pos[t - 1] = n; order[n++] = t - 1; }
+        if (x < W - 1 && comp[t + 1] < 0 && own[t + 1] === o) { comp[t + 1] = k; pos[t + 1] = n; order[n++] = t + 1; }
+        if (t >= W && comp[t - W] < 0 && own[t - W] === o) { comp[t - W] = k; pos[t - W] = n; order[n++] = t - W; }
+        if (t < N - W && comp[t + W] < 0 && own[t + W] === o) { comp[t + W] = k; pos[t + W] = n; order[n++] = t + W; }
         if (bridge) {
           if (x > 0) visitBridge(t - 1, o);
           if (x < W - 1) visitBridge(t + 1, o);
@@ -3383,25 +3407,31 @@ const GameRules = {
           if (t < N - W) visitBridge(t + W, o);
         }
         if (side[t]) { // les deux rives d'un fleuve restent un même morceau
-          across.length = 0;
-          this.acrossRiver(t, pushAcross);
-          for (const j of across) if (comp[j] < 0 && own[j] === o) { comp[j] = k; order[n++] = j; }
+          for (const j of this.acrossFor(t)) if (comp[j] < 0 && own[j] === o) { comp[j] = k; pos[j] = n; order[n++] = j; }
         }
       }
       size.push(n - s); start.push(s); owner.push(o);
-      // Ce morceau a-t-il un avant-poste (bâti ou non), ou le château d'une ancienne zone d'avant-poste ?
-      // (et une ville ou un port fortifié, qui tient la région : sans eux, elle est coupée de ses châteaux)
-      let op = -1, anyOp = false, col = false, cas = false, hold = false;
-      for (let q = s; q < n; q++) {
-        const t = order[q], b = this.building[t];
-        if (b === B_OUTPOST) { anyOp = true; if (this.outpostReady(this.anchor[t])) op = this.anchor[t]; }
-        if (b === B_CASTLE) cas = true;
-        if (b && this.colonies.get(this.anchor[t]) === o) col = true; // (château ou port royal d'une ancienne zone d'avant-poste)
-        if (b && this.holdsAlone(this.anchor[t])) hold = true;
-      }
-      outpost.push(op); anyOutpost.push(anyOp); colony.push(col); hasCastle.push(cas); held.push(hold);
-      if (main[o] < 0 || size[k] > size[main[o]]) main[o] = k;
+      outpost.push(-1); anyOutpost.push(false); colony.push(false); hasCastle.push(false); held.push(false);
     }
+    // Chaque morceau a-t-il un avant-poste (bâti ou non), ou le château d'une ancienne zone d'avant-poste ?
+    // (et une ville ou un port fortifié, qui tient la région : sans eux, elle est coupée de ses châteaux)
+    // (⏱️ on ne regarde que les cases des bâtiments ; l'avant-poste retenu est celui qui vient en dernier dans le morceau)
+    const opAt = new Map();
+    for (const a of this.buildingTiles) {
+      const b = this.building[a];
+      for (const t of this.footprint(a, b)) {
+        const k = comp[t];
+        if (k < 0) continue;
+        if (b === B_OUTPOST) {
+          anyOutpost[k] = true;
+          if (this.outpostReady(a) && !(opAt.get(k) > pos[t])) { outpost[k] = a; opAt.set(k, pos[t]); }
+        }
+        if (b === B_CASTLE) hasCastle[k] = true;
+        if (this.colonies.get(a) === owner[k]) colony[k] = true; // (château ou port royal d'une ancienne zone d'avant-poste)
+        if (this.holdsAlone(a)) held[k] = true;
+      }
+    }
+    for (let k = 0; k < size.length; k++) if (main[owner[k]] < 0 || size[k] > size[main[owner[k]]]) main[owner[k]] = k;
     if (bridge) for (const [t] of bridges) bridge[t] = -1; // (on remet le tableau à zéro pour la prochaine fois)
     // Les cœurs du royaume : sur chaque île (ou continent), son plus grand morceau.
     // Une zone d'avant-poste n'est pas un cœur (c'est une tête de pont), sauf si un château s'y trouve.
@@ -3540,7 +3570,15 @@ const GameRules = {
 
   // Les cases de terre juste en face, de l'autre côté d'un fleuve (en ligne droite, au plus 3 cases d'eau) :
   // un royaume des deux côtés d'un fleuve n'est pas coupé en deux pour autant
-  acrossRiver(i, fn) {
+  acrossRiver(i, fn) { for (const j of this.acrossFor(i)) fn(j); },
+  // (⏱️ les cases d'en face ne dépendent que du relief : gardées en mémoire pour chaque case de rive)
+  acrossFor(i) {
+    if (this.acrossMapFor !== this.terrain) { this.acrossMapFor = this.terrain; this.acrossMemo = new Map(); }
+    let l = this.acrossMemo.get(i);
+    if (!l) { l = []; this.acrossCompute(i, j => l.push(j)); this.acrossMemo.set(i, l); }
+    return l;
+  },
+  acrossCompute(i, fn) {
     const W = this.W, x0 = i % W, y0 = (i / W) | 0;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       for (let k = 1; k <= 4; k++) {
@@ -3926,13 +3964,13 @@ const GameRules = {
   castlePassable(c) {
     const target = this.owner[c], isCastle = this.building[c] === B_CASTLE;
     const R = isCastle ? this.castleInfo(c).radius : 0;
-    const others = this.castles.filter(o => o !== c && this.owner[o] === target);
+    // (⏱️ hors de la muraille de c : dans celle d'une autre de ses villes ? le masque de castleWalls le dit d'un coup)
+    const walls = target >= 0 ? this.castleWalls(target) : null;
     return i => {
       if (this.owner[i] !== target || this.wallAt[i]) return false; // (aucun assaut ne franchit un mur)
-      const x = i % this.W, y = (i / this.W) | 0;
-      if (isCastle && this.inCastleRange(c, x, y, R)) return true;
+      if (isCastle && this.inCastleRange(c, i % this.W, (i / this.W) | 0, R)) return true;
       if (this.anchor[i] === c) return true; // le bâtiment visé lui-même
-      return !others.some(o => this.inCastleRange(o, x, y, this.castleInfo(o).radius));
+      return !walls[i];
     };
   },
 
@@ -3980,26 +4018,32 @@ const GameRules = {
   // (ou depuis toute la frontière de pid si from = -1) jusqu'à une case de goal.
   // walk (facultatif) : coût de la marche sur nos terres jusqu'à la case de départ i (voir castlePath)
   searchPath(pid, from, goal, passable, target, source, walk, allowFord = false) {
-    const dist = new Float64Array(this.N).fill(Infinity), prev = new Int32Array(this.N).fill(-2);
-    const done = new Uint8Array(this.N); // cases déjà traitées (chacune une seule fois)
-    const heap = new MinHeap();
-    const start = (i, extra = 0) => {
-      const d = this.tileDefense(target, i) + extra;
-      if (d < dist[i]) { dist[i] = d; prev[i] = -1; heap.push(d, i); }
+    // (⏱️ les tableaux de travail sont gardés d'une recherche à l'autre : seen[i] === stamp, la case a déjà une
+    //  distance ; done[i] === stamp, elle est finie. Et la défense de chaque case vient de defenseGrid, calculée une fois)
+    const N = this.N, W = this.W;
+    if (!this.pathBuf || this.pathBuf.seen.length !== N)
+      this.pathBuf = { dist: new Float64Array(N), prev: new Int32Array(N), seen: new Int32Array(N), done: new Int32Array(N), stamp: 0 };
+    const B = this.pathBuf, stamp = ++B.stamp, dist = B.dist, prev = B.prev, seen = B.seen, done = B.done;
+    const heap = new MinHeap(), terrain = this.terrain, grid = target >= 0 ? this.defenseGrid(target) : null;
+    const cost = TERRAIN_INFO.map(t => t && t.cost);
+    const defense = i => cost[terrain[i]] + (grid ? grid[i] : 0); // (= tileDefense(target, i))
+    const relax = (n, nd, from) => {
+      if (seen[n] !== stamp || nd < dist[n]) { seen[n] = stamp; dist[n] = nd; prev[n] = from; heap.push(nd, n); }
     };
+    const start = (i, extra = 0) => relax(i, defense(i) + extra, -1);
     if (allowFord) this.riverTiles(); // (prépare riverSide)
     // (from peut aussi être une liste de départs [case, coût pour y arriver] : voir passagePlan)
     if (Array.isArray(from)) for (const [i, extra] of from) start(i, extra);
     else if (from >= 0) start(from);
     else {
       // départ : les cases passables qui touchent nos terres (on part de nos cases, bien moins nombreuses que la carte)
-      const W = this.W, N = this.N, own = this.owner;
+      const own = this.owner;
       for (let i = 0; i < N; i++) {
         if (own[i] !== pid) continue;
         const x = i % W;
         let ok;
         for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
-          if (n < 0 || own[n] === pid || (!walk && prev[n] !== -2) || !passable(n)) continue;
+          if (n < 0 || own[n] === pid || (!walk && seen[n] === stamp) || !passable(n)) continue;
           if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
           if (!ok) break;
           start(n, walk ? walk(i) : 0);
@@ -4016,27 +4060,70 @@ const GameRules = {
     }
     while (heap.size) {
       const [d, i] = heap.pop();
-      if (done[i]) continue;
-      done[i] = 1;
+      if (done[i] === stamp) continue;
+      done[i] = stamp;
       if (goal.has(i)) {
         const path = [];
         for (let j = i; j >= 0; j = prev[j]) path.push(j);
         return path.reverse();
       }
-      this.forNeighbors(i, n => {
-        if (done[n] || !passable(n)) return;
-        const nd = d + this.tileDefense(target, n);
-        if (nd < dist[n]) { dist[n] = nd; prev[n] = i; heap.push(nd, n); }
-      });
+      const x = i % W;
+      if (x > 0) { const n = i - 1; if (done[n] !== stamp && passable(n)) relax(n, d + defense(n), i); }
+      if (x < W - 1) { const n = i + 1; if (done[n] !== stamp && passable(n)) relax(n, d + defense(n), i); }
+      if (i >= W) { const n = i - W; if (done[n] !== stamp && passable(n)) relax(n, d + defense(n), i); }
+      if (i < N - W) { const n = i + W; if (done[n] !== stamp && passable(n)) relax(n, d + defense(n), i); }
       // (un fleuve au milieu de ses terres : l'armée le passe à gué, lentement, comme au départ)
       if (allowFord && this.riverSide[i]) {
-        this.fordAcross(i, pid, (n, gap, bridged) => {
-          const nd = d + this.tileDefense(target, n) + (bridged ? gap : gap * CONFIG.FORD_PATH_COST);
-          if (nd < dist[n]) { dist[n] = nd; prev[n] = i; heap.push(nd, n); }
-        }, n => !done[n] && passable(n));
+        this.fordAcross(i, pid, (n, gap, bridged) => relax(n, d + defense(n) + (bridged ? gap : gap * CONFIG.FORD_PATH_COST), i),
+          n => done[n] !== stamp && passable(n));
       }
     }
     return null;
+  },
+
+  // ⏱️ Les cases dans la muraille d'une ville de pid (comme castleProtects), d'après defenseGrid
+  castleWalls(pid) { this.defenseGrid(pid); return this.defGrids.get(pid).walls; },
+  // ⏱️ Le bonus de défense de chaque case pour le royaume pid (celui de tileDefense, sans le terrain) : le meilleur de
+  // ses châteaux, de ses ports fortifiés et de ses avant-postes qui la protège. Calculé d'un coup (chaque bâtiment
+  // marque son cercle), et gardé tant que ces bâtiments ne changent pas (leur liste, leur niveau, leur maître).
+  defenseGrid(pid) {
+    const W = this.W, H = this.H, N = this.N;
+    const castles = this.castles.filter(c => this.owner[c] === pid);
+    const ports = this.walledPorts().filter(a => this.owner[a] === pid);
+    const outposts = [...this.outposts.keys()].filter(a => this.owner[a] === pid && this.outpostReady(a));
+    let sig = 17;
+    for (const list of [castles, ports, outposts]) { sig = Math.imul(sig, 31) + list.length; for (const a of list) sig = Math.imul(sig ^ a, 16777619) + this.level[a]; }
+    const memo = this.defGrids || (this.defGrids = new Map()), had = memo.get(pid);
+    if (had && had.sig === sig && had.grid.length === N && had.map === this.terrain) return had.grid;
+    const grid = had && had.grid.length === N ? had.grid.fill(0) : new Float32Array(N);
+    const walls = had && had.walls.length === N ? had.walls.fill(0) : new Uint8Array(N); // (1 = dans la muraille d'une de ses villes)
+    // (chaque bâtiment : les cases du carré qui entoure son cercle, testées avec la même règle que tileDefense)
+    const stamp = (cx, cy, R, bonus, inside) => {
+      if (!bonus) return;
+      const x0 = Math.max(0, Math.floor(cx - R) - 1), x1 = Math.min(W - 1, Math.ceil(cx + R) + 1);
+      const y0 = Math.max(0, Math.floor(cy - R) - 1), y1 = Math.min(H - 1, Math.ceil(cy + R) + 1);
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const i = y * W + x;
+        if (grid[i] < bonus && inside(x, y, i)) grid[i] = bonus;
+      }
+    };
+    for (const c of castles) {
+      const info = this.castleInfo(c), half = (this.sizeOf(B_CASTLE) - 1) / 2;
+      stamp(c % W + half, ((c / W) | 0) + half, info.radius, info.bonus, (x, y, i) => this.inCastleRange(c, x, y, info.radius) && (walls[i] = 1));
+    }
+    for (const a of ports) {
+      const info = this.buildingInfo(a), half = (this.sizeOf(B_CHURCH) - 1) / 2;
+      stamp(a % W + half, ((a / W) | 0) + half, info.radius, info.bonus, (x, y, i) => this.inChurchRange(a, i, info.radius));
+    }
+    for (const a of outposts) {
+      const R = CONFIG.LANDING_RADIUS + 1, half = this.sizeOf(this.building[a]) / 2;
+      stamp(a % W + half, ((a / W) | 0) + half, R, CONFIG.OUTPOST_DEFENSE, (x, y, i) => this.nearBuilding(a, i, R));
+    }
+    // (au plus quelques royaumes gardés en mémoire : une grille par royaume pèse lourd sur une grande carte)
+    memo.delete(pid);
+    memo.set(pid, { sig, grid, walls, map: this.terrain });
+    if (memo.size > 4) memo.delete(memo.keys().next().value);
+    return grid;
   },
 
   // Couloir de l'assaut : le chemin, une case de chaque côté, et le château (ou l'église) lui-même
@@ -4104,12 +4191,15 @@ const GameRules = {
   // Pour les bots : quel château viser, et quelle défense de terrain attendre au premier combat ?
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
   // (gardé 2 secondes en mémoire : chercher les chemins coûte cher sur une grande carte)
-  planAssault(pid, target) {
-    if (this.inUI()) return this.uiCall(() => this.planAssault(pid, target)); // (🌐 voir uiCall)
+  // (⏱️ un plan sert AI_PLAN_REUSE secondes ; onlyCached : ne rien calculer, renvoyer null s'il n'y en a pas de récent)
+  planAssault(pid, target, onlyCached = false) {
+    if (this.inUI()) return this.uiCall(() => this.planAssault(pid, target, onlyCached)); // (🌐 voir uiCall)
     if (!this.isProtected(target)) return { castle: null, D: 1.3 };
     const key = pid * 1000 + target, old = (this.assaultPlans = this.assaultPlans || new Map()).get(key);
-    if (old && this.tick - old.tick < 2 * CONFIG.TICKS_PER_SECOND && (old.plan.castle === null || old.plan.castle < 0 || this.owner[old.plan.castle] === target)) return old.plan;
+    if (old && this.tick - old.tick < CONFIG.AI_PLAN_REUSE * CONFIG.TICKS_PER_SECOND && (old.plan.castle === null || old.plan.castle < 0 || this.owner[old.plan.castle] === target)) return old.plan;
+    if (onlyCached) return null;
     const plan = this.computeAssaultPlan(pid, target);
+    plan.fresh = this.tick; // (calculé à ce tour : voir le budget des bots, AI.update)
     this.assaultPlans.set(key, { tick: this.tick, plan });
     return plan;
   },
@@ -4157,7 +4247,10 @@ const GameRules = {
   // Chemin du cœur du royaume pid jusqu'au morceau isolé `piece`, à travers les terres du royaume o
   // (sans passer dans la muraille d'un château de o). Renvoie { path, passable }, ou null.
   linkPath(pid, piece, o) {
-    const passable = i => this.owner[i] === o && !this.wallAt[i] && !this.castleProtects(o, i);
+    // (⏱️ la muraille et la défense de chaque case viennent de defenseGrid, calculées une fois)
+    const grid = this.defenseGrid(o), walls = this.castleWalls(o), cost = TERRAIN_INFO.map(t => t && t.cost);
+    const defense = i => cost[this.terrain[i]] + grid[i]; // (= tileDefense(o, i))
+    const passable = i => this.owner[i] === o && !this.wallAt[i] && !walls[i];
     const touchesPiece = i => {
       let found = false;
       this.forNeighbors(i, n => { if (piece.has(n)) found = true; });
@@ -4169,7 +4262,7 @@ const GameRules = {
     const r = this.regions(true), heartOf = n => this.owner[n] === pid && r.comp[n] >= 0 && r.heart[r.comp[n]];
     for (let i = 0; i < this.N; i++) {
       if (passable(i) && this.hasNeighbor(i, heartOf)) {
-        dist[i] = this.tileDefense(o, i);
+        dist[i] = defense(i);
         prev[i] = -1;
         heap.push(dist[i], i);
       }
@@ -4185,7 +4278,7 @@ const GameRules = {
       }
       this.forNeighbors(i, n => {
         if (done[n] || !passable(n)) return;
-        const nd = d + this.tileDefense(o, n);
+        const nd = d + defense(n);
         if (nd < dist[n]) { dist[n] = nd; prev[n] = i; heap.push(nd, n); }
       });
     }
@@ -6527,7 +6620,12 @@ const GameRules = {
     this.stepTowers();
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
     // (le découpage n'est refait que si l'un d'eux a vraiment englobé des terres)
-    if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive) this.captureEnclaves(p.id);
+    // (⏱️ un seul découpage d'abord : seuls les royaumes qui ont un morceau détaché, sans avant-poste, sont examinés)
+    if (this.tick % (2 * TPS) === 0) {
+      const r = this.regions(true), cut = new Set();
+      for (let k = 0; k < r.size.length; k++) if (!r.heart[k] && !r.anyOutpost[k] && !r.colony[k]) cut.add(r.owner[k]);
+      for (const p of this.players) if (p.alive && cut.has(p.id)) this.captureEnclaves(p.id);
+    }
     // Toutes les 2 secondes : un royaume qui n'a plus que des avant-postes est perdu (voir outpostsOnly)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && this.outpostsOnly(p)) this.loseKingdom(p);
     // ... et un royaume qui a perdu tous ses ports perd aussi tous ses avant-postes (voir dropOutposts)

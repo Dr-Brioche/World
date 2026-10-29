@@ -87,12 +87,18 @@ const AI = {
     // à ce qu'il pourra nous opposer (la moitié de ses soldats + la garnison du château visé).
     let best = null, bestScore = 0, bestAim = -1;
     const alive = Game.players.filter(q => q.alive).length;
+    // (⏱️ chercher un chemin d'assaut coûte cher sur une grande carte : au plus AI_PLANS_PER_TURN plans neufs par
+    //  réflexion ; les autres voisins sont jugés sur leur plan récent, ou à la prochaine réflexion)
+    let budget = CONFIG.AI_PLANS_PER_TURN;
     for (const [o] of nb) {
       if (o < 0 || Game.areAllied(p.id, o) || Game.players[o].raiders) continue; // (les terres des pillards sont imprenables)
       if (Game.attackBlocked(p.id, o)) continue; // (⚜️ une trêve)
       const e = Game.players[o];
       // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
-      const plan = Game.planAssault(p.id, o), aim = plan.castle;
+      const plan = Game.planAssault(p.id, o, budget <= 0);
+      if (!plan) continue;
+      if (plan.fresh === Game.tick) budget--;
+      const aim = plan.castle;
       if (aim === -1) continue;
       // (une garnison vaut 3 au combat ; les soldats d'un avant-poste en construction, affaiblis, comptent pour 1)
       const garrison = aim === null ? 0 : Game.garrison[aim] * (Game.builders(aim) ? 1 : CONFIG.GARRISON_POWER);
