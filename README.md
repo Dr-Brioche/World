@@ -710,16 +710,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      📿 **Les reliques saintes** (parties classiques seulement, pas les scénarios) : entre **10 et 15 minutes** après le
      début, une relique apparaît sur les terres d'un royaume (plutôt **loin des plus grands**, pour rééquilibrer la partie),
      puis une autre toutes les **8 à 15 minutes**. Elle brille sur la carte. Le royaume où elle est, et tous ses
-     **voisins**, peuvent aller la chercher : il faut une **cathédrale** (église de niveau 3) pour la garder. **Clique sur
-     la relique** : une armée (selon le curseur « Envoyer ») part de ta ville la plus proche, avec une **petite croix d'or**
+     **voisins**, peuvent aller la chercher : il faut une **cathédrale** (église de niveau 3) **libre** pour la garder : **une seule relique par
+     cathédrale** (pour une deuxième, il t'en faut une autre). Au survol, la souris devient une **croix d'or** si tu peux
+     y aller. **Clique sur la relique** : une armée (selon le curseur « Envoyer ») part de ta ville la plus proche, avec une **petite croix d'or**
      pour la reconnaître (un nouveau clic lui envoie des renforts : hors de tes terres, ils mettent du temps à la rejoindre, comme ceux d'un assaut). Elle ne prend aucune terre en chemin (elle marche sur tes terres, celles de tes alliés, du royaume
      de la relique et les terres libres). Arrivée, elle s'en empare en **10 secondes** (l'anneau jaune), puis la rapporte
-     à ta **cathédrale la plus proche**, **1/3 plus lentement** ; la relique flotte au-dessus d'elle. En chemin, **tous les
+     à ta **cathédrale libre la plus proche**, **1/3 plus lentement** ; la relique flotte au-dessus d'elle. En chemin, **tous les
      voisins peuvent l'intercepter** (un clic sur sa bannière) : au contact, le plus fort l'emporte, garde ses survivants et
      prend la relique pour la rapporter chez lui (s'il n'a pas de cathédrale, elle tombe là). Tu perds ta dernière
      cathédrale en route : ton armée pose la relique là où elle est et rentre. Une fois déposée, la relique reste **liée à
-     cette église** (elle s'affiche à côté d'elle) : ton royaume **convertit 20 % plus vite** par la Croyance (par relique,
-     sans maximum) et l'église rapporte **50 % d'or en plus**. Prise par un autre, l'église lui donne ces bonus ; détruite
+     cette église** (elle s'affiche à côté d'elle) : ton royaume **convertit 20 % plus vite** par la Croyance (+20 % par
+     relique gardée) et l'église rapporte **50 % d'or en plus**. Prise par un autre, l'église lui donne ces bonus ; détruite
      (un raid viking, une démolition…), elle perd sa relique. Les bots les cherchent aussi (ils économisent pour une
      cathédrale) et interceptent les armées qui passent. Réglages : `RELIC` dans `js/config.js`, règles dans `js/reliques.js`.
 
@@ -1039,6 +1040,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.169** : 📿 reliques : **une seule relique par cathédrale** (il en faut une autre, libre, pour la suivante ; l'armée la rapporte à la cathédrale libre la plus proche), et la souris devient une **croix d'or** au survol d'une relique qu'on peut aller chercher (ou d'une armée de relique qu'on peut intercepter) · 🤖 correctif : un bot dont l'assaut s'arrête de lui-même (passage bloqué à l'arrivée, plus rien à prendre) **ne le relance plus en boucle** : il écarte cette cible une minute et en choisit une autre
 - **v0.92.168** : 📿 reliques : les **renforts** envoyés à une armée de relique déjà en territoire étranger **marchent jusqu'à elle** (depuis ta ville la plus proche, au moins 3 s), comme ceux d'un assaut ; ils s'affichent « (+N) » sur sa bannière en attendant (sur tes terres, ils la rejoignent tout de suite)
 - **v0.92.167** : ⚔️ correctif : un assaut sur une cible juste **de l'autre côté d'un fleuve**, en face d'une de tes villes, part maintenant de **cette ville** (l'armée passe le fleuve à gué), au lieu d'une ville lointaine reliée par la terre qui faisait tout le tour par le territoire ennemi
 - **v0.92.166** : ⚡ **le jeu est bien plus rapide sur les grandes cartes** : la guerre de Cent Ans calcule ses règles 2,5 fois plus vite (et ses pires à-coups passent de 3,5 s à moins d'une demi-seconde), Charlemagne 2 fois plus vite ; les bots ne redécoupent plus toute la carte pour chaque bâtiment envisagé, cherchent leurs chemins d'assaut avec une carte des défenses calculée une fois, et étalent leurs plans d'assaut sur plusieurs réflexions ; le dessin ne refait plus les murailles et les frontières des pactes à chaque image · 🐞 revue du code : de longues parties de tous les modes contrôlées seconde par seconde, aucune incohérence trouvée

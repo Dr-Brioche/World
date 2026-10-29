@@ -89,17 +89,27 @@ Object.assign(GameRules, {
       Music.sound('crusade');
       const near = this.relicEligible(h.id, tile, relic.region);
       UI.log(tr(`📿 Une relique sainte est apparue ${o.isHuman ? 'sur tes terres' : `chez ${o.name}`} !`, `📿 A holy relic has appeared ${o.isHuman ? 'on your land' : `in ${o.name}`}!`) +
-        (!near ? '' : this.relicChurches(h.id).length
+        (!near ? '' : this.relicRoom(h.id) > 0
           ? tr(' Clique dessus pour envoyer une armée la chercher.', ' Click it to send an army to fetch it.')
-          : tr(` Il te faut une église de niveau ${CONFIG.RELIC.CHURCH_LEVEL} pour aller la chercher.`, ` You need a level ${CONFIG.RELIC.CHURCH_LEVEL} church to fetch it.`)), 'good', o);
+          : tr(` Il te faut une église de niveau ${CONFIG.RELIC.CHURCH_LEVEL} libre pour aller la chercher (chacune ne garde qu'une relique).`, ` You need a free level ${CONFIG.RELIC.CHURCH_LEVEL} church to fetch it (each keeps only one relic).`)), 'good', o);
     }
   },
 
   // --- Qui peut aller la chercher ---
-  // Les églises de pid assez grandes pour garder une relique
-  relicChurches(pid) {
+  // Une église de niveau 3 ne garde qu'UNE relique : il en faut une autre, libre, pour la suivante.
+  // Les églises libres de pid : assez grandes, sans relique, et pas déjà promises à une autre de ses armées qui en
+  // rapporte une (sauf except, l'armée qui pose la question)
+  relicChurches(pid, except = null) {
     const L = CONFIG.RELIC.CHURCH_LEVEL;
-    return this.buildingTiles.filter(a => this.building[a] === B_CHURCH && this.owner[a] === pid && this.level[a] >= L);
+    const promised = new Set(this.relicRuns.filter(r => r !== except && r.pid === pid && r.phase === 'carry').map(r => r.church));
+    return this.buildingTiles.filter(a => this.building[a] === B_CHURCH && this.owner[a] === pid && this.level[a] >= L
+      && !this.relicChurch.get(a) && !promised.has(a));
+  },
+  // Combien de reliques pid peut-il encore aller chercher ? Ses églises libres, moins ses armées déjà en route vers
+  // une relique (ou en train de s'en emparer) ; pour l'armée r, seules comptent celles parties avant elle
+  relicRoom(pid, r = null) {
+    const going = this.relicRuns.filter(x => x !== r && x.pid === pid && (x.phase === 'go' || x.phase === 'take') && (!r || x.id < r.id)).length;
+    return this.relicChurches(pid, r).length - going;
   },
   // pid peut-il aller vers cette case ? Elle est sur ses terres ou chez un voisin (ou la relique est apparue chez lui
   // ou chez un voisin)
@@ -183,7 +193,13 @@ Object.assign(GameRules, {
     if (!this.relicMode() || !relic) return tr('Cette relique n\'est plus là.', 'This relic is no longer there.');
     if (relic.run >= 0) return this.launchRelicChase(pid, relic.run, troops);
     if (!this.relicEligible(pid, relic.tile, relic.region)) return tr('Cette relique est trop loin : elle doit être sur tes terres ou chez un voisin.', 'This relic is too far: it must be on your land or in a neighbour\'s.');
-    if (!this.relicChurches(pid).length) return tr(`Il te faut une église de niveau ${R.CHURCH_LEVEL} pour garder une relique.`, `You need a level ${R.CHURCH_LEVEL} church to keep a relic.`);
+    // (une armée à nous y va déjà : ces soldats la rejoignent, sans demander une autre église)
+    if (!this.relicRuns.some(r => r.pid === pid && r.phase === 'go' && r.aim === id) && this.relicRoom(pid) <= 0) {
+      const L = CONFIG.RELIC.CHURCH_LEVEL, any = this.buildingTiles.some(a => this.building[a] === B_CHURCH && this.owner[a] === pid && this.level[a] >= L);
+      return any
+        ? tr(`Chaque église de niveau ${R.CHURCH_LEVEL} ne garde qu'une relique : il t'en faut une autre, libre, pour celle-ci.`, `Each level ${R.CHURCH_LEVEL} church keeps only one relic: you need another free one for this.`)
+        : tr(`Il te faut une église de niveau ${R.CHURCH_LEVEL} pour garder une relique.`, `You need a level ${R.CHURCH_LEVEL} church to keep a relic.`);
+    }
     troops = Math.floor(Math.min(troops, p.troops));
     if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     // (une armée à nous y va déjà : ces soldats la rejoignent)
@@ -270,7 +286,7 @@ Object.assign(GameRules, {
           if (carrier && carrier.pid !== r.pid && !this.areAllied(r.pid, carrier.pid)) { r.phase = 'chase'; r.chase = carrier.id; r.reroute = 0; return; }
           return this.relicGoHome(r, tr('📿 La relique n\'est plus là : ton armée rentre.', '📿 The relic is no longer there: your army heads home.'));
         }
-        if (!this.relicChurches(r.pid).length) return this.relicGoHome(r, tr('📿 Tu n\'as plus d\'église de niveau 3 pour garder la relique : ton armée rentre.', '📿 You no longer have a level 3 church to keep the relic: your army heads home.'));
+        if (this.relicRoom(r.pid, r) <= 0) return this.relicGoHome(r, tr('📿 Tu n\'as plus d\'église de niveau 3 libre pour garder la relique : ton armée rentre.', '📿 You no longer have a free level 3 church to keep the relic: your army heads home.'));
         // (une autre armée s'en empare déjà : on la poursuit)
         if (relic.run >= 0 && relic.run !== r.id) { r.phase = 'chase'; r.chase = relic.run; r.reroute = 0; return; }
       }
@@ -286,7 +302,7 @@ Object.assign(GameRules, {
       return;
     }
     if (r.phase === 'take') {
-      if (second && !this.relicChurches(r.pid).length) {
+      if (second && this.relicRoom(r.pid, r) <= 0) {
         r.relic.run = -1; r.relic = null;
         return this.relicGoHome(r, tr('📿 Tu n\'as plus d\'église de niveau 3 pour garder la relique : ton armée rentre.', '📿 You no longer have a level 3 church to keep the relic: your army heads home.'));
       }
@@ -303,7 +319,7 @@ Object.assign(GameRules, {
     if (r.phase === 'carry') {
       if (second) {
         // (son église a été prise, détruite… : vers une autre ; plus aucune : elle pose la relique là et rentre)
-        if (!(this.building[r.church] === B_CHURCH && this.owner[r.church] === r.pid && this.level[r.church] >= CONFIG.RELIC.CHURCH_LEVEL)) {
+        if (!(this.building[r.church] === B_CHURCH && this.owner[r.church] === r.pid && this.level[r.church] >= CONFIG.RELIC.CHURCH_LEVEL && !this.relicChurch.get(r.church))) {
           if (!this.relicCarry(r, this.relicPos(r))) return;
         }
       }
@@ -336,10 +352,10 @@ Object.assign(GameRules, {
   // L'armée r part (ou repart) avec la relique vers son église de niveau 3 la plus proche ; aucune : elle pose la
   // relique là où elle est, et rentre. Renvoie false si elle ne porte plus la relique.
   relicCarry(r, from) {
-    const churches = this.relicChurches(r.pid), slow = CONFIG.RELIC.SPEED / CONFIG.RELIC.CARRY_SLOW;
+    const churches = this.relicChurches(r.pid, r), slow = CONFIG.RELIC.SPEED / CONFIG.RELIC.CARRY_SLOW;
     if (!churches.length) {
       this.relicDrop(r, from);
-      this.relicGoHome(r, tr('📿 Tu n\'as plus d\'église de niveau 3 pour garder la relique : ton armée la laisse là et rentre.', '📿 You no longer have a level 3 church to keep the relic: your army leaves it there and heads home.'));
+      this.relicGoHome(r, tr('📿 Tu n\'as plus d\'église de niveau 3 libre pour garder la relique : ton armée la laisse là et rentre.', '📿 You no longer have a free level 3 church to keep the relic: your army leaves it there and heads home.'));
       return false;
     }
     // (le chemin à pied jusqu'à la première église atteinte ; puis jusqu'à son centre)
@@ -384,6 +400,8 @@ Object.assign(GameRules, {
   // L'armée r arrive à son église avec la relique : elle y est gardée, et les soldats rejoignent le royaume
   relicStore(r) {
     const p = this.players[r.pid], c = r.church;
+    // (cette église garde déjà une relique, arrivée entre-temps : vers une autre église libre)
+    if (this.relicChurch.get(c)) { this.relicCarry(r, this.relicPos(r)); return; }
     this.relicChurch.set(c, (this.relicChurch.get(c) || 0) + 1);
     r.relic = null;
     this.relicRunEnd(r, true);
@@ -444,7 +462,7 @@ Object.assign(GameRules, {
         c.relic = relic;
         relic.run = c.id;
         c.region = relic.region;
-        if (!this.relicChurches(c.pid).length) {
+        if (!this.relicChurches(c.pid, c).length) {
           this.relicDrop(c, at);
           this.relicGoHome(c, '');
         } else this.relicCarry(c, at);
@@ -482,10 +500,11 @@ Object.assign(GameRules, {
     // sa meilleure église
     const near = this.relics.filter(relic => relic.run < 0 && this.relicEligible(p.id, relic.tile, relic.region));
     if (!near.length) return;
-    if (!this.relicChurches(p.id).length) {
+    if (this.relicRoom(p.id) <= 0) {
       // (il met de l'or de côté pour cette église pendant 2 minutes : voir AI.tryBuild, relicSaving)
+      // (une église pas encore au niveau 3 : ses cathédrales gardent déjà chacune leur relique)
       p.relicSaving = this.tick + 120 * CONFIG.TICKS_PER_SECOND;
-      const best = this.buildingTiles.filter(a => this.building[a] === B_CHURCH && this.owner[a] === p.id)
+      const best = this.buildingTiles.filter(a => this.building[a] === B_CHURCH && this.owner[a] === p.id && this.level[a] < CONFIG.RELIC.CHURCH_LEVEL)
         .sort((a, b) => this.level[b] - this.level[a] || a - b)[0];
       if (best !== undefined) { if (!this.works.has(best)) this.upgradeBuilding(p, best); return; }
       // (pas encore d'église : il en bâtit une près de sa capitale)

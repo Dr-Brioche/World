@@ -97,6 +97,7 @@ const AI = {
       // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
       const plan = Game.planAssault(p.id, o, budget <= 0);
       if (!plan) continue;
+      if (plan.castle === null && plan.tile === undefined && Game.aiBlocked(p.id, 'f' + o)) continue; // (voir Game.aiBlock)
       if (plan.fresh === Game.tick) budget--;
       const aim = plan.castle;
       if (aim === -1) continue;

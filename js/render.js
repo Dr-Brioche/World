@@ -2025,6 +2025,23 @@ const Render = {
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
     '<path d="M16 2L28 16h-7v13h-10V16H4z" fill="#f0c94a" stroke="#3a2512" stroke-width="2" stroke-linejoin="round"/>' +
     '<path d="M16 7l7 8" stroke="#fff4c2" stroke-width="1.5" stroke-linecap="round"/></svg>') + '") 16 2, pointer',
+  // 📿 Sur une relique qu'on peut aller chercher (ou une armée de relique à intercepter) : une croix d'or
+  RELIC_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
+    '<path d="M13 2h6v8h8v6h-8v14h-6V16H5v-6h8z" fill="#f0c94a" stroke="#2a1404" stroke-width="2" stroke-linejoin="round"/>' +
+    '<path d="M15 4.5v23M7.5 12.5h17" stroke="#fff4c2" stroke-width="1" stroke-linecap="round" opacity="0.7"/></svg>') + '") 16 13, pointer',
+  // 📿 La souris est-elle sur une relique qu'on peut aller chercher, ou sur l'armée de relique d'un autre royaume
+  // qu'on peut intercepter ? (pour le curseur en croix)
+  relicActionUnderMouse() {
+    const G = Game, h = G.human, m = this.mouse;
+    if (!m || !h || !h.alive || !G.relics || UI.selectedBuild || UI.plan) return false;
+    const runId = this.relicRunAt(m.x, m.y), run = runId >= 0 ? G.relicRuns.find(r => r.id === runId) : null;
+    if (run) return run.pid !== h.id && !G.areAllied(h.id, run.pid) && G.relicEligible(h.id, G.relicPosTile(run), run.region);
+    const id = this.relicSpotAt(m.x, m.y), relic = id >= 0 ? G.relics.find(r => r.id === id) : null;
+    if (!relic) return false;
+    if (relic.run >= 0) return true; // (une armée s'en empare : on peut l'intercepter)
+    return G.relicEligible(h.id, relic.tile, relic.region) && G.relicRoom(h.id) > 0;
+  },
   HAND_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
     '<path d="M7 16V4a2.5 2.5 0 0 1 5 0v8.5h.8a2.3 2.3 0 0 1 4.2.6a2.3 2.3 0 0 1 4.2.8a2.1 2.1 0 0 1 3.8 1.3V21c0 3-2.2 4.5-5 4.5h-6.5' +
@@ -2094,7 +2111,8 @@ const Render = {
   drawSelectable(ox, oy) {
     const G = Game, a = UI.wallFor >= 0 || UI.tradeFor >= 0 ? -1 : this.selectableAt(this.hover);
     // épée sur une cible attaquable, main médiévale ailleurs ; pendant une construction, le curseur de pose (voir UI)
-    const cursor = UI.upgradeMode ? this.UPGRADE_CURSOR : UI.selectedBuild || UI.wallFor >= 0 || UI.tradeFor >= 0 ? '' : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
+    const cursor = UI.upgradeMode ? this.UPGRADE_CURSOR : UI.selectedBuild || UI.wallFor >= 0 || UI.tradeFor >= 0 ? ''
+      : this.relicActionUnderMouse() ? this.RELIC_CURSOR : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
     // (on garde le dernier curseur choisi : le navigateur réécrit l'adresse de l'image à sa façon)
     if (this.curCursor !== cursor) { this.curCursor = cursor; this.canvas.style.cursor = cursor; }
     if (a < 0) return;
