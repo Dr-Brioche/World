@@ -2080,7 +2080,9 @@ const Render = {
     ctx.restore();
   },
 
-  // Sur une mine : une croix si son filon est épuisé ; autour, une jauge ronde (le diamant extrait, l'or qui reste)
+  // Sur une mine : une croix si son filon est épuisé ; autour, une jauge ronde (le diamant extrait, l'or qui reste).
+  // Une mine d'or épuisée qu'on peut encore relancer (en l'améliorant au niveau 2) : la croix, avec une flèche
+  // d'amélioration verte dans un médaillon en haut à droite ; la croix seule : épuisée pour de bon.
   drawMineState(a, px, py) {
     const G = Game, ctx = this.ctx, s = this.cam.scale, d = G.depositAt.get(a);
     if (!d) return;
@@ -2097,6 +2099,17 @@ const Render = {
         ctx.stroke();
       }
       ctx.lineCap = 'butt';
+      if (d.kind === 'gold' && G.level[a] < MINE_LEVELS.length - 1) {
+        const bx = px + k * 1.25, by = py - k * 1.25, br = Math.max(7, k * 0.75);
+        ctx.beginPath();
+        ctx.arc(bx, by, br, 0, Math.PI * 2);
+        ctx.fillStyle = '#2f6b2a';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(30,15,5,0.85)';
+        ctx.stroke();
+        Icons.draw(ctx, 'up', bx, by, br * 1.5, '#f3e3bf');
+      }
       return;
     }
     if (d.kind !== 'diamond' && d.kind !== 'gold') return;

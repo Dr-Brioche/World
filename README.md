@@ -726,7 +726,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        **3 000**, et à la fin **10 000 pièces** d'un coup (16 000 en tout), puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
        chrono continue pour le nouveau maître, qui touche les versements suivants !
      À gauche de chaque mine (la tienne comme celles des autres), une **petite bulle ronde** montre l'icône de ce qui y est
-     miné (fer, or, pierre, diamant), toujours visible, même quand un grand bâtiment est à côté. Une mine épuisée reste sur la carte avec une **croix rouge**. Pendant la pose d'une mine, les filons s'entourent d'un
+     miné (fer, or, pierre, diamant), toujours visible, même quand un grand bâtiment est à côté. Une mine épuisée reste sur la carte avec une **croix rouge** ; une mine d'or encore de niveau 1 (qu'on peut relancer en l'améliorant) a en plus une **flèche verte d'amélioration** : la croix seule, c'est épuisé pour de bon. Pendant la pose d'une mine, les filons s'entourent d'un
      cercle (vert si tu peux y bâtir), passent **par-dessus les bâtiments** (une grande ville ne les cache plus), et la mine
      s'aimante sur le filon le plus proche de la souris (à moins de 5 cases). Une mine **n'a pas d'autre règle de construction** :
      elle se pose même dans la muraille d'une ville, ou tout près d'un autre bâtiment. Les **autres bâtiments**, eux, laissent
@@ -1024,6 +1024,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.164** : ⛏️ une **mine d'or épuisée qu'on peut encore relancer** (niveau 1 : l'améliorer au niveau 2 la relance) garde sa croix rouge, avec en plus une **flèche verte d'amélioration** ; la croix seule veut dire « épuisée pour de bon »
 - **v0.92.163** : 🎨 icônes : l'**arc** redessiné (une seule pointe, deux plumes rouges à l'arrière, au lieu d'une flèche qui semblait en avoir deux) ; les troupes de niveau 3 et 4 ne sont plus coupées en haut ou en bas (toutes les icônes tiennent dans leur cadre)
 - **v0.92.162** : ⭐ défis des campagnes : l'**or** qu'ils rapportent est **divisé par deux** (c'était un trop gros bonus) ; la Croyance et la Légitimité ne changent pas
 - **v0.92.161** : 🎨 **plus aucun emoji dans le jeu** : 36 nouvelles icônes dessinées au style médiéval (l'almanach de l'année, la fleur de lys, le lion d'Angleterre, le chardon d'Écosse, l'hermine de Bretagne, la grappe de Bourgogne, la colombe de la trêve, la balance, la cloche, l'étoile des défis, les mains jointes du vœu…) ; la coche, la croix et l'étoile du cadre des objectifs sont dessinées aussi, et les infobulles n'ont plus d'emojis · 📜 parchemin : le bois des rouleaux sort du papier par un bord arrondi, dans une petite ombre (moins « collé par-dessus »)
