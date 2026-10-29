@@ -188,7 +188,7 @@ Object.assign(GameRules, {
     if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     // (une armée à nous y va déjà : ces soldats la rejoignent)
     const mine = this.relicRuns.find(r => r.pid === pid && r.phase === 'go' && r.aim === id);
-    if (mine) { p.troops -= troops; mine.troops += troops; return null; }
+    if (mine) { this.relicReinforce(mine, troops); return null; }
     const goal = this.relicTileCenter(relic.tile);
     const start = this.relicHome(pid, goal);
     if (start < 0) return tr('Tu n\'as aucune ville d\'où partir.', 'You have no city to set out from.');
@@ -215,7 +215,7 @@ Object.assign(GameRules, {
     troops = Math.floor(Math.min(troops, p.troops));
     if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     const mine = this.relicRuns.find(r => r.pid === pid && r.phase === 'chase' && r.chase === id);
-    if (mine) { p.troops -= troops; mine.troops += troops; return null; }
+    if (mine) { this.relicReinforce(mine, troops); return null; }
     const at = this.relicPos(t), start = this.relicHome(pid, at);
     if (start < 0) return tr('Tu n\'as aucune ville d\'où partir.', 'You have no city to set out from.');
     const r = { id: this.nextAttackId++, pid, troops, region: t.region, phase: 'chase', chase: id, relic: null };
@@ -231,10 +231,35 @@ Object.assign(GameRules, {
     return null;
   },
 
+  // Des renforts pour l'armée de relique r : sur nos terres, ils la rejoignent tout de suite ; plus loin, ils marchent
+  // depuis notre ville la plus proche, comme les renforts d'un assaut (MARCH_SPEED cases par seconde, au moins
+  // REINFORCE_MIN_TIME secondes : voir reinforceTicks), et ne comptent qu'à leur arrivée
+  relicReinforce(r, troops) {
+    const C = CONFIG, at = this.relicPos(r), t = Math.floor(at.y) * this.W + Math.floor(at.x);
+    this.players[r.pid].troops -= troops;
+    if (this.owner[t] === r.pid) { r.troops += troops; return; }
+    const c = this.relicHome(r.pid, at), from = c >= 0 ? this.relicMid(c) : at;
+    const secs = Math.max(C.REINFORCE_MIN_TIME, Math.hypot(at.x - from.x, at.y - from.y) / C.MARCH_SPEED);
+    (r.pending = r.pending || []).push({ troops, tick: this.tick + Math.round(secs * C.TICKS_PER_SECOND) });
+  },
+  // Les renforts encore en route de l'armée r (0 s'il n'y en a pas)
+  relicPending(r) { return r.pending ? r.pending.reduce((n, q) => n + q.troops, 0) : 0; },
+  // L'armée r a fini : ses renforts encore en route font demi-tour et rejoignent le royaume
+  relicPendingBack(r) {
+    const n = this.relicPending(r);
+    r.pending = [];
+    if (n && this.players[r.pid].alive) this.players[r.pid].troops += n;
+  },
+
   // --- Chaque tour : une armée de relique ---
   // (second : une fois par seconde, on vérifie ce qui a changé et on corrige les trajets)
   stepRelicRun(r, second) {
     const p = this.players[r.pid], TPS = CONFIG.TICKS_PER_SECOND;
+    // (les renforts arrivés rejoignent l'armée)
+    if (r.pending && r.pending.length) {
+      for (const q of r.pending) if (q.tick <= this.tick) { r.troops += q.troops; q.done = true; }
+      r.pending = r.pending.filter(q => !q.done);
+    }
     if (!p.alive || r.troops < 1) return this.relicRunEnd(r);
     if (r.phase === 'go') {
       const relic = this.relics.find(x => x.id === r.aim);
@@ -378,6 +403,7 @@ Object.assign(GameRules, {
       if (r.phase === 'take') { r.relic.run = -1; r.relic = null; } else this.relicDrop(r, this.relicPos(r));
     }
     if (home && this.players[r.pid].alive) this.players[r.pid].troops += r.troops;
+    this.relicPendingBack(r);
     this.relicRuns = this.relicRuns.filter(x => x !== r);
     // (ceux qui la poursuivaient rentrent)
     for (const x of this.relicRuns) if (x.phase === 'chase' && x.chase === r.id) this.relicGoHome(x, '');
@@ -388,6 +414,7 @@ Object.assign(GameRules, {
     const at = this.relicPos(r), c = this.relicHome(r.pid, at);
     if (r.relic && r.phase !== 'take') this.relicDrop(r, at);
     else if (r.relic) { r.relic.run = -1; r.relic = null; }
+    this.relicPendingBack(r);
     this.relicRuns = this.relicRuns.filter(x => x !== r);
     for (const x of this.relicRuns) if (x.phase === 'chase' && x.chase === r.id) this.relicGoHome(x, '');
     if (c < 0) return;
@@ -429,6 +456,7 @@ Object.assign(GameRules, {
     } else {
       t.troops = Math.max(0, Math.round(t.troops * (1 - a / Math.max(1, d))));
       c.troops = 0;
+      this.relicPendingBack(c);
       this.relicRuns = this.relicRuns.filter(x => x !== c);
       if (cp.isHuman) UI.log(tr(`⚔️ Tes soldats n'ont pas pu arrêter l'armée ${this.deName(tp.name)}.`, `⚔️ Your soldiers could not stop ${possessive(tp.name)} army.`), 'warn', tp);
       if (tp.isHuman) UI.log(tr(`⚔️ Ton armée de relique a repoussé ${cp.name} !`, `⚔️ Your relic army drove off ${cp.name}!`), 'good', cp);
