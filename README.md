@@ -639,6 +639,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      jusqu'à sa muraille (ou bien chaque ville bâtit un mur vers l'autre, et les **deux murs se rejoignent** : l'aimant
      accroche le second au premier). Une fois debout, il **relie les deux villes** : **+50 soldats de garnison pour chacune** (en survolant
      la ville : « reliée par un mur à une autre ville : +50 soldats »). Si l'une des deux est prise, le bonus disparaît.
+     ⚓ De même, vise un de tes **ports fortifiés** (niveau 3) : le mur va jusqu'à sa petite muraille et relie la ville et
+     le port : **+50 soldats de garnison pour chacun**.
      Les bots relient aussi leurs villes quand ils le peuvent.
      Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
      le franchir** : les armées ennemies doivent faire le tour. Si un mur tout neuf coupe la route d'un assaut déjà lancé,
@@ -719,7 +721,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      voisins peuvent l'intercepter** (un clic sur sa bannière) : au contact, le plus fort l'emporte, garde ses survivants et
      prend la relique pour la rapporter chez lui (s'il n'a pas de cathédrale, elle tombe là). Tu perds ta dernière
      cathédrale en route : ton armée pose la relique là où elle est et rentre. Une fois déposée, la relique reste **liée à
-     cette église** (elle s'affiche à côté d'elle) : ton royaume **convertit 20 % plus vite** par la Croyance (+20 % par
+     cette église** (elle s'affiche à côté d'elle) : ton royaume gagne **+150 de Croyance** tant qu'il la garde (+150 par
      relique gardée) et l'église rapporte **50 % d'or en plus**. Prise par un autre, l'église lui donne ces bonus ; détruite
      (un raid viking, une démolition…), elle perd sa relique. Les bots les cherchent aussi (ils économisent pour une
      cathédrale) et interceptent les armées qui passent. Réglages : `RELIC` dans `js/config.js`, règles dans `js/reliques.js`.
@@ -1040,6 +1042,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.170** : 📿 une relique gardée donne maintenant **+150 de Croyance** au royaume (tant qu'il tient son église), au lieu d'accélérer la conversion · 🧱⚓ un **mur** peut relier une ville à un de tes **ports fortifiés** : +50 soldats de garnison pour la ville et pour le port
 - **v0.92.169** : 📿 reliques : **une seule relique par cathédrale** (il en faut une autre, libre, pour la suivante ; l'armée la rapporte à la cathédrale libre la plus proche), et la souris devient une **croix d'or** au survol d'une relique qu'on peut aller chercher (ou d'une armée de relique qu'on peut intercepter) · 🤖 correctif : un bot dont l'assaut s'arrête de lui-même (passage bloqué à l'arrivée, plus rien à prendre) **ne le relance plus en boucle** : il écarte cette cible une minute et en choisit une autre
 - **v0.92.168** : 📿 reliques : les **renforts** envoyés à une armée de relique déjà en territoire étranger **marchent jusqu'à elle** (depuis ta ville la plus proche, au moins 3 s), comme ceux d'un assaut ; ils s'affichent « (+N) » sur sa bannière en attendant (sur tes terres, ils la rejoignent tout de suite)
 - **v0.92.167** : ⚔️ correctif : un assaut sur une cible juste **de l'autre côté d'un fleuve**, en face d'une de tes villes, part maintenant de **cette ville** (l'armée passe le fleuve à gué), au lieu d'une ville lointaine reliée par la terre qui faisait tout le tour par le territoire ennemi
