@@ -11,6 +11,7 @@
   `ICON_DEFS` et sa ligne dans `EMOJI_ICONS` (sinon, en ajouter une). Pas d'emoji dans le CSS (`content:`) ni dessiné
   avec `fillText` sur la carte : utiliser un petit SVG ou `Icons.draw`. Dans les infobulles et les listes déroulantes,
   les emojis sont retirés automatiquement (`Icons.strip`).
+  Une icône reste **entière dans son cadre 0–24, contour compris** (sinon elle est coupée) : vérifier en la dessinant en grand.
 - Le joueur est débutant : garder un code simple et commenté, avec les réglages dans `js/config.js`.
 - Les scripts sont chargés par des balises `<script>` classiques (pas de modules ES) pour que le jeu
   marche en ouvrant `index.html` d'un double-clic.
