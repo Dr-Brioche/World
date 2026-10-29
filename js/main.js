@@ -1343,8 +1343,8 @@ const UI = {
         : !G.relicEligible(h.id, relic.tile, relic.region) ? tr('trop loin : elle doit être sur tes terres ou chez un voisin', 'too far: it must be on your land or a neighbour\'s')
         : G.relicRoom(h.id) <= 0 ? tr(`il te faut une église de niveau ${L} libre pour la garder (chacune ne garde qu'une relique)`, `you need a free level ${L} church to keep it (each keeps only one relic)`)
         : tr('clique pour envoyer une armée la chercher (curseur « Envoyer »)', 'click to send an army to fetch it ("Send" slider)')) +
-        tr(` · gardée dans une église : +${Math.round(CONFIG.RELIC.FAITH_BONUS * 100)} % de conversion par la Croyance, +${Math.round(CONFIG.RELIC.CHURCH_GOLD * 100)} % d'or pour l'église`,
-          ` · kept in a church: +${Math.round(CONFIG.RELIC.FAITH_BONUS * 100)}% Faith conversion, +${Math.round(CONFIG.RELIC.CHURCH_GOLD * 100)}% gold for the church`);
+        tr(` · gardée dans une église : +${CONFIG.RELIC.FAITH} de Croyance, +${Math.round(CONFIG.RELIC.CHURCH_GOLD * 100)} % d'or pour l'église`,
+          ` · kept in a church: +${CONFIG.RELIC.FAITH} Faith, +${Math.round(CONFIG.RELIC.CHURCH_GOLD * 100)}% gold for the church`);
     }
     if (G.terrain[i] === TERRAIN.GREAT_RIVER) return tr('🌊 Grand fleuve (infranchissable)', '🌊 Great river (impassable)');
     if (G.terrain[i] === TERRAIN.RIVER) return tr('🌊 Fleuve : neutre, personne ne peut le prendre · pour passer, clic droit sur une terre libre en face → 🛶 Traverser le fleuve',

@@ -787,6 +787,8 @@ const GameRules = {
     for (const c of this.crusades) if (this.tick < c.end && this.owner[c.church] === c.owner) f[c.owner] += CONFIG.CRUSADE_FAITH;
     // (✝️ un bonus pour toujours : l'« Empire chrétien » des Francs, voir stepCharlemagne)
     for (const p of this.players) if (p.faithBonus && p.alive) f[p.id] += p.faithBonus;
+    // (📿 chaque relique gardée dans une de ses églises : +RELIC.FAITH, voir reliques.js)
+    if (this.relicChurch) for (const [c, n] of this.relicChurch) if (this.owner[c] >= 0) f[this.owner[c]] += CONFIG.RELIC.FAITH * n;
     this.faithCache = f;
     return f;
   },
@@ -1110,8 +1112,7 @@ const GameRules = {
         //  pour le convertir à pleine vitesse, voir FAITH_DOMINANCE)
         const dominance = Math.min(1, diff / Math.max(1, this.faithOf(p.id)) / CONFIG.FAITH_DOMINANCE) ** CONFIG.FAITH_DOMINANCE_POWER;
         // (👑 Charlemagne : la Croyance y convertit moins vite, voir CHARLEMAGNE.FAITH_SPEED)
-        // (📿 ses reliques : il convertit plus vite, voir relicFaithFactor)
-        const speed = CONFIG.FAITH_SPEED * (this.cm ? CHARLEMAGNE.FAITH_SPEED : 1) * this.relicFaithFactor(p.id);
+        const speed = CONFIG.FAITH_SPEED * (this.cm ? CHARLEMAGNE.FAITH_SPEED : 1);
         const mult = (this.isProtected(o) ? 1 : CONFIG.FAITH_DISORGANIZED) * speed * dominance;
         const prog = (this.faithProgress.get(key) || 0) + mult / this.faithInterval(diff), n = Math.floor(prog);
         this.faithProgress.set(key, prog - n);
@@ -1262,18 +1263,20 @@ const GameRules = {
         : tr(`Cette ville a déjà ses ${this.wallMax(c)} murs.`, `This city already has its ${this.wallMax(c)} walls.`) };
     }
     const W = this.W, h = this.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
-    // Visé dans (ou tout près de) la muraille d'une autre de ses villes : le mur va jusqu'à elle, et les relie
-    // (city = cette ville : voir garrisonMax)
+    // Visé dans (ou tout près de) la muraille d'une autre de ses villes, ou d'un de ses ports fortifiés : le mur va
+    // jusqu'à elle, et les relie (city = cette ville ou ce port : voir garrisonMax)
     let city = -1, Rcity = 0;
-    for (const o of this.castles) {
+    for (const o of this.castles.concat(this.walledPorts())) {
       if (o === c || this.owner[o] !== pid) continue;
-      const ox = o % W + h, oy = ((o / W) | 0) + h, Ro = this.castleInfo(o).radius;
+      const ho = this.sizeOf(this.building[o]) / 2, ox = o % W + ho, oy = ((o / W) | 0) + ho, Ro = this.buildingInfo(o).radius;
       if (DMath.hypot(target % W + 0.5 - ox, ((target / W) | 0) + 0.5 - oy) <= Ro + CONFIG.WALL_SNAP) {
         city = o; Rcity = Ro;
         target = Math.floor(oy) * W + Math.floor(ox); // (on vise son centre ; le mur s'arrête à sa muraille)
         break;
       }
     }
+    // (la muraille de la ville, ou la petite muraille du port fortifié, où le mur s'arrête)
+    const inCity = (x, y) => this.building[city] === B_CASTLE ? this.inCastleRange(city, x, y, Rcity) : this.inPortWalls(city, y * W + x);
     // Sinon, l'aimant : un obstacle tout proche (voir wallSnap)
     const snap = city >= 0 ? -1 : this.wallSnap(target), sealed = city >= 0 || snap >= 0;
     if (snap >= 0) target = snap;
@@ -1301,7 +1304,7 @@ const GameRules = {
     let err = dx + dy;
     for (;;) {
       const i = y * W + x;
-      if (city >= 0 && this.inCastleRange(city, x, y, Rcity)) break; // (arrivé à la muraille de l'autre ville)
+      if (city >= 0 && inCity(x, y)) break; // (arrivé à la muraille de l'autre ville, ou du port)
       // (les cases dans la muraille de la ville sont la ville elle-même : le mur commence juste après)
       if (!this.wallBarrier(i) && !this.inCastleRange(c, x, y, R)) {
         if (this.owner[i] !== pid) return { error: tr('Le mur doit être entièrement sur tes terres.', 'The wall must be entirely on your land.') };
@@ -1359,7 +1362,7 @@ const GameRules = {
       const o = this.players[w.owner];
       if (o.isHuman) {
         UI.log(tr('🧱 Ton mur est bâti : aucun assaut ne peut plus le franchir.', '🧱 Your wall is built: no assault can cross it any more.') + (this.wallLinked(w.castle).size > before
-          ? tr(` Il relie tes villes : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacune !`, ` It links your cities: +${CONFIG.WALL_LINK_GARRISON} garrison soldiers for each!`) : ''), 'good');
+          ? tr(` Il relie tes villes (ou ton port fortifié) : +${CONFIG.WALL_LINK_GARRISON} soldats de garnison pour chacun !`, ` It links your cities (or your fortified port): +${CONFIG.WALL_LINK_GARRISON} garrison soldiers for each!`) : ''), 'good');
       }
       const mine = new Set(w.tiles);
       for (const a of this.attacks) {
@@ -1521,14 +1524,14 @@ const GameRules = {
     }
   },
 
-  // Villes du même royaume reliées à la ville c par un mur fini (son mur vers elle, ou le leur vers c)
-  // Un mur relie deux villes s'il va de l'une à la muraille de l'autre (w.city), ou si deux murs, chacun parti
-  // de sa ville, se rejoignent (w.touch : les murs finis du royaume qui le touchent). On suit donc la chaîne des
-  // murs qui se touchent, depuis ceux de la ville c.
+  // Villes (et ports fortifiés) du même royaume reliés à la ville (ou au port fortifié) c par un mur fini
+  // Un mur relie deux villes s'il va de l'une à la muraille de l'autre (w.city, qui peut aussi être un port
+  // fortifié), ou si deux murs, chacun parti de sa ville, se rejoignent (w.touch : les murs finis du royaume qui le
+  // touchent). On suit donc la chaîne des murs qui se touchent, depuis ceux de c.
   wallLinked(c) {
     const o = this.owner[c], set = new Set();
     const ok = w => w.done && w.owner === o && this.owner[w.castle] === o && this.building[w.castle] === B_CASTLE;
-    const isCity = v => v !== undefined && v >= 0 && this.building[v] === B_CASTLE && this.owner[v] === o;
+    const isCity = v => v !== undefined && v >= 0 && this.owner[v] === o && (this.building[v] === B_CASTLE || this.walledPort(v));
     const queue = this.walls.filter(w => ok(w) && (w.castle === c || w.city === c)), seen = new Set(queue);
     while (queue.length) {
       const w = queue.pop();
@@ -3098,7 +3101,8 @@ const GameRules = {
   garrisonMax(a) {
     const t = this.building[a];
     if (t === B_OUTPOST) return this.outpostReady(a) ? CONFIG.OUTPOST_GARRISON : Infinity; // en construction : tous
-    // (une ville reliée par un mur à d'autres villes du royaume : WALL_LINK_GARRISON soldats de plus par ville reliée)
+    // (une ville reliée par un mur à d'autres villes, ou à des ports fortifiés, du royaume : WALL_LINK_GARRISON
+    //  soldats de plus par ville ou port relié)
     // (👑 Charlemagne : Rome, tant qu'elle est au pape, a une grande garnison : voir ROME_GARRISON)
     if (t === B_CASTLE && this.cm && a === this.cm.capital.papaute && this.owner[a] === this.cm.role.papaute) return CHARLEMAGNE.ROME_GARRISON;
     // (👑 Charlemagne : les villes de la Bavière, de l'Aquitaine et des Asturies, tant qu'elles les tiennent, voir garrison)
@@ -3106,7 +3110,8 @@ const GameRules = {
     const strong = this.cm && this.cm.strong.get(a), boost = strong && strong.pid === this.owner[a] ? strong.boost : 1;
     if (t === B_CASTLE) return (this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0))
       * ((this.cm || this.hy) && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1) * boost;
-    if (t === B_PORT) return this.buildingInfo(a).garrison || 0;
+    // (⚓ un port fortifié relié par un mur à des villes du royaume : WALL_LINK_GARRISON soldats de plus par ville)
+    if (t === B_PORT) return (this.buildingInfo(a).garrison || 0) + (this.walls.length && this.walledPort(a) ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0);
     return 0;
   },
 

@@ -5,7 +5,7 @@
 // s'en empare en TAKE_TIME secondes, puis la rapporte à son église de niveau 3 la plus proche, plus lentement.
 // En chemin, tout royaume voisin (pas un allié) peut l'intercepter : on clique sur sa bannière. Le combat se joue au
 // contact : le vainqueur garde ses survivants, et prend la relique s'il a une église de niveau 3 (sinon elle tombe là).
-// Une relique déposée reste liée à son église : son royaume convertit plus vite par la Croyance (+FAITH_BONUS par
+// Une relique déposée reste liée à son église : son royaume gagne de la Croyance (+FAITH par
 // relique), et l'église rapporte plus d'or (+CHURCH_GOLD par relique). Prise par un autre, l'église lui donne ces
 // bonus ; détruite (un raid viking, une démolition…), elle emporte sa relique avec elle.
 // Ces armées ne prennent aucune terre en chemin : elles marchent sur leurs terres, celles de leurs alliés, celles du
@@ -35,8 +35,6 @@ Object.assign(GameRules, {
     for (const [c, k] of this.relicChurch) if (this.owner[c] === pid) n += k;
     return n;
   },
-  // Vitesse de conversion par la Croyance (voir stepFaith) : +FAITH_BONUS par relique
-  relicFaithFactor(pid) { return this.relicChurch.size ? 1 + CONFIG.RELIC.FAITH_BONUS * this.relicCount(pid) : 1; },
   // Or d'une église (voir buildingOutput) : +CHURCH_GOLD par relique qu'elle garde
   relicGoldFactor(a) { return 1 + CONFIG.RELIC.CHURCH_GOLD * (this.relicChurch.get(a) || 0); },
   // Une église est détruite (voir removeBuilding) : ses reliques disparaissent avec elle
@@ -44,6 +42,7 @@ Object.assign(GameRules, {
     const n = this.relicChurch.get(a);
     if (!n) return;
     this.relicChurch.delete(a);
+    this.faithCache = null; // (sa Croyance s'en va avec elle)
     const p = this.players[this.owner[a]];
     if (p && p.isHuman) UI.log(tr(`📿 Ton église a été détruite : ${n > 1 ? `ses ${n} reliques sont perdues` : 'sa relique est perdue'} !`,
       `📿 Your church has been destroyed: ${n > 1 ? `its ${n} relics are lost` : 'its relic is lost'}!`), 'warn');
@@ -403,13 +402,14 @@ Object.assign(GameRules, {
     // (cette église garde déjà une relique, arrivée entre-temps : vers une autre église libre)
     if (this.relicChurch.get(c)) { this.relicCarry(r, this.relicPos(r)); return; }
     this.relicChurch.set(c, (this.relicChurch.get(c) || 0) + 1);
+    this.faithCache = null; // (+RELIC.FAITH de Croyance, voir faithAll)
     r.relic = null;
     this.relicRunEnd(r, true);
     const n = this.relicCount(r.pid), R = CONFIG.RELIC;
     if (p.isHuman) {
       Music.sound('crusade');
-      UI.log(tr(`📿 La relique est dans ton église ! Tes terres se convertissent ${Math.round(R.FAITH_BONUS * 100)} % plus vite par la Croyance (${n} relique${n > 1 ? 's' : ''} : +${Math.round(R.FAITH_BONUS * 100 * n)} %), et cette église rapporte ${Math.round(R.CHURCH_GOLD * 100)} % d'or en plus.`,
-        `📿 The relic is in your church! Your Faith converts land ${Math.round(R.FAITH_BONUS * 100)}% faster (${n} relic${n > 1 ? 's' : ''}: +${Math.round(R.FAITH_BONUS * 100 * n)}%), and this church brings ${Math.round(R.CHURCH_GOLD * 100)}% more gold.`), 'good');
+      UI.log(tr(`📿 La relique est dans ton église ! +${R.FAITH} de Croyance tant que tu la gardes (${n} relique${n > 1 ? 's' : ''} : +${R.FAITH * n}), et cette église rapporte ${Math.round(R.CHURCH_GOLD * 100)} % d'or en plus.`,
+        `📿 The relic is in your church! +${R.FAITH} Faith as long as you keep it (${n} relic${n > 1 ? 's' : ''}: +${R.FAITH * n}), and this church brings ${Math.round(R.CHURCH_GOLD * 100)}% more gold.`), 'good');
     } else if (this.human && this.human.alive) {
       UI.log(tr(`📿 ${p.name} a déposé une relique dans une de ses églises.`, `📿 ${p.name} has placed a relic in one of their churches.`), '', p);
     }
