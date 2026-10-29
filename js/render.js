@@ -1598,11 +1598,7 @@ const Render = {
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#c8a028';
     ctx.stroke();
-    ctx.font = '18px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#b8901c';
-    ctx.fillText('⚜', x, y + 1);
+    Icons.draw(ctx, 'lys', x, y, 21);
   },
   // ☠️ La peste (la guerre de Cent Ans) : une tête de mort sur les villes malades, une porte sur celles qui ont fermé
   // leurs portes

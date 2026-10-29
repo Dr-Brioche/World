@@ -6,6 +6,11 @@
   tout texte affiché s'écrit `tr('texte français', 'English text')` ; dans les pages HTML, un texte court porte
   sa traduction dans `data-en` (`data-en-title`, `data-en-placeholder`, `data-en-label`, `data-en-value`) et un long passage existe
   en deux blocs `.fr` / `.en`. Les bannières ont un `id` fixe (le nom français) et un `name` traduit.
+- **Aucun emoji dans le jeu** : tout ce qui s'affiche passe par des icônes dessinées, au style médiéval des autres
+  (`js/icons.js`, grille 24 x 24). Un emoji écrit dans un texte n'est qu'un raccourci : il doit avoir son icône dans
+  `ICON_DEFS` et sa ligne dans `EMOJI_ICONS` (sinon, en ajouter une). Pas d'emoji dans le CSS (`content:`) ni dessiné
+  avec `fillText` sur la carte : utiliser un petit SVG ou `Icons.draw`. Dans les infobulles et les listes déroulantes,
+  les emojis sont retirés automatiquement (`Icons.strip`).
 - Le joueur est débutant : garder un code simple et commenté, avec les réglages dans `js/config.js`.
 - Les scripts sont chargés par des balises `<script>` classiques (pas de modules ES) pour que le jeu
   marche en ouvrant `index.html` d'un double-clic.

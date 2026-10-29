@@ -123,7 +123,7 @@ Object.assign(GameRules, {
       h.gold += gold;
       if (faith) this.defisFaith(faith);
       Music.sound('diamond'); // (le carillon d'une récompense)
-      UI.log((vow ? tr('🙏 Vœu accompli ! ', '🙏 Vow fulfilled! ') : tr('🏅 Défi réussi ! ', '🏅 Challenge complete! ')) + `${c.text} · ${this.defisRewardText(c.reward, m)}`, 'good');
+      UI.log((vow ? tr('🙏 Vœu accompli ! ', '🙏 Vow fulfilled! ') : tr('⭐ Défi réussi ! ', '⭐ Challenge complete! ')) + `${c.text} · ${this.defisRewardText(c.reward, m)}`, 'good');
     } else if (vow) {
       const pay = Math.min(h.gold, V.PENALTY_GOLD);
       h.gold -= pay;
