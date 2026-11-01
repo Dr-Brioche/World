@@ -155,11 +155,17 @@ const GameRules = {
     'assaultPlans', 'routeCache', 'roadsCache', 'roadsVersion', 'roadChurches', 'mineBonusKey', 'mineBonusCache'],
   uiCall(fn) {
     const keys = this.MEMO_KEYS, saved = keys.map(k => this[k]);
-    // (comme si rien n'avait encore été calculé : « calculé il y a très longtemps », « pour aucune version »)
-    for (const k of keys) this[k] = k === 'routeCache' ? new Map() : k.endsWith('Tick') ? -Infinity : k.endsWith('Version') ? -1 : undefined;
+    // (⏱️ l'affichage garde à part ce qu'il a calculé ainsi, tant que la partie n'a pas bougé : même tour, même carte,
+    //  mêmes bâtiments. Sinon, pendant la pose d'un moulin par exemple, chaque case essayée referait tous les calculs
+    //  à zéro. Les règles, elles, ne lisent jamais cette mémoire-là : la partie en ligne reste la même partout.)
+    const stamp = this.tick + ':' + this.version + ':' + this.buildingTiles.length;
+    const ui = this.uiMemo && this.uiMemo.stamp === stamp ? this.uiMemo.vals : null;
+    // (sinon, comme si rien n'avait encore été calculé : « calculé il y a très longtemps », « pour aucune version »)
+    keys.forEach((k, i) => { this[k] = ui ? ui[i] : k === 'routeCache' ? new Map() : k.endsWith('Tick') ? -Infinity : k.endsWith('Version') ? -1 : undefined; });
     this.peeking = true;
     try { return fn(); } finally {
       this.peeking = false;
+      this.uiMemo = { stamp, vals: keys.map(k => this[k]) };
       keys.forEach((k, i) => { this[k] = saved[i]; });
     }
   },
