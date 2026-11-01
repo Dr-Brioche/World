@@ -958,16 +958,19 @@ const Render = {
   drawBuildableTiles(ox, oy) {
     const G = Game, h = G.human, type = UI.selectedBuild;
     if (G.phase !== 'playing' || (type !== B_MILL && type !== B_BARRACKS)) { this.buildable = null; return; }
-    const key = type + ':' + G.buildingTiles.length + ':' + G.works.size + ':' + h.tiles;
-    const now = performance.now();
-    if (!this.buildable || (this.buildable.key !== key && now - this.buildable.time > 300)) {
+    // (⏱️ refait tout de suite si les bâtiments ont changé ; si seules les frontières bougent, au plus une fois par
+    //  seconde : sur un grand royaume, chaque case de chaque zone est essayée)
+    const key = type + ':' + G.buildingTiles.length + ':' + G.works.size, now = performance.now();
+    const stale = !this.buildable || (this.buildable.key !== key ? now - this.buildable.time > 300
+      : this.buildable.tiles !== h.tiles && now - this.buildable.time > 1000);
+    if (stale) {
       const zone = new Set();
       for (const c of G.castles) if (G.owner[c] === h.id) for (const i of G.castleZone(c, h.id)) zone.add(i);
       for (const a of G.buildingTiles) if (G.owner[a] === h.id && G.hasSlots(a)) for (const i of G.churchZone(a)) zone.add(i);
       // (en doré : au bord du chemin d'une église ou d'un port vers une ville, où il produit plus : voir Game.onRoad)
       const ok = [], bad = [], road = [], links = G.roads();
       for (const i of zone) (!G.canPlace(h.id, i, type) ? bad : G.onRoad(h.id, i, type, links) ? road : ok).push(i);
-      this.buildable = { key, time: now, ok, bad, road };
+      this.buildable = { key, time: now, ok, bad, road, tiles: h.tiles };
     }
     this.fillTiles(ox, oy, this.buildable.ok, 'rgba(140,240,110,0.3)');
     this.fillTiles(ox, oy, this.buildable.road, 'rgba(255,205,60,0.5)');
