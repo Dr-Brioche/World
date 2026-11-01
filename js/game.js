@@ -5973,6 +5973,8 @@ const GameRules = {
       // Église ou port visé : on note sa zone (avant qu'il ne change de mains), avec les bâtiments qui en dépendent
       const linked = a.targetCastle >= 0 && this.anchor[t] === a.targetCastle && this.hasSlots(a.targetCastle)
         ? this.churchZone(a.targetCastle) : null;
+      // (et les moulins et casernes qui occupent ses places, avant qu'il ne change de mains : voir takeLinked)
+      const hosted = linked ? this.linkedBuildings(a.targetCastle) : null;
       this.setOwner(t, a.attacker);
       // (route tracée vers un objectif : elle ne reste à l'attaquant que s'il le prend, voir revertRoute)
       if (a.target >= 0 && (a.targetCastle >= 0 || a.link !== undefined)) (a.route = a.route || []).push(t);
@@ -5980,7 +5982,7 @@ const GameRules = {
       const b = this.building[t];
       if (a.targetCastle >= 0 && b && b !== B_CASTLE && this.anchor[t] === a.targetCastle) {
         if (a.raid) return this.vikingRaid(a, a.targetCastle); // (⚔️ une razzia rase sa cible, sans la garder)
-        if (linked) this.takeLinked(a, linked);
+        if (linked) this.takeLinked(a, linked, hosted);
         this.onTargetTaken(a, b, !!linked);
         return this.endAttack(a);
       }
@@ -6105,9 +6107,9 @@ const GameRules = {
 
   // Fin du siège d'un port fortifié : il est pris, avec sa zone et les bâtiments bâtis grâce à lui
   takePort(a, c) {
-    const linked = this.hasSlots(c) ? this.churchZone(c) : null;
+    const linked = this.hasSlots(c) ? this.churchZone(c) : null, hosted = linked ? this.linkedBuildings(c) : null;
     for (const j of this.footprint(c, B_PORT)) this.setOwner(j, a.attacker);
-    if (linked) this.takeLinked(a, linked);
+    if (linked) this.takeLinked(a, linked, hosted);
     this.onTargetTaken(a, B_PORT, !!linked);
     return this.endAttack(a);
   },
@@ -6227,13 +6229,21 @@ const GameRules = {
   // Église (ou port) pris : sa zone passe à l'attaquant, avec les moulins et casernes construits grâce à elle.
   // Ce qui est dans la muraille d'un château reste au défenseur (ça dépend du château), comme les autres
   // châteaux, églises et ports.
-  takeLinked(a, zone) {
+  // (hosted : les moulins et casernes qui occupaient les places de l'église ou du port pris. Ceux qui n'ont pas pu
+  //  être pris avec la zone, parce qu'ils débordent dans la muraille d'une ville du défenseur, sont détruits, sauf si
+  //  une ville, une église ou un port du défenseur les accueille encore : comme quand on démolit l'église, voir stillHosted)
+  takeLinked(a, zone, hosted = []) {
     for (const i of zone) {
       if (this.owner[i] !== a.target || this.castleProtects(a.target, i)) continue;
       const b = this.building[i];
       if (b && b !== B_MINE && b !== B_TOWER && TARGET_TYPES.includes(b)) continue;
       if (b && this.footprint(this.anchor[i], b).some(j => this.castleProtects(a.target, j))) continue;
       this.setOwner(i, a.attacker);
+    }
+    this.slotCache = null; // (l'église a changé de mains : qui accueille encore quoi ? voir slotHosts)
+    for (const b of hosted) {
+      if (this.owner[b] !== a.target || !this.building[b] || this.stillHosted(b)) continue;
+      this.removeBuilding(b);
     }
     a.cut = true; // la zone prise peut couper le royaume du défenseur (voir captureEnclaves)
   },
