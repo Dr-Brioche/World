@@ -736,7 +736,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        **3 mines au plus** (+48 % au maximum).
      - 🪙 **Mine d'or** : son filon rapporte **2 500 pièces en 10 minutes** (un peu à chaque production), doublé si reliée.
        Puis il **s'épuise** (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
-       **relance pour 10 minutes de plus**, qui rapportent de nouveau **2 500 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée.
+       **relance pour 10 minutes de plus**, qui rapportent de nouveau **2 500 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée ; la relance du niveau 2 ne sert qu'**une fois par filon** (détruire la mine et la rebâtir ne la remplit pas), et un filon vidé pour de bon ne peut plus recevoir de mine.
      - 🪨 **Carrière de pierre** (en colline) : les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
        (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
      - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
@@ -1042,6 +1042,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.173** : 🐞 correctif ⛏️ : une **mine d'or** ne se relance plus à l'infini : la relance du niveau 2 (10 min de plus) ne sert **qu'une fois par filon**, même si la mine est détruite puis rebâtie, ou prise par un autre ; et un filon vidé pour de bon (or relancé puis épuisé, diamant entièrement extrait) ne peut plus recevoir de mine
 - **v0.92.172** : ⚡ correctif : plus de **gel de plusieurs secondes** en choisissant un **moulin ou une caserne** en fin de partie (l'aperçu vert et rouge de chaque case refaisait tous ses calculs pour chacune : 4 s sur un grand royaume, 0,05 s maintenant) ; l'aperçu suit tes frontières une fois par seconde
 - **v0.92.171** : 🐞 correctif : quand un ennemi **prend une église** (ou un port), les moulins et casernes qui occupaient ses places et débordaient dans la muraille d'une de tes villes restaient à toi, sans église : ils sont maintenant **détruits avec elle** (sauf si une autre de tes villes, églises ou ports les accueille encore) ; les autres partent toujours avec la zone de l'église
 - **v0.92.170** : 📿 une relique gardée donne maintenant **+150 de Croyance** au royaume (tant qu'il tient son église), au lieu d'accélérer la conversion · 🧱⚓ un **mur** peut relier une ville à un de tes **ports fortifiés** : +50 soldats de garnison pour la ville et pour le port

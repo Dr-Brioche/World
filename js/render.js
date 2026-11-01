@@ -2240,7 +2240,7 @@ const Render = {
         ctx.stroke();
       }
       ctx.lineCap = 'butt';
-      if (d.kind === 'gold' && G.level[a] < MINE_LEVELS.length - 1) {
+      if (d.kind === 'gold' && G.level[a] < MINE_LEVELS.length - 1 && !d.relaunched) {
         const bx = px + k * 1.25, by = py - k * 1.25, br = Math.max(7, k * 0.75);
         ctx.beginPath();
         ctx.arc(bx, by, br, 0, Math.PI * 2);
