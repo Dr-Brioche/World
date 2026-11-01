@@ -275,8 +275,8 @@ const GameRules = {
     // (une mine : seulement sur un filon, tout entier à nous, sans les autres règles de construction : cercles
     //  rouges, muraille, écart entre bâtiments ; les autres bâtiments, eux, laissent un peu de place autour d'un filon)
     if (type === B_MINE) {
-      return this.depositAt.has(a) && this.footprint(a, type).every(j => this.owner[j] === pid && !this.building[j])
-        && this.commanded(a, type);
+      return this.depositAt.has(a) && !this.depositSpent(this.depositAt.get(a))
+        && this.footprint(a, type).every(j => this.owner[j] === pid && !this.building[j]) && this.commanded(a, type);
     }
     if (this.nearDeposit(a, type)) return false;
     if (type === B_PORT && !this.footprint(a, type).some(j => this.isCoastal(j))) return false;
@@ -623,6 +623,11 @@ const GameRules = {
     return { ...MINE_LEVELS[lvl], name, kind, power: m.power && m.power[lvl], gold,
       discount: m.discount && m.discount[lvl], speed: m.speed && m.speed[lvl] };
   },
+  // Un filon vidé pour de bon : de l'or qui a déjà eu sa relance (niveau 2) et ne rapporte plus rien, ou un diamant
+  // entièrement extrait. On ne peut plus y bâtir de mine (une mine détruite puis rebâtie ne le remplit pas à nouveau).
+  depositSpent(d) {
+    return !!d && (d.kind === 'gold' ? d.left <= 0 && !!d.relaunched : d.kind === 'diamond' ? d.progress >= 1 : false);
+  },
   // Le filon de la mine a est-il épuisé ? (or : plus de temps d'exploitation ; diamant : tout extrait)
   mineSpent(a) {
     const d = this.depositAt.get(a);
@@ -674,7 +679,7 @@ const GameRules = {
         d.left--;
         if (d.left <= 0) {
           this.version++; // (sa route disparaît)
-          if (p.isHuman) UI.log(tr('🪙 Ta mine d\'or est épuisée', '🪙 Your gold mine is exhausted') + (this.level[a] < 2
+          if (p.isHuman) UI.log(tr('🪙 Ta mine d\'or est épuisée', '🪙 Your gold mine is exhausted') + (this.level[a] < 2 && !d.relaunched
             ? tr(` : améliore-la pour la relancer ${Math.round(MINES.gold.time / 60)} minutes de plus !`, `: upgrade it to run it ${Math.round(MINES.gold.time / 60)} more minutes!`)
             : tr(' pour de bon.', ' for good.')), 'warn');
         }
@@ -713,6 +718,7 @@ const GameRules = {
     const next = levels && levels[this.level[a] + 1];
     if (!next) return null;
     if (this.building[a] === B_MINE && this.depositAt.get(a).kind === 'diamond' && this.mineSpent(a)) return null; // (épuisée)
+    if (this.building[a] === B_MINE && this.depositAt.get(a).kind === 'gold' && this.depositAt.get(a).relaunched) return null; // (sa relance a déjà servi)
     // (🪨 les carrières de pierre du royaume font baisser le prix)
     // (⚜️ Charles V le Sage : moins cher, voir hyUpgrade)
     return Math.round(next.upgradeCost * (1 - this.mineBonus(this.owner[a], 'stone')) * (this.hy && this.owner[a] >= 0 ? this.hyUpgrade(this.owner[a]) : 1));
@@ -1505,9 +1511,10 @@ const GameRules = {
         if (BUILDING_LEVELS[type][this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
         this.version++;
         if (p.isHuman) Music.sound('build'); // (🔔 le son de la construction : amélioration terminée)
-        // (🪙 une mine d'or améliorée : son filon repart pour MINES.gold.time de plus)
+        // (🪙 une mine d'or améliorée : son filon repart pour MINES.gold.time de plus ; une seule fois par filon, même
+        //  si la mine est détruite puis rebâtie, ou prise par un autre : voir depositSpent)
         const dep = type === B_MINE ? this.depositAt.get(a) : null;
-        if (dep && dep.kind === 'gold') dep.left += MINES.gold.time * CONFIG.TICKS_PER_SECOND;
+        if (dep && dep.kind === 'gold' && !dep.relaunched) { dep.left += MINES.gold.time * CONFIG.TICKS_PER_SECOND; dep.relaunched = true; }
         if (type === B_CASTLE && this.castleInfo(a).imperial) {
           p.imperialBuilt = true; // (une seule par partie)
           this.garrison[a] = this.garrisonMax(a);
@@ -3289,6 +3296,7 @@ const GameRules = {
       if (!d) return tr('Une mine se bâtit sur un filon : les petites icônes de minerai, dans les montagnes (ou les collines pour la pierre).',
         'A mine is built on an ore vein: the small ore icons, in the mountains (or the hills for stone).');
       const m = MINES[d.kind];
+      if (this.depositSpent(d)) return tr('Ce filon est épuisé pour de bon : il n\'y a plus rien à en tirer.', 'This ore vein is exhausted for good: there is nothing left to mine.');
       // (« Mine de fer » → « mines de fer »)
       if (m.max && this.minesOf(p.id, d.kind).length >= m.max) return tr(`Tu as déjà ${m.max} ${m.name.toLowerCase().replace(/^(\S+)/, '$1s')} : c'est le maximum.`,
         `You already have ${m.max} ${m.name.toLowerCase()}s: that is the maximum.`);
