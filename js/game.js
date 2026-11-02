@@ -4031,7 +4031,8 @@ const GameRules = {
   // d'un port fortifié
   stopAtWalls(c, path) {
     if (path && this.building[c] === B_CASTLE) {
-      const k = path.findIndex(i => this.inWalls(c, i));
+      const reach = this.wallsReach(c);
+      const k = path.findIndex(i => this.inWalls(c, i) && reach.has(i));
       if (k >= 0) path.length = k + 1;
     }
     if (path && this.walledPort(c)) {
@@ -4039,6 +4040,30 @@ const GameRules = {
       if (k >= 0) path.length = k + 1;
     }
     return path;
+  },
+
+  // ⛰️ Les cases de la muraille du château c qu'on rejoint depuis la ville sans sortir de la muraille ni passer un
+  // sommet (ou la mer) : le vrai « pied du mur ». Une case du cercle de l'autre côté d'une montagne infranchissable
+  // n'en est pas : une armée qui y arrive ne peut pas assiéger la ville de là, elle doit en faire le tour.
+  // (gardé en mémoire tant que la carte ne change pas)
+  wallsReach(c) {
+    const memo = this.wallsReachMemo || (this.wallsReachMemo = new Map()), key = c + ':' + this.version, had = memo.get(c);
+    if (had && had.key === key) return had.set;
+    const W = this.W, H = this.H, set = new Set(), queue = this.footprint(c, B_CASTLE).slice();
+    for (const t of queue) set.add(t);
+    while (queue.length) {
+      const t = queue.pop(), x = t % W, y = (t / W) | 0;
+      for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+        const n = ny * W + nx;
+        if (set.has(n) || !this.isLand(n) || !this.inCastleRange(c, nx, ny, this.castleInfo(c).radius)) continue;
+        set.add(n);
+        queue.push(n);
+      }
+    }
+    if (memo.size > 64) memo.clear();
+    memo.set(c, { key, set });
+    return set;
   },
 
   // La case i est-elle dans la muraille (le rayon) du château c ?
@@ -5960,7 +5985,7 @@ const GameRules = {
       // Arrivée à la muraille du château visé : l'armée ne la traverse pas, elle s'arrête au pied du mur
       // et commence le siège (on s'y bat avec le bonus de défense des murs)
       const tc = a.targetCastle;
-      if (a.target >= 0 && tc >= 0 && this.building[tc] === B_CASTLE && this.owner[tc] === a.target && this.inWalls(tc, t)) {
+      if (a.target >= 0 && tc >= 0 && this.building[tc] === B_CASTLE && this.owner[tc] === a.target && this.inWalls(tc, t) && this.wallsReach(tc).has(t)) {
         return this.startSiege(a, tc);
       }
       // (un avant-poste visé s'assiège aussi : il ne tombe pas tout de suite)
