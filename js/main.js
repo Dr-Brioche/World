@@ -1830,8 +1830,8 @@ const UI = {
       const list = G.portRoadCastles(h.id, a), n = list.length;
       const sum = list.reduce((s, c) => s + CONFIG.PORT_ROAD_BONUS * (G.castleInfo(c).imperial ? IMPERIAL.roadFactor : 1), 0);
       const mills = Math.min(G.portMills(h.id, list), CONFIG.PORT_MILL_MAX), mp = Math.round(mills * CONFIG.PORT_MILL_BONUS * 100);
-      txt += n ? tr(` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or · 🌾 ${mills} moulin${mills > 1 ? 's' : ''} dans ces villes : +${mp} % (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin, ${CONFIG.PORT_MILL_MAX} au plus)`,
-          ` · 🛤️ linked to ${n > 1 ? `${n} cities (${n} paths)` : 'a city'}: +${Math.round(sum * 100)}% gold · 🌾 ${mills} mill${mills > 1 ? 's' : ''} in these cities: +${mp}% (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)}% per mill, ${CONFIG.PORT_MILL_MAX} at most)`)
+      txt += n ? tr(` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or · 🌾 ${mills} moulin${mills > 1 ? 's' : ''} de ces villes et de leurs églises : +${mp} % (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin, ${CONFIG.PORT_MILL_MAX} au plus)`,
+          ` · 🛤️ linked to ${n > 1 ? `${n} cities (${n} paths)` : 'a city'}: +${Math.round(sum * 100)}% gold · 🌾 ${mills} mill${mills > 1 ? 's' : ''} of these cities and their churches: +${mp}% (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)}% per mill, ${CONFIG.PORT_MILL_MAX} at most)`)
         : tr(` · aucune ville assez proche (${CONFIG.PORT_ROAD_DISTANCE} cases, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)} % par niveau de la ville) : pas de chemin`,
           ` · no city close enough (${CONFIG.PORT_ROAD_DISTANCE} tiles, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)}% per city level): no path`);
     }

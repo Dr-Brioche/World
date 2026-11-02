@@ -771,8 +771,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ville bâtie près d'elle **ajoute** un chemin (elle ne remplace pas les autres). Chaque chemin rapporte **un peu d'or**
      (+2 💰 toutes les 10 s) et **+50 % de Croyance** : les bonus s'additionnent. Mais une église près d'un **port seul**
      (sans ville proche, donc sans route) ne crée pas de chemin.
-     🌾 **Le port exporte le grain** : de base, un port rapporte autant qu'un moulin. Chaque **moulin dans la muraille** d'une
-     des villes du port (de n'importe quel niveau, même un fort en bois) lui rapporte **+15 %** d'or en plus (**6 moulins** au plus : +90 %).
+     🌾 **Le port exporte le grain** : de base, un port rapporte autant qu'un moulin. Chaque **moulin de ses villes** lui rapporte **+15 %** d'or en plus (**6 moulins** au plus : +90 %) : les moulins
+     dans la muraille d'une des villes du port (de n'importe quel niveau, même un fort en bois), dans la **zone du port** lui-même,
+     ou dans la zone d'une **église reliée** à une de ces villes ou à la route du port (chaque moulin compte une fois).
      Le survol du port indique ses villes et ses moulins comptés (« 🛤️ 1 ville : +30 % · 🌾 5 moulins : +75 % »).
      🌾 **Au bord d'une route** : un **moulin** ou une **caserne** bâti **hors des villes** (près d'une église ou d'un port),
      **sur** une de ces routes ou juste à côté (à moins de **3 cases** de son centre), produit **+20 %**. En le posant,
@@ -1043,6 +1044,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.176** : ⚓ le bonus des moulins du port (+15 % par moulin) compte aussi les moulins bâtis **dans la zone du port** et **dans celle des églises reliées** à ses villes ou à sa route
 - **v0.92.175** : 🐞 correctif ⚓ : les **moulins d'une ville de niveau 1** (fort en bois) comptent enfin pour le bonus du port (+15 % par moulin) : avant, seuls ceux d'une ville de niveau 2 ou plus comptaient · le survol d'un port affiche ses villes reliées et ses moulins comptés, et la bulle de construction inclut ce bonus
 - **v0.92.174** : 🐞 correctif ⛰️ : une armée qui touche la **muraille d'une ville de l'autre côté d'un sommet infranchissable** ne s'y arrête plus pour un siège impossible : seul le vrai pied du mur (les cases de la ville qu'on peut rejoindre à pied) déclenche le siège, l'assaut contourne le sommet
 - **v0.92.173** : 🐞 correctif ⛏️ : une **mine d'or** ne se relance plus à l'infini : la relance du niveau 2 (10 min de plus) ne sert **qu'une fois par filon**, même si la mine est détruite puis rebâtie, ou prise par un autre ; et un filon vidé pour de bon (or relancé puis épuisé, diamant entièrement extrait) ne peut plus recevoir de mine
