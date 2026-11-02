@@ -2626,12 +2626,6 @@ const GameRules = {
         : { castle: c, bonus: CONFIG.PORT_ROAD_BONUS, road: 'dirt' });
       if (list.length) links.set(a, this.roadLink(list));
     }
-    // Le port exporte le grain des moulins de ses villes : chaque moulin dans la muraille d'une ville du port (de
-    // n'importe quel niveau, même un fort en bois) lui rapporte PORT_MILL_BONUS d'or en plus (PORT_MILL_MAX au plus)
-    for (const [a, link] of links) {
-      if (this.building[a] !== B_PORT) continue;
-      link.mills = Math.min(this.portMills(this.owner[a], this.linkRoads(link).map(([c]) => c)), CONFIG.PORT_MILL_MAX);
-    }
     // Une mine (qui n'est pas épuisée) à moins de MINE_ROAD_DISTANCE cases d'une de ses villes : une route les relie
     for (const a of this.buildingTiles) {
       if (this.building[a] !== B_MINE || this.owner[a] < 0 || this.mineSpent(a)) continue;
@@ -2644,6 +2638,13 @@ const GameRules = {
       if (this.building[ch] !== B_CHURCH || this.owner[ch] < 0) continue;
       const list = this.churchLinks(this.owner[ch], ch, links);
       if (list.length) this.roadChurches.set(ch, list);
+    }
+    // Le port exporte le grain des moulins de ses villes : chaque moulin dans la muraille d'une ville du port (de
+    // n'importe quel niveau, même un fort en bois), dans la zone du port lui-même, ou dans celle d'une église reliée
+    // à ces villes ou à la route du port, lui rapporte PORT_MILL_BONUS d'or en plus (PORT_MILL_MAX au plus)
+    for (const [a, link] of links) {
+      if (this.building[a] !== B_PORT) continue;
+      link.mills = Math.min(this.portMills(this.owner[a], this.linkRoads(link).map(([c]) => c), a), CONFIG.PORT_MILL_MAX);
     }
     // Un moulin ou une caserne hors des villes, posé sur une de ces routes (ou juste à côté) : +MILL_ROAD_BONUS
     for (const a of this.buildingTiles) {
@@ -2680,16 +2681,24 @@ const GameRules = {
     return best;
   },
 
-  // 🌾 Nombre de moulins de pid dans la muraille d'une de ces villes (cities : leurs châteaux), quel que soit leur
-  // niveau : ce sont les moulins dont un port relié à ces villes exporte le grain (voir roads et PORT_MILL_BONUS)
-  portMills(pid, cities) {
+  // 🌾 Nombre de moulins de pid dont un port relié à ces villes (cities : leurs châteaux) exporte le grain : ceux dans
+  // la muraille d'une de ces villes (quel que soit son niveau), dans la zone du port lui-même (port : -1 s'il n'est pas
+  // encore bâti), ou dans la zone d'une église reliée à une de ces villes ou à la route du port (voir churchLinks).
+  // Chaque moulin compte une fois. (voir roads et PORT_MILL_BONUS)
+  portMills(pid, cities, port = -1) {
     if (!cities.length) return 0;
+    const zones = [];
+    if (port >= 0 && this.hasSlots(port)) zones.push(port);
+    for (const [ch, list] of this.roadChurches || []) {
+      if (this.owner[ch] === pid && this.hasSlots(ch) && list.some(l => (port >= 0 && l.port === port) || cities.includes(l.castle))) zones.push(ch);
+    }
     const half = (this.sizeOf(B_MILL) - 1) / 2;
     let n = 0;
     for (const m of this.buildingTiles) {
       if (this.building[m] !== B_MILL || this.owner[m] !== pid) continue;
       const x = m % this.W + half, y = ((m / this.W) | 0) + half;
-      if (cities.some(c => this.inCastleRange(c, x, y, this.castleInfo(c).radius))) n++;
+      if (cities.some(c => this.inCastleRange(c, x, y, this.castleInfo(c).radius))
+        || zones.some(z => this.footprint(m, B_MILL).every(j => this.inChurchRange(z, j, this.buildingInfo(z).radius)))) n++;
     }
     return n;
   },
