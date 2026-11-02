@@ -910,10 +910,8 @@ const UI = {
     if (b === B_MILL || b === B_PORT) txt += ` · +${n1(G.buildingOutput(a))} 💰${every}`;
     if (b === B_PORT) { // (🛤️ ses routes vers des villes, et 🌾 les moulins de ces villes : voir Game.roads)
       const link = G.roads().get(a), n = link ? G.linkRoads(link).length : 0, mills = link ? link.mills || 0 : 0;
-      txt += n ? tr(` · 🛤️ ${n > 1 ? `${n} villes` : '1 ville'} : +${Math.round(link.bonus * 100)} % · 🌾 ${mills} moulin${mills > 1 ? 's' : ''} : +${Math.round(mills * CONFIG.PORT_MILL_BONUS * 100)} %` +
-          (mills >= CONFIG.PORT_MILL_MAX ? ' (max)' : ''),
-        ` · 🛤️ ${n > 1 ? `${n} cities` : '1 city'}: +${Math.round(link.bonus * 100)}% · 🌾 ${mills} mill${mills > 1 ? 's' : ''}: +${Math.round(mills * CONFIG.PORT_MILL_BONUS * 100)}%` +
-          (mills >= CONFIG.PORT_MILL_MAX ? ' (max)' : ''))
+      txt += n ? tr(` · 🛤️ ${n > 1 ? `${n} villes` : '1 ville'} : +${Math.round(link.bonus * 100)} % · 🌾 ${mills} moulin${mills > 1 ? 's' : ''} : +${Math.round(G.portMillBonus(mills) * 100)} %`,
+        ` · 🛤️ ${n > 1 ? `${n} cities` : '1 city'}: +${Math.round(link.bonus * 100)}% · 🌾 ${mills} mill${mills > 1 ? 's' : ''}: +${Math.round(G.portMillBonus(mills) * 100)}%`)
         : tr(' · 🛤️ relié à aucune ville : ni bonus de route, ni moulins', ' · 🛤️ linked to no city: no road bonus, no mills');
     }
     if (b === B_PORT && info.boatSpeed) txt += tr(' · ⛵ expéditions', ' · ⛵ expeditions');
@@ -1791,7 +1789,7 @@ const UI = {
     if (t === B_PORT) {
       const list = G.portRoadCastles(h.id, a);
       road = list.reduce((s, c) => s + CONFIG.PORT_ROAD_BONUS * (G.castleInfo(c).imperial ? IMPERIAL.roadFactor : 1), 0)
-        + Math.min(G.portMills(h.id, list), CONFIG.PORT_MILL_MAX) * CONFIG.PORT_MILL_BONUS; // (🌾 et les moulins de ces villes)
+        + G.portMillBonus(G.portMills(h.id, list)); // (🌾 et les moulins de ces villes)
     }
     return k * (1 + road) - 1;
   },
@@ -1829,9 +1827,9 @@ const UI = {
     if (t === B_PORT) {
       const list = G.portRoadCastles(h.id, a), n = list.length;
       const sum = list.reduce((s, c) => s + CONFIG.PORT_ROAD_BONUS * (G.castleInfo(c).imperial ? IMPERIAL.roadFactor : 1), 0);
-      const mills = Math.min(G.portMills(h.id, list), CONFIG.PORT_MILL_MAX), mp = Math.round(mills * CONFIG.PORT_MILL_BONUS * 100);
-      txt += n ? tr(` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or · 🌾 ${mills} moulin${mills > 1 ? 's' : ''} de ces villes et de leurs églises : +${mp} % (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin, ${CONFIG.PORT_MILL_MAX} au plus)`,
-          ` · 🛤️ linked to ${n > 1 ? `${n} cities (${n} paths)` : 'a city'}: +${Math.round(sum * 100)}% gold · 🌾 ${mills} mill${mills > 1 ? 's' : ''} of these cities and their churches: +${mp}% (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)}% per mill, ${CONFIG.PORT_MILL_MAX} at most)`)
+      const mills = G.portMills(h.id, list), mp = Math.round(G.portMillBonus(mills) * 100);
+      txt += n ? tr(` · 🛤️ relié à ${n > 1 ? `${n} villes (${n} chemins)` : 'une ville'} : +${Math.round(sum * 100)} % d'or · 🌾 ${mills} moulin${mills > 1 ? 's' : ''} de ces villes et de leurs églises : +${mp} % (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)} % par moulin jusqu'au ${CONFIG.PORT_MILL_FULL}e, puis de moins en moins)`,
+          ` · 🛤️ linked to ${n > 1 ? `${n} cities (${n} paths)` : 'a city'}: +${Math.round(sum * 100)}% gold · 🌾 ${mills} mill${mills > 1 ? 's' : ''} of these cities and their churches: +${mp}% (+${Math.round(CONFIG.PORT_MILL_BONUS * 100)}% per mill up to the ${CONFIG.PORT_MILL_FULL}th, then less and less)`)
         : tr(` · aucune ville assez proche (${CONFIG.PORT_ROAD_DISTANCE} cases, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)} % par niveau de la ville) : pas de chemin`,
           ` · no city close enough (${CONFIG.PORT_ROAD_DISTANCE} tiles, +${Math.round(CONFIG.ROAD_RANGE_PER_LEVEL * 100)}% per city level): no path`);
     }

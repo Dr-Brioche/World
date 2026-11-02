@@ -183,8 +183,13 @@ const CONFIG = {
   MINE_SPACING: 14,          // deux filons sont à au moins 14 cases l'un de l'autre
   DEPOSIT_CLEARANCE: 2,      // les autres bâtiments laissent 2 cases libres autour d'un filon (la place de sa mine)
   PORT_ROAD_BONUS: 0.3,      // par un chemin de terre : +30 % d'or produit par le port
-  PORT_MILL_BONUS: 0.15,     // chaque moulin relié par une route à la même ville que le port : +15 % d'or pour le port
-  PORT_MILL_MAX: 6,          // (6 moulins au plus comptent : +90 % au maximum)
+  // Chaque moulin des villes du port (voir portMills) lui donne de l'or en plus, de moins en moins à mesure qu'il y en a :
+  // +15 % pour chacun des 5 premiers, puis le bonus de chaque nouveau moulin baisse peu à peu jusqu'au 20e (+1 %),
+  // et chaque moulin après le 20e ajoute encore +1 %. (5 moulins : +75 % ; 10 : +136 % ; 20 : +188 % ; 30 : +198 %)
+  PORT_MILL_BONUS: 0.15,     // bonus de chacun des premiers moulins
+  PORT_MILL_FULL: 5,         // combien de moulins ont le bonus entier
+  PORT_MILL_FADE: 20,        // le moulin à partir duquel il ne reste que le petit bonus
+  PORT_MILL_MIN: 0.01,       // le petit bonus de chaque moulin à partir du 20e
   // Une église pas trop loin d'une de ces routes port–ville (à moins de 10 cases) y est reliée par un petit chemin ;
   // sinon, une église pas trop loin d'une ville (à moins de 25 cases, sur la même terre) est reliée à elle.
   // Reliée, elle produit 2 pièces d'or toutes les PRODUCTION_INTERVAL secondes. (Un port seul, sans ville, ne suffit pas.)
