@@ -1864,16 +1864,21 @@ const UI = {
     if (i < 0 || !G.isLand(i)) return base;
     const err = G.spawnError(i);
     if (err) return `${base} · ⚠️ ${err}`;
-    const W = G.W, R = CASTLE_LEVELS[1].radius, x = i % W, y = (i / W) | 0, zone = [];
+    const t = TERRAIN_INFO[G.terrain[i]], def = this.spawnDefense(i);
+    return `${base} · ${t.name}${t.cost > 1 ? tr(` (défense ${pct(t.cost - 1)})`, ` (defense ${pct(t.cost - 1)})`) : ''} · ` +
+      tr(`🛡️ défense de ta capitale ici : ${pct(def)} (terrain + murs)`, `🛡️ your capital's defense here: ${pct(def)} (terrain + walls)`);
+  },
+
+  // 🛡️ Défense qu'aurait la capitale fondée en i (0.6 = +60 %) : sa muraille de niveau 1, sur les terres libres autour
+  // (terrain + murs : voir castleZoneDefense). Affichée dans la barre d'aide et dans la bulle près de la souris.
+  spawnDefense(i) {
+    const G = Game, W = G.W, R = CASTLE_LEVELS[1].radius, x = i % W, y = (i / W) | 0, zone = [];
     for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
       const xx = x + dx, yy = y + dy;
       if (xx < 0 || yy < 0 || xx >= W || yy >= G.H || dx * dx + dy * dy > R * R) continue;
       if (G.claimable(yy * W + xx)) zone.push(yy * W + xx);
     }
-    const t = TERRAIN_INFO[G.terrain[i]];
-    return `${base} · ${t.name}${t.cost > 1 ? tr(` (défense ${pct(t.cost - 1)})`, ` (defense ${pct(t.cost - 1)})`) : ''} · ` +
-      tr(`🛡️ défense de ta capitale ici : ${pct(G.castleZoneDefense(zone, 1) - 1)} (terrain + murs)`,
-        `🛡️ your capital's defense here: ${pct(G.castleZoneDefense(zone, 1) - 1)} (terrain + walls)`);
+    return G.castleZoneDefense(zone, 1) - 1;
   },
 
   // La caméra va sur les terres du royaume pid (clic sur son nom dans le classement) : sur son plus grand morceau,

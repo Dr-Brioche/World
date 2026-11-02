@@ -3034,6 +3034,11 @@ const Render = {
         ctx.strokeStyle = ok ? 'rgba(255,255,255,0.9)' : 'rgba(230,70,60,0.95)';
         ctx.lineWidth = ok ? 1.5 : 2.5;
         ctx.stroke();
+        // Petite bulle près de la souris : la défense qu'aurait la capitale ici (terrain + murs, voir UI.spawnDefense)
+        if (ok && this.mouse && G.isLand(this.hover) && !(G.online && G.human.spawned)) {
+          const def = Math.round(UI.spawnDefense(this.hover) * 100);
+          this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: tr(`🛡️ Défense : +${def} %`, `🛡️ Defense: +${def}%`) };
+        }
       } else if (UI.selectedBuild && this.mouse) {
         // Aperçu de l'emplacement du bâtiment (2x2 ou 4x4 cases)
         const t = UI.selectedBuild, n = G.sizeOf(t);
