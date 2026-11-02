@@ -2626,16 +2626,11 @@ const GameRules = {
         : { castle: c, bonus: CONFIG.PORT_ROAD_BONUS, road: 'dirt' });
       if (list.length) links.set(a, this.roadLink(list));
     }
-    // Le port exporte le grain des moulins de ses villes : chaque moulin relié par une route à une ville du port
-    // lui rapporte PORT_MILL_BONUS d'or en plus (PORT_MILL_MAX moulins au plus)
+    // Le port exporte le grain des moulins de ses villes : chaque moulin dans la muraille d'une ville du port (de
+    // n'importe quel niveau, même un fort en bois) lui rapporte PORT_MILL_BONUS d'or en plus (PORT_MILL_MAX au plus)
     for (const [a, link] of links) {
       if (this.building[a] !== B_PORT) continue;
-      const cities = new Set(this.linkRoads(link).map(([c]) => c));
-      let mills = 0;
-      for (const [m, ml] of links) {
-        if (this.building[m] === B_MILL && this.owner[m] === this.owner[a] && this.linkRoads(ml).some(([c]) => cities.has(c))) mills++;
-      }
-      link.mills = Math.min(mills, CONFIG.PORT_MILL_MAX);
+      link.mills = Math.min(this.portMills(this.owner[a], this.linkRoads(link).map(([c]) => c)), CONFIG.PORT_MILL_MAX);
     }
     // Une mine (qui n'est pas épuisée) à moins de MINE_ROAD_DISTANCE cases d'une de ses villes : une route les relie
     for (const a of this.buildingTiles) {
@@ -2683,6 +2678,20 @@ const GameRules = {
       for (const link of list) if (this.roadNearest(link.pts, x, y).d <= D) best = Math.max(best, link.stone ? 2 : 1);
     }
     return best;
+  },
+
+  // 🌾 Nombre de moulins de pid dans la muraille d'une de ces villes (cities : leurs châteaux), quel que soit leur
+  // niveau : ce sont les moulins dont un port relié à ces villes exporte le grain (voir roads et PORT_MILL_BONUS)
+  portMills(pid, cities) {
+    if (!cities.length) return 0;
+    const half = (this.sizeOf(B_MILL) - 1) / 2;
+    let n = 0;
+    for (const m of this.buildingTiles) {
+      if (this.building[m] !== B_MILL || this.owner[m] !== pid) continue;
+      const x = m % this.W + half, y = ((m / this.W) | 0) + half;
+      if (cities.some(c => this.inCastleRange(c, x, y, this.castleInfo(c).radius))) n++;
+    }
+    return n;
   },
 
   // Villes (châteaux de niveau 2 ou 3) de pid dont la muraille contient le centre d'un moulin (ou d'une caserne)
