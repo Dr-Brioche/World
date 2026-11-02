@@ -14,7 +14,8 @@
 // de la capitale ; vassal : un grand vassal dont la fidélité balance entre les deux rois (voir VASSALS) ;
 // camp : le camp de départ ('france' ou 'angleterre') ; legit : la fidélité de départ d'un vassal (voir VASSALS) ;
 // garrison : les garnisons de ses villes valent garrison fois plus (le pape d'Avignon, qui n'a pas d'armée).
-// flag : sa bannière (en attendant les vraies : un des drapeaux du jeu) ; color : la couleur de son royaume.
+// flag : sa bannière (img/bannieres/ca_<faction> : sa vraie bannière, un gonfanon ; sinon, en attendant, un des drapeaux
+// du jeu) ; color : la couleur de son royaume (celle de son drapeau, ou une couleur proche si elle est déjà prise).
 
 const CENTANS = {
   // 📅 Le calendrier : la guerre dure de 1337 à 1453, en GAME_MINUTES minutes de jeu (l'année s'affiche en haut)
@@ -839,7 +840,7 @@ const CENTANS = {
   // Les factions de 1337 (l'ordre compte : une case va à la première dont un contour la contient)
   factions: [
     {
-      id: 'avignon', name: tr('Papauté d\'Avignon', 'Papacy of Avignon'), leader: tr('le pape Benoît XII', 'Pope Benedict XII'), flag: 'b20', color: [168, 28, 84],
+      id: 'avignon', name: tr('Papauté d\'Avignon', 'Papacy of Avignon'), leader: tr('le pape Benoît XII', 'Pope Benedict XII'), flag: 'b20', color: [214, 96, 160],
       defensive: true, noArmy: true, production: true, garrison: 3,
       capital: [4.81, 43.95, tr('Avignon', 'Avignon'), 'Avignon'], capitalLevel: 3, cities: [], churches: [],
       // le Comtat Venaissin
@@ -866,7 +867,7 @@ const CENTANS = {
       desc: tr('Le riche comté des villes drapières, qui vivent de la laine anglaise.', 'The rich county of the cloth towns, which live on English wool.'),
     },
     {
-      id: 'bretagne', name: tr('Bretagne', 'Brittany'), leader: tr('le duc Jean III', 'Duke John III'), flag: 'b18', color: [236, 232, 218],
+      id: 'bretagne', name: tr('Bretagne', 'Brittany'), leader: tr('le duc Jean III', 'Duke John III'), flag: 'ca_bretagne', color: [236, 232, 218],
       vassal: true, legit: 40, playable: true,
       capital: [-1.68, 48.11, tr('Rennes', 'Rennes'), 'Rennes'],
       cities: [[-1.55, 47.22, tr('Nantes', 'Nantes'), 'Nantes'], [-2.76, 47.66, tr('Vannes', 'Vannes'), 'Vannes'], [-4.49, 48.39, tr('Brest', 'Brest'), 'Brest'],
@@ -876,7 +877,7 @@ const CENTANS = {
       desc: tr('Le duché de Bretagne, fier de ses libertés, entre la France et l\'Angleterre.', 'The duchy of Brittany, proud of its liberties, between France and England.'),
     },
     {
-      id: 'bourgogne', name: tr('Bourgogne', 'Burgundy'), leader: tr('le duc Eudes IV', 'Duke Odo IV'), flag: 'b06', color: [126, 52, 152],
+      id: 'bourgogne', name: tr('Bourgogne', 'Burgundy'), leader: tr('le duc Eudes IV', 'Duke Odo IV'), flag: 'ca_bourgogne', color: [118, 24, 52],
       vassal: true, legit: 60, playable: true,
       capital: [5.04, 47.32, tr('Dijon', 'Dijon'), 'Dijon'],
       cities: [[4.85, 46.78, tr('Chalon', 'Chalon'), 'Chalon'], [6.02, 47.24, tr('Besançon', 'Besançon'), 'Besançon'], [3.57, 47.80, tr('Auxerre', 'Auxerre'), 'Auxerre']],
@@ -887,7 +888,7 @@ const CENTANS = {
       desc: tr('Le duché de Bourgogne et la Franche-Comté : le plus puissant vassal du roi.', 'The duchy of Burgundy and Franche-Comté: the king\'s mightiest vassal.'),
     },
     {
-      id: 'angleterre', name: tr('Angleterre', 'England'), leader: tr('le roi Édouard III', 'King Edward III'), flag: 'b03', color: [196, 30, 44],
+      id: 'angleterre', name: tr('Angleterre', 'England'), leader: tr('le roi Édouard III', 'King Edward III'), flag: 'ca_angleterre', color: [196, 30, 44],
       playable: true, camp: 'angleterre',
       capital: [-0.12, 51.51, tr('Londres', 'London'), 'Londres'], capitalLevel: 3,
       cities: [[-1.08, 53.96, tr('York', 'York'), 'York'], [-1.31, 51.06, tr('Winchester', 'Winchester'), 'Winchester'], [-2.59, 51.45, tr('Bristol', 'Bristol'), 'Bristol'],
@@ -911,7 +912,7 @@ const CENTANS = {
       desc: tr('Tu es Édouard III, roi d\'Angleterre, maître de la Guyenne et du Ponthieu : par ta mère, la couronne de France te revient. Ta campagne : ses propres parchemins, ses débarquements et ses choix.', 'You are Edward III, King of England, master of Guyenne and Ponthieu: through your mother, the crown of France is yours. Your campaign: its own parchments, landings and choices.'),
     },
     {
-      id: 'france', name: tr('France', 'France'), leader: tr('le roi Philippe VI', 'King Philip VI'), flag: 'b08', color: [32, 66, 170],
+      id: 'france', name: tr('France', 'France'), leader: tr('le roi Philippe VI', 'King Philip VI'), flag: 'ca_france', color: [30, 62, 168],
       playable: true, camp: 'france',
       capital: [2.35, 48.86, tr('Paris', 'Paris'), 'Paris'], capitalLevel: 3,
       cities: [[1.10, 49.44, tr('Rouen', 'Rouen'), 'Rouen'], [-0.37, 49.18, tr('Caen', 'Caen'), 'Caen'], [1.86, 50.95, tr('Calais', 'Calais'), 'Calais'],
@@ -948,7 +949,7 @@ const CENTANS = {
       desc: tr('Les terres d\'Empire, de la Hollande à la Provence : une mosaïque de princes qui regardent la guerre.', 'The lands of the Empire, from Holland to Provence: a mosaic of princes watching the war.'),
     },
     {
-      id: 'aragon', name: tr('Aragon', 'Aragon'), leader: tr('le roi Pierre IV', 'King Peter IV'), flag: 'b11', color: [232, 168, 64],
+      id: 'aragon', name: tr('Aragon', 'Aragon'), leader: tr('le roi Pierre IV', 'King Peter IV'), flag: 'b11', color: [232, 124, 36],
       defensive: true,
       capital: [-0.88, 41.65, tr('Saragosse', 'Zaragoza'), 'Saragosse'], capitalLevel: 3,
       cities: [[2.17, 41.39, tr('Barcelone', 'Barcelona'), 'Barcelone'], [-0.41, 42.14, tr('Huesca', 'Huesca'), 'Huesca'], [0.62, 41.62, tr('Lérida', 'Lleida'), 'Lérida'],
@@ -969,7 +970,7 @@ const CENTANS = {
       desc: tr('Le royaume de Castille, dont les galères pèseront lourd sur la mer.', 'The kingdom of Castile, whose galleys will weigh heavily at sea.'),
     },
     {
-      id: 'ecosse', name: tr('Écosse', 'Scotland'), leader: tr('le roi David II', 'King David II'), flag: 'b16', color: [96, 162, 214],
+      id: 'ecosse', name: tr('Écosse', 'Scotland'), leader: tr('le roi David II', 'King David II'), flag: 'ca_ecosse', color: [224, 170, 30],
       playable: true, camp: 'france',
       capital: [-3.19, 55.95, tr('Édimbourg', 'Edinburgh'), 'Édimbourg'],
       cities: [[-3.94, 56.12, tr('Stirling', 'Stirling'), 'Stirling'], [-3.43, 56.40, tr('Perth', 'Perth'), 'Perth'], [-2.10, 57.15, tr('Aberdeen', 'Aberdeen'), 'Aberdeen'],
@@ -997,8 +998,9 @@ const CENTANS = {
   ],
 };
 
-// Les bannières des factions (en attendant leurs vraies bannières : un des drapeaux du jeu, avec la couleur du royaume)
+// Les bannières des factions (leur vraie bannière, ou en attendant un des drapeaux du jeu, avec la couleur du royaume)
+// (une vraie bannière est un gonfanon : il pend sous sa traverse, la hampe au milieu de l'image : foot = 0.5)
 for (const f of CENTANS.factions) {
-  BANNERS.push({ id: f.id, name: f.name, kingdom: f.name, set: 'centans', color: f.color,
+  BANNERS.push({ id: f.id, name: f.name, kingdom: f.name, set: 'centans', color: f.color, foot: f.flag.startsWith('ca_') ? 0.5 : undefined,
     img: `img/bannieres/${f.flag}.webp`, icon: `img/bannieres/${f.flag}s.webp`, logo: `img/bannieres/${f.flag}m.webp` });
 }
