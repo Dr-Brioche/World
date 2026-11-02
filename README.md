@@ -295,7 +295,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
          Légitimité ;
        - 🦄 **Écosse** : Édimbourg, Stirling et Perth, Berwick, Carlisle et Newcastle, York, que Paris reste au roi de
          France (l'Auld Alliance), et de la Légitimité.
-     Les bannières des factions sont provisoires (des drapeaux du jeu, à leurs couleurs). Les données du scénario
+     Les 5 factions jouables (France, Angleterre, Bourgogne, Bretagne, Écosse) ont leur **vraie bannière** (un gonfanon à
+     leurs armoiries de 1337, avec la couleur du royaume assortie) ; les autres ont encore une bannière provisoire (un
+     drapeau du jeu, à leurs couleurs). Les données du scénario
      (factions, objectifs, réglages, textes des parchemins) sont dans `js/centans.js`, ses règles dans `js/centansrules.js`,
      et sa carte dans `js/europemap.js` (`generateCentAnsMap`).
    ⭐ **Les défis des campagnes** (Charlemagne et la guerre de Cent Ans) : **chaque faction jouable** (les 11 de
@@ -1047,6 +1049,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.179** : 🏳️ guerre de Cent Ans : les 5 factions jouables ont leur **vraie bannière** (France : fleurs de lys ; Angleterre : trois léopards ; Bourgogne : écartelé de France et de Bourgogne ; Bretagne : hermines ; Écosse : lion rouge), et leur couleur suit leur drapeau (Bourgogne en bordeaux, Écosse en or ; Aragon passe à l'orange et Avignon au rose pour rester bien distincts)
 - **v0.92.178** : ⚓ le rendement décroissant (plus on a de moulins et de ports, moins chacun rapporte) ne touche plus que l'or de base d'un port, pas ses bonus de routes et de moulins : un port royal relié à une ville et à 16 moulins passe d'environ 19 à 40 pièces toutes les 10 s (avant, ses moulins lui coûtaient plus qu'ils ne lui rapportaient)
 - **v0.92.177** : ⚓ plus de limite de 6 moulins pour le bonus du port : +15 % pour chacun des 5 premiers, puis de moins en moins jusqu'au 20e moulin (+1 %), et +1 % pour chaque moulin suivant (10 moulins : +136 % ; 20 : +188 %)
 - **v0.92.176** : ⚓ le bonus des moulins du port (+15 % par moulin) compte aussi les moulins bâtis **dans la zone du port** et **dans celle des églises reliées** à ses villes ou à sa route
