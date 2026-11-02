@@ -165,6 +165,7 @@ const UI = {
       const fac = this.factionMode() || ['charlemagne', 'centans'].includes($('mapType').value); // (un scénario : rivaux et pactes imposés)
       $('opponents').disabled = fac;
       $('pacts').disabled = fac;
+      $('spawnMode').disabled = fac; // (un scénario : chacun commence à sa capitale historique)
       fillBanners();
     };
     $('mapType').addEventListener('change', modeChange);
@@ -411,6 +412,8 @@ const UI = {
     $('hud').classList.remove('hidden');
     $('hint').textContent = tr('👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale',
       '👑 The rival kingdoms are already settled: click on free land to found your capital');
+    // 🎲 Placement de la capitale « Aléatoire » (menu, en solo) : le jeu la fonde tout de suite, à une place au hasard
+    if (Game.phase === 'spawn' && !Game.online && $('spawnMode').value === 'aleatoire') this.randomSpawn();
     // Mode « Factions » : chacun est déjà à sa capitale ; la partie attend en pause que le joueur se repère
     if (Game.factions) {
       const h = Game.human, place = AZEROTH_CAPITALS[BANNERS[h.banner].id].place;
@@ -455,6 +458,23 @@ const UI = {
       if (f.id === 'angleterre') this.parchment(CENTANS.ENGLAND_EVENTS.intro); // (🦁 sa campagne à lui)
       Game.offerVow(); // (🙏 le vœu solennel : jurer un des défis de sa faction, voir defis.js)
     }
+  },
+
+  // 🎲 Fonde la capitale du joueur à une place au hasard (une terre libre où il pourrait la fonder lui-même, voir
+  // spawnError), et y centre la caméra. Sans place possible (rare), on le laisse choisir en cliquant.
+  randomSpawn() {
+    const G = Game;
+    for (let tries = 0; tries < 20000; tries++) {
+      const i = (G.rand() * G.N) | 0;
+      if (G.spawnError(i)) continue;
+      G.startGame(i);
+      const half = G.sizeOf(B_CASTLE) / 2, c = G.human.capital;
+      Render.centerOn(c % G.W + half, ((c / G.W) | 0) + half);
+      this.log(tr('🎲 Ta capitale a été fondée au hasard ! Clique sur les terres voisines pour t\'étendre.',
+        '🎲 Your capital was founded in a random spot! Click on neighbouring lands to expand.'), 'good');
+      return true;
+    }
+    return false;
   },
 
   // ⬆️ La souris d'amélioration (touche U) : un clic sur un de ses bâtiments l'améliore directement, sans passer par

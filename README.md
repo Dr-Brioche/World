@@ -44,6 +44,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible) ; une petite bulle
    près de la souris indique la **défense** qu'aurait ta capitale à cet endroit (terrain + murs).
+   🎲 **Placement de la capitale** (menu) : **Libre** (tu cliques où tu veux, comme ci-dessus) ou **Aléatoire** (le jeu la
+   fonde tout de suite pour toi, à une place au hasard où tu aurais pu la fonder ; grisé dans les scénarios).
    🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
    montagnes ; réglages `FOREST_LEVEL`, `HILLS_LEVEL` et `MOUNTAIN_LEVEL` dans `js/config.js`) :
    - **Normale** : un grand continent entouré d'océan, à la côte découpée de **criques** (une entrée étroite sur un petit bassin)
@@ -1049,6 +1051,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.182** : 🎲 nouveau réglage au menu, **Placement de la capitale** : **Libre** (comme avant) ou **Aléatoire** (le jeu fonde ta capitale tout de suite, à une place au hasard)
 - **v0.92.181** : 🛡️ en cherchant où fonder sa capitale, une bulle près de la souris affiche la **défense** qu'elle aurait à cet endroit (terrain + murs)
 - **v0.92.180** : 🏳️ guerre de Cent Ans : les 8 autres factions ont aussi leur **vraie bannière** (Avignon : clés et tiare ; Navarre : chaînes d'or ; Flandre : lion noir ; Saint-Empire : aigle bicéphale ; Aragon : pals d'or et de gueules ; Castille : châteaux et lions ; Irlande : harpe ; Grandes Compagnies : tête de mort et épées), et leur couleur suit leur drapeau (Avignon violet, Navarre vert, Saint-Empire anthracite, Castille rose, Irlande bleu ciel, Grandes Compagnies rouille)
 - **v0.92.179** : 🏳️ guerre de Cent Ans : les 5 factions jouables ont leur **vraie bannière** (France : fleurs de lys ; Angleterre : trois léopards ; Bourgogne : écartelé de France et de Bourgogne ; Bretagne : hermines ; Écosse : lion rouge), et leur couleur suit leur drapeau (Bourgogne en bordeaux, Écosse en or ; Aragon passe à l'orange et Avignon au rose pour rester bien distincts)
