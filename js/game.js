@@ -2548,7 +2548,7 @@ const GameRules = {
     const eff = !owner ? 1 : t === B_BARRACKS ? this.barracksEfficiency(owner) : this.goldEfficiency(owner);
     const v = (t === B_MILL || t === B_PORT ? info.gold : info.troops) * eff;
     const road = this.roads().get(a);
-    const mills = road && road.mills ? road.mills * CONFIG.PORT_MILL_BONUS : 0; // (port : les moulins de ses villes)
+    const mills = road && road.mills ? this.portMillBonus(road.mills) : 0; // (port : les moulins de ses villes)
     return v * (1 + (road ? road.bonus : 0) + mills) * this.terrainFactor(a, t);
   },
 
@@ -2641,10 +2641,10 @@ const GameRules = {
     }
     // Le port exporte le grain des moulins de ses villes : chaque moulin dans la muraille d'une ville du port (de
     // n'importe quel niveau, même un fort en bois), dans la zone du port lui-même, ou dans celle d'une église reliée
-    // à ces villes ou à la route du port, lui rapporte PORT_MILL_BONUS d'or en plus (PORT_MILL_MAX au plus)
+    // à ces villes ou à la route du port, lui rapporte de l'or en plus (voir portMillBonus)
     for (const [a, link] of links) {
       if (this.building[a] !== B_PORT) continue;
-      link.mills = Math.min(this.portMills(this.owner[a], this.linkRoads(link).map(([c]) => c), a), CONFIG.PORT_MILL_MAX);
+      link.mills = this.portMills(this.owner[a], this.linkRoads(link).map(([c]) => c), a);
     }
     // Un moulin ou une caserne hors des villes, posé sur une de ces routes (ou juste à côté) : +MILL_ROAD_BONUS
     for (const a of this.buildingTiles) {
@@ -2681,10 +2681,20 @@ const GameRules = {
     return best;
   },
 
+  // 🌾 Bonus d'or d'un port pour n moulins (0.75 = +75 %) : PORT_MILL_BONUS pour chacun des PORT_MILL_FULL premiers,
+  // puis le bonus de chaque nouveau moulin baisse en ligne droite jusqu'à PORT_MILL_MIN au PORT_MILL_FADE-ième,
+  // et chaque moulin suivant ajoute encore PORT_MILL_MIN (voir config.js)
+  portMillBonus(n) {
+    const full = CONFIG.PORT_MILL_FULL, fade = CONFIG.PORT_MILL_FADE, hi = CONFIG.PORT_MILL_BONUS, lo = CONFIG.PORT_MILL_MIN;
+    let sum = 0;
+    for (let k = 1; k <= n; k++) sum += k <= full ? hi : k >= fade ? lo : hi - (hi - lo) * (k - full) / (fade - full);
+    return sum;
+  },
+
   // 🌾 Nombre de moulins de pid dont un port relié à ces villes (cities : leurs châteaux) exporte le grain : ceux dans
   // la muraille d'une de ces villes (quel que soit son niveau), dans la zone du port lui-même (port : -1 s'il n'est pas
   // encore bâti), ou dans la zone d'une église reliée à une de ces villes ou à la route du port (voir churchLinks).
-  // Chaque moulin compte une fois. (voir roads et PORT_MILL_BONUS)
+  // Chaque moulin compte une fois. (voir roads et portMillBonus)
   portMills(pid, cities, port = -1) {
     if (!cities.length) return 0;
     const zones = [];
