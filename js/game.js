@@ -2546,10 +2546,15 @@ const GameRules = {
         * this.terrainFactor(a, B_CHURCH) * this.relicGoldFactor(a); // (📿 ses reliques : voir reliques.js)
     }
     const eff = !owner ? 1 : t === B_BARRACKS ? this.barracksEfficiency(owner) : this.goldEfficiency(owner);
-    const v = (t === B_MILL || t === B_PORT ? info.gold : info.troops) * eff;
-    const road = this.roads().get(a);
-    const mills = road && road.mills ? this.portMillBonus(road.mills) : 0; // (port : les moulins de ses villes)
-    return v * (1 + (road ? road.bonus : 0) + mills) * this.terrainFactor(a, t);
+    const road = this.roads().get(a), bonus = road ? road.bonus : 0;
+    if (t === B_PORT) {
+      // Le port : le rendement décroissant ne touche que son or de base, pas ses bonus (routes et moulins de ses villes),
+      // sinon ses moulins lui coûteraient plus (en rendement) qu'ils ne lui rapportent
+      const mills = road && road.mills ? this.portMillBonus(road.mills) : 0;
+      return info.gold * (eff + bonus + mills) * this.terrainFactor(a, t);
+    }
+    const v = (t === B_MILL ? info.gold : info.troops) * eff;
+    return v * (1 + bonus) * this.terrainFactor(a, t);
   },
 
   // Rendement des casernes d'un royaume : plus il en a, moins chacune produit (voir BARRACKS_DIMINISHING)

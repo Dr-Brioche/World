@@ -152,6 +152,7 @@ const CONFIG = {
   GOLD_PER_TILE: 0.0002,
   // Rendement décroissant : plus un royaume a de moulins et de ports, moins chacun rapporte
   // (rendement = 1 / (1 + 0.1 × (nombre - 1)) : 1 → 100 %, 3 → 83 %, 6 → 67 %, 12 → 48 %).
+  // (pour un port, il ne touche que son or de base, pas ses bonus de routes et de moulins)
   // Le début de partie ne change pas, mais l'économie ne s'emballe plus.
   GOLD_DIMINISHING: 0.1,
   // Solde des troupes : garder trop de soldats coûte de l'or. Au-delà de UPKEEP_FROM de l'armée maximum
