@@ -840,7 +840,7 @@ const CENTANS = {
   // Les factions de 1337 (l'ordre compte : une case va à la première dont un contour la contient)
   factions: [
     {
-      id: 'avignon', name: tr('Papauté d\'Avignon', 'Papacy of Avignon'), leader: tr('le pape Benoît XII', 'Pope Benedict XII'), flag: 'b20', color: [214, 96, 160],
+      id: 'avignon', name: tr('Papauté d\'Avignon', 'Papacy of Avignon'), leader: tr('le pape Benoît XII', 'Pope Benedict XII'), flag: 'ca_avignon', color: [120, 50, 160],
       defensive: true, noArmy: true, production: true, garrison: 3,
       capital: [4.81, 43.95, tr('Avignon', 'Avignon'), 'Avignon'], capitalLevel: 3, cities: [], churches: [],
       // le Comtat Venaissin
@@ -848,7 +848,7 @@ const CENTANS = {
       desc: tr('Le pape, installé à Avignon, sert de médiateur entre les deux rois.', 'The pope, settled at Avignon, mediates between the two kings.'),
     },
     {
-      id: 'navarre', name: tr('Navarre', 'Navarre'), leader: tr('la reine Jeanne II', 'Queen Joan II'), flag: 'b15', color: [40, 150, 150],
+      id: 'navarre', name: tr('Navarre', 'Navarre'), leader: tr('la reine Jeanne II', 'Queen Joan II'), flag: 'ca_navarre', color: [36, 120, 66],
       vassal: true, legit: 0,
       capital: [-1.64, 42.81, tr('Pampelune', 'Pamplona'), 'Pampelune'], cities: [[-1.60, 42.06, tr('Tudela', 'Tudela'), 'Tudela'], [1.15, 49.02, tr('Évreux', 'Évreux'), 'Évreux']],
       churches: [[-1.32, 43.01, tr('Roncevaux', 'Roncevaux'), 'Roncevaux']],
@@ -858,7 +858,7 @@ const CENTANS = {
       desc: tr('Le petit royaume pyrénéen, qui tient aussi le comté d\'Évreux en Normandie.', 'The small Pyrenean kingdom, which also holds the county of Évreux in Normandy.'),
     },
     {
-      id: 'flandre', name: tr('Flandre', 'Flanders'), leader: tr('le comte Louis de Nevers', 'Count Louis of Nevers'), flag: 'b12', color: [238, 206, 48],
+      id: 'flandre', name: tr('Flandre', 'Flanders'), leader: tr('le comte Louis de Nevers', 'Count Louis of Nevers'), flag: 'ca_flandre', color: [240, 210, 40],
       vassal: true, legit: 35, production: true,
       capital: [3.72, 51.05, tr('Gand', 'Ghent'), 'Gand'], capitalLevel: 3,
       cities: [[3.22, 51.21, tr('Bruges', 'Bruges'), 'Bruges'], [2.89, 50.85, tr('Ypres', 'Ypres'), 'Ypres'], [2.38, 51.03, tr('Dunkerque', 'Dunkirk'), 'Dunkerque']],
@@ -934,7 +934,7 @@ const CENTANS = {
         'You are Philip VI of Valois, King of France. Edward III of England disputes your crown: defend the kingdom, win over your great vassals, and drive the English out of France!'),
     },
     {
-      id: 'empire', name: tr('Saint-Empire', 'Holy Roman Empire'), leader: tr('l\'empereur Louis IV', 'Emperor Louis IV'), flag: 'b10', color: [124, 124, 132],
+      id: 'empire', name: tr('Saint-Empire', 'Holy Roman Empire'), leader: tr('l\'empereur Louis IV', 'Emperor Louis IV'), flag: 'ca_empire', color: [72, 68, 76],
       defensive: true, production: true,
       capital: [6.08, 50.78, tr('Aix-la-Chapelle', 'Aachen'), 'Aix-la-Chapelle'], capitalLevel: 3,
       cities: [[4.35, 50.85, tr('Bruxelles', 'Brussels'), 'Bruxelles'], [5.57, 50.63, tr('Liège', 'Liège'), 'Liège'], [6.18, 49.12, tr('Metz', 'Metz'), 'Metz'],
@@ -949,7 +949,7 @@ const CENTANS = {
       desc: tr('Les terres d\'Empire, de la Hollande à la Provence : une mosaïque de princes qui regardent la guerre.', 'The lands of the Empire, from Holland to Provence: a mosaic of princes watching the war.'),
     },
     {
-      id: 'aragon', name: tr('Aragon', 'Aragon'), leader: tr('le roi Pierre IV', 'King Peter IV'), flag: 'b11', color: [232, 124, 36],
+      id: 'aragon', name: tr('Aragon', 'Aragon'), leader: tr('le roi Pierre IV', 'King Peter IV'), flag: 'ca_aragon', color: [232, 124, 36],
       defensive: true,
       capital: [-0.88, 41.65, tr('Saragosse', 'Zaragoza'), 'Saragosse'], capitalLevel: 3,
       cities: [[2.17, 41.39, tr('Barcelone', 'Barcelona'), 'Barcelone'], [-0.41, 42.14, tr('Huesca', 'Huesca'), 'Huesca'], [0.62, 41.62, tr('Lérida', 'Lleida'), 'Lérida'],
@@ -959,7 +959,7 @@ const CENTANS = {
       desc: tr('La couronne d\'Aragon, puissance de la Méditerranée.', 'The Crown of Aragon, a Mediterranean power.'),
     },
     {
-      id: 'castille', name: tr('Castille', 'Castile'), leader: tr('le roi Alphonse XI', 'King Alfonso XI'), flag: 'b13', color: [150, 96, 52],
+      id: 'castille', name: tr('Castille', 'Castile'), leader: tr('le roi Alphonse XI', 'King Alfonso XI'), flag: 'ca_castille', color: [222, 110, 120],
       defensive: true,
       capital: [-3.70, 42.34, tr('Burgos', 'Burgos'), 'Burgos'], capitalLevel: 3,
       cities: [[-5.57, 42.60, tr('León', 'León'), 'León'], [-4.72, 41.65, tr('Valladolid', 'Valladolid'), 'Valladolid'], [-3.81, 43.46, tr('Santander', 'Santander'), 'Santander'],
@@ -981,7 +981,7 @@ const CENTANS = {
       desc: tr('Le royaume d\'Écosse, vieil allié de la France contre l\'Angleterre : l\'Auld Alliance.', 'The kingdom of Scotland, France\'s old ally against England: the Auld Alliance.'),
     },
     {
-      id: 'irlande', name: tr('Clans irlandais', 'Irish clans'), leader: tr('les rois gaéliques', 'the Gaelic kings'), flag: 'b05', color: [74, 150, 70],
+      id: 'irlande', name: tr('Clans irlandais', 'Irish clans'), leader: tr('les rois gaéliques', 'the Gaelic kings'), flag: 'ca_irlande', color: [96, 170, 220],
       defensive: true,
       capital: [-6.77, 54.50, tr('Dungannon', 'Dungannon'), 'Dungannon'],
       cities: [[-8.63, 52.66, tr('Limerick', 'Limerick'), 'Limerick'], [-9.05, 53.27, tr('Galway', 'Galway'), 'Galway'], [-8.47, 54.27, tr('Sligo', 'Sligo'), 'Sligo']],
@@ -991,7 +991,7 @@ const CENTANS = {
     },
     {
       // 🗡️ Les Grandes Compagnies : des routiers sans terres, qui surgissent ici ou là pour piller (voir COMPAGNIES)
-      id: 'compagnies', name: tr('Grandes Compagnies', 'Great Companies'), leader: tr('les capitaines routiers', 'the mercenary captains'), flag: 'b17', color: [70, 60, 52],
+      id: 'compagnies', name: tr('Grandes Compagnies', 'Great Companies'), leader: tr('les capitaines routiers', 'the mercenary captains'), flag: 'ca_compagnies', color: [168, 78, 30], foot: 0.07,
       raiders: true, landless: true, noArmy: true, capital: null, cities: [], churches: [], lands: [],
       desc: tr('Des bandes de routiers sans solde, qui pillent le pays.', 'Bands of unpaid mercenaries who plunder the land.'),
     },
@@ -999,8 +999,9 @@ const CENTANS = {
 };
 
 // Les bannières des factions (leur vraie bannière, ou en attendant un des drapeaux du jeu, avec la couleur du royaume)
-// (une vraie bannière est un gonfanon : il pend sous sa traverse, la hampe au milieu de l'image : foot = 0.5)
+// (une vraie bannière est un gonfanon : il pend sous sa traverse, la hampe au milieu de l'image : foot = 0.5 ;
+// une faction peut préciser foot, si sa hampe est ailleurs : celle des Grandes Compagnies est à gauche)
 for (const f of CENTANS.factions) {
-  BANNERS.push({ id: f.id, name: f.name, kingdom: f.name, set: 'centans', color: f.color, foot: f.flag.startsWith('ca_') ? 0.5 : undefined,
+  BANNERS.push({ id: f.id, name: f.name, kingdom: f.name, set: 'centans', color: f.color, foot: f.foot ?? (f.flag.startsWith('ca_') ? 0.5 : undefined),
     img: `img/bannieres/${f.flag}.webp`, icon: `img/bannieres/${f.flag}s.webp`, logo: `img/bannieres/${f.flag}m.webp` });
 }
