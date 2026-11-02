@@ -557,6 +557,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **Rendement décroissant** : plus ton royaume a de moulins et de ports, moins chacun rapporte
      (3 → 83 % chacun, 6 → 67 %, 12 → environ la moitié). Les premiers rapportent bien, mais on ne devient pas
      riche trop vite en en accumulant (le survol d'un moulin montre son rendement).
+     Pour un **port**, cette baisse ne touche que son or de base : ses bonus (routes et moulins de ses villes) restent entiers.
 
    - ⚔️ **Caserne** : **toutes les 10 secondes**, elle forme quelques soldats (`+3 ⚔️` au-dessus d'elle),
      et elle agrandit ton armée maximum. **Clique dessus pour l'améliorer** (menu rapide) (3 niveaux) :
@@ -1046,6 +1047,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.92.178** : ⚓ le rendement décroissant (plus on a de moulins et de ports, moins chacun rapporte) ne touche plus que l'or de base d'un port, pas ses bonus de routes et de moulins : un port royal relié à une ville et à 16 moulins passe d'environ 19 à 40 pièces toutes les 10 s (avant, ses moulins lui coûtaient plus qu'ils ne lui rapportaient)
 - **v0.92.177** : ⚓ plus de limite de 6 moulins pour le bonus du port : +15 % pour chacun des 5 premiers, puis de moins en moins jusqu'au 20e moulin (+1 %), et +1 % pour chaque moulin suivant (10 moulins : +136 % ; 20 : +188 %)
 - **v0.92.176** : ⚓ le bonus des moulins du port (+15 % par moulin) compte aussi les moulins bâtis **dans la zone du port** et **dans celle des églises reliées** à ses villes ou à sa route
 - **v0.92.175** : 🐞 correctif ⚓ : les **moulins d'une ville de niveau 1** (fort en bois) comptent enfin pour le bonus du port (+15 % par moulin) : avant, seuls ceux d'une ville de niveau 2 ou plus comptaient · le survol d'un port affiche ses villes reliées et ses moulins comptés, et la bulle de construction inclut ce bonus
