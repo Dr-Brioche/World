@@ -1682,11 +1682,19 @@ const GameRules = {
     return zone;
   },
 
-  // La case (x, y) est-elle à moins de R du centre du château (milieu de son carré) ?
-  inCastleRange(c, x, y, R) {
+  // La case (x, y) est-elle à moins de R du centre du château (milieu de son carré) ? (le disque, sans plus)
+  inDisc(c, x, y, R) {
     const half = (this.sizeOf(B_CASTLE) - 1) / 2;
     const dx = (c % this.W) + half - x, dy = ((c / this.W) | 0) + half - y;
     return dx * dx + dy * dy <= R * R;
+  },
+  // La case (x, y) est-elle dans la muraille (le rayon R) du château c ? ⛰️ Seulement si on la rejoint depuis la ville
+  // sans passer un sommet ni la mer (voir wallsReach) : une muraille ne s'étend jamais de l'autre côté d'une zone
+  // infranchissable (plus de bout de muraille coupé de sa ville, qu'aucune armée ne pourrait assiéger).
+  inCastleRange(c, x, y, R) {
+    if (!this.inDisc(c, x, y, R)) return false;
+    if (this.building[c] !== B_CASTLE) return true;
+    return this.wallsReach(c, R).has(Math.floor(y) * this.W + Math.floor(x));
   },
 
   // Défense d'une case = celle du terrain, + le bonus du meilleur château qui la protège
@@ -4238,9 +4246,11 @@ const GameRules = {
   // sommet (ou la mer) : le vrai « pied du mur ». Une case du cercle de l'autre côté d'une montagne infranchissable
   // n'en est pas : une armée qui y arrive ne peut pas assiéger la ville de là, elle doit en faire le tour.
   // (gardé en mémoire tant que la carte ne change pas)
-  wallsReach(c) {
-    const memo = this.wallsReachMemo || (this.wallsReachMemo = new Map()), key = c + ':' + this.version, had = memo.get(c);
-    if (had && had.key === key) return had.set;
+  // (R : le rayon de sa muraille ; gardé en mémoire tant que son rayon et la carte ne changent pas : le relief ne
+  //  bouge pas quand les terres changent de mains)
+  wallsReach(c, R = this.castleInfo(c).radius) {
+    const memo = this.wallsReachMemo || (this.wallsReachMemo = new Map()), had = memo.get(c);
+    if (had && had.R === R && had.map === this.terrain) return had.set;
     const W = this.W, H = this.H, set = new Set(), queue = this.footprint(c, B_CASTLE).slice();
     for (const t of queue) set.add(t);
     while (queue.length) {
@@ -4248,13 +4258,13 @@ const GameRules = {
       for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
         if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const n = ny * W + nx;
-        if (set.has(n) || !this.isLand(n) || !this.inCastleRange(c, nx, ny, this.castleInfo(c).radius)) continue;
+        if (set.has(n) || !this.isLand(n) || !this.inDisc(c, nx, ny, R)) continue;
         set.add(n);
         queue.push(n);
       }
     }
-    if (memo.size > 64) memo.clear();
-    memo.set(c, { key, set });
+    if (memo.size > 4096) memo.clear();
+    memo.set(c, { R, map: this.terrain, set });
     return set;
   },
 
