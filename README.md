@@ -633,8 +633,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      d'autant plus fort que ton armée est **petite** : au plus fort quand elle est presque vide, encore 80 % de l'effet à 35 % de
      ton armée maximum ; puis l'effet tombe vite (plus rien à 65 %). Idéal pour se refaire après une grosse bataille.
      Et il **favorise les petits royaumes** : son effet dépend de ton armée maximum comparée à celle du **plus grand royaume**.
-     Un tout petit royaume recrute jusqu'à **x5** (armée vide), un royaume moitié moins grand que le plus grand environ x3,3,
-     et le plus grand **x1,6** au plus (réglages `LEVY_SMALL` et `LEVY_BIG`).
+     Un tout petit royaume recrute jusqu'à **x6** (armée vide), un royaume moitié moins grand que le plus grand environ x3,9,
+     et le plus grand **x1,75** au plus (réglages `LEVY_SMALL` et `LEVY_BIG`).
      Son bonus est **amplifié par la galvanisation** et **diminué par l'après-guerre** : il avantage la **défense** (un royaume
      galvanisé +50 % voit son bonus monter de moitié), bien plus que l'attaquant qui vient de gagner.
 
@@ -1129,6 +1129,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.18** : ⚔️ le **recrutement de masse** est un peu plus fort (+25 % de bonus) : jusqu'à **x6** pour un tout petit royaume (au lieu de x5), environ x3,9 pour un royaume moyen (au lieu de x3,3), **x1,75** pour le plus grand (au lieu de x1,6)
 - **v0.93.17** : 🔥 les **Vikings** sont **2 fois plus forts** (+100 % au lieu de +50 %), en plus des autres bonus de force (caserne, mines de fer, cité impériale)
 - **v0.93.16** : 🛡️ une armée de défense affiche ses **renforts en route** entre parenthèses (« 🛡 467 (+500) »), en marche comme au combat · ⛰️ un **grand fleuve** (franchissable à gué) ne coupe plus la muraille d'une ville : seuls les sommets, la mer et les lacs la coupent
 - **v0.93.15** : ⛰️ la muraille d'une ville ne s'étend plus **de l'autre côté d'un sommet ou de la mer** : un bout de muraille isolé derrière une montagne faisait échouer les assauts contre la ville (ils visaient un pied de mur qu'ils ne pouvaient pas atteindre)

@@ -220,16 +220,16 @@ const CONFIG = {
   CRUSADE_COST: 2500,
   // ⚔️ Recrutement de masse : une grande caserne (niveau 3) peut le lancer pour 3000 pièces : pendant 60 s, le royaume
   // recrute bien plus vite (un à la fois par royaume). Plus l'armée est petite, plus c'est fort : jusqu'à
-  // x(1 + LEVY_BOOST) quand l'armée est vide, encore x2,6 environ à LEVY_FROM (35 %) de l'armée maximum ; puis ça décroît
+  // x(1 + LEVY_BOOST) quand l'armée est vide, encore x3 environ à LEVY_FROM (35 %) de l'armée maximum ; puis ça décroît
   // vite, jusqu'à rien à LEVY_TO (65 %) : à plus de la moitié de l'armée maximum, il ne sert presque plus à rien.
   LEVY_COST: 3000,
   LEVY_TIME: 60,
-  LEVY_BOOST: 2,
+  LEVY_BOOST: 2.5,
   LEVY_FROM: 0.35,
   LEVY_TO: 0.65,
   // ... et il favorise les petits royaumes : son bonus est multiplié selon la taille de l'armée maximum du royaume,
-  // comparée à celle du plus grand : x LEVY_SMALL pour un tout petit royaume (jusqu'à x5 de recrutement, armée vide),
-  // x LEVY_BIG pour le plus grand (au plus x1,6), et entre les deux en proportion
+  // comparée à celle du plus grand : x LEVY_SMALL pour un tout petit royaume (jusqu'à x6 de recrutement, armée vide),
+  // x LEVY_BIG pour le plus grand (au plus x1,75), et entre les deux en proportion
   LEVY_SMALL: 2,
   LEVY_BIG: 0.3,
   // 🔥 Assaut viking (port royal, niveau 3) : on l'achète VIKING_COST pièces, il est alors prêt (un seul à la fois) ;
