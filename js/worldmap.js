@@ -350,58 +350,50 @@ const WORLD_DESERTS = [
 // latTop / latBottom = latitudes des bords haut et bas, wrap = la carte fait le tour du monde.
 const WORLD_PROJ = { lon0: WORLD_LON0, lonSpan: 360, latTop: WORLD_LAT_TOP, latBottom: WORLD_LAT_BOTTOM, wrap: true };
 
-// 🔍 Une projection peut agrandir une région (warp : { lon: [[de, à, fois], …], lat: [[de, à, fois], …] }) : entre
-// ces longitudes (ou latitudes), la carte est « fois » plus étirée, avec un passage en douceur sur WARP_EDGE degrés
-// de chaque côté (comme les cartes médiévales, qui mettaient Jérusalem en grand au centre du monde). Le reste de la
-// carte se resserre d'autant. La table (0 → 1 d'un bord à l'autre) est calculée une fois, au premier besoin.
-const WARP_EDGE = 0.8, WARP_STEP = 0.01;
-function warpTable(proj, axis) {
-  const key = '_warp_' + axis;
-  if (proj[key]) return proj[key];
-  const from = axis === 'lon' ? proj.lon0 : proj.latBottom, to = axis === 'lon' ? proj.lon0 + proj.lonSpan : proj.latTop;
-  const n = Math.ceil((to - from) / WARP_STEP), cum = new Float64Array(n + 1);
-  const density = v => {
-    let d = 1;
-    for (const [a, b, m] of proj.warp[axis] || []) {
-      const out = v < a ? a - v : v > b ? v - b : 0; // (à quelle distance de la bande)
-      if (out < WARP_EDGE) d += (m - 1) * (out === 0 ? 1 : 0.5 + 0.5 * Math.cos(Math.PI * out / WARP_EDGE));
-    }
-    return d;
-  };
-  for (let k = 0; k < n; k++) cum[k + 1] = cum[k] + density(from + (k + 0.5) * WARP_STEP);
-  for (let k = 0; k <= n; k++) cum[k] /= cum[n];
-  return (proj[key] = { from, n, cum });
+// 🔍 Une projection peut agrandir une région, comme à la loupe (loupe : { lon, lat, R, M }) : autour de ce point,
+// jusqu'à R degrés, la carte est agrandie (M fois au centre, de moins en moins en s'éloignant), comme les cartes du
+// Moyen Âge qui mettaient Jérusalem en grand au centre du monde. Au-delà de R, rien ne change : le reste de la carte
+// garde ses vraies proportions. (Un point à la distance r du centre est repoussé à r·k, avec k = 1 + (M - 1)(1 - r/R)² :
+// la loupe ne déchire jamais la carte tant que M < 4.)
+function loupeK(L, u) { return 1 + (L.M - 1) * (1 - u) * (1 - u); }
+// Les degrés « à plat » autour du centre de la loupe (une longitude vaut cos(latitude) degrés de latitude)
+function loupeFwd(L, lon, lat) {
+  const c = Math.cos(L.lat * Math.PI / 180), dx = (lon - L.lon) * c, dy = lat - L.lat, r = Math.hypot(dx, dy);
+  if (r >= L.R || r === 0) return [lon, lat];
+  const k = loupeK(L, r / L.R);
+  return [L.lon + dx * k / c, L.lat + dy * k];
 }
-// La part (0 → 1) de la carte avant cette longitude ou latitude, et l'inverse
-function warpFrac(proj, axis, v) {
-  const t = warpTable(proj, axis), u = (v - t.from) / WARP_STEP, k = Math.max(0, Math.min(t.n - 1, Math.floor(u)));
-  return t.cum[k] + (t.cum[k + 1] - t.cum[k]) * (u - k);
-}
-function warpValue(proj, axis, f) {
-  const t = warpTable(proj, axis), c = t.cum;
-  let lo = 0, hi = t.n;
-  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (c[mid] <= f) lo = mid; else hi = mid; }
-  return t.from + (lo + (f - c[lo]) / Math.max(1e-12, c[lo + 1] - c[lo])) * WARP_STEP;
+// … et l'inverse (on cherche la distance d'origine par dichotomie : la loupe ne fait que repousser les points)
+function loupeBack(L, lon, lat) {
+  const c = Math.cos(L.lat * Math.PI / 180), dx = (lon - L.lon) * c, dy = lat - L.lat, r2 = Math.hypot(dx, dy);
+  if (r2 >= L.R || r2 === 0) return [lon, lat];
+  let lo = 0, hi = r2;
+  for (let k = 0; k < 40; k++) { const mid = (lo + hi) / 2; if (mid * loupeK(L, mid / L.R) < r2) lo = mid; else hi = mid; }
+  const f = (lo + hi) / 2 / r2;
+  return [L.lon + dx * f / c, L.lat + dy * f];
 }
 
 // longitude / latitude → coordonnées sur la carte (en cases, nombres à virgule)
+// (avec une loupe, il faut les deux à la fois : voir geoXY)
 function geoX(proj, lon, W) {
-  if (proj.warp) return warpFrac(proj, 'lon', lon) * W;
   let d = lon - proj.lon0;
   if (proj.wrap) d = (d % 360 + 360) % 360;
   return d / proj.lonSpan * W;
 }
-function geoY(proj, lat, H) {
-  if (proj.warp) return (1 - warpFrac(proj, 'lat', lat)) * H;
-  return (proj.latTop - lat) / (proj.latTop - proj.latBottom) * H;
+function geoY(proj, lat, H) { return (proj.latTop - lat) / (proj.latTop - proj.latBottom) * H; }
+function geoXY(proj, lon, lat, W, H) {
+  if (proj.loupe) [lon, lat] = loupeFwd(proj.loupe, lon, lat);
+  return [geoX(proj, lon, W), geoY(proj, lat, H)];
 }
 // … et l'inverse : la longitude et la latitude du milieu de la case (x, y)
-function geoLon(proj, x, W) { return proj.warp ? warpValue(proj, 'lon', (x + 0.5) / W) : proj.lon0 + (x + 0.5) / W * proj.lonSpan; }
-function geoLat(proj, y, H) { return proj.warp ? warpValue(proj, 'lat', 1 - (y + 0.5) / H) : proj.latTop - (y + 0.5) / H * (proj.latTop - proj.latBottom); }
-// Un tracé en cases. (Avec une projection agrandie, les longs segments sont d'abord coupés en petits morceaux, pour
-// qu'ils suivent la déformation au lieu de rester tout droits.)
+function geoLonLat(proj, x, y, W, H) {
+  const lon = proj.lon0 + (x + 0.5) / W * proj.lonSpan, lat = proj.latTop - (y + 0.5) / H * (proj.latTop - proj.latBottom);
+  return proj.loupe ? loupeBack(proj.loupe, lon, lat) : [lon, lat];
+}
+// Un tracé en cases. (Avec une loupe, les longs segments sont d'abord coupés en petits morceaux, pour qu'ils suivent
+// la déformation au lieu de rester tout droits.)
 function geoPoints(proj, line, W, H) {
-  if (proj.warp) {
+  if (proj.loupe) {
     const fine = [];
     for (let k = 0; k < line.length; k++) {
       const [a, b] = line[k], next = line[k + 1];
@@ -412,12 +404,12 @@ function geoPoints(proj, line, W, H) {
     }
     line = fine;
   }
-  return line.map(([lon, lat]) => [geoX(proj, lon, W), geoY(proj, lat, H)]);
+  return line.map(([lon, lat]) => geoXY(proj, lon, lat, W, H));
 }
 
 // Remplit un contour sur le masque (val = 1 pour une terre, 0 pour un lac), ligne par ligne
 function fillGeoPolygon(mask, W, H, poly, val, proj) {
-  const pts = geoPoints(proj, proj.warp ? poly.concat([poly[0]]) : poly, W, H); // (agrandie : le dernier côté aussi)
+  const pts = geoPoints(proj, proj.loupe ? poly.concat([poly[0]]) : poly, W, H); // (à la loupe : le dernier côté aussi)
   // (carte du monde : l'Eurasie déborde à droite au-delà de 180° : on garde ses x continus)
   if (proj.wrap) {
     for (let k = 1; k < pts.length; k++) {
@@ -582,7 +574,7 @@ function buildGeoMap(seed, W, H, geo) {
       continue;
     }
     if (terrain[i] !== TERRAIN.PLAINS) continue;
-    const lat = geoLat(P, y, H), lon = geoLon(P, x, W);
+    const [lon, lat] = geoLonLat(P, x, y, W, H);
     // (relief naturel : des bords de forêt plus fins, et des collines en petites taches, indépendantes des forêts)
     const f = geo.natural ? fbm(forestNoise, x / (8 * k), y / (8 * k), 4) : fbm(forestNoise, x / (10 * k), y / (10 * k), 3);
     const h = geo.natural ? fbm(reliefNoise, x / (4 * k) + 200, y / (4 * k) + 50, 3) : f;

@@ -28,8 +28,8 @@ const CONFIG = {
   CHARLEMAGNE_MAP_HEIGHT: 620,
   CENTANS_MAP_WIDTH: 600,  // taille de la carte du scénario « La guerre de Cent Ans » (la France et les îles Britanniques)
   CENTANS_MAP_HEIGHT: 780,
-  CROISADES_MAP_WIDTH: 980, // taille de la carte du scénario « Les Croisades » (de Londres à Bagdad, la Terre sainte agrandie)
-  CROISADES_MAP_HEIGHT: 460,
+  CROISADES_MAP_WIDTH: 860, // taille de la carte du scénario « Les Croisades » (de Londres à Bagdad, la Terre sainte agrandie)
+  CROISADES_MAP_HEIGHT: 544,
   MIN_OPPONENTS: 3,
   // Royaume coupé en deux sur un même continent : son plus grand morceau est son cœur. Un autre morceau tenu par
   // une ville (ou un port fortifié) et assez grand (au moins 25 % du plus grand) est aussi un cœur, à part entière :
@@ -442,6 +442,9 @@ const CONFIG = {
       enemyAssault: 'sons/assaut-ennemi.mp3', // un ennemi lance un assaut sur nous (ou des Vikings débarquent chez nous)
     },
     SOUND_GAP: 3,
+    // 🔁 Un son joué deux fois de suite : la deuxième fois DELAY secondes après la première, un peu plus aiguë
+    // (RATE : 1.08 = 8 % plus aiguë, et un peu plus rapide), et un peu moins forte (GAIN)
+    SOUND_ECHO: { build: { DELAY: 0.22, RATE: 1.08, GAIN: 0.85 } },
   },
 
   // --- 📿 Les reliques saintes (parties classiques seulement, pas les scénarios : voir reliques.js) ---

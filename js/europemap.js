@@ -356,10 +356,12 @@ function generateCentAnsMap(seed) {
 
 // ✝️ Carte du scénario « Les Croisades » (1187-1204) : de Londres à Bagdad, toute la chrétienté latine et l'Orient
 // (voir croisades.js). La Terre sainte y est agrandie, comme sur les cartes du Moyen Âge qui plaçaient Jérusalem au
-// centre du monde (warp, voir geoX) : sans ça, Tyr, Acre et Jérusalem tiendraient en quelques cases.
-const CROISADES_PROJ = { lon0: -6, lonSpan: 54, latTop: 52.6, latBottom: 29, wrap: false,
-  warp: { lon: [[34.3, 36.6, 3.4]], lat: [[31.7, 33.4, 2.6], [34.2, 35.8, 1.3]] } };
-// (seules les latitudes de la Terre sainte sont très étirées : la Méditerranée garde à peu près sa largeur)
+// centre du monde (une loupe, voir loupeFwd) : sans ça, Tyr, Acre et Jérusalem tiendraient en quelques cases. Le reste
+// de la carte garde ses vraies proportions.
+// (la loupe : centrée sur la Galilée, 2,8 fois plus grande au centre, de moins en moins jusqu'à 11 degrés autour :
+//  large, pour que la déformation se répartisse sur la mer et le désert ; voir loupeFwd)
+const CROISADES_PROJ = { lon0: -6, lonSpan: 54, latTop: 52.6, latBottom: 27, wrap: false,
+  loupe: { lon: 35.6, lat: 33.2, R: 11, M: 2.8 } };
 // Les fleuves, lacs, déserts et reliefs de l'Orient des croisades, en plus de ceux de l'Europe
 const CROISADES_RIVERS = [
   [[[31.1, 29.0], [31.25, 29.8], [31.25, 30.1], [31.0, 30.6], [30.75, 31.0], [30.4, 31.45]], 2],   // Nil (branche de Rosette)
@@ -386,10 +388,10 @@ const CROISADES_LAKES = [
   [[35.42, 31.75], [35.58, 31.75], [35.6, 31.4], [35.5, 31.08], [35.4, 31.2]],                       // mer Morte
 ];
 const CROISADES_DESERTS = [
-  [[32.35, 31.05], [33.5, 31.15], [34.25, 31.3], [34.6, 31.15], [35.1, 30.8], [35.15, 29.0], [32.35, 29.0]], // Sinaï et Néguev
-  [[36.05, 32.2], [36.6, 32.0], [45.5, 32.0], [45.5, 29.0], [35.95, 29.0], [35.85, 30.6]],          // désert d'Arabie
-  [[29.9, 30.9], [30.6, 30.3], [31.0, 29.0], [26.0, 29.0], [26.0, 31.2]],                            // désert de Libye (à l'ouest du Delta)
-  [[31.6, 30.2], [32.3, 30.9], [32.35, 29.0], [31.3, 29.0]],                                        // désert arabique (à l'est du Nil)
+  [[32.35, 31.05], [33.5, 31.15], [34.25, 31.3], [34.6, 31.15], [35.1, 30.8], [35.15, 29.0], [34.3, 27.5], [32.35, 29.0]], // Sinaï et Néguev
+  [[36.05, 32.2], [36.6, 32.0], [45.5, 32.0], [48.5, 30.0], [48.5, 26.5], [36.2, 26.5], [35.95, 29.0], [35.85, 30.6]], // désert d'Arabie
+  [[29.9, 30.9], [30.6, 30.3], [31.0, 29.0], [30.9, 26.5], [26.0, 26.5], [26.0, 31.2]],              // désert de Libye (à l'ouest du Delta)
+  [[31.6, 30.2], [32.3, 30.9], [32.35, 29.0], [32.6, 26.5], [31.3, 26.5], [31.3, 29.0]],             // désert arabique (à l'est du Nil)
 ];
 const CROISADES_MOUNTAINS = [
   [5, false, [[36.2, 34.0], [36.0, 33.6], [35.8, 33.25]]],                                          // Anti-Liban
@@ -401,7 +403,7 @@ const CROISADES_MOUNTAINS = [
   [12, true, [[44.5, 37.5], [45.5, 36.2], [46.5, 35.0], [47.5, 33.8]]],                              // Zagros
 ];
 // (le nord de l'Arabie, jusqu'au bas de la carte : la carte d'Europe s'y arrête)
-const CROISADES_ARABIA = [[34.95, 29.55], [35.0, 29.0], [48.5, 29.0], [48.5, 31.0], [36.5, 31.0]];
+const CROISADES_ARABIA = [[34.95, 29.55], [35.0, 29.0], [35.6, 27.6], [36.2, 26.5], [48.5, 26.5], [48.5, 31.0], [36.5, 31.0]];
 // La carte : relief naturel, bord en montagne (comme les autres campagnes), forêts au nord des Alpes seulement
 function generateCroisadesMap(seed) {
   return buildGeoMap(seed, CONFIG.CROISADES_MAP_WIDTH, CONFIG.CROISADES_MAP_HEIGHT, {

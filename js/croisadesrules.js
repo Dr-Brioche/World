@@ -11,7 +11,7 @@ Object.assign(GameRules, {
   // --- Mise en place : l'Orient et l'Occident en juillet 1187 ---
   startCroisades(opts) {
     const C = CROISADES, W = this.W, H = this.H, P = CROISADES_PROJ;
-    const at = (lon, lat) => [geoX(P, lon, W), geoY(P, lat, H)];
+    const at = (lon, lat) => geoXY(P, lon, lat, W, H); // (avec la loupe de la Terre sainte : voir geoXY)
     this.pactsAllowed = false; // (pas d'autres pactes que ceux du scénario : la croisade, le pacte secret de Byzance…)
     const diff = C.RANSOM[opts.difficulty] ? opts.difficulty : 'normal';
     const cr = this.cr = { diff, role: {}, capital: {}, cities: new Map(), churches: new Map(), strong: new Map(), pact: {},
@@ -384,9 +384,10 @@ Object.assign(GameRules, {
   // 👑 Mars 1193 : la succession de Saladin. L'Égypte (à l'ouest de EGYPT_LON) passe à son fils al-Aziz
   crSuccession(ally) {
     const cr = this.cr, sal = this.crP('ayyoubides'), eg = this.crP('egypte'), W = this.W, lon = CROISADES.SUCCESSION.EGYPT_LON;
-    const cut = Math.floor(geoX(CROISADES_PROJ, lon, W));
     eg.dormant = false;
-    for (let i = 0; i < this.N; i++) if (this.owner[i] === sal.id && i % W < cut) this.setOwner(i, eg.id);
+    for (let i = 0; i < this.N; i++) {
+      if (this.owner[i] === sal.id && geoLonLat(CROISADES_PROJ, i % W, (i / W) | 0, W, this.H)[0] < lon) this.setOwner(i, eg.id);
+    }
     for (const [a, w] of this.works) if (w.pid === sal.id && this.owner[a] === eg.id) w.pid = eg.id;
     if (!eg.tiles) return this.eliminate(eg.id, -1, true);
     for (const c of this.castles) if (this.owner[c] === eg.id) { this.garrison[c] = this.garrisonMax(c); if (eg.capital < 0 || eg.capital === undefined) eg.capital = c; }

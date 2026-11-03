@@ -305,7 +305,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      et sa carte dans `js/europemap.js` (`generateCentAnsMap`).
    ✝️ **Scénario « Les Croisades (1187) »** (rubrique 📜 Scénarios) : 4 juillet 1187, aux Cornes de Hattin, Saladin
      anéantit l'armée du royaume de Jérusalem ; la Vraie Croix est perdue, Acre est tombée, Jérusalem va suivre.
-     La carte va **de Londres à Bagdad** (980 x 460 cases), et la **Terre sainte y est agrandie**, comme sur les cartes du
+     La carte va **de Londres à Bagdad** (860 x 544 cases), à ses vraies proportions, et la **Terre sainte y est agrandie à la loupe**, comme sur les cartes du
      Moyen Âge qui mettaient Jérusalem au centre du monde (sans ça, Tyr, Acre et Jérusalem tiendraient en quelques cases) ;
      la côte du Levant y est tracée en détail, avec le Jourdain, la mer Morte, l'Oronte, le Nil et le Saleph.
      **24 royaumes** sont en place (seulement les plus grandes villes, et des **lieux notables** posés comme des églises :
@@ -1094,6 +1094,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.3** : ✝️ Croisades : la carte retrouve ses **vraies proportions** (860 x 544 cases) : au lieu d'étirer des bandes entières, une **loupe ronde** agrandit seulement la Terre sainte (2,8 fois au centre, de moins en moins jusqu'à 11 degrés autour) · 🔨 le son de construction frappe **deux coups**, le second un peu plus aigu (réglage `SOUND_ECHO`)
 - **v0.93.2** : ✝️ Croisades : la Méditerranée est encore moins étirée en hauteur (carte de 980 x 460 cases) : elle a presque ses vraies proportions, et la Terre sainte reste agrandie
 - **v0.93.1** : ✝️ Croisades : la carte est plus large (950 x 480) et seules les latitudes de la Terre sainte restent très étirées : la Méditerranée retrouve des proportions naturelles · ⚖️ forces de 1187 plus fidèles : l'empire Plantagenêt est plus grand que le royaume de Philippe Auguste (Rennes et Limoges en plus pour l'Angleterre, Lyon rendue à l'Empire) · 🎯 objectifs revus : plus d'objectif déjà rempli au départ pour la France et l'Empire (une ville de niveau 4, même en facile), et Saladin doit prendre Tripoli et le Krak des Chevaliers (au lieu de garder ce qu'il tient déjà)
 - **v0.93.0** : ✝️ nouvelle campagne, **Les Croisades (1187-1204)** : de Londres à Bagdad, la Terre sainte agrandie au centre de la carte, 24 royaumes et 7 factions jouables (Saladin, Richard Cœur de Lion, Philippe Auguste, Barberousse, Byzance, Venise, et le royaume de Jérusalem, la faction la plus difficile), chacune avec ses objectifs et 4 défis ; 30 événements historiques en parchemins (Hattin, le siège de Tyr, Gisors, la noyade de Barberousse dans le Saleph, Chypre, Acre, Arsouf, Conrad assassiné, la paix de Jaffa, Richard captif, la mort de Saladin, la quatrième croisade et le sac de Constantinople) et trois choix ; la Vraie Croix (une relique à Damas), les Assassins à engager ou à payer (clic droit), la Croyance qui ne convertit qu'entre chrétiens et musulmans, les razzias des Coumans · ⏱️ grandes cartes plus rapides : la coupe d'un royaume ne redécoupe que ses terres, et les conversions de la Croyance sont regroupées
