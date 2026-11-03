@@ -139,7 +139,12 @@ Object.assign(GameRules, {
     if (!this.relicBuf || this.relicBuf.seen.length !== N)
       this.relicBuf = { dist: new Float64Array(N), prev: new Int32Array(N), seen: new Int32Array(N), stamp: 0 };
     const B = this.relicBuf, stamp = ++B.stamp, heap = new MinHeap(), cost = this.marchCost(pid);
-    const passable = i => this.isLand(i) && (own[i] < 0 || owners.has(own[i]));
+    // (🏰 chez un royaume qui n'est ni le sien ni un allié, l'armée ne traverse ni la muraille de ses villes ni ses murs :
+    //  elle en fait le tour, comme un assaut)
+    const walls = new Map();
+    for (const o of owners) if (o >= 0 && o !== pid && !this.areAllied(pid, o)) walls.set(o, this.castleWalls(o));
+    const passable = i => this.isLand(i) && (own[i] < 0 || (owners.has(own[i]) &&
+      !(walls.has(own[i]) && (walls.get(own[i])[i] || this.wallAt[i]))));
     B.seen[from] = stamp; B.dist[from] = 0; B.prev[from] = -1;
     heap.push(0, from);
     while (heap.size) {
@@ -234,7 +239,9 @@ Object.assign(GameRules, {
     const at = this.relicPos(t), start = this.relicHome(pid, at);
     if (start < 0) return tr('Tu n\'as aucune ville d\'où partir.', 'You have no city to set out from.');
     const r = { id: this.nextAttackId++, pid, troops, region: t.region, phase: 'chase', chase: id, relic: null };
-    r.route = this.walkRoute(pid, this.relicMid(start), at, troops, CONFIG.RELIC.SPEED, true);
+    // (par un vrai chemin : elle ne passe pas la muraille d'une ville ennemie, voir relicPath)
+    r.route = this.relicRoute(r, this.relicMid(start), new Set([Math.floor(at.y) * this.W + Math.floor(at.x)]), at, false);
+    if (!r.route) return tr('Ton armée ne peut pas atteindre cette armée à pied (elle est à l\'abri derrière une muraille ?).', 'Your army cannot reach that army on foot (is it safe behind city walls?).');
     r.reroute = 0;
     p.troops -= troops;
     this.relicRuns.push(r);
@@ -331,12 +338,14 @@ Object.assign(GameRules, {
       const C = CONFIG, me = this.relicPos(r), at = this.relicPos(t), d = Math.hypot(me.x - at.x, me.y - at.y);
       if (d <= C.DEFEND_CONTACT) return this.relicBattle(r, t);
       if (second) {
-        // (près d'elle : droit dessus ; plus loin : par les terres, trajet corrigé toutes les 3 secondes)
-        if (d <= C.DEFEND_DIRECT) r.route = this.walkRoute(r.pid, me, at, r.troops, C.RELIC.SPEED, true);
-        else if (this.tick >= r.reroute) {
+        // (par les terres, sans passer la muraille d'une ville ennemie : trajet corrigé toutes les secondes près d'elle,
+        //  toutes les 3 secondes plus loin ; plus de chemin jusqu'à elle : elle est à l'abri, l'armée rentre)
+        if (d <= C.DEFEND_DIRECT || this.tick >= r.reroute) {
           r.reroute = this.tick + 3 * TPS;
           const tt = Math.floor(at.y) * this.W + Math.floor(at.x);
-          r.route = this.relicRoute(r, me, new Set([tt]), at, false) || this.walkRoute(r.pid, me, at, r.troops, C.RELIC.SPEED, true);
+          const route = this.relicRoute(r, me, new Set([tt]), at, false);
+          if (!route) return this.relicGoHome(r, tr('📿 L\'armée que tu poursuis est hors d\'atteinte (derrière une muraille) : ton armée rentre.', '📿 The army you are chasing is out of reach (behind city walls): your army heads home.'));
+          r.route = route;
         }
       }
     }
@@ -362,15 +371,16 @@ Object.assign(GameRules, {
     for (const c of churches) for (const j of this.footprint(c, B_CHURCH)) goals.set(j, c);
     const ft = Math.floor(from.y) * this.W + Math.floor(from.x);
     const path = this.relicPath(r.pid, ft, new Set(goals.keys()), this.relicOwners(r, this.owner[ft]));
-    let church = path ? goals.get(path[path.length - 1]) : -1;
-    // (pas de chemin à pied jusqu'à une église : tout droit vers la plus proche)
-    if (church < 0) {
-      let bestD = Infinity;
-      for (const c of churches) { const m = this.relicMid(c), d = (m.x - from.x) ** 2 + (m.y - from.y) ** 2; if (d < bestD) { bestD = d; church = c; } }
+    // (pas de chemin à pied jusqu'à une église, sans passer de muraille ennemie : l'armée pose la relique et rentre)
+    if (!path) {
+      this.relicDrop(r, from);
+      this.relicGoHome(r, tr('📿 Ton armée ne trouve aucun chemin jusqu\'à ton église (des murailles ennemies lui barrent la route) : elle laisse la relique là et rentre.', '📿 Your army finds no way to your church (enemy city walls block it): it leaves the relic there and heads home.'));
+      return false;
     }
+    const church = goals.get(path[path.length - 1]);
     r.phase = 'carry';
     r.church = church;
-    r.route = this.walkRoute(r.pid, from, this.relicMid(church), r.troops, slow, !path, path);
+    r.route = this.walkRoute(r.pid, from, this.relicMid(church), r.troops, slow, false, path);
     return true;
   },
   // L'armée r pose sa relique (ou celle dont elle s'emparait) au point at : elle redevient une relique sur la carte
