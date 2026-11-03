@@ -20,8 +20,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
   avec 3 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**,
-  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, et **La guerre de Cent Ans (1337)** :
-  la France contre l'Angleterre, de Crécy à Jeanne d'Arc)
+  **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, **La guerre de Cent Ans (1337)** :
+  la France contre l'Angleterre, de Crécy à Jeanne d'Arc, et **Les Croisades (1187)** : de Londres à Bagdad, Saladin,
+  Richard Cœur de Lion et Barberousse, jusqu'au sac de Constantinople)
 - 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 21 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
@@ -302,8 +303,50 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Grandes Compagnies), et la couleur de son royaume est assortie à son drapeau. Les données du scénario
      (factions, objectifs, réglages, textes des parchemins) sont dans `js/centans.js`, ses règles dans `js/centansrules.js`,
      et sa carte dans `js/europemap.js` (`generateCentAnsMap`).
-   ⭐ **Les défis des campagnes** (Charlemagne et la guerre de Cent Ans) : **chaque faction jouable** (les 11 de
-     Charlemagne, les 5 de la guerre de Cent Ans) a **4 défis**, des objectifs en plus, historiques, drôles ou très durs.
+   ✝️ **Scénario « Les Croisades (1187) »** (rubrique 📜 Scénarios) : 4 juillet 1187, aux Cornes de Hattin, Saladin
+     anéantit l'armée du royaume de Jérusalem ; la Vraie Croix est perdue, Acre est tombée, Jérusalem va suivre.
+     La carte va **de Londres à Bagdad** (800 x 584 cases), et la **Terre sainte y est agrandie**, comme sur les cartes du
+     Moyen Âge qui mettaient Jérusalem au centre du monde (sans ça, Tyr, Acre et Jérusalem tiendraient en quelques cases) ;
+     la côte du Levant y est tracée en détail, avec le Jourdain, la mer Morte, l'Oronte, le Nil et le Saleph.
+     **24 royaumes** sont en place (seulement les plus grandes villes, et des **lieux notables** posés comme des églises :
+     les Cornes de Hattin, le Trésor de Damas, Tortose, Margat, Limassol, Vézelay, Fontevraud, Dürnstein, Séleucie…).
+     **7 factions jouables**, chacune avec ses **objectifs** (tous à remplir en même temps : la victoire) :
+       - ☪️ **Saladin** (les Ayyoubides) : Jérusalem, Tyr (qu'il n'a jamais prise), Acre, Antioche, unir Le Caire, Damas,
+         Alep et Mossoul, garder la Vraie Croix, et de la Croyance ;
+       - ✝️ le **royaume de Jérusalem** de Conrad de Montferrat, **la faction la plus difficile** (comme la Bavière de
+         Charlemagne) : il ne lui reste que Tyr, Jérusalem, Ascalon et le Krak de Moab, isolés. Que Tyr ne tombe jamais,
+         reprendre Acre, Jaffa et Jérusalem, et la Vraie Croix ;
+       - 🦁 l'**Angleterre** (Henri II, puis **Richard Cœur de Lion** en 1189) : Chypre, Acre, Jaffa, Jérusalem, sans perdre
+         Rouen ni Bordeaux ;
+       - ⚜️ la **France** de **Philippe Auguste** : Acre, puis la Normandie, le Poitou et l'Anjou des Plantagenêts ;
+       - 🦅 le **Saint-Empire** de **Barberousse** : Konya, Palerme (l'héritage de Sicile, 1194), Acre ;
+       - ☦️ **Byzance** (difficile) : que Constantinople ne tombe jamais, soumettre les Bulgares, reprendre Chypre, Konya et
+         Antioche ;
+       - 🦁 **Venise** : Zara, Constantinople et la Crète (la quatrième croisade), des ports et des ducats.
+     La partie va de **1187 à 1204** en environ **50 minutes** (la troisième croisade, jusqu'à la mort de Saladin, prend la
+     première moitié) ; l'année est en haut. Les grands événements arrivent à leur date, en **parchemins** (pour les
+     factions concernées) : Saladin assiège Jérusalem puis Tyr ; à Gisors, les rois **prennent la croix** et rejoignent
+     Outremer (un pacte éternel) avec la dîme saladine ; le roi Guy libéré assiège Acre ; Barberousse part de Ratisbonne
+     avec la plus grande armée d'Occident, prend Konya… et **se noie dans le Saleph**, sauf si l'Empire tient le gué de
+     **Séleucie** (il passe alors sur le pont, et ses soldats se battent mieux) ; Byzance s'allie en secret à Saladin (un
+     choix pour le joueur byzantin) ; l'hiver à Messine ; **Richard prend Chypre**, puis les rois débarquent devant Acre ;
+     **Philippe rentre en France** (un choix pour le joueur français) ; Arsouf ; les **Assassins tuent Conrad** (sauf s'il
+     leur paie tribut) ; la **paix de Jaffa** (une trêve) ; **Richard captif** en Autriche (sa rançon part chez l'Empereur) ;
+     la **mort de Saladin** (son héritage se partage : un choix pour le joueur) ; Henri VI conquiert la Sicile ; Isaac Ange
+     aveuglé ; la croisade allemande ; la mort de Richard à Châlus ; puis la **quatrième croisade** : Venise loue sa
+     flotte, prend **Zara** (excommuniée) et attaque **Constantinople** (1203, puis le sac d'avril 1204). Une faction bot
+     joue l'histoire (ses armées débarquent à la bonne date) ; le joueur, lui, reçoit les soldats et choisit où frapper.
+     Ce qui change : 📿 la **Vraie Croix** est une relique gardée au Trésor de Damas (+150 de Croyance à qui la tient) ;
+     ✝️ la Croyance ne convertit les terres qu'**entre chrétiens et musulmans** ; 🗡️ les **Assassins** du Vieux de la
+     Montagne : **clic droit** sur un royaume pour les **engager** contre lui (1 500 pièces : il perd un quart de ses soldats
+     et ne recrute plus pendant 45 s), ou sur leurs terres pour leur **payer tribut** (600 pièces : ils t'épargnent 5 min) ;
+     🦁 Richard, Saladin et Barberousse vivant rendent leurs soldats plus forts ; ⚔️ les **Coumans** des steppes razzient
+     leurs voisins ; 💰 Venise s'enrichit de ses comptoirs ; les royaumes lointains (Castille, Almohades, calife de
+     Bagdad, Géorgie, Pologne, Rus') se contentent de se défendre. Les données du scénario sont dans `js/croisades.js`,
+     ses règles dans `js/croisadesrules.js`, et sa carte dans `js/europemap.js` (`generateCroisadesMap`). Les bannières
+     sont provisoires (des drapeaux du jeu, aux couleurs des factions), en attendant les vraies.
+   ⭐ **Les défis des campagnes** (Charlemagne, la guerre de Cent Ans et les Croisades) : **chaque faction jouable** (les 11 de
+     Charlemagne, les 5 de la guerre de Cent Ans, les 7 des Croisades) a **4 défis**, des objectifs en plus, historiques, drôles ou très durs.
      Ils ne comptent pas pour la victoire, mais chacun rapporte sa **récompense** (de l'or, de la Croyance ou de la
      Légitimité) dès qu'il est réussi. Ils s'affichent sous les objectifs, dans le cadre en haut à gauche (✔ réussi,
      ✖ manqué : certains ont une limite de temps, d'autres se jouent dans la durée, comme « ne perdre aucune ville
@@ -1051,6 +1094,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.0** : ✝️ nouvelle campagne, **Les Croisades (1187-1204)** : de Londres à Bagdad, la Terre sainte agrandie au centre de la carte, 24 royaumes et 7 factions jouables (Saladin, Richard Cœur de Lion, Philippe Auguste, Barberousse, Byzance, Venise, et le royaume de Jérusalem, la faction la plus difficile), chacune avec ses objectifs et 4 défis ; 30 événements historiques en parchemins (Hattin, le siège de Tyr, Gisors, la noyade de Barberousse dans le Saleph, Chypre, Acre, Arsouf, Conrad assassiné, la paix de Jaffa, Richard captif, la mort de Saladin, la quatrième croisade et le sac de Constantinople) et trois choix ; la Vraie Croix (une relique à Damas), les Assassins à engager ou à payer (clic droit), la Croyance qui ne convertit qu'entre chrétiens et musulmans, les razzias des Coumans · ⏱️ grandes cartes plus rapides : la coupe d'un royaume ne redécoupe que ses terres, et les conversions de la Croyance sont regroupées
 - **v0.92.182** : 🎲 nouveau réglage au menu, **Placement de la capitale** : **Libre** (comme avant) ou **Aléatoire** (le jeu fonde ta capitale tout de suite, à une place au hasard)
 - **v0.92.181** : 🛡️ en cherchant où fonder sa capitale, une bulle près de la souris affiche la **défense** qu'elle aurait à cet endroit (terrain + murs)
 - **v0.92.180** : 🏳️ guerre de Cent Ans : les 8 autres factions ont aussi leur **vraie bannière** (Avignon : clés et tiare ; Navarre : chaînes d'or ; Flandre : lion noir ; Saint-Empire : aigle bicéphale ; Aragon : pals d'or et de gueules ; Castille : châteaux et lions ; Irlande : harpe ; Grandes Compagnies : tête de mort et épées), et leur couleur suit leur drapeau (Avignon violet, Navarre vert, Saint-Empire anthracite, Castille rose, Irlande bleu ciel, Grandes Compagnies rouille)
@@ -1459,8 +1503,9 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 - 🗼 Activer la tour de garde dans les parties (le bâtiment est prêt : `TOWERS` dans `js/config.js`)
 - 🌦️ Événements médiévaux dans les parties normales : famine, hivers rigoureux (la peste existe déjà dans la guerre de Cent Ans)
 - 👑 Héros ou rois avec des pouvoirs spéciaux dans les parties normales (comme Jeanne d'Arc et les rois de la guerre de Cent Ans)
-- ⚜️ Les vraies bannières des factions de la guerre de Cent Ans
-- 🌐 En ligne : les scénarios (Charlemagne, la guerre de Cent Ans, les Factions) à plusieurs, les cartes dessinées, et revenir dans sa partie après une coupure
+- ✝️ Les vraies bannières des factions des Croisades
+- 🏹 Une campagne des invasions mongoles (1206-1260), de la Chine à la Pologne
+- 🌐 En ligne : les scénarios (Charlemagne, la guerre de Cent Ans, les Croisades, les Factions) à plusieurs, les cartes dessinées, et revenir dans sa partie après une coupure
 
 ---
 
@@ -1481,6 +1526,7 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/game.js` | Règles : économie, attaques, victoire |
 | `js/charlemagne.js` | 👑 Le scénario « Charlemagne » : ses factions, objectifs, réglages et textes (ses règles sont dans `js/game.js`) |
 | `js/centans.js`, `js/centansrules.js` | ⚜️ Le scénario « La guerre de Cent Ans » : ses données (factions, objectifs, réglages, parchemins), puis ses règles |
+| `js/croisades.js`, `js/croisadesrules.js` | ✝️ Le scénario « Les Croisades » : ses données (factions, objectifs, réglages, parchemins), puis ses règles |
 | `js/defis.js` | ⭐ Les défis des campagnes et le vœu solennel (les défis de chaque faction sont dans `CHALLENGES`) |
 | `js/reliques.js` | 📿 Les reliques saintes des parties classiques : apparition, armées de relique, interception, bonus |
 | `js/ai.js` | Le cerveau des royaumes adverses |

@@ -21,7 +21,7 @@
 
 Object.assign(GameRules, {
   // Les reliques n'existent que dans les parties classiques (pas Charlemagne, la guerre de Cent Ans ni les Factions)
-  relicMode() { return !this.cm && !this.hy && !this.factions; },
+  relicMode() { return !this.cm && !this.hy && !this.cr && !this.factions; },
   relicReset() {
     this.relics = []; this.relicRuns = []; this.relicChurch = new Map();
     this.relicNext = -1; this.nextRelicId = 1;

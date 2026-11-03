@@ -1,4 +1,4 @@
-// ⭐ LES DÉFIS DES CAMPAGNES (Charlemagne, la guerre de Cent Ans)
+// ⭐ LES DÉFIS DES CAMPAGNES (Charlemagne, la guerre de Cent Ans, les Croisades)
 // Des objectifs secondaires, pour chaque faction jouable : historiques, drôles ou très difficiles. Ils ne comptent pas
 // pour la victoire, mais chacun rapporte une récompense (de l'or, de la Croyance ou de la Légitimité) dès qu'il est
 // réussi ; un défi réussi le reste, un défi manqué aussi. Les défis de chaque faction sont dans CHALLENGES
@@ -13,14 +13,15 @@
 //  - obj : un objectif du scénario (voir OBJECTIVES), comme { kind: 'noEnglish' } ;
 //  - king, joan (guerre de Cent Ans) : que le roi Jean ait été capturé, que Jeanne d'Arc ait été prise ;
 //  - noLoss : ne perdre aucune ville jusqu'à until (minutes) ou untilYear ; keep : garder ces lieux jusque-là ;
-//    noCapture : que le roi de France ne soit jamais capturé jusque-là.
+//    noCapture : que le roi de France (Richard, dans les Croisades) ne soit jamais capturé jusque-là ;
+//  - saleph, tribute (Croisades) : que Barberousse ne se soit pas noyé, avoir payé tribut aux Assassins.
 // before (minutes) ou byYear : le défi doit être réussi avant ce moment, sinon il est manqué.
 // 🙏 Le vœu : au début de la partie, un parchemin propose de jurer un des défis. Accompli, il rapporte VOW.MULT fois sa
 // récompense ; manqué (ou pas accompli avant VOW.MINUTES minutes, ou l'année VOW.YEAR), il coûte VOW.PENALTY_GOLD pièces
 // et VOW.PENALTY_FAITH de Croyance (de Légitimité).
 
 const DEFIS = {
-  VOW: { MULT: 2, MINUTES: 30, YEAR: 1420, PENALTY_GOLD: 1000, PENALTY_FAITH: 40 },
+  VOW: { MULT: 2, MINUTES: 30, YEAR: 1420, CR_YEAR: 1197, PENALTY_GOLD: 1000, PENALTY_FAITH: 40 },
   VOW_EVENT: {
     date: tr('Le jour du serment', 'The day of the oath'),
     title: tr('Un vœu solennel', 'A solemn vow'),
@@ -34,7 +35,7 @@ const DEFIS = {
 Object.assign(GameRules, {
   // Les défis de la faction du joueur (une liste vide hors des campagnes)
   challengeList() {
-    const S = this.cm ? CHARLEMAGNE : this.hy ? CENTANS : null;
+    const S = this.cm ? CHARLEMAGNE : this.hy ? CENTANS : this.cr ? CROISADES : null;
     return (S && S.CHALLENGES && this.human && S.CHALLENGES[this.human.role]) || [];
   },
   defisState() { return this.defis || (this.defis = { state: [], vow: -1, vowAsked: false, owned: null }); },
@@ -46,6 +47,7 @@ Object.assign(GameRules, {
   defisTick(minutes, year) {
     if (minutes !== undefined) return minutes * 60 * CONFIG.TICKS_PER_SECOND;
     if (year !== undefined && this.hy) return this.defisYearTick(year);
+    if (year !== undefined && this.cr) return this.crYearTick(year); // (✝️ le calendrier des Croisades, voir croisadesrules.js)
     return Infinity;
   },
   // Les défis qui se jugent dans la durée (on les réussit en tenant jusqu'au bout)
@@ -53,12 +55,13 @@ Object.assign(GameRules, {
   // Le moment où le défi k est manqué s'il n'est pas réussi (le vœu ajoute sa propre limite)
   defisDeadline(c, k) {
     let t = this.defisTick(c.before, c.byYear);
-    if (k === this.defisState().vow && !this.defisLasting(c)) t = Math.min(t, this.defisTick(this.cm ? DEFIS.VOW.MINUTES : undefined, this.hy ? DEFIS.VOW.YEAR : undefined));
+    if (k === this.defisState().vow && !this.defisLasting(c)) t = Math.min(t, this.defisTick(this.cm ? DEFIS.VOW.MINUTES : undefined, this.hy ? DEFIS.VOW.YEAR : this.cr ? DEFIS.VOW.CR_YEAR : undefined));
     return t;
   },
   // La case d'ancrage d'un lieu (-1 s'il n'existe plus)
   defisPlace(token) {
     if (this.hy) return this.hyCity(token);
+    if (this.cr) return this.crCity(token);
     const cm = this.cm;
     const a = cm.capital[token] !== undefined ? cm.capital[token] : cm.sites.has(token) ? cm.sites.get(token) : -1;
     return a >= 0 && this.building[a] ? a : -1;
@@ -83,9 +86,11 @@ Object.assign(GameRules, {
       case 'vikings': return (h.vikingsLaunched || 0) >= c.n;
       case 'razed': return (h.razedCount || 0) >= c.n;
       case 'destroy': { const p = this.players.find(q => q.role === c.role); return !!p && !p.alive; }
-      case 'obj': return hy ? this.hyObjectiveMet(c.obj) : this.objectiveMet(c.obj);
+      case 'obj': return hy ? this.hyObjectiveMet(c.obj) : this.cr ? this.crObjectiveMet(c.obj) : this.objectiveMet(c.obj);
       case 'king': return !!(hy && hy.ransom);
       case 'joan': return !!(hy && hy.joan && hy.joan.state === 'captured');
+      case 'saleph': return !!(this.cr && this.cr.salephBridge);
+      case 'tribute': return !!(this.cr && this.cr.tributePaid.has(h.id));
     }
     return false;
   },
@@ -105,7 +110,7 @@ Object.assign(GameRules, {
     list.forEach((c, k) => {
       if (st.state[k]) return;
       if (this.defisLasting(c)) {
-        const broken = c.kind === 'noLoss' ? lost : c.kind === 'keep' ? !this.defisHolds(c.places) : !!(this.hy && this.hy.ransom);
+        const broken = c.kind === 'noLoss' ? lost : c.kind === 'keep' ? !this.defisHolds(c.places) : !!((this.hy && this.hy.ransom) || (this.cr && this.cr.ransom));
         if (broken) return this.defisEnd(k, false);
         if (this.tick >= this.defisTick(c.until, c.untilYear)) this.defisEnd(k, true);
         return;
@@ -151,7 +156,7 @@ Object.assign(GameRules, {
     const list = this.challengeList(), st = this.defisState();
     if (!list.length || st.vowAsked) return;
     st.vowAsked = true;
-    const limit = this.hy ? tr(`l'an ${DEFIS.VOW.YEAR}`, `the year ${DEFIS.VOW.YEAR}`) : tr(`${DEFIS.VOW.MINUTES} minutes de règne`, `${DEFIS.VOW.MINUTES} minutes of reign`);
+    const limit = this.cr ? tr(`l'an ${DEFIS.VOW.CR_YEAR}`, `the year ${DEFIS.VOW.CR_YEAR}`) : this.hy ? tr(`l'an ${DEFIS.VOW.YEAR}`, `the year ${DEFIS.VOW.YEAR}`) : tr(`${DEFIS.VOW.MINUTES} minutes de règne`, `${DEFIS.VOW.MINUTES} minutes of reign`);
     const choices = list.map((c, k) => ({ key: 'vow', pick: k, label: tr('🙏 Jurer : ', '🙏 Swear: ') + c.text }));
     choices.push({ key: 'vow', pick: -1, label: tr('Ne rien jurer', 'Swear nothing') });
     UI.parchment(DEFIS.VOW_EVENT, { limit }, choices);

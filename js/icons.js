@@ -235,6 +235,15 @@ const ICON_DEFS = {
     { d: 'M5.4 20.4h2.2v1.9H5.4zM16.4 20.4h2.2v1.9h-2.2z', f: '#6b4a12' }],
   // 🏠 une maison (une place libre)
   house: [{ d: 'M3.5 11.5L12 4l8.5 7.5V21H15v-5.5h-6V21H3.5z', f: 'c' }],
+  // ☪ le croissant et l'étoile (Saladin, dans les Croisades), d'or
+  crescent: [{ d: 'M14.8 4.4A8.5 8.5 0 1 0 14.8 19.6A7.6 7.6 0 1 1 14.8 4.4z', f: '#efc23e', s: '#6b4a12', w: 1.1 },
+    { d: 'M18.6 9.2l.75 1.75 1.9.15-1.45 1.25.45 1.85-1.65-1-1.65 1 .45-1.85-1.45-1.25 1.9-.15z', f: '#efc23e', s: '#6b4a12', w: 0.8 }],
+  // 🦅 l'aigle de l'Empire, ailes déployées
+  eagle: [{ d: 'M10.8 9.2C8.2 6.8 4.6 6.2 1.6 7.4l2 1.4-1.6 1.6 2.6.2-1 1.9 3-.5-.3 2 3.8-2.6zM13.2 9.2c2.6-2.4 6.2-3 9.2-1.8l-2 1.4 1.6 1.6-2.6.2 1 1.9-3-.5.3 2-3.8-2.6z', f: 'c' },
+    { d: 'M12 4.5c1.3 0 2.2 1 2.2 2.2 0 1-.5 1.6-1 2.1l.9 7.2-2.1 3.5-2.1-3.5.9-7.2c-.5-.5-1-1.1-1-2.1 0-1.2.9-2.2 2.2-2.2z', f: 'c' },
+    { d: 'M9.8 18.8l2.2 3 2.2-3', s: 'c', w: 1.4 }],
+  // ☦ la croix orthodoxe (Byzance), à trois traverses
+  orthocross: [{ d: 'M11 2h2v20h-2zM8.5 4.4h7v1.8h-7zM5.5 8.4h13v2h-13zM7.4 16.7l8.7-2.3.5 1.8-8.7 2.3z', f: 'c' }],
 };
 
 // Emojis → icônes. Le jeu n'affiche jamais d'emoji : chaque emoji d'un texte a ici son icône dessinée (un nouvel emoji
@@ -249,7 +258,7 @@ const EMOJI_ICONS = {
   '🏗': 'hammer', '🧨': 'pick', '🏚': 'pick', '🔎': 'lens', '🔍': 'lens', '↩': 'back', '🛤': 'road', '🛣': 'road',
   '🏜': 'dune', '🏔': 'mountain', '👑': 'crown', '🗡': 'dagger', '🔗': 'chain', '💥': 'burst',
   '🏆': 'cup', '🚫': 'forbid', '🎁': 'chest', '🧱': 'wall', '💀': 'skull', '☠': 'skull', '▶': 'play', '⏸': 'pause',
-  '⛏': 'pickaxe', '⚒': 'ore_iron', '🪙': 'ore_gold', '🪨': 'ore_stone', '💎': 'ore_diamond', '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '📖': 'bible',
+  '⛏': 'pickaxe', '⚒': 'ore_iron', '🪙': 'ore_gold', '🪨': 'ore_stone', '💎': 'ore_diamond', '🪖': 'troops2', '🎖': 'troops3', '🏅': 'troops4', '🎲': 'dice', '🖱': 'mouse', '⌨': 'keys', '✝': 'cross', '☪': 'crescent', '🦅': 'eagle', '☦': 'orthocross', '📖': 'bible',
   '🖌': 'brush', '✏': 'quill', '🌍': 'orb', '🗼': 'tower', '🎵': 'music', '🔇': 'nomusic',
   '📅': 'calendar', '⚜': 'lys', '🌐': 'globe', '🔔': 'bell', '⭐': 'star', '🙏': 'hands', '🕊': 'dove', '⚖': 'scales',
   '⛓': 'chain', '🦁': 'lion', '⏩': 'fast', '📽': 'book', '✔': 'check', '❌': 'x', '🔒': 'lock', '🤪': 'jester',
