@@ -703,8 +703,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
      le franchir** : les armées ennemies doivent faire le tour. Si un mur tout neuf coupe la route d'un assaut déjà lancé,
      **devant lui** (là où il n'est pas encore passé), l'armée **le contourne** par un autre chemin ; s'il n'y a **pas d'autre
-     chemin** jusqu'à sa cible, elle **rebrousse chemin** (assaut annulé) et rentre à pied, comme une retraite. Un mur bâti sur la partie de la route **déjà
-     passée** n'arrête pas l'assaut. **Personne ne traverse une muraille ni un mur
+     chemin** jusqu'à sa cible, elle **rebrousse chemin** (assaut annulé) et rentre à pied, comme une retraite. **Personne ne traverse une muraille ni un mur
      ennemi** (ni un assaut, ni une armée de relique). Cas rare : une **ville** (ou un mur) bâtie **dans le dos** d'un assaut, sur
      le chemin qu'il a déjà parcouru, le coupe de chez lui : il **bat en retraite d'office**, tout de suite, et perd **15 % de ses
      soldats** par muraille ou mur franchi pour rentrer (réglage `WALL_RETREAT_LOSS`). Si la ville est prise ou détruite, ses murs disparaissent
