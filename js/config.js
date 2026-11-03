@@ -261,7 +261,9 @@ const CONFIG = {
   BUILDING_SPACING: 3,       // cases vides obligatoires autour de chaque bâtiment...
   CASTLE_SPACING: 4,         // ...et autour des châteaux
   // Distances minimum (de centre à centre, en cases) entre ses grands bâtiments : cercles rouges à la construction
-  CASTLE_CASTLE_DISTANCE: 13, // entre deux de ses châteaux
+  CASTLE_CASTLE_DISTANCE: 21, // entre deux de ses châteaux : assez loin pour que leurs murailles (rayon 8 puis 10) ne se
+                              // touchent pas avant le niveau 3 (rayon 13) ; deux murailles qui se touchent relient leurs
+                              // villes comme un mur (+WALL_LINK_GARRISON chacune)
   CASTLE_CHURCH_DISTANCE: 15, // entre un château et une église ou un port (ils restent hors de sa muraille)
   CHURCH_CHURCH_DISTANCE: 11, // entre deux églises, deux ports, ou une église et un port
   // 🏰 Prix des châteaux (villes) qu'on bâtit soi-même, dans l'ordre : le 1er (après la capitale, gratuite) coûte 500,
