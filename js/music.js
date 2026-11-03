@@ -159,8 +159,17 @@ const Music = {
     // (les sons se superposent : un nouveau son ne coupe pas le précédent ; on garde la liste de ceux qui jouent,
     //  pour pouvoir tous les couper avec la musique)
     this.effects = this.effects || new Set();
-    const a = new Audio(src);
-    a.volume = Math.min(1, this.volume * M.VICTORY_GAIN);
+    this.playEffect(src, 1, 1);
+    // (🔁 certains sons se rejouent aussitôt, un peu plus aigus : le bruit de construction fait « toc-toc », voir SOUND_ECHO)
+    const echo = M.SOUND_ECHO && M.SOUND_ECHO[key];
+    if (echo) setTimeout(() => { if (this.on) this.playEffect(src, echo.RATE, echo.GAIN); }, echo.DELAY * 1000);
+  },
+  // Joue un son une fois : rate = sa vitesse et sa hauteur (1 = telle quelle, plus = plus aigu), gain = son volume
+  playEffect(src, rate, gain) {
+    const M = CONFIG.MUSIC, a = new Audio(src);
+    a.volume = Math.min(1, this.volume * M.VICTORY_GAIN * gain);
+    a.playbackRate = rate;
+    a.preservesPitch = false; // (sans ça, le navigateur garderait la même note en jouant plus vite)
     this.effects.add(a);
     a.addEventListener('ended', () => this.effects.delete(a));
     a.play().catch(() => { /* (lecture refusée par le navigateur : tant pis) */ });
