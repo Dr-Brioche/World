@@ -357,6 +357,7 @@ const CONFIG = {
   // Les soldats embarqués défendent l'avant-poste ; pendant la traversée, une petite partie se perd :
   SEA_LOSS_PER_SECOND: 0.01, // 1 % des soldats par seconde de mer...
   SEA_LOSS_MAX: 0.25,        // ...au plus 25 %
+  SEA_LOSS_MAX_ROYAL: 0.10,  // ...et au plus 10 % depuis (ou vers) un port royal (niveau 3)
   // Traversée de fleuve (clic droit sur une terre libre de l'autre côté) : l'armée passe à gué
   CROSSING_TIME_FIRST: 10,   // secondes pour traverser la 1re case de fleuve (c'est difficile !)...
   CROSSING_TIME_NEXT: 6,     // ...et chacune des suivantes (fleuve double)

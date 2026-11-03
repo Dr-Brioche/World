@@ -2314,9 +2314,9 @@ const UI = {
       items.push(plan.error
         ? { label: `${ICONS.ship} ${tr('Attaque navale', 'Naval attack')}`, disabled: plan.error }
         : { label: `${ICONS.ship} ` + tr(`Attaque navale : débarquer ${fmt(h.troops * this.ratio)} soldats (💰 ${plan.cost}, ` +
-            `${Math.max(1, Math.round(plan.time))} s de mer, environ ${Math.round(G.seaLoss(plan.time) * 100)} % de pertes)`,
+            `${Math.max(1, Math.round(plan.time))} s de mer, environ ${Math.round(G.seaLoss(plan.time, plan.port) * 100)} % de pertes)`,
             `Naval attack: land ${fmt(h.troops * this.ratio)} soldiers (💰 ${plan.cost}, ` +
-            `${Math.max(1, Math.round(plan.time))} s at sea, about ${Math.round(G.seaLoss(plan.time) * 100)}% losses)`), run: () => {
+            `${Math.max(1, Math.round(plan.time))} s at sea, about ${Math.round(G.seaLoss(plan.time, plan.port) * 100)}% losses)`), run: () => {
           this.act({ k: 'expedition', i: coast, troops: h.troops * this.ratio }, err => {
             if (err) this.log(err, 'warn');
             else this.log(tr('⛵ Ton expédition prend la mer ! Ses soldats défendront l\'avant-poste qu\'elle bâtira à l\'arrivée.', '⛵ Your expedition sets sail! Its soldiers will defend the outpost it builds on arrival.'), 'good');

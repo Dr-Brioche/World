@@ -889,7 +889,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    zone en demi-cercle le long de la côte** et tu y bâtis un **avant-poste ⛺** (jamais dans la **muraille** d'une ville ou
    d'un port fortifié, ni sur un mur : la côte d'une ville se prend en l'assiégeant). L'expédition coûte un peu d'or
    (un peu plus à chaque avant-poste) et emmène **le % de soldats choisi** avec le curseur « Envoyer » :
-   choisis bien avant de partir ! Une petite partie se perd en mer (1 % par seconde de traversée, 25 % au plus).
+   choisis bien avant de partir ! Une petite partie se perd en mer (1 % par seconde de traversée, 25 % au plus ; **10 % au plus** depuis ou vers un **port royal**, niveau 3 : réglage `SEA_LOSS_MAX_ROYAL`).
    **2 assauts maritimes au plus** contre un même royaume : avec 2 bateaux en route vers lui (ou 2 avant-postes déjà sur ses terres),
    impossible d'en envoyer un 3e.
    Il faut emmener **au moins de quoi remplir la garnison** de l'avant-poste (5 soldats, pertes en mer comprises).
@@ -1121,6 +1121,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.12** : ⚓ depuis (ou vers) un **port royal** (niveau 3), les pertes en mer d'une expédition sont limitées à **10 %** (au lieu de 25 %)
 - **v0.93.11** : 🛡️ si la ville (ou le bâtiment) que tes défenseurs allaient protéger tombe avant leur arrivée, ils battent en retraite tout de suite et rentrent à **leur ville de départ** (au lieu de la ville la plus proche d'eux, parfois près du front)
 - **v0.93.10** : ⛵ une **relique sur une île** se rapporte **en bateau** : l'armée part d'un de tes ports royaux (niveau 3) et revient à un port royal, puis marche jusqu'à ta cathédrale · 🧱 une ville (ou un mur) bâtie **dans le dos** d'un assaut le force à **battre en retraite d'office**, avec **−15 %** de soldats par muraille ou mur franchi (au lieu de −50 %)
 - **v0.93.9** : 🧱 **mine fortifiée** : une mine de niveau 2 peut être fortifiée (💰 800, 30 s) : une petite muraille que la Croyance ne convertit plus, une garnison de 50 soldats qui se défend seule (un assaut doit l'assiéger 10 s) ; aucune armée n'en part, et elle ne tient pas seule un territoire · les bots fortifient leurs mines quand un voisin les convertit
