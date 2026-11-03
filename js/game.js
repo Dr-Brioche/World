@@ -1781,7 +1781,7 @@ const GameRules = {
     p.troops -= troops;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, path: best.path, cost: 0, sent: troops,
-      reinforce: a, port: best.port, troops: troops * (1 - this.seaLoss(best.time)),
+      reinforce: a, port: best.port, troops: troops * (1 - this.seaLoss(best.time, best.port)),
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
     return null;
   },
@@ -4761,7 +4761,7 @@ const GameRules = {
     if (!best) return { error: tr('Aucun de tes ports ne peut rejoindre cette côte par l\'eau.', 'None of your ports can reach this coast by water.') };
     best.cost = Math.round(this.buildCost(p, B_OUTPOST) * this.buildingInfo(best.port).landingCost);
     // assez de soldats pour remplir la garnison de l'avant-poste une fois arrivés
-    best.minTroops = Math.ceil(CONFIG.OUTPOST_GARRISON / (1 - this.seaLoss(best.time)));
+    best.minTroops = Math.ceil(CONFIG.OUTPOST_GARRISON / (1 - this.seaLoss(best.time, best.port)));
     best.zone = zone;
     return best;
   },
@@ -4781,7 +4781,7 @@ const GameRules = {
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: o.landing, home: best.port,
       path: best.path.slice().reverse(), sent: troops,
-      troops: troops * (1 - this.seaLoss(best.time)),
+      troops: troops * (1 - this.seaLoss(best.time, best.port)),
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(best.time * TPS)) });
     return null;
   },
@@ -4812,13 +4812,17 @@ const GameRules = {
     const home = this.homePort(pid, landing), TPS = CONFIG.TICKS_PER_SECOND;
     if (!home) { this.players[pid].troops += troops; return troops; }
     this.expeditions.push({ id: this.nextAttackId++, pid, landing, home: home.port,
-      path: home.path.slice().reverse(), sent: troops, troops: troops * (1 - this.seaLoss(home.time)),
+      path: home.path.slice().reverse(), sent: troops, troops: troops * (1 - this.seaLoss(home.time, home.port)),
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(home.time * TPS)) });
     return troops;
   },
 
   // Part des soldats perdus pendant une traversée de `time` secondes
-  seaLoss(time) { return Math.min(CONFIG.SEA_LOSS_MAX, time * CONFIG.SEA_LOSS_PER_SECOND); },
+  // (⚓ depuis ou vers un port royal, niveau 3 : au plus SEA_LOSS_MAX_ROYAL)
+  seaLoss(time, port = -1) {
+    const max = port >= 0 && this.building[port] === B_PORT && this.level[port] >= 3 ? CONFIG.SEA_LOSS_MAX_ROYAL : CONFIG.SEA_LOSS_MAX;
+    return Math.min(max, time * CONFIG.SEA_LOSS_PER_SECOND);
+  },
 
   // Lance une expédition avec `troops` soldats : le bateau part du port et débarque en arrivant.
   // Les soldats arrivés défendent l'avant-poste. Renvoie un message d'erreur, ou null.
@@ -4843,7 +4847,7 @@ const GameRules = {
     p.lastExpedition = this.tick;
     const TPS = CONFIG.TICKS_PER_SECOND;
     this.expeditions.push({ id: this.nextAttackId++, pid, landing: i, victim: this.owner[i], path: plan.path, cost: plan.cost, sent: troops,
-      troops: troops * (1 - this.seaLoss(plan.time)), // ceux qui arriveront
+      troops: troops * (1 - this.seaLoss(plan.time, plan.port)), // ceux qui arriveront
       start: this.tick, arrive: this.tick + Math.max(TPS, Math.round(plan.time * TPS)) });
     // Prévenir les royaumes dont la côte est visée
     const o = this.owner[i];
