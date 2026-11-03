@@ -176,7 +176,8 @@ const CONFIG = {
   WALL_COSTS: [500, 1000, 2000], // prix du 1er mur, du 2e (citadelle), puis du 3e (cité impériale)
   WALL_BUILD_TIME: 40,       // secondes de chantier
   WALL_MAX_REACH: 12,
-  WALL_RETREAT_LOSS: 0.5,    // une armée en retraite qui doit franchir un mur (bâti dans son dos) y perd 50 % de ses soldats, par mur
+  WALL_RETREAT_LOSS: 0.15,   // une armée coupée de chez elle par une muraille ou un mur bâti dans son dos bat en retraite
+                             // d'office, et y perd 15 % de ses soldats par muraille ou mur franchi
   WALL_LINK_GARRISON: 50,    // deux de ses villes reliées par un mur : +50 soldats de garnison pour chacune
   WALL_SNAP: 3,              // visé à moins de 3 cases d'un obstacle (lac, sommet, fleuve, autre mur) : le mur s'y accroche
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
@@ -464,6 +465,8 @@ const CONFIG = {
   // de son église (pas de maximum).
   RELIC: {
     FIRST: [10, 15], NEXT: [8, 15], TAKE_TIME: 10, CHURCH_LEVEL: 3,
+    SEA_COST: 0.4,     // ⛵ en bateau (relique sur une île : départ et retour par un port royal), une case d'eau compte pour 0,4
+                       // case de plaine (le bateau va 2,5 fois plus vite que la marche)
     LOST_TIME: 15, // (une armée qui en poursuit une autre l'attend 15 s au plus quand elle passe derrière une muraille)
     SPEED: 1,          // vitesse de marche des armées de relique (1 = comme un assaut ; les défenseurs : 1.18)
     CARRY_SLOW: 1.5,   // avec la relique : 1/3 plus lente (le trajet prend 1,5 fois plus de temps)

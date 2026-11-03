@@ -114,7 +114,15 @@ Object.assign(GameRules, {
   // ou chez un voisin)
   relicEligible(pid, tile, region) {
     const nb = this.neighborStats(pid), o = this.owner[tile];
-    return o === pid || region === pid || (o >= 0 && nb.has(o)) || (region >= 0 && nb.has(region));
+    return o === pid || region === pid || (o >= 0 && nb.has(o)) || (region >= 0 && nb.has(region)) || this.relicByBoat(pid, tile);
+  },
+  // ⛵ Une relique (ou une armée de relique) sur une île, ou en mer : on y va en bateau, si on a un port royal (niveau 3)
+  relicPorts(pid) { return this.walledPorts().filter(a => this.owner[a] === pid); },
+  relicByBoat(pid, tile) {
+    if (!this.relicPorts(pid).length) return false;
+    const comp = this.landComp(), k = comp[tile];
+    if (k < 0) return true; // (en mer)
+    return !this.strongholds(pid, false).some(c => comp[c] === k); // (une terre où il n'a aucune ville : une île)
   },
   relicTileCenter(t) { return { x: t % this.W + 0.5, y: ((t / this.W) | 0) + 0.5 }; },
   relicPos(r) {
@@ -165,6 +173,69 @@ Object.assign(GameRules, {
     }
     return null;
   },
+  // ⛵ Chemin le plus rapide de l'une des cases starts jusqu'à une case de goals, en bateau (la mer et les grands fleuves)
+  // et à pied (comme relicPath, mais seulement sur les terres de lands, un Set de numéros d'îles, si on le donne).
+  // Renvoie la liste des cases, ou null. (le bateau va un peu plus vite que la marche : RELIC.SEA_COST par case)
+  relicSeaPath(pid, starts, goals, owners, lands) {
+    const N = this.N, W = this.W, own = this.owner, comp = this.landComp();
+    if (!this.relicSeaBuf || this.relicSeaBuf.seen.length !== N)
+      this.relicSeaBuf = { dist: new Float64Array(N), prev: new Int32Array(N), seen: new Int32Array(N), stamp: 0 };
+    const B = this.relicSeaBuf, stamp = ++B.stamp, heap = new MinHeap(), cost = this.marchCost(pid), sea = CONFIG.RELIC.SEA_COST;
+    const walls = new Map();
+    for (const o of owners) if (o >= 0 && o !== pid && !this.areAllied(pid, o)) walls.set(o, this.castleWalls(o));
+    const water = i => this.navigable(i); // (la mer, les grands fleuves, et les fleuves : les bateaux les remontent)
+    const land = i => this.isLand(i) && (!lands || lands.has(comp[i])) && (own[i] < 0 || (owners.has(own[i]) &&
+      !(walls.has(own[i]) && (walls.get(own[i])[i] || this.wallAt[i]))));
+    for (const s0 of starts) { B.seen[s0] = stamp; B.dist[s0] = 0; B.prev[s0] = -1; heap.push(0, s0); }
+    while (heap.size) {
+      const [d, i] = heap.pop();
+      if (B.seen[i] === -stamp) continue;
+      B.seen[i] = -stamp;
+      if (goals.has(i)) {
+        const path = [];
+        for (let j = i; j >= 0; j = B.prev[j]) path.push(j);
+        return path.reverse();
+      }
+      const x = i % W;
+      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+        if (n < 0 || B.seen[n] === -stamp) continue;
+        const wet = water(n);
+        if (!wet && !land(n)) continue;
+        const nd = d + (wet ? sea : cost(n));
+        if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; B.prev[n] = i; heap.push(nd, n); }
+      }
+    }
+    return null;
+  },
+  // Les cases de mer collées aux ports royaux de pid : Map case d'eau → [port, case du port qui la touche]
+  relicPortWaters(pid) {
+    const m = new Map();
+    for (const a of this.relicPorts(pid)) for (const j of this.footprint(a, B_PORT)) {
+      this.forNeighbors(j, n => { if (this.navigable(n) && !m.has(n)) m.set(n, [a, j]); });
+    }
+    return m;
+  },
+  // ⛵ Aller : l'armée r part d'un de ses ports royaux, en bateau, jusqu'à une case de goals (sur une île : elle n'y marche
+  // que sur cette île). Renvoie son trajet, ou null.
+  relicSeaGo(r, goals, to, lands) {
+    const waters = this.relicPortWaters(r.pid);
+    if (!waters.size) return null;
+    const g = [...goals][0], path = this.relicSeaPath(r.pid, [...waters.keys()], goals, this.relicOwners(r, this.owner[g]), lands);
+    if (!path) return null;
+    const [port, pt] = waters.get(path[0]);
+    return this.walkRoute(r.pid, this.relicMid(port), to, r.troops, CONFIG.RELIC.SPEED, false, [pt].concat(path), CONFIG.RELIC.SEA_COST);
+  },
+  // ⛵ Retour : de la case from (sur l'île, ou en mer), en bateau jusqu'à un de ses ports royaux. Renvoie { path, port, pt }
+  // (pt : la case du port où l'on débarque), ou null.
+  relicSeaBack(r, ft) {
+    const waters = this.relicPortWaters(r.pid);
+    if (!waters.size) return null;
+    const comp = this.landComp(), lands = comp[ft] >= 0 ? new Set([comp[ft]]) : new Set();
+    const path = this.relicSeaPath(r.pid, [ft], new Set(waters.keys()), this.relicOwners(r, this.owner[ft]), lands);
+    if (!path) return null;
+    const [port, pt] = waters.get(path[path.length - 1]);
+    return { path: path.concat([pt]), port, pt };
+  },
   // Les royaumes sur les terres desquels l'armée r peut marcher : le sien, ses alliés, celui de la relique, et celui
   // où elle se trouve
   relicOwners(r, extra = -1) {
@@ -214,7 +285,10 @@ Object.assign(GameRules, {
     if (start < 0) return tr('Tu n\'as aucune ville d\'où partir.', 'You have no city to set out from.');
     const r = { id: this.nextAttackId++, pid, troops, region: relic.region, phase: 'go', aim: id, relic: null };
     r.route = this.relicRoute(r, this.relicMid(start), new Set([relic.tile]), goal, false);
-    if (!r.route) return tr('Impossible d\'atteindre cette relique à pied.', 'This relic cannot be reached on foot.');
+    // (⛵ sur une île : en bateau, depuis un de ses ports royaux)
+    if (!r.route) r.route = this.relicSeaGo(r, new Set([relic.tile]), goal, new Set([this.landComp()[relic.tile]]));
+    if (!r.route) return this.relicPorts(pid).length ? tr('Impossible d\'atteindre cette relique, ni à pied ni en bateau.', 'This relic cannot be reached, neither on foot nor by boat.')
+      : tr('Impossible d\'atteindre cette relique à pied : pour y aller en bateau, il te faut un port royal (port de niveau 3).', 'This relic cannot be reached on foot: to go by boat, you need a royal port (level 3 port).');
     p.troops -= troops;
     this.relicRuns.push(r);
     const o = this.players[this.owner[relic.tile]];
@@ -240,7 +314,8 @@ Object.assign(GameRules, {
     if (start < 0) return tr('Tu n\'as aucune ville d\'où partir.', 'You have no city to set out from.');
     const r = { id: this.nextAttackId++, pid, troops, region: t.region, phase: 'chase', chase: id, relic: null };
     // (par un vrai chemin : elle ne passe pas la muraille d'une ville ennemie, voir relicPath)
-    r.route = this.relicRoute(r, this.relicMid(start), new Set([Math.floor(at.y) * this.W + Math.floor(at.x)]), at, false);
+    const tt = Math.floor(at.y) * this.W + Math.floor(at.x);
+    r.route = this.relicRoute(r, this.relicMid(start), new Set([tt]), at, false) || this.relicSeaGo(r, new Set([tt]), at, null); // (⛵ ou en bateau)
     if (!r.route) return tr('Ton armée ne peut pas atteindre cette armée à pied (elle est à l\'abri derrière une muraille ?).', 'Your army cannot reach that army on foot (is it safe behind city walls?).');
     r.reroute = 0;
     p.troops -= troops;
@@ -362,7 +437,13 @@ Object.assign(GameRules, {
         if (d <= C.DEFEND_DIRECT || this.tick >= r.reroute) {
           r.reroute = this.tick + 3 * TPS;
           const tt = Math.floor(at.y) * this.W + Math.floor(at.x);
-          const route = this.relicRoute(r, me, new Set([tt]), at, false);
+          let route = this.relicRoute(r, me, new Set([tt]), at, false);
+          // (⛵ elle est sur une île ou en mer : on la suit en bateau)
+          if (!route && this.relicPorts(r.pid).length) {
+            const mt = Math.floor(me.y) * this.W + Math.floor(me.x);
+            const path = this.relicSeaPath(r.pid, [mt], new Set([tt]), this.relicOwners(r, this.owner[tt]), null);
+            if (path) route = this.walkRoute(r.pid, me, at, r.troops, C.RELIC.SPEED, false, path, C.RELIC.SEA_COST);
+          }
           // (elle passe derrière une muraille : on la guette, sur le dernier chemin trouvé ; au bout de
           //  RELIC.LOST_TIME secondes sans chemin jusqu'à elle, on renonce)
           if (!route) {
@@ -394,7 +475,19 @@ Object.assign(GameRules, {
     for (const c of churches) for (const j of this.footprint(c, B_CHURCH)) goals.set(j, c);
     const ft = Math.floor(from.y) * this.W + Math.floor(from.x);
     const path = this.relicPath(r.pid, ft, new Set(goals.keys()), this.relicOwners(r, this.owner[ft]));
-    // (pas de chemin à pied jusqu'à une église, sans passer de muraille ennemie : l'armée pose la relique et rentre)
+    // (⛵ pas de chemin à pied : en bateau jusqu'à un de ses ports royaux, puis à pied jusqu'à l'église)
+    if (!path) {
+      const back = this.relicSeaBack(r, ft);
+      const land = back && this.relicPath(r.pid, back.pt, new Set(goals.keys()), this.relicOwners(r, this.owner[back.pt]));
+      if (land) {
+        const church = goals.get(land[land.length - 1]);
+        r.phase = 'carry';
+        r.church = church;
+        r.route = this.walkRoute(r.pid, from, this.relicMid(church), r.troops, slow, false, back.path.concat(land.slice(1)), CONFIG.RELIC.SEA_COST);
+        return true;
+      }
+    }
+    // (pas de chemin jusqu'à une église, sans passer de muraille ennemie : l'armée pose la relique et rentre)
     if (!path) {
       this.relicDrop(r, from);
       this.relicGoHome(r, tr('📿 Ton armée ne trouve aucun chemin jusqu\'à ton église (des murailles ennemies lui barrent la route) : elle laisse la relique là et rentre.', '📿 Your army finds no way to your church (enemy city walls block it): it leaves the relic there and heads home.'));
@@ -468,6 +561,14 @@ Object.assign(GameRules, {
     this.relicPendingBack(r);
     this.relicRuns = this.relicRuns.filter(x => x !== r);
     for (const x of this.relicRuns) if (x.phase === 'chase' && x.chase === r.id) this.relicGoHome(x, '');
+    // (⛵ sur une île ou en mer : elle rentre en bateau jusqu'à un de ses ports royaux)
+    const ft = Math.floor(at.y) * this.W + Math.floor(at.x);
+    const back = this.relicByBoat(r.pid, ft) ? this.relicSeaBack(r, ft) : null;
+    if (back) {
+      const to = this.relicMid(back.port);
+      this.returning.push(Object.assign(this.walkRoute(r.pid, { x: at.x, y: at.y }, to, r.troops, CONFIG.RETREAT_SPEED, false, back.path, CONFIG.RELIC.SEA_COST), { pid: r.pid, source: -1, to }));
+      return;
+    }
     if (c < 0) return;
     const to = this.relicMid(c);
     this.returning.push(Object.assign(this.walkRoute(r.pid, { x: at.x, y: at.y }, to, r.troops, CONFIG.RETREAT_SPEED), { pid: r.pid, source: -1, to }));
