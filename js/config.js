@@ -31,10 +31,9 @@ const CONFIG = {
   CROISADES_MAP_WIDTH: 860, // taille de la carte du scénario « Les Croisades » (de Londres à Bagdad, la Terre sainte agrandie)
   CROISADES_MAP_HEIGHT: 544,
   MIN_OPPONENTS: 3,
-  // Royaume coupé en deux sur un même continent : son plus grand morceau est son cœur. Un autre morceau tenu par
-  // une ville (ou un port fortifié) et assez grand (au moins 25 % du plus grand) est aussi un cœur, à part entière :
-  // ses armées en partent, ses défenseurs y vont. Plus petit, il reste isolé (ses villes tiennent seules).
-  SPLIT_HEART_SHARE: 0.25,
+  // Royaume coupé en morceaux : tout morceau tenu par une ville (ou un port fortifié) est un cœur, à part entière (ses
+  // armées en partent, ses défenseurs y vont), sauf s'il ne reste que la zone de sa muraille, sans terre autour : la
+  // ville est alors encerclée, isolée (elle tient seule). Voir regions.
   CAMERA_KEY_SPEED: 900,   // déplacement de la caméra au clavier (ZQSD / flèches), en pixels d'écran par seconde
   // Courbes de niveau (pied des collines, des montagnes, et bord des sommets) et bordures des terrains : le zoom
   // à partir duquel on les voit (elles suivent le bord des cases : voir buildForests dans render.js)

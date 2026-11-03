@@ -1208,11 +1208,14 @@ const GameRules = {
     const cuts = new Map(); // royaume converti → le dernier prêcheur qui a pu le couper (voir plus bas)
     for (const { t, pid, o } of [...best.values()].flat()) {
       if (this.owner[t] !== o || !this.players[o].alive) continue;
-      // (une église ou un port converti emmène les moulins et casernes qui occupent ses places)
+      // (une église ou un port converti emmène les moulins et casernes qui occupent ses places, et toute sa zone, comme
+      //  s'il était pris par un assaut : voir takeLinked ; ce qui est dans la muraille d'une ville reste au converti)
       const host = this.building[t] && this.hasSlots(this.anchor[t]) ? this.anchor[t] : -1;
       const linked = host >= 0 ? this.linkedBuildings(host) : [];
+      const zone = host >= 0 ? this.churchZone(host) : null;
       this.setOwner(t, pid);
       for (const b of linked) if (this.owner[b] === o) this.setOwner(b, pid);
+      if (zone) { this.takeLinked({ attacker: pid, target: o }, zone); cuts.set(o, pid); }
       // la conversion peut couper son royaume : la coupe s'applique à la fin de cette seconde (voir captureEnclaves),
       // une seule fois par royaume converti (refaire le découpage de la carte à chaque case coûterait trop cher)
       if (this.countNeighborsOwnedBy(t, o) >= 2) cuts.set(o, pid);
@@ -3655,11 +3658,15 @@ const GameRules = {
       if (!best.has(key) || size[k] > size[best.get(key)]) best.set(key, k);
     }
     for (const k of best.values()) { heart[k] = 1; hasHeart.add(owner[k]); }
-    // (un autre morceau du même continent, tenu par une ville ou un port fortifié et assez grand : un cœur aussi)
+    // (un autre morceau, tenu par une ville ou un port fortifié : un cœur aussi, quelle que soit sa taille, sauf si
+    //  la ville est encerclée : il ne reste que la zone de sa muraille, pas une case de terre autour)
     for (let k = 0; k < size.length; k++) {
       if (heart[k] || !held[k] || (anyOutpost[k] && !hasCastle[k])) continue;
-      const b = best.get(owner[k] + ':' + land[order[start[k]]]);
-      if (b !== undefined && size[k] >= size[b] * CONFIG.SPLIT_HEART_SHARE) heart[k] = 1;
+      const o = owner[k];
+      for (let q = start[k], end = start[k] + size[k]; q < end; q++) {
+        const i = order[q];
+        if (!(this.castleProtects(o, i) || this.portBonus(o, i) > 0)) { heart[k] = 1; break; } // (de la terre hors des murailles)
+      }
     }
     // (un royaume qui n'a plus que des zones d'avant-poste : son plus grand morceau reste son cœur)
     for (let o = 0; o < main.length; o++) if (main[o] >= 0 && !hasHeart.has(o)) heart[main[o]] = 1;
