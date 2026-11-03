@@ -1486,7 +1486,7 @@ const GameRules = {
     this.works.delete(a);
     // Chantier annulé : le bâtiment n'est pas construit
     if (w.kind === 'build') {
-      if (this.building[a] === B_CASTLE) p.castlesBuilt--;
+      if (this.building[a] === B_CASTLE && !w.taken) p.castlesBuilt--;
       this.removeBuilding(a);
     }
   },
@@ -1497,14 +1497,26 @@ const GameRules = {
     return !!w && w.kind === 'build';
   },
 
-  // Fin des travaux : le bâtiment monte d'un niveau, ou disparaît. S'il a été pris entre-temps, ils sont perdus.
+  // Fin des travaux : le bâtiment monte d'un niveau, ou disparaît. S'il a été pris entre-temps (une ville, une église,
+  // un port et les bâtiments de sa zone), l'amélioration ou le chantier continue pour son nouveau maître ; une
+  // démolition, elle, s'arrête.
   stepWorks() {
     for (const [a, w] of this.works) {
-      const p = this.players[w.pid];
-      if (this.owner[a] !== w.pid || !this.building[a]) {
+      let p = this.players[w.pid];
+      const o = this.owner[a];
+      if (!this.building[a] || (o !== w.pid && (o < 0 || w.kind === 'down'))) {
         this.works.delete(a);
-        if (p.isHuman) UI.log(tr('🏚️ Ton bâtiment a été pris pendant les travaux : ils sont perdus.', '🏚️ Your building was taken during the works: they are lost.'), 'warn');
+        if (p.isHuman && this.building[a]) UI.log(tr('🏚️ Ton bâtiment a été pris pendant la démolition : elle s\'arrête.', '🏚️ Your building was taken during the demolition: it stops.'), 'warn');
         continue;
+      }
+      if (o !== w.pid) {
+        const name = this.buildingInfo(a).name, q = this.players[o];
+        if (p.isHuman) UI.log(tr(`🏚️ ${q.name} a pris ton bâtiment en travaux (${name}) : ils continuent pour lui.`, `🏚️ ${q.name} took your building under works (${name}): they carry on for them.`), 'warn', q);
+        if (q.isHuman) UI.log(tr(`🏗️ Tu as pris un bâtiment en travaux (${name}) : ils continuent pour toi !`, `🏗️ You took a building under works (${name}): they carry on for you!`), 'good');
+        w.pid = o;
+        w.paid = 0;     // (l'or a été payé par l'ancien maître : annuler ne rend rien au nouveau)
+        w.taken = true; // (un château en chantier pris : il ne compte pas dans les châteaux bâtis du nouveau maître)
+        p = q;
       }
       if (this.tick < w.end) continue;
       this.works.delete(a);
@@ -2447,6 +2459,7 @@ const GameRules = {
         case 'demolish': return this.demolishBuilding(p, o.a);
         case 'defend': return this.sendDefenders(pid, o.attack, o.troops);
         case 'cancelAttack': return this.cancelAttack(pid, o.attack);
+        case 'recallDefense': return this.recallDefenders(pid, o.attack); // (🛡️ rappeler ses défenseurs)
         case 'recall': return this.recallExpedition(pid, o.id);
         case 'link': return this.launchLink(pid, o.c, o.troops);
         case 'expedition': return this.launchExpedition(pid, o.i, o.troops);
@@ -5156,6 +5169,9 @@ const GameRules = {
   // Le relief compte : une plaine est plus attirante qu'une montagne.
   pickFrontier(a) {
     let best = -1, bestScore = -1;
+    // (🏰 un assaut vers un objectif suit le chemin tracé au départ : si une ville a été bâtie depuis sur ce chemin,
+    //  il ne traverse pas sa muraille, il cherche un détour, voir resumeAssault)
+    const pass = this.assaultPassable(a);
     for (let k = 0; k < 4 && a.list.length > 0; k++) {
       const idx = (this.rand() * a.list.length) | 0;
       const t = a.list[idx];
@@ -5174,7 +5190,7 @@ const GameRules = {
       // et ne passe pas les murailles : il s'arrête au pied du mur
       const castle = a.target >= 0 && a.targetCastle < 0 && a.link === undefined &&
         (this.building[t] === B_CASTLE || this.building[t] === B_OUTPOST || this.castleProtects(a.target, t));
-      if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside || castle || this.wallAt[t]) {
+      if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside || castle || this.wallAt[t] || (pass && !pass(t))) {
         a.list[idx] = a.list[a.list.length - 1];
         a.list.pop();
         a.set.delete(t);
@@ -5442,6 +5458,32 @@ const GameRules = {
     // (par le chemin le plus rapide de leurs terres : voir walkRoute ; leur but suit l'assaut, voir arriveDefenders)
     const from = this.defenseOrigin(pid, a, src), to = this.defenseGoal(a);
     (a.defPending = a.defPending || []).push(this.walkRoute(pid, from, to, troops));
+    return a;
+  },
+
+  // 🛡️ Rappeler l'armée de défense envoyée contre l'assaut attackId (comme on rappelle un assaut) : ses soldats
+  // décrochent tout de suite et rentrent à pied à leur ville (ou à leur avant-poste) la plus proche. Ils sont sur
+  // leurs terres : ils rentrent sans perte, comme un assaut qui n'a pas encore quitté les siennes.
+  // (les renforts qui n'étaient pas encore partis rentrent aussitôt)
+  recallDefenders(pid, attackId) {
+    const a = this.attacks.find(x => x.id === attackId && x.target === pid && !x.done);
+    if (!a) return null;
+    const src = a.defSource === undefined ? -1 : a.defSource;
+    const groups = (a.defPending || []).map(r => ({ at: this.walkPosition(r), troops: r.troops }));
+    if (a.defenders >= 1) groups.push({ at: this.defenseGoal(a), troops: a.defenders }); // (ceux qui se battent)
+    const waiting = (a.defReinf || []).reduce((s, r) => s + r.troops, 0);
+    if (!groups.length && waiting < 1) return null;
+    if (waiting > 0) this.giveTroops(pid, src, waiting);
+    for (const g of groups) {
+      // (vers leur avant-poste s'ils en viennent, sinon vers la ville la plus proche)
+      const home = src >= 0 && this.owner[src] === pid ? src : this.relicHome(pid, g.at);
+      if (home < 0) { this.giveTroops(pid, src, g.troops); continue; }
+      const to = this.relicMid(home);
+      this.returning.push(Object.assign(this.walkRoute(pid, { x: g.at.x, y: g.at.y }, to, g.troops), { pid, source: src, to }));
+    }
+    a.defPending = [];
+    a.defReinf = [];
+    a.defenders = 0;
     return a;
   },
 
@@ -6104,12 +6146,21 @@ const GameRules = {
   // front…) : il ne s'arrête pas pour autant. On refait la liste des cases ennemies de son couloir qui touchent ses
   // terres ; s'il n'y en a plus, il cherche un nouveau chemin vers l'objectif, qui doit partir près de son front.
   // Renvoie false si l'objectif est vraiment hors d'atteinte. (une fois par tour au plus)
+  // Les cases qu'un assaut vers une ville ou une église peut prendre : pas dans la muraille d'une AUTRE ville du
+  // défenseur (null pour les autres assauts)
+  assaultPassable(a) {
+    const c = a.targetCastle;
+    if (a.target < 0 || c < 0 || a.link !== undefined || this.owner[c] !== a.target || !this.building[c]) return null;
+    return this.castlePassable(c);
+  },
+
   resumeAssault(a) {
     const c = a.targetCastle;
     if (c < 0 || a.castleTaken || a.siege || this.owner[c] !== a.target || a.resumeTick === this.tick) return false;
     a.resumeTick = this.tick;
     const src = this.sourceOfAttack(a);
-    let list = this.buildFrontier(a.attacker, a.target, src).filter(t => !this.wallAt[t] && (!a.limitZone || a.limitZone.has(t)));
+    const pass = this.assaultPassable(a);
+    let list = this.buildFrontier(a.attacker, a.target, src).filter(t => !this.wallAt[t] && (!a.limitZone || a.limitZone.has(t)) && (!pass || pass(t)));
     if (!list.length) {
       const path = this.castlePath(a.attacker, c, src), f = a.frontTile, W = this.W;
       // (le nouveau chemin doit partir près de là où se trouve l'armée : elle ne se téléporte pas)

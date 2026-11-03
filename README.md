@@ -476,7 +476,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
      groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Contre un même assaut, tu n'envoies qu'**une armée de défense** :
      si tu recliques, les soldats en plus **la renforcent** (ils la rejoignent en **3 s**, qu'elle soit encore en route
-     ou déjà au combat) au lieu de former une nouvelle armée.
+     ou déjà au combat) au lieu de former une nouvelle armée. Une petite croix **×** à côté de **🛡️ Défendre** la **rappelle**, comme
+     un assaut : tes défenseurs décrochent tout de suite (en route ou au combat) et rentrent à pied, **sans perte** (ils sont sur tes terres).
      Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **font
      demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus rapide à rejoindre, comme les bateaux
      de renfort (on voit leur bannière ↩ revenir) : tu ne les récupères qu'à leur arrivée.
@@ -565,7 +566,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    (travaux de **40 s** pour passer au niveau 2, **60 s** pour le niveau 3, pour tous les bâtiments) et **✖** rouge pour le détruire (travaux de **10 s**, après une confirmation). La fenêtre en haut à gauche explique
    ce qu'apporte l'amélioration, avec ses propres boutons **Améliorer** et **🧨 Détruire**. Détruire une **ville**, une **église** ou un **port**
    fait aussi sauter les **moulins et casernes qui en dépendaient** (dans sa muraille, ou à une de ses places), sauf si une autre ville, église ou port les accueille. Pendant les travaux, une petite **jauge** se remplit sous le bâtiment ;
-   recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux, ils sont perdus.
+   recliquer dessus permet de les annuler (l'or d'une amélioration est rendu). S'il est pris pendant les travaux (avec sa ville, son église ou son port),
+   l'amélioration ou le chantier **continue pour celui qui l'a pris** (une démolition, elle, s'arrête).
    Les moulins et casernes occupent **2x2 cases** de ton territoire, les châteaux **4x4 cases** (pas de mer).
    **Tu peux construire au maximum 3 châteaux par partie** (capitale comprise ; le bouton **Château** affiche le compte, ex. « 1/3 ») ; les châteaux pris à l'ennemi
    ne comptent pas dans cette limite, et ta meilleure **église** améliorée en débloque d'autres.
@@ -1094,6 +1096,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.4** : 🛡️ une petite croix **×** rappelle ton armée de défense (en route ou au combat), comme un assaut : elle rentre à pied, sans perte · 🏗️ une ville, une église ou un port pris pendant une amélioration : les travaux **continuent pour le vainqueur** (au lieu d'être perdus) · 🏰 un assaut ne traverse plus la muraille d'une ville bâtie sur son chemin pendant sa marche : il la contourne
 - **v0.93.3** : ✝️ Croisades : la carte retrouve ses **vraies proportions** (860 x 544 cases) : au lieu d'étirer des bandes entières, une **loupe ronde** agrandit seulement la Terre sainte (2,8 fois au centre, de moins en moins jusqu'à 11 degrés autour) · 🔨 le son de construction frappe **deux coups**, le second un peu plus aigu (réglage `SOUND_ECHO`)
 - **v0.93.2** : ✝️ Croisades : la Méditerranée est encore moins étirée en hauteur (carte de 980 x 460 cases) : elle a presque ses vraies proportions, et la Terre sainte reste agrandie
 - **v0.93.1** : ✝️ Croisades : la carte est plus large (950 x 480) et seules les latitudes de la Terre sainte restent très étirées : la Méditerranée retrouve des proportions naturelles · ⚖️ forces de 1187 plus fidèles : l'empire Plantagenêt est plus grand que le royaume de Philippe Auguste (Rennes et Limoges en plus pour l'Angleterre, Lyon rendue à l'Empire) · 🎯 objectifs revus : plus d'objectif déjà rempli au départ pour la France et l'Empire (une ville de niveau 4, même en facile), et Saladin doit prendre Tripoli et le Krak des Chevaliers (au lieu de garder ce qu'il tient déjà)

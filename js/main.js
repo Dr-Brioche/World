@@ -241,6 +241,14 @@ const UI = {
           this.refreshAttacks();
         });
       }
+      // Croix d'une armée de défense : elle rentre (sans perte)
+      const recDef = e.target.closest('[data-recalldef]');
+      if (recDef) {
+        return this.act({ k: 'recallDefense', attack: +recDef.dataset.recalldef }, a => {
+          if (a) this.log(tr('↩️ Tes défenseurs décrochent : ils rentrent à pied, sans perte.', '↩️ Your defenders pull back: they walk home, with no losses.'), 'good');
+          this.refreshAttacks();
+        });
+      }
       const cancel = e.target.closest('[data-cancel]');
       if (!cancel) return;
       const id = cancel.dataset.cancel;
@@ -1765,7 +1773,8 @@ const UI = {
     const G = Game, h = G.human;
     const list = G.attacks.filter(a => !a.done && (a.attacker === h.id || a.target === h.id));
     const boats = G.expeditions.filter(e => !e.done && e.pid === h.id); // nos transports en mer
-    const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '') + (G.isPreparing(a) ? 'p' : '')).join(',') +
+    const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '') + (G.isPreparing(a) ? 'p' : '') +
+      (a.target === h.id && this.hasDefenders(a) ? 'd' : '')).join(',') +
       '|' + boats.map(e => e.id + (e.home !== undefined ? 'h' : '')).join(',');
     const box = $('attacks');
     if (key !== this.attacksKey) {
@@ -1801,7 +1810,9 @@ const UI = {
           `<b data-troops="${a.id}"></b>` +
           (G.isPreparing(a) // (pas encore entrée sur nos terres : on ne peut pas encore la contrer)
             ? `<button data-defend="${a.id}" disabled title="${tr('Elle marche encore sur ses terres : tu pourras la contrer dès qu\'elle entre sur les tiennes', 'It is still marching on its own lands: you can counter it as soon as it enters yours')}">🛡️ ${tr('Défendre', 'Defend')}</button></div>`
-            : `<button data-defend="${a.id}" title="${tr('Envoyer le % de soldats choisi contre cet assaut', 'Send the chosen % of soldiers against this assault')}">🛡️ ${tr('Défendre', 'Defend')}</button></div>`);
+            : `<button data-defend="${a.id}" title="${tr('Envoyer le % de soldats choisi contre cet assaut', 'Send the chosen % of soldiers against this assault')}">🛡️ ${tr('Défendre', 'Defend')}</button>` +
+              // (🛡️ une armée de défense est partie : une petite croix pour la rappeler, comme un assaut)
+              (this.hasDefenders(a) ? `<button class="x" data-recalldef="${a.id}" title="${tr('Rappeler tes défenseurs : ils rentrent à pied, sans perte', 'Call your defenders back: they walk home, with no losses')}">×</button>` : '') + '</div>');
       }).join('') + boats.map(e => {
         // Transport en mer : débarquement, renforts vers un avant-poste, ou retour au port
         const what = e.home !== undefined ? `${ICONS.boatOut} ${tr('retour au port', 'back to port')}`
@@ -1836,6 +1847,9 @@ const UI = {
         (a.target === G.human.id && G.defendWait(a) > 0 ? tr(` · ⏳ renforts dans ${Math.ceil(G.defendWait(a))} s`, ` · ⏳ reinforcements in ${Math.ceil(G.defendWait(a))} s`) : '');
     }
   },
+
+  // Une armée de défense est-elle partie contre l'assaut a (en route, au combat, ou en renfort) ?
+  hasDefenders(a) { return (a.defenders || 0) + Game.defendersOnTheWay(a) >= 1; },
 
   // Petite croix dans le coin d'une barre (assaut ou transport en mer) : retraite, avec des pertes
   retreatCross(attr, id) {
