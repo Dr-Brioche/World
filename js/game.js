@@ -1388,6 +1388,8 @@ const GameRules = {
       for (const a of this.attacks) {
         if (a.done || a.target !== w.owner || a.retreatEnd !== undefined || a.castleTaken) continue;
         const route = a.pathTiles || a.path;
+        // (🧱 un mur dans son dos, sur le chemin déjà parcouru : retraite d'office, voir forcedRetreat)
+        if (route && route.slice(0, this.pathPassed(a)).some(t => mine.has(t))) { this.forcedRetreat(a, 1); continue; }
         if (!route || !route.slice(this.pathPassed(a)).some(t => mine.has(t))) continue;
         const p = this.players[a.attacker];
         if (this.rerouteAssault(a)) {
@@ -1401,6 +1403,30 @@ const GameRules = {
         this.endAttack(a);
       }
     }
+  },
+
+  // 🏰 Le royaume pid vient de bâtir la ville c : un assaut contre lui dont le chemin déjà parcouru passe dans sa
+  // muraille est coupé de chez lui. Personne ne traverse une muraille ennemie : il bat en retraite d'office, tout de
+  // suite, et la franchit quand même pour rentrer, en y perdant WALL_RETREAT_LOSS de ses soldats (voir forcedRetreat).
+  cutBehind(pid, c) {
+    for (const a of this.attacks.slice()) {
+      if (a.done || a.target !== pid || a.retreatEnd !== undefined || a.castleTaken || this.isPreparing(a)) continue;
+      const route = a.pathTiles || a.path;
+      if (route && route.slice(0, this.pathPassed(a)).some(t => this.inWalls(c, t))) this.forcedRetreat(a, 1);
+    }
+  },
+  // L'assaut a est coupé de chez lui par n murailles ou murs ennemis bâtis dans son dos : retraite d'office, et
+  // WALL_RETREAT_LOSS de ses soldats perdus par obstacle franchi (il rentre à pied, voir walkBack)
+  forcedRetreat(a, n) {
+    const keep = DMath.pow(1 - CONFIG.WALL_RETREAT_LOSS, n), p = this.players[a.attacker], d = this.players[a.target];
+    a.troops *= keep;
+    for (const r of a.pending) r.troops *= keep;
+    const lost = Math.round((1 - keep) * 100);
+    if (p.isHuman) UI.log(tr(`🧱 ${d.name} a bâti une muraille dans le dos de ton armée : elle bat en retraite d'office, et y perd ${lost} % de ses soldats en la franchissant.`,
+      `🧱 ${d.name} built walls behind your army: it is forced to retreat, and loses ${lost}% of its soldiers crossing them.`), 'warn', d);
+    else if (d.isHuman) UI.log(tr(`🧱 Ta muraille coupe l'armée ${this.deName(p.name)} de chez elle : elle bat en retraite et y perd ${lost} % de ses soldats !`,
+      `🧱 Your walls cut ${possessive(p.name)} army off from home: it retreats and loses ${lost}% of its soldiers!`), 'good', p);
+    this.endAttack(a);
   },
 
   // Jusqu'où l'assaut a est passé sur son chemin : les cases de route d'index < à ce nombre sont derrière lui
@@ -3496,6 +3522,7 @@ const GameRules = {
     this.placeBuilding(i, type);
     // Chantier de BUILD_TIME secondes (petite jauge) : le bâtiment ne produit rien avant la fin
     this.startWorks(p, i, 'build', CONFIG.BUILD_TIME, cost);
+    if (type === B_CASTLE) this.cutBehind(p.id, i); // (🏰 une ville bâtie dans le dos d'un assaut : voir cutBehind)
     return null;
   },
 
@@ -5602,14 +5629,15 @@ const GameRules = {
   // Un fleuve qui coupe ses terres se passe à gué (voir ownLandPath) : FORD_TIME secondes par case de fleuve.
   // (direct : tout droit, sans chercher de chemin, pour les derniers pas jusqu'à l'ennemi : voir arriveDefenders)
   // (given : le chemin à suivre, déjà calculé, comme celui qui traverse les terres d'un allié : voir passagePlan)
-  walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS, direct = false, given = null) {
+  // (sea : le chemin passe en bateau sur l'eau, chaque case navigable compte pour sea : voir les reliques)
+  walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS, direct = false, given = null, sea = 0) {
     const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x), W = this.W;
     const speed = this.defenderSpeed(troops, bonus), ford = this.fordCost(speed);
     const path = given || (direct ? null : this.ownLandPath(pid, tile(from), tile(to), ford)), march = this.marchCost(pid);
     const pts = [from], cum = [0];
     const add = (q, extra = 0) => {
       const last = pts[pts.length - 1];
-      const t = tile(q), cost = this.isLand(t) ? march(t) : 1;
+      const t = tile(q), cost = sea && this.navigable(t) ? sea : this.isLand(t) ? march(t) : 1;
       pts.push(q);
       cum.push(cum[cum.length - 1] + DMath.hypot(q.x - last.x, q.y - last.y) * cost + extra);
     };

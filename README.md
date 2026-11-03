@@ -704,8 +704,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      le franchir** : les armées ennemies doivent faire le tour. Si un mur tout neuf coupe la route d'un assaut déjà lancé,
      **devant lui** (là où il n'est pas encore passé), l'armée **le contourne** par un autre chemin ; s'il n'y a **pas d'autre
      chemin** jusqu'à sa cible, elle **rebrousse chemin** (assaut annulé) et rentre à pied, comme une retraite. Un mur bâti sur la partie de la route **déjà
-     passée** n'arrête pas l'assaut. Cas rare : une armée qui **bat en retraite** avec un mur dans son dos le franchit quand
-     même, mais perd **50 % de ses soldats** à chaque mur franchi. Si la ville est prise ou détruite, ses murs disparaissent
+     passée** n'arrête pas l'assaut. **Personne ne traverse une muraille ni un mur
+     ennemi** (ni un assaut, ni une armée de relique). Cas rare : une **ville** (ou un mur) bâtie **dans le dos** d'un assaut, sur
+     le chemin qu'il a déjà parcouru, le coupe de chez lui : il **bat en retraite d'office**, tout de suite, et perd **15 % de ses
+     soldats** par muraille ou mur franchi pour rentrer (réglage `WALL_RETREAT_LOSS`). Si la ville est prise ou détruite, ses murs disparaissent
      (et un mur dont une case est prise aussi). `Échap` ou clic droit annule la pose. **Les bots aussi bâtissent des murs** :
      ils ferment le passage par où un voisin ennemi viendrait assiéger leur ville.
    - ⛪ **Église** : elle coûte cher, mais **se construit n'importe où** sur ton territoire,
@@ -781,6 +783,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (on voit leurs soldats tomber, comme un assaut contre des défenseurs ; la prise de la relique attend la fin du combat) ;
      le vainqueur garde ses survivants et prend la relique pour la rapporter chez lui (s'il n'a pas de cathédrale, elle tombe là).
      Une armée qui en poursuit une autre l'attend **15 s** au plus si elle passe derrière une muraille, puis rentre.
+     ⛵ **Une relique sur une île** (une terre où tu n'as aucune ville) se va chercher **en bateau** : il faut un **port royal**
+     (port de niveau 3). L'armée part d'un de tes ports royaux, débarque sur l'île, prend la relique, la rapporte en bateau
+     jusqu'à un de tes ports royaux, puis à pied jusqu'à ta cathédrale (le bateau va 2,5 fois plus vite que la marche ; un
+     bateau sur l'eau, à la place de la croix, la signale). On peut aussi poursuivre une armée de relique en bateau.
      **Clique sur ta propre armée de relique** (à l'aller ou au retour) pour lui envoyer des renforts : sur tes terres, ils
      la rejoignent tout de suite ; plus loin, ils marchent depuis ta ville la plus proche (plus elle est loin, plus c'est long). Tu perds ta dernière
      cathédrale en route : ton armée pose la relique là où elle est et rentre. Une fois déposée, la relique reste **liée à
@@ -1115,6 +1121,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.10** : ⛵ une **relique sur une île** se rapporte **en bateau** : l'armée part d'un de tes ports royaux (niveau 3) et revient à un port royal, puis marche jusqu'à ta cathédrale · 🧱 une ville (ou un mur) bâtie **dans le dos** d'un assaut le force à **battre en retraite d'office**, avec **−15 %** de soldats par muraille ou mur franchi (au lieu de −50 %)
 - **v0.93.9** : 🧱 **mine fortifiée** : une mine de niveau 2 peut être fortifiée (💰 800, 30 s) : une petite muraille que la Croyance ne convertit plus, une garnison de 50 soldats qui se défend seule (un assaut doit l'assiéger 10 s) ; aucune armée n'en part, et elle ne tient pas seule un territoire · les bots fortifient leurs mines quand un voisin les convertit
 - **v0.93.8** : ⚔️ une interception de relique est un **vrai combat** : les deux armées s'arrêtent et on voit leurs soldats tomber · 📿 clic sur ta propre armée de relique (aussi au retour) : des **renforts**, plus ou moins vite selon la distance à ta ville la plus proche · ↩️ une armée qui rentre (retraite, assaut fini ou bloqué par un nouveau mur, défenseurs, armée de relique) **marche jusqu'à sa ville**, par le chemin de son assaut à l'envers, **2 fois plus vite** qu'un assaut, au lieu de revenir d'un coup · ⛪ la cathédrale a **3 places** pour les moulins et casernes (au lieu de 5) : 1, 2 puis 3 places selon le niveau de l'église
 - **v0.93.7** : 📿 les armées de relique (pour la chercher, la rapporter ou l'intercepter) **ne traversent plus la muraille des villes ennemies** ni leurs murs : elles en font le tour (et l'armée qui en poursuit une autre suit ce chemin jusqu'au bout, au lieu de foncer tout droit)

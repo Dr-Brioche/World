@@ -1621,7 +1621,9 @@ const Render = {
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = '#f0c94a';
       ctx.stroke();
-      Icons.draw(ctx, 'cross', x, y, 13, '#f0c94a');
+      // (⛵ en mer : un bateau à la place de la croix)
+      const at = r.phase === 'take' ? null : G.relicPos(r), wet = at && !G.isLand(Math.floor(at.y) * G.W + Math.floor(at.x));
+      Icons.draw(ctx, wet ? 'ship' : 'cross', x, y, 13, '#f0c94a');
       ctx.font = '700 12px Georgia, serif';
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
