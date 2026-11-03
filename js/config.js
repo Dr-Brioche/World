@@ -235,7 +235,7 @@ const CONFIG = {
   // 🔥 Assaut viking (port royal, niveau 3) : on l'achète VIKING_COST pièces, il est alors prêt (un seul à la fois) ;
   // on le lance quand on veut, depuis un port royal, sur une ville (ou un port fortifié) ennemie de l'autre côté de
   // la mer, à VIKING_RANGE cases au plus d'une de ses côtes : les bateaux traversent sans pertes, l'armée débarque et
-  // marche droit sur la cible, avec des soldats VIKING_BONUS plus forts (+50 %). C'est un raid : s'il l'emporte, la
+  // marche droit sur la cible, avec des soldats VIKING_BONUS plus forts (+100 %). C'est un raid : s'il l'emporte, la
   // cible est DÉTRUITE (avec ses moulins et casernes), et chaque bâtiment détruit rapporte VIKING_LOOT pièces.
   // Puis les survivants rentrent par bateau (de même s'il échoue).
   VIKING_COST: 3000,
@@ -243,7 +243,7 @@ const CONFIG = {
   VIKING_RETURN_SPEED: 2,      // les Vikings rentrent au port 2 fois plus vite qu'ils ne sont venus
   VIKING_COOLDOWN: 60,         // secondes entre deux assauts vikings lancés (une fois par minute au plus)
   VIKING_RANGE: 25,
-  VIKING_BONUS: 0.5,
+  VIKING_BONUS: 1,             // soldats vikings 2 fois plus forts (+100 %), en plus des autres bonus de force
   VIKING_MIN_TROOPS: 20,       // soldats à embarquer au moins
   CRUSADE_FAITH: 1000,
   CRUSADE_TIME: 60,

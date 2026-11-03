@@ -880,7 +880,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      de ses côtes**, et **reclique dessus** pour confirmer (comme un assaut : le 1er clic choisit la cible ; ou fais un clic droit
      sur elle → « 🔥 Assaut viking ») : tes bateaux partent **de ton port royal** avec le %
      de soldats du curseur « Envoyer », traversent **sans aucune perte en mer**, débarquent sur la côte la plus proche de la
-     cible et l'armée marche droit sur elle, **sans avant-poste**, avec des soldats **50 % plus forts**. C'est un **raid** :
+     cible et l'armée marche droit sur elle, **sans avant-poste**, avec des soldats **2 fois plus forts** (+100 %, en plus de tes autres bonus de force). C'est un **raid** :
      à la fin du siège, la ville n'est pas prise mais **détruite**, avec ses moulins et casernes, et chaque bâtiment détruit
      te rapporte **💰 300 de butin** ; les terres restent à l'ennemi. Puis les survivants rembarquent et rentrent au port, **2 fois plus vite** qu'à l'aller (de
      même s'il échoue ou si tu le rappelles ; réglage `VIKING_RETURN_SPEED`). **Un seul assaut viking par minute** au plus. Bateaux et assauts vikings portent une **🔥 flamme** pour les reconnaître.
@@ -1129,6 +1129,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.17** : 🔥 les **Vikings** sont **2 fois plus forts** (+100 % au lieu de +50 %), en plus des autres bonus de force (caserne, mines de fer, cité impériale)
 - **v0.93.16** : 🛡️ une armée de défense affiche ses **renforts en route** entre parenthèses (« 🛡 467 (+500) »), en marche comme au combat · ⛰️ un **grand fleuve** (franchissable à gué) ne coupe plus la muraille d'une ville : seuls les sommets, la mer et les lacs la coupent
 - **v0.93.15** : ⛰️ la muraille d'une ville ne s'étend plus **de l'autre côté d'un sommet ou de la mer** : un bout de muraille isolé derrière une montagne faisait échouer les assauts contre la ville (ils visaient un pied de mur qu'ils ne pouvaient pas atteindre)
 - **v0.93.14** : 🛡️ la garnison d'un **avant-poste** (ou d'un port fortifié) attend l'ennemi derrière sa muraille et ne sort qu'au **siège** (elle sortait dès le lancement de l'assaut, avant même son arrivée) · 🔥 l'assaut viking se valide d'un **double clic** sur sa cible (le 1er clic la choisit)
