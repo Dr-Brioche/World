@@ -32,7 +32,8 @@ const GameRules = {
     this.players = [];
     this.attacks = [];
     this.expeditions = []; // bateaux en route vers une côte
-    this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up' ou 'down', start, end, pid, paid }
+    this.works = new Map();  // travaux en cours sur les bâtiments : ancre → { kind: 'up', 'build', 'down' ou 'fort', start, end, pid, paid }
+    this.fortMines = new Set(); // 🧱 mines fortifiées (leur case d'ancrage), voir fortifyMine
     this.defis = null;       // ⭐ les défis de la campagne et le vœu (voir defis.js)
     this.relicReset();       // 📿 les reliques saintes (voir reliques.js)
     this.walls = [];         // murs bâtis par les villes : { castle, owner, tiles, start, ready, done }
@@ -138,7 +139,7 @@ const GameRules = {
     const mix = v => { h = Math.imul(h ^ (v | 0), 16777619) >>> 0; };
     mix(this.tick);
     for (let i = 0; i < this.N; i += 7) { mix(this.owner[i]); mix(this.building[i]); }
-    for (const a of this.buildingTiles) { mix(a); mix(this.level[a]); mix(Math.round(this.garrison[a] || 0)); }
+    for (const a of this.buildingTiles) { mix(a); mix(this.level[a]); mix(Math.round(this.garrison[a] || 0)); mix(this.fortMines.has(a) ? 1 : 0); }
     for (const p of this.players) { mix(p.alive ? 1 : 0); mix(p.tiles); mix(Math.round(p.troops)); mix(Math.round(p.gold)); mix(p.pact); }
     for (const a of this.attacks) { mix(a.attacker); mix(a.target); mix(Math.round(a.troops)); }
     for (const r of this.relics || []) { mix(r.tile); mix(r.run); }
@@ -521,6 +522,7 @@ const GameRules = {
     this.outposts.delete(a);
     this.colonies.delete(a);
     this.works.delete(a);
+    this.fortMines.delete(a);
     if (o >= 0) this.players[o].bCount[type]--;
     this.buildingTiles = this.buildingTiles.filter(b => b !== a);
     this.castles = this.castles.filter(c => c !== a);
@@ -1525,6 +1527,16 @@ const GameRules = {
         if (p.isHuman) Music.sound('build'); // (🔔 le son de la construction)
         continue;
       }
+      if (w.kind === 'fort') { // (🧱 la petite muraille de la mine est debout : sa garnison s'y installe)
+        this.fortMines.add(a);
+        this.garrison[a] = this.garrisonMax(a);
+        this.version++;
+        if (p.isHuman) {
+          Music.sound('build');
+          UI.log(tr(`🧱 Ta mine est fortifiée : la Croyance ne la convertit plus, et ${MINE_FORT.GARRISON} soldats la gardent !`, `🧱 Your mine is fortified: Faith no longer converts it, and ${MINE_FORT.GARRISON} soldiers guard it!`), 'good');
+        }
+        continue;
+      }
       if (w.kind === 'up') {
         if (BUILDING_LEVELS[type][this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
         this.version++;
@@ -1783,6 +1795,7 @@ const GameRules = {
   },
 
   // Bonus de défense dans la muraille d'un port royal, comme un fort en bois (0 si aucun)
+  // (🧱 et dans la petite muraille d'une mine fortifiée : voir MINE_FORT)
   portBonus(pid, i) {
     let best = 0;
     for (const a of this.walledPorts()) {
@@ -1790,7 +1803,53 @@ const GameRules = {
       const info = this.buildingInfo(a);
       if (info.bonus > best && this.inChurchRange(a, i, info.radius)) best = info.bonus;
     }
-    return best;
+    return Math.max(best, this.mineFortBonus(pid, i));
+  },
+
+  // --- 🧱 Mines fortifiées ---
+  mineFortified(a) { return this.building[a] === B_MINE && this.fortMines.has(a); },
+  inMineWalls(a, i) { return this.inChurchRange(a, i, MINE_FORT.RADIUS); },
+  // Bonus de défense de la case i dans la petite muraille d'une mine fortifiée de pid (0 sinon)
+  mineFortBonus(pid, i) {
+    if (!this.fortMines.size) return 0;
+    for (const a of this.fortMines) if (this.owner[a] === pid && this.building[a] === B_MINE && this.inMineWalls(a, i)) return MINE_FORT.BONUS;
+    return 0;
+  },
+  // Les terres de pid dans la petite muraille de la mine a
+  mineZone(a) {
+    const o = this.owner[a], R = MINE_FORT.RADIUS, zone = [], cx = a % this.W, cy = (a / this.W) | 0;
+    for (let y = Math.max(0, cy - R); y <= Math.min(this.H - 1, cy + R + 1); y++) {
+      for (let x = Math.max(0, cx - R); x <= Math.min(this.W - 1, cx + R + 1); x++) {
+        const i = y * this.W + x;
+        if (this.owner[i] === o && this.inMineWalls(a, i)) zone.push(i);
+      }
+    }
+    return zone;
+  },
+  // Pourquoi la mine a ne peut pas être fortifiée par p (null si elle le peut)
+  fortifyError(p, a) {
+    if (this.building[a] !== B_MINE || this.owner[a] !== p.id) return tr('Ce n\'est pas une de tes mines.', 'This is not one of your mines.');
+    if (this.fortMines.has(a)) return tr('Cette mine est déjà fortifiée.', 'This mine is already fortified.');
+    if ((this.level[a] || 1) < 2) return tr('Il faut d\'abord améliorer la mine (niveau 2).', 'Upgrade the mine first (level 2).');
+    if (this.works.has(a)) return tr('Des travaux sont déjà en cours sur ce bâtiment.', 'Works are already under way on this building.');
+    if (p.gold < MINE_FORT.COST) return tr(`Pas assez d'or : il faut 💰 ${fmt(MINE_FORT.COST)}`, `Not enough gold: you need 💰 ${fmt(MINE_FORT.COST)}`);
+    return null;
+  },
+  // Ordre « fortify » : la petite muraille se bâtit en MINE_FORT.TIME secondes (annulable : l'or est rendu)
+  fortifyMine(p, a) {
+    const err = this.fortifyError(p, a);
+    if (err) return err;
+    p.gold -= MINE_FORT.COST;
+    this.startWorks(p, a, 'fort', MINE_FORT.TIME, MINE_FORT.COST);
+    return null;
+  },
+  // Fin du siège d'une mine fortifiée : elle est prise, avec les terres de sa petite muraille
+  takeMine(a, c) {
+    const zone = this.mineZone(c);
+    for (const j of this.footprint(c, B_MINE)) this.setOwner(j, a.attacker);
+    for (const j of zone) if (this.owner[j] === a.target && !this.building[j]) this.setOwner(j, a.attacker);
+    this.onTargetTaken(a, B_MINE, false);
+    return this.endAttack(a);
   },
 
   // --- Apparition des royaumes ---
@@ -2477,6 +2536,7 @@ const GameRules = {
         case 'build': return this.tryBuild(p, o.i, o.type);
         case 'upgrade': return this.upgradeBuilding(p, o.a);
         case 'cancelWorks': return this.cancelWorks(p, o.a);
+        case 'fortify': return this.fortifyMine(p, o.a); // (🧱 fortifier une mine de niveau 2)
         case 'demolish': return this.demolishBuilding(p, o.a);
         case 'defend': return this.sendDefenders(pid, o.attack, o.troops);
         case 'cancelAttack': return this.cancelAttack(pid, o.attack);
@@ -3204,6 +3264,7 @@ const GameRules = {
       * ((this.cm || this.hy || this.cr) && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1) * boost;
     // (⚓ un port fortifié relié par un mur à des villes du royaume : WALL_LINK_GARRISON soldats de plus par ville)
     if (t === B_PORT) return (this.buildingInfo(a).garrison || 0) + (this.walls.length && this.walledPort(a) ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0);
+    if (t === B_MINE) return this.mineFortified(a) ? MINE_FORT.GARRISON : 0; // (🧱 une mine fortifiée)
     return 0;
   },
 
@@ -4138,6 +4199,10 @@ const GameRules = {
       const k = path.findIndex(i => this.inPortWalls(c, i));
       if (k >= 0) path.length = k + 1;
     }
+    if (path && this.mineFortified(c)) {
+      const k = path.findIndex(i => this.inMineWalls(c, i));
+      if (k >= 0) path.length = k + 1;
+    }
     return path;
   },
 
@@ -4245,8 +4310,9 @@ const GameRules = {
     const castles = this.castles.filter(c => this.owner[c] === pid);
     const ports = this.walledPorts().filter(a => this.owner[a] === pid);
     const outposts = [...this.outposts.keys()].filter(a => this.owner[a] === pid && this.outpostReady(a));
+    const mines = [...this.fortMines].filter(a => this.owner[a] === pid && this.building[a] === B_MINE); // (🧱 mines fortifiées)
     let sig = 17;
-    for (const list of [castles, ports, outposts]) { sig = Math.imul(sig, 31) + list.length; for (const a of list) sig = Math.imul(sig ^ a, 16777619) + this.level[a]; }
+    for (const list of [castles, ports, outposts, mines]) { sig = Math.imul(sig, 31) + list.length; for (const a of list) sig = Math.imul(sig ^ a, 16777619) + this.level[a]; }
     const memo = this.defGrids || (this.defGrids = new Map()), had = memo.get(pid);
     if (had && had.sig === sig && had.grid.length === N && had.map === this.terrain) return had.grid;
     const grid = had && had.grid.length === N ? had.grid.fill(0) : new Float32Array(N);
@@ -4268,6 +4334,10 @@ const GameRules = {
     for (const a of ports) {
       const info = this.buildingInfo(a), half = (this.sizeOf(B_CHURCH) - 1) / 2;
       stamp(a % W + half, ((a / W) | 0) + half, info.radius, info.bonus, (x, y, i) => this.inChurchRange(a, i, info.radius));
+    }
+    for (const a of mines) {
+      const half = (this.sizeOf(B_CHURCH) - 1) / 2;
+      stamp(a % W + half, ((a / W) | 0) + half, MINE_FORT.RADIUS, MINE_FORT.BONUS, (x, y, i) => this.inMineWalls(a, i));
     }
     for (const a of outposts) {
       const R = CONFIG.LANDING_RADIUS + 1, half = this.sizeOf(this.building[a]) / 2;
@@ -5217,7 +5287,7 @@ const GameRules = {
       // Un assaut de front ne prend pas de château ni d'avant-poste (il faut les viser, en cliquant dessus),
       // et ne passe pas les murailles : il s'arrête au pied du mur
       const castle = a.target >= 0 && a.targetCastle < 0 && a.link === undefined &&
-        (this.building[t] === B_CASTLE || this.building[t] === B_OUTPOST || this.castleProtects(a.target, t));
+        (this.building[t] === B_CASTLE || this.building[t] === B_OUTPOST || this.castleProtects(a.target, t) || this.mineFortBonus(a.target, t) > 0);
       if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside || castle || this.wallAt[t] || (pass && !pass(t))) {
         a.list[idx] = a.list[a.list.length - 1];
         a.list.pop();
@@ -5425,7 +5495,7 @@ const GameRules = {
   // Garnison du château visé qui attend encore derrière sa muraille (0 une fois sortie)
   garrisonWaiting(a) {
     const c = a.targetCastle;
-    return !a.garrisonOut && c >= 0 && this.building[c] === B_CASTLE && this.owner[c] === a.target ? this.garrison[c] : 0;
+    return !a.garrisonOut && c >= 0 && (this.building[c] === B_CASTLE || this.mineFortified(c)) && this.owner[c] === a.target ? this.garrison[c] : 0;
   },
 
   // Combien vaut un soldat de garnison au combat : GARRISON_POWER (3), sauf pour un avant-poste en construction
@@ -6034,7 +6104,8 @@ const GameRules = {
     }
     // Début d'un assaut sur un port ou un avant-poste : sa garnison sort le défendre
     // (celle d'un château, elle, attend l'ennemi derrière sa muraille : voir startSiege)
-    if (a.prepTicks && this.tick === a.startTick && a.targetCastle >= 0 && this.building[a.targetCastle] !== B_CASTLE && !a.done) {
+    // (🧱 une mine fortifiée garde aussi la sienne derrière sa petite muraille, jusqu'au siège)
+    if (a.prepTicks && this.tick === a.startTick && a.targetCastle >= 0 && this.building[a.targetCastle] !== B_CASTLE && !this.mineFortified(a.targetCastle) && !a.done) {
       a.garrison = this.garrison[a.targetCastle];
       this.garrison[a.targetCastle] = 0;
       a.garrisonOut = true;
@@ -6055,11 +6126,11 @@ const GameRules = {
     if (a.siege) {
       if (this.owner[a.siege.tile] !== a.target) return this.endAttack(a); // le château a changé de mains
       const sb = this.building[a.siege.tile];
-      if (sb !== B_CASTLE && sb !== B_OUTPOST && sb !== B_PORT) return this.endAttack(a); // (il n'existe plus)
+      if (sb !== B_CASTLE && sb !== B_OUTPOST && sb !== B_PORT && sb !== B_MINE) return this.endAttack(a); // (il n'existe plus)
       if (this.tick < a.siege.end) return;
       if ((a.viking !== undefined && !a.landed) || a.raid) return this.vikingRaid(a, this.anchor[a.siege.tile]); // (🔥 un raid viking ou une razzia détruit sa cible)
       return sb === B_OUTPOST ? this.takeOutpost(a, a.siege.tile) : sb === B_PORT ? this.takePort(a, this.anchor[a.siege.tile])
-        : this.takeCastle(a, a.siege.tile);
+        : sb === B_MINE ? this.takeMine(a, this.anchor[a.siege.tile]) : this.takeCastle(a, a.siege.tile);
     }
     // Points de marche de ce tour : prendre une case en coûte autant que sa défense de terrain
     // (plaine 1, forêt 1.6, colline 2.2, montagne 2.8, fleuve 4). On avance donc vite en plaine
@@ -6121,6 +6192,10 @@ const GameRules = {
       if (this.building[t] === B_OUTPOST && this.anchor[t] === a.targetCastle) return this.startSiege(a, t);
       // (un port fortifié aussi, comme une petite ville : l'armée s'arrête à sa petite muraille)
       if (a.target >= 0 && tc >= 0 && this.walledPort(tc) && this.owner[tc] === a.target && this.inPortWalls(tc, t)) {
+        return this.startSiege(a, tc);
+      }
+      // (🧱 une mine fortifiée aussi : l'armée s'arrête à sa petite muraille, et sa garnison sort se battre)
+      if (a.target >= 0 && tc >= 0 && this.mineFortified(tc) && this.owner[tc] === a.target && this.inMineWalls(tc, t)) {
         return this.startSiege(a, tc);
       }
       // (un assaut contre un royaume avance un peu plus vite que la normale dans le relief : ASSAULT_TERRAIN_SLOWDOWN)
@@ -6254,8 +6329,8 @@ const GameRules = {
 
   // L'armée arrive au pied du château (case t) : le siège dure quelques secondes selon son niveau
   startSiege(a, t) {
-    const outpost = this.building[t] === B_OUTPOST, port = this.building[t] === B_PORT;
-    let secs = outpost ? CONFIG.OUTPOST_SIEGE : port ? CONFIG.PORT_SIEGE : this.castleInfo(this.anchor[t]).siege;
+    const outpost = this.building[t] === B_OUTPOST, port = this.building[t] === B_PORT, mine = this.building[t] === B_MINE;
+    let secs = outpost ? CONFIG.OUTPOST_SIEGE : port ? CONFIG.PORT_SIEGE : mine ? MINE_FORT.SIEGE : this.castleInfo(this.anchor[t]).siege;
     // (👑 Charlemagne : le siège de Rome dure ROME_SIEGE secondes, le temps que les Francs viennent au secours)
     if (this.cm && this.anchor[t] === this.cm.capital.papaute && this.owner[t] === this.cm.role.papaute) secs = CHARLEMAGNE.ROME_SIEGE[this.cm.diff];
     // (⚜️ les canons du roi de France, Jeanne d'Arc : voir hySiege)
@@ -6271,6 +6346,7 @@ const GameRules = {
     const p = this.players[a.attacker], d = this.players[a.target];
     const what = outpost ? tr(['un avant-poste', 'ton avant-poste', '⛺'], ['an outpost', 'your outpost', '⛺'])
       : port ? tr(['un port fortifié', 'ton port fortifié', '⚓'], ['a fortified port', 'your fortified port', '⚓'])
+      : mine ? tr(['une mine fortifiée', 'ta mine fortifiée', '⛏️'], ['a fortified mine', 'your fortified mine', '⛏️'])
       : tr(['un château', 'ton château', '🏰'], ['a castle', 'your castle', '🏰']);
     if (p.isHuman) UI.log(tr(`${what[2]} Ton armée assiège ${what[0]} ${this.deName(d.name)} : il tombe dans ${secs} s si personne ne le défend.`,
       `${what[2]} Your army is besieging ${what[0]} of ${d.name}: it falls in ${secs} s if no one defends it.`), 'good', d);

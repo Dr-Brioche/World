@@ -602,6 +602,12 @@ const TERRAIN_PRODUCTION = {
 // ⛏️ Les mines : elles se bâtissent seulement sur un filon (des taches de minerai posées au hasard sur la carte, dans les
 // montagnes, ou les collines pour la pierre). Une mine a 2 niveaux, et rapporte 2 fois plus si une route la relie à une
 // de ses villes (une ville à moins de MINE_ROAD_DISTANCE cases, sur la même terre). Elle ne se démolit pas.
+// 🧱 Mine fortifiée : une mine de niveau 2 peut être fortifiée (bouton « Fortifier », 💰 COST, TIME secondes de
+// travaux) : une petite muraille de RADIUS cases autour d'elle. La Croyance ne convertit plus ce qui est dedans ; une
+// garnison de GARRISON soldats la défend (elle se reconstitue), et un assaut doit l'assiéger SIEGE secondes, avec
+// BONUS de défense en plus (comme un fort en bois). Mais ce n'est pas une ville : aucune armée n'en part (ni assaut ni
+// défenseurs), et elle ne suffit pas à tenir un territoire (sans ville ni port fortifié, il reste désorganisé).
+const MINE_FORT = { COST: 800, TIME: 30, RADIUS: 4, GARRISON: 50, SIEGE: 10, BONUS: 1 };
 const MINE_LEVELS = [
   null,
   { name: tr('Site minier', 'Mining site'),  img: 'img/mine1.webp', size: 3 },

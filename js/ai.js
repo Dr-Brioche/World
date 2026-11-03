@@ -461,6 +461,11 @@ const AI = {
     // (zeal : un peu en facile, plus en difficile)
     const zeal = Game.difficulty.zeal || 1;
     const behind = [...Game.neighborStats(p.id).keys()].some(o => o >= 0 && Game.faithEdge(o, p.id) > 0);
+    // 🧱 Un voisin le convertit : il fortifie une de ses mines de niveau 2 (la Croyance ne la prendra plus)
+    if (behind && p.gold >= MINE_FORT.COST * 1.5) {
+      const m = Game.buildingTiles.find(a => Game.building[a] === B_MINE && !Game.fortifyError(p, a));
+      if (m !== undefined && Game.rand() < 0.5) { Game.fortifyMine(p, m); return; }
+    }
     // Parfois, améliorer un château ou un moulin plutôt que construire
     if (Game.rand() < 0.3) {
       const mine = Game.buildingTiles.filter(a => Game.owner[a] === p.id && !Game.works.has(a)
