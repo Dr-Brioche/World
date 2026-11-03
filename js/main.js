@@ -999,7 +999,7 @@ const UI = {
     if (G.holdsAlone(a) && G.isIsolated(a)) txt += tr(' · 🚩 isolé', ' · 🚩 isolated');
     const w = G.works.get(a);
     if (w) txt += { up: tr(' · ⬆️ amélioration en cours', ' · ⬆️ upgrade under way'), build: tr(' · 🏗️ en construction', ' · 🏗️ under construction'),
-      down: tr(' · 🧨 démolition en cours', ' · 🧨 demolition under way') }[w.kind];
+      down: tr(' · 🧨 démolition en cours', ' · 🧨 demolition under way'), fort: tr(' · 🧱 fortification en cours', ' · 🧱 fortification under way') }[w.kind];
     else if (o === h.id) txt += tr(' · clique pour ses options', ' · click for its options');
     return txt;
   },
@@ -1013,6 +1013,7 @@ const UI = {
       : d.kind === 'diamond' ? tr(` · 💎 extrait à ${Math.floor(d.progress * 100)} % (${d.paid}/4 versements)`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted (${d.paid}/4 payments)`) : '';
     if (!G.mineSpent(a)) txt += G.mineLinked(a) ? tr(` · 🛤️ reliée à une ville : ×${CONFIG.MINE_ROAD_FACTOR}`, ` · 🛤️ linked to a city: ×${CONFIG.MINE_ROAD_FACTOR}`)
       : tr(` · sans route (×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville)`, ` · no road (×${CONFIG.MINE_ROAD_FACTOR} if linked to a city)`);
+    if (G.mineFortified(a)) txt += tr(` · 🧱 fortifiée (🛡️ ${fmt(G.garrison[a])} / ${MINE_FORT.GARRISON})`, ` · 🧱 fortified (🛡️ ${fmt(G.garrison[a])} / ${MINE_FORT.GARRISON})`);
     return txt;
   },
 
@@ -1073,6 +1074,14 @@ const UI = {
       this.updateTradeButton(trade, a, true);
       trade.addEventListener('click', () => { close(); this.closeActionMenu(); this.startTrade(a); });
     }
+    // 🧱 Mine de niveau 2, pas encore fortifiée : bouton « Fortifier »
+    if (type === B_MINE && G.level[a] >= 2 && !G.fortMines.has(a) && !G.works.get(a)) {
+      const btn = document.createElement('button');
+      btn.dataset.fort = '';
+      el.querySelector('.choices').prepend(btn);
+      this.updateFortButton(btn, a, true);
+      btn.addEventListener('click', () => { close(); this.closeActionMenu(); this.fortify(a); });
+    }
     // Grande caserne (niveau 3) : bouton « Recrutement de masse »
     if (type === B_BARRACKS && G.level[a] >= 3) {
       const btn = document.createElement('button');
@@ -1127,6 +1136,7 @@ const UI = {
       (G.building[a] === B_CHURCH && G.level[a] >= 3 ? `<button data-crusade class="up">${ICONS.cross}</button>` : '') +
       (G.building[a] === B_BARRACKS && G.level[a] >= 3 ? `<button data-levy class="up">${ICONS.spears}</button>` : '') +
       (G.building[a] === B_PORT && G.level[a] >= 3 ? `<button data-viking class="up">${ICONS.flame}</button>` : '') +
+      (G.building[a] === B_MINE && G.level[a] >= 2 && !G.fortMines.has(a) && !work ? `<button data-fort class="wall">${ICONS.wall}</button>` : '') +
       (G.building[a] !== B_MINE || work ? `<button data-x class="danger" title="${work ? tr('Annuler les travaux', 'Cancel the works') : tr('Détruire', 'Demolish')}">✖</button>` : '');
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
@@ -1157,6 +1167,11 @@ const UI = {
     if (vikingBtn) {
       this.updateVikingButton(vikingBtn, false);
       vikingBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.vikingButton(); });
+    }
+    const fortBtn = el.querySelector('[data-fort]');
+    if (fortBtn) {
+      this.updateFortButton(fortBtn, a, false);
+      fortBtn.addEventListener('click', () => { this.closeBuildingMenus(); this.fortify(a); });
     }
     const crusadeBtn = el.querySelector('[data-crusade]');
     if (crusadeBtn) {
@@ -2345,6 +2360,8 @@ const UI = {
       if (btn) this.updateWallButton(btn, box.buildingAnchor, text);
       const cb = box && box.buildingAnchor !== undefined && box.querySelector('[data-crusade]');
       if (cb) this.updateCrusadeButton(cb, box.buildingAnchor, text);
+      const ft = box && box.buildingAnchor !== undefined && box.querySelector('[data-fort]');
+      if (ft) this.updateFortButton(ft, box.buildingAnchor, text);
       const lv = box && box.buildingAnchor !== undefined && box.querySelector('[data-levy]');
       if (lv) this.updateLevyButton(lv, box.buildingAnchor, text);
       const vk = box && box.buildingAnchor !== undefined && box.querySelector('[data-viking]');
@@ -2502,6 +2519,26 @@ const UI = {
   levyRunning(left) {
     const f = Game.levyFactor(Game.human).toFixed(1);
     return tr(`Recrutement de masse en cours : encore ${left} s (recrutement x${f.replace('.', ',')})`, `Mass recruitment under way: ${left} s left (recruitment x${f})`);
+  },
+  // 🧱 Le bouton « Fortifier » d'une mine de niveau 2 : grisé s'il manque de l'or (ou si des travaux sont en cours)
+  fortText() {
+    return tr(`Fortifier (💰 ${fmt(MINE_FORT.COST)}) : une petite muraille autour de la mine, en ${MINE_FORT.TIME} s. La Croyance ne la convertit plus, ${MINE_FORT.GARRISON} soldats la gardent et un assaut doit l'assiéger ; mais aucune armée n'en part, et elle ne tient pas seule un territoire.`,
+      `Fortify (💰 ${fmt(MINE_FORT.COST)}): small walls around the mine, in ${MINE_FORT.TIME} s. Faith no longer converts it, ${MINE_FORT.GARRISON} soldiers guard it and an assault must besiege it; but no army sets out from it, and it cannot hold a territory on its own.`);
+  },
+  updateFortButton(btn, a, text) {
+    const G = Game, err = G.fortifyError(G.human, a);
+    btn.disabled = !!err;
+    btn.title = err || this.fortText();
+    if (text) {
+      const html = tr(`🧱 Fortifier (💰 ${fmt(MINE_FORT.COST)})`, `🧱 Fortify (💰 ${fmt(MINE_FORT.COST)})`);
+      if (btn.dataset.html !== html) { btn.dataset.html = html; btn.innerHTML = html; }
+    }
+  },
+  fortify(a) {
+    this.act({ k: 'fortify', a }, err => {
+      if (err) return this.log(err, 'warn');
+      this.log(tr(`🧱 Ta mine se fortifie : sa petite muraille sera debout dans ${MINE_FORT.TIME} s.`, `🧱 Your mine is being fortified: its small walls will stand in ${MINE_FORT.TIME} s.`), 'good');
+    });
   },
   updateLevyButton(btn, a, text) {
     const G = Game, h = G.human, left = Math.ceil(G.levyLeft(h)), err = G.levyError(h, a);

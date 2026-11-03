@@ -747,6 +747,7 @@ const Render = {
     for (const c of G.castles) if (G.owner[c] >= 0) add(G.castleZone(c, G.owner[c]), G.owner[c]);
     for (const a of G.buildingTiles) {
       if (G.building[a] === B_PORT && G.level[a] >= 3 && G.owner[a] >= 0) add(G.churchZone(a), G.owner[a]);
+      if (G.mineFortified(a) && G.owner[a] >= 0) add(G.mineZone(a), G.owner[a]); // (🧱 la petite muraille d'une mine fortifiée)
     }
     this.wallEdges = this.zoneEdges(tiles, (i, n) => prot[n] === prot[i]);
   },
@@ -2007,7 +2008,7 @@ const Render = {
       const x = ox + (a % G.W + n / 2) * s - bw / 2, y = oy + (((a / G.W) | 0) + n) * s + 3;
       ctx.fillStyle = 'rgba(20,12,4,0.75)';
       ctx.fillRect(x - 1, y - 1, bw + 2, bh + 2);
-      ctx.fillStyle = w.kind === 'up' ? '#e6b422' : w.kind === 'build' ? '#4f9d3a' : '#c0392b';
+      ctx.fillStyle = w.kind === 'up' || w.kind === 'fort' ? '#e6b422' : w.kind === 'build' ? '#4f9d3a' : '#c0392b';
       ctx.fillRect(x, y, bw * k, bh);
     }
   },

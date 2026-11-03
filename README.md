@@ -795,6 +795,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      démolit pas, et rapporte **2 fois plus** si une **route** la relie à une de tes villes (une ville à moins de **30 cases**,
      sur la même terre). Elle passe à qui prend ses terres, avec l'état de son filon. 🎯 Une mine ennemie **se vise directement**,
      comme une église ou un port (sauf si elle est dans la muraille d'une ville : il faut d'abord prendre la ville, et la mine part avec elle).
+     🧱 **Fortifier** (mine de niveau 2, 💰 **800**, **30 s** de travaux) : une **petite muraille** de 4 cases autour de la mine.
+     La **Croyance** ne convertit plus rien dedans ; une **garnison de 50 soldats** la garde (elle se reconstitue) et attend
+     l'ennemi derrière la muraille : un assaut doit l'**assiéger 10 s**, et elle se défend seule, sans que tu envoies d'armée.
+     Mais ce n'est pas une ville : **aucune armée n'en part** (ni assaut ni défenseurs), et elle **ne suffit pas à tenir un
+     territoire** (sans ville ni port fortifié, il reste désorganisé). Prise, elle reste fortifiée pour son nouveau maître.
+     Réglages : `MINE_FORT` dans `js/config.js`.
      - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
        **3 mines au plus** (+48 % au maximum).
      - 🪙 **Mine d'or** : son filon rapporte **2 500 pièces en 10 minutes** (un peu à chaque production), doublé si reliée.
@@ -1109,6 +1115,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.9** : 🧱 **mine fortifiée** : une mine de niveau 2 peut être fortifiée (💰 800, 30 s) : une petite muraille que la Croyance ne convertit plus, une garnison de 50 soldats qui se défend seule (un assaut doit l'assiéger 10 s) ; aucune armée n'en part, et elle ne tient pas seule un territoire · les bots fortifient leurs mines quand un voisin les convertit
 - **v0.93.8** : ⚔️ une interception de relique est un **vrai combat** : les deux armées s'arrêtent et on voit leurs soldats tomber · 📿 clic sur ta propre armée de relique (aussi au retour) : des **renforts**, plus ou moins vite selon la distance à ta ville la plus proche · ↩️ une armée qui rentre (retraite, assaut fini ou bloqué par un nouveau mur, défenseurs, armée de relique) **marche jusqu'à sa ville**, par le chemin de son assaut à l'envers, **2 fois plus vite** qu'un assaut, au lieu de revenir d'un coup · ⛪ la cathédrale a **3 places** pour les moulins et casernes (au lieu de 5) : 1, 2 puis 3 places selon le niveau de l'église
 - **v0.93.7** : 📿 les armées de relique (pour la chercher, la rapporter ou l'intercepter) **ne traversent plus la muraille des villes ennemies** ni leurs murs : elles en font le tour (et l'armée qui en poursuit une autre suit ce chemin jusqu'au bout, au lieu de foncer tout droit)
 - **v0.93.6** : 🏰🏰 deux villes dont les **murailles se touchent** sont reliées d'office, sans mur à bâtir (+50 soldats de garnison pour chacune) · 📏 deux de tes villes doivent être à **21 cases** l'une de l'autre (au lieu de 13) : leurs murailles ne se touchent qu'à partir du niveau 3
