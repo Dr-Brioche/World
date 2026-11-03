@@ -481,9 +481,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      si tu recliques, les soldats en plus **la renforcent** (ils la rejoignent en **3 s**, qu'elle soit encore en route
      ou déjà au combat) au lieu de former une nouvelle armée. Une petite croix **×** à côté de **🛡️ Défendre** la **rappelle**, comme
      un assaut : tes défenseurs décrochent tout de suite (en route ou au combat) et rentrent à pied, **sans perte** (ils sont sur tes terres).
-     Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **font
-     demi-tour** là où ils sont et **rentrent à pied** jusqu'à ta ville (château) la plus rapide à rejoindre, comme les bateaux
-     de renfort (on voit leur bannière ↩ revenir) : tu ne les récupères qu'à leur arrivée.
+     Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **battent en retraite
+     tout de suite**, là où ils sont (ils ne vont pas jusqu'au combat pour rien), et **rentrent à pied** jusqu'à **la ville
+     d'où ils sont partis** (si elle est tombée : ta ville la plus rapide à rejoindre), comme les bateaux de renfort (on voit
+     leur bannière ↩ revenir) : tu ne les récupères qu'à leur arrivée.
    - **La garnison** : chaque château a ses propres défenseurs (beaucoup plus nombreux selon son niveau).
      Ils attendent l'ennemi **derrière la muraille** et n'entrent en jeu qu'au **siège**, quand l'armée arrive au pied
      du mur (la barre de l'assaut l'indique : « 🏰 10 derrière les murs ») ; avant, ce sont tes défenseurs qui l'arrêtent.
@@ -1120,6 +1121,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.11** : 🛡️ si la ville (ou le bâtiment) que tes défenseurs allaient protéger tombe avant leur arrivée, ils battent en retraite tout de suite et rentrent à **leur ville de départ** (au lieu de la ville la plus proche d'eux, parfois près du front)
 - **v0.93.10** : ⛵ une **relique sur une île** se rapporte **en bateau** : l'armée part d'un de tes ports royaux (niveau 3) et revient à un port royal, puis marche jusqu'à ta cathédrale · 🧱 une ville (ou un mur) bâtie **dans le dos** d'un assaut le force à **battre en retraite d'office**, avec **−15 %** de soldats par muraille ou mur franchi (au lieu de −50 %)
 - **v0.93.9** : 🧱 **mine fortifiée** : une mine de niveau 2 peut être fortifiée (💰 800, 30 s) : une petite muraille que la Croyance ne convertit plus, une garnison de 50 soldats qui se défend seule (un assaut doit l'assiéger 10 s) ; aucune armée n'en part, et elle ne tient pas seule un territoire · les bots fortifient leurs mines quand un voisin les convertit
 - **v0.93.8** : ⚔️ une interception de relique est un **vrai combat** : les deux armées s'arrêtent et on voit leurs soldats tomber · 📿 clic sur ta propre armée de relique (aussi au retour) : des **renforts**, plus ou moins vite selon la distance à ta ville la plus proche · ↩️ une armée qui rentre (retraite, assaut fini ou bloqué par un nouveau mur, défenseurs, armée de relique) **marche jusqu'à sa ville**, par le chemin de son assaut à l'envers, **2 fois plus vite** qu'un assaut, au lieu de revenir d'un coup · ⛪ la cathédrale a **3 places** pour les moulins et casernes (au lieu de 5) : 1, 2 puis 3 places selon le niveau de l'église

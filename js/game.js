@@ -5582,7 +5582,8 @@ const GameRules = {
     // et marchent à la rencontre de l'armée ennemie : ils se battent en arrivant
     // (par le chemin le plus rapide de leurs terres : voir walkRoute ; leur but suit l'assaut, voir arriveDefenders)
     const from = this.defenseOrigin(pid, a, src), to = this.defenseGoal(a);
-    (a.defPending = a.defPending || []).push(this.walkRoute(pid, from, to, troops));
+    // (home : la ville d'où ils partent ; ils y retournent si l'assaut finit avant leur arrivée, voir sendHome)
+    (a.defPending = a.defPending || []).push(Object.assign(this.walkRoute(pid, from, to, troops), { home: from }));
     return a;
   },
 
@@ -5936,9 +5937,10 @@ const GameRules = {
     return { x: p.sumX / p.tiles + 0.5, y: p.sumY / p.tiles + 0.5 };
   },
 
-  // L'assaut a est fini (la ville est prise, ou l'attaquant est parti) : ses défenseurs encore en route font
-  // demi-tour, là où ils sont, et rentrent à pied (walkRoute) jusqu'à la ville (château) la plus proche
-  // de leur royaume (ou à leur avant-poste). On ne les récupère qu'à leur arrivée.
+  // L'assaut a est fini (la ville est prise, ou l'attaquant est parti) : ses défenseurs encore en route battent en
+  // retraite tout de suite, là où ils sont (ils ne vont pas jusqu'au combat pour rien), et rentrent à pied (walkRoute,
+  // RETREAT_SPEED) jusqu'à la ville d'où ils sont partis (ou à leur avant-poste) ; si elle n'est plus à eux, jusqu'à
+  // la ville la plus rapide à rejoindre. On ne les récupère qu'à leur arrivée.
   sendHome(a, src) {
     if (!a.defPending || !a.defPending.length) return;
     const W = this.W, pid = a.target;
@@ -5946,7 +5948,9 @@ const GameRules = {
     for (const r of a.defPending) {
       const pos = this.walkPosition(r), from = { x: pos.x, y: pos.y };
       let to = null, best = Infinity;
+      const home = r.home && this.owner[Math.floor(r.home.y) * W + Math.floor(r.home.x)] === pid ? r.home : null;
       if (src >= 0 && this.owner[src] === pid && this.building[src] === B_OUTPOST) to = mid(src);
+      else if (home) to = home; // (leur ville de départ : ils font demi-tour)
       else {
         // (la ville la plus rapide à rejoindre à pied, sinon la plus proche à vol d'oiseau)
         const fast = this.fastestCity(pid, Math.floor(from.y) * W + Math.floor(from.x), this.strongholds(pid, false));
