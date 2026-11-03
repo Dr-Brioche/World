@@ -499,7 +499,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Envoyer 2 ou 3 défenseurs à la fois ne suffit donc pas à bloquer une grosse armée !
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
    - **🏰 Le siège** : quand ton armée arrive à la **muraille** d'un château, elle s'arrête au pied du mur
-     (elle ne la traverse pas, la muraille reste entière) et l'assiège : il ne tombe pas tout de suite. Elle doit
+     (elle ne la traverse pas, la muraille reste entière) et l'assiège : il ne tombe pas tout de suite.
+     ⛰️ La muraille d'une ville ne s'étend **jamais de l'autre côté d'un sommet ou de la mer** : elle ne couvre que les terres
+     qu'on rejoint depuis la ville sans les franchir (plus de bout de muraille isolé derrière une montagne, que personne ne
+     pourrait assiéger). Elle doit
      tenir **8 s** (fort en bois), **13 s** (château) ou **18 s** (citadelle) : pendant ce temps, sa garnison sort (elle
      attend l'ennemi derrière la muraille jusque-là ; de même pour un avant-poste, un port fortifié ou une mine fortifiée :
      seuls les bâtisseurs d'un avant-poste encore en chantier se battent tout de suite),
@@ -1126,6 +1129,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.15** : ⛰️ la muraille d'une ville ne s'étend plus **de l'autre côté d'un sommet ou de la mer** : un bout de muraille isolé derrière une montagne faisait échouer les assauts contre la ville (ils visaient un pied de mur qu'ils ne pouvaient pas atteindre)
 - **v0.93.14** : 🛡️ la garnison d'un **avant-poste** (ou d'un port fortifié) attend l'ennemi derrière sa muraille et ne sort qu'au **siège** (elle sortait dès le lancement de l'assaut, avant même son arrivée) · 🔥 l'assaut viking se valide d'un **double clic** sur sa cible (le 1er clic la choisit)
 - **v0.93.13** : 📿 tes armées de relique ont leur barre en bas de l'écran : la petite croix les **rappelle à tout moment** (si elle portait la relique, elle la pose là où elle est)
 - **v0.93.12** : ⚓ depuis (ou vers) un **port royal** (niveau 3), les pertes en mer d'une expédition sont limitées à **10 %** (au lieu de 25 %)
