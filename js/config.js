@@ -264,6 +264,10 @@ const CONFIG = {
   CASTLE_CASTLE_DISTANCE: 13, // entre deux de ses châteaux
   CASTLE_CHURCH_DISTANCE: 15, // entre un château et une église ou un port (ils restent hors de sa muraille)
   CHURCH_CHURCH_DISTANCE: 11, // entre deux églises, deux ports, ou une église et un port
+  // 🏰 Prix des châteaux (villes) qu'on bâtit soi-même, dans l'ordre : le 1er (après la capitale, gratuite) coûte 500,
+  // le 2e 1500, le 3e 2500, le 4e 5000 (et les suivants, s'il y en a, le dernier prix). Comme pour les autres
+  // bâtiments, seuls ceux qu'on a bâtis et qu'on possède encore comptent.
+  CASTLE_COSTS: [500, 1500, 2500, 5000],
   MAX_CASTLES: 3,            // châteaux qu'un royaume peut construire dans la partie (capitale comprise ;
                              // les châteaux pris à l'ennemi ne comptent pas). Une église améliorée en débloque d'autres.
 
@@ -643,7 +647,7 @@ const BUILDINGS = [
   { name: tr('Caserne', 'Barracks'), icon: '⚔️', tiles: 2, baseCost: 20,
     desc: tr(`produit des soldats toutes les ${CONFIG.PRODUCTION_INTERVAL} s, armée plus grande (3 niveaux)`,
       `trains soldiers every ${CONFIG.PRODUCTION_INTERVAL} s, bigger army (3 levels)`) },
-  { name: tr('Château', 'Castle'), icon: '🏰', tiles: 4, baseCost: 250,
+  { name: tr('Château', 'Castle'), icon: '🏰', tiles: 4, baseCost: 500, // (le prix du 1er : voir CASTLE_COSTS)
     desc: tr('muraille qui protège ses terres (3 niveaux)', 'walls that protect its lands (3 levels)') },
   { name: tr('Église', 'Church'), icon: '⛪', tiles: 2, baseCost: 50,
     desc: tr('hors des murailles, sans défense : moulins et casernes autour d\'elle, et plus de châteaux (3 niveaux)',

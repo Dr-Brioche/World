@@ -579,6 +579,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
    **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher** (seulement **35 %** pour
    les **moulins** et les **casernes**, et **2 fois plus cher** pour les **églises** et les **ports** ; les mines gardent leur prix).
+   Les **châteaux** ont leurs propres prix : après la capitale (gratuite), le 1er coûte **💰 500**, le 2e **1500**, le 3e **2500**
+   et le 4e **5000** (réglage `CASTLE_COSTS`).
    Les bâtiments que tu **prends à l'ennemi** ne comptent pas (et un bâtiment perdu ne compte plus).
    **Les moulins et casernes se construisent dans l'enceinte d'une de tes villes** (dans sa muraille),
    **ou près d'une de tes églises** (ou d'un port amélioré), qui a encore de la place, pas ailleurs dans l'arrière-pays.
@@ -649,7 +651,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Défense des murs | Muraille | Moulins et casernes dedans | Garnison | Prix |
      |---|---|---|---|---|---|
-     | 1. Fort en bois | +100 % | petite | 4 | quelques soldats | 💰 250 (puis plus cher à chaque château) |
+     | 1. Fort en bois | +100 % | petite | 4 | quelques soldats | 💰 500, 1500, 2500 puis 5000 (la capitale est gratuite) |
      | 2. Château | +200 % | moyenne | 6 | x5 | 💰 500 |
      | 3. Citadelle | +400 % | grande | 9 | x3 | 💰 3000 |
      | 4. Cité impériale | +600 % | immense | 12 | 300 soldats | 💰 15 000 |
@@ -1096,6 +1098,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.5** : 🏰 nouveaux prix des châteaux : le 1er (après la capitale) coûte **500**, le 2e **1500**, le 3e **2500** et le 4e **5000** (réglage `CASTLE_COSTS`)
 - **v0.93.4** : 🛡️ une petite croix **×** rappelle ton armée de défense (en route ou au combat), comme un assaut : elle rentre à pied, sans perte · 🏗️ une ville, une église ou un port pris pendant une amélioration : les travaux **continuent pour le vainqueur** (au lieu d'être perdus) · 🏰 un assaut ne traverse plus la muraille d'une ville bâtie sur son chemin pendant sa marche : il la contourne
 - **v0.93.3** : ✝️ Croisades : la carte retrouve ses **vraies proportions** (860 x 544 cases) : au lieu d'étirer des bandes entières, une **loupe ronde** agrandit seulement la Terre sainte (2,8 fois au centre, de moins en moins jusqu'à 11 degrés autour) · 🔨 le son de construction frappe **deux coups**, le second un peu plus aigu (réglage `SOUND_ECHO`)
 - **v0.93.2** : ✝️ Croisades : la Méditerranée est encore moins étirée en hauteur (carte de 980 x 460 cases) : elle a presque ses vraies proportions, et la Terre sainte reste agrandie

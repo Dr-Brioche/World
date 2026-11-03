@@ -3316,6 +3316,12 @@ const GameRules = {
   },
 
   buildCost(p, type) {
+    // (🏰 les châteaux ont leurs prix à eux, dans l'ordre : CASTLE_COSTS ; la capitale, fondée gratuitement, ne compte pas)
+    if (type === B_CASTLE) {
+      const L = CONFIG.CASTLE_COSTS, cap = p.capital >= 0 ? this.anchor[p.capital] : -1;
+      const capital = cap >= 0 && this.building[cap] === B_CASTLE && this.owner[cap] === p.id && this.builtBy[cap] === p.id ? 1 : 0;
+      return L[Math.max(0, Math.min(L.length - 1, this.builtCount(p, type) - capital))];
+    }
     // (les églises et les ports montent 2 fois plus vite : on n'en bâtit pas trop)
     // (une mine coûte toujours le même prix ; les moulins et casernes montent moins vite : MILL_COST_GROWTH)
     const growth = type === B_MINE ? 1 : type === B_CHURCH || type === B_PORT ? CONFIG.RARE_COST_GROWTH
