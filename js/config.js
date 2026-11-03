@@ -322,6 +322,8 @@ const CONFIG = {
   DEFEND_REINFORCE_DELAY: 3,   // défenseurs envoyés en plus : ils rejoignent l'armée de défense déjà partie en 3 s
   RETREAT_TIME: 3,             // une attaque annulée met 3 s à décrocher (elle peut encore se faire attaquer)...
   RETREAT_LOSS: 0.15,          // ...et perd 15 % de ses soldats dans la retraite
+  RETREAT_SPEED: 2,            // une armée qui rentre (retraite, assaut fini, défenseurs ou armée de relique qui rentrent)
+                               // marche à pied 2 fois plus vite qu'un assaut (elle ne revient pas d'un coup au royaume)
   REINFORCE_MIN_TIME: 3,       // les renforts d'un assaut marchent de sa cité jusqu'au front (MARCH_SPEED) : au moins 3 s
   AI_SEND_INTERVAL: 12,        // un bot attend au moins 12 s entre deux envois de soldats (renforts, défenseurs)
                                // et envoie alors un gros paquet, au lieu de quelques soldats à chaque instant
@@ -462,6 +464,7 @@ const CONFIG = {
   // de son église (pas de maximum).
   RELIC: {
     FIRST: [10, 15], NEXT: [8, 15], TAKE_TIME: 10, CHURCH_LEVEL: 3,
+    LOST_TIME: 15, // (une armée qui en poursuit une autre l'attend 15 s au plus quand elle passe derrière une muraille)
     SPEED: 1,          // vitesse de marche des armées de relique (1 = comme un assaut ; les défenseurs : 1.18)
     CARRY_SLOW: 1.5,   // avec la relique : 1/3 plus lente (le trajet prend 1,5 fois plus de temps)
     FAITH: 150, CHURCH_GOLD: 0.5,
@@ -564,7 +567,7 @@ const CHURCH_LEVELS = [
   null,
   { name: tr('Église', 'Church'),        slots: 1, castles: 0, faith: 10, radius: 7,  img: 'img/eglise1.webp', size: 2.7 },
   { name: tr('Grande église', 'Great church'), slots: 2, castles: 1, faith: 30, radius: 8,  img: 'img/eglise2.webp', size: 3.6,   upgradeCost: 800 },
-  { name: tr('Cathédrale', 'Cathedral'),    slots: 5, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 5.0, upgradeCost: 2000 },
+  { name: tr('Cathédrale', 'Cathedral'),    slots: 3, castles: 2, faith: 50, radius: 10, img: 'img/eglise3.webp', size: 5.0, upgradeCost: 2000 },
 ];
 
 // Les 3 niveaux du port. Il se construit au bord de la mer ou d'un fleuve, n'est pas défendu

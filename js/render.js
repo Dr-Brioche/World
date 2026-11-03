@@ -2040,7 +2040,7 @@ const Render = {
     const G = Game, h = G.human, m = this.mouse;
     if (!m || !h || !h.alive || !G.relics || UI.selectedBuild || UI.plan) return false;
     const runId = this.relicRunAt(m.x, m.y), run = runId >= 0 ? G.relicRuns.find(r => r.id === runId) : null;
-    if (run) return run.pid !== h.id && !G.areAllied(h.id, run.pid) && G.relicEligible(h.id, G.relicPosTile(run), run.region);
+    if (run) return run.pid === h.id || (!G.areAllied(h.id, run.pid) && G.relicEligible(h.id, G.relicPosTile(run), run.region)); // (la sienne : des renforts)
     const id = this.relicSpotAt(m.x, m.y), relic = id >= 0 ? G.relics.find(r => r.id === id) : null;
     if (!relic) return false;
     if (relic.run >= 0) return true; // (une armée s'en empare : on peut l'intercepter)
