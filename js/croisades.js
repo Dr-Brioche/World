@@ -544,8 +544,8 @@ const CROISADES = {
     {
       id: 'assassins', name: tr('Assassins', 'Assassins'), leader: tr('Rachid ad-Din Sinan, le Vieux de la Montagne', 'Rashid ad-Din Sinan, the Old Man of the Mountain'), flag: 'b14', color: [96, 22, 26],
       defensive: true, garrison: 4, camp: 'musulmans',
-      capital: [36.45, 35.15, tr('Masyaf', 'Masyaf'), 'Masyaf'], capitalLevel: 2, cities: [], churches: [],
-      lands: [[[36.15, 34.95], [36.5, 34.95], [36.5, 35.27], [36.15, 35.27]]],
+      capital: [36.42, 35.32, tr('Masyaf', 'Masyaf'), 'Masyaf'], capitalLevel: 2, cities: [], churches: [],
+      lands: [[[36.15, 34.95], [36.55, 34.95], [36.55, 35.45], [36.15, 35.45]]],
       desc: tr('Les forteresses des Ismaéliens nizarites : on les paie, ou on les craint.', 'The fortresses of the Nizari Ismailis: one pays them, or one fears them.'),
     },
     {

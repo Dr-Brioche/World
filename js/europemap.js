@@ -358,7 +358,7 @@ function generateCentAnsMap(seed) {
 // (voir croisades.js). La Terre sainte y est agrandie, comme sur les cartes du Moyen Âge qui plaçaient Jérusalem au
 // centre du monde (warp, voir geoX) : sans ça, Tyr, Acre et Jérusalem tiendraient en quelques cases.
 const CROISADES_PROJ = { lon0: -6, lonSpan: 54, latTop: 52.6, latBottom: 29, wrap: false,
-  warp: { lon: [[34.3, 36.6, 3.4]], lat: [[31.6, 33.5, 3.0], [33.9, 36.3, 1.8]] } };
+  warp: { lon: [[34.3, 36.6, 3.4]], lat: [[31.7, 33.4, 2.6], [34.2, 35.8, 1.3]] } };
 // (seules les latitudes de la Terre sainte sont très étirées : la Méditerranée garde à peu près sa largeur)
 // Les fleuves, lacs, déserts et reliefs de l'Orient des croisades, en plus de ceux de l'Europe
 const CROISADES_RIVERS = [
