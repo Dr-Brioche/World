@@ -2494,6 +2494,7 @@ const GameRules = {
         case 'crusade': return this.startCrusade(p, o.a);
         case 'relic': return this.launchRelicRun(pid, o.id, o.troops); // (📿 aller chercher une relique)
         case 'relicChase': return this.launchRelicChase(pid, o.run, o.troops); // (📿 intercepter une armée de relique)
+        case 'relicReinforce': return this.launchRelicReinforce(pid, o.run, o.troops); // (📿 renforcer son armée de relique)
         case 'levy': return this.startLevy(p, o.a);
         case 'wall': return this.buildWall(p, o.c, o.i, o.from);
         case 'trade': return this.buildTrade(p, o.a, o.i);
@@ -5506,7 +5507,7 @@ const GameRules = {
       const home = src >= 0 && this.owner[src] === pid ? src : this.relicHome(pid, g.at);
       if (home < 0) { this.giveTroops(pid, src, g.troops); continue; }
       const to = this.relicMid(home);
-      this.returning.push(Object.assign(this.walkRoute(pid, { x: g.at.x, y: g.at.y }, to, g.troops), { pid, source: src, to }));
+      this.returning.push(Object.assign(this.walkRoute(pid, { x: g.at.x, y: g.at.y }, to, g.troops, CONFIG.RETREAT_SPEED), { pid, source: src, to }));
     }
     a.defPending = [];
     a.defReinf = [];
@@ -5858,7 +5859,7 @@ const GameRules = {
         }
       }
       if (!to) to = r.from; // (plus aucun château : ils retournent d'où ils venaient)
-      this.returning.push(Object.assign(this.walkRoute(pid, from, to, r.troops), { pid, source: src, to }));
+      this.returning.push(Object.assign(this.walkRoute(pid, from, to, r.troops, CONFIG.RETREAT_SPEED), { pid, source: src, to }));
     }
     a.defPending = [];
   },
@@ -6447,6 +6448,8 @@ const GameRules = {
     if (a.done) return;
     a.done = true;
     if (this.hy) this.hyAfterBattle(a); // (⚜️ les rançons, le roi Jean captif, Jeanne d'Arc : voir hyAfterBattle)
+    // (le bout de chemin déjà parcouru, avant que l'ennemi ne reprenne ses terres : l'armée rentre par là, voir walkBack)
+    const way = a.pathTiles || a.path, passed = way ? way.slice(0, this.pathPassed(a)) : null;
     this.revertRoute(a);
     const p = this.players[a.attacker];
     // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste) ;
@@ -6454,7 +6457,7 @@ const GameRules = {
     const back = a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
     if (a.eventArmy) { /* (👑 des Vikings levés pour un événement : ils repartent chez eux, sans grossir l'armée danoise) */ }
     else if (a.viking !== undefined && !a.won && !a.castleTaken) this.sailHome(a.attacker, a.viking, back, CONFIG.VIKING_RETURN_SPEED);
-    else this.giveTroops(a.attacker, this.sourceOfAttack(a), back);
+    else this.walkBack(a, back, passed);
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château. Ceux qui étaient encore
     // en route font demi-tour : ils rentrent à pied jusqu'à la ville la plus proche (voir sendHome)
     if (a.target >= 0 && this.players[a.target].alive) {
@@ -6476,6 +6479,38 @@ const GameRules = {
         else this.players[a.target].troops += extra;
       }
     }
+  },
+
+  // 🏳️ Les n survivants de l'assaut a, fini, rentrent à pied (on voit leur bannière ↩ revenir) : ils ne reviennent pas
+  // d'un coup au royaume. Ils marchent RETREAT_SPEED fois plus vite qu'un assaut : par le chemin de leur assaut, à
+  // l'envers (passed : les cases déjà parcourues), puis par leurs terres jusqu'à la ville la plus rapide à rejoindre
+  // (ou à leur avant-poste). On ne les récupère qu'à leur arrivée. (une armée rappelée avant d'avoir quitté ses
+  // terres, ou qui s'étendait en terre libre, rentre aussitôt)
+  walkBack(a, n, passed) {
+    const pid = a.attacker, src = this.sourceOfAttack(a), W = this.W;
+    if (n <= 0) return;
+    // (une expansion en terre libre finit au bord de ses terres : ses soldats les rejoignent tout de suite)
+    if (a.calledBack || a.target < 0 || !this.players[pid].alive) return this.giveTroops(pid, src, n);
+    const from = this.attackFront(a), ft = Math.floor(from.y) * W + Math.floor(from.x);
+    const mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
+    let home = src >= 0 && this.owner[src] === pid ? src : this.fastestCity(pid, ft, this.strongholds(pid, false));
+    if (home < 0) {
+      let best = Infinity;
+      for (const c of this.strongholds(pid, false)) {
+        const m = mid(c), d = (m.x - from.x) ** 2 + (m.y - from.y) ** 2;
+        if (d < best) { best = d; home = c; }
+      }
+    }
+    if (home < 0) return this.giveTroops(pid, src, n); // (plus aucune ville : ils rejoignent le royaume)
+    const to = mid(home), tt = Math.floor(to.y) * W + Math.floor(to.x), ford = this.fordCost(this.defenderSpeed(n, CONFIG.RETREAT_SPEED));
+    // (le chemin de l'assaut à l'envers jusqu'à ses terres, puis ses terres jusqu'à la ville)
+    let path = null;
+    if (passed && passed.length) {
+      const own = this.ownLandPath(pid, passed[0], tt, ford);
+      if (own) path = passed.slice().reverse().concat(own.slice(1));
+    }
+    path = path || this.ownLandPath(pid, ft, tt, ford);
+    this.returning.push(Object.assign(this.walkRoute(pid, from, to, n, CONFIG.RETREAT_SPEED, !path, path), { pid, source: src, to, retreat: true }));
   },
 
   // Assaut vers un objectif (château, église, port, avant-poste, ou château isolé à rejoindre) qui échoue :

@@ -417,6 +417,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    La **petite croix rouge** dans le coin d'une barre ordonne la **retraite** 🏳️ : pour un assaut, tes soldats mettent
    **3 s** à décrocher (ils peuvent encore se faire attaquer), puis rentrent en perdant **15 %** de leurs effectifs
    (mais si l'armée n'a pas encore quitté tes terres, elle rentre tout de suite, **sans aucune perte**) ;
+   ils rentrent **à pied** (bannière ↩), par le chemin de leur assaut à l'envers, jusqu'à ta ville la plus rapide à rejoindre,
+   **2 fois plus vite** qu'un assaut (réglage `RETREAT_SPEED`) : tu ne les récupères qu'à leur arrivée. C'est pareil pour
+   toute armée qui rentre : un assaut fini (ville prise, repoussé, bloqué par un mur), des défenseurs ou une armée de relique ;
    pour un bateau, il fait demi-tour vers le port, et **15 %** des soldats à bord se perdent (l'or de l'expédition
    n'est pas rendu). Les soldats en mer comptent dans ton armée (la jauge en bas indique « ⛵ en mer »).
    Les attaques ennemies contre toi y apparaissent aussi, en rouge.
@@ -700,7 +703,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
      le franchir** : les armées ennemies doivent faire le tour. Si un mur tout neuf coupe la route d'un assaut déjà lancé,
      **devant lui** (là où il n'est pas encore passé), l'armée **le contourne** par un autre chemin ; s'il n'y a **pas d'autre
-     chemin** jusqu'à sa cible, elle **rebrousse chemin** (assaut annulé). Un mur bâti sur la partie de la route **déjà
+     chemin** jusqu'à sa cible, elle **rebrousse chemin** (assaut annulé) et rentre à pied, comme une retraite. Un mur bâti sur la partie de la route **déjà
      passée** n'arrête pas l'assaut. Cas rare : une armée qui **bat en retraite** avec un mur dans son dos le franchit quand
      même, mais perd **50 % de ses soldats** à chaque mur franchi. Si la ville est prise ou détruite, ses murs disparaissent
      (et un mur dont une case est prise aussi). `Échap` ou clic droit annule la pose. **Les bots aussi bâtissent des murs** :
@@ -722,7 +725,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Église | +10 | 1 | aucun | 💰 50 (puis 2 fois plus cher à chaque église) |
      | 2. Grande église | +30 | 2 | +1 | 💰 800 |
-     | 3. Cathédrale | +50 | 5 | +2 | 💰 2000 |
+     | 3. Cathédrale | +50 | 3 | +2 | 💰 2000 |
 
      Seule ta **meilleure église** compte pour les châteaux en plus : elles ne s'additionnent pas
      (une cathédrale donne +2 châteaux, même si tu as d'autres grandes églises). La **Croyance**, elle, s'additionne.
@@ -774,8 +777,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      de la relique et les terres libres), et **ne traverse ni la muraille d'une ville ennemie ni ses murs** : elle en fait le tour
      (si aucun chemin n'y mène, la relique ou l'armée à intercepter est à l'abri). Arrivée, elle s'en empare en **10 secondes** (l'anneau jaune), puis la rapporte
      à ta **cathédrale libre la plus proche**, **1/3 plus lentement** ; la relique flotte au-dessus d'elle. En chemin, **tous les
-     voisins peuvent l'intercepter** (un clic sur sa bannière) : au contact, le plus fort l'emporte, garde ses survivants et
-     prend la relique pour la rapporter chez lui (s'il n'a pas de cathédrale, elle tombe là). Tu perds ta dernière
+     voisins peuvent l'intercepter** (un clic sur sa bannière) : au contact, les deux armées **s'arrêtent et se battent**
+     (on voit leurs soldats tomber, comme un assaut contre des défenseurs ; la prise de la relique attend la fin du combat) ;
+     le vainqueur garde ses survivants et prend la relique pour la rapporter chez lui (s'il n'a pas de cathédrale, elle tombe là).
+     Une armée qui en poursuit une autre l'attend **15 s** au plus si elle passe derrière une muraille, puis rentre.
+     **Clique sur ta propre armée de relique** (à l'aller ou au retour) pour lui envoyer des renforts : sur tes terres, ils
+     la rejoignent tout de suite ; plus loin, ils marchent depuis ta ville la plus proche (plus elle est loin, plus c'est long). Tu perds ta dernière
      cathédrale en route : ton armée pose la relique là où elle est et rentre. Une fois déposée, la relique reste **liée à
      cette église** (elle s'affiche à côté d'elle) : ton royaume gagne **+150 de Croyance** tant qu'il la garde (+150 par
      relique gardée) et l'église rapporte **50 % d'or en plus**. Prise par un autre, l'église lui donne ces bonus ; détruite
@@ -1102,6 +1109,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.8** : ⚔️ une interception de relique est un **vrai combat** : les deux armées s'arrêtent et on voit leurs soldats tomber · 📿 clic sur ta propre armée de relique (aussi au retour) : des **renforts**, plus ou moins vite selon la distance à ta ville la plus proche · ↩️ une armée qui rentre (retraite, assaut fini ou bloqué par un nouveau mur, défenseurs, armée de relique) **marche jusqu'à sa ville**, par le chemin de son assaut à l'envers, **2 fois plus vite** qu'un assaut, au lieu de revenir d'un coup · ⛪ la cathédrale a **3 places** pour les moulins et casernes (au lieu de 5) : 1, 2 puis 3 places selon le niveau de l'église
 - **v0.93.7** : 📿 les armées de relique (pour la chercher, la rapporter ou l'intercepter) **ne traversent plus la muraille des villes ennemies** ni leurs murs : elles en font le tour (et l'armée qui en poursuit une autre suit ce chemin jusqu'au bout, au lieu de foncer tout droit)
 - **v0.93.6** : 🏰🏰 deux villes dont les **murailles se touchent** sont reliées d'office, sans mur à bâtir (+50 soldats de garnison pour chacune) · 📏 deux de tes villes doivent être à **21 cases** l'une de l'autre (au lieu de 13) : leurs murailles ne se touchent qu'à partir du niveau 3
 - **v0.93.5** : 🏰 nouveaux prix des châteaux : le 1er (après la capitale) coûte **500**, le 2e **1500**, le 3e **2500** et le 4e **5000** (réglage `CASTLE_COSTS`)

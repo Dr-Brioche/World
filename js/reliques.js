@@ -253,6 +253,16 @@ Object.assign(GameRules, {
     return null;
   },
 
+  // Ordre « relicReinforce » : pid envoie troops soldats renforcer son armée de relique id (en route, en train de la
+  // prendre, ou qui la rapporte : un clic sur sa bannière)
+  launchRelicReinforce(pid, id, troops) {
+    const p = this.players[pid], r = this.relicRuns.find(x => x.id === id && x.pid === pid);
+    if (!r) return tr('Cette armée n\'est plus là.', 'This army is no longer there.');
+    troops = Math.floor(Math.min(troops, p.troops));
+    if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
+    this.relicReinforce(r, troops);
+    return null;
+  },
   // Des renforts pour l'armée de relique r : sur nos terres, ils la rejoignent tout de suite ; plus loin, ils marchent
   // depuis notre ville la plus proche, comme les renforts d'un assaut (MARCH_SPEED cases par seconde, au moins
   // REINFORCE_MIN_TIME secondes : voir reinforceTicks), et ne comptent qu'à leur arrivée
@@ -283,6 +293,15 @@ Object.assign(GameRules, {
       r.pending = r.pending.filter(q => !q.done);
     }
     if (!p.alive || r.troops < 1) return this.relicRunEnd(r);
+    // ⚔️ Au combat (comme un assaut contre des défenseurs) : les deux armées s'arrêtent et perdent des soldats à chaque
+    // tour, jusqu'à ce que l'une d'elles tombe (voir relicFight)
+    if (r.battle !== undefined) return this.relicFight(r);
+    if (r.frozen) {
+      // (attaquée par une autre armée : elle ne bouge plus, et ne s'empare pas de la relique pendant le combat)
+      if (this.relicRuns.some(x => x.battle === r.id)) { if (r.phase === 'take') r.takeEnd++; return; }
+      r.frozen = false; // (combat fini : elle reprend sa route)
+      if (!this.relicResume(r)) return;
+    }
     if (r.phase === 'go') {
       const relic = this.relics.find(x => x.id === r.aim);
       if (second) {
@@ -336,7 +355,7 @@ Object.assign(GameRules, {
       const t = this.relicRuns.find(x => x.id === r.chase);
       if (!t || this.areAllied(r.pid, t.pid)) return this.relicGoHome(r, '');
       const C = CONFIG, me = this.relicPos(r), at = this.relicPos(t), d = Math.hypot(me.x - at.x, me.y - at.y);
-      if (d <= C.DEFEND_CONTACT) return this.relicBattle(r, t);
+      if (d <= C.DEFEND_CONTACT) return this.relicEngage(r, t);
       if (second) {
         // (par les terres, sans passer la muraille d'une ville ennemie : trajet corrigé toutes les secondes près d'elle,
         //  toutes les 3 secondes plus loin ; plus de chemin jusqu'à elle : elle est à l'abri, l'armée rentre)
@@ -344,8 +363,12 @@ Object.assign(GameRules, {
           r.reroute = this.tick + 3 * TPS;
           const tt = Math.floor(at.y) * this.W + Math.floor(at.x);
           const route = this.relicRoute(r, me, new Set([tt]), at, false);
-          if (!route) return this.relicGoHome(r, tr('📿 L\'armée que tu poursuis est hors d\'atteinte (derrière une muraille) : ton armée rentre.', '📿 The army you are chasing is out of reach (behind city walls): your army heads home.'));
-          r.route = route;
+          // (elle passe derrière une muraille : on la guette, sur le dernier chemin trouvé ; au bout de
+          //  RELIC.LOST_TIME secondes sans chemin jusqu'à elle, on renonce)
+          if (!route) {
+            if (r.lostSince === undefined) r.lostSince = this.tick;
+            if (this.tick - r.lostSince >= CONFIG.RELIC.LOST_TIME * TPS) return this.relicGoHome(r, tr('📿 L\'armée que tu poursuis est hors d\'atteinte (derrière une muraille) : ton armée rentre.', '📿 The army you are chasing is out of reach (behind city walls): your army heads home.'));
+          } else { r.lostSince = undefined; r.route = route; }
         }
       }
     }
@@ -447,49 +470,89 @@ Object.assign(GameRules, {
     for (const x of this.relicRuns) if (x.phase === 'chase' && x.chase === r.id) this.relicGoHome(x, '');
     if (c < 0) return;
     const to = this.relicMid(c);
-    this.returning.push(Object.assign(this.walkRoute(r.pid, { x: at.x, y: at.y }, to, r.troops), { pid: r.pid, source: -1, to }));
+    this.returning.push(Object.assign(this.walkRoute(r.pid, { x: at.x, y: at.y }, to, r.troops, CONFIG.RETREAT_SPEED), { pid: r.pid, source: -1, to }));
   },
-  // L'armée c rattrape l'armée t : combat. Le plus fort (soldats x leur force) l'emporte et garde des survivants ;
-  // s'il prend une relique, il l'emporte vers son église de niveau 3 (sinon elle tombe là)
-  relicBattle(c, t) {
-    const cp = this.players[c.pid], tp = this.players[t.pid];
-    const a = c.troops * this.troopPower(c.pid), d = t.troops * this.troopPower(t.pid);
-    const at = this.relicPos(t), relic = t.relic;
-    if (a > d) {
-      c.troops = Math.max(1, Math.round(c.troops * (1 - d / a)));
-      // (l'armée vaincue disparaît ; sa relique passe au vainqueur ; ceux qui la poursuivaient aussi poursuivent
-      //  désormais le vainqueur, sauf ses alliés)
-      if (t.phase === 'take') relic.run = -1;
-      t.relic = null;
-      t.troops = 0;
-      c.chase = -1;
-      const others = this.relicRuns.filter(x => x !== c && x.phase === 'chase' && x.chase === t.id);
-      for (const x of others) x.chase = c.id;
-      this.relicRunEnd(t);
-      for (const x of others) if (x.pid === c.pid || this.areAllied(x.pid, c.pid)) this.relicGoHome(x, '');
-      if (relic) {
-        this.relics = this.relics.filter(x => x !== relic);
-        c.relic = relic;
-        relic.run = c.id;
-        c.region = relic.region;
-        if (!this.relicChurches(c.pid, c).length) {
-          this.relicDrop(c, at);
-          this.relicGoHome(c, '');
-        } else this.relicCarry(c, at);
-      } else this.relicGoHome(c, '');
-      if (cp.isHuman) UI.log(tr(`⚔️ Tes soldats ont battu l'armée ${this.deName(tp.name)}${relic ? (c.relic ? ' et emportent la relique !' : ' : la relique tombe là (il te faut une église de niveau 3 pour la garder).') : ' !'}`,
-        `⚔️ Your soldiers beat ${possessive(tp.name)} army${relic ? (c.relic ? ' and carry off the relic!' : ': the relic falls there (you need a level 3 church to keep it).') : '!'}`), 'good', tp);
-      if (tp.isHuman) UI.log(tr(`⚔️ Ton armée de relique a été battue par ${cp.name}${relic ? (c.relic ? ', qui emporte la relique ! Intercepte-le à ton tour.' : ' : la relique tombe là.') : '.'}`,
-        `⚔️ Your relic army was beaten by ${cp.name}${relic ? (c.relic ? ', who carries off the relic! Intercept them in turn.' : ': the relic falls there.') : '.'}`), 'warn', cp);
-    } else {
-      t.troops = Math.max(0, Math.round(t.troops * (1 - a / Math.max(1, d))));
-      c.troops = 0;
-      this.relicPendingBack(c);
-      this.relicRuns = this.relicRuns.filter(x => x !== c);
-      if (cp.isHuman) UI.log(tr(`⚔️ Tes soldats n'ont pas pu arrêter l'armée ${this.deName(tp.name)}.`, `⚔️ Your soldiers could not stop ${possessive(tp.name)} army.`), 'warn', tp);
-      if (tp.isHuman) UI.log(tr(`⚔️ Ton armée de relique a repoussé ${cp.name} !`, `⚔️ Your relic army drove off ${cp.name}!`), 'good', cp);
-      if (t.troops < 1) this.relicRunEnd(t);
+  // (une armée qui en poursuit une autre l'attend au plus RELIC.LOST_TIME secondes quand elle passe derrière une muraille)
+  // L'armée c rattrape l'armée t : le combat commence. Les deux s'arrêtent là où elles sont (on voit leurs soldats
+  // tomber, comme un assaut contre des défenseurs) ; le vainqueur reprend sa route ensuite.
+  relicEngage(c, t) {
+    c.battle = t.id;
+    for (const r of [c, t]) {
+      if (r.frozen) continue;
+      r.frozen = true;
+      if (r.phase !== 'take') { const at = this.relicPos(r); r.route = this.walkRoute(r.pid, at, at, r.troops, 1, true); }
     }
+    const cp = this.players[c.pid], tp = this.players[t.pid];
+    if (cp.isHuman) UI.log(tr(`⚔️ Ton armée attaque l'armée ${this.deName(tp.name)} !`, `⚔️ Your army attacks ${possessive(tp.name)} army!`), 'good', tp);
+    if (tp.isHuman) UI.log(tr(`⚔️ ${cp.name} attaque ton armée de relique : le combat commence !`, `⚔️ ${cp.name} attacks your relic army: the battle begins!`), 'warn', cp);
+  },
+  // Un tour de combat entre l'armée c et celle qu'elle a rattrapée : chaque camp perd autant de « force » (soldats x leur
+  // force, voir troopPower) ; une petite part des soldats engagés tombe à chaque tour (FIGHT_RATE, comme un assaut).
+  relicFight(c) {
+    const t = this.relicRuns.find(x => x.id === c.battle);
+    if (!t || this.areAllied(c.pid, t.pid)) { c.battle = undefined; return; } // (elle a disparu : on reprend la poursuite)
+    const pa = this.troopPower(c.pid), pd = this.troopPower(t.pid), A = c.troops * pa, D = t.troops * pd;
+    // (le camp bien plus nombreux frappe plus vite, comme dans un assaut : voir numbersBonus)
+    const loss = Math.min(A, D, Math.max(CONFIG.FIGHT_MIN_LOSS, CONFIG.FIGHT_RATE * Math.min(A, D)) * this.numbersBonus(A, D) * this.numbersBonus(D, A));
+    c.troops -= loss / pa;
+    t.troops -= loss / pd;
+    if (t.troops < 1) return this.relicWin(c, t);
+    if (c.troops < 1) return this.relicLose(c, t);
+  },
+  // L'armée c a battu l'armée t : t disparaît, et sa relique passe au vainqueur
+  relicWin(c, t) {
+    const cp = this.players[c.pid], tp = this.players[t.pid];
+    const at = this.relicPos(t), relic = t.relic;
+    c.troops = Math.max(1, Math.round(c.troops));
+    c.battle = undefined;
+    c.frozen = false;
+    // (l'armée vaincue disparaît ; sa relique passe au vainqueur ; ceux qui la poursuivaient aussi poursuivent
+    //  désormais le vainqueur, sauf ses alliés)
+    if (t.phase === 'take') relic.run = -1;
+    t.relic = null;
+    t.troops = 0;
+    c.chase = -1;
+    const others = this.relicRuns.filter(x => x !== c && x.phase === 'chase' && x.chase === t.id);
+    for (const x of others) { x.chase = c.id; x.reroute = 0; if (x.battle === t.id) x.battle = undefined; }
+    this.relicRunEnd(t);
+    for (const x of others) if (x.pid === c.pid || this.areAllied(x.pid, c.pid)) this.relicGoHome(x, '');
+    if (relic) {
+      this.relics = this.relics.filter(x => x !== relic);
+      c.relic = relic;
+      relic.run = c.id;
+      c.region = relic.region;
+      if (!this.relicChurches(c.pid, c).length) {
+        this.relicDrop(c, at);
+        this.relicGoHome(c, '');
+      } else this.relicCarry(c, at);
+    } else this.relicGoHome(c, '');
+    if (cp.isHuman) UI.log(tr(`⚔️ Tes soldats ont battu l'armée ${this.deName(tp.name)}${relic ? (c.relic ? ' et emportent la relique !' : ' : la relique tombe là (il te faut une église de niveau 3 pour la garder).') : ' !'}`,
+      `⚔️ Your soldiers beat ${possessive(tp.name)} army${relic ? (c.relic ? ' and carry off the relic!' : ': the relic falls there (you need a level 3 church to keep it).') : '!'}`), 'good', tp);
+    if (tp.isHuman) UI.log(tr(`⚔️ Ton armée de relique a été battue par ${cp.name}${relic ? (c.relic ? ', qui emporte la relique ! Intercepte-le à ton tour.' : ' : la relique tombe là.') : '.'}`,
+      `⚔️ Your relic army was beaten by ${cp.name}${relic ? (c.relic ? ', who carries off the relic! Intercept them in turn.' : ': the relic falls there.') : '.'}`), 'warn', cp);
+  },
+  // L'armée c, qui attaquait t, est tombée : t reprend sa route (dès qu'aucune autre armée ne l'attaque plus)
+  relicLose(c, t) {
+    const cp = this.players[c.pid], tp = this.players[t.pid];
+    c.troops = 0;
+    c.battle = undefined;
+    this.relicPendingBack(c);
+    this.relicRuns = this.relicRuns.filter(x => x !== c);
+    t.troops = Math.max(1, Math.round(t.troops));
+    if (cp.isHuman) UI.log(tr(`⚔️ Tes soldats n'ont pas pu arrêter l'armée ${this.deName(tp.name)}.`, `⚔️ Your soldiers could not stop ${possessive(tp.name)} army.`), 'warn', tp);
+    if (tp.isHuman) UI.log(tr(`⚔️ Ton armée de relique a repoussé ${cp.name} !`, `⚔️ Your relic army drove off ${cp.name}!`), 'good', cp);
+  },
+  // Après un combat, l'armée r repart d'où elle est, selon ce qu'elle faisait. Renvoie false si elle a fini (rentrée…).
+  relicResume(r) {
+    const at = this.relicPos(r);
+    if (r.phase === 'go') {
+      const relic = this.relics.find(x => x.id === r.aim);
+      const route = relic ? this.relicRoute(r, at, new Set([relic.tile]), this.relicTileCenter(relic.tile), false) : null;
+      if (!route) { this.relicGoHome(r, ''); return false; }
+      r.route = route;
+    } else if (r.phase === 'carry') return this.relicCarry(r, at);
+    else if (r.phase === 'chase') r.reroute = 0;
+    return true;
   },
 
   // --- 🤖 Les bots ---

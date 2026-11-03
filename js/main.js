@@ -2058,6 +2058,19 @@ const UI = {
     }, () => h.troops);
   },
 
+  // 📿 Renforcer sa propre armée de relique run (selon le curseur « Envoyer ») : sur tes terres, les soldats la rejoignent
+  // tout de suite ; plus loin, ils marchent depuis ta ville la plus proche (plus elle est loin, plus ils mettent de temps)
+  relicSupport(run) {
+    const G = Game, h = G.human;
+    this.act({ k: 'relicReinforce', run: run.id, troops: h.troops * this.ratio }, (err, before) => {
+      if (err) return this.log(err, 'warn');
+      const n = before.troops - h.troops, wait = run.pending && run.pending.length > before.pend ? run.pending[run.pending.length - 1] : null;
+      this.log(wait ? tr(`📿 ${fmt(n)} soldats partent de ta ville la plus proche pour renforcer ton armée de relique : ils la rejoignent dans ${Math.ceil((wait.tick - G.tick) / CONFIG.TICKS_PER_SECOND)} s.`,
+        `📿 ${fmt(n)} soldiers set out from your nearest city to reinforce your relic army: they join it in ${Math.ceil((wait.tick - G.tick) / CONFIG.TICKS_PER_SECOND)} s.`)
+        : tr(`📿 ${fmt(n)} soldats rejoignent ton armée de relique.`, `📿 ${fmt(n)} soldiers join your relic army.`), 'good');
+    }, () => ({ troops: h.troops, pend: run.pending ? run.pending.length : 0 }));
+  },
+
   // Assaut (selon le curseur « Envoyer ») pour relier un château isolé à son royaume
   link(c) {
     const G = Game, h = G.human;
@@ -2664,6 +2677,7 @@ const UI = {
     if (!this.selectedBuild && !this.plan) {
       const runId = Render.relicRunAt(sx, sy), run = runId >= 0 ? G.relicRuns.find(r => r.id === runId) : null;
       if (run && run.pid !== h.id) return this.relicChase(run);
+      if (run) return this.relicSupport(run); // (la sienne : des renforts)
       const relicId = Render.relicSpotAt(sx, sy);
       if (relicId >= 0) return this.relicFetch(relicId);
     }
