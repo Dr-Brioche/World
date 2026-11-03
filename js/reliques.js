@@ -328,6 +328,15 @@ Object.assign(GameRules, {
     return null;
   },
 
+  // Ordre « relicRecall » : pid rappelle son armée de relique id, à tout moment. Elle rentre à pied (ou en bateau) ; si
+  // elle portait la relique, elle la pose là où elle est (si elle était en train de la prendre, la relique reste là).
+  recallRelicRun(pid, id) {
+    const r = this.relicRuns.find(x => x.id === id && x.pid === pid);
+    if (!r) return null;
+    const carried = !!r.relic && r.phase !== 'take';
+    this.relicGoHome(r, '');
+    return { carried };
+  },
   // Ordre « relicReinforce » : pid envoie troops soldats renforcer son armée de relique id (en route, en train de la
   // prendre, ou qui la rapporte : un clic sur sa bannière)
   launchRelicReinforce(pid, id, troops) {
