@@ -28,8 +28,8 @@ const CONFIG = {
   CHARLEMAGNE_MAP_HEIGHT: 620,
   CENTANS_MAP_WIDTH: 600,  // taille de la carte du scénario « La guerre de Cent Ans » (la France et les îles Britanniques)
   CENTANS_MAP_HEIGHT: 780,
-  CROISADES_MAP_WIDTH: 950, // taille de la carte du scénario « Les Croisades » (de Londres à Bagdad, la Terre sainte agrandie)
-  CROISADES_MAP_HEIGHT: 480,
+  CROISADES_MAP_WIDTH: 980, // taille de la carte du scénario « Les Croisades » (de Londres à Bagdad, la Terre sainte agrandie)
+  CROISADES_MAP_HEIGHT: 460,
   MIN_OPPONENTS: 3,
   // Royaume coupé en deux sur un même continent : son plus grand morceau est son cœur. Un autre morceau tenu par
   // une ville (ou un port fortifié) et assez grand (au moins 25 % du plus grand) est aussi un cœur, à part entière :
