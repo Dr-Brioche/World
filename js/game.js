@@ -5527,7 +5527,7 @@ const GameRules = {
   // Garnison du château visé qui attend encore derrière sa muraille (0 une fois sortie)
   garrisonWaiting(a) {
     const c = a.targetCastle;
-    return !a.garrisonOut && c >= 0 && (this.building[c] === B_CASTLE || this.mineFortified(c)) && this.owner[c] === a.target ? this.garrison[c] : 0;
+    return !a.garrisonOut && c >= 0 && this.building[c] && this.owner[c] === a.target ? this.garrison[c] : 0;
   },
 
   // Combien vaut un soldat de garnison au combat : GARRISON_POWER (3), sauf pour un avant-poste en construction
@@ -6139,10 +6139,10 @@ const GameRules = {
         this.linkEntry(a, route.path[0]);
       }
     }
-    // Début d'un assaut sur un port ou un avant-poste : sa garnison sort le défendre
-    // (celle d'un château, elle, attend l'ennemi derrière sa muraille : voir startSiege)
-    // (🧱 une mine fortifiée garde aussi la sienne derrière sa petite muraille, jusqu'au siège)
-    if (a.prepTicks && this.tick === a.startTick && a.targetCastle >= 0 && this.building[a.targetCastle] !== B_CASTLE && !this.mineFortified(a.targetCastle) && !a.done) {
+    // Début d'un assaut sur un avant-poste encore en chantier : ses bâtisseurs, sans muraille, se battent tout de suite
+    // (la garnison d'un château, d'un avant-poste bâti, d'un port fortifié ou d'une mine fortifiée, elle, attend
+    //  l'ennemi derrière sa muraille et ne sort qu'au siège : voir startSiege)
+    if (a.prepTicks && this.tick === a.startTick && a.targetCastle >= 0 && this.builders(a.targetCastle) >= 1 && !a.done) {
       a.garrison = this.garrison[a.targetCastle];
       this.garrison[a.targetCastle] = 0;
       a.garrisonOut = true;
@@ -6375,9 +6375,10 @@ const GameRules = {
     a.siege = { tile: t, start: this.tick, end: this.tick + secs * CONFIG.TICKS_PER_SECOND }; // (start : pour la jauge)
     a.frontTile = t; // on se bat au pied des murs (avec leur bonus de défense)
     // L'ennemi est à la muraille : la garnison du château entre enfin en jeu (elle n'en sort pas avant)
-    if (!outpost && t === a.targetCastle && !a.garrisonOut) {
-      a.garrison = (a.garrison || 0) + this.garrison[t];
-      this.garrison[t] = 0;
+    const c = this.anchor[t];
+    if (c === a.targetCastle && !a.garrisonOut) {
+      a.garrison = (a.garrison || 0) + this.garrison[c];
+      this.garrison[c] = 0;
       a.garrisonOut = true;
     }
     const p = this.players[a.attacker], d = this.players[a.target];

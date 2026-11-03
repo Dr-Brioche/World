@@ -500,7 +500,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
    - **🏰 Le siège** : quand ton armée arrive à la **muraille** d'un château, elle s'arrête au pied du mur
      (elle ne la traverse pas, la muraille reste entière) et l'assiège : il ne tombe pas tout de suite. Elle doit
-     tenir **8 s** (fort en bois), **13 s** (château) ou **18 s** (citadelle) : pendant ce temps, sa garnison sort,
+     tenir **8 s** (fort en bois), **13 s** (château) ou **18 s** (citadelle) : pendant ce temps, sa garnison sort (elle
+     attend l'ennemi derrière la muraille jusque-là ; de même pour un avant-poste, un port fortifié ou une mine fortifiée :
+     seuls les bâtisseurs d'un avant-poste encore en chantier se battent tout de suite),
      et le défenseur peut encore **envoyer des soldats** le défendre ; tous se battent avec le bonus de ses murs.
      Une **jauge ronde**, toujours **jaune** (bien visible, quel que soit l'assaillant ; réglage `SIEGE_RING_COLOR`), se remplit autour de la ville assiégée : quand le cercle est plein, elle tombe.
      ⏸️ Le siège se met **en pause** tant que les défenseurs (garnison ou renforts) se battent contre l'armée : la jauge
@@ -872,7 +874,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      🔥 **Assaut viking** (port royal, niveau 3) : achète-le **💰 3000** (bouton 🔥 Viking dans la barre des constructions,
      ou dans le menu du port royal) ; il est alors **prêt** (un seul à la fois), à lancer quand tu veux. Clique sur le bouton
      🔥 Viking, puis sur une **ville** (ou un port fortifié) ennemie **de l'autre côté de la mer**, à **25 cases au plus d'une
-     de ses côtes** (ou fais un clic droit sur elle → « 🔥 Assaut viking ») : tes bateaux partent **de ton port royal** avec le %
+     de ses côtes**, et **reclique dessus** pour confirmer (comme un assaut : le 1er clic choisit la cible ; ou fais un clic droit
+     sur elle → « 🔥 Assaut viking ») : tes bateaux partent **de ton port royal** avec le %
      de soldats du curseur « Envoyer », traversent **sans aucune perte en mer**, débarquent sur la côte la plus proche de la
      cible et l'armée marche droit sur elle, **sans avant-poste**, avec des soldats **50 % plus forts**. C'est un **raid** :
      à la fin du siège, la ville n'est pas prise mais **détruite**, avec ses moulins et casernes, et chaque bâtiment détruit
@@ -1123,6 +1126,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.14** : 🛡️ la garnison d'un **avant-poste** (ou d'un port fortifié) attend l'ennemi derrière sa muraille et ne sort qu'au **siège** (elle sortait dès le lancement de l'assaut, avant même son arrivée) · 🔥 l'assaut viking se valide d'un **double clic** sur sa cible (le 1er clic la choisit)
 - **v0.93.13** : 📿 tes armées de relique ont leur barre en bas de l'écran : la petite croix les **rappelle à tout moment** (si elle portait la relique, elle la pose là où elle est)
 - **v0.93.12** : ⚓ depuis (ou vers) un **port royal** (niveau 3), les pertes en mer d'une expédition sont limitées à **10 %** (au lieu de 25 %)
 - **v0.93.11** : 🛡️ si la ville (ou le bâtiment) que tes défenseurs allaient protéger tombe avant leur arrivée, ils battent en retraite tout de suite et rentrent à **leur ville de départ** (au lieu de la ville la plus proche d'eux, parfois près du front)
