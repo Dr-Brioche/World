@@ -479,7 +479,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
      groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Contre un même assaut, tu n'envoies qu'**une armée de défense** :
      si tu recliques, les soldats en plus **la renforcent** (ils la rejoignent en **3 s**, qu'elle soit encore en route
-     ou déjà au combat) au lieu de former une nouvelle armée. Une petite croix **×** à côté de **🛡️ Défendre** la **rappelle**, comme
+     ou déjà au combat) au lieu de former une nouvelle armée ; en attendant, sa bannière les affiche entre parenthèses (« 🛡 467 (+500) »). Une petite croix **×** à côté de **🛡️ Défendre** la **rappelle**, comme
      un assaut : tes défenseurs décrochent tout de suite (en route ou au combat) et rentrent à pied, **sans perte** (ils sont sur tes terres).
      Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **battent en retraite
      tout de suite**, là où ils sont (ils ne vont pas jusqu'au combat pour rien), et **rentrent à pied** jusqu'à **la ville
@@ -500,9 +500,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - Si l'attaquant n'a plus de soldats, l'assaut est **repoussé**. Les défenseurs survivants rentrent chez eux.
    - **🏰 Le siège** : quand ton armée arrive à la **muraille** d'un château, elle s'arrête au pied du mur
      (elle ne la traverse pas, la muraille reste entière) et l'assiège : il ne tombe pas tout de suite.
-     ⛰️ La muraille d'une ville ne s'étend **jamais de l'autre côté d'un sommet ou de la mer** : elle ne couvre que les terres
-     qu'on rejoint depuis la ville sans les franchir (plus de bout de muraille isolé derrière une montagne, que personne ne
-     pourrait assiéger). Elle doit
+     ⛰️ La muraille d'une ville ne s'étend **jamais de l'autre côté d'un sommet ou de la mer (ou d'un lac)** : elle ne couvre
+     que les terres qu'on rejoint depuis la ville sans les franchir (plus de bout de muraille isolé derrière une montagne, que
+     personne ne pourrait assiéger). Un **fleuve**, même un grand fleuve, se franchit à gué : il ne coupe pas la muraille. Elle doit
      tenir **8 s** (fort en bois), **13 s** (château) ou **18 s** (citadelle) : pendant ce temps, sa garnison sort (elle
      attend l'ennemi derrière la muraille jusque-là ; de même pour un avant-poste, un port fortifié ou une mine fortifiée :
      seuls les bâtisseurs d'un avant-poste encore en chantier se battent tout de suite),
@@ -1129,6 +1129,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.16** : 🛡️ une armée de défense affiche ses **renforts en route** entre parenthèses (« 🛡 467 (+500) »), en marche comme au combat · ⛰️ un **grand fleuve** (franchissable à gué) ne coupe plus la muraille d'une ville : seuls les sommets, la mer et les lacs la coupent
 - **v0.93.15** : ⛰️ la muraille d'une ville ne s'étend plus **de l'autre côté d'un sommet ou de la mer** : un bout de muraille isolé derrière une montagne faisait échouer les assauts contre la ville (ils visaient un pied de mur qu'ils ne pouvaient pas atteindre)
 - **v0.93.14** : 🛡️ la garnison d'un **avant-poste** (ou d'un port fortifié) attend l'ennemi derrière sa muraille et ne sort qu'au **siège** (elle sortait dès le lancement de l'assaut, avant même son arrivée) · 🔥 l'assaut viking se valide d'un **double clic** sur sa cible (le 1er clic la choisit)
 - **v0.93.13** : 📿 tes armées de relique ont leur barre en bas de l'écran : la petite croix les **rappelle à tout moment** (si elle portait la relique, elle la pose là où elle est)

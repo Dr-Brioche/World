@@ -4258,7 +4258,8 @@ const GameRules = {
       for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
         if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const n = ny * W + nx;
-        if (set.has(n) || !this.isLand(n) || !this.inDisc(c, nx, ny, R)) continue;
+        // (un fleuve, même un grand fleuve, se franchit à gué : il ne coupe pas la muraille ; un sommet ou la mer, si)
+        if (set.has(n) || !(this.isLand(n) || this.terrain[n] === TERRAIN.GREAT_RIVER) || !this.inDisc(c, nx, ny, R)) continue;
         set.add(n);
         queue.push(n);
       }

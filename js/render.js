@@ -1027,7 +1027,9 @@ const Render = {
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = '#ffe2a8';
-      Icons.text(ctx, '🛡 ' + fmt(defenders), sx, sy - 40);
+      // (renforts en route : ceux qui la rejoignent bientôt, et une armée de défense encore en marche)
+      const coming = G.defendersOnTheWay(a);
+      Icons.text(ctx, '🛡 ' + fmt(defenders) + (coming >= 1 ? ` (+${fmt(coming)})` : ''), sx, sy - 40);
       // Des alliés du pacte se battent avec lui : la bannière de celui qui a envoyé le plus de soldats, plus petite
       let ally = -1, most = 1;
       if (a.allyDef) for (const k in a.allyDef) if (a.allyDef[k] >= most) { most = a.allyDef[k]; ally = +k; }
@@ -1283,6 +1285,8 @@ const Render = {
     for (const a of G.attacks) {
       if (a.done || !a.defPending || !a.defPending.length || a.target < 0) continue;
       const d = G.players[a.target];
+      // (des renforts sont en route pour cette armée de défense : « (+N) », comme pour un assaut)
+      const reinf = a.defReinf ? a.defReinf.reduce((n, q) => n + q.troops, 0) : 0;
       for (const r of a.defPending) {
         const { x, y } = this.walkTrail(r, ox, oy); // (les pointillés du reste du trajet)
         ctx.setLineDash([4, 6]);
@@ -1297,7 +1301,7 @@ const Render = {
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgba(20,12,4,0.85)';
         ctx.fillStyle = '#fff';
-        Icons.text(ctx, '🛡 ' + fmt(r.troops), x, y - 22);
+        Icons.text(ctx, '🛡 ' + fmt(r.troops) + (reinf >= 1 && r === a.defPending[0] ? ` (+${fmt(reinf)})` : ''), x, y - 22);
       }
     }
   },
