@@ -5356,7 +5356,7 @@ const GameRules = {
     const M = CONFIG.DISORGANIZED_LOSS_FROM;
     if (n > M && a.target >= 0 && (a.unlinked || this.leaderless(a))) n = M;
     let loss = Math.max(CONFIG.NEUTRAL_TILE_COST, n * CONFIG.TILE_LOSS_RATE);
-    if (a.viking !== undefined && !a.landed) loss /= 1 + CONFIG.VIKING_BONUS; // (🔥 des Vikings : +50 % de force)
+    if (a.viking !== undefined && !a.landed) loss /= 1 + CONFIG.VIKING_BONUS; // (🔥 des Vikings : +VIKING_BONUS de force)
     const free = a.target < 0 ? this.earlyBoost() / (1 + CONFIG.EARLY_GROWTH_BONUS) / CONFIG.FREE_LAND_BOOST : 1;
     return loss * TERRAIN_INFO[this.terrain[t]].cost * free;
   },
@@ -5415,7 +5415,7 @@ const GameRules = {
   // corrigée par la force des soldats des deux camps (casernes de niveau 2 et 3)
   combatRatio(a) {
     let r = this.frontDefense(a) * this.troopPower(a.target) / this.troopPower(a.attacker);
-    if (a.viking !== undefined && !a.landed) r /= 1 + CONFIG.VIKING_BONUS; // (🔥 des Vikings : +50 % de force)
+    if (a.viking !== undefined && !a.landed) r /= 1 + CONFIG.VIKING_BONUS; // (🔥 des Vikings : +VIKING_BONUS de force)
     if (this.hy) r *= this.hyCombat(a); // (⚜️ les arcs longs anglais, Jeanne d'Arc : voir hyCombat)
     // Royaume sans château (ville) : ses troupes, désorganisées, ne comptent que pour 0.8
     if (this.leaderless(a)) r *= CONFIG.LEADERLESS_DEFENSE;
