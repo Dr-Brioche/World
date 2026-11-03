@@ -541,13 +541,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Un morceau avec un **avant-poste** (une invasion par la mer) se défend : il faut viser l'avant-poste.
    Un royaume installé sur **plusieurs îles** (par la mer, puis un château) n'est pas « coupé » d'une île à l'autre.
 
-   **✂️ Grand morceau coupé** : si un royaume est coupé en deux sur un même continent, un autre morceau tenu par une **ville**
-   (ou un port fortifié) et **assez grand** (au moins **25 %** de son plus grand morceau) n'est pas « coupé » : c'est un
-   **cœur à part entière**, comme une autre île. Ses armées en partent, ses défenseurs y vont, et il n'est pas englobé.
-   Seuls les **petits** morceaux sont pris (sauf la zone de leurs villes, qui restent isolées, voir ci-dessous).
+   **✂️ Morceau coupé** : si un royaume est coupé en morceaux, tout morceau tenu par une **ville** (ou un port fortifié)
+   n'est pas « coupé », **quelle que soit sa taille** : c'est un **cœur à part entière**, comme une autre île. Ses armées
+   en partent, ses défenseurs y vont, et il n'est pas englobé. Seuls les morceaux **sans ville** sont pris.
    **🚩 Château isolé** : les **châteaux** et les **ports de niveau 3** savent se défendre seuls (avec leur
-   garnison) : quand leur morceau est pris, ils **restent à leur royaume**, avec les terres de leur zone,
-   **isolés** au milieu des terres ennemies.
+   garnison). Un château (ou port) n'est isolé que s'il est **complètement encerclé** : il ne lui reste que les terres de
+   sa muraille, sans une case de terre autour. Il **reste alors à son royaume**, avec ces terres,
+   **isolé** au milieu des terres ennemies.
    - Un château (ou port) isolé **continue de produire** pour son royaume (avec les moulins et casernes de sa zone) :
      il est juste plus difficile à défendre.
    - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend.
@@ -763,7 +763,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      à côté d'un voisin veut dire que tu convertis ses terres, une **bible rouge** que c'est lui qui convertit les tiennes ;
      le petit chiffre à côté donne l'**écart de Croyance** entre vous deux (« +180 » en vert : tu gagnes ; « −420 » en
      rouge : tu perds ; plus il est gros, plus ça va vite).
-     Ce n'est **pas une agression** (pas d'alerte, pas d'après-guerre). Ce que la Croyance **ne convertit jamais** : les
+     Ce n'est **pas une agression** (pas d'alerte, pas d'après-guerre). Une **église** (ou un port) convertie emporte **toute sa
+     zone** et les moulins et casernes de ses places, comme si elle était prise par un assaut (sauf ce qui est dans la muraille
+     d'une ville). Ce que la Croyance **ne convertit jamais** : les
      **villes** et les **ports fortifiés** (niveau 3), tout ce qui est **dans leur muraille**, les **avant-postes** et leur zone,
      les **murs** 🧱, les **terres libres**, et la route d'un **assaut en cours**. Elle ne part que d'une **zone de royaume**
      organisée : pas d'une zone d'avant-poste, ni d'un morceau coupé de ses villes, ni d'un royaume désorganisé (sans ville).
@@ -1129,6 +1131,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.19** : 🚩 une ville n'est plus **isolée** que si elle est **complètement encerclée** (il ne lui reste que sa muraille, sans terre autour) : tout autre morceau tenu par une ville ou un port fortifié est un cœur du royaume, quelle que soit sa taille (ses armées en partent, ses défenseurs y vont) · ✝️ une **église** (ou un port) **convertie** par la Croyance emporte **toute sa zone**, comme si elle était prise par un assaut
 - **v0.93.18** : ⚔️ le **recrutement de masse** est un peu plus fort (+25 % de bonus) : jusqu'à **x6** pour un tout petit royaume (au lieu de x5), environ x3,9 pour un royaume moyen (au lieu de x3,3), **x1,75** pour le plus grand (au lieu de x1,6)
 - **v0.93.17** : 🔥 les **Vikings** sont **2 fois plus forts** (+100 % au lieu de +50 %), en plus des autres bonus de force (caserne, mines de fer, cité impériale)
 - **v0.93.16** : 🛡️ une armée de défense affiche ses **renforts en route** entre parenthèses (« 🛡 467 (+500) »), en marche comme au combat · ⛰️ un **grand fleuve** (franchissable à gué) ne coupe plus la muraille d'une ville : seuls les sommets, la mer et les lacs la coupent
