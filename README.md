@@ -579,6 +579,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    Pendant la construction, l'info en bas à gauche indique la production prévue à cet endroit.
    **💰 Prix** : chaque bâtiment que tu **construis** rend le suivant du même type **50 % plus cher** (seulement **35 %** pour
    les **moulins** et les **casernes**, et **2 fois plus cher** pour les **églises** et les **ports** ; les mines gardent leur prix).
+   Les **châteaux** ont leurs propres prix : après la capitale (gratuite), le 1er coûte **💰 500**, le 2e **1500**, le 3e **2500**
+   et le 4e **5000** (réglage `CASTLE_COSTS`).
    Les bâtiments que tu **prends à l'ennemi** ne comptent pas (et un bâtiment perdu ne compte plus).
    **Les moulins et casernes se construisent dans l'enceinte d'une de tes villes** (dans sa muraille),
    **ou près d'une de tes églises** (ou d'un port amélioré), qui a encore de la place, pas ailleurs dans l'arrière-pays.
@@ -649,7 +651,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
      | Niveau | Défense des murs | Muraille | Moulins et casernes dedans | Garnison | Prix |
      |---|---|---|---|---|---|
-     | 1. Fort en bois | +100 % | petite | 4 | quelques soldats | 💰 250 (puis plus cher à chaque château) |
+     | 1. Fort en bois | +100 % | petite | 4 | quelques soldats | 💰 500, 1500, 2500 puis 5000 (la capitale est gratuite) |
      | 2. Château | +200 % | moyenne | 6 | x5 | 💰 500 |
      | 3. Citadelle | +400 % | grande | 9 | x3 | 💰 3000 |
      | 4. Cité impériale | +600 % | immense | 12 | 300 soldats | 💰 15 000 |
@@ -691,6 +693,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      la ville : « reliée par un mur à une autre ville : +50 soldats »). Si l'une des deux est prise, le bonus disparaît.
      ⚓ De même, vise un de tes **ports fortifiés** (niveau 3) : le mur va jusqu'à sa petite muraille et relie la ville et
      le port : **+50 soldats de garnison pour chacun**.
+     🏰🏰 Deux de tes villes dont les **murailles se touchent** n'ont pas besoin de mur : leur muraille est déjà commune, elles
+     sont **reliées d'office** (+50 soldats de garnison pour chacune). Deux nouvelles villes sont bâties assez loin l'une de l'autre
+     (21 cases) pour que leurs murailles ne se touchent qu'à partir du niveau 3 (citadelle).
      Les bots relient aussi leurs villes quand ils le peuvent.
      Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
      le franchir** : les armées ennemies doivent faire le tour. Si un mur tout neuf coupe la route d'un assaut déjà lancé,
@@ -704,7 +709,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **sauf trop près de tes châteaux** : elle doit rester hors de portée de leur muraille, même améliorée
      au maximum (quand tu places une église, un **cercle rouge** entoure chacun de tes châteaux).
      De même, un nouveau château ne peut pas être construit trop près d'une de tes églises.
-     📏 **Distances entre grands bâtiments** (dans tous les sens, cercles rouges) : château ↔ château **13 cases**,
+     📏 **Distances entre grands bâtiments** (dans tous les sens, cercles rouges) : château ↔ château **21 cases** (leurs murailles ne se touchent qu'au niveau 3),
      château ↔ église ou port **15 cases**, église ↔ église, port ↔ port ou église ↔ port **11 cases**.
      Elle permet de construire des **moulins ou casernes autour d'elle**, même hors de la muraille d'un château
      (quand tu choisis un moulin ou une caserne, sa zone s'affiche en pointillés clairs).
@@ -1096,6 +1101,8 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.6** : 🏰🏰 deux villes dont les **murailles se touchent** sont reliées d'office, sans mur à bâtir (+50 soldats de garnison pour chacune) · 📏 deux de tes villes doivent être à **21 cases** l'une de l'autre (au lieu de 13) : leurs murailles ne se touchent qu'à partir du niveau 3
+- **v0.93.5** : 🏰 nouveaux prix des châteaux : le 1er (après la capitale) coûte **500**, le 2e **1500**, le 3e **2500** et le 4e **5000** (réglage `CASTLE_COSTS`)
 - **v0.93.4** : 🛡️ une petite croix **×** rappelle ton armée de défense (en route ou au combat), comme un assaut : elle rentre à pied, sans perte · 🏗️ une ville, une église ou un port pris pendant une amélioration : les travaux **continuent pour le vainqueur** (au lieu d'être perdus) · 🏰 un assaut ne traverse plus la muraille d'une ville bâtie sur son chemin pendant sa marche : il la contourne
 - **v0.93.3** : ✝️ Croisades : la carte retrouve ses **vraies proportions** (860 x 544 cases) : au lieu d'étirer des bandes entières, une **loupe ronde** agrandit seulement la Terre sainte (2,8 fois au centre, de moins en moins jusqu'à 11 degrés autour) · 🔨 le son de construction frappe **deux coups**, le second un peu plus aigu (réglage `SOUND_ECHO`)
 - **v0.93.2** : ✝️ Croisades : la Méditerranée est encore moins étirée en hauteur (carte de 980 x 460 cases) : elle a presque ses vraies proportions, et la Terre sainte reste agrandie

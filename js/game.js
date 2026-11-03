@@ -1559,8 +1559,21 @@ const GameRules = {
   // Un mur relie deux villes s'il va de l'une à la muraille de l'autre (w.city, qui peut aussi être un port
   // fortifié), ou si deux murs, chacun parti de sa ville, se rejoignent (w.touch : les murs finis du royaume qui le
   // touchent). On suit donc la chaîne des murs qui se touchent, depuis ceux de c.
+  // 🏰 Deux villes du même royaume dont les murailles se touchent (se chevauchent) sont reliées aussi, sans mur à bâtir :
+  // leur muraille est déjà commune. (CASTLE_CASTLE_DISTANCE empêche deux de ses villes de se toucher avant le niveau 3)
+  // On suit la chaîne : murs, et murailles qui se touchent.
   wallLinked(c) {
-    const o = this.owner[c], set = new Set();
+    const o = this.owner[c], set = new Set([c]), todo = [c];
+    while (todo.length) {
+      for (const v of this.cityLinks(todo.pop(), o)) if (!set.has(v)) { set.add(v); todo.push(v); }
+    }
+    set.delete(c);
+    return set;
+  },
+  // Les villes (et ports fortifiés) du royaume o reliés directement à c : par ses murs, ou par sa muraille qui touche
+  // celle d'une autre de ses villes
+  cityLinks(c, o) {
+    const set = new Set();
     const ok = w => w.done && w.owner === o && this.owner[w.castle] === o && this.building[w.castle] === B_CASTLE;
     const isCity = v => v !== undefined && v >= 0 && this.owner[v] === o && (this.building[v] === B_CASTLE || this.walledPort(v));
     const queue = this.walls.filter(w => ok(w) && (w.castle === c || w.city === c)), seen = new Set(queue);
@@ -1570,8 +1583,16 @@ const GameRules = {
       if (isCity(w.city)) set.add(w.city);
       for (const v of w.touch || []) if (!seen.has(v) && ok(v)) { seen.add(v); queue.push(v); }
     }
+    if (this.building[c] === B_CASTLE) {
+      for (const d of this.castles) if (d !== c && this.owner[d] === o && this.building[d] === B_CASTLE && this.wallsShared(c, d)) set.add(d);
+    }
     set.delete(c);
     return set;
+  },
+  // Les murailles des villes c et d se touchent-elles ? (distance entre leurs centres ≤ la somme de leurs rayons)
+  wallsShared(c, d) {
+    const W = this.W, dx = c % W - d % W, dy = ((c / W) | 0) - ((d / W) | 0), R = this.castleInfo(c).radius + this.castleInfo(d).radius;
+    return dx * dx + dy * dy <= R * R;
   },
 
   // Deux murs se touchent-ils (une case de l'un collée à une case de l'autre, même en diagonale) ?
@@ -3178,7 +3199,7 @@ const GameRules = {
     // (👑 Charlemagne : les villes de la Bavière, de l'Aquitaine et des Asturies, tant qu'elles les tiennent, voir garrison)
     // (👑 Charlemagne : une ville à la garnison renforcée, comme Barcelone, tant que sa faction la tient : voir cm.strong)
     const S = this.cm || this.cr, strong = S && S.strong.get(a), boost = strong && strong.pid === this.owner[a] ? strong.boost : 1;
-    if (t === B_CASTLE) return (this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0))
+    if (t === B_CASTLE) return (this.buildingInfo(a).garrison + this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON)
       * ((this.cm || this.hy || this.cr) && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1) * boost;
     // (⚓ un port fortifié relié par un mur à des villes du royaume : WALL_LINK_GARRISON soldats de plus par ville)
     if (t === B_PORT) return (this.buildingInfo(a).garrison || 0) + (this.walls.length && this.walledPort(a) ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0);
@@ -3316,6 +3337,12 @@ const GameRules = {
   },
 
   buildCost(p, type) {
+    // (🏰 les châteaux ont leurs prix à eux, dans l'ordre : CASTLE_COSTS ; la capitale, fondée gratuitement, ne compte pas)
+    if (type === B_CASTLE) {
+      const L = CONFIG.CASTLE_COSTS, cap = p.capital >= 0 ? this.anchor[p.capital] : -1;
+      const capital = cap >= 0 && this.building[cap] === B_CASTLE && this.owner[cap] === p.id && this.builtBy[cap] === p.id ? 1 : 0;
+      return L[Math.max(0, Math.min(L.length - 1, this.builtCount(p, type) - capital))];
+    }
     // (les églises et les ports montent 2 fois plus vite : on n'en bâtit pas trop)
     // (une mine coûte toujours le même prix ; les moulins et casernes montent moins vite : MILL_COST_GROWTH)
     const growth = type === B_MINE ? 1 : type === B_CHURCH || type === B_PORT ? CONFIG.RARE_COST_GROWTH
