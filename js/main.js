@@ -241,6 +241,15 @@ const UI = {
           this.refreshAttacks();
         });
       }
+      // 📿 Croix d'une armée de relique : elle rentre (et pose la relique là où elle est, si elle la portait)
+      const relRec = e.target.closest('[data-relicrecall]');
+      if (relRec) {
+        return this.act({ k: 'relicRecall', run: +relRec.dataset.relicrecall }, res => {
+          if (res) this.log(res.carried ? tr('📿 Ton armée pose la relique là où elle est et rentre.', '📿 Your army drops the relic where it is and heads home.')
+            : tr('↩️ Ton armée de relique rentre.', '↩️ Your relic army heads home.'), 'warn');
+          this.refreshAttacks();
+        });
+      }
       // Croix d'une armée de défense : elle rentre (sans perte)
       const recDef = e.target.closest('[data-recalldef]');
       if (recDef) {
@@ -1788,9 +1797,10 @@ const UI = {
     const G = Game, h = G.human;
     const list = G.attacks.filter(a => !a.done && (a.attacker === h.id || a.target === h.id));
     const boats = G.expeditions.filter(e => !e.done && e.pid === h.id); // nos transports en mer
+    const runs = G.relicRuns ? G.relicRuns.filter(r => r.pid === h.id) : []; // (📿 nos armées de relique)
     const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '') + (G.isPreparing(a) ? 'p' : '') +
       (a.target === h.id && this.hasDefenders(a) ? 'd' : '')).join(',') +
-      '|' + boats.map(e => e.id + (e.home !== undefined ? 'h' : '')).join(',');
+      '|' + boats.map(e => e.id + (e.home !== undefined ? 'h' : '')).join(',') + '|' + runs.map(r => r.id + r.phase + (r.relic ? 'r' : '')).join(',');
     const box = $('attacks');
     if (key !== this.attacksKey) {
       this.attacksKey = key;
@@ -1836,7 +1846,18 @@ const UI = {
             ? ` ${tr('chez', 'at')} ${this.bannerImg(G.players[G.owner[e.landing]])}${escapeHtml(G.players[G.owner[e.landing]].name)}` : '');
         return `<div class="attack panel"><span>${what}</span><b data-boat="${e.id}"></b>` +
           (e.home !== undefined ? '' : this.retreatCross('data-recall', e.id)) + '</div>';
+      }).join('') + runs.map(r => {
+        // 📿 Armée de relique : où elle en est, et une petite croix pour la rappeler (à tout moment)
+        const what = r.phase === 'chase' ? tr('📿 ⚔️ interception', '📿 ⚔️ interception') : r.phase === 'take' ? tr('📿 prise de la relique', '📿 taking the relic')
+          : r.phase === 'carry' ? tr('📿 rapporte la relique', '📿 carrying the relic') : tr('📿 → relique', '📿 → relic');
+        return `<div class="attack panel"><span>${what}</span><b data-relicrun="${r.id}"></b>` +
+          `<button class="x" data-relicrecall="${r.id}" title="${r.relic && r.phase !== 'take' ? tr('Rappeler ton armée : elle pose la relique là où elle est et rentre', 'Call your army back: it drops the relic where it is and heads home')
+            : tr('Rappeler ton armée : elle rentre', 'Call your army back: it heads home')}">×</button></div>`;
       }).join('');
+    }
+    for (const r of runs) {
+      const el = box.querySelector(`[data-relicrun="${r.id}"]`);
+      if (el) el.textContent = `${G.troopIcon(h.id)} ${fmt(r.troops)}`;
     }
     for (const e of boats) {
       const el = box.querySelector(`[data-boat="${e.id}"]`);

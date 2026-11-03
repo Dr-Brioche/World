@@ -787,6 +787,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (port de niveau 3). L'armée part d'un de tes ports royaux, débarque sur l'île, prend la relique, la rapporte en bateau
      jusqu'à un de tes ports royaux, puis à pied jusqu'à ta cathédrale (le bateau va 2,5 fois plus vite que la marche ; un
      bateau sur l'eau, à la place de la croix, la signale). On peut aussi poursuivre une armée de relique en bateau.
+     Tes armées de relique ont leur barre en bas de l'écran, comme les assauts : sa **petite croix** la **rappelle à tout
+     moment** (elle rentre sans perte ; si elle portait la relique, elle la **pose là où elle est**).
      **Clique sur ta propre armée de relique** (à l'aller ou au retour) pour lui envoyer des renforts : sur tes terres, ils
      la rejoignent tout de suite ; plus loin, ils marchent depuis ta ville la plus proche (plus elle est loin, plus c'est long). Tu perds ta dernière
      cathédrale en route : ton armée pose la relique là où elle est et rentre. Une fois déposée, la relique reste **liée à
@@ -1121,6 +1123,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.93.13** : 📿 tes armées de relique ont leur barre en bas de l'écran : la petite croix les **rappelle à tout moment** (si elle portait la relique, elle la pose là où elle est)
 - **v0.93.12** : ⚓ depuis (ou vers) un **port royal** (niveau 3), les pertes en mer d'une expédition sont limitées à **10 %** (au lieu de 25 %)
 - **v0.93.11** : 🛡️ si la ville (ou le bâtiment) que tes défenseurs allaient protéger tombe avant leur arrivée, ils battent en retraite tout de suite et rentrent à **leur ville de départ** (au lieu de la ville la plus proche d'eux, parfois près du front)
 - **v0.93.10** : ⛵ une **relique sur une île** se rapporte **en bateau** : l'armée part d'un de tes ports royaux (niveau 3) et revient à un port royal, puis marche jusqu'à ta cathédrale · 🧱 une ville (ou un mur) bâtie **dans le dos** d'un assaut le force à **battre en retraite d'office**, avec **−15 %** de soldats par muraille ou mur franchi (au lieu de −50 %)

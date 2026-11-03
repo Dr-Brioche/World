@@ -2581,6 +2581,7 @@ const GameRules = {
         case 'relic': return this.launchRelicRun(pid, o.id, o.troops); // (📿 aller chercher une relique)
         case 'relicChase': return this.launchRelicChase(pid, o.run, o.troops); // (📿 intercepter une armée de relique)
         case 'relicReinforce': return this.launchRelicReinforce(pid, o.run, o.troops); // (📿 renforcer son armée de relique)
+        case 'relicRecall': return this.recallRelicRun(pid, o.run); // (📿 rappeler son armée de relique)
         case 'levy': return this.startLevy(p, o.a);
         case 'wall': return this.buildWall(p, o.c, o.i, o.from);
         case 'trade': return this.buildTrade(p, o.a, o.i);
