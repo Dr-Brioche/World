@@ -2443,16 +2443,28 @@ const UI = {
     this.cancelWall();
     this.cancelTrade();
     this.vikingAim = true;
+    this.vikingPick = -1;
     document.body.style.cursor = 'crosshair';
   },
   cancelVikingAim() {
     if (!this.vikingAim) return;
     this.vikingAim = false;
+    this.vikingPick = -1;
     document.body.style.cursor = '';
   },
   vikingHint() {
     return tr(`🔥 Assaut viking : clique sur une ville (ou un port fortifié) ennemie à raser, à ${CONFIG.VIKING_RANGE} cases au plus d'une côte · ${fmt(Game.human.troops * this.ratio)} soldats (curseur « Envoyer ») · Échap : plus tard`,
       `🔥 Viking assault: click an enemy city (or fortified port) to raze, within ${CONFIG.VIKING_RANGE} tiles of a coast · ${fmt(Game.human.troops * this.ratio)} soldiers (« Send » slider) · Esc: later`);
+  },
+  // Clic pendant la visée viking : 1er clic, la cible est choisie (on vérifie qu'elle est possible) ; 2e clic sur la même
+  // cible, l'assaut part
+  vikingClick(i) {
+    const G = Game, plan = G.uiCall(() => G.planViking(G.human.id, i));
+    if (plan.error) { this.vikingPick = -1; return this.log(plan.error, 'warn'); }
+    if (this.vikingPick === plan.castle) return this.viking(i);
+    this.vikingPick = plan.castle;
+    this.log(tr(`🔥 Cible choisie : ${G.targetLabel(plan.castle)}. Reclique dessus pour lancer l'assaut viking (Échap : annuler).`,
+      `🔥 Target chosen: ${G.targetLabel(plan.castle)}. Click it again to launch the Viking assault (Esc: cancel).`), 'good');
   },
   // Lancer l'assaut viking sur la cible en i
   viking(i) {
@@ -2757,8 +2769,9 @@ const UI = {
       });
       return;
     }
-    // Assaut viking : le clic choisit la ville ennemie visée
-    if (this.vikingAim) return this.viking(i);
+    // Assaut viking : un 1er clic choisit la ville ennemie visée, un 2e clic sur la même ville lance l'assaut
+    // (comme un assaut : on ne part pas sur un clic de trop)
+    if (this.vikingAim) return this.vikingClick(i);
     // Route commerciale : le clic choisit la ville alliée
     if (this.tradeFor >= 0) {
       const a = this.tradeFor, plan = G.planTrade(h.id, a, i);
