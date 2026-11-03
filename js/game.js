@@ -72,6 +72,7 @@ const GameRules = {
     if (this.factions) this.pactsAllowed = false; // (pas d'autres pactes que les 3 camps)
     this.cm = null; // (le scénario « Charlemagne » en cours, voir startCharlemagne)
     this.hy = null; // (le scénario « La guerre de Cent Ans » en cours, voir centansrules.js)
+    this.cr = null; // (le scénario « Les Croisades » en cours, voir croisadesrules.js)
     // 🌐 Les joueurs humains : en solo, un seul ; en ligne, tous ceux de la partie (opts.humans, dans le même ordre
     // chez tout le monde), dont celui de ce navigateur (opts.me). Game.human, c'est toujours le joueur de CE navigateur
     // (pour les messages et l'affichage : isHuman) ; p.human, c'est tout royaume tenu par un humain (pour les règles :
@@ -93,6 +94,7 @@ const GameRules = {
     if (this.mapType === 'charlemagne') return this.startCharlemagne(opts);
     // ⚜️ Scénario « La guerre de Cent Ans » : la France de 1337 (voir centansrules.js)
     if (this.mapType === 'centans') return this.startCentAns(opts);
+    if (this.mapType === 'croisades') return this.startCroisades(opts);
     const names = this.shuffle(KINGDOMS.slice());
     // Les bots reçoivent au hasard les bannières de la carte que le joueur n'a pas prises (sur Azeroth : les écus, et
     // chaque royaume prend le nom de son écu : les Orcs, les Nains…)
@@ -914,7 +916,7 @@ const GameRules = {
     const name = this.players[o].name;
     if (this.areAllied(pid, o)) return { error: tr(`${name} est ton allié !`, `${name} is your ally!`) };
     // (👑 Charlemagne : un raid viking rase sa cible ; les lieux des objectifs, eux, doivent rester debout)
-    if (this.cm && this.cmObjectiveSites().has(c)) return { error: tr('Ce lieu est un des grands desseins de Charlemagne : on ne peut pas le raser (prends-le par un assaut).', 'This place is one of Charlemagne\'s great designs: it cannot be razed (take it with an assault).') };
+    if ((this.cm || this.cr) && this.cmObjectiveSites().has(c)) return { error: tr('Ce lieu est un des grands desseins de Charlemagne : on ne peut pas le raser (prends-le par un assaut).', 'This place is one of Charlemagne\'s great designs: it cannot be razed (take it with an assault).') };
     if (this.truceLeft(c) > 0) return { error: tr(`${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} vient de changer de mains : attends un peu.`, `${this.targetLabel(c)[0].toUpperCase()}${this.targetLabel(c).slice(1)} has just changed hands: wait a little.`) };
     const ports = this.royalPorts(pid); // (les Vikings ne partent que d'un port royal)
     if (!ports.length) return { error: tr('Il te faut un port royal (niveau 3) d\'où partir.', 'You need a royal port (level 3) to sail from.') };
@@ -1116,6 +1118,7 @@ const GameRules = {
       if (!p.alive || this.faithOf(p.id) <= 0) continue;
       for (const o of this.neighborStats(p.id).keys()) {
         if (o < 0) continue;
+        if (this.cr && !this.crFaithPair(p.id, o)) continue; // (✝️ les Croisades : seulement entre chrétiens et musulmans)
         const diff = this.faithEdge(p.id, o), key = p.id * 1000 + o;
         if (diff <= 0) { this.faithProgress.delete(key); continue; }
         // (un royaume désorganisé, sans ville ni port fortifié pour tenir ses terres, se fait convertir plus vite)
@@ -1124,7 +1127,7 @@ const GameRules = {
         //  pour le convertir à pleine vitesse, voir FAITH_DOMINANCE)
         const dominance = Math.min(1, diff / Math.max(1, this.faithOf(p.id)) / CONFIG.FAITH_DOMINANCE) ** CONFIG.FAITH_DOMINANCE_POWER;
         // (👑 Charlemagne : la Croyance y convertit moins vite, voir CHARLEMAGNE.FAITH_SPEED)
-        const speed = CONFIG.FAITH_SPEED * (this.cm ? CHARLEMAGNE.FAITH_SPEED : 1);
+        const speed = CONFIG.FAITH_SPEED * (this.cm ? CHARLEMAGNE.FAITH_SPEED : this.cr ? CROISADES.FAITH_SPEED : 1);
         const mult = (this.isProtected(o) ? 1 : CONFIG.FAITH_DISORGANIZED) * speed * dominance;
         const prog = (this.faithProgress.get(key) || 0) + mult / this.faithInterval(diff), n = Math.floor(prog);
         this.faithProgress.set(key, prog - n);
@@ -1200,6 +1203,7 @@ const GameRules = {
       list.splice(k, 0, { t: i, score, pid, o });
       if (list.length > n) list.pop();
     }
+    const cuts = new Map(); // royaume converti → le dernier prêcheur qui a pu le couper (voir plus bas)
     for (const { t, pid, o } of [...best.values()].flat()) {
       if (this.owner[t] !== o || !this.players[o].alive) continue;
       // (une église ou un port converti emmène les moulins et casernes qui occupent ses places)
@@ -1207,9 +1211,11 @@ const GameRules = {
       const linked = host >= 0 ? this.linkedBuildings(host) : [];
       this.setOwner(t, pid);
       for (const b of linked) if (this.owner[b] === o) this.setOwner(b, pid);
-      // la conversion peut couper son royaume : la coupe s'applique tout de suite (voir captureEnclaves)
-      if (this.players[o].alive && this.countNeighborsOwnedBy(t, o) >= 2) this.captureEnclaves(o, pid);
+      // la conversion peut couper son royaume : la coupe s'applique à la fin de cette seconde (voir captureEnclaves),
+      // une seule fois par royaume converti (refaire le découpage de la carte à chaque case coûterait trop cher)
+      if (this.countNeighborsOwnedBy(t, o) >= 2) cuts.set(o, pid);
     }
+    for (const [o, pid] of cuts) if (this.players[o].alive) this.captureEnclaves(o, pid);
   },
 
   // La Croyance peut-elle convertir cette case du royaume o ? Jamais une ville ni un port fortifié (ils tiennent
@@ -2306,6 +2312,7 @@ const GameRules = {
   // 👑 Les lieux des objectifs de Charlemagne (les capitales à prendre, Barcelone, Rome, les mines historiques) : on ne
   // peut pas les raser (razzias, assauts vikings), sinon la partie ne pourrait plus être gagnée
   cmObjectiveSites() {
+    if (this.cr) return this.crObjectiveSites(); // (✝️ les Croisades : voir croisadesrules.js)
     const cm = this.cm, set = new Set();
     if (!cm) return set;
     for (const o of CHARLEMAGNE.OBJECTIVES) {
@@ -2364,6 +2371,7 @@ const GameRules = {
   // un message le dit. (Au premier passage, on note l'état de départ sans message : Rome est déjà au pape.)
   stepObjectives() {
     if (this.hy) return this.hyStepObjectives(); // (⚜️ la guerre de Cent Ans : voir centansrules.js)
+    if (this.cr) return this.crStepObjectives(); // (✝️ les Croisades : voir croisadesrules.js)
     const cm = this.cm;
     if (!cm || this.human.role !== 'francs' || this.tick % CONFIG.TICKS_PER_SECOND) return;
     CHARLEMAGNE.OBJECTIVES.forEach((o, k) => {
@@ -2378,6 +2386,7 @@ const GameRules = {
   // L'état des objectifs, pour le cadre en haut à gauche : [{ text, done }]
   objectives() {
     if (this.hy) return this.hyObjectives();
+    if (this.cr) return this.crObjectives();
     const cm = this.cm;
     if (!cm || this.human.role !== 'francs') return [];
     // (l'objectif « Rome » perdu pour de bon : barré en rouge, voir drawObjectives)
@@ -2386,7 +2395,7 @@ const GameRules = {
 
   // 👑 Charlemagne couronné empereur : tous ses objectifs sont remplis (et Rome est toujours au pape, ou à lui)
   empireWon() {
-    if (!this.cm && !this.hy) return false;
+    if (!this.cm && !this.hy && !this.cr) return false;
     const list = this.objectives();
     return list.length > 0 && list.every(o => o.done);
   },
@@ -2471,7 +2480,9 @@ const GameRules = {
         case 'hyChev': return this.hyChevauchee(pid, o.a, o.troops);
         case 'hyJoan': return this.hyArmJoan();
         case 'hyChoice': // (🦁 un choix d'un parchemin du roi d'Angleterre, ou 🙏 le vœu du début de partie)
-          return o.key === 'vow' ? this.chooseVow(pid, o.pick) : this.hyChoose(pid, o.key, o.pick);
+          return o.key === 'vow' ? this.chooseVow(pid, o.pick) : this.cr ? this.crChoose(pid, o.key, o.pick) : this.hyChoose(pid, o.key, o.pick);
+        case 'crHire': return this.cr ? this.crHire(pid, o.target) : null; // (🗡️ engager les Assassins, voir croisadesrules.js)
+        case 'crTribute': return this.cr ? this.crTribute(pid) : null;
       }
       return null;
     } finally { this.inUpdate = false; }
@@ -2810,7 +2821,7 @@ const GameRules = {
   // Pourquoi la ville a de pid ne peut pas (encore) avoir de route commerciale, ou null si elle le peut
   tradeBlocker(pid, a) {
     // (en mode Factions, les pactes ordinaires sont interdits, mais on commerce avec les alliés de son camp)
-    if (!this.pactsAllowed && !this.factions && !this.cm && !this.hy) return tr('Pas de pactes dans cette partie : pas de route commerciale.', 'No pacts in this game: no trade routes.');
+    if (!this.pactsAllowed && !this.factions && !this.cm && !this.hy && !this.cr) return tr('Pas de pactes dans cette partie : pas de route commerciale.', 'No pacts in this game: no trade routes.');
     if (this.building[a] !== B_CASTLE || this.owner[a] !== pid || this.level[a] < 2) return tr('Il faut une de tes villes de niveau 2 ou plus.', 'You need one of your cities at level 2 or higher.');
     if (this.tradesOf(a).length >= this.tradeMax(a)) return this.tradeFull(a, tr('Cette ville', 'This city'));
     if (!this.tradePartners(pid).length) return tr('Il te faut un allié dans ton pacte, avec une ville de niveau 2 ou plus.', 'You need an ally in your pact with a city at level 2 or higher.');
@@ -3139,7 +3150,7 @@ const GameRules = {
 
   maxTroops(p) {
     return (CONFIG.BASE_MAX_TROOPS + p.tiles * CONFIG.MAX_TROOPS_PER_TILE
-      + this.levelSum(p, B_BARRACKS, 'maxTroops')) * (this.hy ? this.hyMaxTroops(p) : 1); // (⚜️ voir hyMaxTroops)
+      + this.levelSum(p, B_BARRACKS, 'maxTroops')) * (this.hy ? this.hyMaxTroops(p) : this.cr ? this.crMaxTroops(p) : 1); // (⚜️ voir hyMaxTroops, ✝️ crMaxTroops)
   },
 
   // Garnison maximum d'un bâtiment : celle de son niveau (château, port royal), 0 s'il n'en a pas.
@@ -3153,9 +3164,9 @@ const GameRules = {
     if (t === B_CASTLE && this.cm && a === this.cm.capital.papaute && this.owner[a] === this.cm.role.papaute) return CHARLEMAGNE.ROME_GARRISON;
     // (👑 Charlemagne : les villes de la Bavière, de l'Aquitaine et des Asturies, tant qu'elles les tiennent, voir garrison)
     // (👑 Charlemagne : une ville à la garnison renforcée, comme Barcelone, tant que sa faction la tient : voir cm.strong)
-    const strong = this.cm && this.cm.strong.get(a), boost = strong && strong.pid === this.owner[a] ? strong.boost : 1;
+    const S = this.cm || this.cr, strong = S && S.strong.get(a), boost = strong && strong.pid === this.owner[a] ? strong.boost : 1;
     if (t === B_CASTLE) return (this.buildingInfo(a).garrison + (this.walls.length ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0))
-      * ((this.cm || this.hy) && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1) * boost;
+      * ((this.cm || this.hy || this.cr) && this.owner[a] >= 0 ? this.players[this.owner[a]].garrisonBoost || 1 : 1) * boost;
     // (⚓ un port fortifié relié par un mur à des villes du royaume : WALL_LINK_GARRISON soldats de plus par ville)
     if (t === B_PORT) return (this.buildingInfo(a).garrison || 0) + (this.walls.length && this.walledPort(a) ? this.wallLinked(a).size * CONFIG.WALL_LINK_GARRISON : 0);
     return 0;
@@ -3217,7 +3228,7 @@ const GameRules = {
     if (army >= max || p.crisisUntil > this.tick) return 0; // (👑 797 : Byzance en crise ne recrute plus)
     const base = CONFIG.BASE_TROOP_GROWTH + Math.sqrt(p.tiles) * CONFIG.TROOP_GROWTH_SQRT;
     return base * this.growthFactor(army / max) * this.warFactor(p) * this.earlyBoost() * this.botBonus(p, 'troops') * this.levyFactor(p)
-      * (this.hy ? this.hyRecruit(p) : 1); // (⚜️ la folie du roi, les ports de la Manche… : voir hyRecruit)
+      * (this.hy ? this.hyRecruit(p) : this.cr ? this.crRecruit(p) : 1); // (✝️ voir crRecruit) // (⚜️ la folie du roi, les ports de la Manche… : voir hyRecruit)
   },
 
   // Élan de départ : multiplicateur du recrutement, de 1 + EARLY_GROWTH_BONUS au début de la partie
@@ -3312,7 +3323,7 @@ const GameRules = {
   tryBuild(p, i, type) {
     if (BUILDINGS[type].hidden) return tr('Ce bâtiment ne se construit pas.', 'This building cannot be built.');
     // (👑 scénario « Charlemagne » : les villes de 768 sont toutes là ; on les améliore, on les prend, mais on n'en bâtit pas)
-    if (type === B_CASTLE && (this.cm || this.hy)) return tr('Dans ce scénario, on ne bâtit pas de nouvelle ville : améliore les tiennes, ou prends celles des autres.', 'In this scenario, no new city can be built: upgrade yours, or take other kingdoms\' cities.');
+    if (type === B_CASTLE && (this.cm || this.hy || this.cr)) return tr('Dans ce scénario, on ne bâtit pas de nouvelle ville : améliore les tiennes, ou prends celles des autres.', 'In this scenario, no new city can be built: upgrade yours, or take other kingdoms\' cities.');
     // (🗼 les tours de garde : en nombre limité, et pas encore disponibles, voir CONFIG.TOWERS)
     if (type === B_TOWER) {
       if (!CONFIG.TOWERS) return tr('Les tours de garde ne sont pas encore disponibles.', 'Guard towers are not available yet.');
@@ -3386,6 +3397,10 @@ const GameRules = {
     return null;
   },
 
+  // ⏱️ Une très grande carte (la carte des Croisades, l'Europe…) : de 1 (une carte ordinaire) à 2 ; certaines mémoires
+  // techniques (le découpage en morceaux, les plans d'assaut des bots) y servent d'autant plus longtemps
+  bigMap() { return Math.min(2, Math.max(1, this.N / 350000)); },
+
   // --- Morceaux de territoire ---
   // Découpe la carte en « morceaux » : des cases d'un même royaume qui se touchent.
   // Sur chaque île (ou continent), le plus grand morceau d'un royaume est un cœur ; les autres sont coupés de lui.
@@ -3394,8 +3409,10 @@ const GameRules = {
   // (fresh = false : on réutilise le découpage déjà fait pendant REGIONS_REUSE tours de jeu, même si quelques cases
   //  ont changé de mains entre-temps : sur une grande carte, le refaire à chaque tour ralentirait le jeu.
   //  fresh = true : toujours à jour, pour décider des encerclements.)
-  regions(fresh = false) {
-    if (this.inUI()) { // (🌐 voir uiCall)
+  // (⏱️ only : le découpage des seules terres de ce royaume, toujours à jour, sans toucher à la mémoire du découpage
+  //  complet ; sur une très grande carte, captureEnclaves n'a besoin que de celles du royaume coupé)
+  regions(fresh = false, only = -1) {
+    if (only < 0 && this.inUI()) { // (🌐 voir uiCall)
       if (this.regionsCache) return this.regionsCache;
       // (⏱️ la mémoire des règles est vide, par exemple juste après la perte d'un bâtiment : l'affichage garde son
       //  propre découpage pour cette version de la carte, au lieu de tout redécouper à chaque image ; les règles ne
@@ -3406,12 +3423,18 @@ const GameRules = {
       this.uiRegions = { version: this.version, N: this.N, r };
       return r;
     }
-    if (this.regionsCache && this.regionsVersion === this.version) return this.regionsCache;
-    if (!fresh && this.regionsCache && this.tick - this.regionsTick < CONFIG.REGIONS_REUSE && this.tick >= this.regionsTick) return this.regionsCache;
-    this.regionsTick = this.tick;
-    // (order est réutilisé d'un calcul à l'autre : ceux qui s'en servent en recopient tout de suite un morceau)
-    if (!this.regionsOrder || this.regionsOrder.length !== this.N) this.regionsOrder = new Int32Array(this.N);
-    const comp = new Int32Array(this.N).fill(-1), order = this.regionsOrder;
+    if (only < 0) {
+      if (this.regionsCache && this.regionsVersion === this.version) return this.regionsCache;
+      // (sur une très grande carte, le découpage sert un peu plus longtemps : jusqu'à 2 fois REGIONS_REUSE)
+      const reuse = Math.round(CONFIG.REGIONS_REUSE * this.bigMap());
+      if (!fresh && this.regionsCache && this.tick - this.regionsTick < reuse && this.tick >= this.regionsTick) return this.regionsCache;
+      this.regionsTick = this.tick;
+    }
+    // (order est réutilisé d'un calcul à l'autre : ceux qui s'en servent en recopient tout de suite un morceau ;
+    //  le découpage d'un seul royaume a ses propres tableaux, pour ne pas abîmer celui de toute la carte)
+    const ob = only >= 0 ? 'regionsOrderOne' : 'regionsOrder', pb = only >= 0 ? 'regionsPosOne' : 'regionsPos';
+    if (!this[ob] || this[ob].length !== this.N) this[ob] = new Int32Array(this.N);
+    const comp = new Int32Array(this.N).fill(-1), order = this[ob];
     const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [], hasCastle = [], held = [];
     const main = new Array(this.players.length).fill(-1); // royaume → son plus grand morceau
     let n = 0;
@@ -3419,8 +3442,8 @@ const GameRules = {
     const side = this.riverSide;
     const W = this.W, N = this.N, own = this.owner;
     // (pos[i] : la place de la case i dans order, pour savoir quel bâtiment d'un morceau vient en dernier)
-    if (!this.regionsPos || this.regionsPos.length !== N) this.regionsPos = new Int32Array(N);
-    const pos = this.regionsPos;
+    if (!this[pb] || this[pb].length !== N) this[pb] = new Int32Array(N);
+    const pos = this[pb];
     // Routes d'assauts encore en cours vers un objectif : tant que le combat n'est pas joué, elles ne sont que
     // visuelles. Elles ne coupent donc pas le royaume traversé : pour lui, ses morceaux restent reliés à travers
     // elles (bridge[t] = royaume traversé). Si l'assaut prend son objectif, la coupe s'applique ; sinon la
@@ -3435,7 +3458,7 @@ const GameRules = {
     const visitBridge = (j, o) => { if (bridge[j] === o && bseen[j] !== stamp) { bseen[j] = stamp; bq.push(j); } };
     for (let i = 0; i < N; i++) {
       const o = own[i];
-      if (o < 0 || comp[i] >= 0) continue;
+      if (o < 0 || comp[i] >= 0 || (only >= 0 && o !== only)) continue;
       // Nouveau morceau : on le parcourt de proche en proche
       // (les 4 voisins sont écrits à la main : c'est la fonction la plus appelée des grandes cartes)
       const k = size.length, s = n;
@@ -3503,7 +3526,9 @@ const GameRules = {
     // (un royaume qui n'a plus que des zones d'avant-poste : son plus grand morceau reste son cœur)
     for (let o = 0; o < main.length; o++) if (main[o] >= 0 && !hasHeart.has(o)) heart[main[o]] = 1;
     // outpost[k] = avant-poste bâti du morceau k (-1 s'il n'y en a pas) ; heart[k] = 1 si k est un cœur du royaume
-    this.regionsCache = { comp, order, size, start, owner, main, heart, outpost, anyOutpost, colony, hasCastle, held };
+    const r = { comp, order, size, start, owner, main, heart, outpost, anyOutpost, colony, hasCastle, held };
+    if (only >= 0) return r;
+    this.regionsCache = r;
     this.regionsVersion = this.version;
     return this.regionsCache;
   },
@@ -3741,7 +3766,7 @@ const GameRules = {
   captureEnclaves(target, cutter = -1) {
     const T = this.players[target];
     if (!T.alive) return;
-    const r = this.regions(true), pieces = [];
+    const r = this.regions(true, target), pieces = []; // (⏱️ le découpage des seules terres de target : voir regions)
     const routes = new Set();
     for (const [t] of this.pendingRoutes()) if (this.owner[t] === target) routes.add(t);
     for (let k = 0; k < r.size.length; k++) {
@@ -4284,7 +4309,7 @@ const GameRules = {
     if (this.inUI()) return this.uiCall(() => this.planAssault(pid, target, onlyCached)); // (🌐 voir uiCall)
     if (!this.isProtected(target)) return { castle: null, D: 1.3 };
     const key = pid * 1000 + target, old = (this.assaultPlans = this.assaultPlans || new Map()).get(key);
-    if (old && this.tick - old.tick < CONFIG.AI_PLAN_REUSE * CONFIG.TICKS_PER_SECOND && (old.plan.castle === null || old.plan.castle < 0 || this.owner[old.plan.castle] === target)) return old.plan;
+    if (old && this.tick - old.tick < CONFIG.AI_PLAN_REUSE * this.bigMap() * CONFIG.TICKS_PER_SECOND && (old.plan.castle === null || old.plan.castle < 0 || this.owner[old.plan.castle] === target)) return old.plan;
     if (onlyCached) return null;
     const plan = this.computeAssaultPlan(pid, target);
     plan.fresh = this.tick; // (calculé à ce tour : voir le budget des bots, AI.update)
@@ -5225,6 +5250,7 @@ const GameRules = {
     if (pid >= 0) best *= this.botBonus(this.players[pid], 'power');
     // (⚜️ Du Guesclin, Henri V : voir hyPower)
     if (pid >= 0 && this.hy) best *= this.hyPower(pid);
+    if (pid >= 0 && this.cr) best *= this.crPower(pid); // (✝️ Saladin, Richard, Barberousse : voir crPower)
     return pid >= 0 && this.hasImperial(pid) ? best * (1 + IMPERIAL.troopPower) : best;
   },
 
@@ -6470,7 +6496,7 @@ const GameRules = {
   // --- Alliances : les pactes ---
   // Des royaumes alliés forment un pacte. Un royaume ne peut faire partie que d'un seul pacte.
   // Un assaut de pid contre target est-il interdit en ce moment (⚜️ une trêve, voir hyTruceBlock) ? Le message, ou null
-  attackBlocked(pid, target) { return this.hy ? this.hyTruceBlock(pid, target) : null; },
+  attackBlocked(pid, target) { return this.hy ? this.hyTruceBlock(pid, target) : this.cr ? this.crTruceBlock(pid, target) : null; },
 
   areAllied(a, b) {
     const pa = this.players[a].pact;
@@ -6505,7 +6531,7 @@ const GameRules = {
     p.pact = -1;
     const rest = this.pactMembers(id);
     // (⚜️ la guerre de Cent Ans : les deux camps restent, même avec un seul royaume, voir hySetCamp)
-    if (rest.length < 2 && !(this.hy && this.pacts.get(id).eternal)) {
+    if (rest.length < 2 && !((this.hy || this.cr) && this.pacts.get(id).eternal)) {
       for (const m of rest) m.pact = -1;
       this.pacts.delete(id);
     } else if (this.pacts.get(id).founder === p.id) this.newFounder(id);
@@ -6726,8 +6752,10 @@ const GameRules = {
     // Toutes les 2 secondes : un morceau a pu être coupé autrement (débarquement…)
     // (le découpage n'est refait que si l'un d'eux a vraiment englobé des terres)
     // (⏱️ un seul découpage d'abord : seuls les royaumes qui ont un morceau détaché, sans avant-poste, sont examinés)
+    // (⏱️ le découpage récent suffit pour trouver les royaumes à examiner : captureEnclaves refait, lui, celui de leurs
+    //  seules terres, toujours à jour)
     if (this.tick % (2 * TPS) === 0) {
-      const r = this.regions(true), cut = new Set();
+      const r = this.regions(), cut = new Set();
       for (let k = 0; k < r.size.length; k++) if (!r.heart[k] && !r.anyOutpost[k] && !r.colony[k]) cut.add(r.owner[k]);
       for (const p of this.players) if (p.alive && cut.has(p.id)) this.captureEnclaves(p.id);
     }
@@ -6752,6 +6780,7 @@ const GameRules = {
     for (const p of this.players) if (p.alive && !p.human) AI.update(p); // (les bots ; un humain parti devient un bot)
     this.stepCharlemagne();
     this.stepCentAns();
+    this.stepCroisades();
     this.stepObjectives();
     this.stepChallenges(); // (⭐ les défis des campagnes : voir defis.js)
     this.stepRelics(); // (📿 les reliques saintes, dans les parties classiques : voir reliques.js)
@@ -6772,12 +6801,12 @@ const GameRules = {
     // (mode « Factions » : les royaumes de son camp ne comptent pas comme rivaux, et les terres du camp comptent ensemble ;
     //  scénario « Charlemagne » : ses alliés ne comptent pas comme rivaux non plus)
     // (⚔️ des pillards, comme les Slaves de Charlemagne, ne comptent pas : on ne peut pas les anéantir)
-    const botsAlive = this.players.some(p => !p.isHuman && p.alive && !p.raiders && !((this.factions || this.cm || this.hy) && this.areAllied(p.id, h.id)));
+    const botsAlive = this.players.some(p => !p.isHuman && p.alive && !p.raiders && !((this.factions || this.cm || this.hy || this.cr) && this.areAllied(p.id, h.id)));
     // 👑 Charlemagne couronné empereur (une seule fois : on peut ensuite continuer à jouer)
     if (!this.empireShown && this.empireWon()) {
       this.empireShown = this.victoryShown = true;
       this.phase = 'over';
-      UI.showEnd(true, botsAlive, this.hy ? 'hundred' : 'empire');
+      UI.showEnd(true, botsAlive, this.hy ? 'hundred' : this.cr ? 'crusades' : 'empire');
       return;
     }
     const share = (this.factions ? this.players.filter(p => p === h || this.areAllied(p.id, h.id)) : [h])

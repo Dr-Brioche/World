@@ -6,7 +6,8 @@ const AI = {
     if (p.raiders) return; // (⚔️ des pillards, comme les Slaves de Charlemagne : ils ne font que leurs razzias, voir stepRaids)
     if (p.dormant) return; // (👑 l'Aquitaine, avant sa révolte : elle n'a encore ni terres ni armée)
     if (--p.aiTimer > 0) return;
-    p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Game.rand() * 2));
+    // (un royaume lointain des scénarios, qui ne fait que se défendre, réfléchit moins souvent : slowAI, voir croisades.js)
+    p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Game.rand() * 2) * (p.slowAI || 1));
 
     if (Game.rand() < 0.4) this.tryBuild(p);
     if (Game.rand() < 0.1) this.tryWall(p);
@@ -121,6 +122,7 @@ const AI = {
       if (Game.isTraitor(e)) score += 0.5; // un traître affaibli est une proie facile
       if (p.spare && p.spare.includes(e.role)) score *= 0.5; // (👑 Charlemagne : un voisin qu'il attaque moins volontiers)
       if (Game.hy) score *= Game.hyTargetBonus(p, e); // (⚜️ la guerre de Cent Ans : plutôt l'autre camp)
+      if (Game.cr) score *= Game.crTargetBonus(p, e); // (✝️ les Croisades : les croisés contre l'islam)
       if (score > bestScore) { bestScore = score; best = o; bestAim = plan.tile !== undefined ? plan.tile : aim; }
     }
     const full = Game.armySize(p) >= max * 0.95; // (sans les garnisons)

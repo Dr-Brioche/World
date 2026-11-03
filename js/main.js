@@ -88,7 +88,7 @@ const UI = {
     // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe, Azeroth et les cartes dessinées ont leur taille)
     const sizeForType = () => {
       const t = this.mapType();
-      $('mapSize').disabled = ['world', 'europe', 'azeroth', 'charlemagne', 'centans'].includes(t) || t.startsWith('custom:');
+      $('mapSize').disabled = ['world', 'europe', 'azeroth', 'charlemagne', 'centans', 'croisades'].includes(t) || t.startsWith('custom:');
     };
     $('mapType').addEventListener('change', sizeForType);
     sizeForType();
@@ -112,13 +112,15 @@ const UI = {
     // (les écus des races de Warcraft sur la carte Azeroth, les drapeaux ailleurs) ; on retrouve le dernier choix de chaque sorte
     const lastPick = { base: BANNERS.findIndex(b => b.id === 'Dragon'), azeroth: BANNERS.findIndex(b => b.id === 'Humains'),
       charlemagne: BANNERS.findIndex(b => b.set === 'charlemagne' && b.id === 'francs'),
-      centans: BANNERS.findIndex(b => b.set === 'centans' && b.id === 'france') };
+      centans: BANNERS.findIndex(b => b.set === 'centans' && b.id === 'france'),
+      croisades: BANNERS.findIndex(b => b.set === 'croisades' && b.id === 'angleterre') };
     const fillBanners = () => {
       // (mode « Factions » : seulement les 12 races des 3 camps ; scénario « Charlemagne » : les factions jouables)
       const races = this.factionMode() ? AZEROTH_FACTIONS.flatMap(f => f.races) : null;
       const list = bannersForMap(this.mapType()).filter(k => (!races || races.includes(BANNERS[k].id))
         && (BANNERS[k].set !== 'charlemagne' || this.cmFaction(k).playable)
-        && (BANNERS[k].set !== 'centans' || this.hyFaction(k).playable));
+        && (BANNERS[k].set !== 'centans' || this.hyFaction(k).playable)
+        && (BANNERS[k].set !== 'croisades' || this.crFaction(k).playable));
       const set = BANNERS[list[0]].set || 'base';
       $('bannerPick').innerHTML = list.map(k =>
         `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
@@ -133,7 +135,13 @@ const UI = {
       const cf = BANNERS[k].set === 'charlemagne' && this.cmFaction(k);
       // (⚜️ scénario « La guerre de Cent Ans » : qui l'on incarne en 1337)
       const hf = BANNERS[k].set === 'centans' && this.hyFaction(k);
-      $('factionInfo').classList.toggle('hidden', !f && !cf && !hf);
+      // (✝️ scénario « Les Croisades » : qui l'on incarne en 1187)
+      const xf = BANNERS[k].set === 'croisades' && this.crFaction(k);
+      $('factionInfo').classList.toggle('hidden', !f && !cf && !hf && !xf);
+      if (xf) {
+        $('factionInfo').textContent = tr(`✝️ 1187 · ${xf.name} : tu es ${xf.leader}, à ${xf.capital[2]}. ${xf.desc}`,
+          `✝️ 1187 · ${xf.name}: you are ${xf.leader}, in ${xf.capital[2]}. ${xf.desc}`);
+      }
       if (hf) {
         $('factionInfo').textContent = tr(`⚜️ 1337 · ${hf.name} : tu es ${hf.leader}, à ${hf.capital[2]}. ${hf.desc}`,
           `⚜️ 1337 · ${hf.name}: you are ${hf.leader}, in ${hf.capital[2]}. ${hf.desc}`);
@@ -162,7 +170,7 @@ const UI = {
     });
     // Scénario « Azeroth : les Factions » : 12 royaumes (les 3 camps), pactes et nombre de rivaux imposés
     const modeChange = () => {
-      const fac = this.factionMode() || ['charlemagne', 'centans'].includes($('mapType').value); // (un scénario : rivaux et pactes imposés)
+      const fac = this.factionMode() || ['charlemagne', 'centans', 'croisades'].includes($('mapType').value); // (un scénario : rivaux et pactes imposés)
       $('opponents').disabled = fac;
       $('pacts').disabled = fac;
       $('spawnMode').disabled = fac; // (un scénario : chacun commence à sa capitale historique)
@@ -365,6 +373,8 @@ const UI = {
   cmFaction(k) { return CHARLEMAGNE.factions.find(f => f.id === BANNERS[k].id); },
   // La faction du scénario « La guerre de Cent Ans » de la bannière k (voir centans.js)
   hyFaction(k) { return CENTANS.factions.find(f => f.id === BANNERS[k].id); },
+  // La faction du scénario « Les Croisades » de la bannière k (voir croisades.js)
+  crFaction(k) { return CROISADES.factions.find(f => f.id === BANNERS[k].id); },
   // La carte à générer pour le choix du menu (un scénario se joue sur une carte prédéfinie)
   mapType() { return this.factionMode() ? 'azeroth' : $('mapType').value; },
 
@@ -426,7 +436,7 @@ const UI = {
     // 👑 Scénario « Charlemagne » : pas de nouvelles villes (le bouton Château disparaît) ;
     // 🗼 la tour de garde n'est pas encore disponible (voir CONFIG.TOWERS)
     const bt = t => document.querySelector(`.build[data-type="${t}"]`);
-    bt(B_CASTLE).classList.toggle('hidden', !!(Game.cm || Game.hy));
+    bt(B_CASTLE).classList.toggle('hidden', !!(Game.cm || Game.hy || Game.cr));
     bt(B_TOWER).classList.toggle('hidden', !CONFIG.TOWERS);
     // 👑 Scénario « Charlemagne » : chacun est déjà dans son royaume de 768 ; la partie attend en pause
     if (Game.cm) {
@@ -441,11 +451,12 @@ const UI = {
     }
     // ⚜️ Scénario « La guerre de Cent Ans » : chacun est déjà dans son royaume de 1337 ; la partie attend en pause
     // (la Croyance devient la Légitimité : voir hyLegitAll)
-    $('faithBox').firstChild.textContent = Game.hy ? '👑 ' : '✝️ ';
+    // (✝️ les Croisades : le croissant pour les royaumes musulmans)
+    $('faithBox').firstChild.textContent = Game.hy ? '👑 ' : Game.cr && Game.human.camp === 'musulmans' ? '☪️ ' : '✝️ ';
     $('faithBox').title = Game.hy ? tr('Légitimité : qui est le vrai roi ? Tes villes, tes églises, le sacre à Reims… Les grands vassaux suivent le roi le plus légitime.',
       'Legitimacy: who is the true king? Your cities, your churches, the coronation at Reims… The great vassals follow the most legitimate king.')
       : tr('Croyance (tes églises) : plus que ton voisin ennemi, tu convertis peu à peu ses terres', 'Faith (your churches): with more than an enemy neighbour, you slowly convert their land');
-    $('hyBox').classList.toggle('hidden', !Game.hy);
+    $('hyBox').classList.toggle('hidden', !Game.hy && !Game.cr);
     this.joanBar.classList.add('hidden');
     if (Game.hy) {
       const h = Game.human, f = this.hyFaction(h.banner), half = Game.sizeOf(B_CASTLE) / 2;
@@ -456,6 +467,16 @@ const UI = {
       // 📜 (le roi de France : un parchemin raconte le contexte ; les grands événements suivront, voir stepHyEvents)
       if (f.id === 'france') this.parchment(CENTANS.EVENTS.intro);
       if (f.id === 'angleterre') this.parchment(CENTANS.ENGLAND_EVENTS.intro); // (🦁 sa campagne à lui)
+      Game.offerVow(); // (🙏 le vœu solennel : jurer un des défis de sa faction, voir defis.js)
+    }
+    // ✝️ Scénario « Les Croisades » : chacun est déjà dans son royaume de 1187 ; la partie attend en pause
+    if (Game.cr) {
+      const h = Game.human, f = this.crFaction(h.banner), half = Game.sizeOf(B_CASTLE) / 2;
+      if (h.capital >= 0) Render.centerOn(h.capital % Game.W + half, ((h.capital / Game.W) | 0) + half);
+      $('pauseBtn').textContent = tr('▶ Reprendre', '▶ Resume');
+      this.log(tr(`✝️ Juillet 1187 : tu es ${f.leader} (${f.name}), à ${f.capital[2]}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou Espace) pour commencer !`,
+        `✝️ July 1187: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or Space) to start!`), 'good');
+      if (CROISADES.INTROS[f.id]) this.parchment(CROISADES.INTROS[f.id]);
       Game.offerVow(); // (🙏 le vœu solennel : jurer un des défis de sa faction, voir defis.js)
     }
   },
@@ -1314,6 +1335,18 @@ const UI = {
       }[Game.human.role];
       if (t) { $('endTitle').textContent = t[0]; $('endText').textContent = t[1]; }
     }
+    if (kind === 'crusades') { // (✝️ les Croisades : tous les objectifs de sa faction)
+      const t = {
+        ayyoubides: [tr('☪️ Le sultan victorieux !', '☪️ The victorious sultan!'), tr('Al-Quds est rendue aux croyants, les Francs sont rejetés à la mer et la Vraie Croix dort dans ton trésor. Du Nil à l\'Euphrate, l\'islam est uni : on chantera longtemps le nom de Salah ad-Din.', 'Al-Quds is returned to the faithful, the Franks are driven into the sea and the True Cross sleeps in your treasury. From the Nile to the Euphrates, Islam is united: the name of Salah ad-Din will be sung for ages.')],
+        jerusalem: [tr('✝️ Le royaume est sauvé !', '✝️ The kingdom is saved!'), tr('Contre toute attente, Tyr n\'est jamais tombée, et les cloches du Saint-Sépulcre sonnent de nouveau. La Vraie Croix est revenue à Jérusalem : le royaume des Francs d\'Outremer vivra.', 'Against all odds, Tyre never fell, and the bells of the Holy Sepulchre ring once more. The True Cross has come back to Jerusalem: the Frankish kingdom of Outremer will live.')],
+        angleterre: [tr('🦁 Le roi de Jérusalem et d\'Angleterre !', '🦁 King of Jerusalem and England!'), tr('Chypre, Acre, Jaffa… et Jérusalem : Richard a fait ce qu\'aucun roi n\'osait espérer, sans perdre un pouce de ses terres de France. Les ménestrels chanteront le Cœur de Lion jusqu\'à la fin des temps.', 'Cyprus, Acre, Jaffa… and Jerusalem: Richard has done what no king dared hope, without losing an inch of his French lands. Minstrels will sing of the Lionheart until the end of time.')],
+        france: [tr('⚜️ Philippe Auguste !', '⚜️ Philip Augustus!'), tr('Croisé à Acre, vainqueur des Plantagenêts en Normandie, en Anjou et en Poitou : le petit roi de 1187 règne sur le plus grand royaume d\'Occident. Paris, ceinte de murailles, est la capitale de la chrétienté.', 'Crusader at Acre, conqueror of the Plantagenets in Normandy, Anjou and Poitou: the little king of 1187 rules over the greatest kingdom of the West. Paris, girded with walls, is the capital of Christendom.')],
+        empire: [tr('🦅 L\'Empire universel !', '🦅 The universal Empire!'), tr('De Ratisbonne à Palerme, de Konya à Acre : l\'aigle impérial plane sur l\'Allemagne, l\'Italie et la Terre sainte. Le rêve des Hohenstaufen est accompli.', 'From Regensburg to Palermo, from Konya to Acre: the imperial eagle soars over Germany, Italy and the Holy Land. The dream of the Hohenstaufen is fulfilled.')],
+        byzance: [tr('☦️ L\'Empire romain renaît !', '☦️ The Roman Empire is reborn!'), tr('Constantinople n\'est jamais tombée. Les Bulgares sont soumis, Chypre et Antioche rendues au basileus, Konya prise : l\'empire des Comnènes revit sous les Anges.', 'Constantinople never fell. The Bulgarians are subdued, Cyprus and Antioch returned to the basileus, Konya taken: the empire of the Comneni lives again under the Angeloi.')],
+        venise: [tr('🦁 La reine des mers !', '🦁 The queen of the seas!'), tr('Zara reprise, Constantinople et la Crète à Saint-Marc, un comptoir dans chaque port : le doge est « seigneur d\'un quart et demi de l\'Empire romain ». Les chevaux de bronze veillent sur la place Saint-Marc.', 'Zara retaken, Constantinople and Crete under Saint Mark, a trading post in every port: the doge is "lord of a quarter and a half of the Roman Empire". The bronze horses watch over Saint Mark\'s Square.')],
+      }[Game.human.role];
+      if (t) { $('endTitle').textContent = t[0]; $('endText').textContent = t[1]; }
+    }
     // 🌐 En ligne : vaincu, on peut regarder la suite ; la partie finie, on dit qui l'emporte
     if (kind === 'spectate') {
       $('endText').textContent = tr(`Le royaume de ${h.name} est tombé. La partie continue pour les autres : tu peux regarder la suite.`,
@@ -1499,7 +1532,7 @@ const UI = {
   drawObjectives(box, list, defis = []) {
     if (this.objFolded === undefined) this.objFolded = window.innerWidth < 760; // (replié d'office sur un petit écran)
     // (le titre et l'aide dépendent du scénario ; on ne redessine que si un objectif ou un texte a changé)
-    const title = !list.length ? tr('⭐ Défis', '⭐ Challenges') : Game.hy ? Game.hyObjTitle() : tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives');
+    const title = !list.length ? tr('⭐ Défis', '⭐ Challenges') : Game.hy ? Game.hyObjTitle() : Game.cr ? Game.crObjTitle() : tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives');
     const key = [...list, ...defis].map(o => (o.done ? 1 : 0) + (o.gone ? 'x' : '') + (o.vow ? 'v' : '') + o.text).join('|') + title + (this.objFolded ? 'f' : '');
     if (box.dataset.key !== key) {
       box.dataset.key = key;
@@ -1513,7 +1546,7 @@ const UI = {
           (defis.length ? (list.length ? `<div class="t defisT"><span>${tr('⭐ Défis', '⭐ Challenges')}</span><span>${defis.filter(o => o.done).length}/${defis.length}</span></div>` : '') +
             `<ul class="defis">${items(defis, tr(' (manqué)', ' (failed)'))}</ul>` : ''));
       box.title = !list.length ? tr('Des défis en plus, pour la gloire et une récompense (🙏 : ton vœu) · clic : replier ou déplier', 'Extra challenges, for glory and a reward (🙏: your vow) · click: fold or unfold')
-        : Game.hy ? tr('Tous remplis en même temps : la victoire ! (⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All complete at the same time: victory! (⭐ challenges: for glory) · click: fold or unfold')
+        : Game.hy || Game.cr ? tr('Tous remplis en même temps : la victoire ! (⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All complete at the same time: victory! (⭐ challenges: for glory) · click: fold or unfold')
         : tr('Tous remplis : tu es couronné empereur ! (⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All complete: you are crowned emperor! (⭐ challenges: for glory) · click: fold or unfold');
     }
   },
@@ -1545,6 +1578,21 @@ const UI = {
     const txt = parts.join(' · ');
     if (this.hyBoxText !== txt) { this.hyBoxText = txt; $('hyBox').textContent = txt; $('hyBox').title = tips.join('\n'); }
   },
+  // ✝️ Les Croisades : l'année, et ce qui pèse sur le royaume (la paix de Jaffa, la rançon de Richard, les Assassins)
+  refreshCrBox() {
+    const G = Game, cr = G.cr, TPS = CONFIG.TICKS_PER_SECOND, h = G.human, y = G.crYear();
+    const parts = [`📅 ${Math.floor(y)}`], tips = [tr(`Année ${Math.floor(y)}`, `Year ${Math.floor(y)}`)];
+    if (G.crTruce()) {
+      const n = Math.ceil((cr.truceUntil - G.tick) / TPS);
+      parts.push(`🕊️ ${n} s`); tips.push(tr(`La paix de Jaffa : pas d'assaut entre Saladin et les croisés pendant ${n} s`, `The peace of Jaffa: no assault between Saladin and the crusaders for ${n} s`));
+    }
+    if (cr.ransom && !cr.ransom.paid) { parts.push(`⛓️ ${fmt(cr.ransom.left)}`); tips.push(tr(`Richard est captif : sa rançon (${fmt(cr.ransom.left)} pièces à payer) prend la moitié de l'or de l'Angleterre`, `Richard is a captive: his ransom (${fmt(cr.ransom.left)} gold left) takes half of England's gold`)); }
+    const stun = (cr.stun.get(h.id) || 0) - G.tick;
+    if (stun > 0) { parts.push(`🗡️ ${Math.ceil(stun / TPS)} s`); tips.push(tr('Frappé par les Assassins (ou la guerre civile) : tu ne recrutes plus', 'Struck by the Assassins (or civil war): you recruit no more')); }
+    if (G.crProtected(h.id)) tips.push(tr(`Ton tribut au Vieux de la Montagne te protège encore ${Math.ceil(((cr.tributeUntil.get(h.id) || 0) - G.tick) / TPS)} s`, `Your tribute to the Old Man of the Mountain still protects you for ${Math.ceil(((cr.tributeUntil.get(h.id) || 0) - G.tick) / TPS)} s`));
+    const txt = parts.join(' · ');
+    if (this.hyBoxText !== txt) { this.hyBoxText = txt; $('hyBox').textContent = txt; $('hyBox').title = tips.join('\n'); }
+  },
   // ⚜️ Jeanne d'Arc : le bouton n'apparaît que pour le roi de France, quand elle est là
   refreshJoanBar() {
     const G = Game, j = G.hy && G.hy.joan, btn = this.joanBar;
@@ -1573,6 +1621,7 @@ const UI = {
     $('land').textContent = G.landPct(h.tiles) + tr(' %', '%');
     $('faith').textContent = fmt(Math.round(G.faithOf(h.id)));
     if (G.hy) this.refreshHyBox();
+    if (G.cr) this.refreshCrBox();
     // ⛏️ Nos mines : leur nombre (le détail par minerai au survol), seulement quand on en a
     const mines = MINE_KINDS.map(k => [k, G.minesOf(h.id, k).length]).filter(([, n]) => n);
     $('minesBox').classList.toggle('hidden', !mines.length);
@@ -2096,6 +2145,24 @@ const UI = {
     }
   },
 
+  // ✝️ Les Croisades (clic droit) : 🗡️ engager les Assassins contre le royaume visé, ou leur payer tribut (sur leurs terres)
+  crActions(items, i) {
+    const G = Game, h = G.human, o = G.owner[i], A = CROISADES.ASSASSINS, as = G.crAssassins();
+    if (!as || o < 0 || o === h.id) return;
+    if (o === as.id) {
+      const err = G.crTributeError(h.id);
+      items.push({ label: tr(`🗡️ Payer tribut au Vieux de la Montagne (💰 ${fmt(A.TRIBUTE)} : ses Assassins t'épargnent ${A.SAFE} s)`, `🗡️ Pay tribute to the Old Man of the Mountain (💰 ${fmt(A.TRIBUTE)}: his Assassins spare you for ${A.SAFE} s)`),
+        disabled: err || undefined, run: err ? undefined : () => this.act({ k: 'crTribute' }, e => { if (e) this.log(e, 'warn'); }) });
+      return;
+    }
+    const p = G.players[o];
+    if (!p.alive || p.raiders) return;
+    const err = G.crHireError(h.id, o);
+    items.push({ label: tr(`🗡️ Engager les Assassins contre ${escapeHtml(p.name)} (💰 ${fmt(A.HIRE)} : −${Math.round(A.KILL * 100)} % de ses soldats, plus de recrues pendant ${A.STUN} s)`,
+      `🗡️ Hire the Assassins against ${escapeHtml(p.name)} (💰 ${fmt(A.HIRE)}: −${Math.round(A.KILL * 100)}% of their soldiers, no recruits for ${A.STUN} s)`),
+      disabled: err || undefined, run: err ? undefined : () => this.act({ k: 'crHire', target: o }, e => { if (e) this.log(e, 'warn'); }) });
+  },
+
   // --- Menu d'actions (clic droit sur la carte) : attaquer, construire, débarquer ---
   openActionMenu(sx, sy) {
     const G = Game, h = G.human, i = Render.tileAt(sx, sy);
@@ -2155,6 +2222,7 @@ const UI = {
       }
     }
     if (G.hy) this.hyActions(items, i);
+    if (G.cr) this.crActions(items, i);
     // Son avant-poste : rapatrier les soldats qui y attendent vers le port le plus proche
     if (own && G.building[i] === B_OUTPOST) {
       const op = G.anchor[i], o = G.outposts.get(op), n = o ? Math.floor(o.stationed) : 0;

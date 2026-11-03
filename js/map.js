@@ -57,6 +57,7 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
   if (type === 'europe') return generateEuropeMap(seed); // la carte d'Europe (voir europemap.js)
   if (type === 'charlemagne') return generateCharlemagneMap(seed); // l'Europe de Charlemagne (voir europemap.js)
   if (type === 'centans') return generateCentAnsMap(seed); // la France de la guerre de Cent Ans (voir europemap.js)
+  if (type === 'croisades') return generateCroisadesMap(seed); // de Londres à Bagdad, au temps des croisades (voir europemap.js)
   if (type === 'azeroth') return generateAzerothMap(seed); // le monde d'Azeroth (voir azerothmap.js)
   // une carte dessinée avec l'éditeur (voir custommaps.js) ; si elle n'existe plus, une carte normale
   if (type.startsWith('custom:')) {

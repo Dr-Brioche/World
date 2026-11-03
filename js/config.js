@@ -28,6 +28,8 @@ const CONFIG = {
   CHARLEMAGNE_MAP_HEIGHT: 620,
   CENTANS_MAP_WIDTH: 600,  // taille de la carte du scénario « La guerre de Cent Ans » (la France et les îles Britanniques)
   CENTANS_MAP_HEIGHT: 780,
+  CROISADES_MAP_WIDTH: 800, // taille de la carte du scénario « Les Croisades » (de Londres à Bagdad, la Terre sainte agrandie)
+  CROISADES_MAP_HEIGHT: 584,
   MIN_OPPONENTS: 3,
   // Royaume coupé en deux sur un même continent : son plus grand morceau est son cœur. Un autre morceau tenu par
   // une ville (ou un port fortifié) et assez grand (au moins 25 % du plus grand) est aussi un cœur, à part entière :
@@ -721,7 +723,7 @@ AZEROTH_BANNERS.forEach((b, k) => {
 });
 // Les numéros (dans BANNERS) des bannières proposées sur une carte : les écus sur la carte Azeroth, les drapeaux ailleurs
 function bannersForMap(mapType) {
-  const set = ['azeroth', 'charlemagne', 'centans'].includes(mapType) ? mapType : undefined;
+  const set = ['azeroth', 'charlemagne', 'centans', 'croisades'].includes(mapType) ? mapType : undefined;
   return BANNERS.map((b, k) => k).filter(k => BANNERS[k].set === set);
 }
 // ⚔️ Mode « Factions » (carte Azeroth seulement) : 3 camps, chacun un pacte éternel (il ne se rompt jamais, pas de

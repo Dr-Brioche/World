@@ -353,3 +353,61 @@ function generateCentAnsMap(seed) {
     forestLevel: (lat, lon) => lat > 46.5 && lat < 52 && lon > -2 ? 0.49 : 0.53,
   });
 }
+
+// ✝️ Carte du scénario « Les Croisades » (1187-1204) : de Londres à Bagdad, toute la chrétienté latine et l'Orient
+// (voir croisades.js). La Terre sainte y est agrandie, comme sur les cartes du Moyen Âge qui plaçaient Jérusalem au
+// centre du monde (warp, voir geoX) : sans ça, Tyr, Acre et Jérusalem tiendraient en quelques cases.
+const CROISADES_PROJ = { lon0: -6, lonSpan: 54, latTop: 52.6, latBottom: 29, wrap: false,
+  warp: { lon: [[34.3, 36.6, 3.2]], lat: [[31.2, 36.3, 2.6], [32.75, 33.45, 1.8]] } };
+// Les fleuves, lacs, déserts et reliefs de l'Orient des croisades, en plus de ceux de l'Europe
+const CROISADES_RIVERS = [
+  [[[31.1, 29.0], [31.25, 29.8], [31.25, 30.1], [31.0, 30.6], [30.75, 31.0], [30.4, 31.45]], 2],   // Nil (branche de Rosette)
+  [[[31.25, 30.1], [31.4, 30.6], [31.6, 31.1], [31.8, 31.5]], -1],                                  // Nil (branche de Damiette)
+  [[[35.62, 33.25], [35.6, 32.9]], -1],                                                             // haut Jourdain
+  [[[35.57, 32.7], [35.55, 32.3], [35.55, 31.9], [35.55, 31.78]], -1],                             // Jourdain
+  [[[36.35, 33.9], [36.6, 34.4], [36.75, 35.0], [36.6, 35.6], [36.3, 36.05], [36.1, 36.2], [35.95, 36.05]], -1], // Oronte
+  [[[35.8, 33.55], [35.5, 33.35], [35.25, 33.3]], -1],                                              // Litani
+  [[[32.8, 36.95], [33.3, 36.75], [33.65, 36.5], [33.95, 36.3]], -1],                               // Saleph (Göksu)
+  [[[35.5, 37.1], [35.35, 36.85], [35.4, 36.6]], -1],                                               // Ceyhan (Cilicie)
+];
+// La côte du Levant, plus précise que celle de la carte d'Europe (la Terre sainte est agrandie) : la terre jusqu'à la
+// côte (CROISADES_COAST_LAND), et la mer de l'autre côté (CROISADES_COAST_SEA, posée comme un lac)
+const CROISADES_COAST = [[34.22, 31.32], [34.45, 31.53], [34.57, 31.68], [34.75, 32.05], [34.85, 32.33], [34.92, 32.62],
+  [34.96, 32.83], [35.03, 32.83], [35.08, 32.92], [35.1, 33.07], [35.16, 33.2], [35.12, 33.27], [35.2, 33.29], [35.33, 33.5],
+  [35.37, 33.57], [35.45, 33.78], [35.48, 33.9], [35.62, 34.12], [35.66, 34.3], [35.8, 34.45], [35.84, 34.5],
+  [35.87, 34.8], [35.88, 34.92], [35.92, 35.15], [35.85, 35.4], [35.75, 35.55], [35.8, 35.7], [35.93, 35.9],
+  [35.95, 36.05], [35.85, 36.25], [35.98, 36.5], [36.17, 36.6], [36.2, 36.8]];
+const CROISADES_COAST_LAND = CROISADES_COAST.concat([[37.0, 36.8], [37.0, 31.32]]);
+const CROISADES_COAST_SEA = CROISADES_COAST.concat([[35.6, 36.8], [35.3, 36.1], [35.0, 35.2], [34.7, 34.5], [34.0, 33.0], [33.9, 31.32]]);
+const CROISADES_LAKES = [
+  CROISADES_COAST_SEA,
+  [[35.53, 32.88], [35.65, 32.9], [35.65, 32.72], [35.56, 32.7]],                                   // lac de Tibériade
+  [[35.42, 31.75], [35.58, 31.75], [35.6, 31.4], [35.5, 31.08], [35.4, 31.2]],                       // mer Morte
+];
+const CROISADES_DESERTS = [
+  [[32.35, 31.05], [33.5, 31.15], [34.25, 31.3], [34.6, 31.15], [35.1, 30.8], [35.15, 29.0], [32.35, 29.0]], // Sinaï et Néguev
+  [[36.05, 32.2], [36.6, 32.0], [45.5, 32.0], [45.5, 29.0], [35.95, 29.0], [35.85, 30.6]],          // désert d'Arabie
+  [[29.9, 30.9], [30.6, 30.3], [31.0, 29.0], [26.0, 29.0], [26.0, 31.2]],                            // désert de Libye (à l'ouest du Delta)
+  [[31.6, 30.2], [32.3, 30.9], [32.35, 29.0], [31.3, 29.0]],                                        // désert arabique (à l'est du Nil)
+];
+const CROISADES_MOUNTAINS = [
+  [5, false, [[36.2, 34.0], [36.0, 33.6], [35.8, 33.25]]],                                          // Anti-Liban
+  [4, false, [[35.05, 32.6], [35.15, 32.1], [35.2, 31.7], [35.05, 31.35]]],                          // monts de Judée et de Samarie
+  [4, false, [[35.95, 35.55], [36.1, 35.15], [36.05, 34.8]]],                                        // djebel Ansariya
+  [4, true, [[36.15, 36.0], [36.3, 36.4], [36.45, 36.85]]],                                          // l'Amanus
+  [5, false, [[35.75, 31.4], [35.65, 30.9], [35.5, 30.3], [35.3, 29.6]]],                            // monts d'Édom (Kerak, Montréal)
+  [6, true, [[33.6, 28.9], [33.95, 29.3], [34.1, 29.6]]],                                            // monts du Sinaï
+  [12, true, [[44.5, 37.5], [45.5, 36.2], [46.5, 35.0], [47.5, 33.8]]],                              // Zagros
+];
+// (le nord de l'Arabie, jusqu'au bas de la carte : la carte d'Europe s'y arrête)
+const CROISADES_ARABIA = [[34.95, 29.55], [35.0, 29.0], [48.5, 29.0], [48.5, 31.0], [36.5, 31.0]];
+// La carte : relief naturel, bord en montagne (comme les autres campagnes), forêts au nord des Alpes seulement
+function generateCroisadesMap(seed) {
+  return buildGeoMap(seed, CONFIG.CROISADES_MAP_WIDTH, CONFIG.CROISADES_MAP_HEIGHT, {
+    proj: CROISADES_PROJ, lands: EUROPE_LANDS.concat([CROISADES_COAST_LAND, CROISADES_ARABIA]), lakes: EUROPE_LAKES.concat(CROISADES_LAKES),
+    deserts: EUROPE_DESERTS.concat(CROISADES_DESERTS), glaciers: EUROPE_GLACIERS,
+    mountains: EUROPE_MOUNTAINS.concat(EUROPE_HIGHLANDS, CROISADES_MOUNTAINS), rivers: EUROPE_RIVERS.concat(CROISADES_RIVERS),
+    detail: 1.8, coastAmp: 4, widthScale: 0.9, meander: 3, natural: true, landEdge: true,
+    forestLevel: (lat, lon) => lat > 47 && lon > 6 && lon < 25 ? 0.48 : lat > 44.5 ? 0.52 : lat > 39 ? 0.6 : 0.68,
+  });
+}
