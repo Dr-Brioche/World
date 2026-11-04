@@ -700,7 +700,7 @@ const BANNERS = [
   { id: "Le Péteur", name: tr("Le Péteur", "The Farter"), img: 'img/bannieres/b21.webp', icon: 'img/bannieres/b21s.webp', logo: 'img/bannieres/b21m.webp', color: [222, 78, 44] },
   { id: "Masse d'armes", name: tr("Masse d'armes", "Mace"), img: 'img/bannieres/b02.webp', icon: 'img/bannieres/b02s.webp', logo: 'img/bannieres/b02m.webp', color: [240, 128, 130] },
   { id: "Soleil", name: tr("Soleil", "Sun"), img: 'img/bannieres/b03.webp', icon: 'img/bannieres/b03s.webp', logo: 'img/bannieres/b03m.webp', color: [138, 24, 72] },
-  { id: "Marteau", name: tr("Marteau", "Hammer"), img: 'img/bannieres/b04.webp', icon: 'img/bannieres/b04s.webp', logo: 'img/bannieres/b04m.webp', color: [245, 132, 10] },
+  { id: "Marteau", name: tr("Marteaux croisés", "Crossed hammers"), img: 'img/bannieres/b04.webp', icon: 'img/bannieres/b04s.webp', logo: 'img/bannieres/b04m.webp', color: [245, 132, 10] },
   { id: "Canards", name: tr("Canards", "Ducks"), img: 'img/bannieres/b05.webp', icon: 'img/bannieres/b05s.webp', logo: 'img/bannieres/b05m.webp', color: [200, 160, 50] },
   { id: "Aigle noir", name: tr("Aigle noir", "Black eagle"), img: 'img/bannieres/b06.webp', icon: 'img/bannieres/b06s.webp', logo: 'img/bannieres/b06m.webp', color: [252, 232, 30] },
   { id: "Hallebardes", name: tr("Hallebardes", "Halberds"), img: 'img/bannieres/b07.webp', icon: 'img/bannieres/b07s.webp', logo: 'img/bannieres/b07m.webp', color: [150, 182, 118] },

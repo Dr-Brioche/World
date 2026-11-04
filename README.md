@@ -1247,6 +1247,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.9** : 🔨 le drapeau « Marteau » est redessiné : deux **marteaux croisés** sur un bouclier, sur fond orange (il s'appelle maintenant « Marteaux croisés »)
 - **v0.98.8** : 🧱 la **mine fortifiée** a son propre dessin : le site minier dans sa palissade de pieux, avec sa tour de guet (visible en zoomant)
 - **v0.98.7** : 🌐 en ligne, pendant le choix des places (libre ou places prévues), on peut **changer d'avis** jusqu'à la fin des 15 s : un nouveau clic déplace sa capitale, et les autres le voient en direct ; la partie attend toujours la fin du compte à rebours
 - **v0.98.6** : 🏟️ cartes arène, placement « Places prévues » : un clic n'importe où sur la carte choisit la place de départ libre la plus proche (plus besoin de viser l'écusson) ; « Aléatoire » prend une place prévue au hasard, « Libre » laisse commencer n'importe où · 🌐 **en ligne** : les cartes arène se jouent aussi en ligne, et l'hôte choisit le placement des capitales : libre (15 s pour cliquer où l'on veut), places prévues (15 s pour réserver une place avant les autres) ou aléatoire (tout le monde placé au hasard, 10 s pour regarder la carte) ; sinon, une place au hasard
