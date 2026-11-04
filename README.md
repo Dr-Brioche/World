@@ -408,7 +408,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      rompue pour de bon dès que tu attaques). Réglages : `NIS` et `PEACE` dans `js/croisades.js` ; les royaumes lointains (Castille, Almohades, calife de
      Bagdad, Géorgie, Pologne, Rus') se contentent de se défendre. Les données du scénario sont dans `js/croisades.js`,
      ses règles dans `js/croisadesrules.js`, et sa carte dans `js/europemap.js` (`generateCroisadesMap`). Les bannières
-     sont provisoires (des drapeaux du jeu, aux couleurs des factions), en attendant les vraies.
+     de l'**Angleterre** (les trois léopards), de la **France** (les lis), de l'**Empire** (l'aigle noir), de **Venise** (le
+     lion de saint Marc) et de **Byzance** (le chrisme) sont les vraies (`img/bannieres/cr_…`) ; les autres sont provisoires
+     (des drapeaux du jeu), en attendant les leurs. Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
+     plus historiques vont aux factions jouables (rouge anglais, bleu de France, or impérial, cramoisi de Venise, pourpre
+     byzantine, blanc de Jérusalem, safran de Saladin).
    ⭐ **Les défis des campagnes** (Charlemagne, la guerre de Cent Ans et les Croisades) : **chaque faction jouable** (les 11 de
      Charlemagne, les 5 de la guerre de Cent Ans, les 7 des Croisades) a **4 défis**, des objectifs en plus, historiques, drôles ou très durs.
      Ils ne comptent pas pour la victoire, mais chacun rapporte sa **récompense** (de l'or, de la Croyance ou de la
@@ -1198,6 +1202,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.97.1** : ✝️ Croisades : les **vraies bannières** de l'Angleterre, de la France, du Saint-Empire, de Venise et de Byzance, et une **couleur différente pour chaque royaume**, proche du fond de son drapeau (plus de doublons entre voisins)
 - **v0.97.0** : 🤝 **les Croisades suivent les alliances de l'histoire** : nouveaux pactes (les frères Assen : la Bulgarie et les Coumans, rejoints par la Serbie à Niš de 1189 à 1196 ; la Sicile part en croisade avec les rois en 1188) et **paix historiques** entre bots (l'Empire avec la France et la Hongrie, l'Angleterre avec la Castille, Byzance avec la Hongrie et Venise, Saladin avec le calife et les Assassins, Chypre avec Saladin, personne contre Rome) · 📜 dans **toutes les campagnes historiques**, le joueur peut toujours **rompre** le pacte du scénario (en traître) pour écrire sa propre histoire, sans pouvoir en créer d'autres ; les bots, eux, ne les rompent jamais · 🐛 une armée qui rentre vers sa ville de départ rasée entre-temps ne fige plus la partie
 - **v0.96.0** : 🛡️ nouvelle carte arène **La Mêlée** : **20 joueurs** sur une petite île, serrés en cercle autour d'un centre riche (des voisins partout dès le départ, un filon d'or et un de fer à partager avec chaque voisin) ; sur une carte arène, le menu propose d'office un rival par place prévue
 - **v0.95.3** : 🗺️ dans le choix de la carte, chaque section est une **liste alignée à gauche**, rangée dans l'ordre : les cartes arène par nombre de joueurs (affiché à droite), les scénarios par année (768, 1187, 1337, puis Azeroth), les cartes dessinées par nom
