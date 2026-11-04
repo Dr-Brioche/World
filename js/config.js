@@ -125,6 +125,7 @@ const CONFIG = {
   START_GOLD: 10,
   START_RADIUS: 3,         // taille du territoire de départ
   MIN_SPAWN_DISTANCE: 18,  // distance minimale entre deux capitales
+  REMNANT_TILES: 30,       // un royaume sans plus aucune ville (ni port fortifié, ni avant-poste) réduit à 30 cases au plus se disperse
 
   // --- Soldats ---
   BASE_MAX_TROOPS: 20,

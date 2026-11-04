@@ -6767,6 +6767,24 @@ const GameRules = {
     return any;
   },
 
+  // Le royaume p n'est-il plus qu'un débris ? Aucune ville, aucun port fortifié, aucun avant-poste, et au plus
+  // REMNANT_TILES cases (souvent coincées entre un sommet et un fleuve, où personne ne peut l'atteindre : la partie
+  // ne pourrait jamais finir). Pas les pillards (leurs terres sont à part) ni un royaume qui attend son heure (dormant).
+  remnantOnly(p) {
+    if (p.raiders || p.dormant || p.tiles > CONFIG.REMNANT_TILES || p.bCount[B_OUTPOST]) return false;
+    return !this.strongholds(p.id, false).length;
+  },
+  // Un royaume réduit à un débris se disperse : il est anéanti (par celui qui lui a pris ses dernières terres), et
+  // ses dernières cases redeviennent des terres libres, avec leurs bâtiments
+  scatterKingdom(p) {
+    const by = p.lastHitBy !== undefined && this.players[p.lastHitBy].alive ? p.lastHitBy : -1;
+    UI.log(tr(`🏳️ Les derniers fidèles ${this.deName(p.name)} se dispersent : ce royaume sans ville disparaît.`, `🏳️ The last loyal followers of ${p.name} scatter: this kingdom without a city vanishes.`), p.isHuman ? 'warn' : '', p);
+    this.eliminate(p.id, by);
+    for (const e of this.expeditions) if (e.pid === p.id) e.done = true;
+    for (const a of this.buildingTiles.slice()) if (this.owner[a] === p.id) this.removeBuilding(a);
+    for (let i = 0; i < this.N; i++) if (this.owner[i] === p.id) this.setOwner(i, -1);
+  },
+
   // Un royaume qui n'a plus que des avant-postes est perdu : il est anéanti (par celui qui lui a pris ses dernières
   // terres), ses avant-postes et leurs bâtiments sont supprimés, et leurs zones redeviennent des terres libres.
   loseKingdom(p) {
@@ -7098,6 +7116,8 @@ const GameRules = {
     }
     // Toutes les 2 secondes : un royaume qui n'a plus que des avant-postes est perdu (voir outpostsOnly)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && this.outpostsOnly(p)) this.loseKingdom(p);
+    // (et un royaume réduit à quelques cases, sans plus aucune ville : il se disperse, voir remnantOnly)
+    if (this.tick % (2 * TPS) === TPS) for (const p of this.players) if (p.alive && this.remnantOnly(p)) this.scatterKingdom(p);
     // ... et un royaume qui a perdu tous ses ports perd aussi tous ses avant-postes (voir dropOutposts)
     if (this.tick % (2 * TPS) === 0) for (const p of this.players) if (p.alive && !p.bCount[B_PORT] && p.bCount[B_OUTPOST]) this.dropOutposts(p);
     // Le joueur vient de perdre le lien entre son territoire et ses châteaux : on le prévient (une fois)
