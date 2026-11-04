@@ -24,7 +24,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
   **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, **La guerre de Cent Ans (1337)** :
   la France contre l'Angleterre, de Crécy à Jeanne d'Arc, et **Les Croisades (1187)** : de Londres à Bagdad, Saladin,
   Richard Cœur de Lion et Barberousse, jusqu'au sac de Constantinople)
-- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 21 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
+- 👑 **Ton royaume** : choisis son nom et sa **bannière** parmi 22 drapeaux brodés sur leur hampe (elle donne sa couleur à ton royaume)
 - ⚔️ **La conquête** : attaque les terres voisines en choisissant combien de soldats envoyer
 - 🏰 **Cinq bâtiments** pour développer ton royaume : moulin, caserne, château, église et port
 - ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
@@ -1235,6 +1235,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.4** : 🐓 un nouveau drapeau pour les parties libres : le **Coq guerrier** (un coq d'or armé d'une masse, sur fond rose)
 - **v0.98.3** : 📏 au menu de départ, tous les choix (nom du royaume, carte, taille, pactes, placement, difficulté, adversaires) ont la même largeur
 - **v0.98.2** : 🪵 les barres de défilement (menu, règles, listes) aux couleurs du jeu : une poignée de bois sombre cerclée d'or, dans une gouttière de parchemin
 - **v0.98.1** : ✠ les vraies bannières des Ordres : la croix rouge sur fond blanc des **Templiers**, la croix blanche sur fond noir des **Hospitaliers**

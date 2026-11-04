@@ -716,6 +716,7 @@ const BANNERS = [
   { id: "Hache d'or", name: tr("Hache d'or", "Golden axe"), img: 'img/bannieres/b16.webp', icon: 'img/bannieres/b16s.webp', logo: 'img/bannieres/b16m.webp', color: [150, 150, 146] },
   { id: "Main couronnée", name: tr("Main couronnée", "Crowned hand"), img: 'img/bannieres/b17.webp', icon: 'img/bannieres/b17s.webp', logo: 'img/bannieres/b17m.webp', color: [70, 78, 98] },
   { id: "Croix", name: tr("Croix", "Cross"), img: 'img/bannieres/b18.webp', icon: 'img/bannieres/b18s.webp', logo: 'img/bannieres/b18m.webp', color: [22, 20, 20] },
+  { id: "Coq guerrier", name: tr("Coq guerrier", "War rooster"), img: 'img/bannieres/b22.webp', icon: 'img/bannieres/b22s.webp', logo: 'img/bannieres/b22m.webp', color: [236, 84, 150] },
 ];
 
 // (id : le nom fixe d'une bannière, le même dans toutes les langues ; c'est lui que le code utilise pour la retrouver)
