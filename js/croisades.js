@@ -17,7 +17,7 @@
 // production : moulins et casernes de niveau 2 autour de la capitale ; slowAI : un royaume lointain réfléchit tant de fois
 // moins souvent (pour que le jeu reste rapide) ; camp : 'chretiens' ou 'musulmans' (l'IA s'en
 // sert pour choisir ses cibles) ; dormant : pas de terres au départ (l'Égypte d'al-Aziz, qui naît à la mort de Saladin).
-// flag : sa bannière (img/bannieres/cr_<id>, ou en attendant un des drapeaux du jeu) ; color : la couleur de son royaume
+// flag : sa bannière (img/bannieres/cr_<id>) ; color : la couleur de son royaume
 // (proche du fond de son drapeau, et différente de celle des autres).
 
 const CROISADES = {
@@ -572,7 +572,7 @@ const CROISADES = {
       desc: tr('Les forteresses des Ismaéliens nizarites : on les paie, ou on les craint.', 'The fortresses of the Nizari Ismailis: one pays them, or one fears them.'),
     },
     {
-      id: 'chypre', name: tr('Chypre', 'Cyprus'), leader: tr('le despote Isaac Comnène', 'the despot Isaac Comnenus'), flag: 'b15', color: [156, 199, 228],
+      id: 'chypre', name: tr('Chypre', 'Cyprus'), leader: tr('le despote Isaac Comnène', 'the despot Isaac Comnenus'), flag: 'cr_chypre', color: [156, 199, 228],
       defensive: true, camp: 'chretiens',
       capital: [33.36, 35.17, tr('Nicosie', 'Nicosia'), 'Nicosie'], cities: [],
       churches: [[33.04, 34.68, tr('Limassol', 'Limassol'), 'Limassol']],
@@ -594,7 +594,7 @@ const CROISADES = {
       desc: tr('Après Hattin, il ne reste du royaume que quelques villes isolées. La faction la plus difficile !', 'After Hattin, only a few isolated cities remain of the kingdom. The hardest faction!'),
     },
     {
-      id: 'antioche', name: tr('Antioche et Tripoli', 'Antioch and Tripoli'), leader: tr('le prince Bohémond III', 'Prince Bohemond III'), flag: 'b19', color: [168, 50, 110],
+      id: 'antioche', name: tr('Antioche et Tripoli', 'Antioch and Tripoli'), leader: tr('le prince Bohémond III', 'Prince Bohemond III'), flag: 'cr_antioche', color: [168, 50, 110],
       defensive: true, camp: 'chretiens',
       capital: [36.16, 36.20, tr('Antioche', 'Antioch'), 'Antioche', { garrison: 2 }], capitalLevel: 3,
       cities: [[35.84, 34.44, tr('Tripoli', 'Tripoli'), 'Tripoli', { level: 2 }], [36.29, 34.76, tr('Krak des Chevaliers', 'Krak des Chevaliers'), 'Krak des Chevaliers', { level: 2, garrison: 4 }],
@@ -605,7 +605,7 @@ const CROISADES = {
       desc: tr('La principauté d\'Antioche et le comté de Tripoli, avec les forteresses des Hospitaliers et des Templiers.', 'The principality of Antioch and the county of Tripoli, with the fortresses of the Hospitallers and the Templars.'),
     },
     {
-      id: 'armenie', name: tr('Arménie', 'Armenia'), leader: tr('le prince Léon II', 'Prince Leo II'), flag: 'b04', color: [214, 74, 42],
+      id: 'armenie', name: tr('Arménie', 'Armenia'), leader: tr('le prince Léon II', 'Prince Leo II'), flag: 'cr_armenie', color: [214, 74, 42],
       defensive: true, camp: 'chretiens',
       capital: [35.82, 37.45, tr('Sis', 'Sis'), 'Sis', { garrison: 2 }], cities: [[34.90, 36.92, tr('Tarse', 'Tarsus'), 'Tarse']],
       churches: [[33.93, 36.38, tr('Séleucie (le Saleph)', 'Seleucia (the Saleph)'), 'Séleucie']],
@@ -782,7 +782,7 @@ const CROISADES = {
       desc: '',
     },
     {
-      id: 'georgie', name: tr('Géorgie', 'Georgia'), leader: tr('la reine Thamar', 'Queen Tamar'), flag: 'b05', color: [238, 201, 194],
+      id: 'georgie', name: tr('Géorgie', 'Georgia'), leader: tr('la reine Thamar', 'Queen Tamar'), flag: 'cr_georgie', color: [238, 201, 194],
       defensive: true, slowAI: 3, camp: 'chretiens',
       capital: [44.79, 41.72, tr('Tbilissi', 'Tbilisi'), 'Tbilissi'], cities: [], churches: [],
       lands: [[[40.0, 41.4], [41.6, 41.6], [42.5, 42.5], [44.0, 43.0], [46.5, 42.3], [47.5, 41.6], [46.5, 40.9], [45.0, 40.9], [43.4, 41.0], [42.0, 41.0],
@@ -822,8 +822,7 @@ const CROISADES = {
     GROWTH: 0.15, MAX: 3500, LOOT: 120 },
 };
 
-// Les bannières des factions : leur vraie bannière (cr_…, la hampe au milieu : foot 0.5), ou en attendant un des
-// drapeaux du jeu, avec la couleur du royaume
+// Les bannières des factions : leur vraie bannière (cr_…, la hampe au milieu : foot 0.5), avec la couleur du royaume
 for (const f of CROISADES.factions) {
   BANNERS.push({ id: f.id, name: f.name, kingdom: f.name, set: 'croisades', color: f.color, foot: f.foot ?? (f.flag.startsWith('cr_') ? 0.5 : undefined),
     img: `img/bannieres/${f.flag}.webp`, icon: `img/bannieres/${f.flag}s.webp`, logo: `img/bannieres/${f.flag}m.webp` });
