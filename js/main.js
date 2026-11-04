@@ -372,10 +372,20 @@ const UI = {
     // (en haut du panneau : l'aperçu de la carte survolée, ou de la carte choisie ; voir showMapPreview)
     panel.innerHTML = '<div class="mapPreview"><div class="pv"></div><div class="pvText"><b class="pvName"></b><span class="pvDesc"></span></div></div>' +
       // (chaque sorte de carte est une section qui se déplie d'un clic ; une seule ouverte à la fois)
-      groups.map(g => `<details class="grpBox"><summary class="grp">${iconSVG(g.dataset.icon)}${escapeHtml(g.label)}` +
-      `<span class="cnt">${g.querySelectorAll('option').length}</span></summary>` +
-      `<div class="opts">${[...g.querySelectorAll('option')].map(o =>
-        `<button type="button" data-map="${escapeHtml(o.value)}">${escapeHtml(o.textContent)}</button>`).join('')}</div></details>`).join('');
+      // (une liste alignée à gauche, dans l'ordre de la liste : les cartes arène par nombre de joueurs, les scénarios par
+      //  année ; les cartes dessinées par nom) ; le chiffre entre parenthèses du nom (joueurs ou année) passe à droite
+      groups.map(g => {
+        const opts = [...g.querySelectorAll('option')];
+        if (g.id === 'customMaps') opts.sort((a, b) => a.textContent.localeCompare(b.textContent));
+        const arena = opts.some(o => ARENA_MAPS[o.value]);
+        return `<details class="grpBox"><summary class="grp">${iconSVG(g.dataset.icon)}${escapeHtml(g.label)}` +
+          `<span class="cnt">${opts.length}</span></summary><div class="opts">${opts.map(o => {
+            const m = o.textContent.match(/^(.*) \((\d+)\)$/), name = m ? m[1] : o.textContent;
+            const meta = !m ? '' : arena ? tr(`${m[2]} joueurs`, `${m[2]} players`) : m[2];
+            return `<button type="button" data-map="${escapeHtml(o.value)}"><span>${escapeHtml(name)}</span>` +
+              (meta ? `<span class="meta">${escapeHtml(meta)}</span>` : '') + '</button>';
+          }).join('')}</div></details>`;
+      }).join('');
     // (ouvrir une section referme les autres)
     panel.querySelectorAll('details.grpBox').forEach(d => d.addEventListener('toggle', () => {
       if (d.open) panel.querySelectorAll('details.grpBox').forEach(x => { if (x !== d) x.open = false; });
