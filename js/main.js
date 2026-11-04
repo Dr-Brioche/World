@@ -1901,8 +1901,9 @@ const UI = {
     } else if (G.phase === 'spawn') {
       // (🌐 en ligne : le compte à rebours avant le début de la partie)
       const left = G.online ? `⏳ ${Net.spawnLeft()} s · ` : '';
-      $('hint').textContent = left + (G.online && G.human.spawned ? tr('👑 Ta capitale est fondée : la partie commence à la fin du compte à rebours',
-        '👑 Your capital is founded: the game starts when the countdown ends') : this.spawnHint(Render.hover));
+      $('hint').textContent = left + (G.online && G.spawnRandom ? tr('🎲 Placement aléatoire : regarde la carte, la partie commence à la fin du compte à rebours', '🎲 Random placement: look at the map, the game starts when the countdown ends')
+        : G.online && G.human.spawned ? tr('👑 Ta capitale est fondée : clique ailleurs pour changer d\'avis, la partie commence à la fin du compte à rebours',
+          '👑 Your capital is founded: click elsewhere to change your mind, the game starts when the countdown ends') : this.spawnHint(Render.hover));
     } else if (G.phase === 'over') {
       $('hint').textContent = '';
     }
@@ -2883,7 +2884,8 @@ const UI = {
     if (G.phase === 'spawn') {
       // (🏟️ placement « Places prévues » : le clic choisit la place de départ libre la plus proche)
       if (G.spotMode && G.startSpotNear(i) >= 0) i = G.startSpotNear(i);
-      const err = G.spawnError(i);
+      // (🌐 en ligne, sa capitale déjà posée ne gêne pas : on la déplace)
+      const err = G.spawnError(i, G.online ? G.human.id : -1);
       if (err) return this.log(err, 'warn');
       // (🌐 en ligne : chacun choisit sa place pendant le compte à rebours, la partie commence pour tous ensuite ;
       //  on peut changer d'avis tant qu'elle n'a pas commencé : voir Net)
