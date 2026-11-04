@@ -90,7 +90,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **neige**, les collines et les montagnes, où sont les filons (fer, or, un diamant) : l'économie ou la force ?
      Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js` ; `SPOT_SNAP` dans `js/config.js`.
    🗺️ **Choix de la carte** : les cartes sont rangées par sortes (aléatoires, arène, prédéfinies, scénarios, dessinées),
-   chacune dans une **section qui se déplie** d'un clic (une seule ouverte à la fois ; celle de la carte choisie l'est d'office).
+   chacune dans une **section qui se déplie** d'un clic (une seule ouverte à la fois ; celle de la carte choisie l'est d'office),
+   en liste : les cartes arène par **nombre de joueurs**, les scénarios par **année**, les cartes dessinées par nom.
    **Aperçu des cartes** : dans le choix de la carte (menu), en haut de la liste, un **aperçu** de la carte survolée
    (ou choisie), avec une courte description. Les cartes prédéfinies et les scénarios, qui ne changent pas, montrent une
    **image du jeu** (avec les royaumes de départ) ; les autres, une **petite carte dessinée** : un exemple (leur plan est
@@ -1179,6 +1180,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.95.3** : 🗺️ dans le choix de la carte, chaque section est une **liste alignée à gauche**, rangée dans l'ordre : les cartes arène par nombre de joueurs (affiché à droite), les scénarios par année (768, 1187, 1337, puis Azeroth), les cartes dessinées par nom
 - **v0.95.2** : 🗺️ choix de la carte plus clair : chaque sorte de carte est une **section qui se déplie** (avec le nombre de cartes), une seule ouverte à la fois
 - **v0.95.1** : 🗺️ un **aperçu** de chaque carte dans le choix de la carte : une image du jeu pour les cartes prédéfinies et les scénarios, une petite carte dessinée pour les autres (avec les places de départ et les filons des cartes arène), et une courte description
 - **v0.95.0** : 🏟️ **8 nouvelles cartes arène** : **Le Labyrinthe** (un dédale de crêtes et d'impasses riches), **L'Oasis** (un désert et ses oasis), **Les Hauts Plateaux** (des plateaux défendus, des vallées riches), **Les Mille Ponts** (un delta de dizaines d'îles), **Les Lieux Saints** (trois sanctuaires à reliques), **La Mer Intérieure** (deux fronts, la terre et la mer), **La Montagne Sacrée** (un massif riche au centre) et **Les Terres du Nord** (le sud fertile, le nord minier)

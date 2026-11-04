@@ -142,8 +142,10 @@ html, body {
 #mapPick .grp .cnt { font-family: Georgia, serif; font-size: 12px; font-weight: normal; color: var(--ink); opacity: 0.7; }
 #mapPick details.grpBox .opts { padding-bottom: 8px; }
 #mapPick .grp .ico { width: 1.5em; height: 1.5em; }
-#mapPick .opts { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 28px; }
-#mapPick .opts button { background: var(--parchment-dark); }
+#mapPick .opts { display: flex; flex-direction: column; align-items: stretch; gap: 3px; padding-left: 28px; }
+#mapPick .opts button { background: var(--parchment-dark); display: flex; justify-content: space-between; gap: 12px;
+  text-align: left; width: 100%; max-width: 340px; }
+#mapPick .opts button .meta { opacity: 0.7; font-size: 0.9em; white-space: nowrap; }
 #mapPick .opts button.active { background: var(--gold); box-shadow: 0 0 0 2px var(--ink) inset; }
 /* 🗺️ l'aperçu de la carte, en haut du choix des cartes (il reste en haut quand on fait défiler la liste) */
 #mapPick .mapPreview { position: sticky; top: -6px; z-index: 1; display: flex; gap: 10px; align-items: center;
