@@ -415,8 +415,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (l'aigle à deux têtes), de la **Bulgarie** (le lion d'or), de la **Rus'** (le trident), des **Coumans** (les queues de
      cheval et la tamga), des **Almohades** (le damier), de l'**Égypte** (les palmes et la calligraphie), du **Sultanat de
      Roum** (l'aigle seldjoukide), du **calife abbasside** (le noir et l'or) et des **Assassins** (la dague et Masyaf) sont
-     les vraies (`img/bannieres/cr_…`) ; celles d'Antioche, de Chypre, de l'Arménie et de la Géorgie sont encore
-     provisoires (des drapeaux du jeu). Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
+     les vraies (`img/bannieres/cr_…`), tout comme celles d'**Antioche-Tripoli** (la croix de Toulouse), de **Chypre** (le
+     lion rouge des Lusignan), de l'**Arménie** (le lion d'or couronné) et de la **Géorgie** (la croix de saint Georges) :
+     les 25 factions ont leur bannière. Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
      plus historiques vont aux factions jouables (rouge anglais, bleu de France, or impérial, cramoisi de Venise, pourpre
      byzantine, blanc de Jérusalem, safran de Saladin).
    ⭐ **Les défis des campagnes** (Charlemagne, la guerre de Cent Ans et les Croisades) : **chaque faction jouable** (les 11 de
@@ -1208,6 +1209,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.97.5** : ✝️ Croisades : les 4 dernières vraies bannières (Antioche-Tripoli, Chypre, Arménie, Géorgie) : les 25 factions ont la leur
 - **v0.97.4** : 🏳️ dans le choix de la bannière, le **nom** de chaque drapeau est écrit dessous (la faction dans un scénario, ce qu'il représente dans une partie libre)
 - **v0.97.3** : ✝️ Croisades : 11 nouvelles vraies bannières (Hongrie, Pologne, Serbie, Bulgarie, Rus' de Kiev, Coumans, Almohades, Égypte, Sultanat de Roum, Califat abbasside, Assassins)
 - **v0.97.2** : ✝️ Croisades : 5 nouvelles vraies bannières, celles de Jérusalem, des Ayyoubides, de la Castille, de la Sicile et de la Papauté
