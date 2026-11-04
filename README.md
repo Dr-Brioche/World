@@ -1235,6 +1235,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.5** : 🏰 le menu de départ est un tiers plus large et plus aéré (des choix plus larges, 4 drapeaux par rangée) ; sur un petit écran, il se resserre tout seul pour tout garder visible
 - **v0.98.4** : 🐓 un nouveau drapeau pour les parties libres : le **Coq guerrier** (un coq d'or armé d'une masse, sur fond rose)
 - **v0.98.3** : 📏 au menu de départ, tous les choix (nom du royaume, carte, taille, pactes, placement, difficulté, adversaires) ont la même largeur
 - **v0.98.2** : 🪵 les barres de défilement (menu, règles, listes) aux couleurs du jeu : une poignée de bois sombre cerclée d'or, dans une gouttière de parchemin
