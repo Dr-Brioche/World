@@ -369,15 +369,28 @@ const UI = {
   setupMapPick() {
     const sel = $('mapType'), btn = $('mapBtn'), panel = $('mapPick');
     const groups = [...sel.querySelectorAll('optgroup')].filter(g => g.querySelector('option'));
-    panel.innerHTML = groups.map(g => `<div class="grp">${iconSVG(g.dataset.icon)}${escapeHtml(g.label)}</div>` +
+    // (en haut du panneau : l'aperçu de la carte survolée, ou de la carte choisie ; voir showMapPreview)
+    panel.innerHTML = '<div class="mapPreview"><div class="pv"></div><div class="pvText"><b class="pvName"></b><span class="pvDesc"></span></div></div>' +
+      groups.map(g => `<div class="grp">${iconSVG(g.dataset.icon)}${escapeHtml(g.label)}</div>` +
       `<div class="opts">${[...g.querySelectorAll('option')].map(o =>
         `<button type="button" data-map="${escapeHtml(o.value)}">${escapeHtml(o.textContent)}</button>`).join('')}</div>`).join('');
     const show = () => {
       const o = sel.selectedOptions[0];
       btn.innerHTML = `${iconSVG(o.parentNode.dataset.icon)}<span>${escapeHtml(o.textContent)}</span><span>▾</span>`;
       panel.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.map === sel.value));
+      if (!panel.classList.contains('hidden')) this.showMapPreview(sel.value);
     };
-    btn.addEventListener('click', e => { e.preventDefault(); panel.classList.toggle('hidden'); });
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) this.showMapPreview(sel.value);
+    });
+    // (survoler une carte montre son aperçu ; en quittant la liste, on revient à la carte choisie)
+    panel.addEventListener('mouseover', e => {
+      const b = e.target.closest('button[data-map]');
+      if (b) this.showMapPreview(b.dataset.map);
+    });
+    panel.addEventListener('mouseleave', () => this.showMapPreview(sel.value));
     panel.addEventListener('click', e => {
       const b = e.target.closest('button[data-map]');
       if (!b) return;
@@ -387,6 +400,85 @@ const UI = {
     });
     sel.addEventListener('change', show);
     show();
+  },
+
+  // 🗺️ L'aperçu d'une carte, dans le choix des cartes. Les cartes prédéfinies et les scénarios ne changent pas : une
+  // image tirée du jeu (img/cartes/). Les autres sont créées à chaque partie : une petite carte dessinée (un exemple :
+  // leur plan est toujours le même, le détail du relief change), avec les places de départ (des points dorés) et les
+  // filons (or, fer, pierre, diamant). Gardée en mémoire une fois dessinée.
+  MAP_IMAGES: ['world', 'europe', 'azeroth', 'factions', 'charlemagne', 'centans', 'croisades'],
+  mapDesc(t) {
+    if (ARENA_MAPS[t]) return ARENA_MAPS[t].desc;
+    if (t.startsWith('custom:')) return tr("Une carte dessinée avec l'éditeur.", 'A map drawn with the editor.');
+    return ({
+      normal: tr('Un grand continent aux côtes découpées, et quelques îles au large. Différente à chaque partie.', 'A large continent with jagged coasts, and a few islands offshore. Different every game.'),
+      continental: tr('Que de la terre, bordée de montagnes infranchissables, avec de grands lacs. Différente à chaque partie.', 'Only land, bordered by impassable mountains, with large lakes. Different every game.'),
+      naval: tr('Plusieurs grandes îles : les ports et les expéditions par la mer sont essentiels. Différente à chaque partie.', 'Several large islands: ports and sea expeditions are essential. Different every game.'),
+      world: tr('La vraie carte du monde.', 'The real world map.'),
+      europe: tr("La vraie carte de l'Europe.", 'The real map of Europe.'),
+      azeroth: tr('Le monde de Warcraft, au temps du Norfendre.', 'The world of Warcraft, in the time of Northrend.'),
+      factions: tr("Azeroth, avec les 3 camps (Alliance, Horde, Fléau) déjà en place.", 'Azeroth, with the 3 factions (Alliance, Horde, Scourge) already in place.'),
+      charlemagne: tr("L'Europe de 768 et ses 15 factions historiques.", 'Europe in 768 and its 15 historical factions.'),
+      centans: tr("La France de 1337 : l'Angleterre contre la France.", 'France in 1337: England against France.'),
+      croisades: tr('De Londres à Bagdad, en 1187, au lendemain de Hattin.', 'From London to Baghdad, in 1187, the day after Hattin.'),
+    })[t] || '';
+  },
+  showMapPreview(t) {
+    const panel = $('mapPick'), box = panel.querySelector('.mapPreview .pv');
+    if (!box) return;
+    const o = $('mapType').querySelector(`option[value="${CSS.escape(t)}"]`);
+    panel.querySelector('.pvName').textContent = o ? o.textContent : '';
+    panel.querySelector('.pvDesc').textContent = this.mapDesc(t);
+    this.mapPreviews = this.mapPreviews || new Map();
+    this.previewWanted = t;
+    let el = this.mapPreviews.get(t);
+    if (!el && this.MAP_IMAGES.includes(t)) {
+      el = document.createElement('img');
+      el.src = `img/cartes/${t}.webp`;
+      el.alt = '';
+      this.mapPreviews.set(t, el);
+    }
+    if (el) { if (box.firstChild !== el) box.replaceChildren(el); return; }
+    // (une petite carte à dessiner : un instant de calcul ; on attend que la souris s'arrête sur cette carte, pour ne
+    //  pas toutes les dessiner en passant dessus)
+    box.replaceChildren();
+    clearTimeout(this.previewTimer);
+    this.previewTimer = setTimeout(() => {
+      if (this.previewWanted !== t) return;
+      if (!this.mapPreviews.has(t)) this.mapPreviews.set(t, this.drawMapPreview(t));
+      if (this.previewWanted === t) box.replaceChildren(this.mapPreviews.get(t));
+    }, 120);
+  },
+  // La petite carte dessinée d'une carte créée à chaque partie (taille « Petite » pour les cartes aléatoires)
+  drawMapPreview(t) {
+    const m = generateMap(20251104, t, 'petit'), W = m.W, H = m.H;
+    const img = document.createElement('canvas');
+    img.width = W; img.height = H;
+    const g = img.getContext('2d'), data = g.createImageData(W, H);
+    for (let i = 0; i < m.N; i++) {
+      const c = (TERRAIN_INFO[m.terrain[i]] || TERRAIN_INFO[0]).color;
+      data.data[i * 4] = c[0]; data.data[i * 4 + 1] = c[1]; data.data[i * 4 + 2] = c[2]; data.data[i * 4 + 3] = 255;
+    }
+    g.putImageData(data, 0, 0);
+    const k = Math.min(300 / W, 190 / H), out = document.createElement('canvas');
+    out.width = Math.round(W * k); out.height = Math.round(H * k);
+    const ctx = out.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(img, 0, 0, out.width, out.height);
+    const dot = (a, r, fill) => {
+      ctx.beginPath();
+      ctx.arc((a % W + 1) * k, (((a / W) | 0) + 1) * k, r, 0, Math.PI * 2);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = '#2b1d0e';
+      ctx.stroke();
+    };
+    // (les filons, puis les places de départ par-dessus)
+    const ore = { gold: '#f0c94a', iron: '#9aa7b8', stone: '#c9b07a', diamond: '#8fe6ff' };
+    for (const d of m.deposits || []) dot(d.a, 2.6, ore[d.kind] || '#fff');
+    for (const s of m.spots || []) dot(s, 5, '#f0c94a');
+    return out;
   },
 
   // Les cartes du menu sont rangées en 3 sortes : aléatoires, prédéfinies (Monde, Europe, Azeroth : départ classique,

@@ -89,6 +89,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **❄️ Les Terres du Nord (4)** : 4 royaumes en ligne. Au **sud**, des terres fertiles jusqu'à la mer ; au **nord**, la
      **neige**, les collines et les montagnes, où sont les filons (fer, or, un diamant) : l'économie ou la force ?
      Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js` ; `SPOT_SNAP` dans `js/config.js`.
+   🗺️ **Aperçu des cartes** : dans le choix de la carte (menu), en haut de la liste, un **aperçu** de la carte survolée
+   (ou choisie), avec une courte description. Les cartes prédéfinies et les scénarios, qui ne changent pas, montrent une
+   **image du jeu** (avec les royaumes de départ) ; les autres, une **petite carte dessinée** : un exemple (leur plan est
+   toujours le même, le détail du relief change), avec les **places de départ** (points dorés) et les **filons**.
    🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
    montagnes ; réglages `FOREST_LEVEL`, `HILLS_LEVEL` et `MOUNTAIN_LEVEL` dans `js/config.js`) :
    - **Normale** : un grand continent entouré d'océan, à la côte découpée de **criques** (une entrée étroite sur un petit bassin)
@@ -1173,6 +1177,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.95.1** : 🗺️ un **aperçu** de chaque carte dans le choix de la carte : une image du jeu pour les cartes prédéfinies et les scénarios, une petite carte dessinée pour les autres (avec les places de départ et les filons des cartes arène), et une courte description
 - **v0.95.0** : 🏟️ **8 nouvelles cartes arène** : **Le Labyrinthe** (un dédale de crêtes et d'impasses riches), **L'Oasis** (un désert et ses oasis), **Les Hauts Plateaux** (des plateaux défendus, des vallées riches), **Les Mille Ponts** (un delta de dizaines d'îles), **Les Lieux Saints** (trois sanctuaires à reliques), **La Mer Intérieure** (deux fronts, la terre et la mer), **La Montagne Sacrée** (un massif riche au centre) et **Les Terres du Nord** (le sud fertile, le nord minier)
 - **v0.94.0** : 🏟️ **5 cartes arène** symétriques, avec des **places de départ prévues** (vides : chacun y fonde sa capitale) et des filons posés aux mêmes distances pour tous : **La Couronne** (8 vallées autour d'un plateau entouré d'un fleuve), **Le Cratère** (un volcan à 6 portes au centre), **Le Carrefour des Fleuves** (4 coins, 4 grands fleuves, une île au trésor dans un lac), **L'Archipel des Rois** (une île chacun) et **Les Deux Rives** (4 contre 4 de part et d'autre d'un grand fleuve) · 🎲 nouveau placement de la capitale : **Places prévues** (ou toujours Libre et Aléatoire) · 📿 sur ces cartes, les reliques apparaissent au centre
 - **v0.93.19** : 🚩 une ville n'est plus **isolée** que si elle est **complètement encerclée** (il ne lui reste que sa muraille, sans terre autour) : tout autre morceau tenu par une ville ou un port fortifié est un cœur du royaume, quelle que soit sa taille (ses armées en partent, ses défenseurs y vont) · ✝️ une **église** (ou un port) **convertie** par la Croyance emporte **toute sa zone**, comme si elle était prise par un assaut
