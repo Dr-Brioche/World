@@ -129,8 +129,10 @@ const UI = {
         && (BANNERS[k].set !== 'centans' || this.hyFaction(k).playable)
         && (BANNERS[k].set !== 'croisades' || this.crFaction(k).playable));
       const set = BANNERS[list[0]].set || 'base';
+      // (chaque drapeau avec son nom dessous : la faction d'un scénario, ou un nom qui le décrit pour une partie libre)
       $('bannerPick').innerHTML = list.map(k =>
-        `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}"></button>`
+        `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}">` +
+        `<span class="bname">${escapeHtml(BANNERS[k].name)}</span></button>`
       ).join('');
       pick(list.includes(lastPick[set]) ? lastPick[set] : list[0]);
     };

@@ -115,9 +115,11 @@ html, body {
 #bannerBtn { display: flex; align-items: center; gap: 10px; margin: 4px auto; padding: 4px 12px; background: var(--parchment-dark); }
 #bannerBtn img { height: 148px; display: block; }
 #bannerPick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 6px 0 4px;
-  max-height: 340px; overflow-y: auto; border: 2px solid var(--wood); border-radius: 6px; padding: 6px; }
+  max-height: 380px; overflow-y: auto; border: 2px solid var(--wood); border-radius: 6px; padding: 6px; }
 #bannerPick.hidden { display: none; }
-#bannerPick button { padding: 2px; background: transparent; border: 2px solid transparent; }
+#bannerPick button { padding: 2px 2px 4px; background: transparent; border: 2px solid transparent;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; }
+#bannerPick .bname { max-width: 150px; font-size: 13px; line-height: 1.15; text-align: center; color: var(--ink); }
 #bannerPick button:hover { background: var(--parchment-dark); }
 #bannerPick button.active { border-color: var(--wood); background: var(--gold); }
 #bannerPick img { height: 148px; display: block; }
@@ -458,6 +460,7 @@ button:hover { background: #e8d6a8; }
 
 @media (max-width: 760px) {
   #bannerPick img, #bannerBtn img { height: 110px; }
+  #bannerPick .bname { max-width: 115px; font-size: 12px; }
   .panel { font-size: 12px; padding: 4px 8px; }
   /* (width: auto : sur 2 lignes s'il le faut, pour que les boutons Pause, vitesse, Menu et Règles restent à l'écran) */
   #topbar { gap: 8px; left: 8px; right: 8px; width: auto; transform: none; flex-wrap: wrap; justify-content: center; white-space: normal; row-gap: 4px; }

@@ -38,7 +38,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis d'abord la **langue** du jeu en haut à droite du menu (🇬🇧 English, par défaut, ou 🇫🇷 Français : la page se recharge dans la nouvelle langue, et le choix est gardé pour les prochaines fois), puis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
+1. **Fonde ta capitale** : choisis d'abord la **langue** du jeu en haut à droite du menu (🇬🇧 English, par défaut, ou 🇫🇷 Français : la page se recharge dans la nouvelle langue, et le choix est gardé pour les prochaines fois), puis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux, chacun avec son nom dessous : la faction dans un scénario, ou ce qu'il représente dans une partie libre), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
    **nombre de royaumes rivaux** (de 3 à 20, autant que de drapeaux disponibles ; au plus un rival pour 5 000 cases de carte : 10 sur la petite carte, réglage `CELLS_PER_OPPONENT`) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
@@ -1208,6 +1208,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.97.4** : 🏳️ dans le choix de la bannière, le **nom** de chaque drapeau est écrit dessous (la faction dans un scénario, ce qu'il représente dans une partie libre)
 - **v0.97.3** : ✝️ Croisades : 11 nouvelles vraies bannières (Hongrie, Pologne, Serbie, Bulgarie, Rus' de Kiev, Coumans, Almohades, Égypte, Sultanat de Roum, Califat abbasside, Assassins)
 - **v0.97.2** : ✝️ Croisades : 5 nouvelles vraies bannières, celles de Jérusalem, des Ayyoubides, de la Castille, de la Sicile et de la Papauté
 - **v0.97.1** : ✝️ Croisades : les **vraies bannières** de l'Angleterre, de la France, du Saint-Empire, de Venise et de Byzance, et une **couleur différente pour chaque royaume**, proche du fond de son drapeau (plus de doublons entre voisins)
