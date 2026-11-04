@@ -556,6 +556,7 @@ const UI = {
   },
   // Lance la partie (solo ou en ligne) et prépare l'écran de jeu
   launch(opts) {
+    this.waitFirstMove = false;
     this.dropAllianceRequests(true);
     Music.start(); // (🎵 la musique d'ambiance démarre avec la partie : le clic sur « Commencer » l'autorise)
     Game.init(opts);
@@ -639,8 +640,13 @@ const UI = {
       G.startGame(i);
       const half = G.sizeOf(B_CASTLE) / 2, c = G.human.capital;
       Render.centerOn(c % G.W + half, ((c / G.W) | 0) + half);
-      this.log(tr('🎲 Ta capitale a été fondée au hasard ! Clique sur les terres voisines pour t\'étendre.',
-        '🎲 Your capital was founded in a random spot! Click on neighbouring lands to expand.'), 'good');
+      // (la partie attend en pause, le temps de regarder où l'on est : elle repart à la première conquête, double
+      //  clic sur une terre, ou avec Espace / ▶ Reprendre)
+      G.paused = true;
+      this.waitFirstMove = true;
+      this.refreshPauseButton();
+      this.log(tr('🎲 Ta capitale a été fondée au hasard ! La partie est en pause : regarde autour de toi, puis double-clique sur une terre voisine pour commencer à conquérir (ou Espace).',
+        '🎲 Your capital was founded in a random spot! The game is paused: look around, then double-click on neighbouring land to start conquering (or Space).'), 'good');
       return true;
     }
     return false;
@@ -851,6 +857,8 @@ const UI = {
     const live = o.k === 'continue' || (G.phase === 'playing' && h && h.alive);
     const b = before ? before() : null;
     const res = G.runOrder(h.id, o);
+    // (🎲 placement aléatoire : la première conquête lance la partie, restée en pause depuis le départ)
+    if (this.waitFirstMove && o.k === 'attack' && !res) { this.waitFirstMove = false; if (G.paused) this.togglePause(); }
     if (done && live) done(res, b);
   },
 
@@ -877,6 +885,7 @@ const UI = {
   togglePause() {
     if (Game.online) return Net.togglePause(); // (🌐 en ligne : demandée au serveur, pour tout le monde)
     if (!this.isHost() || this.parchmentOn) return; // (📜 pas pendant la lecture d'un parchemin)
+    this.waitFirstMove = false;
     Game.paused = !Game.paused;
     $('pauseBtn').textContent = Game.paused ? tr('▶ Reprendre', '▶ Resume') : '⏸ Pause';
   },

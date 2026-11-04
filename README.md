@@ -47,7 +47,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible) ; une petite bulle
    près de la souris indique la **défense** qu'aurait ta capitale à cet endroit (terrain + murs).
    🎲 **Placement de la capitale** (menu) : **Libre** (tu cliques où tu veux, comme ci-dessus), **Aléatoire** (le jeu la
-   fonde tout de suite pour toi, à une place au hasard où tu aurais pu la fonder ; sur une carte arène, à une des places
+   fonde tout de suite pour toi, à une place au hasard où tu aurais pu la fonder, et la partie attend en **pause** le
+   temps que tu regardes autour de toi : elle commence à ta première conquête, d'un double clic, ou avec Espace ; sur une carte arène, à une des places
    de départ prévues, au hasard ; grisé dans les scénarios) ou, sur une carte arène, **Places prévues** (choisi
    d'office : tu cliques où tu veux commencer, n'importe où sur la carte, et ta capitale va à la place de départ libre
    la plus proche, un écusson doré ; le survol montre laquelle).
@@ -1247,6 +1248,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.11** : 🎲 en solo, avec le placement **aléatoire**, la partie attend en pause après la fondation de ta capitale : elle commence à ta première conquête (double clic sur une terre) ou avec Espace
 - **v0.98.10** : 🤝 le drapeau « Masse d'armes » est remplacé par **La Création** : deux mains qui se tendent l'une vers l'autre, sur fond rose
 - **v0.98.9** : 🔨 le drapeau « Marteau » est redessiné : deux **marteaux croisés** sur un bouclier, sur fond orange (il s'appelle maintenant « Marteaux croisés »)
 - **v0.98.8** : 🧱 la **mine fortifiée** a son propre dessin : le site minier dans sa palissade de pieux, avec sa tour de guet (visible en zoomant)
