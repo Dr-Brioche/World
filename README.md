@@ -17,8 +17,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 13 **🏟️ cartes arène** symétriques
-  (La Couronne, Le Cratère, Le Labyrinthe, Les Mille Ponts, La Mer Intérieure…), 3 cartes **prédéfinies**
+  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 14 **🏟️ cartes arène** symétriques
+  (La Couronne, Le Cratère, Le Labyrinthe, Les Mille Ponts, La Mer Intérieure, La Mêlée à 20 joueurs…), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**,
   **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, **La guerre de Cent Ans (1337)** :
@@ -88,6 +88,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      du **fer** et de l'**or** sur ses flancs, un **diamant** au sommet enneigé ; 5 royaumes dans les plaines autour.
    - **❄️ Les Terres du Nord (4)** : 4 royaumes en ligne. Au **sud**, des terres fertiles jusqu'à la mer ; au **nord**, la
      **neige**, les collines et les montagnes, où sont les filons (fer, or, un diamant) : l'économie ou la force ?
+   - **🛡️ La Mêlée (20)** : **20 royaumes** serrés en cercle sur une **petite île** (à peine 47 cases entre deux capitales,
+     5 fois moins de place que sur La Couronne) : des voisins partout dès la première minute. Derrière chaque capitale, une
+     carrière près de la côte ; entre deux voisins, une **crête de montagne** (lente à passer, avec un col) et un filon à
+     partager, tour à tour de l'**or** et du **fer** (chacun en a un de chaque à côté de lui) ; au centre, un plateau entouré
+     d'un fleuve (un diamant, 5 mines d'or). Sur une carte arène, le menu propose d'office un rival par place prévue.
      Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js` ; `SPOT_SNAP` dans `js/config.js`.
    🗺️ **Choix de la carte** : les cartes sont rangées par sortes (aléatoires, arène, prédéfinies, scénarios, dessinées),
    chacune dans une **section qui se déplie** d'un clic (une seule ouverte à la fois ; celle de la carte choisie l'est d'office),
@@ -1180,6 +1185,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.96.0** : 🛡️ nouvelle carte arène **La Mêlée** : **20 joueurs** sur une petite île, serrés en cercle autour d'un centre riche (des voisins partout dès le départ, un filon d'or et un de fer à partager avec chaque voisin) ; sur une carte arène, le menu propose d'office un rival par place prévue
 - **v0.95.3** : 🗺️ dans le choix de la carte, chaque section est une **liste alignée à gauche**, rangée dans l'ordre : les cartes arène par nombre de joueurs (affiché à droite), les scénarios par année (768, 1187, 1337, puis Azeroth), les cartes dessinées par nom
 - **v0.95.2** : 🗺️ choix de la carte plus clair : chaque sorte de carte est une **section qui se déplie** (avec le nombre de cartes), une seule ouverte à la fois
 - **v0.95.1** : 🗺️ un **aperçu** de chaque carte dans le choix de la carte : une image du jeu pour les cartes prédéfinies et les scénarios, une petite carte dessinée pour les autres (avec les places de départ et les filons des cartes arène), et une courte description

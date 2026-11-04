@@ -109,7 +109,7 @@ const CONFIG = {
     HASH_EVERY: 50,           // tous les combien de tours on compare l'empreinte de la partie entre joueurs
     // Cartes possibles en ligne (pas encore les scénarios, ni les cartes dessinées, qui n'existent que sur un ordinateur)
     MAPS: ['normal', 'continental', 'naval', 'couronne', 'cratere', 'carrefour', 'archipel', 'rives', 'labyrinthe', 'oasis', 'plateaux',
-      'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'world', 'europe', 'azeroth'],
+      'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'melee', 'world', 'europe', 'azeroth'],
     // Un joueur qui n'a pas écrit le nom de son royaume en reçoit un au hasard dans cette liste (sinon, tout le monde
     // s'appellerait « Mon Royaume ») ; le serveur ajoute « II », « III »… si deux joueurs ont le même nom
     NAMES: ['Aldoria', 'Brumeval', 'Castelroc', 'Dunmor', 'Eldrance', 'Faucombe', 'Grisemont', 'Hautbois', 'Isembourg',
