@@ -565,7 +565,7 @@ const CROISADES = {
   // Les factions de 1187 (l'ordre compte : une case va à la première dont un contour la contient)
   factions: [
     {
-      id: 'assassins', name: tr('Assassins', 'Assassins'), leader: tr('Rachid ad-Din Sinan, le Vieux de la Montagne', 'Rashid ad-Din Sinan, the Old Man of the Mountain'), flag: 'b14', color: [90, 20, 24],
+      id: 'assassins', name: tr('Assassins', 'Assassins'), leader: tr('Rachid ad-Din Sinan, le Vieux de la Montagne', 'Rashid ad-Din Sinan, the Old Man of the Mountain'), flag: 'cr_assassins', color: [90, 20, 24],
       defensive: true, garrison: 4, camp: 'musulmans',
       capital: [36.42, 35.32, tr('Masyaf', 'Masyaf'), 'Masyaf'], capitalLevel: 2, cities: [], churches: [],
       lands: [[[36.15, 34.95], [36.55, 34.95], [36.55, 35.45], [36.15, 35.45]]],
@@ -628,12 +628,12 @@ const CROISADES = {
     },
     {
       // (l'Égypte d'al-Aziz : sans terres au départ ; elle naît à la mort de Saladin, voir crSuccession)
-      id: 'egypte', name: tr('Égypte', 'Egypt'), leader: tr('le sultan al-Aziz', 'Sultan al-Aziz'), flag: 'b05', color: [125, 190, 154],
+      id: 'egypte', name: tr('Égypte', 'Egypt'), leader: tr('le sultan al-Aziz', 'Sultan al-Aziz'), flag: 'cr_egypte', color: [125, 190, 154],
       dormant: true, camp: 'musulmans', lands: [], cities: [], churches: [],
       desc: '',
     },
     {
-      id: 'roum', name: tr('Sultanat de Roum', 'Sultanate of Rum'), leader: tr('le sultan Kılıç Arslan II', 'Sultan Kılıç Arslan II'), flag: 'b13', color: [30, 140, 140],
+      id: 'roum', name: tr('Sultanat de Roum', 'Sultanate of Rum'), leader: tr('le sultan Kılıç Arslan II', 'Sultan Kılıç Arslan II'), flag: 'cr_roum', color: [30, 140, 140],
       camp: 'musulmans',
       capital: [32.49, 37.87, tr('Konya', 'Konya'), 'Konya'], capitalLevel: 3,
       cities: [[35.49, 38.72, tr('Kayseri', 'Kayseri'), 'Kayseri', { level: 2 }], [32.86, 39.93, tr('Ankara', 'Ankara'), 'Ankara']],
@@ -660,7 +660,7 @@ const CROISADES = {
       desc: tr('L\'Empire romain d\'Orient, riche mais déchiré. Une faction difficile.', 'The Eastern Roman Empire, rich but torn apart. A difficult faction.'),
     },
     {
-      id: 'bulgarie', name: tr('Bulgarie', 'Bulgaria'), leader: tr('les tsars Assen et Pierre', 'Tsars Asen and Peter'), flag: 'b08', color: [138, 90, 43],
+      id: 'bulgarie', name: tr('Bulgarie', 'Bulgaria'), leader: tr('les tsars Assen et Pierre', 'Tsars Asen and Peter'), flag: 'cr_bulgarie', color: [138, 90, 43],
       camp: 'chretiens',
       capital: [25.63, 43.08, tr('Tarnovo', 'Tarnovo'), 'Tarnovo', { garrison: 2 }], cities: [],
       churches: [[26.82, 43.16, tr('Preslav', 'Preslav'), 'Preslav']],
@@ -669,7 +669,7 @@ const CROISADES = {
       desc: tr('Les Bulgares révoltés contre Byzance depuis 1185.', 'The Bulgarians in revolt against Byzantium since 1185.'),
     },
     {
-      id: 'serbie', name: tr('Serbie', 'Serbia'), leader: tr('le grand joupan Étienne Nemanja', 'Grand Župan Stefan Nemanja'), flag: 'b07', color: [107, 122, 143],
+      id: 'serbie', name: tr('Serbie', 'Serbia'), leader: tr('le grand joupan Étienne Nemanja', 'Grand Župan Stefan Nemanja'), flag: 'cr_serbie', color: [107, 122, 143],
       defensive: true, slowAI: 3, camp: 'chretiens',
       capital: [20.52, 43.14, tr('Ras', 'Ras'), 'Ras'], cities: [[21.90, 43.32, tr('Niš', 'Niš'), 'Niš']], churches: [],
       lands: [[[18.9, 42.5], [19.3, 43.6], [19.6, 44.4], [20.6, 44.6], [21.6, 44.5], [22.6, 44.2], [22.4, 42.9], [22.5, 42.45], [21.0, 42.3], [19.9, 41.9]]],
@@ -685,7 +685,7 @@ const CROISADES = {
       desc: tr('Peu de terres, beaucoup d\'or et de navires : la croisade passera par toi.', 'Little land, plenty of gold and ships: the crusade will go through you.'),
     },
     {
-      id: 'hongrie', name: tr('Hongrie', 'Hungary'), leader: tr('le roi Béla III', 'King Béla III'), flag: 'b09', color: [92, 158, 63],
+      id: 'hongrie', name: tr('Hongrie', 'Hungary'), leader: tr('le roi Béla III', 'King Béla III'), flag: 'cr_hongrie', color: [92, 158, 63],
       camp: 'chretiens',
       capital: [18.74, 47.79, tr('Esztergom', 'Esztergom'), 'Esztergom'], capitalLevel: 3,
       cities: [[15.23, 44.12, tr('Zara', 'Zara'), 'Zara', { level: 2, garrison: 3 }], [20.46, 44.82, tr('Belgrade', 'Belgrade'), 'Belgrade']],
@@ -765,7 +765,7 @@ const CROISADES = {
       desc: '',
     },
     {
-      id: 'almohades', name: tr('Almohades', 'Almohads'), leader: tr('le calife Abu Yusuf Yaqub', 'Caliph Abu Yusuf Yaqub'), flag: 'b17', color: [31, 122, 77],
+      id: 'almohades', name: tr('Almohades', 'Almohads'), leader: tr('le calife Abu Yusuf Yaqub', 'Caliph Abu Yusuf Yaqub'), flag: 'cr_almohades', color: [31, 122, 77],
       defensive: true, slowAI: 3, camp: 'musulmans',
       capital: [-4.78, 37.89, tr('Cordoue', 'Córdoba'), 'Cordoue'], cities: [[-4.98, 34.03, tr('Fès', 'Fez'), 'Fès'], [10.18, 36.80, tr('Tunis', 'Tunis'), 'Tunis']],
       churches: [],
@@ -775,7 +775,7 @@ const CROISADES = {
       desc: '',
     },
     {
-      id: 'abbassides', name: tr('Califat abbasside', 'Abbasid Caliphate'), leader: tr('le calife an-Nasir', 'Caliph an-Nasir'), flag: 'b21', color: [43, 42, 46],
+      id: 'abbassides', name: tr('Califat abbasside', 'Abbasid Caliphate'), leader: tr('le calife an-Nasir', 'Caliph an-Nasir'), flag: 'cr_abbassides', color: [43, 42, 46],
       defensive: true, slowAI: 3, camp: 'musulmans', garrison: 3,
       capital: [44.37, 33.31, tr('Bagdad', 'Baghdad'), 'Bagdad'], capitalLevel: 3, cities: [], churches: [],
       lands: [[[42.5, 35.0], [43.8, 35.6], [44.2, 36.6], [45.5, 36.5], [48.5, 35.5], [48.5, 29.0], [38.5, 29.0], [39.5, 33.4], [41.0, 34.4]]],
@@ -790,7 +790,7 @@ const CROISADES = {
       desc: '',
     },
     {
-      id: 'pologne', name: tr('Pologne', 'Poland'), leader: tr('le duc Casimir le Juste', 'Duke Casimir the Just'), flag: 'b02', color: [224, 122, 122],
+      id: 'pologne', name: tr('Pologne', 'Poland'), leader: tr('le duc Casimir le Juste', 'Duke Casimir the Just'), flag: 'cr_pologne', color: [224, 122, 122],
       defensive: true, slowAI: 3, camp: 'chretiens',
       capital: [19.94, 50.06, tr('Cracovie', 'Kraków'), 'Cracovie'], cities: [], churches: [],
       lands: [[[15.0, 54.0], [24.0, 54.0], [24.0, 50.3], [22.5, 49.3], [20.0, 49.4], [18.8, 49.5], [17.1, 49.9], [16.9, 49.5], [16.4, 50.4],
@@ -798,7 +798,7 @@ const CROISADES = {
       desc: '',
     },
     {
-      id: 'rus', name: tr('Rus\' de Kiev', 'Kievan Rus\''), leader: tr('le grand-prince Sviatoslav', 'Grand Prince Sviatoslav'), flag: 'b07', color: [74, 111, 165],
+      id: 'rus', name: tr('Rus\' de Kiev', 'Kievan Rus\''), leader: tr('le grand-prince Sviatoslav', 'Grand Prince Sviatoslav'), flag: 'cr_rus', color: [74, 111, 165],
       defensive: true, slowAI: 3, camp: 'chretiens',
       capital: [30.52, 50.45, tr('Kiev', 'Kyiv'), 'Kiev'], cities: [], churches: [],
       lands: [[[24.0, 54.0], [40.0, 54.0], [40.0, 49.5], [36.0, 49.5], [33.0, 49.0], [30.0, 48.6], [28.0, 48.6], [26.5, 48.3], [25.5, 47.9],
@@ -808,7 +808,7 @@ const CROISADES = {
     {
       // ⚔️ Les Coumans des steppes : leurs terres sont imprenables, ils ne s'étendent pas, mais razzient leurs voisins
       // (les Bulgares, Byzance, les Rus' : voir RAIDS)
-      id: 'coumans', name: tr('Coumans', 'Cumans'), leader: tr('les khans coumans', 'the Cuman khans'), flag: 'b04', color: [184, 162, 117],
+      id: 'coumans', name: tr('Coumans', 'Cumans'), leader: tr('les khans coumans', 'the Cuman khans'), flag: 'cr_coumans', color: [184, 162, 117],
       raiders: true, noArmy: true, camp: null,
       capital: [34.97, 44.85, tr('Soudak', 'Sudak'), 'Soudak'], cities: [], churches: [],
       lands: [[[22.6, 44.3], [24.0, 45.4], [26.2, 45.4], [26.5, 46.5], [25.5, 47.9], [26.5, 48.3], [28.0, 48.6], [30.0, 48.6], [33.0, 49.0],
