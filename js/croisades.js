@@ -580,7 +580,7 @@ const CROISADES = {
       desc: tr('Un usurpateur byzantin qui règne seul sur son île.', 'A Byzantine usurper who reigns alone over his island.'),
     },
     {
-      id: 'jerusalem', name: tr('Royaume de Jérusalem', 'Kingdom of Jerusalem'), leader: tr('le marquis Conrad de Montferrat', 'Marquis Conrad of Montferrat'), flag: 'b18', color: [238, 237, 230],
+      id: 'jerusalem', name: tr('Royaume de Jérusalem', 'Kingdom of Jerusalem'), leader: tr('le marquis Conrad de Montferrat', 'Marquis Conrad of Montferrat'), flag: 'cr_jerusalem', color: [238, 237, 230],
       playable: true, camp: 'chretiens', hard: true,
       capital: [35.20, 33.27, tr('Tyr', 'Tyre'), 'Tyr', { garrison: 6 }], capitalLevel: 2,
       cities: [[35.23, 31.78, tr('Jérusalem', 'Jerusalem'), 'Jérusalem', { level: 3, garrison: 0.6 }], [34.57, 31.67, tr('Ascalon', 'Ascalon'), 'Ascalon'],
@@ -613,7 +613,7 @@ const CROISADES = {
       desc: tr('Les Arméniens de Cilicie, dans leurs montagnes du Taurus.', 'The Armenians of Cilicia, in their Taurus mountains.'),
     },
     {
-      id: 'ayyoubides', name: tr('Ayyoubides', 'Ayyubids'), leader: tr('le sultan Saladin', 'Sultan Saladin'), flag: 'b06', color: [224, 138, 30],
+      id: 'ayyoubides', name: tr('Ayyoubides', 'Ayyubids'), leader: tr('le sultan Saladin', 'Sultan Saladin'), flag: 'cr_ayyoubides', color: [224, 138, 30],
       playable: true, camp: 'musulmans', production: true,
       capital: [36.29, 33.51, tr('Damas', 'Damascus'), 'Damas'], capitalLevel: 3,
       cities: [[31.24, 30.04, tr('Le Caire', 'Cairo'), 'Le Caire', { level: 3 }], [29.92, 31.20, tr('Alexandrie', 'Alexandria'), 'Alexandrie'],
@@ -696,7 +696,7 @@ const CROISADES = {
       desc: '',
     },
     {
-      id: 'papaute', name: tr('Papauté', 'Papacy'), leader: tr('le pape Grégoire VIII', 'Pope Gregory VIII'), flag: 'b12', color: [237, 216, 143],
+      id: 'papaute', name: tr('Papauté', 'Papacy'), leader: tr('le pape Grégoire VIII', 'Pope Gregory VIII'), flag: 'cr_papaute', color: [237, 216, 143],
       defensive: true, noArmy: true, production: true, garrison: 3, camp: 'chretiens',
       capital: [12.48, 41.90, tr('Rome', 'Rome'), 'Rome'], capitalLevel: 4, cities: [], churches: [],
       lands: [[[11.6, 42.3], [12.3, 42.55], [12.15, 43.2], [12.3, 43.9], [12.7, 43.95], [13.65, 43.6], [13.9, 42.9], [14.1, 42.2], [13.5, 41.6],
@@ -704,7 +704,7 @@ const CROISADES = {
       desc: '',
     },
     {
-      id: 'sicile', name: tr('Sicile', 'Sicily'), leader: tr('le roi Guillaume II le Bon', 'King William II the Good'), flag: 'b16', color: [61, 139, 201],
+      id: 'sicile', name: tr('Sicile', 'Sicily'), leader: tr('le roi Guillaume II le Bon', 'King William II the Good'), flag: 'cr_sicile', color: [61, 139, 201],
       camp: 'chretiens',
       capital: [13.36, 38.12, tr('Palerme', 'Palermo'), 'Palerme'], capitalLevel: 3,
       cities: [[15.55, 38.19, tr('Messine', 'Messina'), 'Messine'], [14.27, 40.85, tr('Naples', 'Naples'), 'Naples', { level: 2 }], [16.87, 41.12, tr('Bari', 'Bari'), 'Bari']],
@@ -757,7 +757,7 @@ const CROISADES = {
       desc: tr('L\'empire Plantagenêt, de l\'Angleterre aux Pyrénées. Richard sera bientôt roi…', 'The Plantagenet empire, from England to the Pyrenees. Richard will soon be king…'),
     },
     {
-      id: 'espagne', name: tr('Castille', 'Castile'), leader: tr('le roi Alphonse VIII', 'King Alfonso VIII'), flag: 'b02', color: [210, 112, 42],
+      id: 'espagne', name: tr('Castille', 'Castile'), leader: tr('le roi Alphonse VIII', 'King Alfonso VIII'), flag: 'cr_espagne', color: [210, 112, 42],
       defensive: true, slowAI: 3, camp: 'chretiens',
       capital: [-4.02, 39.86, tr('Tolède', 'Toledo'), 'Tolède'], cities: [[2.17, 41.39, tr('Barcelone', 'Barcelona'), 'Barcelone']], churches: [],
       lands: [[[-6.5, 38.8], [-6.5, 43.9], [-1.8, 43.4], [-0.5, 42.8], [0.6, 42.7], [1.5, 42.55], [3.05, 42.45], [3.4, 41.8], [2.0, 41.0],
