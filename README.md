@@ -410,9 +410,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      ses règles dans `js/croisadesrules.js`, et sa carte dans `js/europemap.js` (`generateCroisadesMap`). Les bannières
      de l'**Angleterre** (les trois léopards), de la **France** (les lis), de l'**Empire** (l'aigle noir), de **Venise** (le
      lion de saint Marc), de **Byzance** (le chrisme), de **Jérusalem** (la croix potencée d'or), des **Ayyoubides** (l'aigle
-     de Saladin), de la **Castille** (le château), de la **Sicile** (la bande en damier des Hauteville) et de la **Papauté**
-     (les clés de saint Pierre) sont les vraies (`img/bannieres/cr_…`) ; les autres sont provisoires
-     (des drapeaux du jeu), en attendant les leurs. Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
+     de Saladin), de la **Castille** (le château), de la **Sicile** (la bande en damier des Hauteville), de la **Papauté**
+     (les clés de saint Pierre), de la **Hongrie** (la croix double), de la **Pologne** (l'aigle blanc), de la **Serbie**
+     (l'aigle à deux têtes), de la **Bulgarie** (le lion d'or), de la **Rus'** (le trident), des **Coumans** (les queues de
+     cheval et la tamga), des **Almohades** (le damier), de l'**Égypte** (les palmes et la calligraphie), du **Sultanat de
+     Roum** (l'aigle seldjoukide), du **calife abbasside** (le noir et l'or) et des **Assassins** (la dague et Masyaf) sont
+     les vraies (`img/bannieres/cr_…`) ; celles d'Antioche, de Chypre, de l'Arménie et de la Géorgie sont encore
+     provisoires (des drapeaux du jeu). Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
      plus historiques vont aux factions jouables (rouge anglais, bleu de France, or impérial, cramoisi de Venise, pourpre
      byzantine, blanc de Jérusalem, safran de Saladin).
    ⭐ **Les défis des campagnes** (Charlemagne, la guerre de Cent Ans et les Croisades) : **chaque faction jouable** (les 11 de
@@ -1204,6 +1208,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.97.3** : ✝️ Croisades : 11 nouvelles vraies bannières (Hongrie, Pologne, Serbie, Bulgarie, Rus' de Kiev, Coumans, Almohades, Égypte, Sultanat de Roum, Califat abbasside, Assassins)
 - **v0.97.2** : ✝️ Croisades : 5 nouvelles vraies bannières, celles de Jérusalem, des Ayyoubides, de la Castille, de la Sicile et de la Papauté
 - **v0.97.1** : ✝️ Croisades : les **vraies bannières** de l'Angleterre, de la France, du Saint-Empire, de Venise et de Byzance, et une **couleur différente pour chaque royaume**, proche du fond de son drapeau (plus de doublons entre voisins)
 - **v0.97.0** : 🤝 **les Croisades suivent les alliances de l'histoire** : nouveaux pactes (les frères Assen : la Bulgarie et les Coumans, rejoints par la Serbie à Niš de 1189 à 1196 ; la Sicile part en croisade avec les rois en 1188) et **paix historiques** entre bots (l'Empire avec la France et la Hongrie, l'Angleterre avec la Castille, Byzance avec la Hongrie et Venise, Saladin avec le calife et les Assassins, Chypre avec Saladin, personne contre Rome) · 📜 dans **toutes les campagnes historiques**, le joueur peut toujours **rompre** le pacte du scénario (en traître) pour écrire sa propre histoire, sans pouvoir en créer d'autres ; les bots, eux, ne les rompent jamais · 🐛 une armée qui rentre vers sa ville de départ rasée entre-temps ne fige plus la partie
