@@ -10,6 +10,27 @@
 
 * { box-sizing: border-box; }
 
+/* Les barres de défilement (menu, règles, listes) aux couleurs du jeu : une poignée de bois sombre cerclée d'or, dans
+   une gouttière de parchemin. Chrome, Edge et Safari lisent ::-webkit-scrollbar ; Firefox, scrollbar-color. */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track {
+  background: var(--parchment-dark);
+  border-radius: 6px;
+  box-shadow: inset 0 0 3px rgba(43, 29, 14, 0.45);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #7a5230, var(--wood) 45%, #3e2611);
+  border: 2px solid var(--gold);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(90deg, #8d6038, #6a4522 45%, #4a2e15); }
+::-webkit-scrollbar-thumb:active { border-color: #e3bf4a; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--wood) var(--parchment-dark); }
+}
+
 html, body {
   margin: 0;
   height: 100%;

@@ -1235,6 +1235,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.2** : 🪵 les barres de défilement (menu, règles, listes) aux couleurs du jeu : une poignée de bois sombre cerclée d'or, dans une gouttière de parchemin
 - **v0.98.1** : ✠ les vraies bannières des Ordres : la croix rouge sur fond blanc des **Templiers**, la croix blanche sur fond noir des **Hospitaliers**
 - **v0.98.0** : ✠ Croisades : les **ordres militaires**, **Templiers** (Tortose, Safed, Baghras) et **Hospitaliers** (le Krak des Chevaliers, Margat, Belvoir), **jouables** : des forteresses imprenables dans Outremer, des **chevaliers** qui secourent leurs alliés attaqués (à partir de 1188), la **banque du Temple** (clic droit sur leurs terres : emprunter 2 000 pièces, rendre 2 500), la haine de Saladin (pas de trêve de Jaffa pour eux), des Assassins impuissants, **Chypre vendue par Richard aux Templiers** (1191) puis revendue à Guy de Lusignan (1192), et de nouveaux défis (Saladin : anéantir les Templiers ; Jérusalem : que le Temple tienne jusqu'en 1204 ; Richard : vendre Chypre)
 - **v0.97.5** : ✝️ Croisades : les 4 dernières vraies bannières (Antioche-Tripoli, Chypre, Arménie, Géorgie) : les 25 factions ont la leur
