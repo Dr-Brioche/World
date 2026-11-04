@@ -14,7 +14,9 @@
 //  - king, joan (guerre de Cent Ans) : que le roi Jean ait été capturé, que Jeanne d'Arc ait été prise ;
 //  - noLoss : ne perdre aucune ville jusqu'à until (minutes) ou untilYear ; keep : garder ces lieux jusque-là ;
 //    noCapture : que le roi de France (Richard, dans les Croisades) ne soit jamais capturé jusque-là ;
-//  - saleph, tribute (Croisades) : que Barberousse ne se soit pas noyé, avoir payé tribut aux Assassins.
+//  - saleph, tribute (Croisades) : que Barberousse ne se soit pas noyé, avoir payé tribut aux Assassins ;
+//  - crFlag (Croisades) : que Game.cr[flag] vaille au moins n (1 par défaut) : Chypre vendue, prêts du Temple… ;
+//    alive : que la faction role tienne jusqu'à untilYear.
 // before (minutes) ou byYear : le défi doit être réussi avant ce moment, sinon il est manqué.
 // 🙏 Le vœu : au début de la partie, un parchemin propose de jurer un des défis. Accompli, il rapporte VOW.MULT fois sa
 // récompense ; manqué (ou pas accompli avant VOW.MINUTES minutes, ou l'année VOW.YEAR), il coûte VOW.PENALTY_GOLD pièces
@@ -51,7 +53,7 @@ Object.assign(GameRules, {
     return Infinity;
   },
   // Les défis qui se jugent dans la durée (on les réussit en tenant jusqu'au bout)
-  defisLasting(c) { return ['noLoss', 'keep', 'noCapture'].includes(c.kind); },
+  defisLasting(c) { return ['noLoss', 'keep', 'noCapture', 'alive'].includes(c.kind); },
   // Le moment où le défi k est manqué s'il n'est pas réussi (le vœu ajoute sa propre limite)
   defisDeadline(c, k) {
     let t = this.defisTick(c.before, c.byYear);
@@ -91,6 +93,7 @@ Object.assign(GameRules, {
       case 'joan': return !!(hy && hy.joan && hy.joan.state === 'captured');
       case 'saleph': return !!(this.cr && this.cr.salephBridge);
       case 'tribute': return !!(this.cr && this.cr.tributePaid.has(h.id));
+      case 'crFlag': return !!this.cr && +this.cr[c.flag] >= (c.n || 1); // (✠ Chypre vendue, prêts du Temple…)
     }
     return false;
   },
@@ -110,7 +113,8 @@ Object.assign(GameRules, {
     list.forEach((c, k) => {
       if (st.state[k]) return;
       if (this.defisLasting(c)) {
-        const broken = c.kind === 'noLoss' ? lost : c.kind === 'keep' ? !this.defisHolds(c.places) : !!((this.hy && this.hy.ransom) || (this.cr && this.cr.ransom));
+        const broken = c.kind === 'noLoss' ? lost : c.kind === 'keep' ? !this.defisHolds(c.places)
+          : c.kind === 'alive' ? !this.players.some(p => p.role === c.role && p.alive) : !!((this.hy && this.hy.ransom) || (this.cr && this.cr.ransom));
         if (broken) return this.defisEnd(k, false);
         if (this.tick >= this.defisTick(c.until, c.untilYear)) this.defisEnd(k, true);
         return;

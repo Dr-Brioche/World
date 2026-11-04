@@ -363,9 +363,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      La carte va **de Londres à Bagdad** (860 x 544 cases), à ses vraies proportions, et la **Terre sainte y est agrandie à la loupe**, comme sur les cartes du
      Moyen Âge qui mettaient Jérusalem au centre du monde (sans ça, Tyr, Acre et Jérusalem tiendraient en quelques cases) ;
      la côte du Levant y est tracée en détail, avec le Jourdain, la mer Morte, l'Oronte, le Nil et le Saleph.
-     **24 royaumes** sont en place (seulement les plus grandes villes, et des **lieux notables** posés comme des églises :
-     les Cornes de Hattin, le Trésor de Damas, Tortose, Limassol, Vézelay, Fontevraud, Dürnstein, Séleucie…).
-     **7 factions jouables**, chacune avec ses **objectifs** (tous à remplir en même temps : la victoire) :
+     **26 royaumes** sont en place (seulement les plus grandes villes, et des **lieux notables** posés comme des églises :
+     les Cornes de Hattin, le Trésor de Damas, Limassol, Vézelay, Fontevraud, Dürnstein, Séleucie…).
+     **9 factions jouables**, chacune avec ses **objectifs** (tous à remplir en même temps : la victoire) :
        - ☪️ **Saladin** (les Ayyoubides) : Jérusalem, Tyr (qu'il n'a jamais prise), Tripoli, le Krak des Chevaliers,
          Antioche, garder la Vraie Croix, et de la Croyance ;
        - ✝️ le **royaume de Jérusalem** de Conrad de Montferrat, **la faction la plus difficile** (comme la Bavière de
@@ -377,10 +377,36 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        - 🦅 le **Saint-Empire** de **Barberousse** : Konya, Palerme (l'héritage de Sicile, 1194), Acre ;
        - ☦️ **Byzance** (difficile) : que Constantinople ne tombe jamais, soumettre les Bulgares, reprendre Chypre, Konya et
          Antioche ;
-       - 🦁 **Venise** : Zara, Constantinople et la Crète (la quatrième croisade), des ports et des ducats.
+       - 🦁 **Venise** : Zara, Constantinople et la Crète (la quatrième croisade), des ports et des ducats ;
+       - ✠ les **Templiers** : que Tortose ne tombe jamais, tenir Safed et Baghras, reprendre Jérusalem (le Temple de
+         Salomon) et la Vraie Croix, et amasser le trésor du Temple ;
+       - ✠ les **Hospitaliers** : que le Krak des Chevaliers ne tombe jamais, tenir Margat et Belvoir, prendre Acre,
+         reprendre Jérusalem, et de la Croyance (ils soignent les pèlerins).
+     ✠ **Les ordres militaires** (Templiers et Hospitaliers) : de petites terres mais des **forteresses très solides**
+     (garnisons 2 fois plus fortes ; 3 fois à Tortose et à Margat, 4 fois au Krak des Chevaliers), dans **Outremer** dès le
+     départ. Ils ne fondent
+     pas de villes, mais leurs recrues viennent de toutes les commanderies d'Occident (une armée 10 fois plus grande que
+     leurs terres ne le permettraient) et leurs chevaliers se battent 25 % mieux. Ce qu'ils changent :
+       - ⚔️ **les chevaliers de l'Ordre** : à partir de 1188 (ils ont été décimés à Hattin), quand un allié d'Outremer est
+         attaqué par l'islam, l'ordre le plus fort lui envoie 40 % de ses soldats (une fois toutes les 90 s). Les deux
+         ordres se jalousent : un seul secourt le même royaume à la fois, et aucun ne secourt l'autre ;
+       - 🏦 **la banque du Temple** : un royaume chrétien fait un **clic droit sur les terres des Templiers** pour leur
+         **emprunter 2 000 pièces**, et en rend 2 500 sur ses revenus, en 3 minutes environ (la dette s'affiche en
+         haut) ; les bots à court d'or empruntent aussi. Joueur templier, c'est ton revenu : les intérêts ;
+       - ☪️ **Saladin les hait** (il a fait exécuter les moines-soldats pris à Hattin) : la paix de Jaffa ne les protège
+         pas, et il les attaque deux fois plus volontiers ;
+       - 🗡️ les **Assassins** ne peuvent rien contre eux (tuer un grand maître ne sert à rien : un autre est élu
+         aussitôt), et leur versent un tribut (1 pièce par seconde aux Templiers) ;
+       - 🏝️ **Chypre** : en 1191, Richard (s'il tient Nicosie) vend l'île aux Templiers pour 2 000 pièces (un choix pour
+         le joueur anglais, ou pour le joueur templier) ; en 1192, les Chypriotes se révoltent, et les Templiers la
+         revendent 1 500 pièces à Guy de Lusignan, l'ancien roi de Jérusalem (un joueur templier peut la garder, mais
+         perd 30 % de ses soldats).
+     Réglages : `ORDERS` et `CYPRUS` dans `js/croisades.js`, les règles dans `js/ordres.js`. Les bannières des Ordres
+     sont provisoires (des drapeaux du jeu), en attendant les vraies.
      La partie va de **1187 à 1204** en environ **50 minutes** (la troisième croisade, jusqu'à la mort de Saladin, prend la
      première moitié) ; l'année est en haut. Les grands événements arrivent à leur date, en **parchemins** (pour les
-     factions concernées) : Saladin assiège Jérusalem puis Tyr ; à Gisors, les rois **prennent la croix** et rejoignent
+     factions concernées) : Saladin assiège Jérusalem puis Tyr ; en 1188, il assiège Baghras et Safed (le Temple) puis
+     Belvoir (l'Hôpital), mais pas le Krak ni Tortose, devant lesquels il a renoncé ; à Gisors, les rois **prennent la croix** et rejoignent
      Outremer (avec la Sicile) et lèvent la dîme saladine ; le roi Guy libéré assiège Acre ; Barberousse part de Ratisbonne
      avec la plus grande armée d'Occident, prend Konya… et **se noie dans le Saleph**, sauf si l'Empire tient le gué de
      **Séleucie** (il passe alors sur le pont, et ses soldats se battent mieux) ; Byzance s'allie en secret à Saladin (un
@@ -417,11 +443,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Roum** (l'aigle seldjoukide), du **calife abbasside** (le noir et l'or) et des **Assassins** (la dague et Masyaf) sont
      les vraies (`img/bannieres/cr_…`), tout comme celles d'**Antioche-Tripoli** (la croix de Toulouse), de **Chypre** (le
      lion rouge des Lusignan), de l'**Arménie** (le lion d'or couronné) et de la **Géorgie** (la croix de saint Georges) :
-     les 25 factions ont leur bannière. Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
+     les 25 factions de départ ont leur bannière (les deux Ordres attendent les leurs). Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
      plus historiques vont aux factions jouables (rouge anglais, bleu de France, or impérial, cramoisi de Venise, pourpre
      byzantine, blanc de Jérusalem, safran de Saladin).
    ⭐ **Les défis des campagnes** (Charlemagne, la guerre de Cent Ans et les Croisades) : **chaque faction jouable** (les 11 de
-     Charlemagne, les 5 de la guerre de Cent Ans, les 7 des Croisades) a **4 défis**, des objectifs en plus, historiques, drôles ou très durs.
+     Charlemagne, les 5 de la guerre de Cent Ans, les 9 des Croisades) a **4 défis** (5 pour Saladin, Jérusalem et l'Angleterre), des objectifs en plus, historiques, drôles ou très durs.
      Ils ne comptent pas pour la victoire, mais chacun rapporte sa **récompense** (de l'or, de la Croyance ou de la
      Légitimité) dès qu'il est réussi. Ils s'affichent sous les objectifs, dans le cadre en haut à gauche (✔ réussi,
      ✖ manqué : certains ont une limite de temps, d'autres se jouent dans la durée, comme « ne perdre aucune ville
@@ -1209,6 +1235,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.0** : ✠ Croisades : les **ordres militaires**, **Templiers** (Tortose, Safed, Baghras) et **Hospitaliers** (le Krak des Chevaliers, Margat, Belvoir), **jouables** : des forteresses imprenables dans Outremer, des **chevaliers** qui secourent leurs alliés attaqués (à partir de 1188), la **banque du Temple** (clic droit sur leurs terres : emprunter 2 000 pièces, rendre 2 500), la haine de Saladin (pas de trêve de Jaffa pour eux), des Assassins impuissants, **Chypre vendue par Richard aux Templiers** (1191) puis revendue à Guy de Lusignan (1192), et de nouveaux défis (Saladin : anéantir les Templiers ; Jérusalem : que le Temple tienne jusqu'en 1204 ; Richard : vendre Chypre)
 - **v0.97.5** : ✝️ Croisades : les 4 dernières vraies bannières (Antioche-Tripoli, Chypre, Arménie, Géorgie) : les 25 factions ont la leur
 - **v0.97.4** : 🏳️ dans le choix de la bannière, le **nom** de chaque drapeau est écrit dessous (la faction dans un scénario, ce qu'il représente dans une partie libre)
 - **v0.97.3** : ✝️ Croisades : 11 nouvelles vraies bannières (Hongrie, Pologne, Serbie, Bulgarie, Rus' de Kiev, Coumans, Almohades, Égypte, Sultanat de Roum, Califat abbasside, Assassins)
@@ -1674,6 +1701,7 @@ noms et couleurs des royaumes, difficulté… Change un chiffre, recharge la pag
 | `js/charlemagne.js` | 👑 Le scénario « Charlemagne » : ses factions, objectifs, réglages et textes (ses règles sont dans `js/game.js`) |
 | `js/centans.js`, `js/centansrules.js` | ⚜️ Le scénario « La guerre de Cent Ans » : ses données (factions, objectifs, réglages, parchemins), puis ses règles |
 | `js/croisades.js`, `js/croisadesrules.js` | ✝️ Le scénario « Les Croisades » : ses données (factions, objectifs, réglages, parchemins), puis ses règles |
+| `js/ordres.js` | ✠ Les ordres militaires des Croisades : les renforts des chevaliers, la banque du Temple, Chypre |
 | `js/defis.js` | ⭐ Les défis des campagnes et le vœu solennel (les défis de chaque faction sont dans `CHALLENGES`) |
 | `js/reliques.js` | 📿 Les reliques saintes des parties classiques : apparition, armées de relique, interception, bonus |
 | `js/ai.js` | Le cerveau des royaumes adverses |

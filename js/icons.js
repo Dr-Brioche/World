@@ -244,6 +244,12 @@ const ICON_DEFS = {
     { d: 'M9.8 18.8l2.2 3 2.2-3', s: 'c', w: 1.4 }],
   // ☦ la croix orthodoxe (Byzance), à trois traverses
   orthocross: [{ d: 'M11 2h2v20h-2zM8.5 4.4h7v1.8h-7zM5.5 8.4h13v2h-13zM7.4 16.7l8.7-2.3.5 1.8-8.7 2.3z', f: 'c' }],
+  // ✠ la croix pattée des ordres militaires (Templiers, Hospitaliers), aux bras évasés
+  pattee: [{ d: 'M10.6 10.6L8 2.5h8l-2.6 8.1 8.1-2.6v8l-8.1-2.6 2.6 8.1H8l2.6-8.1-8.1 2.6V8z', f: 'c' }],
+  // 🏦 la banque du Temple : un coffre cerclé de fer, et une pile de pièces
+  bank: [{ d: 'M2.5 10.5h14v10h-14z', f: 'c' }, { d: 'M2.5 10.5c0-3 2-5 7-5s7 2 7 5z', f: 'c', o: 0.75 },
+    { d: 'M2.5 13.5h14M9.5 12.5v4', s: '#000', w: 1, o: 0.35 },
+    { d: 'M18 20.5h4M18 18.2h4M18 15.9h4', s: '#d9a92e', w: 1.8 }],
 };
 
 // Emojis → icônes. Le jeu n'affiche jamais d'emoji : chaque emoji d'un texte a ici son icône dessinée (un nouvel emoji
@@ -265,7 +271,7 @@ const EMOJI_ICONS = {
   '🍇': 'grapes', '🐾': 'ermine', '🦄': 'thistle', '🏁': 'pennant', '🚪': 'door', '🏷': 'tag', '👤': 'person', '⚱': 'urn',
   '💾': 'chest', '📂': 'scroll', '🗑': 'trash', '📤': 'out', '📥': 'in', '🧶': 'yarn', '🐍': 'snake', '💣': 'cannon',
   '🐬': 'dolphin', '💍': 'ring', '👁': 'eye', '🏹': 'bow', '🎚': 'levels', '🏛': 'temple', '🏝': 'island', '🚶': 'walker',
-  '🏠': 'house', '📿': 'relic',
+  '🏠': 'house', '📿': 'relic', '✠': 'pattee', '🏦': 'bank',
 };
 const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).join('|') + ')\\uFE0F?', 'g');
 

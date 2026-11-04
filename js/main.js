@@ -1504,6 +1504,8 @@ const UI = {
         france: [tr('⚜️ Philippe Auguste !', '⚜️ Philip Augustus!'), tr('Croisé à Acre, vainqueur des Plantagenêts en Normandie, en Anjou et en Poitou : le petit roi de 1187 règne sur le plus grand royaume d\'Occident. Paris, ceinte de murailles, est la capitale de la chrétienté.', 'Crusader at Acre, conqueror of the Plantagenets in Normandy, Anjou and Poitou: the little king of 1187 rules over the greatest kingdom of the West. Paris, girded with walls, is the capital of Christendom.')],
         empire: [tr('🦅 L\'Empire universel !', '🦅 The universal Empire!'), tr('De Ratisbonne à Palerme, de Konya à Acre : l\'aigle impérial plane sur l\'Allemagne, l\'Italie et la Terre sainte. Le rêve des Hohenstaufen est accompli.', 'From Regensburg to Palermo, from Konya to Acre: the imperial eagle soars over Germany, Italy and the Holy Land. The dream of the Hohenstaufen is fulfilled.')],
         byzance: [tr('☦️ L\'Empire romain renaît !', '☦️ The Roman Empire is reborn!'), tr('Constantinople n\'est jamais tombée. Les Bulgares sont soumis, Chypre et Antioche rendues au basileus, Konya prise : l\'empire des Comnènes revit sous les Anges.', 'Constantinople never fell. The Bulgarians are subdued, Cyprus and Antioch returned to the basileus, Konya taken: the empire of the Comneni lives again under the Angeloi.')],
+        templiers: [tr('✠ Non nobis, Domine !', '✠ Non nobis, Domine!'), tr('Tortose, Safed et Baghras ont tenu, la Vraie Croix est revenue au Temple de Salomon, et les rois d\'Occident te doivent tous de l\'or. Jamais l\'Ordre n\'a été si puissant… pourvu qu\'un roi de France n\'en prenne pas ombrage.', 'Tortosa, Safed and Baghras have held, the True Cross has returned to the Temple of Solomon, and every king of the West owes you gold. Never has the Order been so powerful… as long as no King of France takes offence.')],
+        hospitaliers: [tr('✠ Pro Fide, pro utilitate hominum !', '✠ Pro Fide, pro utilitate hominum!'), tr('Le Krak, Margat et Belvoir ont tenu, et l\'Hôpital de Saint-Jean rouvre ses portes à Jérusalem comme à Acre : tes frères soignent de nouveau les pèlerins, l\'épée à la ceinture.', 'The Krak, Margat and Belvoir have held, and the Hospital of Saint John reopens its doors in Jerusalem as in Acre: your brothers nurse the pilgrims again, sword at their belt.')],
         venise: [tr('🦁 La reine des mers !', '🦁 The queen of the seas!'), tr('Zara reprise, Constantinople et la Crète à Saint-Marc, un comptoir dans chaque port : le doge est « seigneur d\'un quart et demi de l\'Empire romain ». Les chevaux de bronze veillent sur la place Saint-Marc.', 'Zara retaken, Constantinople and Crete under Saint Mark, a trading post in every port: the doge is "lord of a quarter and a half of the Roman Empire". The bronze horses watch over Saint Mark\'s Square.')],
       }[Game.human.role];
       if (t) { $('endTitle').textContent = t[0]; $('endText').textContent = t[1]; }
@@ -1750,6 +1752,8 @@ const UI = {
     if (cr.ransom && !cr.ransom.paid) { parts.push(`⛓️ ${fmt(cr.ransom.left)}`); tips.push(tr(`Richard est captif : sa rançon (${fmt(cr.ransom.left)} pièces à payer) prend la moitié de l'or de l'Angleterre`, `Richard is a captive: his ransom (${fmt(cr.ransom.left)} gold left) takes half of England's gold`)); }
     const stun = (cr.stun.get(h.id) || 0) - G.tick;
     if (stun > 0) { parts.push(`🗡️ ${Math.ceil(stun / TPS)} s`); tips.push(tr('Frappé par les Assassins (ou la guerre civile) : tu ne recrutes plus', 'Struck by the Assassins (or civil war): you recruit no more')); }
+    const loan = cr.loans.get(h.id);
+    if (loan) { parts.push(`🏦 ${fmt(loan.left)}`); tips.push(tr(`Ta dette au Temple : ${fmt(loan.left)} pièces (tu la rembourses peu à peu, chaque seconde)`, `Your debt to the Temple: ${fmt(loan.left)} gold (you repay it little by little, every second)`)); }
     if (G.crProtected(h.id)) tips.push(tr(`Ton tribut au Vieux de la Montagne te protège encore ${Math.ceil(((cr.tributeUntil.get(h.id) || 0) - G.tick) / TPS)} s`, `Your tribute to the Old Man of the Mountain still protects you for ${Math.ceil(((cr.tributeUntil.get(h.id) || 0) - G.tick) / TPS)} s`));
     const txt = parts.join(' · ');
     if (this.hyBoxText !== txt) { this.hyBoxText = txt; $('hyBox').textContent = txt; $('hyBox').title = tips.join('\n'); }
@@ -2339,10 +2343,17 @@ const UI = {
     }
   },
 
-  // ✝️ Les Croisades (clic droit) : 🗡️ engager les Assassins contre le royaume visé, ou leur payer tribut (sur leurs terres)
+  // ✝️ Les Croisades (clic droit) : 🗡️ engager les Assassins contre le royaume visé, ou leur payer tribut (sur leurs terres) ;
+  // 🏦 emprunter au Temple (sur les terres des Templiers)
   crActions(items, i) {
-    const G = Game, h = G.human, o = G.owner[i], A = CROISADES.ASSASSINS, as = G.crAssassins();
-    if (!as || o < 0 || o === h.id) return;
+    const G = Game, h = G.human, o = G.owner[i], A = CROISADES.ASSASSINS, as = G.crAssassins(), tp = G.crTemple();
+    if (o < 0 || o === h.id) return;
+    if (tp && o === tp.id && h.camp === 'chretiens') {
+      const O = CROISADES.ORDERS, err = G.crLoanError(h.id);
+      items.push({ label: tr(`🏦 Emprunter au Temple (💰 +${fmt(O.LOAN)}, à rendre ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))} sur tes revenus)`, `🏦 Borrow from the Temple (💰 +${fmt(O.LOAN)}, to repay ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))} out of your income)`),
+        disabled: err || undefined, run: err ? undefined : () => this.act({ k: 'crLoan' }, e => { if (e) this.log(e, 'warn'); }) });
+    }
+    if (!as) return;
     if (o === as.id) {
       const err = G.crTributeError(h.id);
       items.push({ label: tr(`🗡️ Payer tribut au Vieux de la Montagne (💰 ${fmt(A.TRIBUTE)} : ses Assassins t'épargnent ${A.SAFE} s)`, `🗡️ Pay tribute to the Old Man of the Mountain (💰 ${fmt(A.TRIBUTE)}: his Assassins spare you for ${A.SAFE} s)`),

@@ -15,7 +15,9 @@ Object.assign(GameRules, {
     this.pactsAllowed = false; // (pas d'autres pactes que ceux du scénario : la croisade, le pacte secret de Byzance…)
     const diff = C.RANSOM[opts.difficulty] ? opts.difficulty : 'normal';
     const cr = this.cr = { diff, role: {}, capital: {}, cities: new Map(), churches: new Map(), strong: new Map(), pact: {},
-      fired: new Set(), done: {}, gone: {}, offers: {}, peaceBroken: new Set(), truceUntil: 0, ransom: null, stun: new Map(), tributeUntil: new Map(),
+      fired: new Set(), done: {}, gone: {}, offers: {}, peaceBroken: new Set(),
+      loans: new Map(), loansGiven: 0, helpReady: new Map(), helped: new Map(), nextLoan: CROISADES.ORDERS.AI_LOAN_EVERY * CONFIG.TICKS_PER_SECOND,
+      cyprusSold: false, cyprusBought: false, truceUntil: 0, ransom: null, stun: new Map(), tributeUntil: new Map(),
       tributePaid: new Set(), hireReady: new Map(), richard: false, arsuf: false, salephBridge: false, john: false,
       civilWarUntil: 0, nextRaid: C.RAIDS.FIRST * CONFIG.TICKS_PER_SECOND, nextAssassin: C.ASSASSINS.AI_EVERY * CONFIG.TICKS_PER_SECOND };
     // Les factions (le joueur incarne celle de sa bannière)
@@ -27,11 +29,12 @@ Object.assign(GameRules, {
       p.defensive = !!f.defensive;
       p.noArmy = !!f.noArmy;
       p.raiders = !!f.raiders;
+      p.order = !!f.order; // (✠ un ordre militaire : voir ordres.js)
       p.dormant = !!f.dormant; // (l'Égypte d'al-Aziz : sans terres, elle naît à la mort de Saladin)
       p.garrisonBoost = f.garrison || 1;
       p.camp = f.camp || null;
       p.slowAI = f.slowAI || 1; // (⏱️ les royaumes lointains réfléchissent moins souvent : voir AI.update)
-      p.gold = C.START_GOLD;
+      p.gold = f.id === 'templiers' ? C.ORDERS.TEMPLE_GOLD : C.START_GOLD; // (🏦 le trésor du Temple)
       cr.role[f.id] = p.id;
     }
     // Les terres de 1187 : une case va à la première faction dont le territoire la contient (les contours suivent la
@@ -46,16 +49,29 @@ Object.assign(GameRules, {
     this.claimLands(polys, C.BORDER_WARP);
     // Les villes et les lieux notables, au plus près de leur vraie place (avec leur nom, écrit sur la carte)
     const strong = (p, a, o) => { if (o && o.garrison) cr.strong.set(a, { pid: p.id, boost: o.garrison }); };
+    // (une ville qui ne trouve pas de place, parce que la frontière déformée a rogné ses terres : sa faction reçoit
+    //  d'abord les terres libres d'obstacles dans un petit disque autour de sa vraie place, puis on réessaie)
+    const place = (p, type, x, y, level) => {
+      let a = this.placeOnLand(p, type, x, y, level);
+      if (a >= 0) return a;
+      const R = 6;
+      for (let yy = Math.floor(y - R); yy <= y + R; yy++) for (let xx = Math.floor(x - R); xx <= x + R; xx++) {
+        if (xx < 0 || yy < 0 || xx >= W || yy >= H || (xx - x) ** 2 + (yy - y) ** 2 > R * R) continue;
+        const j = yy * W + xx;
+        if (this.isLand(j) && this.claimable(j) && !this.building[j]) this.setOwner(j, p.id);
+      }
+      return this.placeOnLand(p, type, x, y, level);
+    };
     for (const f of C.factions) {
       if (!f.capital) continue;
       const p = this.players[cr.role[f.id]], c0 = f.capital;
-      const cap = this.placeOnLand(p, B_CASTLE, ...at(c0[0], c0[1]), Math.max(2, f.capitalLevel || 2));
+      const cap = place(p, B_CASTLE, ...at(c0[0], c0[1]), Math.max(2, f.capitalLevel || 2));
       if (cap >= 0) {
         p.capital = cap; cr.capital[f.id] = cap; p.castlesBuilt = 1;
         this.placeNames.set(cap, c0[2]); cr.cities.set(c0[3], cap); strong(p, cap, c0[4]);
       }
       for (const c of f.cities) {
-        const a = this.placeOnLand(p, B_CASTLE, ...at(c[0], c[1]), (c[4] && c[4].level) || 1);
+        const a = place(p, B_CASTLE, ...at(c[0], c[1]), (c[4] && c[4].level) || 1);
         if (a >= 0) { this.placeNames.set(a, c[2]); cr.cities.set(c[3], a); strong(p, a, c[4]); }
       }
       for (const c of f.churches) {
@@ -88,7 +104,7 @@ Object.assign(GameRules, {
     const cross = cr.churches.get(C.TRUE_CROSS);
     if (cross !== undefined) this.relicChurch.set(cross, 1);
     // Outremer : le royaume de Jérusalem et Antioche-Tripoli, alliés pour toujours (les rois croisés les rejoindront)
-    cr.pact.croisade = this.crNewPact(tr('Outremer', 'Outremer'), 'jerusalem', ['jerusalem', 'antioche']);
+    cr.pact.croisade = this.crNewPact(tr('Outremer', 'Outremer'), 'jerusalem', ['jerusalem', 'antioche', 'templiers', 'hospitaliers']);
     // Les frères Assen : la Bulgarie, révoltée contre Byzance (1185), et ses alliés coumans des steppes
     cr.pact.assen = this.crNewPact(tr('Les frères Assen', 'The Asen brothers'), 'bulgarie', ['bulgarie', 'coumans']);
     this.version++;
@@ -217,6 +233,7 @@ Object.assign(GameRules, {
     this.crStepRaids();
     this.crStepRansom();
     this.crStepAssassins();
+    this.crStepOrders(); // (✠ les ordres militaires : voir ordres.js)
     // 💰 Venise : l'or de ses comptoirs
     const ve = this.crP('venise'), V = CROISADES.VENICE;
     if (ve.alive && this.tick % (V.EVERY * TPS) === 0) ve.gold += V.GOLD;
@@ -270,6 +287,19 @@ Object.assign(GameRules, {
       this.crCampaign('jerusalem', 'acreSiege', ['Acre'], R(E * 0.9), true,
         n => tr(`⚔️ Le roi Guy assiège ${n} !`, `⚔️ King Guy besieges ${n}!`), 'musulmans');
     }
+    // 1188 : Saladin contre les forteresses des Ordres (il renonce devant le Krak et Tortose) : Baghras, Safed, Belvoir
+    if (once('saladinNorth', 1188.7) && this.crHolder('Baghras') && this.crHolder('Baghras') !== 'ayyoubides') {
+      this.crCampaign('ayyoubides', 'saladinNorth', ['Baghras'], R(E * 0.9), false,
+        n => tr(`⚔️ Saladin assiège ${n}, la forteresse du Temple !`, `⚔️ Saladin besieges ${n}, the Temple's fortress!`));
+    }
+    if (once('safedSiege', 1188.85) && this.crHolder('Safed') && this.crHolder('Safed') !== 'ayyoubides') {
+      this.crCampaign('ayyoubides', 'safedSiege', ['Safed'], R(E * 0.9), false,
+        n => tr(`⚔️ Saladin assiège ${n}, la forteresse du Temple !`, `⚔️ Saladin besieges ${n}, the Temple's fortress!`));
+    }
+    if (once('belvoirSiege', 1188.95) && this.crHolder('Belvoir') && this.crHolder('Belvoir') !== 'ayyoubides') {
+      this.crCampaign('ayyoubides', 'belvoirSiege', ['Belvoir'], R(E * 0.8), false,
+        n => tr(`⚔️ Saladin assiège ${n}, la forteresse de l'Hôpital !`, `⚔️ Saladin besieges ${n}, the Hospital's fortress!`));
+    }
     // 1189 : à Niš, la Serbie s'allie aux frères Assen contre Byzance ; elle les quitte en 1196 (Étienne Nemanjić
     // épouse une princesse byzantine)
     const se = this.crP('serbie'), bg = this.crP('bulgarie');
@@ -320,6 +350,9 @@ Object.assign(GameRules, {
       cr.arsuf = true;
       this.crEvent('arsuf', {}, tr('⚔️ 1191 : Richard bat Saladin à Arsouf.', '⚔️ 1191: Richard defeats Saladin at Arsuf.'), '');
     }
+    // 1191-1192 : Chypre vendue aux Templiers, puis revendue à Guy de Lusignan (voir ordres.js)
+    if (once('cyprusSale', C.CYPRUS.SALE)) this.crCyprusSale();
+    if (once('cyprusRevolt', C.CYPRUS.REVOLT)) this.crCyprusRevolt();
     // 1192 : Conrad assassiné (sauf s'il a payé tribut aux Assassins)
     if (once('conrad', 1192.32) && jer.alive) this.crConrad();
     // 1192 : la paix de Jaffa ; les rois rentrent chez eux
@@ -459,7 +492,7 @@ Object.assign(GameRules, {
   crOffer(key, data) {
     const C = CROISADES, cr = this.cr;
     cr.offers[key] = data;
-    const vars = { gold: fmt(1500), faith: key === 'saladinDies' ? C.SUCCESSION.FAITH : 60, pct: Math.round(C.SUCCESSION.CIVIL_WAR * 100) };
+    const vars = Object.assign({ gold: fmt(1500), faith: key === 'saladinDies' ? C.SUCCESSION.FAITH : 60, pct: Math.round(C.SUCCESSION.CIVIL_WAR * 100) }, data);
     UI.parchment(C.EVENTS[key], vars, C.CHOICES[key].map(c => ({ key, pick: c.pick, label: c.label })));
   },
   // Le joueur a choisi (ordre « hyChoice »)
@@ -472,6 +505,7 @@ Object.assign(GameRules, {
   },
   crApplyChoice(key, pick) {
     const C = CROISADES, cr = this.cr, h = this.human;
+    if (this.crOrderChoice(key, pick)) { this.version++; return; } // (🏝️ les choix de Chypre : voir ordres.js)
     if (key === 'philipLeaves') {
       const fr = this.crP('france');
       if (pick === 'home') {
@@ -558,6 +592,7 @@ Object.assign(GameRules, {
     const A = CROISADES.ASSASSINS, as = this.crAssassins(), p = this.players[pid], t = this.players[target];
     if (!as) return tr('Il n\'y a plus d\'Assassins.', 'There are no Assassins left.');
     if (!t || !t.alive || target === pid || target === as.id || t.raiders) return tr('Personne à frapper ici.', 'Nobody to strike here.');
+    if (t.order) return tr('Tuer un grand maître ne sert à rien : l\'Ordre en élit aussitôt un autre.', 'Killing a Grand Master is useless: the Order at once elects another.');
     if (pid === as.id) return null;
     const wait = (this.cr.hireReady.get(pid) || 0) - this.tick;
     if (wait > 0) return tr(`Les Assassins ne reprendront un contrat que dans ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`, `The Assassins will take another contract only in ${Math.ceil(wait / CONFIG.TICKS_PER_SECOND)} s.`);
@@ -630,16 +665,18 @@ Object.assign(GameRules, {
     if (p.role === 'empire' && this.tick < cr.civilWarUntil) k *= 0.5;
     return k;
   },
-  // Armée maximum : Saladin (un bot) a une armée plus grande (voir SALADIN.BOOST)
+  // Armée maximum : Saladin (un bot) a une armée plus grande (voir SALADIN.BOOST), et les ordres aussi (ORDERS.ARMY)
   crMaxTroops(p) {
+    if (p.order) return CROISADES.ORDERS.ARMY; // (✠ les recrues des commanderies d'Occident)
     if (p.role !== 'ayyoubides' || p.isHuman) return 1;
     return CROISADES.SALADIN.BOOST[this.cr.diff];
   },
-  // Force des soldats : Saladin, Richard Cœur de Lion (et Arsouf), Barberousse vivant
+  // Force des soldats : Saladin, Richard Cœur de Lion (et Arsouf), Barberousse vivant, les chevaliers des ordres
   crPower(pid) {
     const cr = this.cr, C = CROISADES, p = this.players[pid], y = this.crYear();
     let k = 1;
     if (p.role === 'ayyoubides' && y < 1193.17) k += C.SALADIN.POWER;
+    if (p.order) k += C.ORDERS.POWER; // (✠ des moines-soldats : la meilleure chevalerie d'Orient)
     if (p.role === 'angleterre' && cr.richard && !(cr.ransom && !cr.ransom.paid)) k += C.RICHARD.HERO + (cr.arsuf ? C.RICHARD.ARSUF : 0);
     if (p.role === 'empire' && cr.salephBridge && y < 1192.67) k += C.SALEPH.HERO;
     return k;
@@ -653,6 +690,7 @@ Object.assign(GameRules, {
     if (p.camp && e.camp && p.camp !== e.camp) k *= 1.5;
     if (p.camp && e.camp && p.camp === e.camp) k *= 0.6;
     if (e.defensive) k *= 0.7;
+    if ((p.role === 'ayyoubides' || p.role === 'egypte') && e.order) k *= CROISADES.ORDERS.SALADIN_HATE; // (✠ il hait les Ordres)
     const pair = r => (p.role === r[0] && e.role === r[1]) || (p.role === r[1] && e.role === r[0]);
     if (pair(['france', 'angleterre']) && this.crYear() > 1191.58) k *= 3;
     if (pair(['bulgarie', 'byzance']) || pair(['roum', 'byzance'])) k *= 2;
