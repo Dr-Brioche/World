@@ -233,7 +233,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        volontiers aux Asturies, dans leurs montagnes ;
      - ✝️ **succès « Empire chrétien »** : quand les terres des Francs touchent celles de Rome, leur Croyance gagne
        **+100 pour toujours** ;
-     - les **Francs, Carloman et le pape** forment un **pacte éternel** (l'« Alliance de Rome ») ; au bout de quelques
+     - les **Francs, Carloman et le pape** forment un **pacte** (l'« Alliance de Rome ») que les bots ne rompent jamais
+       (toi, tu peux le trahir) ; au bout de quelques
        minutes (3 en Facile, 6 en Normal, 10 en Difficile), **Carloman meurt** et son royaume revient aux Francs ;
      - **Byzance et Rome** sont des puissances défensives : elles se défendent mais ne partent pas en conquête ;
      - **Rome** n'a **pas d'armée**, seulement une **grande garnison** (320 soldats, qui se reconstitue) qui repousse
@@ -380,7 +381,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      La partie va de **1187 à 1204** en environ **50 minutes** (la troisième croisade, jusqu'à la mort de Saladin, prend la
      première moitié) ; l'année est en haut. Les grands événements arrivent à leur date, en **parchemins** (pour les
      factions concernées) : Saladin assiège Jérusalem puis Tyr ; à Gisors, les rois **prennent la croix** et rejoignent
-     Outremer (un pacte éternel) avec la dîme saladine ; le roi Guy libéré assiège Acre ; Barberousse part de Ratisbonne
+     Outremer (avec la Sicile) et lèvent la dîme saladine ; le roi Guy libéré assiège Acre ; Barberousse part de Ratisbonne
      avec la plus grande armée d'Occident, prend Konya… et **se noie dans le Saleph**, sauf si l'Empire tient le gué de
      **Séleucie** (il passe alors sur le pont, et ses soldats se battent mieux) ; Byzance s'allie en secret à Saladin (un
      choix pour le joueur byzantin) ; l'hiver à Messine ; **Richard prend Chypre**, puis les rois débarquent devant Acre ;
@@ -395,7 +396,16 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Montagne : **clic droit** sur un royaume pour les **engager** contre lui (1 500 pièces : il perd un quart de ses soldats
      et ne recrute plus pendant 45 s), ou sur leurs terres pour leur **payer tribut** (600 pièces : ils t'épargnent 5 min) ;
      🦁 Richard, Saladin et Barberousse vivant rendent leurs soldats plus forts ; ⚔️ les **Coumans** des steppes razzient
-     leurs voisins ; 💰 Venise s'enrichit de ses comptoirs ; les royaumes lointains (Castille, Almohades, calife de
+     leurs voisins ; 💰 Venise s'enrichit de ses comptoirs ;
+     🤝 les **pactes de l'histoire** : **Outremer** (Jérusalem, Antioche-Tripoli), que rejoignent en 1188 les rois croisés
+     (Angleterre, France, Empire) et la Sicile de Guillaume II, jusqu'à la paix de Jaffa ; les **frères Assen** (la
+     Bulgarie et ses alliés coumans, qui ne la razzient plus), que la **Serbie** de Nemanja rejoint à Niš en 1189 et quitte
+     en 1196 ; le **pacte secret** de Byzance et de Saladin (1189-1192) ; les Ayyoubides, si Saladin partage son empire ;
+     🕊️ les **paix de l'histoire** : l'Empire ne fait la guerre ni à la France ni à la Hongrie, l'Angleterre épargne la
+     Castille, la Hongrie épargne Byzance (jusqu'en 1195) et Venise aussi (jusqu'en 1201), Saladin et l'Égypte épargnent le
+     calife de Bagdad et les Assassins, Chypre et Saladin s'épargnent (jusqu'en 1191), et aucun royaume chrétien n'attaque
+     Rome. Les bots ne rompent jamais ces pactes et ces paix ; toi, tu le peux (en traître pour un pacte ; une paix est
+     rompue pour de bon dès que tu attaques). Réglages : `NIS` et `PEACE` dans `js/croisades.js` ; les royaumes lointains (Castille, Almohades, calife de
      Bagdad, Géorgie, Pologne, Rus') se contentent de se défendre. Les données du scénario sont dans `js/croisades.js`,
      ses règles dans `js/croisadesrules.js`, et sa carte dans `js/europemap.js` (`generateCroisadesMap`). Les bannières
      sont provisoires (des drapeaux du jeu, aux couleurs des factions), en attendant les vraies.
@@ -1032,6 +1042,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    **rentre tout de suite, sans perte**. Une ville prise ainsi est d'abord un **château isolé**, loin de ton royaume.
    Pour trahir un allié, attaque-le directement (ou clique sur 💔) : une confirmation t'est demandée,
    et tu quittes le pacte.
+   📜 Dans les **campagnes historiques** (Charlemagne, la guerre de Cent Ans, les Croisades), on ne crée pas de pacte :
+   seuls existent ceux du scénario. Les bots n'en sortent jamais, mais **toi, tu peux toujours rompre le tien** (en
+   traître) pour écrire ta propre histoire ; le scénario ne te remettra plus dans aucun de ses pactes.
    Mais attention, un **traître** 🗡️ le paie cher pendant 2 minutes : **sa défense est réduite de moitié**
    (ses terres coûtent 2x moins de soldats à prendre), personne ne veut s'allier avec lui,
    et les autres royaumes en profitent pour l'attaquer !
@@ -1185,6 +1198,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.97.0** : 🤝 **les Croisades suivent les alliances de l'histoire** : nouveaux pactes (les frères Assen : la Bulgarie et les Coumans, rejoints par la Serbie à Niš de 1189 à 1196 ; la Sicile part en croisade avec les rois en 1188) et **paix historiques** entre bots (l'Empire avec la France et la Hongrie, l'Angleterre avec la Castille, Byzance avec la Hongrie et Venise, Saladin avec le calife et les Assassins, Chypre avec Saladin, personne contre Rome) · 📜 dans **toutes les campagnes historiques**, le joueur peut toujours **rompre** le pacte du scénario (en traître) pour écrire sa propre histoire, sans pouvoir en créer d'autres ; les bots, eux, ne les rompent jamais · 🐛 une armée qui rentre vers sa ville de départ rasée entre-temps ne fige plus la partie
 - **v0.96.0** : 🛡️ nouvelle carte arène **La Mêlée** : **20 joueurs** sur une petite île, serrés en cercle autour d'un centre riche (des voisins partout dès le départ, un filon d'or et un de fer à partager avec chaque voisin) ; sur une carte arène, le menu propose d'office un rival par place prévue
 - **v0.95.3** : 🗺️ dans le choix de la carte, chaque section est une **liste alignée à gauche**, rangée dans l'ordre : les cartes arène par nombre de joueurs (affiché à droite), les scénarios par année (768, 1187, 1337, puis Azeroth), les cartes dessinées par nom
 - **v0.95.2** : 🗺️ choix de la carte plus clair : chaque sorte de carte est une **section qui se déplie** (avec le nombre de cartes), une seule ouverte à la fois

@@ -1415,6 +1415,9 @@ const UI = {
       `pendant ${CONFIG.TRAITOR_DURATION / 60} min et personne ne voudra s'allier avec toi.`,
       `🗡️ Betray <b>${escapeHtml(other.name)}</b>? Your defense will be weakened by ${pct}% ` +
       `for ${CONFIG.TRAITOR_DURATION / 60} min and nobody will want to ally with you.`) +
+      // (📜 une campagne : on quitte pour de bon le pacte du scénario, et on n'en rejoindra plus aucun)
+      (Game.cm || Game.hy || Game.cr ? tr(` Tu quittes pour de bon le ${escapeHtml(Game.pactName(Game.human))} : ton histoire s'écarte de celle du scénario.`,
+        ` You leave the ${escapeHtml(Game.pactName(Game.human))} for good: your story parts from the scenario's.`) : '') +
       `<div class="choices"><button data-yes>${tr('Trahir', 'Betray')}</button><button data-no>${tr('Annuler', 'Cancel')}</button></div>`;
     const close = () => { el.remove(); if (this.betrayalBox === el) this.betrayalBox = null; };
     el.querySelector('[data-yes]').addEventListener('click', () => {

@@ -92,7 +92,7 @@ const AI = {
     //  réflexion ; les autres voisins sont jugés sur leur plan récent, ou à la prochaine réflexion)
     let budget = CONFIG.AI_PLANS_PER_TURN;
     for (const [o] of nb) {
-      if (o < 0 || Game.areAllied(p.id, o) || Game.players[o].raiders) continue; // (les terres des pillards sont imprenables)
+      if (o < 0 || Game.aiSpares(p.id, o) || Game.players[o].raiders) continue; // (les terres des pillards sont imprenables)
       if (Game.attackBlocked(p.id, o)) continue; // (⚜️ une trêve)
       const e = Game.players[o];
       // château le plus proche atteignable (null = aucun château) et défense du terrain où l'on se battra
@@ -286,7 +286,7 @@ const AI = {
     // Une campagne par la mer : il faut une armée bien remplie, et pas déjà un avant-poste à utiliser
     // (une puissance défensive n'en lance pas)
     if (p.defensive || bases >= 1 || p.troops < G.maxTroops(p) * 0.5) return;
-    const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.areAllied(p.id, o.id) && o.troops < p.troops * 0.8);
+    const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.aiSpares(p.id, o.id) && o.troops < p.troops * 0.8);
     if (!foes.length) return;
     const foe = foes[(Game.rand() * foes.length) | 0];
     const targets = Game.shuffle(G.targetsOf(foe.id)).slice(0, 5);
@@ -313,7 +313,7 @@ const AI = {
       return;
     }
     if (p.troops < max * 0.5 || G.expeditions.some(e => !e.done && e.pid === p.id && e.viking !== undefined)) return;
-    const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.areAllied(p.id, o.id) && o.troops < p.troops * 0.8);
+    const foes = G.players.filter(o => o.alive && o.id !== p.id && !G.aiSpares(p.id, o.id) && o.troops < p.troops * 0.8);
     if (!foes.length) return;
     const foe = foes[(Game.rand() * foes.length) | 0];
     const cities = Game.shuffle(G.castles.filter(c => G.owner[c] === foe.id)).slice(0, 3);
@@ -331,7 +331,7 @@ const AI = {
     for (const [op, o] of G.outposts) {
       if (G.owner[op] !== p.id || !G.outpostReady(op)) continue;
       const v = o.victim;
-      if (v < 0 || !G.players[v].alive || G.areAllied(p.id, v)) {
+      if (v < 0 || !G.players[v].alive || G.aiSpares(p.id, v)) {
         if (o.stationed >= 10 && Game.rand() < 0.3 && !G.launchAttack(p.id, -1, o.stationed * 0.7, undefined, op)) return true;
         continue;
       }

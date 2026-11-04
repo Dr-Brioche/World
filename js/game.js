@@ -6661,8 +6661,9 @@ const GameRules = {
     // (une expansion en terre libre finit au bord de ses terres : ses soldats les rejoignent tout de suite)
     if (a.calledBack || a.target < 0 || !this.players[pid].alive) return this.giveTroops(pid, src, n);
     const from = this.attackFront(a), ft = Math.floor(from.y) * W + Math.floor(from.x);
-    const mid = c => { const h = this.sizeOf(this.building[c]) / 2; return { x: c % W + h, y: ((c / W) | 0) + h }; };
-    let home = src >= 0 && this.owner[src] === pid ? src : this.fastestCity(pid, ft, this.strongholds(pid, false));
+    const mid = c => { const h = this.building[c] ? this.sizeOf(this.building[c]) / 2 : 0.5; return { x: c % W + h, y: ((c / W) | 0) + h }; };
+    // (sa ville de départ, si elle est toujours à lui et debout : une ville rasée entre-temps ne l'accueille plus)
+    let home = src >= 0 && this.owner[src] === pid && this.building[src] ? src : this.fastestCity(pid, ft, this.strongholds(pid, false));
     if (home < 0) {
       let best = Infinity;
       for (const c of this.strongholds(pid, false)) {
@@ -6964,10 +6965,15 @@ const GameRules = {
   },
 
   // Le royaume pid est-il dans un pacte éternel (un camp du mode « Factions ») ? Il ne peut ni le quitter ni le trahir.
+  // (📜 dans les campagnes historiques, les pactes du scénario sont éternels pour les bots, mais un joueur peut toujours
+  //  rompre le sien, en traître, pour écrire sa propre histoire ; il ne peut pas en créer d'autres)
   eternalPact(pid) {
-    const id = this.players[pid].pact;
+    const p = this.players[pid], id = p.pact;
+    if (p.human && (this.cm || this.hy || this.cr)) return false;
     return id >= 0 && !!(this.pacts.get(id) || {}).eternal;
   },
+  // Un bot épargne-t-il ce royaume ? Ses alliés, et (✝️ les Croisades) ceux avec qui il était en paix dans l'histoire
+  aiSpares(a, b) { return this.areAllied(a, b) || (!!this.cr && this.crPeace(a, b)); },
 
   // Un traître a sa défense affaiblie pendant TRAITOR_DURATION secondes
   isTraitor(p) { return this.tick < p.traitorUntil; },
@@ -6977,6 +6983,7 @@ const GameRules = {
     if (!this.areAllied(traitorId, otherId) || this.eternalPact(traitorId)) return;
     const traitor = this.players[traitorId], name = this.pactName(traitor);
     this.leavePact(traitor);
+    traitor.pactBroken = true; // (📜 une campagne ne le remettra plus dans un pacte du scénario)
     traitor.traitorUntil = this.tick + CONFIG.TRAITOR_DURATION * CONFIG.TICKS_PER_SECOND;
     UI.log(tr(`🗡️ ${traitor.name} a trahi le ${name} ! Sa défense est affaiblie.`, `🗡️ ${traitor.name} has betrayed the ${name}! Their defense is weakened.`), 'warn', traitor);
   },
