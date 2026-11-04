@@ -6698,13 +6698,17 @@ const GameRules = {
   // d'un coup au royaume. Ils marchent RETREAT_SPEED fois plus vite qu'un assaut : par le chemin de leur assaut, à
   // l'envers (passed : les cases déjà parcourues), puis par leurs terres jusqu'à la ville la plus rapide à rejoindre
   // (ou à leur avant-poste). On ne les récupère qu'à leur arrivée. (une armée rappelée avant d'avoir quitté ses
-  // terres, ou qui s'étendait en terre libre, rentre aussitôt)
+  // terres, qui s'étendait en terre libre, qui a pris sa cible ou qui finit sur ses propres terres rentre aussitôt)
   walkBack(a, n, passed) {
     const pid = a.attacker, src = this.sourceOfAttack(a), W = this.W;
     if (n <= 0) return;
     // (une expansion en terre libre finit au bord de ses terres : ses soldats les rejoignent tout de suite)
     if (a.calledBack || a.target < 0 || !this.players[pid].alive) return this.giveTroops(pid, src, n);
+    // (l'armée a pris sa ville ou sa zone : elle est sur ses terres, pas de retraite à faire ; ses soldats rejoignent
+    //  le royaume tout de suite, comme une armée qui finit sur ses propres terres)
+    if (a.won || a.castleTaken) return this.giveTroops(pid, src, n);
     const from = this.attackFront(a), ft = Math.floor(from.y) * W + Math.floor(from.x);
+    if (this.owner[ft] === pid) return this.giveTroops(pid, src, n);
     const mid = c => { const h = this.building[c] ? this.sizeOf(this.building[c]) / 2 : 0.5; return { x: c % W + h, y: ((c / W) | 0) + h }; };
     // (sa ville de départ, si elle est toujours à lui et debout : une ville rasée entre-temps ne l'accueille plus)
     let home = src >= 0 && this.owner[src] === pid && this.building[src] ? src : this.fastestCity(pid, ft, this.strongholds(pid, false));
