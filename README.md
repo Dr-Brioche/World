@@ -523,7 +523,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    (mais si l'armée n'a pas encore quitté tes terres, elle rentre tout de suite, **sans aucune perte**) ;
    ils rentrent **à pied** (bannière ↩), par le chemin de leur assaut à l'envers, jusqu'à ta ville la plus rapide à rejoindre,
    **2 fois plus vite** qu'un assaut (réglage `RETREAT_SPEED`) : tu ne les récupères qu'à leur arrivée. C'est pareil pour
-   toute armée qui rentre : un assaut fini (ville prise, repoussé, bloqué par un mur), des défenseurs ou une armée de relique ;
+   toute armée qui rentre : un assaut repoussé ou bloqué par un mur, des défenseurs ou une armée de relique ; mais un assaut
+   qui **prend sa ville ou sa zone** (ou qui finit sur tes propres terres) n'a pas de retraite à faire : il est déjà chez
+   toi, ses soldats rejoignent ton royaume tout de suite ;
    pour un bateau, il fait demi-tour vers le port, et **15 %** des soldats à bord se perdent (l'or de l'expédition
    n'est pas rendu). Les soldats en mer comptent dans ton armée (la jauge en bas indique « ⛵ en mer »).
    Les attaques ennemies contre toi y apparaissent aussi, en rouge.
@@ -1248,6 +1250,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.12** : ⚔️ une armée qui **prend une ville ou une zone** ne fait plus de retraite à pied : elle est déjà sur tes terres, ses survivants rejoignent ton royaume tout de suite (la retraite reste pour un assaut repoussé ou bloqué chez l'ennemi)
 - **v0.98.11** : 🎲 en solo, avec le placement **aléatoire**, la partie attend en pause après la fondation de ta capitale : elle commence à ta première conquête (double clic sur une terre) ou avec Espace
 - **v0.98.10** : 🤝 le drapeau « Masse d'armes » est remplacé par **La Création** : deux mains qui se tendent l'une vers l'autre, sur fond rose
 - **v0.98.9** : 🔨 le drapeau « Marteau » est redessiné : deux **marteaux croisés** sur un bouclier, sur fond orange (il s'appelle maintenant « Marteaux croisés »)
