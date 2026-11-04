@@ -403,7 +403,7 @@ Object.assign(GameRules, {
     const want = Math.max(-V.PULL, Math.min(V.PULL, gap / V.LEGIT_SCALE));
     for (const role of Object.keys(hy.loyalty)) {
       const p = this.hyP(role);
-      if (!p.alive) continue;
+      if (!p.alive || (p.human && p.pactBroken)) continue; // (📜 un joueur qui a rompu son pacte choisit seul son camp)
       let L = hy.loyalty[role];
       L += (want - L) * V.DRIFT;
       hy.loyalty[role] = L = Math.max(-100, Math.min(100, L));

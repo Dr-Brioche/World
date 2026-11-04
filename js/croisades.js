@@ -54,6 +54,28 @@ const CROISADES = {
   ASSASSINS: { HIRE: 1500, TRIBUTE: 600, KILL: 0.25, STUN: 45, COOLDOWN: 180, SAFE: 300, AI_EVERY: 240, AI_GOLD: 3000 },
   // 🕊️ La paix de Jaffa (septembre 1192) : TRUCE secondes sans assaut entre Saladin et les croisés
   TRUCE: 150,
+  // 🤝 Les pactes du scénario (des alliances de l'histoire) : Outremer (Jérusalem et Antioche-Tripoli), que rejoignent
+  // en 1188 les rois croisés (Angleterre, France, Empire) et la Sicile de Guillaume II, jusqu'à la paix de Jaffa ; les
+  // frères Assen (la Bulgarie et ses alliés coumans), que la Serbie de Nemanja rejoint à Niš (NIS.JOIN) puis quitte
+  // quand son fils Étienne épouse une princesse byzantine (NIS.LEAVE) ; le pacte secret de Byzance et de Saladin
+  // (1189-1192) ; les Ayyoubides, si Saladin partage son empire. Un bot ne quitte jamais un pacte du scénario ; le joueur,
+  // lui, peut rompre le sien (en traître), mais pas en créer d'autres.
+  NIS: { JOIN: 1189.55, LEAVE: 1196.2 },
+  // 🕊️ Les paix de l'histoire : ces royaumes ne se sont pas fait la guerre entre ces deux années (un traité, un mariage,
+  // une trêve…). Un bot n'attaque jamais l'autre ; le joueur, lui, le peut, et la paix est alors rompue pour de bon.
+  // (et aucun royaume chrétien n'attaque Rome : voir crPeace)
+  PEACE: [
+    ['empire', 'france', 1187, 1205],        // le traité d'Ivois (1187) ; puis Henri VI et Philippe Auguste, contre Richard
+    ['empire', 'hongrie', 1187, 1205],       // Béla III accueille Barberousse et son armée (1189)
+    ['angleterre', 'espagne', 1187, 1205],   // Alphonse VIII de Castille a épousé Aliénor d'Angleterre
+    ['hongrie', 'byzance', 1187, 1195.3],    // Isaac Ange a épousé Marguerite de Hongrie (1185) ; il est renversé en 1195
+    ['venise', 'byzance', 1187, 1201.3],     // le traité de 1187, jusqu'au marché de la quatrième croisade
+    ['ayyoubides', 'abbassides', 1187, 1205], // Saladin reconnaît le calife de Bagdad
+    ['egypte', 'abbassides', 1187, 1205],
+    ['ayyoubides', 'assassins', 1187, 1205], // la trêve de Masyaf (1176)
+    ['egypte', 'assassins', 1187, 1205],
+    ['chypre', 'ayyoubides', 1187, 1191.5],  // Isaac Comnène, l'allié de Saladin, jusqu'à la venue de Richard
+  ],
   // ⛓️ Richard captif en Autriche (décembre 1192) : sa rançon (RANSOM pièces, selon la difficulté) se paie toute seule,
   // RANSOM_SHARE de l'or de l'Angleterre y part chaque seconde ; elle va à l'Empereur. Tant qu'elle n'est pas payée,
   // l'Angleterre recrute CAPTIVE fois moins vite.

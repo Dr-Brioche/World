@@ -15,7 +15,7 @@ Object.assign(GameRules, {
     this.pactsAllowed = false; // (pas d'autres pactes que ceux du scénario : la croisade, le pacte secret de Byzance…)
     const diff = C.RANSOM[opts.difficulty] ? opts.difficulty : 'normal';
     const cr = this.cr = { diff, role: {}, capital: {}, cities: new Map(), churches: new Map(), strong: new Map(), pact: {},
-      fired: new Set(), done: {}, gone: {}, offers: {}, truceUntil: 0, ransom: null, stun: new Map(), tributeUntil: new Map(),
+      fired: new Set(), done: {}, gone: {}, offers: {}, peaceBroken: new Set(), truceUntil: 0, ransom: null, stun: new Map(), tributeUntil: new Map(),
       tributePaid: new Set(), hireReady: new Map(), richard: false, arsuf: false, salephBridge: false, john: false,
       civilWarUntil: 0, nextRaid: C.RAIDS.FIRST * CONFIG.TICKS_PER_SECOND, nextAssassin: C.ASSASSINS.AI_EVERY * CONFIG.TICKS_PER_SECOND };
     // Les factions (le joueur incarne celle de sa bannière)
@@ -89,15 +89,18 @@ Object.assign(GameRules, {
     if (cross !== undefined) this.relicChurch.set(cross, 1);
     // Outremer : le royaume de Jérusalem et Antioche-Tripoli, alliés pour toujours (les rois croisés les rejoindront)
     cr.pact.croisade = this.crNewPact(tr('Outremer', 'Outremer'), 'jerusalem', ['jerusalem', 'antioche']);
+    // Les frères Assen : la Bulgarie, révoltée contre Byzance (1185), et ses alliés coumans des steppes
+    cr.pact.assen = this.crNewPact(tr('Les frères Assen', 'The Asen brothers'), 'bulgarie', ['bulgarie', 'coumans']);
     this.version++;
     this.phase = 'playing';
     this.paused = true;
   },
-  // Un pacte du scénario (qu'on ne peut pas trahir), fondé par le rôle founder, avec ces rôles
+  // Un pacte du scénario (qu'un bot ne trahit jamais ; le joueur, si : voir eternalPact), fondé par le rôle founder,
+  // avec ces rôles
   crNewPact(name, founder, roles) {
     const id = this.nextPactId++;
     this.pacts.set(id, { name, founder: this.cr.role[founder], eternal: true });
-    for (const r of roles) { const p = this.crP(r); if (p.alive) p.pact = id; }
+    for (const r of roles) { const p = this.crP(r); if (this.crCanJoin(p)) p.pact = id; }
     this.version++;
     return id;
   },
@@ -109,6 +112,29 @@ Object.assign(GameRules, {
     const rest = this.players.filter(q => q.alive && q.pact === id);
     if (rest.length < 2) { for (const q of rest) q.pact = -1; this.pacts.delete(id); }
     this.version++;
+  },
+
+  // Le scénario peut-il mettre ce royaume dans un de ses pactes ? (pas un joueur qui a déjà rompu le sien)
+  crCanJoin(p) { return p.alive && !(p.human && p.pactBroken); },
+  // 🕊️ Ces deux royaumes sont-ils en paix, comme dans l'histoire (PEACE) ? Un bot n'attaque pas l'autre (voir aiSpares).
+  // Aucun royaume chrétien n'attaque Rome. Si le joueur attaque l'autre, la paix est rompue pour de bon.
+  crPeace(a, b) {
+    const cr = this.cr, pa = this.players[a], pb = this.players[b];
+    if (!pa || !pb || a === b) return false;
+    const key = Math.min(a, b) + ':' + Math.max(a, b);
+    if (cr.peaceBroken.has(key)) return false;
+    let peace = (pa.role === 'papaute' && pb.camp === 'chretiens') || (pb.role === 'papaute' && pa.camp === 'chretiens');
+    if (!peace) {
+      const y = this.crYear();
+      peace = CROISADES.PEACE.some(([r1, r2, y0, y1]) => y >= y0 && y < y1 && ((pa.role === r1 && pb.role === r2) || (pa.role === r2 && pb.role === r1)));
+    }
+    if (!peace) return false;
+    if ((pa.human || pb.human) && this.attacks.some(t => !t.done && this.players[t.attacker].human &&
+      ((t.attacker === a && t.target === b) || (t.attacker === b && t.target === a)))) {
+      cr.peaceBroken.add(key);
+      return false;
+    }
+    return true;
   },
 
   // --- Outils ---
@@ -218,8 +244,11 @@ Object.assign(GameRules, {
       for (const p of [en, fr, em]) {
         if (!p.alive) continue;
         p.gold += gold;
-        if (this.pacts.has(cr.pact.croisade)) p.pact = cr.pact.croisade;
+        if (this.pacts.has(cr.pact.croisade) && this.crCanJoin(p)) p.pact = cr.pact.croisade;
       }
+      // (la Sicile de Guillaume II prend la croix aussi : sa flotte sauve Tripoli et Tyr en 1188)
+      const si = this.crP('sicile');
+      if (this.pacts.has(cr.pact.croisade) && this.crCanJoin(si) && si.pact < 0) si.pact = cr.pact.croisade;
       if (this.pacts.has(cr.pact.croisade)) this.pacts.get(cr.pact.croisade).name = tr('La Croisade', 'The Crusade');
       this.version++;
       this.crEvent('gisors', { gold: fmt(gold) }, tr('✝️ 1188 : les rois d\'Occident prennent la croix.', '✝️ 1188: the kings of the West take the cross.'), '');
@@ -240,6 +269,20 @@ Object.assign(GameRules, {
     if (once('acreSiege', 1189.65) && this.crHolder('Acre') !== 'jerusalem') {
       this.crCampaign('jerusalem', 'acreSiege', ['Acre'], R(E * 0.9), true,
         n => tr(`⚔️ Le roi Guy assiège ${n} !`, `⚔️ King Guy besieges ${n}!`), 'musulmans');
+    }
+    // 1189 : à Niš, la Serbie s'allie aux frères Assen contre Byzance ; elle les quitte en 1196 (Étienne Nemanjić
+    // épouse une princesse byzantine)
+    const se = this.crP('serbie'), bg = this.crP('bulgarie');
+    if (once('nis', C.NIS.JOIN) && this.pacts.has(cr.pact.assen) && bg.pact === cr.pact.assen && this.crCanJoin(se) && se.pact < 0) {
+      se.pact = cr.pact.assen;
+      this.pacts.get(cr.pact.assen).name = tr('L\'alliance de Niš', 'The alliance of Niš');
+      this.version++;
+      UI.log(tr('🤝 1189 : à Niš, la Serbie de Nemanja s\'allie aux frères Assen contre Byzance.', '🤝 1189: at Niš, Nemanja\'s Serbia allies with the Asen brothers against Byzantium.'), '', se);
+    }
+    if (once('nisEnd', C.NIS.LEAVE) && se.alive && se.pact === cr.pact.assen && !se.human) {
+      this.crLeavePact(se);
+      if (this.pacts.has(cr.pact.assen)) this.pacts.get(cr.pact.assen).name = tr('Les frères Assen', 'The Asen brothers');
+      UI.log(tr('💍 1196 : la Serbie quitte l\'alliance bulgare : Étienne Nemanjić épouse une princesse byzantine.', '💍 1196: Serbia leaves the Bulgarian alliance: Stefan Nemanjić marries a Byzantine princess.'), '', se);
     }
     // 1189 : le pacte secret d'Isaac Ange avec Saladin
     if (once('byzantineTreaty', 1189.75) && by.alive && sal.alive) {
@@ -361,7 +404,7 @@ Object.assign(GameRules, {
   crJaffa() {
     const cr = this.cr, TPS = CONFIG.TICKS_PER_SECOND;
     cr.truceUntil = this.tick + CROISADES.TRUCE * TPS;
-    for (const role of ['angleterre', 'france', 'empire']) {
+    for (const role of ['angleterre', 'france', 'empire', 'sicile']) {
       const p = this.crP(role);
       if (p.alive && p.pact === cr.pact.croisade) this.crLeavePact(p);
     }
@@ -493,7 +536,7 @@ Object.assign(GameRules, {
       if (!p.raiders || !p.alive) continue;
       p.raids = (p.raids || 0) + 1;
       const army = Math.min(R.MAX, Math.round(R.ARMY[cr.diff] * (1 + R.GROWTH * (p.raids - 1))));
-      const victims = this.shuffle([...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders));
+      const victims = this.shuffle([...this.neighborStats(p.id).keys()].filter(o => o >= 0 && this.players[o].alive && !this.players[o].raiders && !this.areAllied(p.id, o)));
       for (const o of victims) {
         const castle = this.raidTarget(p.id, o);
         if (castle < 0) continue;
@@ -569,7 +612,7 @@ Object.assign(GameRules, {
     const bots = this.players.filter(p => p.alive && !p.human && !p.defensive && !p.raiders && !p.dormant && p.gold >= A.AI_GOLD);
     if (!bots.length) return;
     const p = bots[Math.floor(this.rand() * bots.length)];
-    const foes = [...this.neighborStats(p.id).keys()].filter(o => o >= 0 && !this.areAllied(p.id, o) && !this.crHireError(p.id, o))
+    const foes = [...this.neighborStats(p.id).keys()].filter(o => o >= 0 && !this.aiSpares(p.id, o) && !this.crHireError(p.id, o))
       .sort((a, b) => this.players[b].tiles - this.players[a].tiles || a - b);
     if (foes.length) this.crHire(p.id, foes[0]);
   },
