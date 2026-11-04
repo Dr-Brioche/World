@@ -1837,6 +1837,8 @@ const Render = {
     img.src = l.img;
     return img;
   })),
+  // 🧱 L'image d'une mine fortifiée (voir MINE_FORT)
+  fortMineImage: Object.assign(new Image(), { src: MINE_FORT.IMG }),
 
   // Image des bâtiments sans niveaux (l'avant-poste)
   simpleImages: BUILDINGS.map(b => {
@@ -2145,8 +2147,9 @@ const Render = {
   // Bâtiment à niveaux (moulin, caserne, château, église) : icône de loin, image quand on zoome
   drawLeveledBuilding(i, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, G = Game;
-    const type = G.building[i], lvl = G.level[i] || 1, info = BUILDING_LEVELS[type][lvl];
-    const img = this.buildingImages[type][lvl];
+    const type = G.building[i], lvl = G.level[i] || 1, fort = type === B_MINE && G.fortMines.has(i);
+    const info = fort ? { ...BUILDING_LEVELS[type][lvl], size: MINE_FORT.SIZE } : BUILDING_LEVELS[type][lvl];
+    const img = fort ? this.fortMineImage : this.buildingImages[type][lvl]; // (🧱 une mine fortifiée : son image à elle)
     if (!img) imgAlpha = 0; // pas d'image : toujours l'icône
     const half = G.sizeOf(type) / 2; // demi-côté du bâtiment, en cases
     // De loin : l'icône et le niveau en chiffres romains
