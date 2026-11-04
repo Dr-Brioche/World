@@ -1247,6 +1247,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.10** : 🤝 le drapeau « Masse d'armes » est remplacé par **La Création** : deux mains qui se tendent l'une vers l'autre, sur fond rose
 - **v0.98.9** : 🔨 le drapeau « Marteau » est redessiné : deux **marteaux croisés** sur un bouclier, sur fond orange (il s'appelle maintenant « Marteaux croisés »)
 - **v0.98.8** : 🧱 la **mine fortifiée** a son propre dessin : le site minier dans sa palissade de pieux, avec sa tour de guet (visible en zoomant)
 - **v0.98.7** : 🌐 en ligne, pendant le choix des places (libre ou places prévues), on peut **changer d'avis** jusqu'à la fin des 15 s : un nouveau clic déplace sa capitale, et les autres le voient en direct ; la partie attend toujours la fin du compte à rebours
