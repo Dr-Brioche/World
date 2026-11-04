@@ -2653,6 +2653,7 @@ const GameRules = {
           return o.key === 'vow' ? this.chooseVow(pid, o.pick) : this.cr ? this.crChoose(pid, o.key, o.pick) : this.hyChoose(pid, o.key, o.pick);
         case 'crHire': return this.cr ? this.crHire(pid, o.target) : null; // (🗡️ engager les Assassins, voir croisadesrules.js)
         case 'crTribute': return this.cr ? this.crTribute(pid) : null;
+        case 'crLoan': return this.cr ? this.crLoan(pid) : null; // (🏦 emprunter au Temple, voir ordres.js)
       }
       return null;
     } finally { this.inUpdate = false; }

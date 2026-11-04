@@ -77,6 +77,27 @@ const CROISADES = {
     ['egypte', 'assassins', 1187, 1205],
     ['chypre', 'ayyoubides', 1187, 1191.5],  // Isaac Comnène, l'allié de Saladin, jusqu'à la venue de Richard
   ],
+  // ✠ Les ordres militaires (Templiers et Hospitaliers, voir ordres.js) :
+  //  - les chevaliers : à partir de HELP_FROM (ils ont été décimés à Hattin), quand un allié d'un ordre est attaqué par
+  //    l'islam, l'ordre le plus fort (un bot) lui envoie HELP_SHARE de ses soldats (s'il en a au moins HELP_MIN), au plus
+  //    une fois toutes les HELP_EVERY secondes ; les deux ordres se jalousent : un seul secourt le même royaume à la
+  //    fois, et jamais l'autre ordre ;
+  //  - 🏦 la banque du Temple : un royaume chrétien emprunte LOAN pièces aux Templiers (clic droit sur leurs terres ; un
+  //    joueur templier prête son propre or, des Templiers bots celui des commanderies d'Occident) et rend
+  //    LOAN × (1 + INTEREST), en REPAY_TIME secondes environ (une part égale chaque seconde, s'il a l'or) ; un bot
+  //    chrétien à court d'or (moins de AI_LOAN_GOLD) emprunte parfois (toutes les AI_LOAN_EVERY secondes) ; le Temple
+  //    commence avec TEMPLE_GOLD pièces ;
+  //  - Saladin les hait : la paix de Jaffa ne les protège pas, et son IA les vise SALADIN_HATE fois plus ;
+  //  - les Assassins ne peuvent rien contre eux, et versent ASSASSIN_GOLD pièces par seconde aux Templiers ;
+  //  - leurs recrues viennent de toutes les commanderies d'Occident : armée maximum et recrutement ARMY fois plus
+  //    grands que leurs petites terres ne le permettraient, et des chevaliers POWER plus forts.
+  ORDERS: { HELP_FROM: 1188, HELP_EVERY: 90, HELP_SHARE: 0.4, HELP_MIN: 150, LOAN: 2000, INTEREST: 0.25, REPAY_TIME: 180,
+    AI_LOAN_EVERY: 150, AI_LOAN_GOLD: 300, TEMPLE_GOLD: 3000, SALADIN_HATE: 2, ASSASSIN_GOLD: 1, ARMY: 10, POWER: 0.25 },
+  // 🏝️ Chypre : en SALE, Richard (s'il tient Nicosie) vend l'île aux Templiers pour PRICE pièces ; en REVOLT, les
+  // Chypriotes se révoltent contre eux, et les Templiers la revendent (RESALE pièces) à Guy de Lusignan, l'ancien roi de
+  // Jérusalem (elle va au royaume de Jérusalem) ; un joueur templier peut la garder, mais perd REVOLT_LOSS de ses
+  // soldats. BOX : l'île, [longitude ouest, latitude sud, longitude est, latitude nord].
+  CYPRUS: { SALE: 1191.5, REVOLT: 1192.25, PRICE: 2000, RESALE: 1500, REVOLT_LOSS: 0.3, BOX: [32.2, 34.5, 34.7, 35.75] },
   // ⛓️ Richard captif en Autriche (décembre 1192) : sa rançon (RANSOM pièces, selon la difficulté) se paie toute seule,
   // RANSOM_SHARE de l'or de l'Angleterre y part chaque seconde ; elle va à l'Empereur. Tant qu'elle n'est pas payée,
   // l'Angleterre recrute CAPTIVE fois moins vite.
@@ -95,6 +116,54 @@ const CROISADES = {
   // Les textes des parchemins (date, titre, récit, et le conseil, à mots couverts, des conseillers). who : les factions
   // jouables pour qui il s'ouvre (pour les autres, un simple message le remplace). « {clé} » devient un nombre du jeu.
   EVENTS: {
+    saladinNorth: {
+      who: ['templiers', 'ayyoubides'],
+      date: tr('Septembre 1188', 'September 1188'),
+      title: tr('Saladin en Syrie du Nord', 'Saladin in northern Syria'),
+      text: tr('Saladin a renoncé devant le Krak des Chevaliers et devant le donjon de Tortose ; il remonte vers le nord avec {army} hommes, prend Lattaquié et Saône, puis met le siège devant Baghras, la forteresse du Temple qui garde les portes de Syrie.',
+        'Saladin gave up before the Krak des Chevaliers and the keep of Tortosa; he marches north with {army} men, takes Latakia and Saone, then lays siege to Baghras, the Temple\'s fortress guarding the Syrian Gates.'),
+      todo: tr('Baghras commande la route d\'Antioche : qui la tient tient le nord.', 'Baghras commands the road to Antioch: whoever holds it holds the north.'),
+    },
+    safedSiege: {
+      who: ['templiers', 'ayyoubides'],
+      date: tr('Novembre 1188', 'November 1188'),
+      title: tr('Le siège de Safed', 'The siege of Safed'),
+      text: tr('Malgré l\'hiver et la pluie, Saladin ne rentre pas à Damas : il assiège Safed, la grande forteresse du Temple en Galilée, avec {army} hommes. Ses mangonneaux battent les murs jour et nuit.',
+        'Despite the winter and the rain, Saladin does not go home to Damascus: he besieges Safed, the Temple\'s great fortress in Galilee, with {army} men. His mangonels pound the walls day and night.'),
+      todo: tr('Safed ne tiendra pas seule : il lui faut des défenseurs.', 'Safed will not hold alone: it needs defenders.'),
+    },
+    belvoirSiege: {
+      who: ['hospitaliers', 'ayyoubides'],
+      date: tr('Décembre 1188', 'December 1188'),
+      title: tr('Le siège de Belvoir', 'The siege of Belvoir'),
+      text: tr('Sur son éperon au-dessus du Jourdain, Belvoir, la forteresse de l\'Hôpital, résiste depuis un an et demi. Saladin vient en finir lui-même avec {army} hommes, et ses sapeurs creusent déjà sous les tours.',
+        'On its spur above the Jordan, Belvoir, the fortress of the Hospital, has held out for a year and a half. Saladin comes to finish it himself with {army} men, and his sappers are already digging under the towers.'),
+      todo: tr('Belvoir veille sur le Jourdain : qui la tient garde la porte de la Galilée.', 'Belvoir watches over the Jordan: whoever holds it guards the gate of Galilee.'),
+    },
+    cyprusSale: {
+      who: ['angleterre'],
+      date: tr('Juin 1191', 'June 1191'),
+      title: tr('Que faire de Chypre ?', 'What to do with Cyprus?'),
+      text: tr('Chypre est à toi, mais tu n\'as ni le temps ni les hommes pour la garder : Jérusalem t\'attend. Le grand maître du Temple, Robert de Sablé, ton vassal et ami, t\'offre {price} pièces d\'or pour l\'île entière. Ses chevaliers la tiendront à ta place.',
+        'Cyprus is yours, but you have neither the time nor the men to keep it: Jerusalem awaits you. The Grand Master of the Temple, Robert de Sablé, your vassal and friend, offers you {price} gold for the whole island. His knights will hold it in your stead.'),
+      todo: tr('Une île ne se défend pas toute seule… mais l\'or, lui, se dépense partout.', 'An island does not defend itself… but gold can be spent anywhere.'),
+    },
+    cyprusBuy: {
+      who: ['templiers'],
+      date: tr('Juin 1191', 'June 1191'),
+      title: tr('Richard vend Chypre', 'Richard sells Cyprus'),
+      text: tr('Le roi d\'Angleterre a pris Chypre en quelques jours, mais il ne veut pas s\'y attarder. Il propose de te la vendre : {price} pièces d\'or, et l\'île est au Temple, avec ses ports et ses moissons.',
+        'The King of England took Cyprus in a few days, but he does not want to linger there. He offers to sell it to you: {price} gold, and the island belongs to the Temple, with its ports and its harvests.'),
+      todo: tr('Les Chypriotes n\'aiment guère les moines-soldats : une île achetée n\'est pas une île soumise.', 'The Cypriots have little love for warrior monks: an island bought is not an island subdued.'),
+    },
+    cyprusRevolt: {
+      who: ['templiers'],
+      date: tr('Avril 1192', 'April 1192'),
+      title: tr('Nicosie se révolte', 'Nicosia rises'),
+      text: tr('Les Chypriotes se sont soulevés contre tes frères, trop peu nombreux et trop durs : la garnison de Nicosie a dû s\'enfermer dans le château. Guy de Lusignan, l\'ancien roi de Jérusalem, propose de racheter l\'île : {gold} pièces d\'or.',
+        'The Cypriots have risen against your brothers, too few and too harsh: the garrison of Nicosia had to shut itself in the castle. Guy of Lusignan, the former King of Jerusalem, offers to buy back the island: {gold} gold.'),
+      todo: tr('Garder Chypre coûtera du sang ; la rendre rapportera de l\'or.', 'Keeping Cyprus will cost blood; giving it up will bring gold.'),
+    },
     jerusalemSiege: {
       who: ['jerusalem', 'ayyoubides'],
       date: tr('20 septembre 1187', '20 September 1187'),
@@ -364,6 +433,20 @@ const CROISADES = {
   },
   // Les premiers parchemins : un par faction jouable, au début de la partie
   INTROS: {
+    templiers: {
+      date: tr('Juillet 1187', 'July 1187'), title: tr('Les pauvres chevaliers du Christ', 'The Poor Knights of Christ'),
+      text: tr('À Hattin, deux cents de tes frères ont été pris ; Saladin les a fait décapiter, tous, sous ses yeux. Le grand maître Gérard de Ridefort est son prisonnier. Il ne reste au Temple que trois forteresses — Tortose, Safed, Baghras — et ce que nul ne peut lui prendre : l\'or. Les rois d\'Occident déposent leur trésor dans tes commanderies, et empruntent à tes frères.',
+        'At Hattin, two hundred of your brothers were taken; Saladin had them all beheaded, before his eyes. Grand Master Gérard de Ridefort is his prisoner. The Temple has only three fortresses left — Tortosa, Safed, Baghras — and what no one can take from it: gold. The kings of the West keep their treasure in your commanderies, and borrow from your brothers.'),
+      todo: tr('Chaque roi chrétien peut t\'emprunter de l\'or, et te le rendre avec intérêts. Tu ne fondes pas de villes : tiens les tiennes.',
+        'Every Christian king may borrow gold from you, and repay it with interest. You found no cities: hold your own.'),
+    },
+    hospitaliers: {
+      date: tr('Juillet 1187', 'July 1187'), title: tr('L\'ordre de Saint-Jean', 'The Order of Saint John'),
+      text: tr('Ton grand maître est mort à la Fontaine du Cresson, tes frères pris à Hattin ont été exécutés, et l\'Hôpital de Jérusalem, où tes moines soignaient mille pèlerins, va tomber. Mais l\'Ordre tient encore ses grandes forteresses : le Krak des Chevaliers, Margat, Belvoir. Le Krak est la plus formidable de toute la chrétienté.',
+        'Your Grand Master died at the Spring of Cresson, your brothers taken at Hattin were executed, and the Hospital of Jerusalem, where your monks nursed a thousand pilgrims, is about to fall. But the Order still holds its great fortresses: the Krak des Chevaliers, Margat, Belvoir. The Krak is the most formidable in all Christendom.'),
+      todo: tr('Tu ne fondes pas de villes : tiens les tiennes, et viens au secours d\'Outremer.',
+        'You found no cities: hold your own, and come to the aid of Outremer.'),
+    },
     ayyoubides: {
       date: tr('5 juillet 1187', '5 July 1187'), title: tr('Le lendemain de Hattin', 'The day after Hattin'),
       text: tr('Hier, aux Cornes de Hattin, tu as écrasé l\'armée franque : le roi Guy est ton prisonnier, Renaud de Châtillon, le pillard des caravanes, a payé de sa tête, et la Vraie Croix des chrétiens est dans ta tente. Acre vient de t\'ouvrir ses portes. De l\'Égypte à Alep, l\'islam est uni sous ta bannière : il te reste à rendre Jérusalem — al-Quds — aux croyants.',
@@ -415,6 +498,18 @@ const CROISADES = {
   },
   // Les choix des parchemins : pour chaque événement, ses boutons (pick : le choix, voir crChoose)
   CHOICES: {
+    cyprusSale: [
+      { pick: 'sell', label: tr('💰 Vendre Chypre aux Templiers (+{price} d\'or)', '💰 Sell Cyprus to the Templars (+{price} gold)') },
+      { pick: 'keep', label: tr('🏝️ Garder l\'île', '🏝️ Keep the island') },
+    ],
+    cyprusBuy: [
+      { pick: 'buy', label: tr('🏝️ Acheter Chypre (−{price} d\'or)', '🏝️ Buy Cyprus (−{price} gold)') },
+      { pick: 'refuse', label: tr('✋ Refuser : le Temple garde son or', '✋ Refuse: the Temple keeps its gold') },
+    ],
+    cyprusRevolt: [
+      { pick: 'resell', label: tr('💰 Revendre l\'île à Guy de Lusignan (+{gold} d\'or)', '💰 Sell the island back to Guy of Lusignan (+{gold} gold)') },
+      { pick: 'keep', label: tr('⚔️ Écraser la révolte (−{pct} % de tes soldats)', '⚔️ Crush the revolt (−{pct}% of your soldiers)') },
+    ],
     philipLeaves: [
       { pick: 'home', label: tr('🏰 Rentrer en France (+{gold} d\'or de l\'héritage de Flandre, la croisade sans toi)', '🏰 Go home to France (+{gold} gold from the Flemish inheritance, the crusade goes on without you)') },
       { pick: 'stay', label: tr('✝️ Rester en Terre sainte (+{faith} de Croyance)', '✝️ Stay in the Holy Land (+{faith} Faith)') },
@@ -435,6 +530,28 @@ const CROISADES = {
   //  - faith : avoir cette Croyance ; citadel : une ville de ce niveau ; gold : avoir cet or.
   //  (goal = { facile, normal, difficile } ; « {n} » dans le texte devient ce nombre)
   OBJECTIVES: {
+    templiers: {
+      title: tr('✠ Le Temple de Salomon', '✠ The Temple of Solomon'),
+      list: [
+        { kind: 'never', city: 'Tortose', text: tr('Que Tortose ne tombe jamais : son donjon tient en 1188', 'Tortosa must never fall: its keep holds in 1188') },
+        { kind: 'city', cities: ['Safed'], text: tr('Tenir Safed, la forteresse de Galilée', 'Hold Safed, the fortress of Galilee') },
+        { kind: 'city', cities: ['Baghras'], text: tr('Tenir Baghras, la porte d\'Antioche', 'Hold Baghras, the gate of Antioch') },
+        { kind: 'city', cities: ['Jérusalem'], text: tr('Le Temple de Salomon : reprendre Jérusalem, berceau de l\'Ordre', 'The Temple of Solomon: retake Jerusalem, cradle of the Order') },
+        { kind: 'cross', text: tr('Reprendre la Vraie Croix, que tes frères portaient à Hattin', 'Recover the True Cross, which your brothers carried at Hattin') },
+        { kind: 'gold', goal: { facile: 6000, normal: 8000, difficile: 10000 }, text: tr('Le trésor du Temple : {n} pièces d\'or', 'The treasure of the Temple: {n} gold') },
+      ],
+    },
+    hospitaliers: {
+      title: tr('✠ L\'Hôpital de Saint-Jean', '✠ The Hospital of Saint John'),
+      list: [
+        { kind: 'never', city: 'Krak des Chevaliers', text: tr('Que le Krak des Chevaliers ne tombe jamais', 'The Krak des Chevaliers must never fall') },
+        { kind: 'city', cities: ['Margat'], text: tr('Tenir Margat, le nouveau siège de l\'Ordre', 'Hold Margat, the new seat of the Order') },
+        { kind: 'city', cities: ['Belvoir'], text: tr('Tenir Belvoir, qui veille sur le Jourdain', 'Hold Belvoir, which watches over the Jordan') },
+        { kind: 'city', cities: ['Acre'], text: tr('L\'Hôpital d\'Acre : prendre Acre (1191)', 'The Hospital of Acre: take Acre (1191)') },
+        { kind: 'city', cities: ['Jérusalem'], text: tr('L\'Hôpital de Saint-Jean : reprendre Jérusalem', 'The Hospital of Saint John: retake Jerusalem') },
+        { kind: 'faith', goal: { facile: 200, normal: 300, difficile: 400 }, text: tr('Soigner les pèlerins : {n} de Croyance', 'Nurse the pilgrims: {n} Faith') },
+      ],
+    },
     ayyoubides: {
       title: tr('☪️ Le djihad de Saladin', '☪️ Saladin\'s jihad'),
       list: [
@@ -518,23 +635,38 @@ const CROISADES = {
   // ⭐ Les défis de chaque faction jouable (voir defis.js) : des objectifs en plus, historiques, drôles ou très durs.
   // Un lieu (places) : le nom français d'une ville ou d'un lieu. byYear / untilYear : l'année.
   CHALLENGES: {
+    templiers: [
+      { kind: 'crFlag', flag: 'cyprusBought', byYear: 1192, text: tr('Le Temple achète une île : acheter Chypre à Richard', 'The Temple buys an island: buy Cyprus from Richard'), reward: { gold: 1500 } },
+      { kind: 'crFlag', flag: 'loansGiven', n: 3, text: tr('Le banquier des rois : prêter trois fois l\'or du Temple', 'Banker to kings: lend the Temple\'s gold three times'), reward: { faith: 30 } },
+      { kind: 'hold', places: ['Le Caire'], text: tr('La croisade d\'Égypte, 30 ans d\'avance : prendre Le Caire', 'The Egyptian crusade, 30 years early: take Cairo'), reward: { gold: 4000, faith: 60 } },
+      { kind: 'gold', n: 15000, text: tr('De quoi tenter Philippe le Bel : amasser 15 000 pièces d\'or', 'Enough to tempt Philip the Fair: hoard 15,000 gold'), reward: { faith: 40 } },
+    ],
+    hospitaliers: [
+      { kind: 'keep', places: ['Belvoir'], untilYear: 1190, text: tr('Belvoir résiste : garder Belvoir jusqu\'en 1190', 'Belvoir holds out: keep Belvoir until 1190'), reward: { gold: 2000, faith: 40 } },
+      { kind: 'hold', places: ['Alep'], text: tr('Du Krak à Alep : prendre Alep', 'From the Krak to Aleppo: take Aleppo'), reward: { gold: 3000 } },
+      { kind: 'level', n: 4, text: tr('Le Krak agrandi : une forteresse de niveau 4', 'The Krak enlarged: a level 4 fortress'), reward: { faith: 40 } },
+      { kind: 'hold', places: ['Damas'], text: tr('Ce que la deuxième croisade a manqué : prendre Damas', 'What the Second Crusade missed: take Damascus'), reward: { gold: 3000, faith: 60 } },
+    ],
     ayyoubides: [
       { kind: 'hold', places: ['Jérusalem'], byYear: 1188, text: tr('La reconquête éclair : prendre Jérusalem avant 1188', 'Lightning reconquest: take Jerusalem before 1188'), reward: { gold: 2000, faith: 40 } },
       { kind: 'hold', places: ['Constantinople'], text: tr('Deux siècles d\'avance : prendre Constantinople', 'Two centuries early: take Constantinople'), reward: { gold: 3000, faith: 60 } },
       { kind: 'army', n: 12000, text: tr('L\'armée de Hattin : réunir 12 000 soldats', 'The army of Hattin: gather 12,000 soldiers'), reward: { gold: 1500 } },
       { kind: 'hold', places: ['Rome'], text: tr('Le cheval de Saladin à Saint-Pierre : prendre Rome', 'Saladin\'s horse in St Peter\'s: take Rome'), reward: { gold: 4000, faith: 80 } },
+      { kind: 'destroy', role: 'templiers', text: tr('Pas de quartier pour les moines-soldats : anéantir les Templiers', 'No quarter for the warrior monks: wipe out the Templars'), reward: { gold: 2500, faith: 40 } },
     ],
     jerusalem: [
       { kind: 'keep', places: ['Jérusalem'], untilYear: 1188, text: tr('Balian tient bon : garder Jérusalem jusqu\'en 1188', 'Balian holds firm: keep Jerusalem until 1188'), reward: { gold: 2000, faith: 40 } },
       { kind: 'hold', places: ['Damas'], text: tr('Le rêve de Baudouin : prendre Damas', 'Baldwin\'s dream: take Damascus'), reward: { gold: 3000, faith: 60 } },
       { kind: 'hold', places: ['Le Caire'], text: tr('Amaury avait raison : prendre Le Caire', 'Amalric was right: take Cairo'), reward: { gold: 4000, faith: 60 } },
       { kind: 'tribute', text: tr('Le marquis prudent : payer tribut au Vieux de la Montagne', 'The prudent marquis: pay tribute to the Old Man of the Mountain'), reward: { gold: 500 } },
+      { kind: 'alive', role: 'templiers', untilYear: 1204.3, text: tr('Le Temple ne tombe jamais : que les Templiers tiennent jusqu\'en 1204', 'The Temple never falls: the Templars must hold until 1204'), reward: { gold: 1500, faith: 40 } },
     ],
     angleterre: [
       { kind: 'hold', places: ['Jérusalem'], byYear: 1193, text: tr('Ce que Richard n\'a pas osé : prendre Jérusalem avant 1193', 'What Richard did not dare: take Jerusalem before 1193'), reward: { gold: 3000, faith: 80 } },
       { kind: 'hold', places: ['Paris'], text: tr('Le vassal qui voulait être roi : prendre Paris', 'The vassal who would be king: take Paris'), reward: { gold: 3000 } },
       { kind: 'hold', places: ['Messine'], byYear: 1191, text: tr('Les Grecs de Messine : prendre Messine avant 1191', 'The Greeks of Messina: take Messina before 1191'), reward: { gold: 1500 } },
       { kind: 'noCapture', untilYear: 1194, text: tr('Pas de Dürnstein : que Richard ne soit jamais capturé', 'No Dürnstein: Richard must never be captured'), reward: { faith: 50 } },
+      { kind: 'crFlag', flag: 'cyprusSold', byYear: 1192, text: tr('Le roi marchand : vendre Chypre aux Templiers', 'The merchant king: sell Cyprus to the Templars'), reward: { gold: 1000 } },
     ],
     france: [
       { kind: 'hold', places: ['Londres'], text: tr('Louis le Lion avant l\'heure : prendre Londres', 'Louis the Lion ahead of time: take London'), reward: { gold: 3000, faith: 40 } },
@@ -564,6 +696,28 @@ const CROISADES = {
 
   // Les factions de 1187 (l'ordre compte : une case va à la première dont un contour la contient)
   factions: [
+    {
+      // ✠ Les ordres militaires : des moines-soldats, peu de terres mais des forteresses très solides (garnisons 2 fois
+      // plus fortes ; 3 fois à Tortose et Margat, 4 fois au Krak des Chevaliers), dans Outremer (voir ORDERS) ; décimés
+      // à Hattin, ils envoient des renforts à partir de 1188
+      id: 'templiers', name: tr('Templiers', 'Templars'), leader: tr('le grand maître Gérard de Ridefort', 'Grand Master Gérard de Ridefort'), flag: 'b01', color: [179, 20, 28],
+      playable: true, order: true, defensive: true, garrison: 2, camp: 'chretiens',
+      capital: [35.89, 34.89, tr('Tortose', 'Tortosa'), 'Tortose', { garrison: 1.5 }], capitalLevel: 2,
+      cities: [[35.50, 32.96, tr('Safed', 'Safed'), 'Safed', { level: 2 }], [36.40, 36.38, tr('Baghras', 'Baghras'), 'Baghras']],
+      churches: [],
+      lands: [[[35.75, 34.78], [36.03, 34.78], [36.03, 35.00], [35.75, 35.00]], [[35.36, 32.85], [35.64, 32.85], [35.64, 33.07], [35.36, 33.07]], [[36.26, 36.27], [36.54, 36.27], [36.54, 36.49], [36.26, 36.49]]],
+      desc: tr('Les pauvres chevaliers du Christ et du Temple de Salomon : trois forteresses, et la banque de l\'Occident.', 'The Poor Knights of Christ and of the Temple of Solomon: three fortresses, and the bank of the West.'),
+    },
+    {
+      id: 'hospitaliers', name: tr('Hospitaliers', 'Hospitallers'), leader: tr('le grand maître Ermengard d\'Asp', 'Grand Master Ermengard d\'Asp'), flag: 'b18', color: [30, 30, 34],
+      playable: true, order: true, defensive: true, garrison: 2, camp: 'chretiens',
+      // (Margat, le siège de l'Ordre après la chute de Jérusalem ; le Krak, sa plus grande forteresse)
+      capital: [35.97, 35.17, tr('Margat', 'Margat'), 'Margat', { garrison: 1.5 }], capitalLevel: 2,
+      cities: [[36.29, 34.76, tr('Krak des Chevaliers', 'Krak des Chevaliers'), 'Krak des Chevaliers', { level: 2, garrison: 2 }], [35.52, 32.56, tr('Belvoir', 'Belvoir'), 'Belvoir']],
+      churches: [],
+      lands: [[[36.15, 34.65], [36.43, 34.65], [36.43, 34.87], [36.15, 34.87]], [[35.84, 35.07], [36.10, 35.07], [36.10, 35.27], [35.84, 35.27]], [[35.38, 32.45], [35.66, 32.45], [35.66, 32.67], [35.38, 32.67]]],
+      desc: tr('L\'ordre de Saint-Jean de Jérusalem : les moines-soldats qui soignent les pèlerins, et tiennent le Krak des Chevaliers.', 'The Order of Saint John of Jerusalem: the warrior monks who nurse the pilgrims, and hold the Krak des Chevaliers.'),
+    },
     {
       id: 'assassins', name: tr('Assassins', 'Assassins'), leader: tr('Rachid ad-Din Sinan, le Vieux de la Montagne', 'Rashid ad-Din Sinan, the Old Man of the Mountain'), flag: 'cr_assassins', color: [90, 20, 24],
       defensive: true, garrison: 4, camp: 'musulmans',
@@ -597,12 +751,11 @@ const CROISADES = {
       id: 'antioche', name: tr('Antioche et Tripoli', 'Antioch and Tripoli'), leader: tr('le prince Bohémond III', 'Prince Bohemond III'), flag: 'cr_antioche', color: [168, 50, 110],
       defensive: true, camp: 'chretiens',
       capital: [36.16, 36.20, tr('Antioche', 'Antioch'), 'Antioche', { garrison: 2 }], capitalLevel: 3,
-      cities: [[35.84, 34.44, tr('Tripoli', 'Tripoli'), 'Tripoli', { level: 2 }], [36.29, 34.76, tr('Krak des Chevaliers', 'Krak des Chevaliers'), 'Krak des Chevaliers', { level: 2, garrison: 4 }],
-        [35.78, 35.52, tr('Lattaquié', 'Latakia'), 'Lattaquié']],
-      churches: [[35.89, 34.89, tr('Tortose', 'Tortosa'), 'Tortose']],
+      cities: [[35.84, 34.44, tr('Tripoli', 'Tripoli'), 'Tripoli', { level: 2 }], [35.78, 35.52, tr('Lattaquié', 'Latakia'), 'Lattaquié']],
+      churches: [],
       lands: [[[35.7, 34.2], [36.45, 34.2], [36.45, 34.95], [36.15, 34.95], [36.15, 35.3], [36.5, 35.45], [36.75, 36.05], [36.6, 36.55],
         [36.2, 36.75], [35.9, 36.5], [35.7, 35.5]]],
-      desc: tr('La principauté d\'Antioche et le comté de Tripoli, avec les forteresses des Hospitaliers et des Templiers.', 'The principality of Antioch and the county of Tripoli, with the fortresses of the Hospitallers and the Templars.'),
+      desc: tr('La principauté d\'Antioche et le comté de Tripoli, entre les forteresses des Templiers et des Hospitaliers.', 'The principality of Antioch and the county of Tripoli, between the fortresses of the Templars and the Hospitallers.'),
     },
     {
       id: 'armenie', name: tr('Arménie', 'Armenia'), leader: tr('le prince Léon II', 'Prince Leo II'), flag: 'cr_armenie', color: [214, 74, 42],
