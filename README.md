@@ -401,8 +401,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
          le joueur anglais, ou pour le joueur templier) ; en 1192, les Chypriotes se révoltent, et les Templiers la
          revendent 1 500 pièces à Guy de Lusignan, l'ancien roi de Jérusalem (un joueur templier peut la garder, mais
          perd 30 % de ses soldats).
-     Réglages : `ORDERS` et `CYPRUS` dans `js/croisades.js`, les règles dans `js/ordres.js`. Les bannières des Ordres
-     sont provisoires (des drapeaux du jeu), en attendant les vraies.
+     Réglages : `ORDERS` et `CYPRUS` dans `js/croisades.js`, les règles dans `js/ordres.js`. Leurs bannières : la croix
+     rouge sur fond blanc des Templiers, la croix blanche sur fond noir des Hospitaliers.
      La partie va de **1187 à 1204** en environ **50 minutes** (la troisième croisade, jusqu'à la mort de Saladin, prend la
      première moitié) ; l'année est en haut. Les grands événements arrivent à leur date, en **parchemins** (pour les
      factions concernées) : Saladin assiège Jérusalem puis Tyr ; en 1188, il assiège Baghras et Safed (le Temple) puis
@@ -443,7 +443,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Roum** (l'aigle seldjoukide), du **calife abbasside** (le noir et l'or) et des **Assassins** (la dague et Masyaf) sont
      les vraies (`img/bannieres/cr_…`), tout comme celles d'**Antioche-Tripoli** (la croix de Toulouse), de **Chypre** (le
      lion rouge des Lusignan), de l'**Arménie** (le lion d'or couronné) et de la **Géorgie** (la croix de saint Georges) :
-     les 25 factions de départ ont leur bannière (les deux Ordres attendent les leurs). Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
+     les 27 factions ont leur bannière, Templiers et Hospitaliers compris. Chaque royaume a une couleur à lui, proche du fond de son drapeau : les
      plus historiques vont aux factions jouables (rouge anglais, bleu de France, or impérial, cramoisi de Venise, pourpre
      byzantine, blanc de Jérusalem, safran de Saladin).
    ⭐ **Les défis des campagnes** (Charlemagne, la guerre de Cent Ans et les Croisades) : **chaque faction jouable** (les 11 de
@@ -1235,6 +1235,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.1** : ✠ les vraies bannières des Ordres : la croix rouge sur fond blanc des **Templiers**, la croix blanche sur fond noir des **Hospitaliers**
 - **v0.98.0** : ✠ Croisades : les **ordres militaires**, **Templiers** (Tortose, Safed, Baghras) et **Hospitaliers** (le Krak des Chevaliers, Margat, Belvoir), **jouables** : des forteresses imprenables dans Outremer, des **chevaliers** qui secourent leurs alliés attaqués (à partir de 1188), la **banque du Temple** (clic droit sur leurs terres : emprunter 2 000 pièces, rendre 2 500), la haine de Saladin (pas de trêve de Jaffa pour eux), des Assassins impuissants, **Chypre vendue par Richard aux Templiers** (1191) puis revendue à Guy de Lusignan (1192), et de nouveaux défis (Saladin : anéantir les Templiers ; Jérusalem : que le Temple tienne jusqu'en 1204 ; Richard : vendre Chypre)
 - **v0.97.5** : ✝️ Croisades : les 4 dernières vraies bannières (Antioche-Tripoli, Chypre, Arménie, Géorgie) : les 25 factions ont la leur
 - **v0.97.4** : 🏳️ dans le choix de la bannière, le **nom** de chaque drapeau est écrit dessous (la faction dans un scénario, ce qu'il représente dans une partie libre)

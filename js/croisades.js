@@ -700,7 +700,7 @@ const CROISADES = {
       // ✠ Les ordres militaires : des moines-soldats, peu de terres mais des forteresses très solides (garnisons 2 fois
       // plus fortes ; 3 fois à Tortose et Margat, 4 fois au Krak des Chevaliers), dans Outremer (voir ORDERS) ; décimés
       // à Hattin, ils envoient des renforts à partir de 1188
-      id: 'templiers', name: tr('Templiers', 'Templars'), leader: tr('le grand maître Gérard de Ridefort', 'Grand Master Gérard de Ridefort'), flag: 'b01', color: [179, 20, 28],
+      id: 'templiers', name: tr('Templiers', 'Templars'), leader: tr('le grand maître Gérard de Ridefort', 'Grand Master Gérard de Ridefort'), flag: 'cr_templiers', color: [179, 20, 28],
       playable: true, order: true, defensive: true, garrison: 2, camp: 'chretiens',
       capital: [35.89, 34.89, tr('Tortose', 'Tortosa'), 'Tortose', { garrison: 1.5 }], capitalLevel: 2,
       cities: [[35.50, 32.96, tr('Safed', 'Safed'), 'Safed', { level: 2 }], [36.40, 36.38, tr('Baghras', 'Baghras'), 'Baghras']],
@@ -709,7 +709,7 @@ const CROISADES = {
       desc: tr('Les pauvres chevaliers du Christ et du Temple de Salomon : trois forteresses, et la banque de l\'Occident.', 'The Poor Knights of Christ and of the Temple of Solomon: three fortresses, and the bank of the West.'),
     },
     {
-      id: 'hospitaliers', name: tr('Hospitaliers', 'Hospitallers'), leader: tr('le grand maître Ermengard d\'Asp', 'Grand Master Ermengard d\'Asp'), flag: 'b18', color: [30, 30, 34],
+      id: 'hospitaliers', name: tr('Hospitaliers', 'Hospitallers'), leader: tr('le grand maître Ermengard d\'Asp', 'Grand Master Ermengard d\'Asp'), flag: 'cr_hospitaliers', color: [30, 30, 34],
       playable: true, order: true, defensive: true, garrison: 2, camp: 'chretiens',
       // (Margat, le siège de l'Ordre après la chute de Jérusalem ; le Krak, sa plus grande forteresse)
       capital: [35.97, 35.17, tr('Margat', 'Margat'), 'Margat', { garrison: 1.5 }], capitalLevel: 2,
