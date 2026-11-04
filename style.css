@@ -429,6 +429,10 @@ button:hover { background: #e8d6a8; }
   background: #fffaf0;
 }
 .card select { max-width: 62%; }
+/* (tous les choix du menu ont la même largeur, celle du nom du royaume ; un nom de carte trop long finit par « … ») */
+.card > label > input, .card > label > select:not(.ghost), .card > label > #mapBtn { width: 220px; max-width: 58%; flex: none; }
+.card > label > #mapBtn { justify-content: space-between; }
+#mapBtn > span:first-of-type { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
 /* 🌐 Jouer en ligne (sous « Commencer la conquête ») : la partie publique, les salons privés */
 .netBox { margin: 14px 0 4px; padding: 8px 10px; border: 2px dashed var(--parchment-dark); border-radius: 8px; }
 .netTitle { font-family: Cinzel, Georgia, serif; font-weight: bold; margin-bottom: 6px; }
