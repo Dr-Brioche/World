@@ -28,10 +28,14 @@ const PUBLIC_EVERY = (+process.env.PUBLIC_SECONDS || 120) * 1000; // une partie 
 const PUBLIC_KINGDOMS = 10;               // … avec des bots pour arriver à 10 royaumes en tout (s'il y a moins de joueurs)
 const MAX_PLAYERS = 16;                   // joueurs humains au plus dans une partie
 const SPAWN_TIME = 15;                    // secondes pour choisir où fonder sa capitale
+const LOOK_TIME = 10;                     // placement aléatoire : secondes pour regarder la carte avant le début
 const PAUSE_TIME = 15 * 1000;             // salon privé : un joueur (pas l'hôte) met en pause 15 s au plus…
 const PAUSE_EVERY = 5 * 60 * 1000;        // … une fois toutes les 5 minutes
 const HASH_KEEP = 2000;                   // tours pendant lesquels on garde les empreintes reçues (pour les comparer)
-const MAPS = ['normal', 'continental', 'naval', 'world', 'europe', 'azeroth']; // (CONFIG.NET.MAPS)
+// (CONFIG.NET.MAPS : les cartes aléatoires, les 14 cartes arène, et les cartes prédéfinies)
+const MAPS = ['normal', 'continental', 'naval', 'couronne', 'cratere', 'carrefour', 'archipel', 'rives', 'labyrinthe', 'oasis',
+  'plateaux', 'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'melee', 'world', 'europe', 'azeroth'];
+const SPAWN_MODES = ['libre', 'aleatoire', 'places']; // placement des capitales (places : les places prévues d'une carte arène)
 const PUBLIC_MAPS = MAPS;                 // cartes tirées au hasard pour la partie publique
 const SIZES = ['petit', 'moyen', 'grand'];
 const DIFFICULTIES = ['facile', 'normal', 'difficile'];
@@ -172,13 +176,14 @@ function cleanSettings(s) {
     pacts: !!s.pacts,
     difficulty: DIFFICULTIES.includes(s.difficulty) ? s.difficulty : 'normal',
     opponents: Math.max(0, Math.min(30, s.opponents | 0)),
+    spawnMode: SPAWN_MODES.includes(s.spawnMode) ? s.spawnMode : 'libre',
   };
 }
 // La prochaine partie publique : une carte au hasard
 function openPublicRoom() {
   publicRoom = {
     code: newCode(), public: true, host: null, members: [], game: null, startsAt: Date.now() + PUBLIC_EVERY,
-    settings: { mapType: pick(PUBLIC_MAPS), mapSize: pick(['moyen', 'grand']), pacts: Math.random() < 0.5, difficulty: 'normal', opponents: 0 },
+    settings: { mapType: pick(PUBLIC_MAPS), mapSize: pick(['moyen', 'grand']), pacts: Math.random() < 0.5, difficulty: 'normal', opponents: 0, spawnMode: 'places' },
   };
   rooms.set(publicRoom.code, publicRoom);
   broadcastRoom(publicRoom);
@@ -242,7 +247,7 @@ function startGame(room) {
     queue: [],                     // ordres reçus, pour le prochain tour : [slot, ordre, numéro]
     paused: false, pauseBy: -1, pauseUntil: 0, lastPause: new Map(),
     speed: 1, host: hostSlot,
-    spawnTurns: SPAWN_TIME * TPS,
+    spawnTurns: (s.spawnMode === 'aleatoire' ? LOOK_TIME : SPAWN_TIME) * TPS,
     hashes: new Map(), desync: false,
   };
   const seed = crypto.randomBytes(4).readUInt32BE(0);

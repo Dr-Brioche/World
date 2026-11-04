@@ -68,6 +68,7 @@ const GameRules = {
     // prévues ») : le joueur doit en choisir une ; sinon, il se pose où il veut (les bots, eux, prennent des places)
     this.spots = map.spots && map.spots.length ? map.spots.slice() : null;
     this.spotMode = !!(this.spots && opts.spotMode);
+    this.spawnRandom = !!(opts.online && opts.spawnRandom); // (🌐 placement aléatoire en ligne : chacun est placé au hasard, voir beginOnline)
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
     this.speed = 1; // vitesse de la partie (x1, x1.5, x2, x3 : bouton ⏩ en jeu) : la boucle de jeu tourne plus vite (voir main.js)
@@ -113,6 +114,9 @@ const GameRules = {
     }
     this.phase = 'spawn';
     this.spawnBots();
+    // (🌐 placement aléatoire en ligne : tout le monde est placé au hasard tout de suite ; il reste quelques secondes
+    //  pour regarder la carte avant que la partie commence)
+    if (this.spawnRandom) this.placeWaitingHumans();
   },
 
   addPlayer(name, banner, isHuman) {
@@ -2009,11 +2013,12 @@ const GameRules = {
     }
   },
 
-  // 🏟️ La place de départ prévue la plus proche de la case i (à moins de SPOT_SNAP cases), libre, ou -1
+  // 🏟️ La place de départ prévue libre la plus proche de la case i, ou -1 (placement « Places prévues » : où que l'on
+  // clique, on choisit ainsi sa place en cliquant de son côté de la carte)
   startSpotNear(i) {
     if (!this.spots) return -1;
     const W = this.W, x = i % W, y = (i / W) | 0;
-    let best = -1, bestD = CONFIG.SPOT_SNAP;
+    let best = -1, bestD = Infinity;
     for (const s of this.spots) {
       const d = DMath.hypot(s % W - x, ((s / W) | 0) - y);
       if (d <= bestD && this.owner[s] < 0) { bestD = d; best = s; }
@@ -2662,6 +2667,10 @@ const GameRules = {
   // 🌐 En ligne : un joueur fonde sa capitale (pendant le moment prévu pour ça, au début de la partie)
   spawnHuman(p, i) {
     if (this.phase !== 'spawn' || p.spawned || !p.alive) return null;
+    if (this.spawnRandom) return tr('Placement aléatoire : le jeu fonde ta capitale au hasard au début de la partie.', 'Random placement: the game founds your capital at random when the game starts.');
+    // (🏟️ places prévues : la place libre la plus proche ; si un autre joueur vient de prendre celle qu'on visait, on
+    //  a la suivante)
+    if (this.spotMode) { const s = this.startSpotNear(i); if (s >= 0) i = s; }
     const err = this.spawnError(i);
     if (err) return err;
     this.inUpdate = true;
@@ -2670,14 +2679,26 @@ const GameRules = {
     return null;
   },
   // 🌐 En ligne : la partie commence pour de bon. Ceux qui n'ont pas encore choisi leur place sont posés au hasard
-  // (le hasard de la partie : la même place chez tout le monde)
+  // (le hasard de la partie : la même place chez tout le monde) ; 🏟️ sur une carte arène, à une place prévue libre
+  // (sauf en placement libre)
   beginOnline() {
     if (this.phase !== 'spawn') return null;
+    this.placeWaitingHumans();
+    this.phase = 'playing';
+    return null;
+  },
+  // Les joueurs humains (ou partis) qui n'ont pas encore de capitale sont posés au hasard
+  placeWaitingHumans() {
     this.inUpdate = true;
     try {
       for (const p of this.players) {
         if (!(p.human || p.left) || p.spawned || !p.alive) continue;
         let placed = false;
+        if (this.spotMode || (this.spawnRandom && this.spots)) {
+          for (const s of this.shuffle(this.freeSpots())) {
+            if (this.canSpawnAt(s, CONFIG.MIN_SPAWN_DISTANCE)) { this.spawnPlayer(p, s); placed = true; break; }
+          }
+        }
         for (let tries = 0; tries < 4000 && !placed; tries++) {
           const i = (this.rand() * this.N) | 0;
           if (this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE * (tries < 2000 ? 1 : 0.5)) && this.landSize()[i] >= CONFIG.MIN_SPAWN_LAND) {
@@ -2688,8 +2709,6 @@ const GameRules = {
         p.spawned = true;
       }
     } finally { this.inUpdate = false; }
-    this.phase = 'playing';
-    return null;
   },
 
   // Le joueur fonde sa capitale : la partie commence

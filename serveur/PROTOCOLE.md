@@ -68,7 +68,7 @@ Des messages **JSON** sur une WebSocket, à l'adresse `/ws`. Chacun a un champ `
 | `{ t: 'join', code }` | menu | rejoindre un salon privé avec son code |
 | `{ t: 'leave' }` | salon | quitter le salon |
 | `{ t: 'profile', name, banner }` | salon | changer de nom ou de bannière |
-| `{ t: 'settings', settings }` | salon, hôte | changer les réglages : `{ mapType, mapSize, pacts, difficulty, opponents }` |
+| `{ t: 'settings', settings }` | salon, hôte | changer les réglages : `{ mapType, mapSize, pacts, difficulty, opponents, spawnMode }` (`spawnMode` : `'libre'`, `'aleatoire'` ou `'places'`, les places prévues d'une carte arène) |
 | `{ t: 'start' }` | salon, hôte | lancer la partie |
 | `{ t: 'order', s, o }` | partie | un ordre `o` (voir plus bas), avec son numéro `s` (pour retrouver son résultat) |
 | `{ t: 'pause', on }` | partie | demander la pause (`on: true`) ou la reprise |
