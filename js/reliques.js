@@ -59,6 +59,20 @@ Object.assign(GameRules, {
     }
     for (const r of this.relicRuns.slice()) this.stepRelicRun(r, this.tick % TPS === 0);
   },
+  // 🏟️ Une case pour la relique près d'une des places de reliques de la carte arène (sur les terres d'un royaume, pas sur
+  // un bâtiment), ou -1
+  relicArenaTile() {
+    const W = this.W, spots = this.shuffle(this.map.relicSpots.slice());
+    for (const s of spots) {
+      const x0 = s % W, y0 = (s / W) | 0;
+      for (let r = 0; r <= 8; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        const i = (y0 + dy) * W + x0 + dx, o = this.owner[i];
+        if (i >= 0 && i < this.N && o >= 0 && this.claimable(i) && !this.building[i] && !this.players[o].raiders) return i;
+      }
+    }
+    return -1;
+  },
   // Une case au hasard sur les terres d'un royaume, d'autant plus probable qu'elle est loin des plus grands royaumes
   // (pour équilibrer la partie) ; pas sur un bâtiment
   spawnRelic() {
@@ -81,6 +95,9 @@ Object.assign(GameRules, {
     if (!cands.length) return;
     let pick = this.rand() * total, tile = cands[cands.length - 1][0];
     for (const [i, w] of cands) { pick -= w; if (pick <= 0) { tile = i; break; } }
+    // (🏟️ une carte arène : la relique apparaît au centre, le trésor disputé, dès qu'un royaume y tient des terres)
+    const center = this.map.relicSpots ? this.relicArenaTile() : -1;
+    if (center >= 0) tile = center;
     const relic = { id: this.nextRelicId++, tile, region: this.owner[tile], run: -1 };
     this.relics.push(relic);
     const h = this.human, o = this.players[relic.region];

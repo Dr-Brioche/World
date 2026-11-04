@@ -64,6 +64,10 @@ const GameRules = {
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
     this.placeDeposits(); // ⛏️ les filons de minerai (voir MINES)
+    // 🏟️ Carte arène : ses places de départ prévues (vides : on y fonde sa capitale). spotMode (placement « Places
+    // prévues ») : le joueur doit en choisir une ; sinon, il se pose où il veut (les bots, eux, prennent des places)
+    this.spots = map.spots && map.spots.length ? map.spots.slice() : null;
+    this.spotMode = !!(this.spots && opts.spotMode);
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
     this.speed = 1; // vitesse de la partie (x1, x1.5, x2, x3 : bouton ⏩ en jeu) : la boucle de jeu tourne plus vite (voir main.js)
@@ -582,6 +586,16 @@ const GameRules = {
     this.depositAt = new Map();          // case en haut à gauche → filon
     this.depositTile = new Uint8Array(this.N); // 1 = case d'un filon
     const W = this.W, H = this.H, T = this.terrain, scale = Math.sqrt(this.N / (650 * 366)), TPS = CONFIG.TICKS_PER_SECOND;
+    // (🏟️ une carte arène : ses filons sont posés à l'avance, aux mêmes distances pour chacun)
+    if (this.map.deposits) {
+      for (const { a, kind } of this.map.deposits) {
+        const d = { a, kind, left: (MINES.gold.time) * TPS, progress: 0, paid: 0 };
+        this.deposits.push(d);
+        this.depositAt.set(a, d);
+        for (const j of [a, a + 1, a + W, a + W + 1]) this.depositTile[j] = 1;
+      }
+      return;
+    }
     const fits = (kind, t) => MINES[kind].terrain === 'hills' ? t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS : t === TERRAIN.MOUNTAIN;
     for (const kind of MINE_KINDS) {
       const [lo, hi] = MINES[kind].count, want = Math.max(1, Math.round((lo + Math.floor(this.rand() * (hi - lo + 1))) * scale));
@@ -1976,8 +1990,15 @@ const GameRules = {
   // Les royaumes rivaux s'installent dès l'ouverture de la carte : le joueur voit où ils sont
   // avant de choisir où fonder sa capitale (comme au début d'une partie d'OpenFront)
   spawnBots() {
+    // (🏟️ une carte arène : les bots prennent des places prévues au hasard, en laissant une place à chaque humain ;
+    //  s'il y a plus de bots que de places, les autres se posent ailleurs)
+    const free = this.spots ? this.shuffle(this.spots.slice()) : [], humans = this.players.filter(p => p.human).length;
     for (const p of this.players) {
       if (p.human) continue;
+      if (free.length > humans) {
+        const s = free.shift();
+        if (this.canSpawnAt(s, CONFIG.MIN_SPAWN_DISTANCE)) { this.spawnPlayer(p, s); continue; }
+      }
       let placed = false;
       for (let tries = 0; tries < 3000 && !placed; tries++) {
         const i = (this.rand() * this.N) | 0;
@@ -1988,8 +2009,24 @@ const GameRules = {
     }
   },
 
+  // 🏟️ La place de départ prévue la plus proche de la case i (à moins de SPOT_SNAP cases), libre, ou -1
+  startSpotNear(i) {
+    if (!this.spots) return -1;
+    const W = this.W, x = i % W, y = (i / W) | 0;
+    let best = -1, bestD = CONFIG.SPOT_SNAP;
+    for (const s of this.spots) {
+      const d = DMath.hypot(s % W - x, ((s / W) | 0) - y);
+      if (d <= bestD && this.owner[s] < 0) { bestD = d; best = s; }
+    }
+    return best;
+  },
+  // Les places de départ prévues encore libres
+  freeSpots() { return this.spots ? this.spots.filter(s => this.owner[s] < 0) : []; },
+
   // Pourquoi le joueur ne peut pas fonder sa capitale ici (null s'il le peut)
   spawnError(i) {
+    // (🏟️ placement « Places prévues » : seulement sur une place de départ libre)
+    if (this.spotMode && !this.freeSpots().includes(i)) return tr('Clique sur une des places de départ prévues (les écussons dorés).', 'Click on one of the planned starting places (the golden shields).');
     if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return tr('Choisis une terre, pas l\'eau !', 'Pick land, not water!');
     if (this.owner[i] >= 0) return tr(`Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`, `This land already belongs to ${this.players[this.owner[i]].name}.`);
     if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return tr('Cette île est trop petite pour y fonder ta capitale.', 'This island is too small to found your capital on.');
