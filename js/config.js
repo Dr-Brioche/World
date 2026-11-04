@@ -611,7 +611,9 @@ const TERRAIN_PRODUCTION = {
 // garnison de GARRISON soldats la défend (elle se reconstitue), et un assaut doit l'assiéger SIEGE secondes, avec
 // BONUS de défense en plus (comme un fort en bois). Mais ce n'est pas une ville : aucune armée n'en part (ni assaut ni
 // défenseurs), et elle ne suffit pas à tenir un territoire (sans ville ni port fortifié, il reste désorganisé).
-const MINE_FORT = { COST: 800, TIME: 30, RADIUS: 4, GARRISON: 50, SIEGE: 10, BONUS: 1 };
+// Une mine fortifiée a sa propre image (IMG : le site minier dans sa palissade, avec sa tour de guet), un peu plus
+// grande (SIZE, en cases, comme les size des MINE_LEVELS).
+const MINE_FORT = { COST: 800, TIME: 30, RADIUS: 4, GARRISON: 50, SIEGE: 10, BONUS: 1, IMG: 'img/mine3.webp', SIZE: 4.4 };
 const MINE_LEVELS = [
   null,
   { name: tr('Site minier', 'Mining site'),  img: 'img/mine1.webp', size: 3 },
