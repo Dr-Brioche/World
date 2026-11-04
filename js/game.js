@@ -1930,12 +1930,13 @@ const GameRules = {
   // Numéro de l'île (ou du continent) de chaque case
   landComp() { this.landSize(); return this.landComps; },
 
-  canSpawnAt(i, minDist) {
-    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER || this.owner[i] !== -1) return false;
+  // (ignore : un royaume dont on ne tient pas compte, celui qui déplace sa capitale pendant le choix des places en ligne)
+  canSpawnAt(i, minDist, ignore = -1) {
+    if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER || (this.owner[i] !== -1 && this.owner[i] !== ignore)) return false;
     if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return false; // pas de capitale sur un îlot
     const x = i % this.W, y = (i / this.W) | 0;
     for (const p of this.players) {
-      if (p.capital === undefined) continue;
+      if (p.capital === undefined || p.id === ignore) continue;
       const dx = (p.capital % this.W) - x, dy = ((p.capital / this.W) | 0) - y;
       if (dx * dx + dy * dy < minDist * minDist) return false;
     }
@@ -2028,14 +2029,14 @@ const GameRules = {
   // Les places de départ prévues encore libres
   freeSpots() { return this.spots ? this.spots.filter(s => this.owner[s] < 0) : []; },
 
-  // Pourquoi le joueur ne peut pas fonder sa capitale ici (null s'il le peut)
-  spawnError(i) {
+  // Pourquoi le joueur ne peut pas fonder sa capitale ici (null s'il le peut) ; ignore : voir canSpawnAt
+  spawnError(i, ignore = -1) {
     // (🏟️ placement « Places prévues » : seulement sur une place de départ libre)
-    if (this.spotMode && !this.freeSpots().includes(i)) return tr('Clique sur une des places de départ prévues (les écussons dorés).', 'Click on one of the planned starting places (the golden shields).');
+    if (this.spotMode && !this.freeSpots().includes(i) && !(ignore >= 0 && this.owner[i] === ignore)) return tr('Clique sur une des places de départ prévues (les écussons dorés).', 'Click on one of the planned starting places (the golden shields).');
     if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return tr('Choisis une terre, pas l\'eau !', 'Pick land, not water!');
-    if (this.owner[i] >= 0) return tr(`Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`, `This land already belongs to ${this.players[this.owner[i]].name}.`);
+    if (this.owner[i] >= 0 && this.owner[i] !== ignore) return tr(`Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`, `This land already belongs to ${this.players[this.owner[i]].name}.`);
     if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return tr('Cette île est trop petite pour y fonder ta capitale.', 'This island is too small to found your capital on.');
-    if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE)) return tr('Trop près d\'un royaume rival : éloigne-toi un peu.', 'Too close to a rival kingdom: move a little further away.');
+    if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE, ignore)) return tr('Trop près d\'un royaume rival : éloigne-toi un peu.', 'Too close to a rival kingdom: move a little further away.');
     return null;
   },
 
@@ -2664,19 +2665,42 @@ const GameRules = {
     } finally { this.inUpdate = false; }
   },
 
-  // 🌐 En ligne : un joueur fonde sa capitale (pendant le moment prévu pour ça, au début de la partie)
+  // 🌐 En ligne : un joueur fonde sa capitale (pendant le moment prévu pour ça, au début de la partie). Tant que le
+  // compte à rebours n'est pas fini, il peut changer d'avis : sa capitale est retirée, puis reposée au nouvel endroit
+  // (s'il n'est pas possible, elle revient à sa place)
   spawnHuman(p, i) {
-    if (this.phase !== 'spawn' || p.spawned || !p.alive) return null;
+    if (this.phase !== 'spawn' || !p.alive) return null;
     if (this.spawnRandom) return tr('Placement aléatoire : le jeu fonde ta capitale au hasard au début de la partie.', 'Random placement: the game founds your capital at random when the game starts.');
-    // (🏟️ places prévues : la place libre la plus proche ; si un autre joueur vient de prendre celle qu'on visait, on
-    //  a la suivante)
-    if (this.spotMode) { const s = this.startSpotNear(i); if (s >= 0) i = s; }
-    const err = this.spawnError(i);
-    if (err) return err;
     this.inUpdate = true;
-    try { this.spawnPlayer(p, i); } finally { this.inUpdate = false; }
-    p.spawned = true;
+    try {
+      const old = p.spawned ? p.spawnTile : -1;
+      if (old >= 0) this.unspawnPlayer(p);
+      // (🏟️ places prévues : la place libre la plus proche ; si un autre joueur vient de prendre celle qu'on visait,
+      //  on a la suivante)
+      if (this.spotMode) { const s = this.startSpotNear(i); if (s >= 0) i = s; }
+      const err = this.spawnError(i);
+      if (err) {
+        if (old >= 0) this.spawnPlayer(p, old);
+        return err;
+      }
+      this.spawnPlayer(p, i);
+      p.spawned = true;
+      p.spawnTile = i;
+    } finally { this.inUpdate = false; }
     return null;
+  },
+  // Retire la capitale (et les terres de départ) d'un joueur qui change de place pendant le choix des places
+  unspawnPlayer(p) {
+    p.dormant = true; // (pour qu'il ne soit pas anéanti en perdant toutes ses terres : voir setOwner)
+    for (let j = 0; j < this.N; j++) {
+      if (this.owner[j] !== p.id) continue;
+      if (this.building[j] && this.anchor[j] === j) this.removeBuilding(j);
+      this.setOwner(j, -1);
+    }
+    p.dormant = false;
+    p.castlesBuilt = 0;
+    p.capital = undefined;
+    p.spawned = false;
   },
   // 🌐 En ligne : la partie commence pour de bon. Ceux qui n'ont pas encore choisi leur place sont posés au hasard
   // (le hasard de la partie : la même place chez tout le monde) ; 🏟️ sur une carte arène, à une place prévue libre

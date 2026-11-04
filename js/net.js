@@ -139,11 +139,13 @@ const Net = {
     this.send({ t: 'order', s, o });
   },
   // (début de partie : on choisit sa place ; la partie commence pour tout le monde à la fin du compte à rebours)
+  // (on peut changer d'avis jusqu'à la fin du compte à rebours : un nouveau clic déplace la capitale)
   chooseSpawn(i) {
-    if (Game.human.spawned) return;
+    const moved = Game.human.spawned;
     this.sendOrder({ k: 'spawn', i }, err => {
       if (err) return UI.log(err, 'warn');
-      UI.log(tr('👑 Ta capitale est fondée ! La partie commence à la fin du compte à rebours.', '👑 Your capital is founded! The game starts when the countdown ends.'), 'good');
+      UI.log(moved ? tr('👑 Ta capitale change de place. Tu peux encore changer d\'avis jusqu\'à la fin du compte à rebours.', '👑 Your capital moves. You can still change your mind until the countdown ends.')
+        : tr('👑 Ta capitale est fondée ! Tu peux encore changer d\'avis (clique ailleurs) jusqu\'à la fin du compte à rebours.', '👑 Your capital is founded! You can still change your mind (click elsewhere) until the countdown ends.'), 'good');
     });
   },
   togglePause() {

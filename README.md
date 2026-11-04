@@ -1154,7 +1154,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        proche qui reste) ; sinon, une place prévue au hasard ;
      - **Aléatoire** : tout le monde est placé au hasard dès le départ (sur une carte arène, aux places prévues), et on a
        **10 secondes** pour regarder la carte ;
-     puis la partie commence pour tous. Les **cartes arène** se jouent aussi en ligne. Les autres joueurs ont un 👤 dans le classement ; on peut leur proposer un pacte (ils répondent eux-mêmes),
+     pendant ce temps, chacun voit **en direct** où les autres se posent, et peut **changer d'avis** autant qu'il veut
+     (un nouveau clic déplace sa capitale ; une place prise par un autre n'est plus libre) ; la partie commence pour
+     tous à la fin du compte à rebours, même si tout le monde a déjà choisi (de quoi regarder le reste de la carte).
+     Les **cartes arène** se jouent aussi en ligne. Les autres joueurs ont un 👤 dans le classement ; on peut leur proposer un pacte (ils répondent eux-mêmes),
      les aider ou les attaquer comme un bot. Un joueur qui quitte la partie est remplacé par un **bot**. Vaincu, tu peux
      **👁️ regarder la suite** ; la partie s'arrête quand un royaume tient 70 % des terres (ou reste seul).
    - Les **scénarios** et les **cartes dessinées** se jouent en solo, pour l'instant. Si la connexion au serveur est
@@ -1244,6 +1247,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.7** : 🌐 en ligne, pendant le choix des places (libre ou places prévues), on peut **changer d'avis** jusqu'à la fin des 15 s : un nouveau clic déplace sa capitale, et les autres le voient en direct ; la partie attend toujours la fin du compte à rebours
 - **v0.98.6** : 🏟️ cartes arène, placement « Places prévues » : un clic n'importe où sur la carte choisit la place de départ libre la plus proche (plus besoin de viser l'écusson) ; « Aléatoire » prend une place prévue au hasard, « Libre » laisse commencer n'importe où · 🌐 **en ligne** : les cartes arène se jouent aussi en ligne, et l'hôte choisit le placement des capitales : libre (15 s pour cliquer où l'on veut), places prévues (15 s pour réserver une place avant les autres) ou aléatoire (tout le monde placé au hasard, 10 s pour regarder la carte) ; sinon, une place au hasard
 - **v0.98.5** : 🏰 le menu de départ est un tiers plus large et plus aéré (des choix plus larges, 4 drapeaux par rangée) ; sur un petit écran, il se resserre tout seul pour tout garder visible
 - **v0.98.4** : 🐓 un nouveau drapeau pour les parties libres : le **Coq guerrier** (un coq d'or armé d'une masse, sur fond rose)
