@@ -371,9 +371,15 @@ const UI = {
     const groups = [...sel.querySelectorAll('optgroup')].filter(g => g.querySelector('option'));
     // (en haut du panneau : l'aperçu de la carte survolée, ou de la carte choisie ; voir showMapPreview)
     panel.innerHTML = '<div class="mapPreview"><div class="pv"></div><div class="pvText"><b class="pvName"></b><span class="pvDesc"></span></div></div>' +
-      groups.map(g => `<div class="grp">${iconSVG(g.dataset.icon)}${escapeHtml(g.label)}</div>` +
+      // (chaque sorte de carte est une section qui se déplie d'un clic ; une seule ouverte à la fois)
+      groups.map(g => `<details class="grpBox"><summary class="grp">${iconSVG(g.dataset.icon)}${escapeHtml(g.label)}` +
+      `<span class="cnt">${g.querySelectorAll('option').length}</span></summary>` +
       `<div class="opts">${[...g.querySelectorAll('option')].map(o =>
-        `<button type="button" data-map="${escapeHtml(o.value)}">${escapeHtml(o.textContent)}</button>`).join('')}</div>`).join('');
+        `<button type="button" data-map="${escapeHtml(o.value)}">${escapeHtml(o.textContent)}</button>`).join('')}</div></details>`).join('');
+    // (ouvrir une section referme les autres)
+    panel.querySelectorAll('details.grpBox').forEach(d => d.addEventListener('toggle', () => {
+      if (d.open) panel.querySelectorAll('details.grpBox').forEach(x => { if (x !== d) x.open = false; });
+    }));
     const show = () => {
       const o = sel.selectedOptions[0];
       btn.innerHTML = `${iconSVG(o.parentNode.dataset.icon)}<span>${escapeHtml(o.textContent)}</span><span>▾</span>`;
@@ -383,7 +389,11 @@ const UI = {
     btn.addEventListener('click', e => {
       e.preventDefault();
       panel.classList.toggle('hidden');
-      if (!panel.classList.contains('hidden')) this.showMapPreview(sel.value);
+      if (panel.classList.contains('hidden')) return;
+      this.showMapPreview(sel.value);
+      // (la section de la carte choisie est ouverte)
+      const cur = panel.querySelector(`button[data-map="${CSS.escape(sel.value)}"]`);
+      if (cur) cur.closest('details').open = true;
     });
     // (survoler une carte montre son aperçu ; en quittant la liste, on revient à la carte choisie)
     panel.addEventListener('mouseover', e => {
