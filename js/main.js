@@ -230,7 +230,15 @@ const UI = {
     // comme avec « Rejouer » ; la langue, la musique et son volume restent ceux choisis)
     $('quitBtn').addEventListener('click', () => this.openQuit());
     $('quitNo').addEventListener('click', () => this.closeQuit());
-    $('quitYes').addEventListener('click', () => location.reload());
+    // (🏆 après une victoire et « Continuer » : quitter la partie ramène d'abord à l'écran de victoire, avec son résumé ;
+    //  c'est lui qui renvoie ensuite au menu)
+    $('quitYes').addEventListener('click', () => {
+      if (!this.victory || Game.online) return location.reload();
+      $('quitScreen').classList.add('hidden');
+      this.quitPaused = false;
+      Game.phase = 'over';
+      this.showEnd(true, Game.players.some(p => p.alive && !p.isHuman), this.victory.kind);
+    });
     $('attacks').addEventListener('click', e => {
       // (closest : le texte des boutons est remplacé par des icônes, le clic peut tomber sur l'icône)
       const def = e.target.closest('[data-defend]');
@@ -557,6 +565,7 @@ const UI = {
   // Lance la partie (solo ou en ligne) et prépare l'écran de jeu
   launch(opts) {
     this.waitFirstMove = false;
+    this.victory = null;
     this.dropAllianceRequests(true);
     Music.start(); // (🎵 la musique d'ambiance démarre avec la partie : le clic sur « Commencer » l'autorise)
     Game.init(opts);
@@ -1497,6 +1506,7 @@ const UI = {
   showEnd(win, canContinue = false, kind = '') {
     this.dropAllianceRequests(true);
     this.endKind = kind;
+    if (win && kind !== 'spectate') this.victory = { kind }; // (🏆 on a gagné : voir quitYes)
     const h = Game.human, secs = Math.floor(Game.tick / CONFIG.TICKS_PER_SECOND);
     $('endTitle').textContent = win ? tr('🏆 Victoire !', '🏆 Victory!') : tr('💀 Défaite...', '💀 Defeat...');
     $('endText').textContent = win

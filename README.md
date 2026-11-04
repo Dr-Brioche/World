@@ -1135,7 +1135,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    entière et sans détail : on voit les royaumes grandir, se battre et disparaître (avec l'heure de la partie et
    les plus grands royaumes du moment ; ▶️/⏸️ et une réglette pour revenir à un moment précis).
    **Anéantir un royaume** rapporte une **prime de 500 pièces**, plus **tout le trésor** qui lui restait.
-   Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux.
+   Après la victoire, le bouton **Continuer** te laisse finir la conquête si tu veux ; si tu t'arrêtes en route
+   (↩ Menu, puis Quitter), l'**écran de victoire** revient, avec son **Résumé** : tu as gagné.
+   🏳️ Un royaume qui n'a **plus aucune ville** (ni port fortifié, ni avant-poste) et ne tient plus que **30 cases au
+   plus** se **disperse** : ses dernières terres redeviennent libres (souvent un bout coincé entre un sommet et un
+   fleuve, que personne ne pourrait atteindre). Réglage : `REMNANT_TILES` dans `js/config.js`.
 7. **Joue à plusieurs, en ligne** 🌐 : quand le jeu vient d'un **serveur de jeu** (voir
    [`serveur/PROTOCOLE.md`](serveur/PROTOCOLE.md) : `node serveur/serveur.js`, puis http://localhost:8080), le menu
    affiche **🌐 Jouer en ligne** (sous « Commencer la conquête ») :
@@ -1250,6 +1254,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.13** : 🏳️ un royaume sans plus aucune ville réduit à 30 cases au plus se **disperse** (ses dernières terres redeviennent libres) : plus de débris imprenable coincé entre un sommet et un fleuve qui empêche de finir la partie · 🏆 après une victoire et « Continuer », quitter la partie ramène à l'**écran de victoire** (avec son Résumé) au lieu du menu
 - **v0.98.12** : ⚔️ une armée qui **prend une ville ou une zone** ne fait plus de retraite à pied : elle est déjà sur tes terres, ses survivants rejoignent ton royaume tout de suite (la retraite reste pour un assaut repoussé ou bloqué chez l'ennemi)
 - **v0.98.11** : 🎲 en solo, avec le placement **aléatoire**, la partie attend en pause après la fondation de ta capitale : elle commence à ta première conquête (double clic sur une terre) ou avec Espace
 - **v0.98.10** : 🤝 le drapeau « Masse d'armes » est remplacé par **La Création** : deux mains qui se tendent l'une vers l'autre, sur fond rose
