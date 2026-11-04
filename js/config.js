@@ -125,7 +125,6 @@ const CONFIG = {
   START_GOLD: 10,
   START_RADIUS: 3,         // taille du territoire de départ
   MIN_SPAWN_DISTANCE: 18,  // distance minimale entre deux capitales
-  SPOT_SNAP: 16,           // 🏟️ carte arène : un clic à moins de 16 cases d'une place de départ prévue la choisit
 
   // --- Soldats ---
   BASE_MAX_TROOPS: 20,

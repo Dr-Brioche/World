@@ -47,8 +47,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible) ; une petite bulle
    près de la souris indique la **défense** qu'aurait ta capitale à cet endroit (terrain + murs).
    🎲 **Placement de la capitale** (menu) : **Libre** (tu cliques où tu veux, comme ci-dessus), **Aléatoire** (le jeu la
-   fonde tout de suite pour toi, à une place au hasard où tu aurais pu la fonder ; grisé dans les scénarios) ou, sur une
-   carte arène, **Places prévues** (choisi d'office : tu cliques sur une des places de départ, les écussons dorés).
+   fonde tout de suite pour toi, à une place au hasard où tu aurais pu la fonder ; sur une carte arène, à une des places
+   de départ prévues, au hasard ; grisé dans les scénarios) ou, sur une carte arène, **Places prévues** (choisi
+   d'office : tu cliques où tu veux commencer, n'importe où sur la carte, et ta capitale va à la place de départ libre
+   la plus proche, un écusson doré ; le survol montre laquelle).
    🏟️ **Cartes arène** (symétriques, pas réalistes, à la façon de Warcraft 3 ou d'Age of Empires) : chacun commence à
    égalité, à une **place de départ prévue**, autour d'un **centre riche** et disputé. Rien n'est bâti d'avance : les places
    sont vides, tu y fondes ta capitale (ou ailleurs, en placement **Libre**) ; seuls les **filons** sont posés à l'avance,
@@ -93,7 +95,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      carrière près de la côte ; entre deux voisins, une **crête de montagne** (lente à passer, avec un col) et un filon à
      partager, tour à tour de l'**or** et du **fer** (chacun en a un de chaque à côté de lui) ; au centre, un plateau entouré
      d'un fleuve (un diamant, 5 mines d'or). Sur une carte arène, le menu propose d'office un rival par place prévue.
-     Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js` ; `SPOT_SNAP` dans `js/config.js`.
+     Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js`.
    🗺️ **Choix de la carte** : les cartes sont rangées par sortes (aléatoires, arène, prédéfinies, scénarios, dessinées),
    chacune dans une **section qui se déplie** d'un clic (une seule ouverte à la fois ; celle de la carte choisie l'est d'office),
    en liste : les cartes arène par **nombre de joueurs**, les scénarios par **année**, les cartes dessinées par nom.
@@ -1144,8 +1146,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **15 s, une fois toutes les 5 minutes**. Si l'hôte s'en va, le joueur suivant prend sa place.
    - Pas de nom écrit (ou « Mon Royaume » laissé tel quel) : ton royaume reçoit un **nom au hasard** (Valdor, Brumeval…),
      pour que tout le monde ne s'appelle pas pareil ; deux joueurs au même nom deviennent « Valdor » et « Valdor II ».
-   - Au début, chacun a **15 secondes** pour fonder sa capitale (sinon, une place au hasard), puis la partie commence pour
-     tous. Les autres joueurs ont un 👤 dans le classement ; on peut leur proposer un pacte (ils répondent eux-mêmes),
+   - Au début, selon le **placement de la capitale** choisi par l'hôte (la partie publique : places prévues sur une
+     carte arène, sinon libre) :
+     - **Libre** : chacun a **15 secondes** pour cliquer où il veut fonder sa capitale (sinon, une place au hasard) ;
+     - **Places prévues** (carte arène) : chacun a **15 secondes** pour cliquer où il veut commencer et **réserver** la
+       place de départ libre la plus proche, avant les autres (si deux joueurs visent la même, le second a la plus
+       proche qui reste) ; sinon, une place prévue au hasard ;
+     - **Aléatoire** : tout le monde est placé au hasard dès le départ (sur une carte arène, aux places prévues), et on a
+       **10 secondes** pour regarder la carte ;
+     puis la partie commence pour tous. Les **cartes arène** se jouent aussi en ligne. Les autres joueurs ont un 👤 dans le classement ; on peut leur proposer un pacte (ils répondent eux-mêmes),
      les aider ou les attaquer comme un bot. Un joueur qui quitte la partie est remplacé par un **bot**. Vaincu, tu peux
      **👁️ regarder la suite** ; la partie s'arrête quand un royaume tient 70 % des terres (ou reste seul).
    - Les **scénarios** et les **cartes dessinées** se jouent en solo, pour l'instant. Si la connexion au serveur est
@@ -1235,6 +1244,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.6** : 🏟️ cartes arène, placement « Places prévues » : un clic n'importe où sur la carte choisit la place de départ libre la plus proche (plus besoin de viser l'écusson) ; « Aléatoire » prend une place prévue au hasard, « Libre » laisse commencer n'importe où · 🌐 **en ligne** : les cartes arène se jouent aussi en ligne, et l'hôte choisit le placement des capitales : libre (15 s pour cliquer où l'on veut), places prévues (15 s pour réserver une place avant les autres) ou aléatoire (tout le monde placé au hasard, 10 s pour regarder la carte) ; sinon, une place au hasard
 - **v0.98.5** : 🏰 le menu de départ est un tiers plus large et plus aéré (des choix plus larges, 4 drapeaux par rangée) ; sur un petit écran, il se resserre tout seul pour tout garder visible
 - **v0.98.4** : 🐓 un nouveau drapeau pour les parties libres : le **Coq guerrier** (un coq d'or armé d'une masse, sur fond rose)
 - **v0.98.3** : 📏 au menu de départ, tous les choix (nom du royaume, carte, taille, pactes, placement, difficulté, adversaires) ont la même largeur

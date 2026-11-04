@@ -541,27 +541,32 @@ const UI = {
       difficulty: DIFFICULTIES[s.difficulty] ? s.difficulty : 'normal',
       opponents: Math.max(0, s.opponents | 0),
       pacts: !!s.pacts,
+      // (🏟️ placement des capitales : les places prévues d'une carte arène, au hasard, ou libre ; voir beginOnline)
+      spotMode: s.spawnMode === 'places', spawnRandom: s.spawnMode === 'aleatoire',
     });
     this.refreshHostButtons();
     this.refreshPauseButton();
     const others = Game.players.filter(p => p.human && !p.isHuman).map(p => p.name);
     const bots = Game.players.filter(p => !p.human).length;
-    this.log(tr(`🌐 Partie en ligne${others.length ? ` avec ${others.join(', ')}` : ''} (et ${bots} bots). Choisis vite où fonder ta capitale : la partie commence dans ${Net.spawnLeft()} s (sinon, une place au hasard).`,
-      `🌐 Online game${others.length ? ` with ${others.join(', ')}` : ''} (and ${bots} bots). Quickly choose where to found your capital: the game starts in ${Net.spawnLeft()} s (otherwise, a random spot).`), 'good');
+    const n = Net.spawnLeft(), who = tr(`🌐 Partie en ligne${others.length ? ` avec ${others.join(', ')}` : ''} (et ${bots} bots). `, `🌐 Online game${others.length ? ` with ${others.join(', ')}` : ''} (and ${bots} bots). `);
+    this.log(who + (Game.spawnRandom ? tr(`Placement aléatoire : chacun est déjà placé au hasard. Regarde la carte : la partie commence dans ${n} s.`, `Random placement: everyone is already placed at random. Look at the map: the game starts in ${n} s.`)
+      : Game.spotMode ? tr(`Clique vite où tu veux commencer : la place de départ libre la plus proche est à toi, avant les autres. La partie commence dans ${n} s (sinon, une place prévue au hasard).`,
+        `Quickly click where you want to start: the nearest free starting place is yours, before the others. The game starts in ${n} s (otherwise, a random planned place).`)
+      : tr(`Choisis vite où fonder ta capitale : la partie commence dans ${n} s (sinon, une place au hasard).`, `Quickly choose where to found your capital: the game starts in ${n} s (otherwise, a random spot).`)), 'good');
   },
   // Lance la partie (solo ou en ligne) et prépare l'écran de jeu
   launch(opts) {
     this.dropAllianceRequests(true);
     Music.start(); // (🎵 la musique d'ambiance démarre avec la partie : le clic sur « Commencer » l'autorise)
     Game.init(opts);
-    this.centeredOnline = false;
+    this.centeredOnline = this.startedOnline = false;
     $('kBanner').src = BANNERS[this.banner].icon;
     $('speedBtn').textContent = '⏩ x1'; // (chaque partie commence à vitesse normale)
     Render.setupMap();
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
-    $('hint').textContent = Game.spotMode ? tr('👑 Les royaumes rivaux sont déjà installés : clique sur une place de départ libre (un écusson doré) pour fonder ta capitale',
-      '👑 The rival kingdoms are already settled: click on a free starting place (a golden shield) to found your capital')
+    $('hint').textContent = Game.spotMode ? tr('👑 Les royaumes rivaux sont déjà installés : clique où tu veux commencer, ta capitale ira à la place de départ libre la plus proche (un écusson doré)',
+      '👑 The rival kingdoms are already settled: click where you want to start, your capital will go to the nearest free starting place (a golden shield)')
       : tr('👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale',
       '👑 The rival kingdoms are already settled: click on free land to found your capital');
     // 🎲 Placement de la capitale « Aléatoire » (menu, en solo) : le jeu la fonde tout de suite, à une place au hasard
@@ -712,7 +717,7 @@ const UI = {
     $('netJoin').addEventListener('click', () => { if ($('netCode').value.trim()) Net.joinRoom($('netCode').value); });
     $('netCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('netJoin').click(); });
     // (l'hôte d'un salon privé change un réglage : tout le salon le voit ; les scénarios restent pour le jeu en solo)
-    for (const id of ['mapType', 'mapSize', 'pacts', 'difficulty', 'opponents']) {
+    for (const id of ['mapType', 'mapSize', 'pacts', 'difficulty', 'opponents', 'spawnMode']) {
       $(id).addEventListener('change', () => {
         if (!Net.room) return;
         if (id === 'mapType' && !CONFIG.NET.MAPS.includes($('mapType').value)) {
@@ -749,7 +754,7 @@ const UI = {
   netSettings() {
     const m = $('mapType').value;
     return { mapType: CONFIG.NET.MAPS.includes(m) ? m : 'normal', mapSize: $('mapSize').value, pacts: $('pacts').value === 'oui',
-      difficulty: $('difficulty').value, opponents: +$('opponents').value };
+      difficulty: $('difficulty').value, opponents: +$('opponents').value, spawnMode: $('spawnMode').value };
   },
   netStatus(text, kind = '') {
     $('netStatus').textContent = text;
@@ -763,14 +768,14 @@ const UI = {
     $('netBtns').classList.toggle('hidden', !!r);
     $('startBtn').classList.toggle('hidden', !!r);
     const lock = !!r && !host;
-    for (const id of ['mapBtn', 'mapSize', 'pacts', 'difficulty', 'opponents']) $(id).disabled = lock;
+    for (const id of ['mapBtn', 'mapSize', 'pacts', 'difficulty', 'opponents', 'spawnMode']) $(id).disabled = lock;
     if (!r) {
       this.netStatus('');
       $('mapType').dispatchEvent(new Event('change')); // (les réglages reprennent leur état habituel)
       return;
     }
     if (!host && r.settings) this.applyNetSettings(r.settings);
-    if (lock) for (const id of ['mapBtn', 'mapSize', 'pacts', 'difficulty', 'opponents']) $(id).disabled = true;
+    if (lock) for (const id of ['mapBtn', 'mapSize', 'pacts', 'difficulty', 'opponents', 'spawnMode']) $(id).disabled = true;
     this.netStatus('');
     const you = tr(' (toi)', ' (you)');
     const players = r.players.map(p => `<li>${BANNERS[p.banner] ? `<img src="${BANNERS[p.banner].icon}" alt="">` : ''}` +
@@ -812,6 +817,9 @@ const UI = {
     }
     $('pacts').value = st.pacts ? 'oui' : 'non';
     if (DIFFICULTIES[st.difficulty]) $('difficulty').value = st.difficulty;
+    // (le placement des capitales : « Places prévues » n'existe que sur une carte arène)
+    const sp = $('spawnMode').querySelector(`option[value="${st.spawnMode}"]`);
+    if (sp && !sp.disabled) $('spawnMode').value = st.spawnMode;
     // (le nombre de bots : on l'ajoute à la liste s'il n'y est pas, pour l'afficher tel quel)
     const n = String(st.opponents | 0);
     if (![...$('opponents').options].some(o => o.value === n)) {
@@ -1868,11 +1876,15 @@ const UI = {
 
     this.refreshAttacks();
 
-    // (🌐 en ligne, la partie commence : la caméra va sur sa capitale, choisie ou tirée au hasard)
-    if (G.online && G.phase === 'playing' && !this.centeredOnline) {
+    // (🌐 en ligne, la partie commence : la caméra va sur sa capitale, choisie ou tirée au hasard ; en placement
+    //  aléatoire, dès le début, pour regarder autour de soi pendant le compte à rebours)
+    if (G.online && !this.centeredOnline && (G.phase === 'playing' || (G.spawnRandom && G.human.capital >= 0))) {
       this.centeredOnline = true;
       const half = G.sizeOf(B_CASTLE) / 2;
       if (G.human.capital >= 0) Render.centerOn(G.human.capital % G.W + half, ((G.human.capital / G.W) | 0) + half);
+    }
+    if (G.online && G.phase === 'playing' && !this.startedOnline) {
+      this.startedOnline = true;
       this.log(tr('⚔️ La partie commence !', '⚔️ The game begins!'), 'good');
     }
     if (G.phase === 'playing') {
@@ -2112,7 +2124,7 @@ const UI = {
   // Avant de fonder sa capitale : en survolant, le terrain et la défense qu'aurait la zone de sa première ville
   // (terrain + murs du fort en bois, en moyenne dans sa muraille), ou pourquoi on ne peut pas la fonder là
   spawnHint(i) {
-    const G = Game, base = G.spotMode ? tr('👑 Clique sur une place de départ prévue (un écusson doré) pour y fonder ta capitale', '👑 Click on a planned starting place (a golden shield) to found your capital there')
+    const G = Game, base = G.spotMode ? tr('👑 Clique sur la carte : ta capitale sera fondée à la place de départ libre la plus proche (un écusson doré)', '👑 Click on the map: your capital will be founded at the nearest free starting place (a golden shield)')
       : tr('👑 Clique sur une terre libre pour fonder ta capitale', '👑 Click on free land to found your capital');
     if (i >= 0 && G.spotMode && G.startSpotNear(i) >= 0) i = G.startSpotNear(i);
     if (i < 0 || !G.isLand(i)) return base;
