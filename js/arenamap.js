@@ -49,6 +49,9 @@ const ARENA_MAPS = {
   // ❄️ au sud des terres fertiles, au nord la neige et les filons : l'économie ou la force ?
   nord: { name: tr('Les Terres du Nord', 'The Northern Lands'), W: 600, H: 440, players: 4,
     desc: tr('Au sud des terres fertiles, au nord la neige et tous les filons : l\'économie ou la force ?', 'In the south fertile land, in the north snow and every ore vein: economy or strength?') },
+  // 🛡️ 20 royaumes serrés en cercle sur une petite île : des voisins partout, dès la première minute
+  melee: { name: tr('La Mêlée', 'The Melee'), W: 400, H: 400, players: 20,
+    desc: tr('20 royaumes serrés en cercle sur une petite île, autour d\'un centre riche : pas de place, des voisins dès la première minute.', '20 kingdoms packed in a circle on a small island, around a rich centre: no room, neighbours from the very first minute.') },
 };
 
 function generateArenaMap(type, seed) {
@@ -425,6 +428,31 @@ function generateArenaMap(type, seed) {
     deposit(cx - 1, H * 0.1, 'diamond');
     deposit(cx - 1, H * 0.25, 'gold');
     for (const s of [-1, 1]) m.relicSpots.push(at(cx + s * 30, H * 0.12));
+  } else if (type === 'melee') {
+    // 🛡️ La Mêlée : une petite île ronde, 20 places en cercle (à peine 47 cases entre deux capitales : 5 fois moins de
+    // place que sur La Couronne). Derrière chaque capitale, une carrière près de la côte ; entre deux voisins, une
+    // crête de montagne (lente à passer, avec un col) et, plus près du centre, un filon à partager, tour à tour de l'or
+    // et du fer (chacun en a un de chaque à côté de lui) ; au centre, un plateau entouré d'un fleuve (diamant, 5 mines d'or).
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, phi, fx, fy } = fold(x, y, 20), i = y * W + x, w = wobble(fx, fy);
+      let t = land(fx, 2.5 * fy, 0.66, 0.86); // (une part est très étroite : on étire le relief en largeur, sinon il fait des anneaux)
+      if (r > 188 + 5 * wobble(fx, fy, 2)) t = T.WATER;
+      else if (r < 8) t = T.MOUNTAIN;
+      else if (r < 48) t = fbm(forestNoise, fx / 10, fy / 10, 2) > 0.55 ? T.WOODED_HILLS : T.HILLS; // (le plateau du centre)
+      else if (r < 52.5) t = T.RIVER; // (l'anneau de fleuve)
+      else if (r > 124 && r * phi < 2.5 + 0.8 * w) t = r > 146 && r < 155 ? T.HILLS : T.MOUNTAIN; // (la crête entre deux voisins, et son col)
+      terrain[i] = t;
+    }
+    const part = 18 * DEG;
+    for (let k = 0; k < 20; k++) {
+      const a = k * part + part / 2;
+      spot(...polar(150, a));
+      deposit(...polar(172, a).map(v => v - 1), 'stone');
+      deposit(...polar(106, k * part).map(v => v - 1), k % 2 ? 'iron' : 'gold'); // (entre deux voisins : à partager)
+    }
+    deposit(cx - 1, cy - 1, 'diamond');
+    for (let k = 0; k < 5; k++) deposit(...polar(31, k * 72 * DEG + 36 * DEG).map(v => v - 1), 'gold');
+    for (let k = 0; k < 5; k++) m.relicSpots.push(at(...polar(22, k * 72 * DEG)));
   }
 
   // (petites variations de couleur pour un rendu moins plat)

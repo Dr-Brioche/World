@@ -104,7 +104,8 @@ const UI = {
     this.wantOpp = 7;
     $('opponents').addEventListener('change', () => { this.wantOpp = +$('opponents').value; });
     const fillOpponents = () => {
-      const cur = this.wantOpp, max = this.maxOpponents();
+      // (🏟️ sur une carte arène : d'office un rival par place prévue, qu'on peut baisser)
+      const max = this.maxOpponents(), cur = ARENA_MAPS[this.mapType()] ? max : this.wantOpp;
       $('opponents').innerHTML = '';
       for (let n = CONFIG.MIN_OPPONENTS; n <= max; n++) {
         $('opponents').insertAdjacentHTML('beforeend', `<option value="${n}"${n === Math.min(cur, max) ? ' selected' : ''}>${tr(`${n} royaumes rivaux`, `${n} rival kingdoms`)}</option>`);
