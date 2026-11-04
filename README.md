@@ -17,8 +17,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 5 **🏟️ cartes arène** symétriques
-  (La Couronne, Le Cratère, Le Carrefour des Fleuves, L'Archipel des Rois, Les Deux Rives), 3 cartes **prédéfinies**
+  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 13 **🏟️ cartes arène** symétriques
+  (La Couronne, Le Cratère, Le Labyrinthe, Les Mille Ponts, La Mer Intérieure…), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**,
   **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, **La guerre de Cent Ans (1337)** :
@@ -70,6 +70,24 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      d'or entre deux îles, et une **grande île au centre** (diamant, or et fer). Rien ne se fait sans **ports**.
    - **⚔️ Les Deux Rives (8)** : un **grand fleuve** coupe la carte en deux, **4 places de chaque côté**. Au milieu du fleuve,
      une **chaîne d'îles riches** (diamant, or, fer, pierre) qu'on rejoint à gué : le front se joue là.
+   - **🌀 Le Labyrinthe (4)** : un **dédale** d'anneaux de sommets percés de cols, avec des crêtes entre eux. Chaque royaume
+     sort de son couloir par deux cols ; derrière lui, une **impasse** avec sa mine d'or ; entre deux voisins, une impasse
+     partagée (du fer) ; la porte du centre (diamant, or) est au bout du dédale. Un mur bien placé ferme tout un pan de la carte.
+   - **🏜️ L'Oasis (6)** : un grand **désert** (−20 % de production) et quelques **oasis** fertiles : une petite par royaume,
+     une avec de l'or entre deux royaumes, et une grande au centre (diamant, fer, or), reliée aux autres par des fleuves.
+   - **🏔️ Les Hauts Plateaux (4)** : chaque royaume sur un **plateau de collines**, bordé de pentes de montagne percées de
+     4 rampes : bien défendu, mais lent à traverser. Entre les plateaux, de larges **vallées** de plaine, ouvertes et riches
+     (un fleuve, de l'or, du fer). Une carte plus lente : rester en hauteur, ou descendre dans les vallées ?
+   - **🌉 Les Mille Ponts (6)** : un **delta** découpé en dizaines d'îles par des bras de fleuve. Tout se passe à gué,
+     lentement : celui qui bâtit vite ses **ponts** avance deux fois plus vite.
+   - **✝️ Les Lieux Saints (6)** : au centre, une grande plaine ouverte avec **trois sanctuaires** où apparaissent les
+     **reliques** ; chaque royaume commence sur des **hauteurs** (+30 % pour les églises). Une partie de Croyance.
+   - **⛵ La Mer Intérieure (8)** : un anneau de terre autour d'une **grande mer** ; chacun a des voisins par la terre **et**
+     une côte sur la mer, à défendre sur deux fronts (débarquements, Vikings). Dans la mer, des îles d'or et une île au diamant.
+   - **🗻 La Montagne Sacrée (5)** : un grand **massif** au centre (montagnes et collines : lent à prendre, bien défendu),
+     du **fer** et de l'**or** sur ses flancs, un **diamant** au sommet enneigé ; 5 royaumes dans les plaines autour.
+   - **❄️ Les Terres du Nord (4)** : 4 royaumes en ligne. Au **sud**, des terres fertiles jusqu'à la mer ; au **nord**, la
+     **neige**, les collines et les montagnes, où sont les filons (fer, or, un diamant) : l'économie ou la force ?
      Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js` ; `SPOT_SNAP` dans `js/config.js`.
    🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
    montagnes ; réglages `FOREST_LEVEL`, `HILLS_LEVEL` et `MOUNTAIN_LEVEL` dans `js/config.js`) :
@@ -1155,6 +1173,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.95.0** : 🏟️ **8 nouvelles cartes arène** : **Le Labyrinthe** (un dédale de crêtes et d'impasses riches), **L'Oasis** (un désert et ses oasis), **Les Hauts Plateaux** (des plateaux défendus, des vallées riches), **Les Mille Ponts** (un delta de dizaines d'îles), **Les Lieux Saints** (trois sanctuaires à reliques), **La Mer Intérieure** (deux fronts, la terre et la mer), **La Montagne Sacrée** (un massif riche au centre) et **Les Terres du Nord** (le sud fertile, le nord minier)
 - **v0.94.0** : 🏟️ **5 cartes arène** symétriques, avec des **places de départ prévues** (vides : chacun y fonde sa capitale) et des filons posés aux mêmes distances pour tous : **La Couronne** (8 vallées autour d'un plateau entouré d'un fleuve), **Le Cratère** (un volcan à 6 portes au centre), **Le Carrefour des Fleuves** (4 coins, 4 grands fleuves, une île au trésor dans un lac), **L'Archipel des Rois** (une île chacun) et **Les Deux Rives** (4 contre 4 de part et d'autre d'un grand fleuve) · 🎲 nouveau placement de la capitale : **Places prévues** (ou toujours Libre et Aléatoire) · 📿 sur ces cartes, les reliques apparaissent au centre
 - **v0.93.19** : 🚩 une ville n'est plus **isolée** que si elle est **complètement encerclée** (il ne lui reste que sa muraille, sans terre autour) : tout autre morceau tenu par une ville ou un port fortifié est un cœur du royaume, quelle que soit sa taille (ses armées en partent, ses défenseurs y vont) · ✝️ une **église** (ou un port) **convertie** par la Croyance emporte **toute sa zone**, comme si elle était prise par un assaut
 - **v0.93.18** : ⚔️ le **recrutement de masse** est un peu plus fort (+25 % de bonus) : jusqu'à **x6** pour un tout petit royaume (au lieu de x5), environ x3,9 pour un royaume moyen (au lieu de x3,3), **x1,75** pour le plus grand (au lieu de x1,6)

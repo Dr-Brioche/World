@@ -20,6 +20,22 @@ const ARENA_MAPS = {
   archipel: { name: tr("L'Archipel des Rois", 'The Archipelago of Kings'), W: 600, H: 600, players: 8 },
   // ⚔️ deux rives d'un grand fleuve, 4 places de chaque côté, et une chaîne d'îles riches au milieu
   rives: { name: tr('Les Deux Rives', 'The Two Banks'), W: 640, H: 420, players: 8 },
+  // 🌀 un dédale de crêtes : des couloirs, des cols, et des richesses au fond des impasses
+  labyrinthe: { name: tr('Le Labyrinthe', 'The Labyrinth'), W: 520, H: 520, players: 4 },
+  // 🏜️ un grand désert et quelques oasis fertiles, reliées au centre par des fleuves
+  oasis: { name: tr("L'Oasis", 'The Oasis'), W: 540, H: 540, players: 6 },
+  // 🏔️ chacun sur un haut plateau (bien défendu, lent à traverser), et de riches vallées ouvertes entre eux
+  plateaux: { name: tr('Les Hauts Plateaux', 'The High Plateaus'), W: 520, H: 520, players: 4 },
+  // 🌉 un delta : des dizaines d'îles séparées par des bras de fleuve ; les ponts font tout
+  ponts: { name: tr('Les Mille Ponts', 'The Thousand Bridges'), W: 540, H: 540, players: 6 },
+  // ✝️ trois sanctuaires au centre, où les reliques apparaissent ; des hauteurs pour les églises
+  saints: { name: tr('Les Lieux Saints', 'The Holy Places'), W: 540, H: 540, players: 6 },
+  // ⛵ une mer au centre, entourée d'un anneau de terre : deux fronts, la terre et la côte
+  merinterieure: { name: tr('La Mer Intérieure', 'The Inland Sea'), W: 600, H: 600, players: 8 },
+  // 🗻 un grand massif au centre, lent et bien défendu, aux flancs riches en fer et en or
+  montagne: { name: tr('La Montagne Sacrée', 'The Sacred Mountain'), W: 540, H: 540, players: 5 },
+  // ❄️ au sud des terres fertiles, au nord la neige et les filons : l'économie ou la force ?
+  nord: { name: tr('Les Terres du Nord', 'The Northern Lands'), W: 600, H: 440, players: 4 },
 };
 
 function generateArenaMap(type, seed) {
@@ -202,6 +218,200 @@ function generateArenaMap(type, seed) {
     const kinds = ['diamond', 'gold', 'iron', 'gold', 'stone'];
     for (let k = 0; k < 5; k++) for (const s of k ? [-1, 1] : [1]) deposit(cx + s * k * 64 - 1, cy - 1, kinds[k]);
     for (const s of [-1, 1]) m.relicSpots.push(at(cx + s * 20, cy));
+  } else if (type === 'labyrinthe') {
+    // 🌀 Le Labyrinthe : des anneaux de sommets percés de cols, et des crêtes entre eux. Chaque royaume sort de son
+    // couloir par deux cols ; derrière lui, une impasse avec sa mine d'or ; entre deux voisins, une impasse partagée
+    // (du fer) ; la porte du centre (diamant, or) est entre deux voisins, au bout du dédale.
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, phi, fx, fy } = fold(x, y, 4), i = y * W + x, deg = phi / DEG, w = wobble(fx, fy);
+      let t = land(fx, fy, 0.62, 0.8);
+      if (r > 250 + 4 * w) t = T.PEAK;
+      else if (Math.abs(r - 202) < 4 && !(deg > 15 && deg < 21) && !(deg > 43)) t = T.PEAK;   // (anneau 1 : 2 cols, et l'entrée de l'impasse)
+      else if (r > 147 && r < 198 && r * phi < 3) t = T.PEAK;                                // (crête entre deux voisins)
+      else if (Math.abs(r - 145) < 4 && !(deg > 8 && deg < 12) && !(deg > 41)) t = T.PEAK;    // (anneau 2)
+      else if (r > 92 && r < 141 && Math.abs(deg - 22) < 1.4) t = T.PEAK;                    // (crêtes : des impasses)
+      else if (Math.abs(r - 90) < 4 && !(deg < 4)) t = T.PEAK;                                // (anneau 3 : la porte du centre)
+      else if (r < 7) t = T.MOUNTAIN;
+      terrain[i] = t;
+    }
+    const part = 90 * DEG;
+    for (let k = 0; k < 4; k++) {
+      const a = k * part + part / 2;
+      spot(...polar(226, a));
+      deposit(...polar(226, a + 10 * DEG).map(v => v - 1), 'stone');
+      deposit(...polar(118, a).map(v => v - 1), 'gold');            // (au fond de son impasse)
+      deposit(...polar(118, k * part).map(v => v - 1), 'iron');     // (l'impasse partagée entre deux voisins)
+      deposit(...polar(50, a).map(v => v - 1), 'gold');             // (au centre)
+    }
+    deposit(cx - 1, cy - 1, 'diamond');
+    for (let k = 0; k < 4; k++) m.relicSpots.push(at(...polar(30, k * part)));
+  } else if (type === 'oasis') {
+    // 🏜️ L'Oasis : un grand désert (−20 % de production), quelques collines. Chaque royaume commence dans une petite
+    // oasis ; entre deux royaumes, une oasis avec de l'or ; au centre, une grande oasis (diamant, fer), reliée aux autres
+    // par des fleuves.
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, phi, fx, fy } = fold(x, y, 6), i = y * W + x, w = wobble(fx, fy);
+      const home = DMath.hypot(fx - 200 * DMath.cos(30 * DEG), fy - 200 * DMath.sin(30 * DEG)), mid = DMath.hypot(fx - 122, fy);
+      let t = land(fx, fy, 0.64, 0.8);
+      const oasis = home < 34 + 4 * w || mid < 24 + 3 * w || r < 72 + 5 * w;
+      if (r > 255 + 4 * w) t = T.PEAK;
+      else if (r * phi < 1.6 && r > 66 && r < 102) t = T.RIVER; // (le fleuve qui relie l'oasis du centre à celle des voisins)
+      else if (!oasis && t !== T.HILLS && t !== T.MOUNTAIN && t !== T.WOODED_HILLS) t = T.DESERT;
+      else if (!oasis && t === T.WOODED_HILLS) t = T.HILLS;
+      terrain[i] = t;
+    }
+    const part = 60 * DEG;
+    for (let k = 0; k < 6; k++) {
+      const a = k * part + part / 2;
+      spot(...polar(200, a));
+      deposit(...polar(226, a).map(v => v - 1), 'stone');
+      deposit(...polar(122, k * part + 7 * DEG).map(v => v - 1), 'gold'); // (l'oasis entre deux royaumes)
+      deposit(...polar(150, a).map(v => v - 1), 'iron');                // (dans les collines du désert)
+      deposit(...polar(42, a).map(v => v - 1), k % 2 ? 'iron' : 'gold');  // (la grande oasis)
+    }
+    deposit(cx - 1, cy - 1, 'diamond');
+    for (let k = 0; k < 6; k++) m.relicSpots.push(at(...polar(24, k * part)));
+  } else if (type === 'plateaux') {
+    // 🏔️ Les Hauts Plateaux : chaque royaume sur un plateau de collines, bordé de pentes de montagne percées de 4 rampes ;
+    // entre les plateaux, de larges vallées de plaine, ouvertes et riches (un fleuve, de l'or, du fer) ; un diamant au
+    // centre, dans la plaine.
+    const P = [175 * DMath.cos(45 * DEG), 175 * DMath.sin(45 * DEG)]; // (le centre du plateau, replié)
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, phi, fx, fy } = fold(x, y, 4), i = y * W + x, deg = phi / DEG, w = wobble(fx, fy);
+      const edge = Math.min(x, y, W - 1 - x, H - 1 - y), d = DMath.hypot(fx - P[0], fy - P[1]);
+      const ramp = deg > 39.5 || Math.abs(r - 175) < 7; // (4 rampes : vers le centre, vers le bord, et vers les deux vallées)
+      let t;
+      if (edge < 9 + 3 * w) t = T.WATER;
+      else if (d < 62 + 3 * w) { // (le plateau : des collines, avec des replats de plaine)
+        const e = fbm(reliefNoise, fx / 10 + 9, fy / 10 + 4, 2);
+        t = e < 0.45 ? T.PLAINS : fbm(forestNoise, fx / 11, fy / 11, 2) > 0.55 ? T.WOODED_HILLS : T.HILLS;
+      }
+      else if (d < 71 + 3 * w) t = ramp ? T.HILLS : T.MOUNTAIN; // (ses pentes)
+      else if (r > 40 && r * phi < 1.6) t = T.RIVER;              // (le fleuve de la vallée)
+      else t = land(fx, fy, 0.75, 0.9);                            // (la vallée : surtout des plaines et des forêts)
+      terrain[i] = t;
+    }
+    const part = 90 * DEG;
+    for (let k = 0; k < 4; k++) {
+      const a = k * part + part / 2;
+      spot(...polar(175, a));
+      deposit(...polar(200, a + 8 * DEG).map(v => v - 1), 'stone');
+      deposit(...polar(140, k * part + 8 * DEG).map(v => v - 1), 'gold'); // (dans la vallée, au bord du fleuve)
+      deposit(...polar(140, k * part - 8 * DEG).map(v => v - 1), 'gold');
+      deposit(...polar(230, k * part + 6 * DEG).map(v => v - 1), 'iron');
+    }
+    deposit(cx - 1, cy - 1, 'diamond');
+    for (let k = 0; k < 4; k++) m.relicSpots.push(at(...polar(20, k * part + part / 2)));
+  } else if (type === 'ponts') {
+    // 🌉 Les Mille Ponts : un delta rond, découpé par des bras de fleuve en dizaines d'îles d'environ 30 cases de côté.
+    // Tout se passe à gué, lentement : bâtir des ponts change tout.
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, fx, fy } = fold(x, y, 6), i = y * W + x, w = wobble(fx, fy, 2);
+      let t = land(fx, fy, 0.66, 0.82);
+      const gx = (fx + 400) % 33, gy = (fy + 400 + 0.5 * fx) % 33; // (le quadrillage des bras du fleuve, un peu de biais)
+      if (r > 258 + 5 * w) t = T.WATER;
+      else if ((gx < 2 || gy < 2) && r > 22) t = T.RIVER;
+      terrain[i] = t;
+    }
+    const part = 60 * DEG;
+    for (let k = 0; k < 6; k++) {
+      const a = k * part + part / 2;
+      spot(...polar(205, a));
+      deposit(...polar(232, a).map(v => v - 1), 'stone');
+      deposit(...polar(155, a).map(v => v - 1), 'iron');
+      deposit(...polar(110, k * part).map(v => v - 1), 'gold');
+      deposit(...polar(60, a).map(v => v - 1), k % 2 ? 'iron' : 'gold');
+    }
+    deposit(cx - 1, cy - 1, 'diamond');
+    for (let k = 0; k < 6; k++) m.relicSpots.push(at(...polar(14, k * part)));
+  } else if (type === 'saints') {
+    // ✝️ Les Lieux Saints : au centre, une grande plaine ouverte avec trois sanctuaires (les reliques y apparaissent) ;
+    // chaque royaume commence sur des hauteurs (+30 % pour les églises), à égale distance d'un sanctuaire.
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, fx, fy } = fold(x, y, 6), i = y * W + x, w = wobble(fx, fy);
+      let t = land(fx, fy);
+      if (r > 255 + 4 * w) t = T.PEAK;
+      else if (r < 92 + 4 * w) t = fbm(forestNoise, fx / 12, fy / 12, 2) > 0.7 ? T.FOREST : T.PLAINS; // (la plaine sainte)
+      else if (r > 165) t = land(fx, fy, 0.42, 0.85); // (les hauteurs : surtout des collines)
+      terrain[i] = t;
+    }
+    const part = 60 * DEG;
+    for (let k = 0; k < 6; k++) {
+      const a = k * part + part / 2;
+      spot(...polar(205, a));
+      deposit(...polar(232, a).map(v => v - 1), 'stone');
+      deposit(...polar(140, a).map(v => v - 1), 'iron');
+      deposit(...polar(112, k * part).map(v => v - 1), 'gold');
+    }
+    for (let k = 0; k < 3; k++) for (const d of [-4, 4]) m.relicSpots.push(at(...polar(46, k * 120 * DEG + d * DEG))); // (les 3 sanctuaires)
+  } else if (type === 'merinterieure') {
+    // ⛵ La Mer Intérieure : un anneau de terre autour d'une grande mer ; chaque royaume a une côte sur la mer, et des
+    // voisins par la terre. Dans la mer, des îles riches (or) et une île au centre (diamant).
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, fx, fy } = fold(x, y, 8), i = y * W + x, w = wobble(fx, fy, 1.5);
+      let t = land(fx, fy);
+      const isle = DMath.hypot(fx - 95, fy) < 17 + 2 * w;
+      if (r > 274 + 5 * w) t = T.WATER;
+      else if (r < 150 + 6 * w && !isle && r > 30 + 2 * w) t = T.WATER;
+      terrain[i] = t;
+    }
+    const part = 45 * DEG;
+    for (let k = 0; k < 8; k++) {
+      const a = k * part + part / 2;
+      spot(...polar(195, a));
+      deposit(...polar(245, a).map(v => v - 1), 'stone');
+      deposit(...polar(232, k * part).map(v => v - 1), 'iron'); // (entre deux voisins)
+      deposit(...polar(95, k * part).map(v => v - 1), 'gold');  // (une île de la mer)
+    }
+    deposit(cx - 1, cy - 1, 'diamond');
+    for (let k = 0; k < 8; k++) m.relicSpots.push(at(...polar(12, k * part)));
+  } else if (type === 'montagne') {
+    // 🗻 La Montagne Sacrée : un grand massif au centre (montagnes et collines : lent à prendre, bien défendu), avec du
+    // fer et de l'or sur ses flancs et un diamant au sommet ; 5 royaumes dans les plaines autour.
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, fx, fy } = fold(x, y, 5), i = y * W + x, w = wobble(fx, fy);
+      let t = land(fx, fy);
+      if (r > 258 + 4 * w) t = T.PEAK;
+      else if (r < 14) t = T.SNOW;
+      else if (r < 128 + 8 * w) t = fbm(reliefNoise, fx / 9, fy / 9, 3) > 0.46 ? T.MOUNTAIN : T.HILLS; // (le massif)
+      else if (r < 150) t = land(fx, fy, 0.5, 0.8);
+      terrain[i] = t;
+    }
+    const part = 72 * DEG;
+    for (let k = 0; k < 5; k++) {
+      const a = k * part + part / 2;
+      spot(...polar(200, a));
+      deposit(...polar(226, a).map(v => v - 1), 'stone');
+      deposit(...polar(105, a).map(v => v - 1), 'gold');       // (sur le flanc, face à lui)
+      deposit(...polar(75, k * part).map(v => v - 1), 'iron'); // (sur le flanc, entre deux voisins)
+    }
+    deposit(cx - 1, cy - 1, 'diamond');
+    for (let k = 0; k < 5; k++) m.relicSpots.push(at(...polar(24, k * part + part / 2)));
+  } else if (type === 'nord') {
+    // ❄️ Les Terres du Nord : 4 royaumes en ligne, au milieu de la carte. Au sud, des terres fertiles (plaines, forêts)
+    // jusqu'à la mer ; au nord, la neige, les collines et les montagnes, où sont les filons (fer, or, et un diamant).
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const fx = Math.abs(x + 0.5 - cx), i = y * W + x, w = wobble(fx, y), v = y / H;
+      let t;
+      if (fx > W / 2 - 8 - 3 * w || v < 0.03 + 0.01 * w) t = T.PEAK;
+      else if (v > 0.93 + 0.02 * w) t = T.WATER;
+      else if (v < 0.36 + 0.03 * w) { // (le nord : neige, collines, montagnes)
+        const e = fbm(reliefNoise, fx / 14 + 5, y / 14, 3);
+        t = e > 0.72 ? T.MOUNTAIN : e > 0.5 ? T.SNOW : T.HILLS;
+      } else if (v > 0.6) t = land(fx, y, 0.8, 0.95); // (le sud : fertile)
+      else t = land(fx, y);
+      terrain[i] = t;
+    }
+    for (const sx of [-1, 1]) for (const d of [70, 205]) {
+      const x = cx + sx * d;
+      spot(x, H * 0.5);
+      deposit(x - 1, H * 0.57, 'stone');
+      deposit(x - 1, H * 0.24, 'iron');
+      deposit(x + sx * 30 - 1, H * 0.14, 'gold');
+    }
+    deposit(cx - 1, H * 0.1, 'diamond');
+    deposit(cx - 1, H * 0.25, 'gold');
+    for (const s of [-1, 1]) m.relicSpots.push(at(cx + s * 30, H * 0.12));
   }
 
   // (petites variations de couleur pour un rendu moins plat)
