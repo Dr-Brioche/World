@@ -59,6 +59,7 @@ function generateMap(seed, type = 'normal', size = 'moyen') {
   if (type === 'centans') return generateCentAnsMap(seed); // la France de la guerre de Cent Ans (voir europemap.js)
   if (type === 'croisades') return generateCroisadesMap(seed); // de Londres à Bagdad, au temps des croisades (voir europemap.js)
   if (type === 'azeroth') return generateAzerothMap(seed); // le monde d'Azeroth (voir azerothmap.js)
+  if (ARENA_MAPS[type]) return generateArenaMap(type, seed); // 🏟️ une carte arène, symétrique (voir arenamap.js)
   // une carte dessinée avec l'éditeur (voir custommaps.js) ; si elle n'existe plus, une carte normale
   if (type.startsWith('custom:')) {
     const m = CustomMaps.find(type.slice(7));

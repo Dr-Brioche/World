@@ -3028,22 +3028,40 @@ const Render = {
       this.drawWhiteFlags(ox, oy);
     }
 
+    // 🏟️ Carte arène, pendant le placement : les places de départ prévues encore libres (un écusson vide, doré)
+    if (G.phase === 'spawn' && G.spots) {
+      for (const sp of G.freeSpots()) {
+        const x = ox + (sp % G.W + 0.5) * s, y = oy + (((sp / G.W) | 0) + 0.5) * s, R = Math.max(16, s * 3.2);
+        ctx.beginPath();
+        ctx.arc(x, y, R, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(30,18,6,0.55)';
+        ctx.fill();
+        ctx.setLineDash([4, 3]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#f0c94a';
+        ctx.stroke();
+        ctx.setLineDash([]);
+        Icons.draw(ctx, 'shield', x, y, R * 1.1, '#f0c94a');
+      }
+    }
     // Case survolée (et aperçu de la capitale pendant le placement)
     if (this.hover >= 0 && (G.phase === 'spawn' || G.phase === 'playing')) {
-      const hx = this.hover % G.W, hy = (this.hover / G.W) | 0;
+      // (🏟️ placement « Places prévues » : l'aperçu se cale sur la place de départ la plus proche)
+      const at = G.phase === 'spawn' && G.spotMode && G.startSpotNear(this.hover) >= 0 ? G.startSpotNear(this.hover) : this.hover;
+      const hx = at % G.W, hy = (at / G.W) | 0;
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
       ctx.lineWidth = 1.5;
       if (G.phase === 'spawn') {
         // Aperçu de la capitale : blanc si on peut la fonder ici, rouge sinon (trop près d'un rival…)
-        const ok = !G.spawnError(this.hover);
+        const ok = !G.spawnError(at);
         ctx.beginPath();
         ctx.arc(ox + (hx + 0.5) * s, oy + (hy + 0.5) * s, (CONFIG.START_RADIUS + 0.5) * s, 0, Math.PI * 2);
         ctx.strokeStyle = ok ? 'rgba(255,255,255,0.9)' : 'rgba(230,70,60,0.95)';
         ctx.lineWidth = ok ? 1.5 : 2.5;
         ctx.stroke();
         // Petite bulle près de la souris : la défense qu'aurait la capitale ici (terrain + murs, voir UI.spawnDefense)
-        if (ok && this.mouse && G.isLand(this.hover) && !(G.online && G.human.spawned)) {
-          const def = Math.round(UI.spawnDefense(this.hover) * 100);
+        if (ok && this.mouse && G.isLand(at) && !(G.online && G.human.spawned)) {
+          const def = Math.round(UI.spawnDefense(at) * 100);
           this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: tr(`🛡️ Défense : +${def} %`, `🛡️ Defense: +${def}%`) };
         }
       } else if (UI.selectedBuild && this.mouse) {

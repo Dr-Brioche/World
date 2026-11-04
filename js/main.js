@@ -87,8 +87,14 @@ const UI = {
     this.setupMapPick();
     // Taille de la carte : seulement pour les cartes aléatoires (Monde, Europe, Azeroth et les cartes dessinées ont leur taille)
     const sizeForType = () => {
-      const t = this.mapType();
-      $('mapSize').disabled = ['world', 'europe', 'azeroth', 'charlemagne', 'centans', 'croisades'].includes(t) || t.startsWith('custom:');
+      const t = this.mapType(), arena = !!ARENA_MAPS[t];
+      $('mapSize').disabled = ['world', 'europe', 'azeroth', 'charlemagne', 'centans', 'croisades'].includes(t) || t.startsWith('custom:') || arena;
+      // (🏟️ une carte arène : on propose ses places de départ prévues ; ailleurs, ce choix n'existe pas)
+      const places = $('spawnMode').querySelector('option[value="places"]');
+      places.disabled = !arena;
+      if (arena && this.lastMapArena !== true) $('spawnMode').value = 'places';
+      if (!arena && $('spawnMode').value === 'places') $('spawnMode').value = 'libre';
+      this.lastMapArena = arena;
     };
     $('mapType').addEventListener('change', sizeForType);
     sizeForType();
@@ -346,6 +352,7 @@ const UI = {
     if (t === 'world') [W, H] = [C.WORLD_MAP_WIDTH, C.WORLD_MAP_HEIGHT];
     else if (t === 'europe') [W, H] = [C.EUROPE_MAP_WIDTH, C.EUROPE_MAP_HEIGHT];
     else if (t === 'azeroth') [W, H] = [C.AZEROTH_MAP_WIDTH, C.AZEROTH_MAP_HEIGHT];
+    else if (ARENA_MAPS[t]) return Math.max(C.MIN_OPPONENTS, ARENA_MAPS[t].players - 1); // (🏟️ une place prévue chacun)
     else if (t.startsWith('custom:')) {
       const m = CustomMaps.all().find(m => 'custom:' + m.name === t);
       [W, H] = m ? [m.W, m.H] : C.MAP_SIZES.moyen;
@@ -405,6 +412,7 @@ const UI = {
       mapType: this.mapType(),
       mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
+      spotMode: $('spawnMode').value === 'places', // (🏟️ carte arène : fonder sa capitale à une place prévue)
       seed: this.nextSeed, // (en solo : rien, une graine au hasard ; voir Game.init)
     });
   },
@@ -437,7 +445,9 @@ const UI = {
     Render.setupMap();
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
-    $('hint').textContent = tr('👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale',
+    $('hint').textContent = Game.spotMode ? tr('👑 Les royaumes rivaux sont déjà installés : clique sur une place de départ libre (un écusson doré) pour fonder ta capitale',
+      '👑 The rival kingdoms are already settled: click on a free starting place (a golden shield) to found your capital')
+      : tr('👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale',
       '👑 The rival kingdoms are already settled: click on free land to found your capital');
     // 🎲 Placement de la capitale « Aléatoire » (menu, en solo) : le jeu la fonde tout de suite, à une place au hasard
     if (Game.phase === 'spawn' && !Game.online && $('spawnMode').value === 'aleatoire') this.randomSpawn();
@@ -501,9 +511,10 @@ const UI = {
   // 🎲 Fonde la capitale du joueur à une place au hasard (une terre libre où il pourrait la fonder lui-même, voir
   // spawnError), et y centre la caméra. Sans place possible (rare), on le laisse choisir en cliquant.
   randomSpawn() {
-    const G = Game;
+    const G = Game, free = G.freeSpots();
     for (let tries = 0; tries < 20000; tries++) {
-      const i = (G.rand() * G.N) | 0;
+      // (🏟️ une carte arène : une des places de départ prévues encore libres)
+      const i = free.length ? free[(G.rand() * free.length) | 0] : (G.rand() * G.N) | 0;
       if (G.spawnError(i)) continue;
       G.startGame(i);
       const half = G.sizeOf(B_CASTLE) / 2, c = G.human.capital;
@@ -1979,7 +1990,9 @@ const UI = {
   // Avant de fonder sa capitale : en survolant, le terrain et la défense qu'aurait la zone de sa première ville
   // (terrain + murs du fort en bois, en moyenne dans sa muraille), ou pourquoi on ne peut pas la fonder là
   spawnHint(i) {
-    const G = Game, base = tr('👑 Clique sur une terre libre pour fonder ta capitale', '👑 Click on free land to found your capital');
+    const G = Game, base = G.spotMode ? tr('👑 Clique sur une place de départ prévue (un écusson doré) pour y fonder ta capitale', '👑 Click on a planned starting place (a golden shield) to found your capital there')
+      : tr('👑 Clique sur une terre libre pour fonder ta capitale', '👑 Click on free land to found your capital');
+    if (i >= 0 && G.spotMode && G.startSpotNear(i) >= 0) i = G.startSpotNear(i);
     if (i < 0 || !G.isLand(i)) return base;
     const err = G.spawnError(i);
     if (err) return `${base} · ⚠️ ${err}`;
@@ -2720,12 +2733,15 @@ const UI = {
   },
 
   onMapClick(sx, sy) {
-    const G = Game, i = Render.tileAt(sx, sy);
+    const G = Game;
+    let i = Render.tileAt(sx, sy);
     if (i < 0) return;
     // (terres libres : il faut deux clics de suite pour les attaquer, voir plus bas)
     const armed = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
     this.freeArm = 0;
     if (G.phase === 'spawn') {
+      // (🏟️ placement « Places prévues » : le clic choisit la place de départ libre la plus proche)
+      if (G.spotMode && G.startSpotNear(i) >= 0) i = G.startSpotNear(i);
       const err = G.spawnError(i);
       if (err) return this.log(err, 'warn');
       // (🌐 en ligne : chacun choisit sa place pendant le compte à rebours, la partie commence pour tous ensuite ;

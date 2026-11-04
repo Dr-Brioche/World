@@ -17,7 +17,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec 3 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 3 cartes **prédéfinies**
+  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 5 **🏟️ cartes arène** symétriques
+  (La Couronne, Le Cratère, Le Carrefour des Fleuves, L'Archipel des Rois, Les Deux Rives), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**,
   **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, **La guerre de Cent Ans (1337)** :
@@ -45,8 +46,31 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible) ; une petite bulle
    près de la souris indique la **défense** qu'aurait ta capitale à cet endroit (terrain + murs).
-   🎲 **Placement de la capitale** (menu) : **Libre** (tu cliques où tu veux, comme ci-dessus) ou **Aléatoire** (le jeu la
-   fonde tout de suite pour toi, à une place au hasard où tu aurais pu la fonder ; grisé dans les scénarios).
+   🎲 **Placement de la capitale** (menu) : **Libre** (tu cliques où tu veux, comme ci-dessus), **Aléatoire** (le jeu la
+   fonde tout de suite pour toi, à une place au hasard où tu aurais pu la fonder ; grisé dans les scénarios) ou, sur une
+   carte arène, **Places prévues** (choisi d'office : tu cliques sur une des places de départ, les écussons dorés).
+   🏟️ **Cartes arène** (symétriques, pas réalistes, à la façon de Warcraft 3 ou d'Age of Empires) : chacun commence à
+   égalité, à une **place de départ prévue**, autour d'un **centre riche** et disputé. Rien n'est bâti d'avance : les places
+   sont vides, tu y fondes ta capitale (ou ailleurs, en placement **Libre**) ; seuls les **filons** sont posés à l'avance,
+   aux mêmes distances pour tout le monde. Les bots prennent des places au hasard (une reste toujours libre pour toi).
+   Les forêts et les collines changent à chaque partie, mais restent les mêmes pour chaque joueur. Les **reliques** y
+   apparaissent au centre (dès qu'un royaume y tient des terres). La taille de la carte est fixe ; le chiffre dans le nom est
+   le nombre de places.
+   - **👑 La Couronne (8)** : une île ronde. Chaque royaume a sa **vallée**, fermée vers le centre par une crête de sommets
+     à **deux cols**, et séparée de ses voisins par une crête à **un col**. Au milieu, des terres libres (une mine de fer
+     par joueur, une mine à partager entre deux voisins), puis un **plateau** entouré d'un **anneau de fleuve** : un
+     **diamant** au centre et **4 mines d'or**.
+   - **🐉 Le Cratère (6)** : un pays fermé par des montagnes. Au centre, un **volcan** : un anneau de sommets percé de
+     **6 portes** (une face à chaque joueur), et dedans une vallée très riche (diamant, 3 mines d'or, 3 mines de fer). Autour,
+     une **bande de désert** (−20 % de production), puis les 6 terres de départ, séparées par des montagnes.
+   - **🌊 Le Carrefour des Fleuves (4)** : 4 royaumes dans les coins, séparés par **4 grands fleuves** qui vont de la mer à un
+     **lac central** (on les passe à gué, lentement, ou par un pont). Au milieu du lac, une **île au trésor** (un diamant),
+     qu'on n'atteint qu'**en bateau**. Deux mines d'or par royaume, le long de ses fleuves.
+   - **🏝️ L'Archipel des Rois (8)** : une **île par royaume** (une carrière, une mine de fer), un **îlot** avec une mine
+     d'or entre deux îles, et une **grande île au centre** (diamant, or et fer). Rien ne se fait sans **ports**.
+   - **⚔️ Les Deux Rives (8)** : un **grand fleuve** coupe la carte en deux, **4 places de chaque côté**. Au milieu du fleuve,
+     une **chaîne d'îles riches** (diamant, or, fer, pierre) qu'on rejoint à gué : le front se joue là.
+     Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js` ; `SPOT_SNAP` dans `js/config.js`.
    🎲 **Cartes aléatoires** (différentes à chaque partie, avec un décor de Moyen Âge : beaucoup de **forêts**, moins de
    montagnes ; réglages `FOREST_LEVEL`, `HILLS_LEVEL` et `MOUNTAIN_LEVEL` dans `js/config.js`) :
    - **Normale** : un grand continent entouré d'océan, à la côte découpée de **criques** (une entrée étroite sur un petit bassin)
@@ -1131,6 +1155,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.94.0** : 🏟️ **5 cartes arène** symétriques, avec des **places de départ prévues** (vides : chacun y fonde sa capitale) et des filons posés aux mêmes distances pour tous : **La Couronne** (8 vallées autour d'un plateau entouré d'un fleuve), **Le Cratère** (un volcan à 6 portes au centre), **Le Carrefour des Fleuves** (4 coins, 4 grands fleuves, une île au trésor dans un lac), **L'Archipel des Rois** (une île chacun) et **Les Deux Rives** (4 contre 4 de part et d'autre d'un grand fleuve) · 🎲 nouveau placement de la capitale : **Places prévues** (ou toujours Libre et Aléatoire) · 📿 sur ces cartes, les reliques apparaissent au centre
 - **v0.93.19** : 🚩 une ville n'est plus **isolée** que si elle est **complètement encerclée** (il ne lui reste que sa muraille, sans terre autour) : tout autre morceau tenu par une ville ou un port fortifié est un cœur du royaume, quelle que soit sa taille (ses armées en partent, ses défenseurs y vont) · ✝️ une **église** (ou un port) **convertie** par la Croyance emporte **toute sa zone**, comme si elle était prise par un assaut
 - **v0.93.18** : ⚔️ le **recrutement de masse** est un peu plus fort (+25 % de bonus) : jusqu'à **x6** pour un tout petit royaume (au lieu de x5), environ x3,9 pour un royaume moyen (au lieu de x3,3), **x1,75** pour le plus grand (au lieu de x1,6)
 - **v0.93.17** : 🔥 les **Vikings** sont **2 fois plus forts** (+100 % au lieu de +50 %), en plus des autres bonus de force (caserne, mines de fer, cité impériale)
@@ -1561,6 +1586,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 - 👑 Héros ou rois avec des pouvoirs spéciaux dans les parties normales (comme Jeanne d'Arc et les rois de la guerre de Cent Ans)
 - ✝️ Les vraies bannières des factions des Croisades
 - 🏹 Une campagne des invasions mongoles (1206-1260), de la Chine à la Pologne
+- 🏟️ Cartes arène : des équipes fixées au départ (2 contre 2 sur Les Deux Rives), et une victoire « tenir le centre » (comme une merveille d'Age of Empires)
 - 🌐 En ligne : les scénarios (Charlemagne, la guerre de Cent Ans, les Croisades, les Factions) à plusieurs, les cartes dessinées, et revenir dans sa partie après une coupure
 
 ---

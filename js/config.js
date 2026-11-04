@@ -108,7 +108,7 @@ const CONFIG = {
     PROTOCOL: 1,              // version du protocole : le serveur refuse un jeu trop vieux (ou trop récent)
     HASH_EVERY: 50,           // tous les combien de tours on compare l'empreinte de la partie entre joueurs
     // Cartes possibles en ligne (pas encore les scénarios, ni les cartes dessinées, qui n'existent que sur un ordinateur)
-    MAPS: ['normal', 'continental', 'naval', 'world', 'europe', 'azeroth'],
+    MAPS: ['normal', 'continental', 'naval', 'couronne', 'cratere', 'carrefour', 'archipel', 'rives', 'world', 'europe', 'azeroth'],
     // Un joueur qui n'a pas écrit le nom de son royaume en reçoit un au hasard dans cette liste (sinon, tout le monde
     // s'appellerait « Mon Royaume ») ; le serveur ajoute « II », « III »… si deux joueurs ont le même nom
     NAMES: ['Aldoria', 'Brumeval', 'Castelroc', 'Dunmor', 'Eldrance', 'Faucombe', 'Grisemont', 'Hautbois', 'Isembourg',
@@ -124,6 +124,7 @@ const CONFIG = {
   START_GOLD: 10,
   START_RADIUS: 3,         // taille du territoire de départ
   MIN_SPAWN_DISTANCE: 18,  // distance minimale entre deux capitales
+  SPOT_SNAP: 16,           // 🏟️ carte arène : un clic à moins de 16 cases d'une place de départ prévue la choisit
 
   // --- Soldats ---
   BASE_MAX_TROOPS: 20,
