@@ -11,31 +11,44 @@
 
 const ARENA_MAPS = {
   // 👑 8 vallées en couronne, protégées par des crêtes à deux cols ; au centre, un plateau entouré d'un fleuve
-  couronne: { name: tr('La Couronne', 'The Crown'), W: 560, H: 560, players: 8 },
+  couronne: { name: tr('La Couronne', 'The Crown'), W: 560, H: 560, players: 8,
+    desc: tr('8 vallées gardées par des crêtes à cols, autour d\'un plateau entouré d\'un fleuve : un diamant et 4 mines d\'or au centre.', '8 valleys guarded by ridges with passes, around a plateau ringed by a river: a diamond and 4 gold mines in the centre.') },
   // 🐉 un volcan au centre : un cratère riche, fermé par un anneau de sommets percé d'une porte par joueur
-  cratere: { name: tr('Le Cratère', 'The Crater'), W: 520, H: 520, players: 6 },
+  cratere: { name: tr('Le Cratère', 'The Crater'), W: 520, H: 520, players: 6,
+    desc: tr('Un volcan au centre, avec une porte face à chaque joueur : un cratère très riche, entouré d\'un désert.', 'A volcano in the centre, with a gate facing each player: a very rich crater, surrounded by desert.') },
   // 🌊 quatre grands fleuves et un lac au centre, avec une île au trésor qu'on n'atteint qu'en bateau
-  carrefour: { name: tr('Le Carrefour des Fleuves', 'The River Crossroads'), W: 500, H: 500, players: 4 },
+  carrefour: { name: tr('Le Carrefour des Fleuves', 'The River Crossroads'), W: 500, H: 500, players: 4,
+    desc: tr('4 royaumes dans les coins, séparés par 4 grands fleuves ; une île au diamant dans le lac, qu\'on n\'atteint qu\'en bateau.', '4 kingdoms in the corners, split by 4 great rivers; a diamond island in the lake, reachable only by boat.') },
   // 🏝️ une île par royaume, des îlots riches entre elles, et une grande île au centre
-  archipel: { name: tr("L'Archipel des Rois", 'The Archipelago of Kings'), W: 600, H: 600, players: 8 },
+  archipel: { name: tr("L'Archipel des Rois", 'The Archipelago of Kings'), W: 600, H: 600, players: 8,
+    desc: tr('Une île par royaume, un îlot d\'or entre deux îles et une grande île riche au centre : rien sans ports.', 'An island for each kingdom, a gold islet between two islands and a big rich island in the centre: nothing without ports.') },
   // ⚔️ deux rives d'un grand fleuve, 4 places de chaque côté, et une chaîne d'îles riches au milieu
-  rives: { name: tr('Les Deux Rives', 'The Two Banks'), W: 640, H: 420, players: 8 },
+  rives: { name: tr('Les Deux Rives', 'The Two Banks'), W: 640, H: 420, players: 8,
+    desc: tr('4 places de chaque côté d\'un grand fleuve, et une chaîne d\'îles riches au milieu, où se joue le front.', '4 places on each side of a great river, and a chain of rich islands in the middle, where the front line is.') },
   // 🌀 un dédale de crêtes : des couloirs, des cols, et des richesses au fond des impasses
-  labyrinthe: { name: tr('Le Labyrinthe', 'The Labyrinth'), W: 520, H: 520, players: 4 },
+  labyrinthe: { name: tr('Le Labyrinthe', 'The Labyrinth'), W: 520, H: 520, players: 4,
+    desc: tr('Un dédale de crêtes et de cols, avec des mines au fond des impasses : un mur bien placé ferme tout un pan de la carte.', 'A maze of ridges and passes, with mines at the end of dead ends: a well-placed wall closes a whole part of the map.') },
   // 🏜️ un grand désert et quelques oasis fertiles, reliées au centre par des fleuves
-  oasis: { name: tr("L'Oasis", 'The Oasis'), W: 540, H: 540, players: 6 },
+  oasis: { name: tr("L'Oasis", 'The Oasis'), W: 540, H: 540, players: 6,
+    desc: tr('Un grand désert et quelques oasis fertiles, reliées au centre par des fleuves : la bonne terre est rare.', 'A great desert and a few fertile oases, linked to the centre by rivers: good land is rare.') },
   // 🏔️ chacun sur un haut plateau (bien défendu, lent à traverser), et de riches vallées ouvertes entre eux
-  plateaux: { name: tr('Les Hauts Plateaux', 'The High Plateaus'), W: 520, H: 520, players: 4 },
+  plateaux: { name: tr('Les Hauts Plateaux', 'The High Plateaus'), W: 520, H: 520, players: 4,
+    desc: tr('Chacun sur un plateau de collines, bien défendu mais lent ; entre eux, de riches vallées ouvertes.', 'Everyone on a plateau of hills, well defended but slow; between them, rich open valleys.') },
   // 🌉 un delta : des dizaines d'îles séparées par des bras de fleuve ; les ponts font tout
-  ponts: { name: tr('Les Mille Ponts', 'The Thousand Bridges'), W: 540, H: 540, players: 6 },
+  ponts: { name: tr('Les Mille Ponts', 'The Thousand Bridges'), W: 540, H: 540, players: 6,
+    desc: tr('Un delta de dizaines d\'îles séparées par des bras de fleuve : celui qui bâtit vite ses ponts avance deux fois plus vite.', 'A delta of dozens of islands split by river arms: whoever builds bridges quickly moves twice as fast.') },
   // ✝️ trois sanctuaires au centre, où les reliques apparaissent ; des hauteurs pour les églises
-  saints: { name: tr('Les Lieux Saints', 'The Holy Places'), W: 540, H: 540, players: 6 },
+  saints: { name: tr('Les Lieux Saints', 'The Holy Places'), W: 540, H: 540, players: 6,
+    desc: tr('Trois sanctuaires au centre, où apparaissent les reliques, et des départs sur les hauteurs : une partie de Croyance.', 'Three sanctuaries in the centre, where relics appear, and starts on the heights: a game of Faith.') },
   // ⛵ une mer au centre, entourée d'un anneau de terre : deux fronts, la terre et la côte
-  merinterieure: { name: tr('La Mer Intérieure', 'The Inland Sea'), W: 600, H: 600, players: 8 },
+  merinterieure: { name: tr('La Mer Intérieure', 'The Inland Sea'), W: 600, H: 600, players: 8,
+    desc: tr('Un anneau de terre autour d\'une mer : des voisins par la terre et par la mer, deux fronts à tenir.', 'A ring of land around a sea: neighbours by land and by sea, two fronts to hold.') },
   // 🗻 un grand massif au centre, lent et bien défendu, aux flancs riches en fer et en or
-  montagne: { name: tr('La Montagne Sacrée', 'The Sacred Mountain'), W: 540, H: 540, players: 5 },
+  montagne: { name: tr('La Montagne Sacrée', 'The Sacred Mountain'), W: 540, H: 540, players: 5,
+    desc: tr('Un grand massif au centre, lent et bien défendu, avec du fer et de l\'or sur ses flancs et un diamant au sommet.', 'A great massif in the centre, slow and well defended, with iron and gold on its slopes and a diamond at the top.') },
   // ❄️ au sud des terres fertiles, au nord la neige et les filons : l'économie ou la force ?
-  nord: { name: tr('Les Terres du Nord', 'The Northern Lands'), W: 600, H: 440, players: 4 },
+  nord: { name: tr('Les Terres du Nord', 'The Northern Lands'), W: 600, H: 440, players: 4,
+    desc: tr('Au sud des terres fertiles, au nord la neige et tous les filons : l\'économie ou la force ?', 'In the south fertile land, in the north snow and every ore vein: economy or strength?') },
 };
 
 function generateArenaMap(type, seed) {

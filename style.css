@@ -127,7 +127,7 @@ html, body {
 #mapBtn .ico { width: 1.4em; height: 1.4em; }
 #mapBtn:disabled { opacity: 0.55; cursor: default; } /* (🌐 salon : seul l'hôte choisit la carte) */
 #mapPick { margin: -4px 0 8px; border: 2px solid var(--wood); border-radius: 6px; padding: 6px 8px; text-align: left;
-  background: #fffaf0; max-height: 320px; overflow-y: auto; }
+  background: #fffaf0; max-height: 520px; overflow-y: auto; }
 #mapPick.hidden { display: none; }
 #mapPick .grp { display: flex; align-items: center; gap: 6px; margin: 6px 0 2px; font-family: Cinzel, Georgia, serif;
   font-weight: bold; color: var(--wood); }
@@ -135,6 +135,18 @@ html, body {
 #mapPick .opts { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 28px; }
 #mapPick .opts button { background: var(--parchment-dark); }
 #mapPick .opts button.active { background: var(--gold); box-shadow: 0 0 0 2px var(--ink) inset; }
+/* 🗺️ l'aperçu de la carte, en haut du choix des cartes (il reste en haut quand on fait défiler la liste) */
+#mapPick .mapPreview { position: sticky; top: -6px; z-index: 1; display: flex; gap: 10px; align-items: center;
+  background: #fffaf0; padding: 4px 0 6px; border-bottom: 1px solid var(--wood); margin-bottom: 4px; }
+#mapPick .mapPreview .pv { flex: none; width: 300px; height: 190px; display: flex; align-items: center; justify-content: center;
+  background: #2f4c66; border: 2px solid var(--wood); border-radius: 4px; overflow: hidden; }
+#mapPick .mapPreview .pv img, #mapPick .mapPreview .pv canvas { max-width: 100%; max-height: 100%; display: block; }
+#mapPick .mapPreview .pvText { display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.3; }
+#mapPick .mapPreview .pvName { font-family: Cinzel, Georgia, serif; color: var(--wood); }
+@media (max-width: 560px) {
+  #mapPick .mapPreview { flex-direction: column; align-items: stretch; }
+  #mapPick .mapPreview .pv { width: 100%; }
+}
 .nm {
   display: inline-block;
   width: 105px;
