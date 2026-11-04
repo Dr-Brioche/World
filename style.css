@@ -430,7 +430,12 @@ button:hover { background: #e8d6a8; }
 }
 .card select { max-width: 62%; }
 /* (tous les choix du menu ont la même largeur, celle du nom du royaume ; un nom de carte trop long finit par « … ») */
+/* (le menu de départ : un tiers plus large que les autres cartes, pour l'aérer ; sur un petit écran, il se resserre
+   tout seul : width 100 % et des marges plus fines, voir la fin du fichier) */
+#menu > .card { max-width: 860px; padding: 26px 44px; }
+#menu > .card > label { margin: 12px 0; }
 .card > label > input, .card > label > select:not(.ghost), .card > label > #mapBtn { width: 220px; max-width: 58%; flex: none; }
+#menu > .card > label > input, #menu > .card > label > select:not(.ghost), #menu > .card > label > #mapBtn { width: 280px; }
 .card > label > #mapBtn { justify-content: space-between; }
 #mapBtn > span:first-of-type { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
 /* 🌐 Jouer en ligne (sous « Commencer la conquête ») : la partie publique, les salons privés */
@@ -647,3 +652,7 @@ button:disabled .ico { opacity: 0.6; }
   #parchment .sheet { padding: 16px 18px 14px; font-size: 16px; }
   #parchment .pTitle { font-size: 22px; }
 }
+
+/* (le menu de départ sur un écran moyen ou petit : moins de marges, pour garder un maximum de place aux réglages) */
+@media (max-width: 900px) { #menu > .card { padding: 22px 26px; } }
+@media (max-width: 520px) { #menu > .card { padding: 16px 14px; } #menu > .card .langRow { margin-right: -8px; } }
