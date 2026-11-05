@@ -916,7 +916,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      cathédrale en route : ton armée pose la relique là où elle est et rentre. Une fois déposée, la relique reste **liée à
      cette église** (elle s'affiche à côté d'elle) : ton royaume gagne **+150 de Croyance** tant qu'il la garde (+150 par
      relique gardée) et l'église rapporte **50 % d'or en plus**. Prise par un autre, l'église lui donne ces bonus ; détruite
-     (un raid viking, une démolition…), elle perd sa relique. Les bots les cherchent aussi (ils économisent pour une
+     (un raid viking, une démolition…), elle perd sa relique. Dès la première relique apparue, la **barre du haut** compte
+     les reliques gardées : les tiennes et celles de tes ennemis (« 📿 1 · ennemis 2 » ; celles de tes alliés au survol).
+     Les bots les cherchent aussi (ils économisent pour une
      cathédrale) et interceptent les armées qui passent. Réglages : `RELIC` dans `js/config.js`, règles dans `js/reliques.js`.
 
    - ⛏️ **Mine** (touche **7**, 💰 **600**, puis 💰 **1200** pour le niveau 2) : elle se bâtit seulement sur un **filon**, une
@@ -1264,6 +1266,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.24** : 📿 dès la première relique, la **barre du haut** compte les reliques gardées : les tiennes et celles de tes ennemis (« 📿 1 · ennemis 2 » ; celles de tes alliés au survol)
 - **v0.98.23** : 📿 les soldats d'une **expédition de relique** comptent maintenant dans ton armée, « en campagne », comme ceux d'un assaut : la jauge du bas ne baisse plus quand ils partent (et le recrutement en tient compte)
 - **v0.98.22** : 📿 une **expédition de relique** se lance maintenant comme un assaut : un 1er clic vise la relique (cercle doré en pointillés), un 2e clic lance l'armée (Échap ou clic droit pour annuler) ; plus de soldats envoyés par un clic de trop
 - **v0.98.21** : 📏 les distances minimum entre tes grands bâtiments sont **un tiers plus grandes**, pour aérer les royaumes : château ↔ château **28 cases** (au lieu de 21), château ↔ église ou port **20** (au lieu de 15), entre églises et ports **15** (au lieu de 11) ; deux villes bâties ne se touchent plus d'office au niveau 3 (seulement avec la cité impériale) : relie-les par un mur

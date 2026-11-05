@@ -1869,6 +1869,19 @@ const UI = {
     $('traitor').textContent = tr(`🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % `,
       `🗡️ Traitor: defense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)}% `) +
       `(${Math.floor(traitorSecs / 60)}:${String(traitorSecs % 60).padStart(2, '0')})`;
+    // 📿 Les reliques gardées : les tiennes, et celles des royaumes ennemis (celles de tes alliés au survol) ; affiché
+    //  dès que la première relique est apparue (parties classiques, voir reliques.js)
+    const relicOn = G.relicMode() && G.relicChurch && (G.relicChurch.size || G.relics.length || G.relicRuns.length);
+    $('relicBox').classList.toggle('hidden', !relicOn);
+    if (relicOn) {
+      let foes = 0, allies = 0;
+      for (const q of G.players) if (q !== h) { const n = G.relicCount(q.id); if (G.areAllied(h.id, q.id)) allies += n; else foes += n; }
+      const mine = G.relicCount(h.id);
+      $('relics').textContent = tr(`${mine} · ennemis ${foes}`, `${mine} · enemies ${foes}`);
+      $('relicBox').title = tr(`Reliques gardées dans les églises : ${mine} à toi, ${foes} chez tes ennemis`, `Relics kept in churches: ${mine} yours, ${foes} held by your enemies`)
+        + (allies ? tr(`, ${allies} chez tes alliés`, `, ${allies} held by your allies`) : '')
+        + tr(` (chacune : +${CONFIG.RELIC.FAITH} de Croyance)`, ` (each: +${CONFIG.RELIC.FAITH} Faith)`);
+    }
     // 🛡️ Politique de guerre en cours : le bonus de garnison et le temps qui reste
     const warOn = G.warActive(h), warSecs = Math.ceil((h.warUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
     $('warBox').classList.toggle('hidden', !warOn);
