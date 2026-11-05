@@ -7,7 +7,8 @@ const AI = {
     if (p.dormant) return; // (👑 l'Aquitaine, avant sa révolte : elle n'a encore ni terres ni armée)
     if (--p.aiTimer > 0) return;
     // (un royaume lointain des scénarios, qui ne fait que se défendre, réfléchit moins souvent : slowAI, voir croisades.js)
-    p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Game.rand() * 2) * (p.slowAI || 1));
+    // (💀 extrême : les bots réfléchissent plus souvent, voir DIFFICULTIES.think)
+    p.aiTimer = Math.round(CONFIG.TICKS_PER_SECOND * (1 + Game.rand() * 2) * (p.slowAI || 1) * (Game.difficulty.think || 1));
 
     if (Game.rand() < 0.4) this.tryBuild(p);
     if (Game.rand() < 0.1) this.tryWall(p);

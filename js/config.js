@@ -822,4 +822,9 @@ const DIFFICULTIES = {
   normal:    { bots: 7,  aggression: [0.45, 0.7], hateHuman: 0.1,  zeal: 1 },
   difficile: { bots: 10, aggression: [0.3, 0.55], hateHuman: 0.25, zeal: 2,
                botBonus: { gold: 1.25, troops: 1.2, power: 1.1 } },
+  // 💀 Extrême : des bots bien plus riches et plus forts (or x1,8, recrutement x1,6, armée maximum x1,3, soldats 25 %
+  // plus forts), qui réfléchissent plus vite (think : leur temps de réflexion x0,6) et attaquent plus tôt. Très dur !
+  // (dans les scénarios, leurs tableaux par difficulté prennent la valeur de « difficile »)
+  extreme:   { bots: 10, aggression: [0.2, 0.4], hateHuman: 0.35, zeal: 3, think: 0.6,
+               botBonus: { gold: 1.8, troops: 1.6, max: 1.3, power: 1.25 } },
 };

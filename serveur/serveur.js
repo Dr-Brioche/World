@@ -38,7 +38,7 @@ const MAPS = ['normal', 'continental', 'naval', 'couronne', 'cratere', 'carrefou
 const SPAWN_MODES = ['libre', 'aleatoire', 'places']; // placement des capitales (places : les places prévues d'une carte arène)
 const PUBLIC_MAPS = MAPS;                 // cartes tirées au hasard pour la partie publique
 const SIZES = ['petit', 'moyen', 'grand'];
-const DIFFICULTIES = ['facile', 'normal', 'difficile'];
+const DIFFICULTIES = ['facile', 'normal', 'difficile', 'extreme'];
 
 // ============================================================================================================
 // 1. Les fichiers du jeu (un tout petit serveur web)
