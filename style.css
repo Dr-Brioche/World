@@ -493,15 +493,20 @@ button:hover { background: #e8d6a8; }
 .rules {
   text-align: left;
   font-size: 13px;
-  padding-left: 18px;
   margin: 6px 0 0;
 }
 /* Règles repliées : on clique sur le titre pour les dérouler */
 .rulesBox { margin-top: 14px; text-align: left; border-top: 1px solid var(--parchment-dark); padding-top: 8px; }
-.rulesBox summary { padding-right: 190px; }
-.rulesBox summary { cursor: pointer; font-weight: bold; font-family: Cinzel, Georgia, serif; }
+.rulesBox > summary { padding-right: 190px; }
+.rulesBox > summary { cursor: pointer; font-weight: bold; font-family: Cinzel, Georgia, serif; }
 .rulesBox summary small { font-weight: normal; font-family: Georgia, serif; opacity: 0.7; }
 .rules li { margin: 4px 0; }
+/* Une catégorie de règles : un titre qu'on clique pour la déplier (une liste à la fois, plus facile à lire) */
+.ruleCat { border: 1px solid var(--parchment-dark); border-radius: 6px; margin: 5px 0; background: rgba(255, 248, 225, 0.35); }
+.ruleCat > summary { cursor: pointer; padding: 5px 10px; font-weight: bold; font-family: Cinzel, Georgia, serif; font-size: 14px; }
+.ruleCat > summary:hover { background: rgba(212, 175, 55, 0.18); }
+.ruleCat[open] > summary { border-bottom: 1px solid var(--parchment-dark); }
+.ruleCat > ul { padding: 2px 12px 6px 28px; margin: 0; }
 
 /* (écran moyen : la barre du haut, entre le bord gauche et le classement, passe sur 2 lignes s'il le faut) */
 @media (min-width: 761px) and (max-width: 1180px) {
