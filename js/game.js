@@ -2228,7 +2228,9 @@ const GameRules = {
     const id = this.nextPactId++;
     this.pacts.set(id, { name: tr('Alliance de Rome', 'Alliance of Rome'), founder: cm.role.francs, eternal: true });
     for (const role of ['francs', 'carloman', 'papaute']) this.players[cm.role[role]].pact = id;
-    const diff = C.CARLOMAN_DIES[opts.difficulty] ? opts.difficulty : 'normal';
+    // (💀 extrême : les tableaux du scénario prennent la valeur de « difficile » ; les bots, eux, ont les bonus de l'extrême)
+    const want = opts.difficulty === 'extreme' ? 'difficile' : opts.difficulty;
+    const diff = C.CARLOMAN_DIES[want] ? want : 'normal';
     cm.diff = diff;
     cm.carlomanTick = C.CARLOMAN_DIES[diff] * 60 * TPS;
     cm.lombardTick = C.LOMBARDS_MARCH[diff] * 60 * TPS;
@@ -3423,7 +3425,8 @@ const GameRules = {
 
   maxTroops(p) {
     return (CONFIG.BASE_MAX_TROOPS + p.tiles * CONFIG.MAX_TROOPS_PER_TILE
-      + this.levelSum(p, B_BARRACKS, 'maxTroops')) * (this.hy ? this.hyMaxTroops(p) : this.cr ? this.crMaxTroops(p) : 1); // (⚜️ voir hyMaxTroops, ✝️ crMaxTroops)
+      + this.levelSum(p, B_BARRACKS, 'maxTroops')) * (this.hy ? this.hyMaxTroops(p) : this.cr ? this.crMaxTroops(p) : 1) // (⚜️ voir hyMaxTroops, ✝️ crMaxTroops)
+      * this.botBonus(p, 'max'); // (💀 extrême : une armée maximum plus grande pour les bots)
   },
 
   // Garnison maximum d'un bâtiment : celle de son niveau (château, port royal), 0 s'il n'en a pas.

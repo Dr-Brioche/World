@@ -105,6 +105,12 @@ const UI = {
     // (wantOpp : le nombre choisi par le joueur, retrouvé s'il repasse sur une carte assez grande)
     this.wantOpp = 7;
     $('opponents').addEventListener('change', () => { this.wantOpp = +$('opponents').value; });
+    // 💀 La difficulté « Extrême » : une petite tête de mort à côté du mot « Difficulté » (une liste déroulante ne montre pas d'icône)
+    const skull = () => $('diffSkull').classList.toggle('hidden', $('difficulty').value !== 'extreme');
+    $('difficulty').addEventListener('change', skull);
+    // (la difficulté peut aussi changer sans clic : menu retrouvé après un changement de langue, réglages d'un salon en ligne)
+    setInterval(skull, 500);
+    skull();
     const fillOpponents = () => {
       // (🏟️ sur une carte arène : d'office un rival par place prévue, qu'on peut baisser)
       const max = this.maxOpponents(), cur = ARENA_MAPS[this.mapType()] ? max : this.wantOpp;

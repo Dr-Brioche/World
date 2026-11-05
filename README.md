@@ -30,7 +30,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 - ⛵ **Des expéditions maritimes** : débarque sur une côte lointaine et plante un avant-poste
 - 🤖 **3 à 20 royaumes rivaux** (tu choisis combien, un par drapeau, selon la taille de la carte : Bourgogne, Aquitaine, Castille, Bohême…) qui s'étendent, attaquent, s'allient et se trahissent tout seuls
 - 🤝 **Des pactes** : allie-toi à d'autres royaumes… et trahis-les quand ça t'arrange
-- 🎚️ **3 niveaux de difficulté** : Facile, Normale, Difficile (en Difficile, les bots ont un petit avantage : **+25 % d'or**, recrutement **20 % plus rapide** et soldats **10 % plus forts**)
+- 🎚️ **4 niveaux de difficulté** : Facile, Normale, Difficile (en Difficile, les bots ont un petit avantage : **+25 % d'or**, recrutement **20 % plus rapide** et soldats **10 % plus forts**) et 💀 **Extrême** (une petite tête de mort à côté du mot « Difficulté » : des bots qui attaquent bien plus tôt, réfléchissent plus vite et ont **+80 % d'or**, un recrutement **60 % plus rapide**, une armée maximum **30 % plus grande** et des soldats **25 % plus forts** ; dans les scénarios, les dates et les armées des événements sont celles du Difficile). Très dur !
 - ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ (en haut) la fait passer à x1, x1,5, x2 ou x3, pour des parties plus courtes
 - ✝️ **La Croyance** : tes églises prêchent chez tes voisins et convertissent peu à peu leurs terres
 - 🌐 **Jouer en ligne, à plusieurs** (avec un serveur de jeu, voir [`serveur/PROTOCOLE.md`](serveur/PROTOCOLE.md)) : la **partie publique**, qui part toutes les 2 minutes avec tous ceux qui attendent (carte au hasard, des bots complètent), ou un **salon privé** entre amis, avec un code
@@ -38,7 +38,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis d'abord la **langue** du jeu en haut à droite du menu (🇬🇧 English, par défaut, ou 🇫🇷 Français : la page se recharge dans la nouvelle langue, en gardant les réglages déjà choisis au menu, et le choix est gardé pour les prochaines fois), puis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux, chacun avec son nom dessous : la faction dans un scénario, ou ce qu'il représente dans une partie libre), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
+1. **Fonde ta capitale** : choisis d'abord la **langue** du jeu en haut à droite du menu (🇬🇧 English, par défaut, ou 🇫🇷 Français : la page se recharge dans la nouvelle langue, en gardant les réglages déjà choisis au menu, et le choix est gardé pour les prochaines fois), puis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux, chacun avec son nom dessous : la faction dans un scénario, ou ce qu'il représente dans une partie libre), le **type de carte**, la **difficulté** (Facile, Normale, Difficile, 💀 Extrême : les bots y sont de plus en plus avantagés) et le
    **nombre de royaumes rivaux** (de 3 à 20, autant que de drapeaux disponibles ; au plus un rival pour 5 000 cases de carte : 10 sur la petite carte, réglage `CELLS_PER_OPPONENT`) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
@@ -1288,6 +1288,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.32** : 💀 nouvelle difficulté **Extrême** (une petite tête de mort à côté) : des bots plus rapides, plus agressifs, avec +80 % d'or, un recrutement 60 % plus rapide, une armée maximum 30 % plus grande et des soldats 25 % plus forts. Très dur !
 - **v0.98.31** : 🗺️ dans le choix des cartes, les **cartes arène** sont sur deux colonnes : les classiques à gauche, les **cartes de gloire** à droite (l'une sous l'autre sur un téléphone) ; L'Octogone de la Gloire affiche « 8 joueurs » comme les autres
 - **v0.98.30** : ✔ dans le choix du drapeau d'un scénario, un petit **V vert** à côté des campagnes déjà gagnées en solo, et des factions à défis dont tous les défis ont été réussis (gardé dans le navigateur)
 - **v0.98.29** : 📜 dans le choix du drapeau d'un scénario, les factions sont rangées de la plus importante à la moins importante (les Francs d'abord pour Charlemagne, Saladin pour les Croisades), avec **(Campagne)** ou **(Défis)** à côté du nom

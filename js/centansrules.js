@@ -11,7 +11,9 @@ Object.assign(GameRules, {
     const C = CENTANS, W = this.W, H = this.H, P = CENTANS_PROJ, TPS = CONFIG.TICKS_PER_SECOND;
     const at = (lon, lat) => [geoX(P, lon, W), geoY(P, lat, H)];
     this.pactsAllowed = false; // (pas d'autres pactes que les deux camps)
-    const diff = C.RANSOM[opts.difficulty] ? opts.difficulty : 'normal';
+    // (💀 extrême : les tableaux du scénario prennent la valeur de « difficile » ; les bots, eux, ont les bonus de l'extrême)
+    const want = opts.difficulty === 'extreme' ? 'difficile' : opts.difficulty;
+    const diff = C.RANSOM[want] ? want : 'normal';
     const hy = this.hy = { diff, role: {}, capital: {}, cities: new Map(), churches: new Map(), loyalty: {}, pact: {},
       legitBonus: {}, crowned: { france: true, angleterre: false }, fired: new Set(), done: {},
       sick: new Map(), immune: new Map(), closed: new Map(), truceUntil: 0, kingIdx: 0, engIdx: 0, comps: 0 };

@@ -13,7 +13,9 @@ Object.assign(GameRules, {
     const C = CROISADES, W = this.W, H = this.H, P = CROISADES_PROJ;
     const at = (lon, lat) => geoXY(P, lon, lat, W, H); // (avec la loupe de la Terre sainte : voir geoXY)
     this.pactsAllowed = false; // (pas d'autres pactes que ceux du scénario : la croisade, le pacte secret de Byzance…)
-    const diff = C.RANSOM[opts.difficulty] ? opts.difficulty : 'normal';
+    // (💀 extrême : les tableaux du scénario prennent la valeur de « difficile » ; les bots, eux, ont les bonus de l'extrême)
+    const want = opts.difficulty === 'extreme' ? 'difficile' : opts.difficulty;
+    const diff = C.RANSOM[want] ? want : 'normal';
     const cr = this.cr = { diff, role: {}, capital: {}, cities: new Map(), churches: new Map(), strong: new Map(), pact: {},
       fired: new Set(), done: {}, gone: {}, offers: {}, peaceBroken: new Set(),
       loans: new Map(), loansGiven: 0, helpReady: new Map(), helped: new Map(), nextLoan: CROISADES.ORDERS.AI_LOAN_EVERY * CONFIG.TICKS_PER_SECOND,
