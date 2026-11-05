@@ -752,7 +752,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      galvanisé +50 % voit son bonus monter de moitié), bien plus que l'attaquant qui vient de gagner.
 
      Une caserne ne fait pas dépasser l'armée maximum. **L'armée maximum compte tous tes soldats** : ceux du royaume, mais
-     aussi ceux **partis en campagne** (dans tes assauts, tes défenseurs, ceux qui rentrent), aux avant-postes et en mer
+     aussi ceux **partis en campagne** (dans tes assauts, tes défenseurs, tes armées de relique, ceux qui rentrent), aux avant-postes et en mer
      (pas les garnisons) : pendant qu'une armée est au loin, le royaume ne recrute pas au-delà de son maximum. Les soldats produits et l'armée max de toutes
      tes casernes s'additionnent, mais avec un **rendement décroissant** (comme les moulins) : plus tu as de casernes,
      moins chacune produit de soldats (3 → 83 % chacune, 6 → 67 %).
@@ -1264,6 +1264,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.23** : 📿 les soldats d'une **expédition de relique** comptent maintenant dans ton armée, « en campagne », comme ceux d'un assaut : la jauge du bas ne baisse plus quand ils partent (et le recrutement en tient compte)
 - **v0.98.22** : 📿 une **expédition de relique** se lance maintenant comme un assaut : un 1er clic vise la relique (cercle doré en pointillés), un 2e clic lance l'armée (Échap ou clic droit pour annuler) ; plus de soldats envoyés par un clic de trop
 - **v0.98.21** : 📏 les distances minimum entre tes grands bâtiments sont **un tiers plus grandes**, pour aérer les royaumes : château ↔ château **28 cases** (au lieu de 21), château ↔ église ou port **20** (au lieu de 15), entre églises et ports **15** (au lieu de 11) ; deux villes bâties ne se touchent plus d'office au niveau 3 (seulement avec la cité impériale) : relie-les par un mur
 - **v0.98.20** : 🧱⚓ la **mine fortifiée** a maintenant une garnison de **25 soldats** (au lieu de 50), et le **port royal** (niveau 3) aussi **25** (au lieu de 10)
