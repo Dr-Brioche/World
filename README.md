@@ -1302,6 +1302,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.35** : 🌿 les 3 dessins de la tour de gloire gardent maintenant la **même échelle** que sur le dessin d'origine (la tour de bois plus petite, la tour de pierre et la citadelle à la même taille)
 - **v0.98.34** : 🌿 la **tour de gloire** remplace la mine de gloire : une construction spéciale des cartes de gloire (bouton à elle), à 3 niveaux (💰 500, 1 000, 2 500 ; une tour de bois, de pierre, puis une citadelle), avec au niveau 3 une petite fortification de 25 soldats ; elle donne 1, 1,6 puis 2,2 de gloire par seconde · « **+X 🌿** » s'affiche toutes les 5 s au-dessus de chaque tour · L'Octogone de la Gloire : 2 fois moins de gloire par tour · nouvelle carte de gloire **Le Trône des Trois** (3 joueurs) : une île en triangle, un massif à 3 cols qui garde le Trône, et sur chaque frontière une rivière avec deux îles de gloire
 - **v0.98.33** : ⏱️ plus de **gels** réguliers de la partie (jusqu'à 4 s, surtout sur L'Octogone de la Gloire) : les bots vérifiaient la règle « un mur ne ferme jamais un passage » pour chacun des 160 murs qu'ils envisagent ; ils ne la vérifient plus que pour leurs meilleurs, et la vérification est bien plus rapide
 - **v0.98.32** : 💀 nouvelle difficulté **Extrême** (une petite tête de mort à côté) : des bots plus rapides, plus agressifs, avec +80 % d'or, un recrutement 60 % plus rapide, une armée maximum 30 % plus grande et des soldats 25 % plus forts. Très dur !

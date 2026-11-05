@@ -655,9 +655,9 @@ const MINES = {
   //   petite fortification : MINE_FORT.GARRISON soldats de garnison, comme une mine fortifiée (pas besoin de la fortifier)
   glory: { name: tr('Tour de gloire', 'Glory tower'), short: tr('de la gloire pour la victoire', 'glory for the victory'), icon: '🌿', terrain: 'hills',
     rate: [0, 1, 1.6, 2.2], cost: 500, levels: [null,
-      { name: tr('Tour de gloire', 'Glory tower'), img: 'img/gloire1.webp', size: 3.0 },
-      { name: tr('Grande tour de gloire', 'Great glory tower'), img: 'img/gloire2.webp', size: 2.2, upgradeCost: 1000 },
-      { name: tr('Citadelle de gloire', 'Glory citadel'), img: 'img/gloire3.webp', size: 3.8, upgradeCost: 2500 }] }, // (size : la largeur de l'image, en cases ; les tours sont hautes)
+      { name: tr('Tour de gloire', 'Glory tower'), img: 'img/gloire1.webp', size: 2.54 },
+      { name: tr('Grande tour de gloire', 'Great glory tower'), img: 'img/gloire2.webp', size: 2.21, upgradeCost: 1000 },
+      { name: tr('Citadelle de gloire', 'Glory citadel'), img: 'img/gloire3.webp', size: 3.8, upgradeCost: 2500 }] }, // (size : la largeur de l'image, en cases, proportionnelle à sa largeur en pixels : les 3 tours gardent l'échelle du dessin)
 };
 const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond', 'glory'];
 
