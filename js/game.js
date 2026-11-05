@@ -1247,7 +1247,7 @@ const GameRules = {
       // une seule fois par royaume converti (refaire le découpage de la carte à chaque case coûterait trop cher)
       if (this.countNeighborsOwnedBy(t, o) >= 2) cuts.set(o, pid);
     }
-    for (const [o, pid] of cuts) if (this.players[o].alive) this.captureEnclaves(o, pid);
+    for (const [o, pid] of cuts) if (this.players[o].alive) this.captureEnclaves(o, pid, true);
   },
 
   // La Croyance peut-elle convertir cette case du royaume o ? Jamais une ville ni un port fortifié (ils tiennent
@@ -4056,18 +4056,25 @@ const GameRules = {
   // - un morceau avec un avant-poste ou une colonie (invasion par la mer) se défend : il faut viser l'avant-poste ;
   // - la route d'un de ses assauts encore en cours n'est que visuelle : elle n'est jamais englobée (sinon l'armée
   //   perdrait son chemin, par exemple quand la Croyance convertit la case d'où part sa route).
-  captureEnclaves(target, cutter = -1) {
+  captureEnclaves(target, cutter = -1, faith = false) {
     const T = this.players[target];
     if (!T.alive) return;
     const r = this.regions(true, target), pieces = []; // (⏱️ le découpage des seules terres de target : voir regions)
-    const routes = new Set();
-    for (const [t] of this.pendingRoutes()) if (this.owner[t] === target) routes.add(t);
+    const routes = new Set(), open = new Set();
+    for (const [t] of this.pendingRoutes()) if (this.owner[t] === target) routes.add(t); else open.add(t);
+    // (✝️ après une conversion par la Croyance : un morceau coupé seulement par la route d'un assaut en cours n'est
+    //  pas pris ; la route n'est pas encore une vraie conquête, elle lui revient si l'assaut échoue)
+    const byRoute = tiles => faith && open.size && tiles.some(i => {
+      const x = i % this.W;
+      return (x > 0 && open.has(i - 1)) || (x < this.W - 1 && open.has(i + 1)) || open.has(i - this.W) || open.has(i + this.W);
+    });
     for (let k = 0; k < r.size.length; k++) {
       if (r.owner[k] !== target || r.heart[k]) continue;
       if (r.anyOutpost[k] || r.colony[k]) continue;
       pieces.push(Array.from(r.order.subarray(r.start[k], r.start[k] + r.size[k])));
     }
     for (const tiles of pieces) {
+      if (byRoute(tiles)) continue;
       // Les châteaux et ports de niveau 3 du morceau, et les terres de leur zone, restent au royaume
       const keep = tiles.filter(i => this.anchor[i] === i && this.building[i] && this.holdsAlone(i));
       // (et aussi toute case dans la muraille d'un de ses châteaux, même si le château est dans un autre morceau :

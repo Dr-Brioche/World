@@ -2763,6 +2763,11 @@ const UI = {
   },
 
   crusade(a) {
+    // (un clic de trop, dans la seconde et demie, ne lance pas aussi la croisade d'une autre cathédrale : chacune peut
+    //  avoir la sienne, mais il faut le vouloir ; en ligne, l'ordre met aussi un moment à revenir du serveur)
+    const now = performance.now();
+    if (now - (this.lastCrusade || 0) < CONFIG.CRUSADE_CLICK_GAP * 1000) return;
+    this.lastCrusade = now;
     this.act({ k: 'crusade', a }, err => {
       if (err) return this.log(err, 'warn');
       Music.sound('crusade'); // (🔔 le son de la croisade)
