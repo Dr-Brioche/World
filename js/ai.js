@@ -75,7 +75,9 @@ const AI = {
 
     // S'il reste des terres libres, on s'étend en priorité
     // (il attend d'avoir assez de soldats, puis envoie un gros morceau, plutôt que de petits paquets sans arrêt)
-    if (nb.has(-1) && p.troops > max * 0.4 && Game.rand() < 0.85) {
+    // (🌿 carte de gloire : tant qu'une mine de gloire est encore sur des terres libres, on court vers elle, sans attendre)
+    const rush = Game.gloryMode && Game.deposits.some(d => d.kind === 'glory' && Game.owner[d.a] < 0);
+    if (nb.has(-1) && p.troops > max * (rush ? 0.25 : 0.4) && Game.rand() < 0.85) {
       Game.launchAttack(p.id, -1, p.troops * 0.6);
       return;
     }
@@ -83,6 +85,12 @@ const AI = {
     if (p.troops < max * p.aggression) return;
     // (une puissance défensive, comme Rome ou Byzance dans le scénario « Charlemagne » : elle ne part pas en conquête)
     if (p.defensive) return;
+
+    // 🌿 Carte de gloire : souvent, on va prendre la mine de gloire d'un voisin (la plus proche qu'on peut atteindre)
+    if (Game.gloryMode && Game.rand() < 0.5) {
+      const t = this.gloryTarget(p, nb);
+      if (t >= 0 && !Game.launchAttack(p.id, Game.owner[t], p.troops * 0.7, t)) return;
+    }
 
     // Sinon on cherche le voisin le plus faible : on compare notre assaut (70 % de nos soldats)
     // à ce qu'il pourra nous opposer (la moitié de ses soldats + la garnison du château visé).
@@ -442,10 +450,24 @@ const AI = {
     return !G.buildBridge(p, best);
   },
 
+  // 🌿 La mine de gloire d'un voisin ennemi la plus proche qu'on peut atteindre (-1 s'il n'y en a pas)
+  gloryTarget(p, nb) {
+    const G = Game, W = G.W, src = G.attackSources(p.id);
+    let best = -1, bestD = Infinity;
+    for (const d of G.deposits) {
+      const o = G.owner[d.a];
+      if (d.kind !== 'glory' || G.building[d.a] !== B_MINE || o < 0 || o === p.id || !nb.has(o)) continue;
+      if (G.aiSpares(p.id, o) || G.attackBlocked(p.id, o) || G.players[o].raiders) continue;
+      const dd = Math.min(...src.map(c => DMath.hypot(c % W - d.a % W, ((c / W) | 0) - ((d.a / W) | 0))));
+      if (dd < bestD && src.some(c => G.castlePath(p.id, d.a, c))) { bestD = dd; best = d.a; }
+    }
+    return best;
+  },
+
   // Bâtit une mine sur le meilleur filon libre de ses terres (diamant, or, fer, pierre), s'il y en a un.
   // Renvoie true s'il en a bâti une.
   tryMine(p) {
-    const G = Game, order = { diamond: 0, gold: 1, iron: 2, stone: 3 };
+    const G = Game, order = { glory: -1, diamond: 0, gold: 1, iron: 2, stone: 3 }; // (🌿 la gloire d'abord)
     const spots = G.deposits.filter(d => G.canPlace(p.id, d.a, B_MINE)
       && !(MINES[d.kind].max && G.minesOf(p.id, d.kind).length >= MINES[d.kind].max))
       .sort((x, y) => order[x.kind] - order[y.kind]);
@@ -453,6 +475,21 @@ const AI = {
   },
 
   tryBuild(p, forced) {
+    // 🌿 Carte de gloire : une mine de gloire à bâtir sur ses terres passe avant tout (il économise pour elle) ;
+    // puis il améliore ses mines de gloire (niveau 2 : plus de gloire)
+    if (!forced && Game.gloryMode) {
+      const G = Game, spot = G.deposits.find(d => d.kind === 'glory' && G.canPlace(p.id, d.a, B_MINE));
+      if (spot) {
+        if (p.gold >= G.buildCost(p, B_MINE)) { if (!G.tryBuild(p, spot.a, B_MINE)) return; }
+        else if (G.rand() < 0.85) return;
+      }
+      const mine = G.deposits.find(d => d.kind === 'glory' && G.building[d.a] === B_MINE && G.owner[d.a] === p.id
+        && G.level[d.a] < 2 && !G.works.has(d.a) && !G.underConstruction(d.a));
+      if (mine && G.upgradeCost(mine.a) !== null) {
+        if (p.gold >= G.upgradeCost(mine.a)) { if (!G.upgradeBuilding(p, mine.a)) return; }
+        else if (G.rand() < 0.6) return;
+      }
+    }
     // (il économise pour un pont : il ne dépense pas tout de suite, la plupart du temps)
     if (!forced && p.bridgeSaving && p.gold < Game.bridgeCost(p.id) && Game.rand() < 0.7) return;
     // (📿 il économise pour une église de niveau 3, une relique est à sa portée : voir Game.relicBot)

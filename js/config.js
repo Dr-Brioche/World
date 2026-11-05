@@ -109,7 +109,7 @@ const CONFIG = {
     HASH_EVERY: 50,           // tous les combien de tours on compare l'empreinte de la partie entre joueurs
     // Cartes possibles en ligne (pas encore les scénarios, ni les cartes dessinées, qui n'existent que sur un ordinateur)
     MAPS: ['normal', 'continental', 'naval', 'couronne', 'cratere', 'carrefour', 'archipel', 'rives', 'labyrinthe', 'oasis', 'plateaux',
-      'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'melee', 'world', 'europe', 'azeroth'],
+      'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'melee', 'gloire', 'world', 'europe', 'azeroth'],
     // Un joueur qui n'a pas écrit le nom de son royaume en reçoit un au hasard dans cette liste (sinon, tout le monde
     // s'appellerait « Mon Royaume ») ; le serveur ajoute « II », « III »… si deux joueurs ont le même nom
     NAMES: ['Aldoria', 'Brumeval', 'Castelroc', 'Dunmor', 'Eldrance', 'Faucombe', 'Grisemont', 'Hautbois', 'Isembourg',
@@ -179,6 +179,7 @@ const CONFIG = {
   WALL_MAX_REACH: 12,
   WALL_RETREAT_LOSS: 0.15,   // une armée coupée de chez elle par une muraille ou un mur bâti dans son dos bat en retraite
                              // d'office, et y perd 15 % de ses soldats par muraille ou mur franchi
+  WALL_POCKET_MAX: 60,       // 🧱 un mur ne ferme jamais un passage : il peut seulement enfermer une petite poche vide (au plus 60 cases)
   WALL_LINK_GARRISON: 50,    // deux de ses villes reliées par un mur : +50 soldats de garnison pour chacune
   WALL_SNAP: 3,              // visé à moins de 3 cases d'un obstacle (lac, sommet, fleuve, autre mur) : le mur s'y accroche
   DEMOLISH_TIME: 10,         // secondes de travaux pour détruire un de ses bâtiments
@@ -248,7 +249,11 @@ const CONFIG = {
   VIKING_MIN_TROOPS: 20,       // soldats à embarquer au moins
   CRUSADE_FAITH: 1000,
   CRUSADE_TIME: 60,
-  CRUSADE_CLICK_GAP: 1.5,  // secondes (vraies) entre deux clics qui lancent une croisade : pas de croisades en rafale par erreur
+  CRUSADE_CLICK_GAP: 1.5,
+  // 🌿 La gloire (cartes de gloire) : chaque mine de gloire en donne à son royaume (voir MINES.glory.rate) ; une seule
+  // jauge pour tous, en haut au milieu, se remplit de la gloire de chacun. Quand elle est pleine (GOAL points en tout),
+  // le royaume qui en a le plus l'emporte.
+  GLORY: { GOAL: 8000 },  // secondes (vraies) entre deux clics qui lancent une croisade : pas de croisades en rafale par erreur
   // Vitesse de la conversion selon l'écart de Croyance : [écart, secondes pour convertir une case].
   // (entre deux lignes, on passe en douceur de l'une à l'autre ; plus petit que 20 : encore plus lent ;
   //  500 d'écart : 2 cases par seconde ; 1000 : 5 par seconde ; au-delà, ça accélère de moins en moins :
@@ -644,8 +649,11 @@ const MINES = {
   //   (son compteur passe à celui qui prend la mine : il touche les versements suivants)
   diamond: { name: tr('Mine de diamant', 'Diamond mine'), short: tr('un trésor de 16 000 pièces', 'a treasure of 16,000 gold'), icon: '💎', terrain: 'mountain', count: [1, 3], time: 1200, speed: [0, 1, 1.5],
     pay: [1000, 2000, 3000], final: 10000 }, // (pay : le versement de chaque quart, dans l'ordre)
+  // 🌿 gloire (seulement sur les cartes de gloire, comme L'Octogone de la Gloire : pas de count, jamais posée au hasard) :
+  //   rate = points de gloire par seconde, au niveau 1 et 2 ; voir CONFIG.GLORY
+  glory: { name: tr('Mine de gloire', 'Glory mine'), short: tr('de la gloire pour la victoire', 'glory for the victory'), icon: '🌿', terrain: 'hills', rate: [0, 1, 1.75] },
 };
-const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond'];
+const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond', 'glory'];
 
 // 🗼 Les 5 niveaux de la tour de garde (pas encore disponible : voir CONFIG.TOWERS) : chaque seconde,
 // elle abat damage soldats des armées ennemies qui se battent à moins de range cases d'elle (la plus proche d'abord).

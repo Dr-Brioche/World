@@ -1004,10 +1004,32 @@ const UI = {
     // (on compare avec le dernier texte écrit : innerHTML, lui, a déjà vu ses emojis remplacés par des icônes)
     if (this.tipHtml !== html) { this.tipHtml = html; tip.innerHTML = html; }
     // toujours au même endroit : centrée juste sous la barre de nos infos, en haut de l'écran
-    const bar = $('topbar').getBoundingClientRect();
+    const bar = $('topbar').getBoundingClientRect(), glory = Game.gloryMode ? $('gloryBar').getBoundingClientRect() : null;
     tip.style.left = (bar.left + bar.width / 2) + 'px';
-    tip.style.top = (bar.bottom + 6) + 'px';
+    tip.style.top = ((glory ? glory.bottom : bar.bottom) + 6) + 'px'; // (🌿 sous la jauge de gloire)
     tip.classList.remove('hidden');
+  },
+
+  // 🌿 La jauge de gloire (cartes de gloire) : une seule pour tous, en haut au milieu. Elle se remplit de la gloire de
+  // chaque royaume, un trait de sa couleur par royaume, du plus glorieux au moins glorieux (l'ordre se refait à chaque
+  // mise à jour) ; au survol d'un trait, son nom et sa part de la jauge. Quand elle est pleine, le plus glorieux gagne.
+  refreshGlory() {
+    const G = Game, bar = $('gloryBar');
+    bar.classList.toggle('hidden', !G.gloryMode);
+    if (!G.gloryMode) return;
+    // (toujours au même endroit : au milieu de l'écran, juste sous la barre de nos infos)
+    bar.style.top = ($('topbar').getBoundingClientRect().bottom + 6) + 'px';
+    const key = Math.floor(G.tick / (CONFIG.TICKS_PER_SECOND / 2)) + ':' + G.players.length;
+    if (this.gloryKey === key) return;
+    this.gloryKey = key;
+    const goal = CONFIG.GLORY.GOAL, total = G.gloryTotal(), h = G.human;
+    const pct = v => (v / goal * 100).toFixed(1).replace('.0', '');
+    const lead = G.gloryLeader(), first = lead && lead !== h && lead.glory > 0 ? tr(` · 1er : ${lead.name} ${pct(lead.glory)} %`, ` · 1st: ${lead.name} ${pct(lead.glory)}%`) : '';
+    $('gloryTitle').textContent = tr(`🌿 Gloire ${pct(Math.min(goal, total))} % · toi ${pct(h.glory)} %`, `🌿 Glory ${pct(Math.min(goal, total))}% · you ${pct(h.glory)}%`) + first;
+    $('gloryGauge').innerHTML = G.players.filter(p => p.glory > 0).sort((a, b) => b.glory - a.glory)
+      .map(p => `<i class="${p === h ? 'me' : ''}" style="width:${Math.min(100, p.glory / goal * 100)}%;background:rgb(${p.color})" title="${escapeHtml(p.name)} : ${pct(p.glory)} %"></i>`).join('');
+    bar.title = tr(`La jauge de gloire : chaque mine de gloire la remplit de la couleur de son royaume. Pleine, le royaume qui en a le plus l'emporte.`,
+      `The glory gauge: each glory mine fills it with its kingdom's colour. When it is full, the kingdom with the most wins.`);
   },
 
   // ⛏️ Les mines d'un royaume, pour la barre de résumé : « · ⛏️ 3 (⚒️ 2 🪙 1) » (rien s'il n'en a pas)
@@ -1103,6 +1125,8 @@ const UI = {
       x2, tr('puis le filon s\'épuise', 'then the ore vein runs out')];
     if (info.kind === 'stone') return [tr(`Prix des améliorations, murs et ponts ${pct(-info.discount)}`, `Cost of upgrades, walls and bridges ${pct(-info.discount)}`),
       x2, tr(`${m.max} au plus`, `${m.max} at most`)];
+    if (info.kind === 'glory') return [tr(`🌿 +${String(info.glory).replace('.', ',')} de gloire par seconde`, `🌿 +${info.glory} glory per second`),
+      tr(`La jauge se remplit : pleine (${fmt(CONFIG.GLORY.GOAL)}), le plus glorieux gagne`, `The gauge fills up: when full (${fmt(CONFIG.GLORY.GOAL)}), the most glorious wins`)];
     return [tr(`💰 ${m.pay.map(fmt).join(', ')} aux 3 premiers quarts, ${fmt(m.final)} à la fin`, `💰 ${m.pay.map(fmt).join(', ')} at each of the first 3 quarters, ${fmt(m.final)} at the end`),
       tr(`Extraction : ${Math.round(m.time / 60 / info.speed)} min (×0,5 sans route)`, `Extraction: ${Math.round(m.time / 60 / info.speed)} min (×0.5 without a road)`)];
   },
@@ -1145,6 +1169,7 @@ const UI = {
       if (cur.kind === 'gold') return [tr(`Filon relancé : 💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min de plus`,
         `Ore vein restarted: 💰 ${m.total.toLocaleString('en-US')} over ${Math.round(m.time / 60)} more min`)];
       if (cur.kind === 'stone') return [tr(`Réduction ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`, `Discount ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`)];
+      if (cur.kind === 'glory') return [tr(`🌿 Gloire : ${String(m.rate[1]).replace('.', ',')} → ${String(m.rate[2]).replace('.', ',')} par seconde`, `🌿 Glory: ${m.rate[1]} → ${m.rate[2]} per second`)];
       return [tr(`Extraction ${pct(m.speed[2] / m.speed[1] - 1)} plus rapide`, `Extraction ${pct(m.speed[2] / m.speed[1] - 1)} faster`)];
     }
     return [tr(`Or ${pct(next.gold / cur.gold - 1)}`, `Gold ${pct(next.gold / cur.gold - 1)}`)];
@@ -1194,7 +1219,8 @@ const UI = {
         if (info.kind === 'gold') txt += tr(` · encore ≈ ${left} 💰 · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`, ` · ≈ ${left} 💰 left · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`);
         if (info.kind === 'stone') txt += tr(` · prix ${pct(-info.discount * k)}`, ` · costs ${pct(-info.discount * k)}`);
         if (info.kind === 'diamond') txt += tr(` · 💎 ${Math.floor(d.progress * 100)} % extrait`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted`);
-        txt += k > 1 ? tr(' · 🛤️ reliée', ' · 🛤️ linked') : tr(' · sans route (×2 si reliée à une ville)', ' · no road (×2 if linked to a city)');
+        if (info.kind === 'glory') txt += tr(` · 🌿 +${String(info.glory).replace('.', ',')} de gloire par seconde`, ` · 🌿 +${info.glory} glory per second`); // (pas de route qui compte)
+        else txt += k > 1 ? tr(' · 🛤️ reliée', ' · 🛤️ linked') : tr(' · sans route (×2 si reliée à une ville)', ' · no road (×2 if linked to a city)');
       }
     }
     if (G.holdsAlone(a) && G.isIsolated(a)) txt += tr(' · 🚩 isolé', ' · 🚩 isolated');
@@ -1212,7 +1238,8 @@ const UI = {
     let txt = G.mineSpent(a) ? tr(' · ❌ filon épuisé', ' · ❌ ore vein exhausted') + (d.kind === 'gold' && G.level[a] < 2 ? tr(' (améliore-la pour le relancer)', ' (upgrade it to restart it)') : '')
       : d.kind === 'gold' ? tr(` · ⏳ filon : ${clock(d.left / CONFIG.TICKS_PER_SECOND)} d'exploitation`, ` · ⏳ ore vein: ${clock(d.left / CONFIG.TICKS_PER_SECOND)} of mining left`)
       : d.kind === 'diamond' ? tr(` · 💎 extrait à ${Math.floor(d.progress * 100)} % (${d.paid}/4 versements)`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted (${d.paid}/4 payments)`) : '';
-    if (!G.mineSpent(a)) txt += G.mineLinked(a) ? tr(` · 🛤️ reliée à une ville : ×${CONFIG.MINE_ROAD_FACTOR}`, ` · 🛤️ linked to a city: ×${CONFIG.MINE_ROAD_FACTOR}`)
+    if (d.kind === 'glory') txt += tr(` · 🌿 +${String(G.mineInfo(a).glory).replace('.', ',')} de gloire par seconde`, ` · 🌿 +${G.mineInfo(a).glory} glory per second`); // (la gloire : pas de route qui compte)
+    else if (!G.mineSpent(a)) txt += G.mineLinked(a) ? tr(` · 🛤️ reliée à une ville : ×${CONFIG.MINE_ROAD_FACTOR}`, ` · 🛤️ linked to a city: ×${CONFIG.MINE_ROAD_FACTOR}`)
       : tr(` · sans route (×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville)`, ` · no road (×${CONFIG.MINE_ROAD_FACTOR} if linked to a city)`);
     if (G.mineFortified(a)) txt += tr(` · 🧱 fortifiée (🛡️ ${fmt(G.garrison[a])} / ${MINE_FORT.GARRISON})`, ` · 🧱 fortified (🛡️ ${fmt(G.garrison[a])} / ${MINE_FORT.GARRISON})`);
     return txt;
@@ -1577,6 +1604,14 @@ const UI = {
       }[Game.human.role];
       if (t) { $('endTitle').textContent = t[0]; $('endText').textContent = t[1]; }
     }
+    // 🌿 Carte de gloire : la jauge est pleine
+    if (kind === 'glory') {
+      const w = Game.players[Game.gloryWinner], pc = q => Math.round(q.glory / Math.max(1, Game.gloryTotal()) * 100);
+      $('endTitle').textContent = win ? tr('🌿 La gloire éternelle !', '🌿 Eternal glory!') : tr('🌿 La gloire t\'échappe...', '🌿 Glory slips away...');
+      $('endText').textContent = win
+        ? tr(`La jauge de gloire est pleine, et ${pc(h)} % de cette gloire est à ${h.name} : les chroniques ne retiendront que ton nom.`, `The glory gauge is full, and ${pc(h)}% of that glory belongs to ${h.name}: the chronicles will remember only your name.`)
+        : tr(`La jauge de gloire est pleine : ${w ? w.name : '?'} en a le plus (${w ? pc(w) : 0} %), et l'emporte. ${h.name} n'en avait que ${pc(h)} %.`, `The glory gauge is full: ${w ? w.name : '?'} has the most (${w ? pc(w) : 0}%), and wins. ${h.name} had only ${pc(h)}%.`);
+    }
     // 🌐 En ligne : vaincu, on peut regarder la suite ; la partie finie, on dit qui l'emporte
     if (kind === 'spectate') {
       $('endText').textContent = tr(`Le royaume de ${h.name} est tombé. La partie continue pour les autres : tu peux regarder la suite.`,
@@ -1585,7 +1620,8 @@ const UI = {
     const w = kind === 'online' ? Game.players[Game.winner] : null;
     if (w && !win) {
       $('endTitle').textContent = tr('🏁 Partie terminée', '🏁 Game over');
-      $('endText').textContent = tr(`${w.name} l'emporte, avec ${Game.landPct(w.tiles)} % des terres.`, `${w.name} wins, with ${Game.landPct(w.tiles)}% of the land.`);
+      $('endText').textContent = Game.gloryDone() ? tr(`La jauge de gloire est pleine : ${w.name} l'emporte, avec ${Math.round(w.glory / Math.max(1, Game.gloryTotal()) * 100)} % de la gloire.`, `The glory gauge is full: ${w.name} wins, with ${Math.round(w.glory / Math.max(1, Game.gloryTotal()) * 100)}% of the glory.`)
+        : tr(`${w.name} l'emporte, avec ${Game.landPct(w.tiles)} % des terres.`, `${w.name} wins, with ${Game.landPct(w.tiles)}% of the land.`);
     }
     if (kind === 'empire') {
       $('endTitle').textContent = tr('👑 Couronné empereur !', '👑 Crowned emperor!');
@@ -1871,6 +1907,7 @@ const UI = {
     $('traitor').textContent = tr(`🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % `,
       `🗡️ Traitor: defense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)}% `) +
       `(${Math.floor(traitorSecs / 60)}:${String(traitorSecs % 60).padStart(2, '0')})`;
+    this.refreshGlory(); // (🌿 la jauge de gloire)
     // 📿 Tes reliques gardées (affiché dès que la première relique est apparue, parties classiques : voir reliques.js ;
     //  celles d'un autre royaume se voient en le survolant, voir refreshKingdomTip)
     const relicOn = G.relicMode() && G.relicChurch && (G.relicChurch.size || G.relics.length || G.relicRuns.length);
