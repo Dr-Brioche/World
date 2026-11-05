@@ -44,9 +44,9 @@ const UI = {
     // gloire (comme une mine : il suffit de cliquer sur le filon) ; voir MINES.glory
     const gb = document.createElement('button');
     gb.className = 'build glory hidden';
-    gb.title = tr(`Tour de gloire : sur un filon de gloire (couronne de laurier), elle remplit la jauge de gloire de ta couleur. 3 niveaux (💰 ${MINES.glory.cost}, puis ${fmt(MINES.glory.levels[2].upgradeCost)} et ${fmt(MINES.glory.levels[3].upgradeCost)}) ; au niveau 3, une petite fortification de ${MINE_FORT.GARRISON} soldats.`,
-      `Glory tower: on a glory vein (laurel wreath), it fills the glory gauge with your colour. 3 levels (💰 ${MINES.glory.cost}, then ${fmt(MINES.glory.levels[2].upgradeCost)} and ${fmt(MINES.glory.levels[3].upgradeCost)}); at level 3, a small fortification of ${MINE_FORT.GARRISON} soldiers.`);
-    gb.innerHTML = `<span class="icon">${ICONS.laurel}</span><span>${tr('Tour de gloire', 'Glory tower')}</span><span class="cost">💰 ${MINES.glory.cost}</span>`;
+    gb.title = tr(`Tour de gloire (touche ${GLORY_KEY}) : sur un filon de gloire (couronne de laurier), elle remplit la jauge de gloire de ta couleur. 3 niveaux (💰 ${MINES.glory.cost}, puis ${fmt(MINES.glory.levels[2].upgradeCost)} et ${fmt(MINES.glory.levels[3].upgradeCost)}) ; au niveau 3, une petite fortification de ${MINE_FORT.GARRISON} soldats.`,
+      `Glory tower (key ${GLORY_KEY}): on a glory vein (laurel wreath), it fills the glory gauge with your colour. 3 levels (💰 ${MINES.glory.cost}, then ${fmt(MINES.glory.levels[2].upgradeCost)} and ${fmt(MINES.glory.levels[3].upgradeCost)}); at level 3, a small fortification of ${MINE_FORT.GARRISON} soldiers.`);
+    gb.innerHTML = `<span class="key">${GLORY_KEY}</span><span class="icon">${ICONS.laurel}</span><span>${tr('Tour de gloire', 'Glory tower')}</span><span class="cost">💰 ${MINES.glory.cost}</span>`;
     gb.addEventListener('click', () => this.selectBuild(this.selectedBuild === B_MINE ? 0 : B_MINE));
     builds.appendChild(gb);
     this.gloryBtn = gb;
@@ -373,6 +373,8 @@ const UI = {
       const shown = n && document.querySelector(`.build[data-type="${n}"]:not(.hidden)`);
       if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden && shown) {
         this.selectBuild(this.selectedBuild === n ? 0 : n);
+      } else if (n === GLORY_KEY && !this.gloryBtn.classList.contains('hidden')) {
+        this.selectBuild(this.selectedBuild === B_MINE ? 0 : B_MINE); // (🌿 touche 8 : la tour de gloire, sur une carte de gloire)
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
       if (e.key === 'Escape' && !$('quitScreen').classList.contains('hidden')) return this.closeQuit(); // (… et « Quitter ? »)
@@ -1815,7 +1817,7 @@ const UI = {
     if (G.depositTile[i] && G.building[i] !== B_MINE) {
       const d = G.deposits.find(d => [d.a, d.a + 1, d.a + G.W, d.a + G.W + 1].includes(i));
       if (d) txt += ` · ${MINES[d.kind].icon} ${tr('filon', 'ore vein')} : ${MINES[d.kind].name}${d.name ? ` · ${d.name}` : ''} (${MINES[d.kind].short})` +
-        (o !== G.human.id ? '' : d.kind === 'glory' ? tr(` · 🌿 bouton « Tour de gloire » (ou touche ${B_MINE}) pour y bâtir une tour de gloire (💰 ${fmt(G.buildCost(G.human, B_MINE, d.a))})`, ` · 🌿 « Glory tower » button (or key ${B_MINE}) to build a glory tower here (💰 ${fmt(G.buildCost(G.human, B_MINE, d.a))})`)
+        (o !== G.human.id ? '' : d.kind === 'glory' ? tr(` · 🌿 bouton « Tour de gloire » (ou touche ${GLORY_KEY}) pour y bâtir une tour de gloire (💰 ${fmt(G.buildCost(G.human, B_MINE, d.a))})`, ` · 🌿 « Glory tower » button (or key ${GLORY_KEY}) to build a glory tower here (💰 ${fmt(G.buildCost(G.human, B_MINE, d.a))})`)
           : tr(` · ⛏️ touche ${B_MINE} pour y bâtir une mine (💰 ${fmt(G.buildCost(G.human, B_MINE))})`, ` · ⛏️ key ${B_MINE} to build a mine here (💰 ${fmt(G.buildCost(G.human, B_MINE))})`));
     }
     if (o >= 0 && (G.castleProtects(o, i) || G.portBonus(o, i) > 0)) txt += tr(` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`, ` · inside the walls: defense ${pct(G.tileDefense(o, i) - 1)}`);
