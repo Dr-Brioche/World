@@ -1091,6 +1091,7 @@ const GameRules = {
     const p = this.players[a.attacker], d = this.players[a.target];
     const ruins = [c, ...this.linkedBuildings(c)], label = this.targetLabel(c); // (son nom, avant qu'elle ne soit rasée)
     const city = this.building[c] === B_CASTLE, what = city ? tr('une ville', 'a city') : tr('un port fortifié', 'a fortified port');
+    const fort = this.warFort(c); // (🛡️ un lieu fortifié rasé : son maître proclame la politique de guerre, comme s'il était pris)
     // (une cible déjà passée au pillard, comme une église prise d'un coup : ses cases reviennent au défenseur)
     for (const j of this.footprint(c, this.building[c])) if (this.owner[j] === a.attacker) this.setOwner(j, a.target);
     for (const b of ruins) this.removeBuilding(b);
@@ -1110,7 +1111,10 @@ const GameRules = {
       return this.endAttack(a);
     }
     p.gold += loot;
+    // (🔥 comme un assaut qui prend une ville : le pillard a l'après-guerre, le perdant est galvanisé, et
+    //  🛡️ il proclame la politique de guerre : ses autres lieux fortifiés ont plus de garnison)
     this.warEffects(a);
+    if (fort && d.alive) this.warPolicy(d, p);
     if (p.isHuman) UI.log(tr(`🔥 Tes Vikings ont rasé ${what} ${this.deName(d.name)} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} détruit${ruins.length > 1 ? 's' : ''}, 💰 ${fmt(loot)} de butin ! Ils rembarquent.`,
       `🔥 Your Vikings razed ${what} of ${d.name}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} destroyed, 💰 ${fmt(loot)} of loot! They set sail home.`), 'good', d);
     else if (d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} ont rasé une de tes ${city ? 'villes' : 'places fortes'} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} détruit${ruins.length > 1 ? 's' : ''} !`,

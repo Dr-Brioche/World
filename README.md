@@ -629,7 +629,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (La garnison d'un port royal ou d'un avant-poste, elle, sort dès que l'assaut entre sur tes terres.) **Au combat, chaque soldat de garnison
      en vaut 3.** Ils se reconstituent ensuite peu à peu.
    - 🛡️ **Politique de guerre** (contre l'acharnement, pour tous les royaumes, bots compris) : quand tu perds un
-     **lieu fortifié** (une ville, un port royal ou une mine fortifiée), tous tes autres lieux fortifiés qui ne sont pas
+     **lieu fortifié** (une ville, un port royal ou une mine fortifiée, pris par un assaut ou rasé par des Vikings), tous tes autres lieux fortifiés qui ne sont pas
      isolés reçoivent tout de suite **+50 soldats de garnison**, pendant **1 min 30**. Si tu en perds un autre pendant
      ce temps, le bonus **s'additionne** (+100, puis +150…) et le compte à rebours **repart de zéro**. Le bonus et le
      temps qui reste s'affichent en haut de l'écran ; à la fin, les garnisons reviennent à la normale. Un royaume
@@ -933,7 +933,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **voisins**, peuvent aller la chercher : il faut une **cathédrale** (église de niveau 3) **libre** pour la garder : **une seule relique par
      cathédrale** (pour une deuxième, il t'en faut une autre). Au survol, la souris devient une **croix d'or** si tu peux
      y aller. **Clique sur la relique** pour la viser (un cercle doré en pointillés l'entoure), puis **clique encore une fois** dessus
-     pour lancer l'expédition, comme un assaut (Échap ou clic droit pour annuler) : une armée (selon le curseur « Envoyer ») part de ta ville la plus proche, avec une **petite croix d'or**
+     pour lancer l'expédition, comme un assaut (Échap ou clic droit pour annuler) : une armée (selon le curseur « Envoyer ») part de ta ville la plus rapide à rejoindre à pied (pas forcément la plus proche à vol d'oiseau), avec une **petite croix d'or**
      pour la reconnaître (2 nouveaux clics lui envoient des renforts : hors de tes terres, ils mettent du temps à la rejoindre, comme ceux d'un assaut). Elle ne prend aucune terre en chemin (elle marche sur tes terres, celles de tes alliés, du royaume
      de la relique et les terres libres), et **ne traverse ni la muraille d'une ville ennemie ni ses murs** : elle en fait le tour
      (si aucun chemin n'y mène, la relique ou l'armée à intercepter est à l'abri). Arrivée, elle s'en empare en **10 secondes** (l'anneau jaune), puis la rapporte
@@ -1308,6 +1308,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.45** : 📿 une **expédition de relique** (et une interception) part maintenant de ta ville **la plus rapide à rejoindre à pied**, comme un assaut, et plus de la plus proche à vol d'oiseau (qui pouvait l'obliger à un long détour autour d'un lac, d'un sommet ou d'une muraille) · 🔥 une ville (ou un port fortifié) **rasée par des Vikings** déclenche aussi la **politique de guerre** de son maître, comme une ville prise par un assaut (il était déjà galvanisé).
 - **v0.98.44** : 🌿⛏️ en posant une **tour de gloire**, seuls les **filons de gloire** sont proposés (et entourés), et en posant une **mine**, seuls les **filons de minerai** · **zone interdite autour des filons** (mines et tours de gloire) : pas de **château** à moins de **13 cases**, ni d'**église** ou de **port** à moins de **10** (cercles rouges pendant la pose), ni de **capitale** à moins de 13 (sauf aux places prévues des arènes) · la **muraille d'une ville s'arrête toujours à 3 cases d'un filon**, même quand la ville s'améliore : une mine ou une tour de gloire ne finit plus jamais enfermée dans une ville, on peut toujours aller la prendre (les villes déjà bâties au début des scénarios gardent leur muraille). Réglages : `DEPOSIT_CASTLE_DISTANCE`, `DEPOSIT_CHURCH_DISTANCE`, `DEPOSIT_SPAWN_DISTANCE`, `DEPOSIT_WALL_GAP` dans `js/config.js`.
 - **v0.98.43** : ✝️ une **église**, un **port** ou une **mine** que tu viens de prendre par un **assaut** ne peut plus être reconverti tout de suite par la Croyance de son ancien maître : **15 s** de répit (réglage `FAITH_CAPTURE_TRUCE`), même face à beaucoup plus de Croyance.
 - **v0.98.42** : 🖱️ **tout envoi de soldats se fait en 2 clics**, comme un assaut : défendre contre un assaut (sur sa bannière, ou le bouton « Défendre » qui devient « Confirmer »), renforcer un assaut ou ton armée de défense, relier un château isolé, intercepter ou renforcer une armée de relique. Le 1er clic vise (l'aide en bas dit combien de soldats partiront), le 2e les envoie ; un autre clic, Échap ou un clic droit annule, et un choix du menu clic droit part tout de suite.
