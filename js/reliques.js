@@ -596,8 +596,14 @@ Object.assign(GameRules, {
       return;
     }
     if (c < 0) return;
-    const to = this.relicMid(c);
-    this.returning.push(Object.assign(this.walkRoute(r.pid, { x: at.x, y: at.y }, to, r.troops, CONFIG.RETREAT_SPEED), { pid: r.pid, source: -1, to }));
+    // (à pied, par un vrai chemin : comme à l'aller, sur ses terres, celles de ses alliés, du royaume où elle est et
+    //  les terres libres, en contournant les sommets, la mer et les murailles ennemies ; jusqu'à sa place forte la plus
+    //  rapide à rejoindre. Sans chemin : sur ses seules terres (voir walkRoute), ou à défaut tout droit)
+    const goals = new Map();
+    for (const a of this.strongholds(r.pid)) for (const j of this.footprint(a, this.building[a])) goals.set(j, a);
+    const path = goals.size ? this.relicPath(r.pid, ft, new Set(goals.keys()), this.relicOwners(r, this.owner[ft])) : null;
+    const home = path ? goals.get(path[path.length - 1]) : c, to = this.relicMid(home);
+    this.returning.push(Object.assign(this.walkRoute(r.pid, { x: at.x, y: at.y }, to, r.troops, CONFIG.RETREAT_SPEED, false, path), { pid: r.pid, source: -1, to }));
   },
   // (une armée qui en poursuit une autre l'attend au plus RELIC.LOST_TIME secondes quand elle passe derrière une muraille)
   // L'armée c rattrape l'armée t : le combat commence. Les deux s'arrêtent là où elles sont (on voit leurs soldats

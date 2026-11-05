@@ -5805,7 +5805,16 @@ const GameRules = {
   walkRoute(pid, from, to, troops, bonus = CONFIG.DEFENDER_SPEED_BONUS, direct = false, given = null, sea = 0) {
     const tile = p => Math.floor(p.y) * this.W + Math.floor(p.x), W = this.W;
     const speed = this.defenderSpeed(troops, bonus), ford = this.fordCost(speed);
-    const path = given || (direct ? null : this.ownLandPath(pid, tile(from), tile(to), ford)), march = this.marchCost(pid);
+    let path = given || (direct ? null : this.ownLandPath(pid, tile(from), tile(to), ford));
+    // (pas de chemin sur ses seules terres, par exemple parti de chez un autre royaume : par ses terres, celles de ses
+    //  alliés, du royaume où il est et les terres libres, en contournant les sommets et la mer ; plus jamais tout droit
+    //  à travers les montagnes, voir relicPath)
+    if (!path && !direct && !given) {
+      const owners = new Set([pid, this.owner[tile(from)], this.owner[tile(to)]]);
+      for (const a of this.allies(pid)) owners.add(a.id);
+      path = this.relicPath(pid, tile(from), new Set([tile(to)]), owners);
+    }
+    const march = this.marchCost(pid);
     const pts = [from], cum = [0];
     const add = (q, extra = 0) => {
       const last = pts[pts.length - 1];
