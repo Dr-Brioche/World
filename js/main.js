@@ -18,7 +18,8 @@ const UI = {
     Music.menu(); // (🏰 la musique du menu de départ, jusqu'au début de la partie : voir music.js)
     // Langue du jeu (en haut à droite du menu) : en changer recharge la page (voir lang.js)
     $('langSelect').value = LANG;
-    $('langSelect').addEventListener('change', function () { setLang(this.value); });
+    // (les réglages de la partie déjà choisis sont gardés le temps du rechargement : voir saveMenu)
+    $('langSelect').addEventListener('change', e => { this.saveMenu(); setLang(e.target.value); });
     $('ratio').addEventListener('input', e => { this.ratio = e.target.value / 100; this.refresh(); });
     // (curseur lâché : il rend la main au clavier, pour que les flèches et ZQSD déplacent de nouveau la caméra)
     $('ratio').addEventListener('change', e => e.target.blur());
@@ -354,6 +355,40 @@ const UI = {
     });
     // Les emojis de la page deviennent des icônes médiévales dessinées (voir icons.js)
     Icons.watch();
+    this.restoreMenu(); // (🌍 après un changement de langue : les réglages d'avant)
+  },
+
+  // 🌍 Changer de langue recharge la page : les réglages déjà choisis au menu (nom, bannière, carte, taille, pactes,
+  // placement, difficulté, adversaires) sont gardés dans le navigateur le temps du rechargement, puis remis en place
+  MENU_KEY: 'medievalEmperor.menu',
+  saveMenu() {
+    const name = $('name').value.trim(), v = id => $(id).value;
+    const s = { banner: this.banner, mapType: v('mapType'), mapSize: v('mapSize'), pacts: v('pacts'), spawnMode: v('spawnMode'),
+      difficulty: v('difficulty'), opponents: v('opponents'),
+      // (le nom, s'il n'est pas celui par défaut : sinon on laisse celui de la nouvelle langue)
+      name: name && name !== 'Mon Royaume' && name !== 'My Kingdom' ? name : '' };
+    try { sessionStorage.setItem(this.MENU_KEY, JSON.stringify(s)); } catch (e) { /* (sans stockage : tant pis) */ }
+  },
+  restoreMenu() {
+    let s = null;
+    try { s = JSON.parse(sessionStorage.getItem(this.MENU_KEY) || 'null'); sessionStorage.removeItem(this.MENU_KEY); } catch (e) { s = null; }
+    if (!s) return;
+    // (une valeur qui n'existe plus dans la liste, comme une carte dessinée supprimée, est ignorée)
+    const set = (id, val) => {
+      const opt = val !== undefined && [...$(id).options].find(o => o.value === String(val));
+      if (!opt || opt.disabled || $(id).value === String(val)) return;
+      $(id).value = String(val);
+      $(id).dispatchEvent(new Event('change'));
+    };
+    set('mapType', s.mapType); // (d'abord la carte : elle règle la taille, le placement, les bannières et les rivaux possibles)
+    set('mapSize', s.mapSize);
+    set('pacts', s.pacts);
+    set('spawnMode', s.spawnMode);
+    set('difficulty', s.difficulty);
+    set('opponents', s.opponents);
+    const b = document.querySelector(`#bannerPick button[data-banner="${s.banner}"]`);
+    if (b) { b.click(); $('bannerPick').classList.add('hidden'); }
+    if (s.name) $('name').value = s.name;
   },
 
   // Nombre de rivaux le plus grand possible sur la carte choisie dans le menu (voir CELLS_PER_OPPONENT)
