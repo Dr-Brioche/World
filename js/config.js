@@ -417,7 +417,7 @@ const CONFIG = {
   // niveau 3 ou une mine fortifiée) renforce tous ses autres lieux fortifiés, s'ils ne sont pas isolés :
   // +GARRISON soldats de garnison chacun, pendant TIME secondes. Une nouvelle perte pendant ce temps ajoute encore
   // +GARRISON (+50, puis +100, +150…) et le compte à rebours repart de zéro.
-  WAR_POLICY: { GARRISON: 50, TIME: 90 },
+  WAR_POLICY: { GARRISON: 50, TIME: 120 },
   ALLIANCE_REQUEST_TIMEOUT: 15,  // secondes pour répondre à une demande d'alliance
   ALLY_GIFT_RATIO: 0.75,         // soldats envoyés à un allié : il n'en reçoit que 75 % (le voyage en coûte)
 
