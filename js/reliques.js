@@ -269,6 +269,20 @@ Object.assign(GameRules, {
     const bonus = CONFIG.RELIC.SPEED / (slow ? CONFIG.RELIC.CARRY_SLOW : 1);
     return this.walkRoute(r.pid, from, to, r.troops, bonus, false, path);
   },
+  // 🚶 Le départ le plus rapide à pied pour l'armée r vers la case tile : la place forte d'où le vrai chemin (relief,
+  // sommets, mer, murailles ennemies contournés) est le plus court, et pas la plus proche à vol d'oiseau (qui peut
+  // obliger à un long détour). On cherche depuis la case visée vers toutes ses places fortes à la fois.
+  // Renvoie { c, route } (route : son trajet, voir walkRoute), ou null s'il n'y a aucun chemin à pied.
+  relicFastStart(r, tile, to, slow) {
+    const goals = new Map();
+    for (const a of this.strongholds(r.pid, false)) for (const j of this.footprint(a, this.building[a])) goals.set(j, a);
+    if (!goals.size) return null;
+    const back = this.relicPath(r.pid, tile, new Set(goals.keys()), this.relicOwners(r, this.owner[tile]));
+    if (!back) return null;
+    const c = goals.get(back[back.length - 1]), path = back.reverse();
+    const bonus = CONFIG.RELIC.SPEED / (slow ? CONFIG.RELIC.CARRY_SLOW : 1);
+    return { c, route: this.walkRoute(r.pid, this.relicMid(c), to, r.troops, bonus, false, path) };
+  },
   // La place forte de pid la plus proche du point (pour partir ou rentrer)
   relicHome(pid, at) {
     const list = this.strongholds(pid, false);
@@ -301,7 +315,9 @@ Object.assign(GameRules, {
     const start = this.relicHome(pid, goal);
     if (start < 0) return tr('Tu n\'as aucune ville d\'où partir.', 'You have no city to set out from.');
     const r = { id: this.nextAttackId++, pid, troops, region: relic.region, phase: 'go', aim: id, relic: null };
-    r.route = this.relicRoute(r, this.relicMid(start), new Set([relic.tile]), goal, false);
+    // (🚶 depuis la place forte la plus rapide à pied, pas forcément la plus proche : voir relicFastStart)
+    const fast = this.relicFastStart(r, relic.tile, goal, false);
+    r.route = fast ? fast.route : this.relicRoute(r, this.relicMid(start), new Set([relic.tile]), goal, false);
     // (⛵ sur une île : en bateau, depuis un de ses ports royaux)
     if (!r.route) r.route = this.relicSeaGo(r, new Set([relic.tile]), goal, new Set([this.landComp()[relic.tile]]));
     if (!r.route) return this.relicPorts(pid).length ? tr('Impossible d\'atteindre cette relique, ni à pied ni en bateau.', 'This relic cannot be reached, neither on foot nor by boat.')
@@ -332,7 +348,8 @@ Object.assign(GameRules, {
     const r = { id: this.nextAttackId++, pid, troops, region: t.region, phase: 'chase', chase: id, relic: null };
     // (par un vrai chemin : elle ne passe pas la muraille d'une ville ennemie, voir relicPath)
     const tt = Math.floor(at.y) * this.W + Math.floor(at.x);
-    r.route = this.relicRoute(r, this.relicMid(start), new Set([tt]), at, false) || this.relicSeaGo(r, new Set([tt]), at, null); // (⛵ ou en bateau)
+    const fast = this.relicFastStart(r, tt, at, false); // (🚶 depuis la place forte la plus rapide à pied)
+    r.route = (fast && fast.route) || this.relicRoute(r, this.relicMid(start), new Set([tt]), at, false) || this.relicSeaGo(r, new Set([tt]), at, null); // (⛵ ou en bateau)
     if (!r.route) return tr('Ton armée ne peut pas atteindre cette armée à pied (elle est à l\'abri derrière une muraille ?).', 'Your army cannot reach that army on foot (is it safe behind city walls?).');
     r.reroute = 0;
     p.troops -= troops;
