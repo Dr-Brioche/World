@@ -2018,6 +2018,12 @@ const UI = {
         count.classList.toggle('full', h.castlesBuilt >= max);
       }
     });
+    // 🌿 Le bouton « Tour de gloire » : son prix (lui aussi plus bas avec des carrières de pierre)
+    if (G.gloryMode) {
+      const d = [...G.depositAt.values()].find(v => v.kind === 'glory'), cost = d ? G.buildCost(h, B_MINE, d.a) : MINES.glory.cost;
+      this.gloryBtn.querySelector('.cost').textContent = `💰 ${fmt(cost)}`;
+      this.gloryBtn.classList.toggle('poor', h.gold < cost);
+    }
     this.refreshBuildingMenu();
     this.refreshCrusadeBar();
     this.refreshLevyBar();
