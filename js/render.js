@@ -1854,6 +1854,8 @@ const Render = {
   })),
   // 🧱 L'image d'une mine fortifiée (voir MINE_FORT)
   fortMineImage: Object.assign(new Image(), { src: MINE_FORT.IMG }),
+  // 🌿 Les images des 3 niveaux de la tour de gloire (voir MINES.glory.levels)
+  gloryImages: MINES.glory.levels.map(l => l && Object.assign(new Image(), { src: l.img })),
 
   // Image des bâtiments sans niveaux (l'avant-poste)
   simpleImages: BUILDINGS.map(b => {
@@ -2162,9 +2164,10 @@ const Render = {
   // Bâtiment à niveaux (moulin, caserne, château, église) : icône de loin, image quand on zoome
   drawLeveledBuilding(i, px, py, imgAlpha) {
     const ctx = this.ctx, s = this.cam.scale, G = Game;
-    const type = G.building[i], lvl = G.level[i] || 1, fort = type === B_MINE && G.fortMines.has(i);
-    const info = fort ? { ...BUILDING_LEVELS[type][lvl], size: MINE_FORT.SIZE } : BUILDING_LEVELS[type][lvl];
-    const img = fort ? this.fortMineImage : this.buildingImages[type][lvl]; // (🧱 une mine fortifiée : son image à elle)
+    const type = G.building[i], lvl = G.level[i] || 1, glory = G.isGloryTower(i), fort = !glory && type === B_MINE && G.fortMines.has(i);
+    // (🌿 une tour de gloire : ses images à elle ; sa petite fortification, au niveau 3, est déjà sur l'image)
+    const info = glory ? { ...MINES.glory.levels[lvl], kind: 'glory' } : fort ? { ...BUILDING_LEVELS[type][lvl], size: MINE_FORT.SIZE } : BUILDING_LEVELS[type][lvl];
+    const img = glory ? this.gloryImages[lvl] : fort ? this.fortMineImage : this.buildingImages[type][lvl]; // (🧱 une mine fortifiée : son image à elle)
     if (!img) imgAlpha = 0; // pas d'image : toujours l'icône
     const half = G.sizeOf(type) / 2; // demi-côté du bâtiment, en cases
     // De loin : l'icône et le niveau en chiffres romains
@@ -2349,9 +2352,11 @@ const Render = {
   },
 
   // Fait apparaître un petit chiffre qui monte au-dessus d'un bâtiment (production)
-  floatText(a, type, text) {
+  floatText(a, type, text, color, up = 0) {
     const half = Game.sizeOf(type) / 2;
-    this.floaters.push({ x: a % Game.W + half, y: ((a / Game.W) | 0), text, color: type === B_BARRACKS ? '#ffffff' : '#ffd75e', start: performance.now() });
+    // (color : sa couleur, sinon blanc pour une caserne et or pour le reste ; up : cases à remonter, au-dessus d'un
+    //  bâtiment haut comme une tour de gloire)
+    this.floaters.push({ x: a % Game.W + half, y: ((a / Game.W) | 0) - up, text, color: color || (type === B_BARRACKS ? '#ffffff' : '#ffd75e'), start: performance.now() });
   },
 
   drawFloaters(ox, oy) {
@@ -3035,7 +3040,7 @@ const Render = {
         // Au-dessus du bâtiment : 🛡 sa garnison, ⚔ les soldats stationnés (avant-poste), 🏗️ la construction
         if (s >= 4) {
           // (au-dessus de l'image quand on la voit, sinon au-dessus de l'icône)
-          const info = BUILDING_LEVELS[type] ? BUILDING_LEVELS[type][G.level[i] || 1] : BUILDINGS[type];
+          const lv = G.levelsOf(i), info = lv ? lv[G.level[i] || 1] : BUILDINGS[type];
           const top = (imgAlpha > 0.5 && info.size ? info.size * 0.8 : half) * CONFIG.BUILDING_DRAW_SCALE;
           this.drawBuildingLabel(i, type, px, py - s * top - 8);
         }

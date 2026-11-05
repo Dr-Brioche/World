@@ -644,17 +644,17 @@ const GameRules = {
   },
   // Infos d'une mine : son niveau, et ce que fait sa sorte de filon à ce niveau
   mineInfo(a) {
-    const d = this.depositAt.get(a), lvl = this.level[a] || 1, base = MINE_LEVELS[lvl];
+    const d = this.depositAt.get(a), lvl = this.level[a] || 1, base = (d && MINES[d.kind].levels || MINE_LEVELS)[lvl];
     if (!d) return base;
     const info = this.mineInfoAt(d.kind, lvl);
     return d.name ? { ...info, name: `${info.name} (${d.name})` } : info; // (une mine historique : son nom)
   },
   // Les infos d'une mine de cette sorte, à ce niveau (sans mine posée : pour les aperçus)
   mineInfoAt(kind, lvl) {
-    const m = MINES[kind], name = lvl > 1 ? tr('Grande ', 'Great ') + m.name[0].toLowerCase() + m.name.slice(1) : m.name;
+    const m = MINES[kind], name = m.levels ? m.levels[lvl].name : lvl > 1 ? tr('Grande ', 'Great ') + m.name[0].toLowerCase() + m.name.slice(1) : m.name;
     // (or : les 2000 pièces du filon, réparties sur ses versements : un toutes les PRODUCTION_INTERVAL secondes)
     const gold = m.total ? m.total / (m.time / CONFIG.PRODUCTION_INTERVAL) : undefined;
-    return { ...MINE_LEVELS[lvl], name, kind, power: m.power && m.power[lvl], gold,
+    return { ...(m.levels ? m.levels[lvl] : MINE_LEVELS[lvl]), name, kind, power: m.power && m.power[lvl], gold,
       discount: m.discount && m.discount[lvl], speed: m.speed && m.speed[lvl], glory: m.rate && m.rate[lvl] };
   },
   // Un filon vidé pour de bon : de l'or qui a déjà eu sa relance (niveau 2) et ne rapporte plus rien, ou un diamant
@@ -743,12 +743,20 @@ const GameRules = {
     const levels = BUILDING_LEVELS[this.building[a]];
     return levels ? levels[this.level[a] || 1] : null;
   },
+  // Les niveaux du bâtiment a : ceux de son type (BUILDING_LEVELS), ou ceux de sa sorte de mine (🌿 la tour de gloire)
+  levelsOf(a) {
+    const t = this.building[a];
+    if (t === B_MINE) { const d = this.depositAt && this.depositAt.get(a); if (d && MINES[d.kind].levels) return MINES[d.kind].levels; }
+    return BUILDING_LEVELS[t];
+  },
+  // 🌿 Une tour de gloire (une mine bâtie sur un filon de gloire) ?
+  isGloryTower(a) { const d = this.building[a] === B_MINE && this.depositAt.get(a); return !!d && d.kind === 'glory'; },
 
   castleInfo(c) { return CASTLE_LEVELS[this.level[c] || 1]; },
 
   // Prix pour passer au niveau suivant (null si impossible)
   upgradeCost(a) {
-    const levels = BUILDING_LEVELS[this.building[a]];
+    const levels = this.levelsOf(a);
     const next = levels && levels[this.level[a] + 1];
     if (!next) return null;
     if (this.building[a] === B_MINE && this.depositAt.get(a).kind === 'diamond' && this.mineSpent(a)) return null; // (épuisée)
@@ -778,7 +786,7 @@ const GameRules = {
   // Pourquoi on ne peut pas améliorer le bâtiment a (même avec assez d'or), ou null. La cité impériale (château de
   // niveau 4) demande au moins un bâtiment de chaque type au niveau maximum, et on n'en bâtit qu'une par partie.
   upgradeBlocker(p, a) {
-    const levels = BUILDING_LEVELS[this.building[a]], next = levels && levels[this.level[a] + 1];
+    const levels = this.levelsOf(a), next = levels && levels[this.level[a] + 1];
     if (!next || !next.imperial) return null;
     const building = [...this.works].some(([b, w]) => w.pid === p.id && w.kind === 'up' && this.building[b] === B_CASTLE && this.level[b] >= 3);
     if (p.imperialBuilt || building) return tr('Tu as déjà ta cité impériale : une seule par partie.', 'You already have your imperial city: only one per game.');
@@ -1640,7 +1648,7 @@ const GameRules = {
       }
       if (this.tick < w.end) continue;
       this.works.delete(a);
-      const type = this.building[a], icon = BUILDINGS[type].icon;
+      const type = this.building[a], icon = this.isGloryTower(a) ? '🌿' : BUILDINGS[type].icon; // (🌿 une tour de gloire : le laurier)
       if (w.kind === 'build') { // chantier fini : le bâtiment fonctionne
         if (p.isHuman) Music.sound('build'); // (🔔 le son de la construction)
         continue;
@@ -1656,7 +1664,9 @@ const GameRules = {
         continue;
       }
       if (w.kind === 'up') {
-        if (BUILDING_LEVELS[type][this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
+        if (this.levelsOf(a)[this.level[a] + 1]) this.level[a]++; // (jamais au-delà du niveau maximum)
+        // (🌿 une tour de gloire au niveau 3 : sa petite fortification, comme une mine fortifiée, avec sa garnison)
+        if (this.isGloryTower(a) && this.level[a] >= 3 && !this.fortMines.has(a)) { this.fortMines.add(a); this.garrison[a] = this.garrisonMax(a); }
         this.version++;
         if (p.isHuman) Music.sound('build'); // (🔔 le son de la construction : amélioration terminée)
         // (🪙 une mine d'or améliorée : son filon repart pour MINES.gold.time de plus ; une seule fois par filon, même
@@ -1956,6 +1966,7 @@ const GameRules = {
   fortifyError(p, a) {
     if (this.building[a] !== B_MINE || this.owner[a] !== p.id) return tr('Ce n\'est pas une de tes mines.', 'This is not one of your mines.');
     if (this.fortMines.has(a)) return tr('Cette mine est déjà fortifiée.', 'This mine is already fortified.');
+    if (this.isGloryTower(a)) return tr('Une tour de gloire se fortifie d\'elle-même au niveau 3.', 'A glory tower fortifies itself at level 3.');
     if ((this.level[a] || 1) < 2) return tr('Il faut d\'abord améliorer la mine (niveau 2).', 'Upgrade the mine first (level 2).');
     if (this.works.has(a)) return tr('Des travaux sont déjà en cours sur ce bâtiment.', 'Works are already under way on this building.');
     if (p.gold < MINE_FORT.COST) return tr(`Pas assez d'or : il faut 💰 ${fmt(MINE_FORT.COST)}`, `Not enough gold: you need 💰 ${fmt(MINE_FORT.COST)}`);
@@ -3457,11 +3468,21 @@ const GameRules = {
   // 🌿 LA GLOIRE (cartes de gloire) : chaque seconde, chaque mine de gloire bâtie donne MINES.glory.rate points à son
   // royaume. La jauge commune (CONFIG.GLORY.GOAL points) se remplit de la gloire de tous ; voir checkEnd.
   stepGlory() {
-    const rate = MINES.glory.rate;
+    const every = CONFIG.GLORY.FLOAT_EVERY, show = this.tick % (every * CONFIG.TICKS_PER_SECOND) === 0;
     for (const d of this.deposits) {
       if (d.kind !== 'glory' || this.building[d.a] !== B_MINE || this.owner[d.a] < 0 || this.underConstruction(d.a)) continue;
-      this.players[this.owner[d.a]].glory += rate[this.level[d.a] || 1];
+      const p = this.players[this.owner[d.a]];
+      p.glory += this.gloryRate(d.a);
+      // (toutes les FLOAT_EVERY secondes, au-dessus de chaque tour : « +X 🌿 », la gloire gagnée pendant ce temps, pour la
+      //  voir couler : en or pour les tiennes, en blanc pour celles des autres)
+      if (show) Render.floatText(d.a, B_MINE, `+${fmtRate(this.gloryRate(d.a) * every)} 🌿`, p.isHuman ? '#ffd75e' : '#f2ece0', 8); // (8 cases plus haut : au-dessus de la tour)
     }
+  },
+  // Gloire par seconde de la tour de gloire a : selon son niveau (MINES.glory.rate), et la carte (ARENA_MAPS.gloryRate :
+  // sur une carte à beaucoup de joueurs, chaque tour en donne moins)
+  gloryRate(a) {
+    const A = ARENA_MAPS[this.mapType];
+    return MINES.glory.rate[this.level[a] || 1] * (A && A.gloryRate || 1);
   },
   // Toute la gloire gagnée (la jauge commune), et le royaume vivant qui en a le plus
   gloryTotal() { return this.players.reduce((s, p) => s + p.glory, 0); },
@@ -3668,7 +3689,9 @@ const GameRules = {
     return 1 - CONFIG.UPKEEP_MAX * Math.min(1, (r - CONFIG.UPKEEP_FROM) / (1 - CONFIG.UPKEEP_FROM));
   },
 
-  buildCost(p, type) {
+  buildCost(p, type, i = -1) {
+    // (🌿 une tour de gloire, sur un filon de gloire : son prix à elle)
+    if (type === B_MINE && i >= 0 && this.depositAt.get(i) && MINES[this.depositAt.get(i).kind].cost) return MINES[this.depositAt.get(i).kind].cost;
     // (🏰 les châteaux ont leurs prix à eux, dans l'ordre : CASTLE_COSTS ; la capitale, fondée gratuitement, ne compte pas)
     if (type === B_CASTLE) {
       const L = CONFIG.CASTLE_COSTS, cap = p.capital >= 0 ? this.anchor[p.capital] : -1;
@@ -3759,7 +3782,7 @@ const GameRules = {
       }
       return tr(`Il faut ${n}x${n} cases libres sur ton territoire (pas de mer).`, `You need ${n}x${n} free tiles on your territory (no sea).`);
     }
-    const cost = this.buildCost(p, type);
+    const cost = this.buildCost(p, type, i);
     if (p.gold < cost) return tr(`Pas assez d'or (${cost} nécessaires).`, `Not enough gold (${cost} needed).`);
     p.gold -= cost;
     if (type === B_CASTLE) p.castlesBuilt++;
