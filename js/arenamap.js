@@ -53,8 +53,14 @@ const ARENA_MAPS = {
   melee: { name: tr('La Mêlée', 'The Melee'), W: 400, H: 400, players: 20,
     desc: tr('20 royaumes serrés en cercle sur une petite île, autour d\'un centre riche : pas de place, des voisins dès la première minute.', '20 kingdoms packed in a circle on a small island, around a rich centre: no room, neighbours from the very first minute.') },
   // 🌿 la première carte de gloire : une île en octogone, des mines de gloire enclavées (lacs, sommets) à prendre et tenir
-  gloire: { name: tr("L'Octogone de la Gloire", 'The Octagon of Glory'), W: 500, H: 500, players: 8, glory: true, // (glory : une carte de gloire, rangée à part dans le menu)
+  // (glory : une carte de gloire, rangée à part dans le menu ; gloryRate : la gloire de chaque tour, ici divisée par 2,
+  //  puisqu'il y a 9 tours pour 8 royaumes)
+  gloire: { name: tr("L'Octogone de la Gloire", 'The Octagon of Glory'), W: 500, H: 500, players: 8, glory: true, gloryRate: 0.5,
     desc: tr('Une île en octogone et 9 mines de gloire, enfermées dans des lacs ou des sommets avec un seul petit accès : tiens-les pour remplir la jauge de gloire.', 'An octagonal island and 9 glory mines, shut in by lakes or peaks with a single small way in: hold them to fill the glory gauge.') },
+  // 🌿 une petite île en triangle pour 3 : un massif au centre, et sur chaque frontière une rivière avec deux îles de gloire
+  // (ox : le centre du triangle est décalé, pour que l'île soit au milieu de la carte)
+  trois: { name: tr('Le Trône des Trois', 'The Throne of Three'), W: 340, H: 380, players: 3, glory: true, ox: 34,
+    desc: tr('Une île en triangle pour 3 royaumes : au cœur d\'un massif à 3 cols, le Trône ; sur chaque frontière, une rivière et ses deux îles de gloire, dont une dans un cirque de sommets qu\'on n\'atteint que par l\'étroite vallée de la rivière.', 'A triangular island for 3 kingdoms: in the heart of a massif with 3 passes, the Throne; on each border, a river and its two glory islands, one of them in a cirque of peaks reachable only through the narrow river valley.') },
 };
 
 function generateArenaMap(type, seed) {
@@ -63,7 +69,7 @@ function generateArenaMap(type, seed) {
   const reliefNoise = makeValueNoise(rand), forestNoise = makeValueNoise(rand), edgeNoise = makeValueNoise(rand);
   const terrain = new Uint8Array(N);
   const m = { W, H, N, terrain, spots: [], deposits: [], relicSpots: [], arena: type };
-  const cx = W / 2, cy = H / 2, DEG = Math.PI / 180;
+  const cx = W / 2 + (A.ox || 0), cy = H / 2 + (A.oy || 0), DEG = Math.PI / 180;
 
   // Le point (x, y) ramené dans la première « part » de la carte : n parts autour du centre, chacune en miroir
   // (r = distance au centre, phi = angle dans la part, entre 0 et la moitié de la part ; fx, fy : le point replié)
@@ -498,6 +504,54 @@ function generateArenaMap(type, seed) {
     }
     deposit(cx - 1, cy - 1, 'glory'); // (le Sanctuaire)
     for (let k = 0; k < 8; k++) m.relicSpots.push(at(...polar(14, k * part + half)));
+  }
+
+  if (type === 'trois') {
+    // 🌿 Le Trône des Trois : une île en triangle aux coins arrondis, 3 royaumes dans les coins. Au centre, un grand
+    // massif (montagnes, et un anneau de sommets) percé de 3 cols étroits, un face à chaque frontière : au fond, le
+    // Trône (une tour de gloire). Sur chaque frontière, du massif à la mer, coule une rivière (on la passe à gué,
+    // lentement) avec deux îles de gloire : l'île du Gué, à mi-chemin, reliée à chaque rive par une petite chaussée,
+    // et l'île du Cirque, près de la côte, enfermée dans un anneau de sommets : on n'y entre que par l'étroite vallée
+    // de la rivière, sur ses sentiers de berge.
+    // Chaque royaume a son lac, ses forêts, une carrière, du fer vers le massif et deux mines d'or sur ses flancs.
+    const part = 120 * DEG, half = part / 2, inn = 72, cirque = 103;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, phi, fx, fy } = fold(x, y, 3), i = y * W + x, w = wobble(fx, fy), w2 = wobble(fx, fy, 2);
+      // (la côte : un triangle aux coins arrondis, ses côtés face aux frontières ; un peu de dentelle)
+      const coast = 118 / DMath.pow(DMath.cos(Math.min(phi, half - 0.02)), 0.62) + 5 * w2 + 2 * w;
+      if (r > coast) { terrain[i] = T.WATER; continue; }
+      let t = land(fx, fy, 0.64, 0.82);
+      const dIn = DMath.hypot(fx - inn, fy), dCi = DMath.hypot(fx - cirque, fy);
+      // (le lac de chaque royaume, derrière sa capitale, un peu de côté)
+      const lake = DMath.hypot(fx - 112 * DMath.cos(half - 0.42), fy - 112 * DMath.sin(half - 0.42));
+      if (lake < 9 + 2 * w) t = T.WATER;
+      // (le massif du centre : le Trône, l'anneau de sommets et ses 3 cols, puis les montagnes autour)
+      else if (r < 15) t = T.HILLS;
+      else if (r < 40 + 2 * w) t = r * phi < 2.4 ? T.HILLS : r > 22 && r < 33 + w ? T.PEAK : T.MOUNTAIN;
+      else if (r < 50 + 3 * w && r * phi > 4) t = fbm(reliefNoise, fx / 8, fy / 8, 2) > 0.5 ? T.MOUNTAIN : T.WOODED_HILLS;
+      // (le cirque de l'île de gloire près de la côte : un fer à cheval de sommets, ouvert seulement sur la rivière)
+      else if (dCi < 7) t = fy < 1.2 && dCi > 3.6 ? T.RIVER : T.HILLS;
+      else if (dCi < 13 + w) t = fy < 1.2 ? T.RIVER : fy < 2.8 ? T.PLAINS : dCi < 11 + w ? T.PEAK : T.MOUNTAIN; // (la rivière, et un sentier de berge de chaque côté)
+      // (l'île du Gué : une colline au milieu de la rivière, qui se partage en deux bras autour d'elle)
+      else if (dIn < 5) t = T.HILLS;
+      else if (dIn < 8.5) t = Math.abs(fx - inn) < 1.3 ? T.PLAINS : T.RIVER; // (deux petites chaussées, une de chaque rive)
+      // (la rivière de la frontière, du massif à la mer)
+      else if (r > 46 && fy < 1.2 + 0.3 * w) t = T.RIVER;
+      // (des berges fertiles le long de la rivière)
+      else if (r > 46 && fy < 7 && t !== T.WATER) t = t === T.HILLS || t === T.MOUNTAIN ? T.FOREST : T.PLAINS;
+      terrain[i] = t;
+    }
+    for (let k = 0; k < 3; k++) {
+      const a = k * part + half, b = k * part; // (a : l'axe du royaume k ; b : la frontière entre deux royaumes)
+      spot(...polar(140, a));
+      deposit(...polar(166, a).map(v => v - 1), 'stone');
+      deposit(...polar(84, a).map(v => v - 1), 'iron');
+      for (const s of [-1, 1]) deposit(...polar(100, a + s * 16 * DEG).map(v => v - 1), 'gold'); // (entre la capitale et ses lacs)
+      deposit(...polar(inn, b).map(v => v - 1), 'glory');    // (l'île du Gué)
+      deposit(...polar(cirque, b).map(v => v - 1), 'glory'); // (l'île du Cirque)
+    }
+    deposit(cx - 1, cy - 1, 'glory'); // (le Trône)
+    for (let k = 0; k < 3; k++) m.relicSpots.push(at(...polar(9, k * part + half)));
   }
 
   // (petites variations de couleur pour un rendu moins plat)

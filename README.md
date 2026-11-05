@@ -97,18 +97,32 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      carrière près de la côte ; entre deux voisins, une **crête de montagne** (lente à passer, avec un col) et un filon à
      partager, tour à tour de l'**or** et du **fer** (chacun en a un de chaque à côté de lui) ; au centre, un plateau entouré
      d'un fleuve (un diamant, 5 mines d'or).
-   - **🌿 L'Octogone de la Gloire (8)** : la première **carte de gloire**. Une île en **octogone**, au terrain naturel
-     (plaines, forêts, collines ; plus ouvert vers le centre), 8 places face aux 8 côtés. **9 mines de gloire**, enclavées :
-     au centre, le **Sanctuaire**, dans un anneau de sommets percé de 8 portes étroites ; entre deux voisins, à mi-chemin du
-     centre, une mine sur une colline au milieu d'un **lac**, reliée à la terre par une seule petite **chaussée** tournée vers
-     le centre (aussi loin de l'un que de l'autre). Chacun a une carrière, une mine de fer et une mine d'or à lui.
-     🌿 **La gloire** : une **mine de gloire** (💰 600, sur un filon de gloire, une couronne de laurier) donne **1 point de
-     gloire par seconde** à son royaume (**1,75** au niveau 2). Une seule **jauge de gloire**, en haut au milieu de l'écran,
-     se remplit pour tout le monde : un **trait de la couleur** de chaque royaume qui a de la gloire, du plus grand au plus
-     petit (l'ordre se refait sans cesse), avec ta part et celle du premier ; au survol d'un trait, le nom du royaume et sa
-     part de la jauge. Quand elle est **pleine** (8 000 points en tout), le royaume qui a **le plus de gloire l'emporte**
-     (la conquête de 70 % des terres marche toujours aussi). Plus tu tiens de mines, plus ta part grandit vite : prends-les,
-     améliore-les, et va prendre celles des autres ! Les bots les visent aussi. Réglages : `GLORY` et `MINES.glory` dans `js/config.js`.
+   - **Les cartes de gloire** (colonne 🌿 Gloire du choix des cartes) : on y gagne en tenant des **tours de gloire**.
+     🌿 **La tour de gloire** : une construction spéciale de ces cartes (bouton **Tour de gloire** de la barre, ou touche 7
+     sur un filon de gloire, une couronne de laurier). **3 niveaux** : 💰 **500** pour la bâtir (une tour de bois), puis
+     **1 000** (une tour de pierre) et **2 500** (une citadelle) ; au **niveau 3**, elle a sa **petite fortification** :
+     **25 soldats de garnison**, comme une mine fortifiée (un assaut doit l'assiéger). Elle donne à son royaume **1, 1,6
+     puis 2,2 points de gloire par seconde** selon son niveau. Toutes les 5 secondes, au-dessus de chaque tour, un petit
+     **« +X 🌿 »** montre la gloire gagnée (en or pour les tiennes, en blanc pour celles des autres). Une seule **jauge de
+     gloire**, en haut au milieu de l'écran, se remplit pour tout le monde : un **trait de la couleur** de chaque royaume qui
+     a de la gloire, du plus grand au plus petit (l'ordre se refait sans cesse), avec ta part et celle du premier ; au
+     survol d'un trait, le nom du royaume et sa part de la jauge. Quand elle est **pleine** (8 000 points en tout), le
+     royaume qui a **le plus de gloire l'emporte** (la conquête de 70 % des terres marche toujours aussi). Plus tu tiens de
+     tours, plus ta part grandit vite : prends-les, améliore-les, et va prendre celles des autres ! Les bots les visent aussi.
+     Attention : une tour dans la **muraille d'une ville** (une ville voisine qui s'agrandit en l'englobant) ne se vise plus
+     directement, comme toute mine : il faut d'abord prendre la ville. Réglages : `GLORY` et `MINES.glory` dans `js/config.js`.
+   - **🌿 L'Octogone de la Gloire (8)** : une île en **octogone**, au terrain naturel (plaines, forêts, collines ; plus
+     ouvert vers le centre), 8 places face aux 8 côtés. **9 tours de gloire** à bâtir, enclavées : au centre, le
+     **Sanctuaire**, dans un anneau de sommets percé de 8 portes étroites ; entre deux voisins, à mi-chemin du centre, une
+     colline au milieu d'un **lac**, reliée à la terre par une seule petite **chaussée** tournée vers le centre (aussi loin
+     de l'un que de l'autre). Chacun a une carrière, une mine de fer et une mine d'or à lui. Avec 9 tours pour 8, chaque
+     tour y donne **2 fois moins** de gloire.
+   - **🌿 Le Trône des Trois (3)** : une petite île en **triangle** aux coins arrondis, un royaume dans chaque coin (avec
+     ses deux lacs, sa carrière, son fer vers le centre et deux mines d'or). Au centre, un grand **massif** et un anneau de
+     sommets percé de **3 cols** étroits, un face à chaque frontière : au fond, le **Trône** (une tour de gloire). Sur
+     chaque frontière, une **rivière** coule du massif à la mer, avec **deux îles de gloire** à partager : l'**île du Gué**,
+     à mi-chemin, reliée à chaque rive par une petite chaussée, et l'**île du Cirque**, près de la côte, dans un anneau de
+     sommets où l'on n'entre que par l'étroite vallée de la rivière. 7 tours pour 3 royaumes.
      Sur une carte arène, le menu propose d'office un rival par place prévue.
      Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js`.
    🗺️ **Choix de la carte** : les cartes sont rangées par sortes (aléatoires, arène, prédéfinies, scénarios, dessinées),
@@ -1288,6 +1302,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.34** : 🌿 la **tour de gloire** remplace la mine de gloire : une construction spéciale des cartes de gloire (bouton à elle), à 3 niveaux (💰 500, 1 000, 2 500 ; une tour de bois, de pierre, puis une citadelle), avec au niveau 3 une petite fortification de 25 soldats ; elle donne 1, 1,6 puis 2,2 de gloire par seconde · « **+X 🌿** » s'affiche toutes les 5 s au-dessus de chaque tour · L'Octogone de la Gloire : 2 fois moins de gloire par tour · nouvelle carte de gloire **Le Trône des Trois** (3 joueurs) : une île en triangle, un massif à 3 cols qui garde le Trône, et sur chaque frontière une rivière avec deux îles de gloire
 - **v0.98.33** : ⏱️ plus de **gels** réguliers de la partie (jusqu'à 4 s, surtout sur L'Octogone de la Gloire) : les bots vérifiaient la règle « un mur ne ferme jamais un passage » pour chacun des 160 murs qu'ils envisagent ; ils ne la vérifient plus que pour leurs meilleurs, et la vérification est bien plus rapide
 - **v0.98.32** : 💀 nouvelle difficulté **Extrême** (une petite tête de mort à côté) : des bots plus rapides, plus agressifs, avec +80 % d'or, un recrutement 60 % plus rapide, une armée maximum 30 % plus grande et des soldats 25 % plus forts. Très dur !
 - **v0.98.31** : 🗺️ dans le choix des cartes, les **cartes arène** sont sur deux colonnes : les classiques à gauche, les **cartes de gloire** à droite (l'une sous l'autre sur un téléphone) ; L'Octogone de la Gloire affiche « 8 joueurs » comme les autres
@@ -1765,7 +1780,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 - ✝️ Les vraies bannières des factions des Croisades
 - 🏹 Une campagne des invasions mongoles (1206-1260), de la Chine à la Pologne
 - 🏟️ Cartes arène : des équipes fixées au départ (2 contre 2 sur Les Deux Rives)
-- 🌿 D'autres cartes de gloire (des mines de gloire sur des îles, un sanctuaire au sommet d'une montagne…)
+- 🌿 D'autres cartes de gloire (des tours de gloire sur des îles, un sanctuaire au sommet d'une montagne…)
 - 🌐 En ligne : les scénarios (Charlemagne, la guerre de Cent Ans, les Croisades, les Factions) à plusieurs, les cartes dessinées, et revenir dans sa partie après une coupure
 
 ---

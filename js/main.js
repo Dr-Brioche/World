@@ -4,7 +4,7 @@
 const $ = id => document.getElementById(id);
 
 // Petites icônes dessinées pour les menus (voir icons.js) : un style médiéval, pas des emojis
-const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall'), cross: iconSVG('cross'),
+const ICONS = { laurel: iconSVG('laurel'), up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('anchor'), wall: iconSVG('wall'), cross: iconSVG('cross'),
   boatIn: iconSVG('boatIn'), boatOut: iconSVG('boatOut'), cart: iconSVG('cart'), spears: iconSVG('spears'), flame: iconSVG('flame') };
 
 const UI = {
@@ -40,6 +40,16 @@ const UI = {
       btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
       builds.appendChild(btn);
     }
+    // 🌿 Bouton « Tour de gloire » (cartes de gloire seulement) : la construction spéciale qui se bâtit sur un filon de
+    // gloire (comme une mine : il suffit de cliquer sur le filon) ; voir MINES.glory
+    const gb = document.createElement('button');
+    gb.className = 'build glory hidden';
+    gb.title = tr(`Tour de gloire : sur un filon de gloire (couronne de laurier), elle remplit la jauge de gloire de ta couleur. 3 niveaux (💰 ${MINES.glory.cost}, puis ${fmt(MINES.glory.levels[2].upgradeCost)} et ${fmt(MINES.glory.levels[3].upgradeCost)}) ; au niveau 3, une petite fortification de ${MINE_FORT.GARRISON} soldats.`,
+      `Glory tower: on a glory vein (laurel wreath), it fills the glory gauge with your colour. 3 levels (💰 ${MINES.glory.cost}, then ${fmt(MINES.glory.levels[2].upgradeCost)} and ${fmt(MINES.glory.levels[3].upgradeCost)}); at level 3, a small fortification of ${MINE_FORT.GARRISON} soldiers.`);
+    gb.innerHTML = `<span class="icon">${ICONS.laurel}</span><span>${tr('Tour de gloire', 'Glory tower')}</span><span class="cost">💰 ${MINES.glory.cost}</span>`;
+    gb.addEventListener('click', () => this.selectBuild(this.selectedBuild === B_MINE ? 0 : B_MINE));
+    builds.appendChild(gb);
+    this.gloryBtn = gb;
     // Bouton « Croisade » : il apparaît dès qu'on a une cathédrale (église de niveau 3),
     // pour lancer une croisade d'ici, sans aller cliquer sur l'église (voir refreshCrusadeBar)
     const cb = document.createElement('button');
@@ -693,6 +703,8 @@ const UI = {
     const bt = t => document.querySelector(`.build[data-type="${t}"]`);
     bt(B_CASTLE).classList.toggle('hidden', !!(Game.cm || Game.hy || Game.cr));
     bt(B_TOWER).classList.toggle('hidden', !CONFIG.TOWERS);
+    this.gloryBtn.classList.toggle('hidden', !Game.gloryMode); // (🌿 la tour de gloire : cartes de gloire seulement)
+    this.gloryBtn.classList.toggle('poor', false);
     // 👑 Scénario « Charlemagne » : chacun est déjà dans son royaume de 768 ; la partie attend en pause
     if (Game.cm) {
       const h = Game.human, f = this.cmFaction(h.banner), half = Game.sizeOf(B_CASTLE) / 2;
@@ -1185,7 +1197,7 @@ const UI = {
       x2, tr('puis le filon s\'épuise', 'then the ore vein runs out')];
     if (info.kind === 'stone') return [tr(`Prix des améliorations, murs et ponts ${pct(-info.discount)}`, `Cost of upgrades, walls and bridges ${pct(-info.discount)}`),
       x2, tr(`${m.max} au plus`, `${m.max} at most`)];
-    if (info.kind === 'glory') return [tr(`🌿 +${String(info.glory).replace('.', ',')} de gloire par seconde`, `🌿 +${info.glory} glory per second`),
+    if (info.kind === 'glory') return [tr(`🌿 +${fmtRate(info.glory * ((ARENA_MAPS[Game.mapType] && ARENA_MAPS[Game.mapType].gloryRate) || 1))} de gloire par seconde`, `🌿 +${fmtRate(info.glory * ((ARENA_MAPS[Game.mapType] && ARENA_MAPS[Game.mapType].gloryRate) || 1))} glory per second`),
       tr(`La jauge se remplit : pleine (${fmt(CONFIG.GLORY.GOAL)}), le plus glorieux gagne`, `The gauge fills up: when full (${fmt(CONFIG.GLORY.GOAL)}), the most glorious wins`)];
     return [tr(`💰 ${m.pay.map(fmt).join(', ')} aux 3 premiers quarts, ${fmt(m.final)} à la fin`, `💰 ${m.pay.map(fmt).join(', ')} at each of the first 3 quarters, ${fmt(m.final)} at the end`),
       tr(`Extraction : ${Math.round(m.time / 60 / info.speed)} min (×0,5 sans route)`, `Extraction: ${Math.round(m.time / 60 / info.speed)} min (×0.5 without a road)`)];
@@ -1229,7 +1241,12 @@ const UI = {
       if (cur.kind === 'gold') return [tr(`Filon relancé : 💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min de plus`,
         `Ore vein restarted: 💰 ${m.total.toLocaleString('en-US')} over ${Math.round(m.time / 60)} more min`)];
       if (cur.kind === 'stone') return [tr(`Réduction ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`, `Discount ${pct(-m.discount[1])} → ${pct(-m.discount[2])}`)];
-      if (cur.kind === 'glory') return [tr(`🌿 Gloire : ${String(m.rate[1]).replace('.', ',')} → ${String(m.rate[2]).replace('.', ',')} par seconde`, `🌿 Glory: ${m.rate[1]} → ${m.rate[2]} per second`)];
+      if (cur.kind === 'glory') {
+        // (🌿 la tour de gloire : sa gloire par seconde, sur cette carte ; et au niveau 3, sa petite fortification)
+        const n = m.levels.indexOf(next), f = (ARENA_MAPS[Game.mapType] && ARENA_MAPS[Game.mapType].gloryRate) || 1, r = v => fmtRate(v * f);
+        return [tr(`🌿 Gloire : ${r(m.rate[n - 1])} → ${r(m.rate[n])} par seconde`, `🌿 Glory: ${r(m.rate[n - 1])} → ${r(m.rate[n])} per second`),
+          n === 3 && tr(`🧱 Petite fortification : ${MINE_FORT.GARRISON} soldats de garnison (un assaut doit l'assiéger)`, `🧱 Small fortification: ${MINE_FORT.GARRISON} garrison soldiers (an assault must besiege it)`)].filter(Boolean);
+      }
       return [tr(`Extraction ${pct(m.speed[2] / m.speed[1] - 1)} plus rapide`, `Extraction ${pct(m.speed[2] / m.speed[1] - 1)} faster`)];
     }
     return [tr(`Or ${pct(next.gold / cur.gold - 1)}`, `Gold ${pct(next.gold / cur.gold - 1)}`)];
@@ -1279,7 +1296,7 @@ const UI = {
         if (info.kind === 'gold') txt += tr(` · encore ≈ ${left} 💰 · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`, ` · ≈ ${left} 💰 left · ⏳ ${clock(d.left / CONFIG.TICKS_PER_SECOND)}`);
         if (info.kind === 'stone') txt += tr(` · prix ${pct(-info.discount * k)}`, ` · costs ${pct(-info.discount * k)}`);
         if (info.kind === 'diamond') txt += tr(` · 💎 ${Math.floor(d.progress * 100)} % extrait`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted`);
-        if (info.kind === 'glory') txt += tr(` · 🌿 +${String(info.glory).replace('.', ',')} de gloire par seconde`, ` · 🌿 +${info.glory} glory per second`); // (pas de route qui compte)
+        if (info.kind === 'glory') txt += tr(` · 🌿 +${fmtRate(G.gloryRate(a))} de gloire par seconde`, ` · 🌿 +${fmtRate(G.gloryRate(a))} glory per second`); // (pas de route qui compte)
         else txt += k > 1 ? tr(' · 🛤️ reliée', ' · 🛤️ linked') : tr(' · sans route (×2 si reliée à une ville)', ' · no road (×2 if linked to a city)');
       }
     }
@@ -1298,7 +1315,7 @@ const UI = {
     let txt = G.mineSpent(a) ? tr(' · ❌ filon épuisé', ' · ❌ ore vein exhausted') + (d.kind === 'gold' && G.level[a] < 2 ? tr(' (améliore-la pour le relancer)', ' (upgrade it to restart it)') : '')
       : d.kind === 'gold' ? tr(` · ⏳ filon : ${clock(d.left / CONFIG.TICKS_PER_SECOND)} d'exploitation`, ` · ⏳ ore vein: ${clock(d.left / CONFIG.TICKS_PER_SECOND)} of mining left`)
       : d.kind === 'diamond' ? tr(` · 💎 extrait à ${Math.floor(d.progress * 100)} % (${d.paid}/4 versements)`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted (${d.paid}/4 payments)`) : '';
-    if (d.kind === 'glory') txt += tr(` · 🌿 +${String(G.mineInfo(a).glory).replace('.', ',')} de gloire par seconde`, ` · 🌿 +${G.mineInfo(a).glory} glory per second`); // (la gloire : pas de route qui compte)
+    if (d.kind === 'glory') txt += tr(` · 🌿 +${fmtRate(G.gloryRate(a))} de gloire par seconde`, ` · 🌿 +${fmtRate(G.gloryRate(a))} glory per second`); // (la gloire : pas de route qui compte)
     else if (!G.mineSpent(a)) txt += G.mineLinked(a) ? tr(` · 🛤️ reliée à une ville : ×${CONFIG.MINE_ROAD_FACTOR}`, ` · 🛤️ linked to a city: ×${CONFIG.MINE_ROAD_FACTOR}`)
       : tr(` · sans route (×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville)`, ` · no road (×${CONFIG.MINE_ROAD_FACTOR} if linked to a city)`);
     if (G.mineFortified(a)) txt += tr(` · 🧱 fortifiée (🛡️ ${fmt(G.garrison[a])} / ${MINE_FORT.GARRISON})`, ` · 🧱 fortified (🛡️ ${fmt(G.garrison[a])} / ${MINE_FORT.GARRISON})`);
@@ -1319,7 +1336,7 @@ const UI = {
 
   // Fenêtre explicative d'un de ses bâtiments (en haut à gauche) : ce qu'apporterait son amélioration
   showUpgrade(a) {
-    const G = Game, type = G.building[a], icon = BUILDINGS[type].icon;
+    const G = Game, type = G.building[a], icon = G.isGloryTower(a) ? '🌿' : BUILDINGS[type].icon; // (🌿 une tour de gloire : le laurier)
     if (this.upgradeBox) this.upgradeBox.remove();
     const el = document.createElement('div');
     this.upgradeBox = el;
@@ -1334,8 +1351,8 @@ const UI = {
       el.innerHTML = `${icon} <b>${cur.name}</b> ` + tr(`(niveau ${G.level[a]}) : niveau maximum`, `(level ${G.level[a]}): max level`) + state + this.perksHTML(this.levelPerks(type, cur)) +
         `<div class="choices">${del}<button data-no>OK</button></div>`;
     } else {
-      const next = BUILDING_LEVELS[type][G.level[a] + 1], why = G.upgradeBlocker(G.human, a);
-      el.innerHTML = `${icon} <b>${cur.name}</b> (${tr('niveau', 'level')} ${G.level[a]}) → <b>${type === B_MINE ? G.mineInfoAt(cur.kind, 2).name : next.name}</b> (${tr('niveau', 'level')} ${G.level[a] + 1})${state}<br>` +
+      const next = G.levelsOf(a)[G.level[a] + 1], why = G.upgradeBlocker(G.human, a);
+      el.innerHTML = `${icon} <b>${cur.name}</b> (${tr('niveau', 'level')} ${G.level[a]}) → <b>${type === B_MINE ? G.mineInfoAt(cur.kind, G.level[a] + 1).name : next.name}</b> (${tr('niveau', 'level')} ${G.level[a] + 1})${state}<br>` +
         (next.img ? `<img src="${next.img}" alt="">` : '') +
         this.perksHTML(this.upgradePerks(type, cur, next)) +
         (why ? `<div class="need">⚠️ ${why}</div>` : '') + // (ce qu'il manque pour la cité impériale)
@@ -1363,7 +1380,7 @@ const UI = {
       trade.addEventListener('click', () => { close(); this.closeActionMenu(); this.startTrade(a); });
     }
     // 🧱 Mine de niveau 2, pas encore fortifiée : bouton « Fortifier »
-    if (type === B_MINE && G.level[a] >= 2 && !G.fortMines.has(a) && !G.works.get(a)) {
+    if (type === B_MINE && G.level[a] >= 2 && !G.fortMines.has(a) && !G.works.get(a) && !G.isGloryTower(a)) {
       const btn = document.createElement('button');
       btn.dataset.fort = '';
       el.querySelector('.choices').prepend(btn);
@@ -1424,7 +1441,7 @@ const UI = {
       (G.building[a] === B_CHURCH && G.level[a] >= 3 ? `<button data-crusade class="up">${ICONS.cross}</button>` : '') +
       (G.building[a] === B_BARRACKS && G.level[a] >= 3 ? `<button data-levy class="up">${ICONS.spears}</button>` : '') +
       (G.building[a] === B_PORT && G.level[a] >= 3 ? `<button data-viking class="up">${ICONS.flame}</button>` : '') +
-      (G.building[a] === B_MINE && G.level[a] >= 2 && !G.fortMines.has(a) && !work ? `<button data-fort class="wall">${ICONS.wall}</button>` : '') +
+      (G.building[a] === B_MINE && G.level[a] >= 2 && !G.fortMines.has(a) && !work && !G.isGloryTower(a) ? `<button data-fort class="wall">${ICONS.wall}</button>` : '') +
       (G.building[a] !== B_MINE || work ? `<button data-x class="danger" title="${work ? tr('Annuler les travaux', 'Cancel the works') : tr('Détruire', 'Demolish')}">✖</button>` : '');
     el.style.left = Math.min(sx + 14, window.innerWidth - 100) + 'px';
     el.style.top = Math.min(sy - 20, window.innerHeight - 60) + 'px';
@@ -1797,7 +1814,8 @@ const UI = {
     if (G.depositTile[i] && G.building[i] !== B_MINE) {
       const d = G.deposits.find(d => [d.a, d.a + 1, d.a + G.W, d.a + G.W + 1].includes(i));
       if (d) txt += ` · ${MINES[d.kind].icon} ${tr('filon', 'ore vein')} : ${MINES[d.kind].name}${d.name ? ` · ${d.name}` : ''} (${MINES[d.kind].short})` +
-        (o === G.human.id ? tr(` · ⛏️ touche ${B_MINE} pour y bâtir une mine (💰 ${fmt(G.buildCost(G.human, B_MINE))})`, ` · ⛏️ key ${B_MINE} to build a mine here (💰 ${fmt(G.buildCost(G.human, B_MINE))})`) : '');
+        (o !== G.human.id ? '' : d.kind === 'glory' ? tr(` · 🌿 bouton « Tour de gloire » (ou touche ${B_MINE}) pour y bâtir une tour de gloire (💰 ${fmt(G.buildCost(G.human, B_MINE, d.a))})`, ` · 🌿 « Glory tower » button (or key ${B_MINE}) to build a glory tower here (💰 ${fmt(G.buildCost(G.human, B_MINE, d.a))})`)
+          : tr(` · ⛏️ touche ${B_MINE} pour y bâtir une mine (💰 ${fmt(G.buildCost(G.human, B_MINE))})`, ` · ⛏️ key ${B_MINE} to build a mine here (💰 ${fmt(G.buildCost(G.human, B_MINE))})`));
     }
     if (o >= 0 && (G.castleProtects(o, i) || G.portBonus(o, i) > 0)) txt += tr(` · dans la muraille : défense ${pct(G.tileDefense(o, i) - 1)}`, ` · inside the walls: defense ${pct(G.tileDefense(o, i) - 1)}`);
     // Conseils d'attaque contre un royaume ennemi
@@ -3203,6 +3221,9 @@ const UI = {
     attack(false);
   },
 };
+
+// Un nombre à une décimale au plus, dans la langue du jeu (1,6 en français ; 1.6 en anglais)
+function fmtRate(v) { const t = String(Math.round(v * 100) / 100); return LANG === 'fr' ? t.replace('.', ',') : t; }
 
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

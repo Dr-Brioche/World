@@ -109,7 +109,7 @@ const CONFIG = {
     HASH_EVERY: 50,           // tous les combien de tours on compare l'empreinte de la partie entre joueurs
     // Cartes possibles en ligne (pas encore les scénarios, ni les cartes dessinées, qui n'existent que sur un ordinateur)
     MAPS: ['normal', 'continental', 'naval', 'couronne', 'cratere', 'carrefour', 'archipel', 'rives', 'labyrinthe', 'oasis', 'plateaux',
-      'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'melee', 'gloire', 'world', 'europe', 'azeroth'],
+      'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'melee', 'gloire', 'trois', 'world', 'europe', 'azeroth'],
     // Un joueur qui n'a pas écrit le nom de son royaume en reçoit un au hasard dans cette liste (sinon, tout le monde
     // s'appellerait « Mon Royaume ») ; le serveur ajoute « II », « III »… si deux joueurs ont le même nom
     NAMES: ['Aldoria', 'Brumeval', 'Castelroc', 'Dunmor', 'Eldrance', 'Faucombe', 'Grisemont', 'Hautbois', 'Isembourg',
@@ -253,7 +253,7 @@ const CONFIG = {
   // 🌿 La gloire (cartes de gloire) : chaque mine de gloire en donne à son royaume (voir MINES.glory.rate) ; une seule
   // jauge pour tous, en haut au milieu, se remplit de la gloire de chacun. Quand elle est pleine (GOAL points en tout),
   // le royaume qui en a le plus l'emporte.
-  GLORY: { GOAL: 8000 },  // secondes (vraies) entre deux clics qui lancent une croisade : pas de croisades en rafale par erreur
+  GLORY: { GOAL: 8000, FLOAT_EVERY: 5 }, // (FLOAT_EVERY : toutes les combien de secondes « +X 🌿 » s'affiche au-dessus des tours)  // secondes (vraies) entre deux clics qui lancent une croisade : pas de croisades en rafale par erreur
   // Vitesse de la conversion selon l'écart de Croyance : [écart, secondes pour convertir une case].
   // (entre deux lignes, on passe en douceur de l'une à l'autre ; plus petit que 20 : encore plus lent ;
   //  500 d'écart : 2 cases par seconde ; 1000 : 5 par seconde ; au-delà, ça accélère de moins en moins :
@@ -650,8 +650,14 @@ const MINES = {
   diamond: { name: tr('Mine de diamant', 'Diamond mine'), short: tr('un trésor de 16 000 pièces', 'a treasure of 16,000 gold'), icon: '💎', terrain: 'mountain', count: [1, 3], time: 1200, speed: [0, 1, 1.5],
     pay: [1000, 2000, 3000], final: 10000 }, // (pay : le versement de chaque quart, dans l'ordre)
   // 🌿 gloire (seulement sur les cartes de gloire, comme L'Octogone de la Gloire : pas de count, jamais posée au hasard) :
-  //   rate = points de gloire par seconde, au niveau 1 et 2 ; voir CONFIG.GLORY
-  glory: { name: tr('Mine de gloire', 'Glory mine'), short: tr('de la gloire pour la victoire', 'glory for the victory'), icon: '🌿', terrain: 'hills', rate: [0, 1, 1.75] },
+  //   on y bâtit une TOUR DE GLOIRE, une construction spéciale à 3 niveaux (levels : ses images et prix ; cost : son prix
+  //   de construction) ; rate = points de gloire par seconde à chaque niveau (voir CONFIG.GLORY). Au niveau 3, elle a sa
+  //   petite fortification : MINE_FORT.GARRISON soldats de garnison, comme une mine fortifiée (pas besoin de la fortifier)
+  glory: { name: tr('Tour de gloire', 'Glory tower'), short: tr('de la gloire pour la victoire', 'glory for the victory'), icon: '🌿', terrain: 'hills',
+    rate: [0, 1, 1.6, 2.2], cost: 500, levels: [null,
+      { name: tr('Tour de gloire', 'Glory tower'), img: 'img/gloire1.webp', size: 3.0 },
+      { name: tr('Grande tour de gloire', 'Great glory tower'), img: 'img/gloire2.webp', size: 2.2, upgradeCost: 1000 },
+      { name: tr('Citadelle de gloire', 'Glory citadel'), img: 'img/gloire3.webp', size: 3.8, upgradeCost: 2500 }] }, // (size : la largeur de l'image, en cases ; les tours sont hautes)
 };
 const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond', 'glory'];
 

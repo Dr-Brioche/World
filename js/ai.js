@@ -481,16 +481,16 @@ const AI = {
   },
 
   tryBuild(p, forced) {
-    // 🌿 Carte de gloire : une mine de gloire à bâtir sur ses terres passe avant tout (il économise pour elle) ;
-    // puis il améliore ses mines de gloire (niveau 2 : plus de gloire)
+    // 🌿 Carte de gloire : une tour de gloire à bâtir sur ses terres passe avant tout (il économise pour elle) ;
+    // puis il améliore ses tours de gloire (plus de gloire ; au niveau 3, une petite fortification)
     if (!forced && Game.gloryMode) {
       const G = Game, spot = G.deposits.find(d => d.kind === 'glory' && G.canPlace(p.id, d.a, B_MINE));
       if (spot) {
-        if (p.gold >= G.buildCost(p, B_MINE)) { if (!G.tryBuild(p, spot.a, B_MINE)) return; }
+        if (p.gold >= G.buildCost(p, B_MINE, spot.a)) { if (!G.tryBuild(p, spot.a, B_MINE)) return; }
         else if (G.rand() < 0.85) return;
       }
       const mine = G.deposits.find(d => d.kind === 'glory' && G.building[d.a] === B_MINE && G.owner[d.a] === p.id
-        && G.level[d.a] < 2 && !G.works.has(d.a) && !G.underConstruction(d.a));
+        && G.level[d.a] < 3 && !G.works.has(d.a) && !G.underConstruction(d.a)); // (🌿 jusqu'au niveau 3, sa fortification)
       if (mine && G.upgradeCost(mine.a) !== null) {
         if (p.gold >= G.upgradeCost(mine.a)) { if (!G.upgradeBuilding(p, mine.a)) return; }
         else if (G.rand() < 0.6) return;

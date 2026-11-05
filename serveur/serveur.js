@@ -32,9 +32,9 @@ const LOOK_TIME = 10;                     // placement aléatoire : secondes pou
 const PAUSE_TIME = 15 * 1000;             // salon privé : un joueur (pas l'hôte) met en pause 15 s au plus…
 const PAUSE_EVERY = 5 * 60 * 1000;        // … une fois toutes les 5 minutes
 const HASH_KEEP = 2000;                   // tours pendant lesquels on garde les empreintes reçues (pour les comparer)
-// (CONFIG.NET.MAPS : les cartes aléatoires, les 15 cartes arène, et les cartes prédéfinies)
+// (CONFIG.NET.MAPS : les cartes aléatoires, les 16 cartes arène, et les cartes prédéfinies)
 const MAPS = ['normal', 'continental', 'naval', 'couronne', 'cratere', 'carrefour', 'archipel', 'rives', 'labyrinthe', 'oasis',
-  'plateaux', 'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'melee', 'gloire', 'world', 'europe', 'azeroth'];
+  'plateaux', 'ponts', 'saints', 'merinterieure', 'montagne', 'nord', 'melee', 'gloire', 'trois', 'world', 'europe', 'azeroth'];
 const SPAWN_MODES = ['libre', 'aleatoire', 'places']; // placement des capitales (places : les places prévues d'une carte arène)
 const PUBLIC_MAPS = MAPS;                 // cartes tirées au hasard pour la partie publique
 const SIZES = ['petit', 'moyen', 'grand'];
