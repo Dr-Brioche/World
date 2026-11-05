@@ -248,6 +248,7 @@ const CONFIG = {
   VIKING_MIN_TROOPS: 20,       // soldats à embarquer au moins
   CRUSADE_FAITH: 1000,
   CRUSADE_TIME: 60,
+  CRUSADE_CLICK_GAP: 1.5,  // secondes (vraies) entre deux clics qui lancent une croisade : pas de croisades en rafale par erreur
   // Vitesse de la conversion selon l'écart de Croyance : [écart, secondes pour convertir une case].
   // (entre deux lignes, on passe en douceur de l'une à l'autre ; plus petit que 20 : encore plus lent ;
   //  500 d'écart : 2 cases par seconde ; 1000 : 5 par seconde ; au-delà, ça accélère de moins en moins :

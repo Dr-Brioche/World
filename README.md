@@ -888,7 +888,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      comme le mur des villes) et dans sa fenêtre : pour **💰 2500**, ta Croyance monte de **+1000 pendant 60 s** (une croisade
      à la fois par cathédrale). Dès ta première cathédrale, un bouton **✝️ Croisade** apparaît aussi dans la barre des
      constructions, en bas : un clic la lance tout de suite (depuis une cathédrale libre), et il affiche le temps restant
-     quand toutes tes cathédrales ont déjà leur croisade en cours. De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
+     quand toutes tes cathédrales ont déjà leur croisade en cours (avec plusieurs cathédrales, chaque clic en lance une de plus :
+     il faut attendre 1,5 s entre deux clics, pour ne pas en lancer plusieurs par erreur). De quoi convertir très vite les terres de tes voisins ! Les bots en lancent aussi quand ils sont
      en retard de Croyance (un message te prévient si c'est un voisin).
      📿 **Les reliques saintes** (parties classiques seulement, pas les scénarios) : entre **10 et 15 minutes** après le
      début, une relique apparaît sur les terres d'un royaume (plutôt **loin des plus grands**, pour rééquilibrer la partie),
@@ -1266,6 +1267,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.27** : ✝️ la Croyance ne profite plus de la **route d'un assaut en cours** : elle ne prêche jamais depuis elle, et ne prend plus les morceaux du royaume ennemi que seule cette route coupe du reste (tant que l'assaut n'a pas réussi) · ✝️ le bouton **Croisade** ne lance plus plusieurs croisades d'un coup sur des clics trop rapides (1,5 s entre deux)
 - **v0.98.26** : 📿 la barre du haut ne compte plus que **tes** reliques ; celles d'un autre royaume s'affichent en le **survolant** (dans sa barre d'infos) · 🐛 plus de retraite « 0 » sur la carte : une armée de moins d'un soldat rentre tout de suite
 - **v0.98.25** : 🐛 une armée qui rentre chez elle depuis les terres d'un autre royaume (une armée de relique rappelée ou battue, des défenseurs) suit maintenant un vrai chemin, autour des sommets et de la mer, au lieu de filer tout droit à travers les montagnes · 🖱️ autour des barres du bas (assauts, jauge des soldats), on peut de nouveau cliquer sur la carte : le cadre invisible qui les entoure ne bloque plus les clics
 - **v0.98.24** : 📿 dès la première relique, la **barre du haut** compte les reliques gardées : les tiennes et celles de tes ennemis (« 📿 1 · ennemis 2 » ; celles de tes alliés au survol)
