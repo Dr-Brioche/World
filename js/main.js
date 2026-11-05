@@ -1867,6 +1867,11 @@ const UI = {
     $('traitor').textContent = tr(`🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % `,
       `🗡️ Traitor: defense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)}% `) +
       `(${Math.floor(traitorSecs / 60)}:${String(traitorSecs % 60).padStart(2, '0')})`;
+    // 🛡️ Politique de guerre en cours : le bonus de garnison et le temps qui reste
+    const warOn = G.warActive(h), warSecs = Math.ceil((h.warUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
+    $('warBox').classList.toggle('hidden', !warOn);
+    if (warOn) $('warBox').textContent = tr(`🛡️ Politique de guerre : garnisons +${h.warLevel * CONFIG.WAR_POLICY.GARRISON} `,
+      `🛡️ War policy: garrisons +${h.warLevel * CONFIG.WAR_POLICY.GARRISON} `) + `(${Math.floor(warSecs / 60)}:${String(warSecs % 60).padStart(2, '0')})`;
     $('ratioVal').textContent = `${Math.round(this.ratio * 100)}${tr(' %', '%')} (${fmt(h.troops * this.ratio)})`;
 
     document.querySelectorAll('.build[data-type]').forEach(btn => {

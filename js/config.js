@@ -398,6 +398,11 @@ const CONFIG = {
   ALLIANCE_REQUEST_GAP: 20,      // au moins 20 s entre deux demandes d'alliance affichées au joueur (pas de spam)
   TRAITOR_DURATION: 120,         // secondes pendant lesquelles un traître est mal vu
   TRAITOR_DEFENSE_MALUS: 0.5,    // les terres d'un traître coûtent 2x moins cher à prendre
+  // 🛡️ Politique de guerre (contre l'acharnement) : un royaume qui perd un lieu fortifié (une ville, un port de
+  // niveau 3 ou une mine fortifiée) renforce tous ses autres lieux fortifiés, s'ils ne sont pas isolés :
+  // +GARRISON soldats de garnison chacun, pendant TIME secondes. Une nouvelle perte pendant ce temps ajoute encore
+  // +GARRISON (+50, puis +100, +150…) et le compte à rebours repart de zéro.
+  WAR_POLICY: { GARRISON: 50, TIME: 90 },
   ALLIANCE_REQUEST_TIMEOUT: 15,  // secondes pour répondre à une demande d'alliance
   ALLY_GIFT_RATIO: 0.75,         // soldats envoyés à un allié : il n'en reçoit que 75 % (le voyage en coûte)
 

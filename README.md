@@ -597,6 +597,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      du mur (la barre de l'assaut l'indique : « 🏰 10 derrière les murs ») ; avant, ce sont tes défenseurs qui l'arrêtent.
      (La garnison d'un port royal ou d'un avant-poste, elle, sort dès que l'assaut entre sur tes terres.) **Au combat, chaque soldat de garnison
      en vaut 3.** Ils se reconstituent ensuite peu à peu.
+   - 🛡️ **Politique de guerre** (contre l'acharnement, pour tous les royaumes, bots compris) : quand tu perds un
+     **lieu fortifié** (une ville, un port royal ou une mine fortifiée), tous tes autres lieux fortifiés qui ne sont pas
+     isolés reçoivent tout de suite **+50 soldats de garnison**, pendant **1 min 30**. Si tu en perds un autre pendant
+     ce temps, le bonus **s'additionne** (+100, puis +150…) et le compte à rebours **repart de zéro**. Le bonus et le
+     temps qui reste s'affichent en haut de l'écran ; à la fin, les garnisons reviennent à la normale. Un royaume
+     attaqué sans relâche devient donc de plus en plus dur à prendre, mais seulement en défense.
    - **Le combat** n'est pas instantané : sur la bannière, tu vois en direct les soldats des deux armées.
      **En plaine, 1 défenseur vaut 1 attaquant** ; ailleurs, le défenseur profite de la défense de l'endroit
      où se bat l'assaut (forêt +60 %, colline +120 %, colline boisée ou montagne +180 %, + bonus du château dans sa muraille).
@@ -1256,6 +1262,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.19** : 🛡️ **politique de guerre** contre l'acharnement : un royaume qui perd une ville, un port royal ou une mine fortifiée a +50 soldats de garnison dans tous ses autres lieux fortifiés non isolés pendant 1 min 30 ; chaque nouvelle perte pendant ce temps ajoute +50 et relance le compte à rebours (affiché en haut de l'écran)
 - **v0.98.18** : 📜 règles : la ligne « Départ » précise qu'en **Places prévues** (carte arène), les rivaux s'installent après toi
 - **v0.98.17** : 🏟️ cartes arène, placement des capitales revu : **Libre**, les rivaux commencent eux aussi n'importe où (plus forcément aux places prévues) ; **Aléatoire**, toi et les rivaux commencez aux places prévues, tirées au hasard ; **Places prévues**, toutes les places sont libres au début, tu choisis la tienne, puis les rivaux prennent celles qui restent (en ligne aussi, après le choix des joueurs)
 - **v0.98.16** : 🐟 le drapeau aux deux poissons s'appelle maintenant **Brion**

@@ -135,6 +135,7 @@ const GameRules = {
       sumXX: 0, sumYY: 0, sumXY: 0, // (pour l'allongement et la direction du royaume : voir Render.kingdomAxis)
       bCount: [0, 0, 0, 0, 0, 0, 0, 0, 0],
       traitorUntil: 0,
+      warLevel: 0, warUntil: 0, // (🛡️ politique de guerre : niveau du bonus de garnison, et sa fin ; voir warPolicy)
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
       castlesBuilt: 0,  // châteaux construits dans la partie (capitale comprise), limité à MAX_CASTLES
       refusedUntil: {}, // royaume id → tick avant lequel on ne peut pas redemander
@@ -247,6 +248,8 @@ const GameRules = {
     // Un bâtiment n'est compté qu'une fois : sur sa case d'ancrage
     const b = this.anchor[i] === i ? this.building[i] : 0;
     if (b) this.garrison[i] = 0; // château (ou avant-poste) pris : sa garnison est perdue
+    // (🛡️ un lieu fortifié pris par un autre royaume : son ancien maître proclame la politique de guerre)
+    const lostFort = b && old >= 0 && pid >= 0 && this.phase === 'playing' && this.warFort(i);
     if (old >= 0) {
       const o = this.players[old];
       o.tiles--; o.sumX -= x; o.sumY -= y; o.sumXX -= x * x; o.sumYY -= y * y; o.sumXY -= x * y;
@@ -254,6 +257,7 @@ const GameRules = {
     }
     this.owner[i] = pid;
     this.version++;
+    if (lostFort) this.warPolicy(this.players[old], this.players[pid]);
     // (🗼 une tour de garde prise retombe au niveau 1, et ses travaux s'arrêtent)
     if (b === B_TOWER && old >= 0 && pid >= 0) { this.level[i] = 1; this.works.delete(i); }
     // (une case d'un mur, finie ou en chantier, change de mains : le mur est perdu)
@@ -3379,7 +3383,58 @@ const GameRules = {
 
   // Garnison maximum d'un bâtiment : celle de son niveau (château, port royal), 0 s'il n'en a pas.
   // Un avant-poste n'a pas de maximum : sa garnison, ce sont les soldats débarqués (elle ne se reconstitue pas).
+  // (🛡️ plus le bonus de la politique de guerre de son royaume : voir warPolicy)
   garrisonMax(a) {
+    const m = this.baseGarrisonMax(a);
+    return m && m !== Infinity && this.warFort(a) ? m + this.warBonus(a) : m;
+  },
+
+  // 🛡️ POLITIQUE DE GUERRE (contre l'acharnement, voir CONFIG.WAR_POLICY)
+  // Un lieu fortifié : une ville, un port de niveau 3 (port royal) ou une mine fortifiée
+  warFort(a) {
+    const b = this.building[a];
+    return b === B_CASTLE || (b === B_PORT && this.level[a] >= 3) || (b === B_MINE && this.fortMines.has(a));
+  },
+  // La politique de guerre du royaume p est-elle en cours ?
+  warActive(p) { return p.warLevel > 0 && this.tick < p.warUntil; },
+  // Soldats de garnison en plus pour ce lieu fortifié (0 s'il est isolé : les renforts ne peuvent pas le rejoindre)
+  warBonus(a) {
+    const o = this.owner[a];
+    if (o < 0 || !this.warActive(this.players[o]) || this.isIsolated(a)) return 0;
+    return this.players[o].warLevel * CONFIG.WAR_POLICY.GARRISON;
+  },
+  // Le royaume p vient de perdre un lieu fortifié (pris par taker) : +GARRISON soldats de garnison de plus dans tous
+  // ses autres lieux fortifiés non isolés, tout de suite, et le compte à rebours repart de zéro
+  warPolicy(p, taker) {
+    if (!p.alive) return;
+    const W = CONFIG.WAR_POLICY;
+    p.warLevel = (this.warActive(p) ? p.warLevel : 0) + 1;
+    p.warUntil = this.tick + W.TIME * CONFIG.TICKS_PER_SECOND;
+    for (const a of this.buildingTiles) {
+      if (this.owner[a] === p.id && this.warFort(a) && !this.isIsolated(a)) this.garrison[a] += W.GARRISON;
+    }
+    const bonus = p.warLevel * W.GARRISON;
+    if (p.isHuman) UI.log(tr(`🛡️ Politique de guerre : tu as perdu un lieu fortifié, tes autres villes, ports royaux et mines fortifiées (non isolés) ont +${bonus} soldats de garnison pendant ${W.TIME} s !`,
+      `🛡️ War policy: you lost a fortified place, your other cities, royal ports and fortified mines (not cut off) get +${bonus} garrison soldiers for ${W.TIME} s!`), 'good');
+    else if (taker && taker.isHuman) UI.log(tr(`🛡️ ${p.name} proclame la politique de guerre : ses lieux fortifiés ont +${bonus} soldats de garnison pendant ${W.TIME} s.`,
+      `🛡️ ${p.name} proclaims a war policy: their fortified places get +${bonus} garrison soldiers for ${W.TIME} s.`), 'warn', p);
+  },
+  // Les politiques de guerre qui s'achèvent : les garnisons perdent leur bonus (sans descendre sous leur maximum)
+  stepWarPolicy() {
+    for (const p of this.players) {
+      if (!p.warLevel || this.tick < p.warUntil) continue;
+      const bonus = p.warLevel * CONFIG.WAR_POLICY.GARRISON;
+      p.warLevel = 0;
+      for (const a of this.buildingTiles) {
+        if (this.owner[a] !== p.id || !this.warFort(a)) continue;
+        const max = this.garrisonMax(a);
+        if (this.garrison[a] > max) this.garrison[a] = Math.max(max, this.garrison[a] - bonus);
+      }
+      if (p.isHuman && p.alive) UI.log(tr('🛡️ Ta politique de guerre prend fin : tes garnisons reviennent à la normale.', '🛡️ Your war policy ends: your garrisons are back to normal.'));
+    }
+  },
+
+  baseGarrisonMax(a) {
     const t = this.building[a];
     if (t === B_OUTPOST) return this.outpostReady(a) ? CONFIG.OUTPOST_GARRISON : Infinity; // en construction : tous
     // (une ville reliée par un mur à d'autres villes, ou à des ports fortifiés, du royaume : WALL_LINK_GARRISON
@@ -7086,6 +7141,7 @@ const GameRules = {
 
     // Les garnisons des châteaux se reconstituent (sauf celle qui est en train de combattre)
     // (elles ne comptent pas dans l'armée du royaume : son maximum ne les freine pas)
+    this.stepWarPolicy(); // (🛡️ les politiques de guerre qui s'achèvent)
     const besieged = new Set(this.attacks.filter(a => !a.done && !this.isPreparing(a)).map(a => a.targetCastle));
     for (const c of this.buildingTiles) {
       if (this.building[c] === B_OUTPOST) continue; // (la garnison d'un avant-poste ne se reconstitue pas : voir stepOutposts)
