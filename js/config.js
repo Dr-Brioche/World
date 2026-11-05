@@ -763,6 +763,13 @@ AZEROTH_BANNERS.forEach((b, k) => {
   BANNERS.push({ ...b, set: 'azeroth', shield: true, img: `img/bannieres/az${n}.webp`, icon: `img/bannieres/az${n}s.webp` });
 });
 // Les numéros (dans BANNERS) des bannières proposées sur une carte : les écus sur la carte Azeroth, les drapeaux ailleurs
+// 📜 L'ordre des factions des scénarios dans le choix du drapeau (menu) : les plus importantes d'abord
+// (celles qui ne sont pas dans la liste viennent après, dans leur ordre)
+const FACTION_ORDER = {
+  charlemagne: ['francs', 'lombards', 'cordoue', 'saxons', 'avars', 'anglos', 'aquitaine', 'baviere', 'danois', 'asturies', 'bretons'],
+  centans: ['france', 'angleterre', 'bourgogne', 'ecosse', 'bretagne'],
+  croisades: ['ayyoubides', 'angleterre', 'france', 'empire', 'jerusalem', 'byzance', 'templiers', 'hospitaliers', 'venise'],
+};
 function bannersForMap(mapType) {
   const set = ['azeroth', 'charlemagne', 'centans', 'croisades'].includes(mapType) ? mapType : undefined;
   return BANNERS.map((b, k) => k).filter(k => BANNERS[k].set === set);

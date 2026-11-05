@@ -131,11 +131,19 @@ const UI = {
         && (BANNERS[k].set !== 'centans' || this.hyFaction(k).playable)
         && (BANNERS[k].set !== 'croisades' || this.crFaction(k).playable));
       const set = BANNERS[list[0]].set || 'base';
-      // (chaque drapeau avec son nom dessous : la faction d'un scénario, ou un nom qui le décrit pour une partie libre)
-      $('bannerPick').innerHTML = list.map(k =>
-        `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}">` +
-        `<span class="bname">${escapeHtml(BANNERS[k].name)}</span></button>`
-      ).join('');
+      // (📜 un scénario : les factions les plus importantes d'abord, voir FACTION_ORDER)
+      const order = FACTION_ORDER[set];
+      if (order) {
+        const rank = k => { const r = order.indexOf(BANNERS[k].id); return r < 0 ? order.length : r; };
+        list.sort((a, b) => rank(a) - rank(b));
+      }
+      // (chaque drapeau avec son nom dessous : la faction d'un scénario, ou un nom qui le décrit pour une partie libre ;
+      //  dans un scénario, « (Campagne) » si la faction a sa propre histoire, ses objectifs, ou « (Défis) » si elle n'a que des défis)
+      $('bannerPick').innerHTML = list.map(k => {
+        const kind = this.factionKind(k), label = kind ? ` <i class="bkind">(${kind})</i>` : '';
+        return `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}${kind ? ` (${kind})` : ''}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}">` +
+          `<span class="bname">${escapeHtml(BANNERS[k].name)}${label}</span></button>`;
+      }).join('');
       pick(list.includes(lastPick[set]) ? lastPick[set] : list[0]);
     };
     const pick = k => {
@@ -554,6 +562,15 @@ const UI = {
   factionMode() { return $('mapType').value === 'factions'; },
   // La faction du scénario « Charlemagne » de la bannière k (voir charlemagne.js)
   cmFaction(k) { return CHARLEMAGNE.factions.find(f => f.id === BANNERS[k].id); },
+  // 📜 La sorte de jeu d'une faction de scénario (bannière k) : « Campagne » si elle a sa propre histoire (des objectifs à
+  // remplir, comme les Francs de Charlemagne), « Défis » si elle n'a que des défis ; '' hors des scénarios
+  factionKind(k) {
+    const b = BANNERS[k], S = { charlemagne: CHARLEMAGNE, centans: CENTANS, croisades: CROISADES }[b.set];
+    if (!S) return '';
+    const story = b.set === 'charlemagne' ? b.id === 'francs' : !!(S.OBJECTIVES && S.OBJECTIVES[b.id]);
+    if (story) return tr('Campagne', 'Campaign');
+    return S.CHALLENGES && S.CHALLENGES[b.id] ? tr('Défis', 'Challenges') : '';
+  },
   // La faction du scénario « La guerre de Cent Ans » de la bannière k (voir centans.js)
   hyFaction(k) { return CENTANS.factions.find(f => f.id === BANNERS[k].id); },
   // La faction du scénario « Les Croisades » de la bannière k (voir croisades.js)

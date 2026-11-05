@@ -141,6 +141,7 @@ html, body {
 #bannerPick button { padding: 2px 2px 4px; background: transparent; border: 2px solid transparent;
   display: flex; flex-direction: column; align-items: center; gap: 3px; }
 #bannerPick .bname { max-width: 150px; font-size: 13px; line-height: 1.15; text-align: center; color: var(--ink); }
+#bannerPick .bkind { font-style: normal; font-size: 0.85em; opacity: 0.75; } /* (📜 « (Campagne) » ou « (Défis) », à côté du nom) */
 #bannerPick button:hover { background: var(--parchment-dark); }
 #bannerPick button.active { border-color: var(--wood); background: var(--gold); }
 #bannerPick img { height: 148px; display: block; }
