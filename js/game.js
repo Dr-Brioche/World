@@ -48,6 +48,7 @@ const GameRules = {
     this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
     this.colonies = new Map(); // château bâti ou pris dans la zone d'un avant-poste → son royaume
     this.truces = new Map();   // château, église ou port qui vient d'être conquis → tour jusqu'auquel on ne peut pas l'attaquer
+    this.faithTruces = new Map(); // ✝️ église, port ou mine pris par un assaut → tour jusqu'auquel la Croyance ne peut pas le convertir
     this.nextAttackId = 1;
     this.pacts = new Map(); // id du pacte → { name }
     this.nextPactId = 0;
@@ -101,12 +102,15 @@ const GameRules = {
       p.human = true;
       if (k === me) this.human = p;
     });
-    if (this.factions) return this.startFactions(opts);
+    // (⛏️🌿 les villes déjà bâties au début d'un scénario gardent toute leur muraille, même près d'un filon : voir depositWallCap)
+    this.capExempt = new Set();
+    const prebuilt = () => { this.capExempt = new Set(this.castles); this.depositCapMemo = null; };
+    if (this.factions) { this.startFactions(opts); return prebuilt(); }
     // 👑 Scénario « Charlemagne » : l'Europe de 768, avec ses factions déjà en place (voir startCharlemagne)
-    if (this.mapType === 'charlemagne') return this.startCharlemagne(opts);
+    if (this.mapType === 'charlemagne') { this.startCharlemagne(opts); return prebuilt(); }
     // ⚜️ Scénario « La guerre de Cent Ans » : la France de 1337 (voir centansrules.js)
-    if (this.mapType === 'centans') return this.startCentAns(opts);
-    if (this.mapType === 'croisades') return this.startCroisades(opts);
+    if (this.mapType === 'centans') { this.startCentAns(opts); return prebuilt(); }
+    if (this.mapType === 'croisades') { this.startCroisades(opts); return prebuilt(); }
     const names = this.shuffle(KINGDOMS.slice());
     // Les bots reçoivent au hasard les bannières de la carte que le joueur n'a pas prises (sur Azeroth : les écus, et
     // chaque royaume prend le nom de son écu : les Orcs, les Nains…)
@@ -303,7 +307,7 @@ const GameRules = {
       return this.depositAt.has(a) && !this.depositSpent(this.depositAt.get(a))
         && this.footprint(a, type).every(j => this.owner[j] === pid && !this.building[j]) && this.commanded(a, type);
     }
-    if (this.nearDeposit(a, type)) return false;
+    if (this.nearDeposit(a, type) || this.depositConflict(a, type)) return false;
     if (type === B_PORT && !this.footprint(a, type).some(j => this.isCoastal(j))) return false;
     return this.footprint(a, type).every(j => this.owner[j] === pid && this.isLand(j) && !this.building[j]
       && this.terrain[j] !== TERRAIN.RIVER)
@@ -320,6 +324,37 @@ const GameRules = {
       }
     }
     return false;
+  },
+
+  // ⛏️🌿 Les cercles interdits autour des filons (mines et tours de gloire) pour un château, une église ou un port :
+  // [{ x, y, R }] (x, y : le centre du filon). Voir DEPOSIT_CASTLE_DISTANCE
+  depositCircles(type) {
+    const R = type === B_CASTLE ? CONFIG.DEPOSIT_CASTLE_DISTANCE : type === B_CHURCH || type === B_PORT ? CONFIG.DEPOSIT_CHURCH_DISTANCE : 0;
+    return R ? this.deposits.map(d => ({ x: d.a % this.W + 1, y: ((d.a / this.W) | 0) + 1, R })) : [];
+  },
+  // Le bâtiment type, posé en a, aurait-il son centre dans le cercle interdit d'un filon ?
+  depositConflict(a, type) {
+    const R = type === B_CASTLE ? CONFIG.DEPOSIT_CASTLE_DISTANCE : type === B_CHURCH || type === B_PORT ? CONFIG.DEPOSIT_CHURCH_DISTANCE : 0;
+    if (!R) return false;
+    const h = this.sizeOf(type) / 2, x = a % this.W + h, y = ((a / this.W) | 0) + h, W = this.W;
+    for (const d of this.deposits) if ((d.a % W + 1 - x) ** 2 + (((d.a / W) | 0) + 1 - y) ** 2 < R * R) return true;
+    return false;
+  },
+  // ⛏️🌿 Le plus grand rayon de muraille possible pour la ville c : elle s'arrête à DEPOSIT_WALL_GAP cases du filon le
+  // plus proche (une mine ou une tour de gloire n'est jamais enfermée dans une ville ; gardé en mémoire : rien ne bouge)
+  depositWallCap(c) {
+    if (this.capExempt && this.capExempt.has(c)) return Infinity; // (une ville historique, bâtie au début d'un scénario)
+    const memo = this.depositCapMemo || (this.depositCapMemo = new Map());
+    if (memo.has(c)) return memo.get(c);
+    const half = (this.sizeOf(B_CASTLE) - 1) / 2, cx = c % this.W + half, cy = ((c / this.W) | 0) + half;
+    let cap = Infinity;
+    for (const d of this.deposits) {
+      // (au bord du filon, 2 x 2 cases : son centre moins sa demi-diagonale)
+      const dist = Math.sqrt((d.a % this.W + 0.5 - cx) ** 2 + (((d.a / this.W) | 0) + 0.5 - cy) ** 2) - 0.75;
+      cap = Math.min(cap, dist - CONFIG.DEPOSIT_WALL_GAP);
+    }
+    memo.set(c, cap);
+    return cap;
   },
 
   // Un territoire désorganisé (son morceau n'a ni ville ni port fortifié pour le diriger, ni avant-poste) ne peut
@@ -602,6 +637,7 @@ const GameRules = {
   placeDeposits() {
     this.deposits = [];
     this.depositAt = new Map();          // case en haut à gauche → filon
+    this.depositCapMemo = null;           // (⛏️🌿 la muraille des villes s'arrête avant les filons : voir depositWallCap)
     this.depositTile = new Uint8Array(this.N); // 1 = case d'un filon
     const W = this.W, H = this.H, T = this.terrain, scale = Math.sqrt(this.N / (650 * 366)), TPS = CONFIG.TICKS_PER_SECOND;
     // (🏟️ une carte arène : ses filons sont posés à l'avance, aux mêmes distances pour chacun)
@@ -1274,6 +1310,8 @@ const GameRules = {
     if (this.building[i]) {
       const a = this.anchor[i];
       if (this.holdsAlone(a) || this.building[a] === B_OUTPOST || this.building[a] === B_MILL || this.building[a] === B_BARRACKS) return false;
+      // (✝️ une église, un port ou une mine qu'un assaut vient de prendre : pas tout de suite, voir FAITH_CAPTURE_TRUCE)
+      if (this.faithTruceLeft(a) > 0) return false;
       // (un bâtiment de plusieurs cases : toutes doivent pouvoir passer)
       if (this.footprint(a, this.building[a]).some(j => this.castleBonus(o, j) > 0 || this.portBonus(o, j) > 0 || this.outpostBonus(o, j) > 0)) return false;
     }
@@ -2028,6 +2066,15 @@ const GameRules = {
     return true;
   },
 
+  // ⛏️🌿 Une capitale fondée en i serait-elle trop près d'un filon (sa muraille de départ l'atteindrait) ? Pas aux places
+  // de départ prévues d'une carte arène (elles sont faites pour) ni dans les scénarios (les villes y sont déjà)
+  spawnNearDeposit(i) {
+    if (this.spots && this.spots.includes(i)) return false;
+    const R = CONFIG.DEPOSIT_SPAWN_DISTANCE, W = this.W, x = i % W, y = (i / W) | 0;
+    for (const d of this.deposits) if ((d.a % W + 1 - x) ** 2 + (((d.a / W) | 0) + 1 - y) ** 2 < R * R) return true;
+    return false;
+  },
+
   spawnPlayer(p, center) {
     const r = CONFIG.START_RADIUS;
     const cx = center % this.W, cy = (center / this.W) | 0;
@@ -2096,7 +2143,8 @@ const GameRules = {
       for (let tries = 0; tries < 3000 && !placed; tries++) {
         const i = (this.rand() * this.N) | 0;
         const minDist = CONFIG.MIN_SPAWN_DISTANCE * (tries < 1500 ? 1 : 0.5);
-        if (this.canSpawnAt(i, minDist)) { this.spawnPlayer(p, i); placed = true; }
+        // (⛏️🌿 pas trop près d'un filon, tant qu'on trouve de la place)
+        if (this.canSpawnAt(i, minDist) && (tries >= 2500 || !this.spawnNearDeposit(i))) { this.spawnPlayer(p, i); placed = true; }
       }
       if (!placed) p.alive = false;
     }
@@ -2124,6 +2172,8 @@ const GameRules = {
     if (!this.isLand(i) || this.terrain[i] === TERRAIN.RIVER) return tr('Choisis une terre, pas l\'eau !', 'Pick land, not water!');
     if (this.owner[i] >= 0 && this.owner[i] !== ignore) return tr(`Cette terre appartient déjà à ${this.players[this.owner[i]].name}.`, `This land already belongs to ${this.players[this.owner[i]].name}.`);
     if (this.landSize()[i] < CONFIG.MIN_SPAWN_LAND) return tr('Cette île est trop petite pour y fonder ta capitale.', 'This island is too small to found your capital on.');
+    if (this.spawnNearDeposit(i)) return tr(`Trop près d'un filon (mine ou tour de gloire) : ta capitale doit être à ${CONFIG.DEPOSIT_SPAWN_DISTANCE} cases au moins, pour que sa muraille ne l'enferme pas.`,
+      `Too close to an ore vein (mine or glory tower): your capital must be at least ${CONFIG.DEPOSIT_SPAWN_DISTANCE} tiles away, so that its walls do not enclose it.`);
     if (!this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE, ignore)) return tr('Trop près d\'un royaume rival : éloigne-toi un peu.', 'Too close to a rival kingdom: move a little further away.');
     return null;
   },
@@ -2816,7 +2866,7 @@ const GameRules = {
         }
         for (let tries = 0; tries < 4000 && !placed; tries++) {
           const i = (this.rand() * this.N) | 0;
-          if (this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE * (tries < 2000 ? 1 : 0.5)) && this.landSize()[i] >= CONFIG.MIN_SPAWN_LAND) {
+          if (this.canSpawnAt(i, CONFIG.MIN_SPAWN_DISTANCE * (tries < 2000 ? 1 : 0.5)) && this.landSize()[i] >= CONFIG.MIN_SPAWN_LAND && (tries >= 3000 || !this.spawnNearDeposit(i))) {
             this.spawnPlayer(p, i); placed = true;
           }
         }
@@ -3780,6 +3830,10 @@ const GameRules = {
       if (type === B_PORT && i >= 0 && !this.footprint(i, type).some(j => this.isCoastal(j))) {
         return tr('Un port se construit au bord de la mer ou d\'un fleuve.', 'A port is built on the shore of the sea or a river.');
       }
+      if (i >= 0 && this.depositConflict(i, type)) {
+        return tr(`Trop près d'un filon (cercle rouge) : pas de château à moins de ${CONFIG.DEPOSIT_CASTLE_DISTANCE} cases d'une mine ou d'une tour de gloire, ni d'église ou de port à moins de ${CONFIG.DEPOSIT_CHURCH_DISTANCE} (pour qu'on puisse toujours aller les prendre).`,
+          `Too close to an ore vein (red circle): no castle within ${CONFIG.DEPOSIT_CASTLE_DISTANCE} tiles of a mine or a glory tower, no church or port within ${CONFIG.DEPOSIT_CHURCH_DISTANCE} (so that they can always be taken).`);
+      }
       if (i >= 0 && this.nearDeposit(i, type)) {
         return tr(`Trop près d'un filon : il faut ${CONFIG.DEPOSIT_CLEARANCE} cases libres autour de lui (c'est la place de sa mine).`,
           `Too close to an ore vein: it needs ${CONFIG.DEPOSIT_CLEARANCE} free tiles around it (that is the room for its mine).`);
@@ -4526,6 +4580,7 @@ const GameRules = {
   // (R : le rayon de sa muraille ; gardé en mémoire tant que son rayon et la carte ne changent pas : le relief ne
   //  bouge pas quand les terres changent de mains)
   wallsReach(c, R = this.castleInfo(c).radius) {
+    R = Math.min(R, this.depositWallCap(c)); // (⛏️🌿 jamais jusqu'à un filon : voir depositWallCap)
     const memo = this.wallsReachMemo || (this.wallsReachMemo = new Map()), had = memo.get(c);
     if (had && had.R === R && had.map === this.terrain) return had.set;
     const W = this.W, H = this.H, set = new Set(), queue = this.footprint(c, B_CASTLE).slice();
@@ -4727,6 +4782,13 @@ const GameRules = {
     return (end - this.tick) / CONFIG.TICKS_PER_SECOND;
   },
   startTruce(a) { this.truces.set(a, this.tick + CONFIG.CAPTURE_TRUCE * CONFIG.TICKS_PER_SECOND); },
+  // ✝️ Secondes avant que la Croyance puisse convertir le bâtiment a, pris par un assaut (0 = elle le peut)
+  faithTruceLeft(a) {
+    const end = this.faithTruces.get(a);
+    if (end === undefined) return 0;
+    if (this.tick >= end) { this.faithTruces.delete(a); return 0; }
+    return (end - this.tick) / CONFIG.TICKS_PER_SECOND;
+  },
 
   // Pour les bots : quel château viser, et quelle défense de terrain attendre au premier combat ?
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
@@ -6840,6 +6902,8 @@ const GameRules = {
   onTargetTaken(a, type, withZone) {
     a.won = true; // (objectif pris : la route reste à l'attaquant)
     if (type !== B_OUTPOST) this.startTruce(a.targetCastle); // (église ou port : on ne peut pas le reprendre tout de suite)
+    // (✝️ ni par la Croyance de son ancien maître : FAITH_CAPTURE_TRUCE secondes pour s'y installer)
+    if (type !== B_OUTPOST) this.faithTruces.set(a.targetCastle, this.tick + CONFIG.FAITH_CAPTURE_TRUCE * CONFIG.TICKS_PER_SECOND);
     a.cut = true; // (et la coupe qu'elle fait dans le royaume s'applique maintenant : voir regions)
     this.regionsCache = null;
     const p = this.players[a.attacker], d = this.players[a.target];

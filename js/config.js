@@ -188,6 +188,13 @@ const CONFIG = {
   MINE_ROAD_FACTOR: 2,       // ... et rapporte 2 fois plus (voir MINES)
   MINE_SPACING: 14,          // deux filons sont à au moins 14 cases l'un de l'autre
   DEPOSIT_CLEARANCE: 2,      // les autres bâtiments laissent 2 cases libres autour d'un filon (la place de sa mine)
+  // ⛏️🌿 Autour d'un filon (une mine, une tour de gloire) : pas de château à moins de 13 cases, ni d'église ou de port à
+  // moins de 10 (cercles rouges), et la muraille d'une ville s'arrête toujours à 3 cases d'un filon (même améliorée) :
+  // une mine ou une tour de gloire ne finit jamais enfermée dans une ville, on peut toujours aller la prendre
+  DEPOSIT_CASTLE_DISTANCE: 13,
+  DEPOSIT_CHURCH_DISTANCE: 10, // (églises et ports)
+  DEPOSIT_WALL_GAP: 3,
+  DEPOSIT_SPAWN_DISTANCE: 13, // (une capitale : pas à moins de 13 cases d'un filon, sauf aux places prévues des arènes)
   PORT_ROAD_BONUS: 0.3,      // par un chemin de terre : +30 % d'or produit par le port
   // Chaque moulin des villes du port (voir portMills) lui donne de l'or en plus, de moins en moins à mesure qu'il y en a :
   // +15 % pour chacun des 5 premiers, puis le bonus de chaque nouveau moulin baisse peu à peu jusqu'au 20e (+1 %),
@@ -308,6 +315,7 @@ const CONFIG = {
   // le perdant est galvanisé (+25 %). Les deux s'additionnent : un +25 % annule un -25 %.
   WAR_EFFECT_TIME: 30,
   CAPTURE_TRUCE: 30,           // une ville (château), une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant 30 s
+  FAITH_CAPTURE_TRUCE: 15,     // ✝️ une église, un port ou une mine pris par un assaut ne peut pas être converti par la Croyance pendant 15 s
   ELIMINATION_BOUNTY: 500,     // anéantir un royaume rapporte une prime de 500 pièces, plus le trésor qui lui restait
   POST_WAR_MALUS: 0.25,
   RALLY_BONUS: 0.25,
