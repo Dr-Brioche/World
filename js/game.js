@@ -6149,7 +6149,8 @@ const GameRules = {
   // Les défenseurs qui rentrent arrivent à leur ville : ils rejoignent l'armée (ou leur avant-poste)
   stepReturning() {
     for (const r of this.returning) {
-      if (this.tick < r.arrive) continue;
+      // (moins d'un soldat, après un combat perdu : pas de retraite à 0 sur la carte, ils rentrent tout de suite)
+      if (this.tick < r.arrive && r.troops >= 1) continue;
       r.done = true;
       if (this.players[r.pid].alive) this.giveTroops(r.pid, r.source, r.troops);
     }

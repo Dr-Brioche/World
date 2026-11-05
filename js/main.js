@@ -998,7 +998,9 @@ const UI = {
       this.minesText(o) +
       ` · <span title="${tr('Part des terres', 'Share of the land')}">🗺️ ${p.raiders ? '⚔️' : G.landPct(p.tiles) + tr(' %', '%')}</span>` +
       (G.hy ? ` · <span title="${tr('Légitimité', 'Legitimacy')}">👑 ${fmt(Math.round(G.faithOf(o)))}</span>` + (G.hyLoyaltyText(o) ? ` · ${G.hyLoyaltyText(o)}` : '')
-        : ` · <span title="${tr('Croyance', 'Faith')}">✝️ ${fmt(Math.round(G.faithOf(o)))}</span>`);
+        : ` · <span title="${tr('Croyance', 'Faith')}">✝️ ${fmt(Math.round(G.faithOf(o)))}</span>`) +
+      // (📿 ses reliques gardées, dès qu'il en a une : parties classiques)
+      (G.relicMode() && G.relicChurch && G.relicCount(o) ? ` · <span title="${tr('Reliques gardées dans ses églises', 'Relics kept in their churches')}">📿 ${G.relicCount(o)}</span>` : '');
     // (on compare avec le dernier texte écrit : innerHTML, lui, a déjà vu ses emojis remplacés par des icônes)
     if (this.tipHtml !== html) { this.tipHtml = html; tip.innerHTML = html; }
     // toujours au même endroit : centrée juste sous la barre de nos infos, en haut de l'écran
@@ -1869,18 +1871,14 @@ const UI = {
     $('traitor').textContent = tr(`🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % `,
       `🗡️ Traitor: defense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)}% `) +
       `(${Math.floor(traitorSecs / 60)}:${String(traitorSecs % 60).padStart(2, '0')})`;
-    // 📿 Les reliques gardées : les tiennes, et celles des royaumes ennemis (celles de tes alliés au survol) ; affiché
-    //  dès que la première relique est apparue (parties classiques, voir reliques.js)
+    // 📿 Tes reliques gardées (affiché dès que la première relique est apparue, parties classiques : voir reliques.js ;
+    //  celles d'un autre royaume se voient en le survolant, voir refreshKingdomTip)
     const relicOn = G.relicMode() && G.relicChurch && (G.relicChurch.size || G.relics.length || G.relicRuns.length);
     $('relicBox').classList.toggle('hidden', !relicOn);
     if (relicOn) {
-      let foes = 0, allies = 0;
-      for (const q of G.players) if (q !== h) { const n = G.relicCount(q.id); if (G.areAllied(h.id, q.id)) allies += n; else foes += n; }
       const mine = G.relicCount(h.id);
-      $('relics').textContent = tr(`${mine} · ennemis ${foes}`, `${mine} · enemies ${foes}`);
-      $('relicBox').title = tr(`Reliques gardées dans les églises : ${mine} à toi, ${foes} chez tes ennemis`, `Relics kept in churches: ${mine} yours, ${foes} held by your enemies`)
-        + (allies ? tr(`, ${allies} chez tes alliés`, `, ${allies} held by your allies`) : '')
-        + tr(` (chacune : +${CONFIG.RELIC.FAITH} de Croyance)`, ` (each: +${CONFIG.RELIC.FAITH} Faith)`);
+      $('relics').textContent = mine;
+      $('relicBox').title = tr(`Reliques gardées dans tes églises : ${mine} (chacune : +${CONFIG.RELIC.FAITH} de Croyance)`, `Relics kept in your churches: ${mine} (each: +${CONFIG.RELIC.FAITH} Faith)`);
     }
     // 🛡️ Politique de guerre en cours : le bonus de garnison et le temps qui reste
     const warOn = G.warActive(h), warSecs = Math.ceil((h.warUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
