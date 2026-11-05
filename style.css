@@ -263,6 +263,7 @@ html, body {
 }
 .attack button { padding: 2px 8px; font-size: 13px; }
 .attack button:hover { background: #e9b5a8; }
+.attack button.armed { background: var(--gold); font-weight: bold; } /* (⚔️ « Défendre » visé d'un 1er clic : un 2e clic envoie) */
 .attack.incoming { border-color: var(--danger); color: var(--danger); padding-right: 10px; }
 /* petite croix dans le coin d'une barre : retraite */
 #bottomwrap .attack.panel, .attack { position: relative; padding-right: 22px; }
