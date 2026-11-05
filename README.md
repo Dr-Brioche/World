@@ -202,7 +202,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      reste à bâtir la mine). L'argent compte comme une mine d'or ; le trésor des Avars et le mercure d'Almadén comme
      une mine de diamant.
      Tu choisis ta faction dans le menu (tout le monde sauf Rome, Byzance et Carloman), mais le but est surtout de jouer
-     les **Francs** et de bâtir l'empire de Charlemagne. Règles du scénario :
+     les **Francs** et de bâtir l'empire de Charlemagne. 📜 Dans le choix du drapeau de chaque scénario, les factions sont
+     rangées de la plus importante à la moins importante (les Francs d'abord), avec **(Campagne)** à côté du nom quand la
+     faction a sa propre histoire et ses objectifs, ou **(Défis)** quand elle n'a que des défis (réglage : `FACTION_ORDER`
+     dans `js/config.js`). Règles du scénario :
      - **pas de nouvelles villes** : on améliore les siennes, on prend celles des autres (le bouton Château disparaît) ;
      - ✝️ la **Croyance** prend les terres voisines **2 fois moins vite** que dans une partie classique (chacun commence
        déjà avec beaucoup d'églises ; réglage `FAITH_SPEED` dans `js/charlemagne.js`) ;
@@ -1284,6 +1287,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.29** : 📜 dans le choix du drapeau d'un scénario, les factions sont rangées de la plus importante à la moins importante (les Francs d'abord pour Charlemagne, Saladin pour les Croisades), avec **(Campagne)** ou **(Défis)** à côté du nom
 - **v0.98.28** : 🌿 **la gloire** et une nouvelle carte arène, **L'Octogone de la Gloire** (8 joueurs) : une île en octogone au terrain naturel, avec 9 **mines de gloire** enclavées (un sanctuaire dans un anneau de sommets au centre, 8 lacs à une seule chaussée entre deux voisins) ; chaque mine de gloire remplit une **jauge de gloire** commune, en haut au milieu, de la couleur de son royaume (plus vite au niveau 2) ; pleine, le plus glorieux gagne · 🚧 un **mur** ne peut plus fermer complètement un passage : il reste toujours un chemin pour aller prendre chaque ville
 - **v0.98.27** : ✝️ la Croyance ne profite plus de la **route d'un assaut en cours** : elle ne prêche jamais depuis elle, et ne prend plus les morceaux du royaume ennemi que seule cette route coupe du reste (tant que l'assaut n'a pas réussi) · ✝️ le bouton **Croisade** ne lance plus plusieurs croisades d'un coup sur des clics trop rapides (1,5 s entre deux)
 - **v0.98.26** : 📿 la barre du haut ne compte plus que **tes** reliques ; celles d'un autre royaume s'affichent en le **survolant** (dans sa barre d'infos) · 🐛 plus de retraite « 0 » sur la carte : une armée de moins d'un soldat rentre tout de suite
