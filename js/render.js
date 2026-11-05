@@ -1585,6 +1585,21 @@ const Render = {
       ctx.stroke();
       relicIcon(x, y, 26);
       this.relicSpots.push({ id: r.id, x, y });
+      // (📿 la relique visée d'un 1er clic : un cercle de visée doré, en pointillés qui tournent ; un 2e clic la lance)
+      if (UI.relicAim === r.id) {
+        ctx.save();
+        ctx.setLineDash([7, 5]);
+        ctx.lineDashOffset = -performance.now() / 60;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(20,12,4,0.7)';
+        ctx.beginPath();
+        ctx.arc(x, y, 30, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffd24a';
+        ctx.stroke();
+        ctx.restore();
+      }
       // (une armée s'en empare : l'anneau jaune qui se remplit, comme un siège)
       const run = r.run >= 0 ? G.relicRuns.find(q => q.id === r.run) : null;
       if (run && run.phase === 'take') {
