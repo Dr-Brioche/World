@@ -27,6 +27,7 @@ const Render = {
       const mx = this.cam.x + sx / this.cam.scale, my = this.cam.y + sy / this.cam.scale;
       let best = -1, bestD = 5;
       for (const d of Game.deposits) {
+        if (UI.selectedBuild === B_MINE && !UI.depositWanted(d)) continue; // (🌿 la tour de gloire : ses filons ; la mine : les siens)
         const dd = Math.hypot(d.a % Game.W + 1 - mx, ((d.a / Game.W) | 0) + 1 - my);
         if (dd < bestD) { bestD = dd; best = d.a; }
       }
@@ -936,9 +937,14 @@ const Render = {
   drawChurchCastleCircles(ox, oy) {
     const G = Game, ctx = this.ctx, s = this.cam.scale, t = UI.selectedBuild;
     if (G.phase !== 'playing' || (t !== B_CHURCH && t !== B_CASTLE && t !== B_PORT)) return;
-    for (const { a, R } of G.placementCircles(G.human.id, t)) {
+    // (⛏️🌿 et autour des filons, mines et tours de gloire comprises : voir Game.depositCircles)
+    const circles = G.placementCircles(G.human.id, t).map(({ a, R }) => {
       const half = G.sizeOf(G.building[a]) / 2;
-      const cx = ox + (a % G.W + half) * s, cy = oy + (((a / G.W) | 0) + half) * s;
+      return { x: a % G.W + half, y: ((a / G.W) | 0) + half, R };
+    }).concat(G.depositCircles(t));
+    for (const { x, y, R } of circles) {
+      const cx = ox + x * s, cy = oy + y * s;
+      if (cx < -R * s || cy < -R * s || cx > this.vw + R * s || cy > this.vh + R * s) continue;
       ctx.beginPath();
       ctx.arc(cx, cy, R * s, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(220,50,40,0.12)';
@@ -2210,7 +2216,7 @@ const Render = {
       if (G.building[d.a] === B_MINE) continue;
       const x = ox + (d.a % G.W + 1) * s, y = oy + (((d.a / G.W) | 0) + 1) * s;
       if (x < -40 || y < -40 || x > this.vw + 40 || y > this.vh + 40) continue;
-      if (placing) {
+      if (placing && UI.depositWanted(d)) { // (🌿 seulement les filons du bâtiment choisi : gloire ou minerai)
         const ok = G.canPlace(G.human.id, d.a, B_MINE);
         ctx.beginPath();
         ctx.arc(x, y, size * (0.9 + 0.15 * pulse), 0, Math.PI * 2);

@@ -41,7 +41,7 @@ const UI = {
       btn.innerHTML = `<span class="key">${t}</span><span class="icon">${b.icon}</span>` +
         `<span>${b.name}</span><span class="cost"></span>` +
         (t === B_CASTLE ? `<span class="count" title="${tr('Châteaux construits / maximum (ta meilleure église en débloque d\'autres)', 'Castles built / maximum (your best church unlocks more)')}"></span>` : '');
-      btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t ? 0 : t));
+      btn.addEventListener('click', () => this.selectBuild(this.selectedBuild === t && !this.gloryPick ? 0 : t));
       builds.appendChild(btn);
     }
     // 🌿 Bouton « Tour de gloire » (cartes de gloire seulement) : la construction spéciale qui se bâtit sur un filon de
@@ -51,7 +51,7 @@ const UI = {
     gb.title = tr(`Tour de gloire (touche ${GLORY_KEY}) : sur un filon de gloire (couronne de laurier), elle remplit la jauge de gloire de ta couleur. 3 niveaux (💰 ${MINES.glory.cost}, puis ${fmt(MINES.glory.levels[2].upgradeCost)} et ${fmt(MINES.glory.levels[3].upgradeCost)}) ; au niveau 3, une petite fortification de ${MINE_FORT.GARRISON} soldats.`,
       `Glory tower (key ${GLORY_KEY}): on a glory vein (laurel wreath), it fills the glory gauge with your colour. 3 levels (💰 ${MINES.glory.cost}, then ${fmt(MINES.glory.levels[2].upgradeCost)} and ${fmt(MINES.glory.levels[3].upgradeCost)}); at level 3, a small fortification of ${MINE_FORT.GARRISON} soldiers.`);
     gb.innerHTML = `<span class="key">${GLORY_KEY}</span><span class="icon">${ICONS.laurel}</span><span>${tr('Tour de gloire', 'Glory tower')}</span><span class="cost">💰 ${MINES.glory.cost}</span>`;
-    gb.addEventListener('click', () => this.selectBuild(this.selectedBuild === B_MINE ? 0 : B_MINE));
+    gb.addEventListener('click', () => this.selectBuild(this.gloryPick ? 0 : B_MINE, true));
     builds.appendChild(gb);
     this.gloryBtn = gb;
     // Bouton « Croisade » : il apparaît dès qu'on a une cathédrale (église de niveau 3),
@@ -376,9 +376,9 @@ const UI = {
       // (un bâtiment dont le bouton est caché ne se choisit pas : la tour de garde, pas encore disponible…)
       const shown = n && document.querySelector(`.build[data-type="${n}"]:not(.hidden)`);
       if (n >= 1 && n < BUILDINGS.length && !BUILDINGS[n].hidden && shown) {
-        this.selectBuild(this.selectedBuild === n ? 0 : n);
+        this.selectBuild(this.selectedBuild === n && !this.gloryPick ? 0 : n);
       } else if (n === GLORY_KEY && !this.gloryBtn.classList.contains('hidden')) {
-        this.selectBuild(this.selectedBuild === B_MINE ? 0 : B_MINE); // (🌿 touche 8 : la tour de gloire, sur une carte de gloire)
+        this.selectBuild(this.gloryPick ? 0 : B_MINE, true); // (🌿 touche 8 : la tour de gloire, sur une carte de gloire)
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
       if (e.key === 'Escape' && !$('quitScreen').classList.contains('hidden')) return this.closeQuit(); // (… et « Quitter ? »)
@@ -803,12 +803,20 @@ const UI = {
     });
   },
 
-  selectBuild(t) {
+  // (glory : la tour de gloire, qui se pose comme une mine mais seulement sur un filon de gloire ; la mine, elle,
+  //  seulement sur un filon de minerai : voir depositWanted)
+  selectBuild(t, glory = false) {
     if (t) { this.cancelPlan(); this.cancelWall(); this.cancelVikingAim(); this.upgradeMode = false; }
     this.selectedBuild = t;
-    document.querySelectorAll('.build[data-type]').forEach(b => b.classList.toggle('active', +b.dataset.type === t));
+    this.gloryPick = t === B_MINE && glory;
+    document.querySelectorAll('.build[data-type]').forEach(b => b.classList.toggle('active', +b.dataset.type === t && !this.gloryPick));
+    if (this.gloryBtn) this.gloryBtn.classList.toggle('active', this.gloryPick);
     document.body.style.cursor = t ? 'cell' : '';
   },
+
+  // ⛏️🌿 Pendant la pose d'une mine ou d'une tour de gloire : ce filon est-il proposé ? (la tour de gloire : les filons de
+  // gloire seulement ; la mine : tous les autres)
+  depositWanted(d) { return (d.kind === 'glory') === !!this.gloryPick; },
 
   // Infobulle des petits carrés d'alliés dans le classement
   alliesTitle(p) {
@@ -3218,7 +3226,13 @@ const UI = {
       return;
     }
     if (this.selectedBuild) {
-      this.act({ k: 'build', i: Render.anchorAt(sx, sy, this.selectedBuild), type: this.selectedBuild }, err => {
+      // (🌿 la tour de gloire ne va que sur un filon de gloire, la mine que sur un filon de minerai)
+      const at = Render.anchorAt(sx, sy, this.selectedBuild), dep = this.selectedBuild === B_MINE ? G.depositAt.get(at) : null;
+      if (dep && !this.depositWanted(dep)) {
+        return this.log(this.gloryPick ? tr('🌿 Une tour de gloire se bâtit sur un filon de gloire (une couronne de laurier), pas sur un filon de minerai.', '🌿 A glory tower is built on a glory vein (a laurel wreath), not on an ore vein.')
+          : tr('⛏️ Ce filon de gloire attend une tour de gloire (bouton « Tour de gloire » ou touche 8), pas une mine.', '⛏️ This glory vein awaits a glory tower (« Glory tower » button or key 8), not a mine.'), 'warn');
+      }
+      this.act({ k: 'build', i: at, type: this.selectedBuild }, err => {
         if (err) this.log(err, 'warn');
         else this.selectBuild(0);
       });

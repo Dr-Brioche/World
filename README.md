@@ -109,8 +109,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      survol d'un trait, le nom du royaume et sa part de la jauge. Quand elle est **pleine** (8 000 points en tout), le
      royaume qui a **le plus de gloire l'emporte** (la conquête de 70 % des terres marche toujours aussi). Plus tu tiens de
      tours, plus ta part grandit vite : prends-les, améliore-les, et va prendre celles des autres ! Les bots les visent aussi.
-     Attention : une tour dans la **muraille d'une ville** (une ville voisine qui s'agrandit en l'englobant) ne se vise plus
-     directement, comme toute mine : il faut d'abord prendre la ville. Réglages : `GLORY` et `MINES.glory` dans `js/config.js`.
+     Une tour, comme une mine, ne finit **jamais dans la muraille d'une ville** : pas de château à moins de 13 cases d'un
+     filon, et la muraille d'une ville s'arrête toujours à 3 cases d'un filon, même améliorée. Réglages : `GLORY` et `MINES.glory` dans `js/config.js`.
    - **🌿 L'Octogone de la Gloire (8)** : une île en **octogone**, au terrain naturel (plaines, forêts, collines ; plus
      ouvert vers le centre), 8 places face aux 8 côtés. **9 tours de gloire** à bâtir, enclavées : au centre, le
      **Sanctuaire**, dans un anneau de sommets percé de 8 portes étroites ; entre deux voisins, à mi-chemin du centre, une
@@ -985,8 +985,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      miné (fer, or, pierre, diamant, gloire), toujours visible, même quand un grand bâtiment est à côté. Une mine épuisée reste sur la carte avec une **croix rouge** ; une mine d'or encore de niveau 1 (qu'on peut relancer en l'améliorant) a en plus une **flèche verte d'amélioration** : la croix seule, c'est épuisé pour de bon. Pendant la pose d'une mine, les filons s'entourent d'un
      cercle (vert si tu peux y bâtir), passent **par-dessus les bâtiments** (une grande ville ne les cache plus), et la mine
      s'aimante sur le filon le plus proche de la souris (à moins de 5 cases). Une mine **n'a pas d'autre règle de construction** :
-     elle se pose même dans la muraille d'une ville, ou tout près d'un autre bâtiment. Les **autres bâtiments**, eux, laissent
+     elle se pose même tout près d'un autre bâtiment. Les **autres bâtiments**, eux, laissent
      **2 cases libres** autour d'un filon (la place de sa mine) : réglage `DEPOSIT_CLEARANCE` dans `js/config.js`.
+     Et autour d'un filon (mine ou tour de gloire), une **zone interdite** (cercles rouges pendant la pose) : pas de
+     **château** à moins de 13 cases, ni d'**église** ou de **port** à moins de 10, ni de **capitale** à moins de 13 (sauf aux
+     places prévues des arènes) ; la **muraille d'une ville s'arrête toujours à 3 cases d'un filon** (même améliorée) : une
+     mine ne finit jamais enfermée dans une ville (les villes déjà bâties au début des scénarios gardent leur muraille).
+     Réglages : `DEPOSIT_CASTLE_DISTANCE`, `DEPOSIT_CHURCH_DISTANCE`, `DEPOSIT_SPAWN_DISTANCE`, `DEPOSIT_WALL_GAP`.
    - ⚓ **Port** : il coûte cher et se construit **au bord de la mer ou d'un fleuve**, avec les mêmes règles
      que l'église (hors de la zone de tes châteaux et de tes églises : cercles rouges). Comme l'église, il donne des
      places pour des moulins et casernes autour de lui ; un moulin dans les zones d'un port **et** d'une église n'occupe
@@ -1303,6 +1308,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.44** : 🌿⛏️ en posant une **tour de gloire**, seuls les **filons de gloire** sont proposés (et entourés), et en posant une **mine**, seuls les **filons de minerai** · **zone interdite autour des filons** (mines et tours de gloire) : pas de **château** à moins de **13 cases**, ni d'**église** ou de **port** à moins de **10** (cercles rouges pendant la pose), ni de **capitale** à moins de 13 (sauf aux places prévues des arènes) · la **muraille d'une ville s'arrête toujours à 3 cases d'un filon**, même quand la ville s'améliore : une mine ou une tour de gloire ne finit plus jamais enfermée dans une ville, on peut toujours aller la prendre (les villes déjà bâties au début des scénarios gardent leur muraille). Réglages : `DEPOSIT_CASTLE_DISTANCE`, `DEPOSIT_CHURCH_DISTANCE`, `DEPOSIT_SPAWN_DISTANCE`, `DEPOSIT_WALL_GAP` dans `js/config.js`.
 - **v0.98.43** : ✝️ une **église**, un **port** ou une **mine** que tu viens de prendre par un **assaut** ne peut plus être reconverti tout de suite par la Croyance de son ancien maître : **15 s** de répit (réglage `FAITH_CAPTURE_TRUCE`), même face à beaucoup plus de Croyance.
 - **v0.98.42** : 🖱️ **tout envoi de soldats se fait en 2 clics**, comme un assaut : défendre contre un assaut (sur sa bannière, ou le bouton « Défendre » qui devient « Confirmer »), renforcer un assaut ou ton armée de défense, relier un château isolé, intercepter ou renforcer une armée de relique. Le 1er clic vise (l'aide en bas dit combien de soldats partiront), le 2e les envoie ; un autre clic, Échap ou un clic droit annule, et un choix du menu clic droit part tout de suite.
 - **v0.98.41** : 🌿 le bouton **Tour de gloire** affiche maintenant son vrai prix : comme toutes les constructions, la tour de gloire et ses améliorations coûtent moins cher avec des **carrières de pierre** (le bouton montrait toujours 500), et il passe en rouge quand tu n'as pas assez d'or.

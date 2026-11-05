@@ -188,6 +188,13 @@ const CONFIG = {
   MINE_ROAD_FACTOR: 2,       // ... et rapporte 2 fois plus (voir MINES)
   MINE_SPACING: 14,          // deux filons sont à au moins 14 cases l'un de l'autre
   DEPOSIT_CLEARANCE: 2,      // les autres bâtiments laissent 2 cases libres autour d'un filon (la place de sa mine)
+  // ⛏️🌿 Autour d'un filon (une mine, une tour de gloire) : pas de château à moins de 13 cases, ni d'église ou de port à
+  // moins de 10 (cercles rouges), et la muraille d'une ville s'arrête toujours à 3 cases d'un filon (même améliorée) :
+  // une mine ou une tour de gloire ne finit jamais enfermée dans une ville, on peut toujours aller la prendre
+  DEPOSIT_CASTLE_DISTANCE: 13,
+  DEPOSIT_CHURCH_DISTANCE: 10, // (églises et ports)
+  DEPOSIT_WALL_GAP: 3,
+  DEPOSIT_SPAWN_DISTANCE: 13, // (une capitale : pas à moins de 13 cases d'un filon, sauf aux places prévues des arènes)
   PORT_ROAD_BONUS: 0.3,      // par un chemin de terre : +30 % d'or produit par le port
   // Chaque moulin des villes du port (voir portMills) lui donne de l'or en plus, de moins en moins à mesure qu'il y en a :
   // +15 % pour chacun des 5 premiers, puis le bonus de chaque nouveau moulin baisse peu à peu jusqu'au 20e (+1 %),
