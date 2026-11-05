@@ -388,19 +388,24 @@ const AI = {
       // un obstacle (il ferme vraiment le passage), et qu'il soit court (passage étroit). Sinon, un mur qui coupe le
       // chemin oblige quand même l'ennemi à faire un détour.
       const R = G.castleInfo(c).radius, h = G.sizeOf(B_CASTLE) / 2, cx = c % W + h, cy = ((c / W) | 0) + h;
-      let best = -1, bestScore = Infinity;
+      // (⏱️ on note tous les murs possibles sans la vérification du passage, qui coûte cher ; puis on ne vérifie que les
+      //  meilleurs, dans l'ordre : le premier qui ne ferme pas complètement un passage est bâti, voir wallSeals)
+      const cands = [];
       for (let k = 0; k < 32; k++) {
         const ang = k / 32 * Math.PI * 2;
         for (let d = R + 3; d <= R + CONFIG.WALL_MAX_REACH; d += 3) {
           const x = Math.round(cx + DMath.cos(ang) * d), y = Math.round(cy + DMath.sin(ang) * d);
           if (x < 0 || y < 0 || x >= W || y >= G.H) continue;
-          const plan = G.planWall(p.id, c, y * W + x);
+          const plan = G.planWall(p.id, c, y * W + x, -1, true);
           if (plan.error || !plan.tiles.some(t => route.has(t))) continue;
-          const score = plan.tiles.length + (plan.sealed ? 0 : 100);
-          if (score < bestScore) { bestScore = score; best = y * W + x; }
+          cands.push({ at: y * W + x, tiles: plan.tiles, score: plan.tiles.length + (plan.sealed ? 0 : 100) });
         }
       }
-      if (best >= 0 && !G.buildWall(p, c, best)) return true;
+      cands.sort((a, b) => a.score - b.score);
+      for (const cand of cands.slice(0, 4)) {
+        if (G.wallSeals(cand.tiles)) continue;
+        if (!G.buildWall(p, c, cand.at)) return true;
+      }
     }
     return false;
   },

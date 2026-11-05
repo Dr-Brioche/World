@@ -1307,7 +1307,7 @@ const GameRules = {
   // obstacle infranchissable, il n'y a pas besoin de mur : il le laisse).
   // from = une case d'un mur déjà bâti de la ville (pour le second mur) : il part de là, au lieu de la muraille,
   // et va au plus à WALL_MAX_REACH cases de ce point.
-  planWall(pid, c, target, from = -1) {
+  planWall(pid, c, target, from = -1, noSeal = false) {
     if (this.building[c] !== B_CASTLE || this.owner[c] !== pid) return { error: tr('Ce n\'est pas une de tes villes.', 'This is not one of your cities.') };
     if (this.wallsOf(c).length >= this.wallMax(c)) {
       return { error: this.level[c] < 2 ? tr('Il faut une ville de niveau 2 pour bâtir un mur.', 'You need a level 2 city to build a wall.')
@@ -1370,7 +1370,7 @@ const GameRules = {
       if (e2 <= dx) { err += dx; y += sty; }
     }
     if (tiles.length < 2) return { error: city >= 0 ? tr('Ces deux villes sont trop proches : pas besoin de mur entre elles.', 'These two cities are too close: no need for a wall between them.') : tr('Le mur est trop court.', 'The wall is too short.') };
-    if (this.wallSeals(tiles)) return { error: tr('Ce mur fermerait complètement un passage : il doit toujours rester un chemin pour aller prendre chaque ville (et chaque lieu à conquérir).', 'This wall would close a passage completely: there must always be a way to go and take every city (and every place to conquer).') };
+    if (!noSeal && this.wallSeals(tiles)) return { error: tr('Ce mur fermerait complètement un passage : il doit toujours rester un chemin pour aller prendre chaque ville (et chaque lieu à conquérir).', 'This wall would close a passage completely: there must always be a way to go and take every city (and every place to conquer).') };
     return { tiles, end: city >= 0 ? tiles[tiles.length - 1] : target, sealed, city };
   },
 
@@ -1380,37 +1380,54 @@ const GameRules = {
   // toute petite poche vide (WALL_POCKET_MAX cases, sans bâtiment ni filon), contre une montagne par exemple.
   // (on part de chaque côté du mur et on cherche à rejoindre les autres côtés, en s'arrêtant tôt : c'est rapide)
   wallSeals(tiles) {
-    const W = this.W, N = this.N, wall = new Set(tiles), CAP = 6000;
-    for (const w of this.walls) if (!w.done) for (const t of w.tiles) wall.add(t);
-    const open = i => this.isLand(i) && !this.wallAt[i] && !wall.has(i);
-    const nb = i => { const x = i % W; return [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]; };
-    const sides = new Set();
-    for (const t of tiles) for (const n of nb(t)) if (n >= 0 && open(n)) sides.add(n);
-    // (une recherche depuis start ; s'arrête à cap cases. Renvoie les cases vues, et si elle a été coupée par cap)
-    const search = (start, cap) => {
-      const seen = new Set([start]), todo = [start];
-      while (todo.length) {
-        if (seen.size > cap) return { seen, big: true };
-        for (const n of nb(todo.pop())) if (n >= 0 && !seen.has(n) && open(n)) { seen.add(n); todo.push(n); }
+    const W = this.W, N = this.N, CAP = 4000;
+    // (⏱️ des tableaux gardés d'un appel à l'autre, au lieu d'ensembles : c'est bien plus rapide ; mark[i] === stamp :
+    //  case déjà vue par la recherche en cours ; wall[i] === wallStamp : case d'un mur, ce mur-ci ou un mur en chantier)
+    if (!this.sealBuf || this.sealBuf.mark.length !== N) this.sealBuf = { mark: new Int32Array(N), wall: new Int32Array(N), stamp: 0, wallStamp: 0, todo: new Int32Array(N) };
+    const B = this.sealBuf, wallStamp = ++B.wallStamp;
+    for (const t of tiles) B.wall[t] = wallStamp;
+    for (const w of this.walls) if (!w.done) for (const t of w.tiles) B.wall[t] = wallStamp;
+    const open = i => B.wall[i] !== wallStamp && !this.wallAt[i] && this.isLand(i);
+    const sides = [];
+    for (const t of tiles) {
+      const x = t % W;
+      for (const n of [x > 0 ? t - 1 : -1, x < W - 1 ? t + 1 : -1, t >= W ? t - W : -1, t < N - W ? t + W : -1]) if (n >= 0 && open(n) && !sides.includes(n)) sides.push(n);
+    }
+    // (une recherche depuis start, jusqu'à cap cases ; elle s'arrête dès qu'elle a vu toutes les cases de goals.
+    //  Renvoie { size, big } ; les cases vues gardent la marque stamp, pour savoir lesquelles des goals sont atteintes)
+    const search = (start, cap, goals) => {
+      const stamp = ++B.stamp, todo = B.todo;
+      let head = 0, tail = 0, size = 1, left = goals.filter(g => g !== start).length;
+      B.mark[start] = stamp; todo[tail++] = start;
+      while (head < tail) {
+        if (size > cap) return { stamp, size, big: true };
+        if (!left) return { stamp, size, big: true }; // (tout est relié : inutile d'aller plus loin)
+        const i = todo[head++], x = i % W;
+        for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+          if (n < 0 || B.mark[n] === stamp || !open(n)) continue;
+          B.mark[n] = stamp; todo[tail++] = n; size++;
+          if (goals.includes(n)) left--;
+        }
       }
-      return { seen, big: false };
+      return { stamp, size, big: false, seen: todo.subarray(0, tail) };
     };
-    const left = new Set(sides), bigStarts = [], closed = [];
-    while (left.size) {
-      const start = left.values().next().value, { seen, big } = search(start, CAP);
-      for (const n of [...left]) if (seen.has(n)) left.delete(n);
-      if (big) bigStarts.push(start); else closed.push(seen);
+    let left = sides.slice();
+    const bigStarts = [], closed = [];
+    while (left.length) {
+      const start = left[0], r = search(start, CAP, left);
+      left = left.filter(n => B.mark[n] !== r.stamp);
+      if (r.big) bigStarts.push(start); else closed.push(Array.from(r.seen));
     }
     if (bigStarts.length + closed.length <= 1) return false; // (tous les côtés du mur se rejoignent : rien n'est fermé)
     // (un côté fermé, coupé des autres : une petite poche vide passe, sinon le mur est refusé)
     for (const seen of closed) {
-      if (seen.size > CONFIG.WALL_POCKET_MAX) return true;
+      if (seen.length > CONFIG.WALL_POCKET_MAX) return true;
       for (const i of seen) if (this.building[i] || this.depositTile[i]) return true;
     }
-    // (deux grands côtés : sont-ils encore reliés plus loin ? On vérifie, sans limite cette fois : c'est rare)
+    // (deux grands côtés : sont-ils encore reliés plus loin ? On cherche sans limite, en s'arrêtant dès qu'on les a tous)
     if (bigStarts.length > 1) {
-      const { seen } = search(bigStarts[0], Infinity);
-      if (bigStarts.some(s => !seen.has(s))) return true;
+      const r = search(bigStarts[0], Infinity, bigStarts);
+      if (bigStarts.some(s => B.mark[s] !== r.stamp)) return true;
     }
     return false;
   },
