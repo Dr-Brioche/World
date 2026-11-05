@@ -924,7 +924,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      sur la même terre). Elle passe à qui prend ses terres, avec l'état de son filon. 🎯 Une mine ennemie **se vise directement**,
      comme une église ou un port (sauf si elle est dans la muraille d'une ville : il faut d'abord prendre la ville, et la mine part avec elle).
      🧱 **Fortifier** (mine de niveau 2, 💰 **800**, **30 s** de travaux) : une **petite muraille** de 4 cases autour de la mine.
-     La **Croyance** ne convertit plus rien dedans ; une **garnison de 50 soldats** la garde (elle se reconstitue) et attend
+     La **Croyance** ne convertit plus rien dedans ; une **garnison de 25 soldats** la garde (elle se reconstitue) et attend
      l'ennemi derrière la muraille : un assaut doit l'**assiéger 10 s**, et elle se défend seule, sans que tu envoies d'armée.
      Mais ce n'est pas une ville : **aucune armée n'en part** (ni assaut ni défenseurs), et elle **ne suffit pas à tenir un
      territoire** (sans ville ni port fortifié, il reste désorganisé). Prise, elle reste fortifiée pour son nouveau maître.
@@ -985,7 +985,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      |---|---|---|---|---|
      | 1. Port | plus qu'un moulin (3 💰 toutes les 10 s) | aucun | non | 💰 60 (puis 2 fois plus cher à chaque port) |
      | 2. Grand port | +167 % | 1 | **oui** | 💰 400 |
-     | 3. Port royal | +100 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **petite garnison** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 2000 |
+     | 3. Port royal | +100 % | 3 | moitié prix, bateaux 80 % plus rapides, et une **garnison de 25 soldats** et une **petite muraille** (+1 de défense dans sa zone, comme un fort en bois) | 💰 2000 |
 
      Comme l'église, un port amélioré permet de construire des moulins ou casernes autour de lui.
 
@@ -1262,6 +1262,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.20** : 🧱⚓ la **mine fortifiée** a maintenant une garnison de **25 soldats** (au lieu de 50), et le **port royal** (niveau 3) aussi **25** (au lieu de 10)
 - **v0.98.19** : 🛡️ **politique de guerre** contre l'acharnement : un royaume qui perd une ville, un port royal ou une mine fortifiée a +50 soldats de garnison dans tous ses autres lieux fortifiés non isolés pendant 1 min 30 ; chaque nouvelle perte pendant ce temps ajoute +50 et relance le compte à rebours (affiché en haut de l'écran)
 - **v0.98.18** : 📜 règles : la ligne « Départ » précise qu'en **Places prévues** (carte arène), les rivaux s'installent après toi
 - **v0.98.17** : 🏟️ cartes arène, placement des capitales revu : **Libre**, les rivaux commencent eux aussi n'importe où (plus forcément aux places prévues) ; **Aléatoire**, toi et les rivaux commencez aux places prévues, tirées au hasard ; **Places prévues**, toutes les places sont libres au début, tu choisis la tienne, puis les rivaux prennent celles qui restent (en ligne aussi, après le choix des joueurs)
