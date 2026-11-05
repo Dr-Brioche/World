@@ -525,6 +525,8 @@ const TERRAIN_INFO = [
 const MAX_LAND_COST = Math.max(...TERRAIN_INFO.filter(t => t.cost < Infinity).map(t => t.cost));
 
 const B_MILL = 1, B_BARRACKS = 2, B_CASTLE = 3, B_CHURCH = 4, B_PORT = 5, B_OUTPOST = 6, B_MINE = 7, B_TOWER = 8;
+// 🌿 La touche de la tour de gloire (cartes de gloire ; la tour de garde, elle aussi sur la touche 8, n'y existe pas)
+const GLORY_KEY = 8;
 
 // Les 2 niveaux du moulin : gold = or produit toutes les PRODUCTION_INTERVAL secondes.
 const MILL_LEVELS = [
