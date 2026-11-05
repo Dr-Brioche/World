@@ -3478,7 +3478,7 @@ const GameRules = {
   armySize(p) { return p.troops + this.stationedOf(p) + this.atSeaOf(p) + this.campaignOf(p); },
 
   // Soldats de p partis en campagne : dans ses assauts (et leurs renforts en route), ses défenseurs (au combat,
-  // en route ou qui rentrent), et ceux qu'il a envoyés aider un allié. Ils comptent dans son armée : pendant qu'ils
+  // en route ou qui rentrent), ses armées de relique, et ceux qu'il a envoyés aider un allié. Ils comptent dans son armée : pendant qu'ils
   // sont loin, le royaume ne recrute pas au-delà de son maximum (sinon un assaut pourrait grossir sans fin).
   campaignOf(p) {
     let sum = 0;
@@ -3489,6 +3489,8 @@ const GameRules = {
       if (a.target === id) sum += Math.max(0, a.defenders) + this.defendersOnTheWay(a);
     }
     for (const r of this.returning) if (r.pid === id) sum += r.troops;
+    // (📿 ses armées de relique, et leurs renforts en route, comme un assaut ; voir reliques.js)
+    if (this.relicRuns) for (const r of this.relicRuns) if (r.pid === id) sum += r.troops + this.relicPending(r);
     return sum;
   },
 
