@@ -46,12 +46,13 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    sont déjà installés** (leur nom et leur bannière sont affichés) : regarde qui est où, puis clique sur une terre libre
    pour fonder ta capitale (pas sur un îlot, ni trop près d'un rival : le cercle devient rouge si c'est impossible) ; une petite bulle
    près de la souris indique la **défense** qu'aurait ta capitale à cet endroit (terrain + murs).
-   🎲 **Placement de la capitale** (menu) : **Libre** (tu cliques où tu veux, comme ci-dessus), **Aléatoire** (le jeu la
+   🎲 **Placement de la capitale** (menu) : **Libre** (tu cliques où tu veux, comme ci-dessus ; sur une carte arène,
+   les royaumes rivaux aussi commencent n'importe où, pas forcément aux places prévues), **Aléatoire** (le jeu la
    fonde tout de suite pour toi, à une place au hasard où tu aurais pu la fonder, et la partie attend en **pause** le
-   temps que tu regardes autour de toi : elle commence à ta première conquête, d'un double clic, ou avec Espace ; sur une carte arène, à une des places
-   de départ prévues, au hasard ; grisé dans les scénarios) ou, sur une carte arène, **Places prévues** (choisi
-   d'office : tu cliques où tu veux commencer, n'importe où sur la carte, et ta capitale va à la place de départ libre
-   la plus proche, un écusson doré ; le survol montre laquelle).
+   temps que tu regardes autour de toi : elle commence à ta première conquête, d'un double clic, ou avec Espace ; sur une carte arène, toi et les rivaux
+   commencez aux places de départ prévues, tirées au hasard ; grisé dans les scénarios) ou, sur une carte arène, **Places prévues** (choisi
+   d'office : toutes les places sont libres, tu cliques où tu veux commencer, n'importe où sur la carte, et ta capitale va à la place de départ
+   la plus proche, un écusson doré ; le survol montre laquelle ; les royaumes rivaux prennent ensuite les places restantes).
    🏟️ **Cartes arène** (symétriques, pas réalistes, à la façon de Warcraft 3 ou d'Age of Empires) : chacun commence à
    égalité, à une **place de départ prévue**, autour d'un **centre riche** et disputé. Rien n'est bâti d'avance : les places
    sont vides, tu y fondes ta capitale (ou ailleurs, en placement **Libre**) ; seuls les **filons** sont posés à l'avance,
@@ -1155,10 +1156,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      pour que tout le monde ne s'appelle pas pareil ; deux joueurs au même nom deviennent « Valdor » et « Valdor II ».
    - Au début, selon le **placement de la capitale** choisi par l'hôte (la partie publique : places prévues sur une
      carte arène, sinon libre) :
-     - **Libre** : chacun a **15 secondes** pour cliquer où il veut fonder sa capitale (sinon, une place au hasard) ;
+     - **Libre** : chacun a **15 secondes** pour cliquer où il veut fonder sa capitale (sinon, une place au hasard) ; les
+       bots se posent n'importe où, même sur une carte arène ;
      - **Places prévues** (carte arène) : chacun a **15 secondes** pour cliquer où il veut commencer et **réserver** la
        place de départ libre la plus proche, avant les autres (si deux joueurs visent la même, le second a la plus
-       proche qui reste) ; sinon, une place prévue au hasard ;
+       proche qui reste) ; sinon, une place prévue au hasard ; les bots prennent ensuite les places restantes ;
      - **Aléatoire** : tout le monde est placé au hasard dès le départ (sur une carte arène, aux places prévues), et on a
        **10 secondes** pour regarder la carte ;
      pendant ce temps, chacun voit **en direct** où les autres se posent, et peut **changer d'avis** autant qu'il veut
@@ -1254,6 +1256,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.17** : 🏟️ cartes arène, placement des capitales revu : **Libre**, les rivaux commencent eux aussi n'importe où (plus forcément aux places prévues) ; **Aléatoire**, toi et les rivaux commencez aux places prévues, tirées au hasard ; **Places prévues**, toutes les places sont libres au début, tu choisis la tienne, puis les rivaux prennent celles qui restent (en ligne aussi, après le choix des joueurs)
 - **v0.98.16** : 🐟 le drapeau aux deux poissons s'appelle maintenant **Brion**
 - **v0.98.15** : 🐓 le drapeau **Coq guerrier** est redessiné en haute définition (un coq d'or coiffé d'une hache, sur fond rose) : il n'est plus flou
 - **v0.98.14** : 🌍 changer de langue au menu garde les réglages déjà choisis (nom du royaume, bannière, carte, taille, pactes, placement, difficulté, adversaires)
