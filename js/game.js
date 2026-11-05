@@ -1628,7 +1628,7 @@ const GameRules = {
   // fortifié), ou si deux murs, chacun parti de sa ville, se rejoignent (w.touch : les murs finis du royaume qui le
   // touchent). On suit donc la chaîne des murs qui se touchent, depuis ceux de c.
   // 🏰 Deux villes du même royaume dont les murailles se touchent (se chevauchent) sont reliées aussi, sans mur à bâtir :
-  // leur muraille est déjà commune. (CASTLE_CASTLE_DISTANCE empêche deux de ses villes de se toucher avant le niveau 3)
+  // leur muraille est déjà commune. (CASTLE_CASTLE_DISTANCE empêche deux de ses villes bâties de se toucher, sauf avec une cité impériale ; des villes prises, elles, peuvent être plus proches)
   // On suit la chaîne : murs, et murailles qui se touchent.
   wallLinked(c) {
     const o = this.owner[c], set = new Set([c]), todo = [c];
