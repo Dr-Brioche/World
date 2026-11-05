@@ -140,7 +140,9 @@ const UI = {
       // (chaque drapeau avec son nom dessous : la faction d'un scénario, ou un nom qui le décrit pour une partie libre ;
       //  dans un scénario, « (Campagne) » si la faction a sa propre histoire, ses objectifs, ou « (Défis) » si elle n'a que des défis)
       $('bannerPick').innerHTML = list.map(k => {
-        const kind = this.factionKind(k), label = kind ? ` <i class="bkind">(${kind})</i>` : '';
+        // (✔ vert : déjà réussie en solo, voir factionDone)
+        const kind = this.factionKind(k), done = kind && this.factionDone(k);
+        const label = kind ? ` <i class="bkind">(${kind})</i>` + (done ? ` <span class="bdone" title="${tr('Déjà réussie', 'Already completed')}">✔</span>` : '') : '';
         return `<button type="button" data-banner="${k}" title="${escapeHtml(BANNERS[k].name)}${kind ? ` (${kind})` : ''}"><img src="${BANNERS[k].logo || BANNERS[k].icon}" alt="${escapeHtml(BANNERS[k].name)}">` +
           `<span class="bname">${escapeHtml(BANNERS[k].name)}${label}</span></button>`;
       }).join('');
@@ -182,7 +184,11 @@ const UI = {
       $('bannerCur').src = BANNERS[k].logo || BANNERS[k].icon; // (au menu : juste le tissu, recadré sur son motif ; un écu : en entier)
     };
     // (la liste des drapeaux s'ouvre et se ferme d'un clic sur le drapeau choisi ; choisir un drapeau la referme)
-    $('bannerBtn').addEventListener('click', () => $('bannerPick').classList.toggle('hidden'));
+    $('bannerBtn').addEventListener('click', () => {
+      // (✔ la liste est refaite à chaque ouverture : une campagne ou des défis réussis depuis s'y voient tout de suite)
+      if ($('bannerPick').classList.contains('hidden')) fillBanners();
+      $('bannerPick').classList.toggle('hidden');
+    });
     $('bannerPick').addEventListener('click', e => {
       const btn = e.target.closest('button[data-banner]');
       if (btn) { pick(+btn.dataset.banner); $('bannerPick').classList.add('hidden'); }
@@ -562,6 +568,30 @@ const UI = {
   factionMode() { return $('mapType').value === 'factions'; },
   // La faction du scénario « Charlemagne » de la bannière k (voir charlemagne.js)
   cmFaction(k) { return CHARLEMAGNE.factions.find(f => f.id === BANNERS[k].id); },
+  // ✔ Ce qu'on a déjà réussi en solo dans les scénarios, gardé dans le navigateur : pour chaque faction (« centans:france »),
+  // la campagne gagnée (campaign) et les défis réussis au moins une fois (defis : leurs numéros)
+  DONE_KEY: 'medievalEmperor.done',
+  doneAll() { try { return JSON.parse(localStorage.getItem(this.DONE_KEY) || '{}') || {}; } catch (e) { return {}; } },
+  doneOf(k) { const b = BANNERS[k]; return this.doneAll()[b.set + ':' + b.id] || {}; },
+  noteDone(change) {
+    const h = Game.human;
+    if (Game.online || !h || !BANNERS[h.banner].set) return; // (en solo, dans un scénario seulement)
+    const all = this.doneAll(), key = BANNERS[h.banner].set + ':' + BANNERS[h.banner].id, rec = all[key] || (all[key] = {});
+    change(rec);
+    try { localStorage.setItem(this.DONE_KEY, JSON.stringify(all)); } catch (e) { /* (navigateur sans stockage) */ }
+  },
+  // (une campagne gagnée ; un défi réussi : voir defisEnd)
+  noteCampaignWon() { this.noteDone(r => { r.campaign = true; }); },
+  noteChallengeDone(n) { this.noteDone(r => { r.defis = [...new Set([...(r.defis || []), n])]; }); },
+  // La faction (bannière k) a-t-elle déjà été réussie ? Sa campagne gagnée, ou (une faction à défis) tous ses défis réussis
+  factionDone(k) {
+    const b = BANNERS[k], S = { charlemagne: CHARLEMAGNE, centans: CENTANS, croisades: CROISADES }[b.set], d = this.doneOf(k);
+    if (!S) return false;
+    if (this.factionKind(k) === tr('Campagne', 'Campaign')) return !!d.campaign;
+    const n = (S.CHALLENGES && S.CHALLENGES[b.id] || []).length;
+    return n > 0 && (d.defis || []).length >= n;
+  },
+
   // 📜 La sorte de jeu d'une faction de scénario (bannière k) : « Campagne » si elle a sa propre histoire (des objectifs à
   // remplir, comme les Francs de Charlemagne), « Défis » si elle n'a que des défis ; '' hors des scénarios
   factionKind(k) {
@@ -1591,6 +1621,7 @@ const UI = {
     this.dropAllianceRequests(true);
     this.endKind = kind;
     if (win && kind !== 'spectate') this.victory = { kind }; // (🏆 on a gagné : voir quitYes)
+    if (win && ['empire', 'hundred', 'crusades'].includes(kind)) this.noteCampaignWon(); // (✔ la campagne est réussie)
     const h = Game.human, secs = Math.floor(Game.tick / CONFIG.TICKS_PER_SECOND);
     $('endTitle').textContent = win ? tr('🏆 Victoire !', '🏆 Victory!') : tr('💀 Défaite...', '💀 Defeat...');
     $('endText').textContent = win
