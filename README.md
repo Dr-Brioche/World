@@ -914,7 +914,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      rouge : tu perds ; plus il est gros, plus ça va vite).
      Ce n'est **pas une agression** (pas d'alerte, pas d'après-guerre). Une **église** (ou un port) convertie emporte **toute sa
      zone** et les moulins et casernes de ses places, comme si elle était prise par un assaut (sauf ce qui est dans la muraille
-     d'une ville). Ce que la Croyance **ne convertit jamais** : les
+     d'une ville). Une église, un port ou une mine **pris par un assaut** est à l'abri de la Croyance pendant **15 s**
+     (pas de reconversion immédiate, même face à beaucoup plus de Croyance). Ce que la Croyance **ne convertit jamais** : les
      **villes** et les **ports fortifiés** (niveau 3), tout ce qui est **dans leur muraille**, les **avant-postes** et leur zone,
      les **murs** 🧱, les **terres libres**, et la route d'un **assaut en cours**. Elle ne part que d'une **zone de royaume**
      organisée : pas d'une zone d'avant-poste, ni d'un morceau coupé de ses villes, ni d'un royaume désorganisé (sans ville).
@@ -1302,6 +1303,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.43** : ✝️ une **église**, un **port** ou une **mine** que tu viens de prendre par un **assaut** ne peut plus être reconverti tout de suite par la Croyance de son ancien maître : **15 s** de répit (réglage `FAITH_CAPTURE_TRUCE`), même face à beaucoup plus de Croyance.
 - **v0.98.42** : 🖱️ **tout envoi de soldats se fait en 2 clics**, comme un assaut : défendre contre un assaut (sur sa bannière, ou le bouton « Défendre » qui devient « Confirmer »), renforcer un assaut ou ton armée de défense, relier un château isolé, intercepter ou renforcer une armée de relique. Le 1er clic vise (l'aide en bas dit combien de soldats partiront), le 2e les envoie ; un autre clic, Échap ou un clic droit annule, et un choix du menu clic droit part tout de suite.
 - **v0.98.41** : 🌿 le bouton **Tour de gloire** affiche maintenant son vrai prix : comme toutes les constructions, la tour de gloire et ses améliorations coûtent moins cher avec des **carrières de pierre** (le bouton montrait toujours 500), et il passe en rouge quand tu n'as pas assez d'or.
 - **v0.98.40** : 🌿 la **tour de gloire** a sa touche à elle : **8** (sur les cartes de gloire), affichée sur son bouton.

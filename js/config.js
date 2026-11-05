@@ -308,6 +308,7 @@ const CONFIG = {
   // le perdant est galvanisé (+25 %). Les deux s'additionnent : un +25 % annule un -25 %.
   WAR_EFFECT_TIME: 30,
   CAPTURE_TRUCE: 30,           // une ville (château), une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant 30 s
+  FAITH_CAPTURE_TRUCE: 15,     // ✝️ une église, un port ou une mine pris par un assaut ne peut pas être converti par la Croyance pendant 15 s
   ELIMINATION_BOUNTY: 500,     // anéantir un royaume rapporte une prime de 500 pièces, plus le trésor qui lui restait
   POST_WAR_MALUS: 0.25,
   RALLY_BONUS: 0.25,

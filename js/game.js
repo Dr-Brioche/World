@@ -48,6 +48,7 @@ const GameRules = {
     this.outposts = new Map(); // avant-poste → { ready : tick où il est bâti, landing : case du débarquement }
     this.colonies = new Map(); // château bâti ou pris dans la zone d'un avant-poste → son royaume
     this.truces = new Map();   // château, église ou port qui vient d'être conquis → tour jusqu'auquel on ne peut pas l'attaquer
+    this.faithTruces = new Map(); // ✝️ église, port ou mine pris par un assaut → tour jusqu'auquel la Croyance ne peut pas le convertir
     this.nextAttackId = 1;
     this.pacts = new Map(); // id du pacte → { name }
     this.nextPactId = 0;
@@ -1274,6 +1275,8 @@ const GameRules = {
     if (this.building[i]) {
       const a = this.anchor[i];
       if (this.holdsAlone(a) || this.building[a] === B_OUTPOST || this.building[a] === B_MILL || this.building[a] === B_BARRACKS) return false;
+      // (✝️ une église, un port ou une mine qu'un assaut vient de prendre : pas tout de suite, voir FAITH_CAPTURE_TRUCE)
+      if (this.faithTruceLeft(a) > 0) return false;
       // (un bâtiment de plusieurs cases : toutes doivent pouvoir passer)
       if (this.footprint(a, this.building[a]).some(j => this.castleBonus(o, j) > 0 || this.portBonus(o, j) > 0 || this.outpostBonus(o, j) > 0)) return false;
     }
@@ -4727,6 +4730,13 @@ const GameRules = {
     return (end - this.tick) / CONFIG.TICKS_PER_SECOND;
   },
   startTruce(a) { this.truces.set(a, this.tick + CONFIG.CAPTURE_TRUCE * CONFIG.TICKS_PER_SECOND); },
+  // ✝️ Secondes avant que la Croyance puisse convertir le bâtiment a, pris par un assaut (0 = elle le peut)
+  faithTruceLeft(a) {
+    const end = this.faithTruces.get(a);
+    if (end === undefined) return 0;
+    if (this.tick >= end) { this.faithTruces.delete(a); return 0; }
+    return (end - this.tick) / CONFIG.TICKS_PER_SECOND;
+  },
 
   // Pour les bots : quel château viser, et quelle défense de terrain attendre au premier combat ?
   // castle : null = pas de château (attaque de front), -1 = aucun atteignable, sinon le château.
@@ -6840,6 +6850,8 @@ const GameRules = {
   onTargetTaken(a, type, withZone) {
     a.won = true; // (objectif pris : la route reste à l'attaquant)
     if (type !== B_OUTPOST) this.startTruce(a.targetCastle); // (église ou port : on ne peut pas le reprendre tout de suite)
+    // (✝️ ni par la Croyance de son ancien maître : FAITH_CAPTURE_TRUCE secondes pour s'y installer)
+    if (type !== B_OUTPOST) this.faithTruces.set(a.targetCastle, this.tick + CONFIG.FAITH_CAPTURE_TRUCE * CONFIG.TICKS_PER_SECOND);
     a.cut = true; // (et la coupe qu'elle fait dans le royaume s'applique maintenant : voir regions)
     this.regionsCache = null;
     const p = this.players[a.attacker], d = this.players[a.target];
