@@ -1227,7 +1227,9 @@ const GameRules = {
   // (on garde les meilleures en un seul passage sur la carte).
   preach(due) {
     const W = this.W, H = this.H, N = this.N, own = this.owner, r = this.regions();
-    const routes = new Set(this.pendingRoutes().map(([t]) => t)); // (routes d'assauts en cours : on n'y touche pas)
+    // (routes d'assauts en cours : on n'y touche pas, et pour la Croyance elles n'existent pas encore : chaque case
+    //  compte comme une case du royaume attaqué, tant que l'assaut n'a pas réussi)
+    const routeOf = new Map(this.pendingRoutes()), routes = new Set(routeOf.keys());
     const sites = new Set();
     for (const w of this.walls) if (!w.done) for (const t of w.tiles) sites.add(t);
     // On ne prêche que depuis une zone de royaume : pas une zone d'avant-poste, pas un morceau coupé de ses villes
@@ -1262,7 +1264,7 @@ const GameRules = {
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
         const xx = x + dx, yy = y + dy;
         if ((!dx && !dy) || xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
-        const q = own[yy * W + xx];
+        const k = yy * W + xx, q = routeOf.has(k) ? routeOf.get(k) : own[k];
         if (q === pid) mine++;
         else if (q === o && (!dx || !dy)) theirs++;
       }
@@ -1317,9 +1319,9 @@ const GameRules = {
       // (✝️ une église, un port ou une mine qu'un assaut vient de prendre : pas tout de suite, voir FAITH_CAPTURE_TRUCE)
       if (this.faithTruceLeft(a) > 0) return false;
       // (un bâtiment de plusieurs cases : toutes doivent pouvoir passer)
-      if (this.footprint(a, this.building[a]).some(j => this.castleBonus(o, j) > 0 || this.portBonus(o, j) > 0 || this.outpostBonus(o, j) > 0)) return false;
+      if (this.footprint(a, this.building[a]).some(j => this.castleBonus(o, j) > 0 || this.portBonus(o, j) > 0 || this.outpostBonus(o, j) > 0 || this.mineFortBonus(o, j) > 0)) return false;
     }
-    return !(this.castleBonus(o, i) > 0 || this.portBonus(o, i) > 0 || this.outpostBonus(o, i) > 0);
+    return !(this.castleBonus(o, i) > 0 || this.portBonus(o, i) > 0 || this.outpostBonus(o, i) > 0 || this.mineFortBonus(o, i) > 0);
   },
 
   // --- Murs ---
@@ -4252,7 +4254,9 @@ const GameRules = {
       const keep = tiles.filter(i => this.anchor[i] === i && this.building[i] && this.holdsAlone(i));
       // (et aussi toute case dans la muraille d'un de ses châteaux, même si le château est dans un autre morceau :
       //  la zone d'une ville ne tombe qu'avec elle, jamais coupée ou convertie par la Croyance)
-      const kept = i => this.castleProtects(target, i) || keep.some(c => this.building[c] === B_CASTLE
+      // (🧱🌿 et la petite muraille d'une mine fortifiée, ou d'une tour de gloire de niveau 3 : elle tient, isolée ; il
+      //  faut l'assiéger pour la prendre)
+      const kept = i => this.castleProtects(target, i) || this.mineFortBonus(target, i) > 0 || keep.some(c => this.building[c] === B_CASTLE
         ? this.inCastleRange(c, i % this.W, (i / this.W) | 0, this.castleInfo(c).radius)
         : this.inChurchRange(c, i, this.buildingInfo(c).radius)); // (zone du port, celle de sa muraille)
       // Les royaumes qui touchent ce morceau (pas les alliés de target), avec la longueur de leur frontière
@@ -7037,8 +7041,10 @@ const GameRules = {
   // Le royaume p n'est-il plus qu'un débris ? Aucune ville, aucun port fortifié, aucun avant-poste, et au plus
   // REMNANT_TILES cases (souvent coincées entre un sommet et un fleuve, où personne ne peut l'atteindre : la partie
   // ne pourrait jamais finir). Pas les pillards (leurs terres sont à part) ni un royaume qui attend son heure (dormant).
+  // (🧱🌿 une mine fortifiée, ou une tour de gloire de niveau 3, le fait tenir aussi : il faut l'assiéger pour l'anéantir)
   remnantOnly(p) {
     if (p.raiders || p.dormant || p.tiles > CONFIG.REMNANT_TILES || p.bCount[B_OUTPOST]) return false;
+    if ([...this.fortMines].some(a => this.owner[a] === p.id && this.building[a] === B_MINE)) return false;
     return !this.strongholds(p.id, false).length;
   },
   // Un royaume réduit à un débris se disperse : il est anéanti (par celui qui lui a pris ses dernières terres), et
