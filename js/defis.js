@@ -127,6 +127,7 @@ Object.assign(GameRules, {
   defisEnd(k, ok) {
     const st = this.defisState(), c = this.challengeList()[k], h = this.human, V = DEFIS.VOW, vow = k === st.vow;
     st.state[k] = ok ? 'done' : 'failed';
+    if (ok) UI.noteChallengeDone(k); // (✔ gardé dans le navigateur : voir UI.factionDone)
     if (ok) {
       const m = vow ? V.MULT : 1, gold = (c.reward.gold || 0) * m, faith = (c.reward.faith || 0) * m;
       h.gold += gold;
