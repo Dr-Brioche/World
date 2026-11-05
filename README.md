@@ -1288,6 +1288,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.33** : ⏱️ plus de **gels** réguliers de la partie (jusqu'à 4 s, surtout sur L'Octogone de la Gloire) : les bots vérifiaient la règle « un mur ne ferme jamais un passage » pour chacun des 160 murs qu'ils envisagent ; ils ne la vérifient plus que pour leurs meilleurs, et la vérification est bien plus rapide
 - **v0.98.32** : 💀 nouvelle difficulté **Extrême** (une petite tête de mort à côté) : des bots plus rapides, plus agressifs, avec +80 % d'or, un recrutement 60 % plus rapide, une armée maximum 30 % plus grande et des soldats 25 % plus forts. Très dur !
 - **v0.98.31** : 🗺️ dans le choix des cartes, les **cartes arène** sont sur deux colonnes : les classiques à gauche, les **cartes de gloire** à droite (l'une sous l'autre sur un téléphone) ; L'Octogone de la Gloire affiche « 8 joueurs » comme les autres
 - **v0.98.30** : ✔ dans le choix du drapeau d'un scénario, un petit **V vert** à côté des campagnes déjà gagnées en solo, et des factions à défis dont tous les défis ont été réussis (gardé dans le navigateur)
