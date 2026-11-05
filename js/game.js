@@ -114,7 +114,10 @@ const GameRules = {
     banners.forEach((b, k) => { if (BANNERS[b].kingdom) names[k] = BANNERS[b].kingdom; });
     // Nombre de royaumes rivaux : choisi dans le menu (au moins MIN_OPPONENTS), sinon celui de la difficulté
     // (en ligne : le nombre de bots est choisi par le salon, même 0)
-    const bots = this.online ? Math.max(0, opts.opponents || 0) : Math.max(CONFIG.MIN_OPPONENTS, opts.opponents || this.difficulty.bots);
+    // (🏟️ une carte arène : jamais plus de rivaux que de places prévues, moins celle du joueur)
+    const arena = ARENA_MAPS[this.mapType], minBots = arena ? Math.min(CONFIG.MIN_OPPONENTS, arena.players - 1) : CONFIG.MIN_OPPONENTS;
+    let bots = this.online ? Math.max(0, opts.opponents || 0) : Math.max(minBots, opts.opponents || this.difficulty.bots);
+    if (arena && !this.online) bots = Math.min(bots, arena.players - 1);
     for (let k = 0; k < bots && k < banners.length && names[k]; k++) {
       this.addPlayer(names[k], banners[k], false);
     }

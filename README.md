@@ -1302,6 +1302,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.37** : 🐛 sur une **petite carte arène** (Le Trône des Trois), plus de rival en trop : il y a au plus un rival par place prévue (moins la tienne), même si c'est moins que les 3 rivaux minimum des autres cartes
 - **v0.98.36** : 🌿 les 3 tours de gloire ont maintenant la **même base** sur la carte : le corps de la tour de bois, celui de la tour de pierre et la tour centrale de la citadelle font la même largeur (la tour de bois et la tour de pierre étaient trop grandes)
 - **v0.98.35** : 🌿 les 3 dessins de la tour de gloire gardent maintenant la **même échelle** que sur le dessin d'origine (la tour de bois plus petite, la tour de pierre et la citadelle à la même taille)
 - **v0.98.34** : 🌿 la **tour de gloire** remplace la mine de gloire : une construction spéciale des cartes de gloire (bouton à elle), à 3 niveaux (💰 500, 1 000, 2 500 ; une tour de bois, de pierre, puis une citadelle), avec au niveau 3 une petite fortification de 25 soldats ; elle donne 1, 1,6 puis 2,2 de gloire par seconde · « **+X 🌿** » s'affiche toutes les 5 s au-dessus de chaque tour · L'Octogone de la Gloire : 2 fois moins de gloire par tour · nouvelle carte de gloire **Le Trône des Trois** (3 joueurs) : une île en triangle, un massif à 3 cols qui garde le Trône, et sur chaque frontière une rivière avec deux îles de gloire
