@@ -817,7 +817,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      le port : **+50 soldats de garnison pour chacun**.
      🏰🏰 Deux de tes villes dont les **murailles se touchent** n'ont pas besoin de mur : leur muraille est déjà commune, elles
      sont **reliées d'office** (+50 soldats de garnison pour chacune). Deux nouvelles villes sont bâties assez loin l'une de l'autre
-     (21 cases) pour que leurs murailles ne se touchent qu'à partir du niveau 3 (citadelle).
+     (28 cases) pour que leurs murailles ne se touchent pas, sauf avec ta cité impériale (niveau 4) ; des villes prises à l'ennemi
+     peuvent, elles, être plus proches.
      Les bots relient aussi leurs villes quand ils le peuvent.
      Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
      le franchir** : les armées ennemies doivent faire le tour. Si un mur tout neuf coupe la route d'un assaut déjà lancé,
@@ -832,8 +833,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **sauf trop près de tes châteaux** : elle doit rester hors de portée de leur muraille, même améliorée
      au maximum (quand tu places une église, un **cercle rouge** entoure chacun de tes châteaux).
      De même, un nouveau château ne peut pas être construit trop près d'une de tes églises.
-     📏 **Distances entre grands bâtiments** (dans tous les sens, cercles rouges) : château ↔ château **21 cases** (leurs murailles ne se touchent qu'au niveau 3),
-     château ↔ église ou port **15 cases**, église ↔ église, port ↔ port ou église ↔ port **11 cases**.
+     📏 **Distances entre grands bâtiments** (dans tous les sens, cercles rouges) : château ↔ château **28 cases** (leurs murailles ne se touchent qu'avec une cité impériale),
+     château ↔ église ou port **20 cases**, église ↔ église, port ↔ port ou église ↔ port **15 cases**.
      Elle permet de construire des **moulins ou casernes autour d'elle**, même hors de la muraille d'un château
      (quand tu choisis un moulin ou une caserne, sa zone s'affiche en pointillés clairs).
      Attention : elle **n'est pas défendue** (pas de bonus de défense, pas de garnison), et on peut
@@ -1262,6 +1263,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.21** : 📏 les distances minimum entre tes grands bâtiments sont **un tiers plus grandes**, pour aérer les royaumes : château ↔ château **28 cases** (au lieu de 21), château ↔ église ou port **20** (au lieu de 15), entre églises et ports **15** (au lieu de 11) ; deux villes bâties ne se touchent plus d'office au niveau 3 (seulement avec la cité impériale) : relie-les par un mur
 - **v0.98.20** : 🧱⚓ la **mine fortifiée** a maintenant une garnison de **25 soldats** (au lieu de 50), et le **port royal** (niveau 3) aussi **25** (au lieu de 10)
 - **v0.98.19** : 🛡️ **politique de guerre** contre l'acharnement : un royaume qui perd une ville, un port royal ou une mine fortifiée a +50 soldats de garnison dans tous ses autres lieux fortifiés non isolés pendant 1 min 30 ; chaque nouvelle perte pendant ce temps ajoute +50 et relance le compte à rebours (affiché en haut de l'écran)
 - **v0.98.18** : 📜 règles : la ligne « Départ » précise qu'en **Places prévues** (carte arène), les rivaux s'installent après toi
