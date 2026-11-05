@@ -18,7 +18,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
   avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 14 **🏟️ cartes arène** symétriques
-  (La Couronne, Le Cratère, Le Labyrinthe, Les Mille Ponts, La Mer Intérieure, La Mêlée à 20 joueurs…), 3 cartes **prédéfinies**
+  (La Couronne, Le Cratère, Le Labyrinthe, Les Mille Ponts, La Mer Intérieure, La Mêlée à 20 joueurs, L'Octogone de la Gloire…), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**,
   **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, **La guerre de Cent Ans (1337)** :
@@ -96,7 +96,20 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      5 fois moins de place que sur La Couronne) : des voisins partout dès la première minute. Derrière chaque capitale, une
      carrière près de la côte ; entre deux voisins, une **crête de montagne** (lente à passer, avec un col) et un filon à
      partager, tour à tour de l'**or** et du **fer** (chacun en a un de chaque à côté de lui) ; au centre, un plateau entouré
-     d'un fleuve (un diamant, 5 mines d'or). Sur une carte arène, le menu propose d'office un rival par place prévue.
+     d'un fleuve (un diamant, 5 mines d'or).
+   - **🌿 L'Octogone de la Gloire (8)** : la première **carte de gloire**. Une île en **octogone**, au terrain naturel
+     (plaines, forêts, collines ; plus ouvert vers le centre), 8 places face aux 8 côtés. **9 mines de gloire**, enclavées :
+     au centre, le **Sanctuaire**, dans un anneau de sommets percé de 8 portes étroites ; entre deux voisins, à mi-chemin du
+     centre, une mine sur une colline au milieu d'un **lac**, reliée à la terre par une seule petite **chaussée** tournée vers
+     le centre (aussi loin de l'un que de l'autre). Chacun a une carrière, une mine de fer et une mine d'or à lui.
+     🌿 **La gloire** : une **mine de gloire** (💰 600, sur un filon de gloire, une couronne de laurier) donne **1 point de
+     gloire par seconde** à son royaume (**1,75** au niveau 2). Une seule **jauge de gloire**, en haut au milieu de l'écran,
+     se remplit pour tout le monde : un **trait de la couleur** de chaque royaume qui a de la gloire, du plus grand au plus
+     petit (l'ordre se refait sans cesse), avec ta part et celle du premier ; au survol d'un trait, le nom du royaume et sa
+     part de la jauge. Quand elle est **pleine** (8 000 points en tout), le royaume qui a **le plus de gloire l'emporte**
+     (la conquête de 70 % des terres marche toujours aussi). Plus tu tiens de mines, plus ta part grandit vite : prends-les,
+     améliore-les, et va prendre celles des autres ! Les bots les visent aussi. Réglages : `GLORY` et `MINES.glory` dans `js/config.js`.
+     Sur une carte arène, le menu propose d'office un rival par place prévue.
      Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js`.
    🗺️ **Choix de la carte** : les cartes sont rangées par sortes (aléatoires, arène, prédéfinies, scénarios, dessinées),
    chacune dans une **section qui se déplie** d'un clic (une seule ouverte à la fois ; celle de la carte choisie l'est d'office),
@@ -820,6 +833,10 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (28 cases) pour que leurs murailles ne se touchent pas, sauf avec ta cité impériale (niveau 4) ; des villes prises à l'ennemi
      peuvent, elles, être plus proches.
      Les bots relient aussi leurs villes quand ils le peuvent.
+     🚧 **Jamais de passage fermé pour de bon** : un mur ne peut pas couper la carte en deux. Il doit toujours rester un
+     chemin par la terre vers chaque ville, port, filon ou bâtiment (la muraille d'une ville ne ferme rien : la ville se
+     prend, et on passe). Un mur qui fermerait complètement un passage est refusé (ligne rouge) ; il peut seulement enfermer
+     une toute petite poche vide (60 cases au plus), contre une montagne. Ainsi, personne ne peut bloquer la partie.
      Le chantier dure **40 s** (le mur apparaît à moitié transparent, avec une jauge). Une fois debout, **aucun assaut ne peut
      le franchir** : les armées ennemies doivent faire le tour. Si un mur tout neuf coupe la route d'un assaut déjà lancé,
      **devant lui** (là où il n'est pas encore passé), l'armée **le contourne** par un autre chemin ; s'il n'y a **pas d'autre
@@ -946,7 +963,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        **3 000**, et à la fin **10 000 pièces** d'un coup (16 000 en tout), puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
        chrono continue pour le nouveau maître, qui touche les versements suivants !
      À gauche de chaque mine (la tienne comme celles des autres), une **petite bulle ronde** montre l'icône de ce qui y est
-     miné (fer, or, pierre, diamant), toujours visible, même quand un grand bâtiment est à côté. Une mine épuisée reste sur la carte avec une **croix rouge** ; une mine d'or encore de niveau 1 (qu'on peut relancer en l'améliorant) a en plus une **flèche verte d'amélioration** : la croix seule, c'est épuisé pour de bon. Pendant la pose d'une mine, les filons s'entourent d'un
+     miné (fer, or, pierre, diamant, gloire), toujours visible, même quand un grand bâtiment est à côté. Une mine épuisée reste sur la carte avec une **croix rouge** ; une mine d'or encore de niveau 1 (qu'on peut relancer en l'améliorant) a en plus une **flèche verte d'amélioration** : la croix seule, c'est épuisé pour de bon. Pendant la pose d'une mine, les filons s'entourent d'un
      cercle (vert si tu peux y bâtir), passent **par-dessus les bâtiments** (une grande ville ne les cache plus), et la mine
      s'aimante sur le filon le plus proche de la souris (à moins de 5 cases). Une mine **n'a pas d'autre règle de construction** :
      elle se pose même dans la muraille d'une ville, ou tout près d'un autre bâtiment. Les **autres bâtiments**, eux, laissent
@@ -1267,6 +1284,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.28** : 🌿 **la gloire** et une nouvelle carte arène, **L'Octogone de la Gloire** (8 joueurs) : une île en octogone au terrain naturel, avec 9 **mines de gloire** enclavées (un sanctuaire dans un anneau de sommets au centre, 8 lacs à une seule chaussée entre deux voisins) ; chaque mine de gloire remplit une **jauge de gloire** commune, en haut au milieu, de la couleur de son royaume (plus vite au niveau 2) ; pleine, le plus glorieux gagne · 🚧 un **mur** ne peut plus fermer complètement un passage : il reste toujours un chemin pour aller prendre chaque ville
 - **v0.98.27** : ✝️ la Croyance ne profite plus de la **route d'un assaut en cours** : elle ne prêche jamais depuis elle, et ne prend plus les morceaux du royaume ennemi que seule cette route coupe du reste (tant que l'assaut n'a pas réussi) · ✝️ le bouton **Croisade** ne lance plus plusieurs croisades d'un coup sur des clics trop rapides (1,5 s entre deux)
 - **v0.98.26** : 📿 la barre du haut ne compte plus que **tes** reliques ; celles d'un autre royaume s'affichent en le **survolant** (dans sa barre d'infos) · 🐛 plus de retraite « 0 » sur la carte : une armée de moins d'un soldat rentre tout de suite
 - **v0.98.25** : 🐛 une armée qui rentre chez elle depuis les terres d'un autre royaume (une armée de relique rappelée ou battue, des défenseurs) suit maintenant un vrai chemin, autour des sommets et de la mer, au lieu de filer tout droit à travers les montagnes · 🖱️ autour des barres du bas (assauts, jauge des soldats), on peut de nouveau cliquer sur la carte : le cadre invisible qui les entoure ne bloque plus les clics
@@ -1737,7 +1755,8 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 - 👑 Héros ou rois avec des pouvoirs spéciaux dans les parties normales (comme Jeanne d'Arc et les rois de la guerre de Cent Ans)
 - ✝️ Les vraies bannières des factions des Croisades
 - 🏹 Une campagne des invasions mongoles (1206-1260), de la Chine à la Pologne
-- 🏟️ Cartes arène : des équipes fixées au départ (2 contre 2 sur Les Deux Rives), et une victoire « tenir le centre » (comme une merveille d'Age of Empires)
+- 🏟️ Cartes arène : des équipes fixées au départ (2 contre 2 sur Les Deux Rives)
+- 🌿 D'autres cartes de gloire (des mines de gloire sur des îles, un sanctuaire au sommet d'une montagne…)
 - 🌐 En ligne : les scénarios (Charlemagne, la guerre de Cent Ans, les Croisades, les Factions) à plusieurs, les cartes dessinées, et revenir dans sa partie après une coupure
 
 ---

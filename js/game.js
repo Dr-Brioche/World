@@ -64,6 +64,7 @@ const GameRules = {
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
     this.placeDeposits(); // ⛏️ les filons de minerai (voir MINES)
+    this.gloryMode = this.deposits.some(d => d.kind === 'glory'); // (🌿 une carte de gloire : la jauge et sa victoire)
     // 🏟️ Carte arène : ses places de départ prévues (vides : on y fonde sa capitale). Le placement (menu) :
     //  - « Libre » : chacun commence où il veut, les bots aussi (n'importe où, pas forcément à une place prévue) ;
     //  - « Aléatoire » : tout le monde commence à une place prévue tirée au hasard ;
@@ -135,6 +136,7 @@ const GameRules = {
       sumXX: 0, sumYY: 0, sumXY: 0, // (pour l'allongement et la direction du royaume : voir Render.kingdomAxis)
       bCount: [0, 0, 0, 0, 0, 0, 0, 0, 0],
       traitorUntil: 0,
+      glory: 0,         // 🌿 points de gloire (cartes de gloire, voir stepGlory)
       warLevel: 0, warUntil: 0, // (🛡️ politique de guerre : niveau du bonus de garnison, et sa fin ; voir warPolicy)
       pact: -1,         // pacte (groupe d'alliés) dont fait partie ce royaume, -1 = aucun
       castlesBuilt: 0,  // châteaux construits dans la partie (capitale comprise), limité à MAX_CASTLES
@@ -154,7 +156,7 @@ const GameRules = {
     mix(this.tick);
     for (let i = 0; i < this.N; i += 7) { mix(this.owner[i]); mix(this.building[i]); }
     for (const a of this.buildingTiles) { mix(a); mix(this.level[a]); mix(Math.round(this.garrison[a] || 0)); mix(this.fortMines.has(a) ? 1 : 0); }
-    for (const p of this.players) { mix(p.alive ? 1 : 0); mix(p.tiles); mix(Math.round(p.troops)); mix(Math.round(p.gold)); mix(p.pact); }
+    for (const p of this.players) { mix(p.alive ? 1 : 0); mix(p.tiles); mix(Math.round(p.troops)); mix(Math.round(p.gold)); mix(p.pact); mix(Math.round(p.glory || 0)); }
     for (const a of this.attacks) { mix(a.attacker); mix(a.target); mix(Math.round(a.troops)); }
     for (const r of this.relics || []) { mix(r.tile); mix(r.run); }
     for (const r of this.relicRuns || []) { mix(r.pid); mix(Math.round(r.troops)); mix(r.phase.length); }
@@ -611,6 +613,7 @@ const GameRules = {
     }
     const fits = (kind, t) => MINES[kind].terrain === 'hills' ? t === TERRAIN.HILLS || t === TERRAIN.WOODED_HILLS : t === TERRAIN.MOUNTAIN;
     for (const kind of MINE_KINDS) {
+      if (!MINES[kind].count) continue; // (🌿 la gloire : seulement sur les cartes de gloire)
       const [lo, hi] = MINES[kind].count, want = Math.max(1, Math.round((lo + Math.floor(this.rand() * (hi - lo + 1))) * scale));
       // les emplacements possibles : 4 cases de terre (pas de fleuve), dont au moins 3 du bon terrain
       const spots = [];
@@ -652,7 +655,7 @@ const GameRules = {
     // (or : les 2000 pièces du filon, réparties sur ses versements : un toutes les PRODUCTION_INTERVAL secondes)
     const gold = m.total ? m.total / (m.time / CONFIG.PRODUCTION_INTERVAL) : undefined;
     return { ...MINE_LEVELS[lvl], name, kind, power: m.power && m.power[lvl], gold,
-      discount: m.discount && m.discount[lvl], speed: m.speed && m.speed[lvl] };
+      discount: m.discount && m.discount[lvl], speed: m.speed && m.speed[lvl], glory: m.rate && m.rate[lvl] };
   },
   // Un filon vidé pour de bon : de l'or qui a déjà eu sa relance (niveau 2) et ne rapporte plus rien, ou un diamant
   // entièrement extrait. On ne peut plus y bâtir de mine (une mine détruite puis rebâtie ne le remplit pas à nouveau).
@@ -1367,7 +1370,49 @@ const GameRules = {
       if (e2 <= dx) { err += dx; y += sty; }
     }
     if (tiles.length < 2) return { error: city >= 0 ? tr('Ces deux villes sont trop proches : pas besoin de mur entre elles.', 'These two cities are too close: no need for a wall between them.') : tr('Le mur est trop court.', 'The wall is too short.') };
+    if (this.wallSeals(tiles)) return { error: tr('Ce mur fermerait complètement un passage : il doit toujours rester un chemin pour aller prendre chaque ville (et chaque lieu à conquérir).', 'This wall would close a passage completely: there must always be a way to go and take every city (and every place to conquer).') };
     return { tiles, end: city >= 0 ? tiles[tiles.length - 1] : target, sealed, city };
+  },
+
+  // 🧱 Ce mur (ses cases) fermerait-il complètement un passage ? On ne doit jamais pouvoir bloquer la partie : il reste
+  // toujours un chemin par la terre (sommets, mer et murs exceptés) vers chaque ville, port, filon ou bâtiment. Les
+  // murailles des villes, elles, ne ferment rien : une ville se prend, et on passe. Un mur peut seulement enfermer une
+  // toute petite poche vide (WALL_POCKET_MAX cases, sans bâtiment ni filon), contre une montagne par exemple.
+  // (on part de chaque côté du mur et on cherche à rejoindre les autres côtés, en s'arrêtant tôt : c'est rapide)
+  wallSeals(tiles) {
+    const W = this.W, N = this.N, wall = new Set(tiles), CAP = 6000;
+    for (const w of this.walls) if (!w.done) for (const t of w.tiles) wall.add(t);
+    const open = i => this.isLand(i) && !this.wallAt[i] && !wall.has(i);
+    const nb = i => { const x = i % W; return [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]; };
+    const sides = new Set();
+    for (const t of tiles) for (const n of nb(t)) if (n >= 0 && open(n)) sides.add(n);
+    // (une recherche depuis start ; s'arrête à cap cases. Renvoie les cases vues, et si elle a été coupée par cap)
+    const search = (start, cap) => {
+      const seen = new Set([start]), todo = [start];
+      while (todo.length) {
+        if (seen.size > cap) return { seen, big: true };
+        for (const n of nb(todo.pop())) if (n >= 0 && !seen.has(n) && open(n)) { seen.add(n); todo.push(n); }
+      }
+      return { seen, big: false };
+    };
+    const left = new Set(sides), bigStarts = [], closed = [];
+    while (left.size) {
+      const start = left.values().next().value, { seen, big } = search(start, CAP);
+      for (const n of [...left]) if (seen.has(n)) left.delete(n);
+      if (big) bigStarts.push(start); else closed.push(seen);
+    }
+    if (bigStarts.length + closed.length <= 1) return false; // (tous les côtés du mur se rejoignent : rien n'est fermé)
+    // (un côté fermé, coupé des autres : une petite poche vide passe, sinon le mur est refusé)
+    for (const seen of closed) {
+      if (seen.size > CONFIG.WALL_POCKET_MAX) return true;
+      for (const i of seen) if (this.building[i] || this.depositTile[i]) return true;
+    }
+    // (deux grands côtés : sont-ils encore reliés plus loin ? On vérifie, sans limite cette fois : c'est rare)
+    if (bigStarts.length > 1) {
+      const { seen } = search(bigStarts[0], Infinity);
+      if (bigStarts.some(s => !seen.has(s))) return true;
+    }
+    return false;
   },
 
   // Bâtir un mur de la ville c jusqu'à la case visée (depuis la case from d'un de ses murs, si elle est donnée).
@@ -3388,6 +3433,25 @@ const GameRules = {
     const m = this.baseGarrisonMax(a);
     return m && m !== Infinity && this.warFort(a) ? m + this.warBonus(a) : m;
   },
+
+  // 🌿 LA GLOIRE (cartes de gloire) : chaque seconde, chaque mine de gloire bâtie donne MINES.glory.rate points à son
+  // royaume. La jauge commune (CONFIG.GLORY.GOAL points) se remplit de la gloire de tous ; voir checkEnd.
+  stepGlory() {
+    const rate = MINES.glory.rate;
+    for (const d of this.deposits) {
+      if (d.kind !== 'glory' || this.building[d.a] !== B_MINE || this.owner[d.a] < 0 || this.underConstruction(d.a)) continue;
+      this.players[this.owner[d.a]].glory += rate[this.level[d.a] || 1];
+    }
+  },
+  // Toute la gloire gagnée (la jauge commune), et le royaume vivant qui en a le plus
+  gloryTotal() { return this.players.reduce((s, p) => s + p.glory, 0); },
+  gloryLeader() {
+    let best = null;
+    for (const p of this.players) if (p.alive && !p.raiders && (!best || p.glory > best.glory)) best = p;
+    return best;
+  },
+  // La jauge est-elle pleine ? (on a un vainqueur)
+  gloryDone() { return this.gloryMode && this.gloryTotal() >= CONFIG.GLORY.GOAL; },
 
   // 🛡️ POLITIQUE DE GUERRE (contre l'acharnement, voir CONFIG.WAR_POLICY)
   // Un lieu fortifié : une ville, un port de niveau 3 (port royal) ou une mine fortifiée
@@ -7161,6 +7225,7 @@ const GameRules = {
     // Les garnisons des châteaux se reconstituent (sauf celle qui est en train de combattre)
     // (elles ne comptent pas dans l'armée du royaume : son maximum ne les freine pas)
     this.stepWarPolicy(); // (🛡️ les politiques de guerre qui s'achèvent)
+    if (this.gloryMode && this.tick % TPS === 0) this.stepGlory(); // (🌿 la gloire des mines de gloire)
     const besieged = new Set(this.attacks.filter(a => !a.done && !this.isPreparing(a)).map(a => a.targetCastle));
     for (const c of this.buildingTiles) {
       if (this.building[c] === B_OUTPOST) continue; // (la garnison d'un avant-poste ne se reconstitue pas : voir stepOutposts)
@@ -7251,6 +7316,15 @@ const GameRules = {
       UI.showEnd(true, botsAlive, this.hy ? 'hundred' : this.cr ? 'crusades' : 'empire');
       return;
     }
+    // 🌿 Carte de gloire : la jauge commune est pleine, le royaume qui a le plus de gloire l'emporte (une seule fois)
+    if (!this.gloryShown && this.gloryDone()) {
+      const w = this.gloryLeader();
+      this.gloryShown = this.victoryShown = true;
+      this.gloryWinner = w ? w.id : -1;
+      this.phase = 'over';
+      UI.showEnd(w === h, w === h && botsAlive, 'glory');
+      return;
+    }
     const share = (this.factions ? this.players.filter(p => p === h || this.areAllied(p.id, h.id)) : [h])
       .reduce((s, p) => s + p.tiles, 0) / this.conquerableLand();
     // Victoire : 70 % des terres (WIN_RATIO ; une seule fois, on peut ensuite continuer à jouer),
@@ -7270,6 +7344,7 @@ const GameRules = {
     if (this.winner !== undefined) return;
     const alive = this.players.filter(p => p.alive && !p.raiders);
     let w = alive.find(p => p.tiles / this.conquerableLand() >= CONFIG.WIN_RATIO);
+    if (!w && this.gloryDone()) w = this.gloryLeader(); // (🌿 la jauge de gloire est pleine)
     if (!w && alive.length === 1) w = alive[0];
     if (!w) return;
     this.winner = w.id;

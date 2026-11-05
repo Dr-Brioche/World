@@ -52,6 +52,9 @@ const ARENA_MAPS = {
   // 🛡️ 20 royaumes serrés en cercle sur une petite île : des voisins partout, dès la première minute
   melee: { name: tr('La Mêlée', 'The Melee'), W: 400, H: 400, players: 20,
     desc: tr('20 royaumes serrés en cercle sur une petite île, autour d\'un centre riche : pas de place, des voisins dès la première minute.', '20 kingdoms packed in a circle on a small island, around a rich centre: no room, neighbours from the very first minute.') },
+  // 🌿 la première carte de gloire : une île en octogone, des mines de gloire enclavées (lacs, sommets) à prendre et tenir
+  gloire: { name: tr("L'Octogone de la Gloire", 'The Octagon of Glory'), W: 500, H: 500, players: 8,
+    desc: tr('Une île en octogone et 9 mines de gloire, enfermées dans des lacs ou des sommets avec un seul petit accès : tiens-les pour remplir la jauge de gloire.', 'An octagonal island and 9 glory mines, shut in by lakes or peaks with a single small way in: hold them to fill the glory gauge.') },
 };
 
 function generateArenaMap(type, seed) {
@@ -93,7 +96,7 @@ function generateArenaMap(type, seed) {
   // avec un peu de relief autour
   const deposit = (x, y, kind) => {
     x = Math.round(x); y = Math.round(y);
-    const t = kind === 'stone' ? T.HILLS : T.MOUNTAIN;
+    const t = kind === 'stone' || kind === 'glory' ? T.HILLS : T.MOUNTAIN; // (🌿 la gloire : sur une colline)
     disk(x + 1, y + 1, 3.2, kind === 'stone' ? T.HILLS : T.HILLS, v => v !== T.WATER && v !== T.GREAT_RIVER && v !== T.PEAK);
     for (const j of [at(x, y), at(x + 1, y), at(x, y + 1), at(x + 1, y + 1)]) terrain[j] = t;
     m.deposits.push({ a: at(x, y), kind });
@@ -453,6 +456,48 @@ function generateArenaMap(type, seed) {
     deposit(cx - 1, cy - 1, 'diamond');
     for (let k = 0; k < 5; k++) deposit(...polar(31, k * 72 * DEG + 36 * DEG).map(v => v - 1), 'gold');
     for (let k = 0; k < 5; k++) m.relicSpots.push(at(...polar(22, k * 72 * DEG)));
+  }
+
+  if (type === 'gloire') {
+    // 🌿 L'Octogone de la Gloire : une île en octogone (côtes irrégulières), un terrain naturel (plaines, forêts,
+    // collines, quelques montagnes). 8 places de départ face aux 8 côtés. 9 mines de gloire, enclavées :
+    //  - au centre, le Sanctuaire : un anneau de sommets percé de 8 portes étroites (une entre deux voisins) ;
+    //  - entre deux voisins, à mi-chemin du centre : une mine sur une colline au milieu d'un lac, reliée à la terre
+    //    par une seule petite chaussée, tournée vers le centre (aussi loin de l'un que de l'autre).
+    // Entre deux voisins, vers la côte, une crête de montagnes (lente à passer, pas fermée).
+    const part = 45 * DEG, half = part / 2, lakeR = 122, lake = [lakeR, 0]; // (le lac, sur la limite entre deux parts)
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const { r, phi, fx, fy } = fold(x, y, 8), i = y * W + x, w = wobble(fx, fy), w2 = wobble(fx, fy, 2);
+      // (la côte : un octogone, côtés face aux places de départ, avec des caps et des baies)
+      const coast = 224 / DMath.cos(half - phi) + 4 * w2 + 2.5 * w;
+      if (r > coast) { terrain[i] = T.WATER; continue; }
+      // (vers le centre, des terres plus ouvertes : on y court vers la gloire ; plus de relief vers la côte)
+      let t = r < 158 ? land(fx, fy, 0.72, 0.88) : land(fx, fy, 0.62, 0.8);
+      // (le lac autour de la mine, et sa chaussée vers le centre : une bande étroite le long de la limite)
+      const dl = DMath.hypot(fx - lake[0], fy - lake[1]);
+      if (dl < 8) t = T.HILLS;                                              // (l'île de la mine)
+      else if (dl < 16 + 2.5 * w) t = fx < lakeR && fy < 2.2 ? T.PLAINS : T.WATER; // (le lac ; la chaussée, vers le centre)
+      // (le Sanctuaire du centre : des collines, puis un anneau de sommets percé de 8 portes, entre deux voisins)
+      else if (r < 22) t = fbm(forestNoise, fx / 9, fy / 9, 2) > 0.58 ? T.WOODED_HILLS : T.HILLS;
+      else if (r < 34 + 1.5 * w) t = r * phi < 2.6 ? T.HILLS : r > 25 && r < 31 + w ? T.PEAK : T.MOUNTAIN;
+      // (entre deux voisins, vers la côte : une crête de montagnes en chapelet, plus ou moins large, avec un col)
+      else if (r > 150 && r < coast - 12) {
+        const e = fbm(reliefNoise, fx / 7 + 11, fy / 7 + 5, 2), wide = 1 + 9 * e * e;
+        if (r * phi < wide && !(r > 174 && r < 186)) t = r * phi < wide * 0.45 && e > 0.55 ? T.PEAK : T.MOUNTAIN;
+        else if (r * phi < wide + 4) t = t === T.PLAINS ? T.HILLS : t === T.FOREST ? T.WOODED_HILLS : t;
+      }
+      terrain[i] = t;
+    }
+    for (let k = 0; k < 8; k++) {
+      const a = k * part + half;
+      spot(...polar(184, a));
+      deposit(...polar(206, a).map(v => v - 1), 'stone');          // (une carrière derrière la capitale)
+      deposit(...polar(150, a + 12 * DEG).map(v => v - 1), 'iron'); // (une mine de fer sur le côté)
+      deposit(...polar(72, a).map(v => v - 1), 'gold');             // (de l'or devant, vers le centre)
+      deposit(...polar(lakeR, k * part).map(v => v - 1), 'glory');  // (la mine de gloire du lac, entre deux voisins)
+    }
+    deposit(cx - 1, cy - 1, 'glory'); // (le Sanctuaire)
+    for (let k = 0; k < 8; k++) m.relicSpots.push(at(...polar(14, k * part + half)));
   }
 
   // (petites variations de couleur pour un rendu moins plat)
