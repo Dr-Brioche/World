@@ -1196,7 +1196,7 @@ const UI = {
     if (info.kind === 'iron') return [tr(`Force des troupes ${pct(info.power)}`, `Troop strength ${pct(info.power)}`), x2, tr(`${m.max} au plus`, `${m.max} at most`)];
     if (info.kind === 'gold') return [tr(`💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min`, `💰 ${m.total.toLocaleString('en-US')} in ${Math.round(m.time / 60)} min`),
       x2, tr('puis le filon s\'épuise', 'then the ore vein runs out')];
-    if (info.kind === 'stone') return [tr(`Prix des améliorations, murs et ponts ${pct(-info.discount)}`, `Cost of upgrades, walls and bridges ${pct(-info.discount)}`),
+    if (info.kind === 'stone') return [tr(`Prix des constructions, améliorations, murs et ponts ${pct(-info.discount)}`, `Cost of buildings, upgrades, walls and bridges ${pct(-info.discount)}`),
       x2, tr(`${m.max} au plus`, `${m.max} at most`)];
     if (info.kind === 'glory') return [tr(`🌿 +${fmtRate(info.glory * ((ARENA_MAPS[Game.mapType] && ARENA_MAPS[Game.mapType].gloryRate) || 1))} de gloire par seconde`, `🌿 +${fmtRate(info.glory * ((ARENA_MAPS[Game.mapType] && ARENA_MAPS[Game.mapType].gloryRate) || 1))} glory per second`),
       tr(`La jauge se remplit : pleine (${fmt(CONFIG.GLORY.GOAL)}), le plus glorieux gagne`, `The gauge fills up: when full (${fmt(CONFIG.GLORY.GOAL)}), the most glorious wins`)];
