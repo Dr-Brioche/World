@@ -200,6 +200,12 @@ html, body {
   gap: 6px;
 }
 #bottomwrap .panel { position: static; }
+/* (le cadre du bas et la rangée des assauts sont invisibles : leurs coins vides laissent passer les clics jusqu'à la carte ;
+   seules leurs barres les arrêtent) */
+#bottomwrap { pointer-events: none; }
+#bottomwrap > * { pointer-events: auto; }
+#bottomwrap > #attacks { pointer-events: none; }
+#attacks > * { pointer-events: auto; }
 
 /* 🎵 La musique d'ambiance, en bas à droite : le bouton (couper / remettre) et la petite barre de volume */
 #musicBox { bottom: 8px; right: 8px; z-index: 50; display: flex; align-items: center; gap: 6px; padding: 4px 8px; }

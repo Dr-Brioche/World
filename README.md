@@ -1266,6 +1266,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.25** : 🐛 une armée qui rentre chez elle depuis les terres d'un autre royaume (une armée de relique rappelée ou battue, des défenseurs) suit maintenant un vrai chemin, autour des sommets et de la mer, au lieu de filer tout droit à travers les montagnes · 🖱️ autour des barres du bas (assauts, jauge des soldats), on peut de nouveau cliquer sur la carte : le cadre invisible qui les entoure ne bloque plus les clics
 - **v0.98.24** : 📿 dès la première relique, la **barre du haut** compte les reliques gardées : les tiennes et celles de tes ennemis (« 📿 1 · ennemis 2 » ; celles de tes alliés au survol)
 - **v0.98.23** : 📿 les soldats d'une **expédition de relique** comptent maintenant dans ton armée, « en campagne », comme ceux d'un assaut : la jauge du bas ne baisse plus quand ils partent (et le recrutement en tient compte)
 - **v0.98.22** : 📿 une **expédition de relique** se lance maintenant comme un assaut : un 1er clic vise la relique (cercle doré en pointillés), un 2e clic lance l'armée (Échap ou clic droit pour annuler) ; plus de soldats envoyés par un clic de trop
