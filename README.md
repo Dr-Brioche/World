@@ -1256,6 +1256,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.18** : 📜 règles : la ligne « Départ » précise qu'en **Places prévues** (carte arène), les rivaux s'installent après toi
 - **v0.98.17** : 🏟️ cartes arène, placement des capitales revu : **Libre**, les rivaux commencent eux aussi n'importe où (plus forcément aux places prévues) ; **Aléatoire**, toi et les rivaux commencez aux places prévues, tirées au hasard ; **Places prévues**, toutes les places sont libres au début, tu choisis la tienne, puis les rivaux prennent celles qui restent (en ligne aussi, après le choix des joueurs)
 - **v0.98.16** : 🐟 le drapeau aux deux poissons s'appelle maintenant **Brion**
 - **v0.98.15** : 🐓 le drapeau **Coq guerrier** est redessiné en haute définition (un coq d'or coiffé d'une hache, sur fond rose) : il n'est plus flou
