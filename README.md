@@ -1254,6 +1254,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.16** : 🐟 le drapeau aux deux poissons s'appelle maintenant **Brion**
 - **v0.98.15** : 🐓 le drapeau **Coq guerrier** est redessiné en haute définition (un coq d'or coiffé d'une hache, sur fond rose) : il n'est plus flou
 - **v0.98.14** : 🌍 changer de langue au menu garde les réglages déjà choisis (nom du royaume, bannière, carte, taille, pactes, placement, difficulté, adversaires)
 - **v0.98.13** : 🏳️ un royaume sans plus aucune ville réduit à 30 cases au plus se **disperse** (ses dernières terres redeviennent libres) : plus de débris imprenable coincé entre un sommet et un fleuve qui empêche de finir la partie · 🏆 après une victoire et « Continuer », quitter la partie ramène à l'**écran de victoire** (avec son Résumé) au lieu du menu
