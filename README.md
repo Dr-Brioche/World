@@ -895,7 +895,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      puis une autre toutes les **8 à 15 minutes**. Elle brille sur la carte. Le royaume où elle est, et tous ses
      **voisins**, peuvent aller la chercher : il faut une **cathédrale** (église de niveau 3) **libre** pour la garder : **une seule relique par
      cathédrale** (pour une deuxième, il t'en faut une autre). Au survol, la souris devient une **croix d'or** si tu peux
-     y aller. **Clique sur la relique** : une armée (selon le curseur « Envoyer ») part de ta ville la plus proche, avec une **petite croix d'or**
+     y aller. **Clique sur la relique** pour la viser (un cercle doré en pointillés l'entoure), puis **clique encore une fois** dessus
+     pour lancer l'expédition, comme un assaut (Échap ou clic droit pour annuler) : une armée (selon le curseur « Envoyer ») part de ta ville la plus proche, avec une **petite croix d'or**
      pour la reconnaître (un nouveau clic lui envoie des renforts : hors de tes terres, ils mettent du temps à la rejoindre, comme ceux d'un assaut). Elle ne prend aucune terre en chemin (elle marche sur tes terres, celles de tes alliés, du royaume
      de la relique et les terres libres), et **ne traverse ni la muraille d'une ville ennemie ni ses murs** : elle en fait le tour
      (si aucun chemin n'y mène, la relique ou l'armée à intercepter est à l'abri). Arrivée, elle s'en empare en **10 secondes** (l'anneau jaune), puis la rapporte
@@ -1263,6 +1264,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.22** : 📿 une **expédition de relique** se lance maintenant comme un assaut : un 1er clic vise la relique (cercle doré en pointillés), un 2e clic lance l'armée (Échap ou clic droit pour annuler) ; plus de soldats envoyés par un clic de trop
 - **v0.98.21** : 📏 les distances minimum entre tes grands bâtiments sont **un tiers plus grandes**, pour aérer les royaumes : château ↔ château **28 cases** (au lieu de 21), château ↔ église ou port **20** (au lieu de 15), entre églises et ports **15** (au lieu de 11) ; deux villes bâties ne se touchent plus d'office au niveau 3 (seulement avec la cité impériale) : relie-les par un mur
 - **v0.98.20** : 🧱⚓ la **mine fortifiée** a maintenant une garnison de **25 soldats** (au lieu de 50), et le **port royal** (niveau 3) aussi **25** (au lieu de 10)
 - **v0.98.19** : 🛡️ **politique de guerre** contre l'acharnement : un royaume qui perd une ville, un port royal ou une mine fortifiée a +50 soldats de garnison dans tous ses autres lieux fortifiés non isolés pendant 1 min 30 ; chaque nouvelle perte pendant ce temps ajoute +50 et relance le compte à rebours (affiché en haut de l'écran)

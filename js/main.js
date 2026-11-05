@@ -10,6 +10,7 @@ const ICONS = { up: iconSVG('up'), ship: iconSVG('ship'), anchor: iconSVG('ancho
 const UI = {
   selectedBuild: 0,
   ratio: 0.3,
+  relicAim: -1, // 📿 relique visée d'un 1er clic (son id), en attente du 2e clic qui lance l'expédition ; -1 = aucune
   // Assaut choisi par le joueur, en attente de validation : { target, castle, tile, source }
   // (1er clic sur la cible : on la choisit ; 2e clic sur la même cible : l'assaut part)
   plan: null,
@@ -344,7 +345,7 @@ const UI = {
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
       if (e.key === 'Escape' && !$('quitScreen').classList.contains('hidden')) return this.closeQuit(); // (… et « Quitter ? »)
-      if (e.key === 'Escape') { this.setUpgradeMode(false); this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; }
+      if (e.key === 'Escape') { this.setUpgradeMode(false); this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; this.relicAim = -1; }
       // P ou la barre Espace : pause (Espace ne doit pas cliquer le bouton qui a gardé le focus, ni faire défiler la page)
       if (e.key === 'p' || e.key === 'P' || e.code === 'Space') {
         if (e.code === 'Space') { e.preventDefault(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
@@ -601,6 +602,7 @@ const UI = {
   // Lance la partie (solo ou en ligne) et prépare l'écran de jeu
   launch(opts) {
     this.waitFirstMove = false;
+    this.relicAim = -1; // (📿 aucune relique visée : voir onMapClick)
     this.victory = null;
     this.dropAllianceRequests(true);
     Music.start(); // (🎵 la musique d'ambiance démarre avec la partie : le clic sur « Commencer » l'autorise)
@@ -1949,7 +1951,7 @@ const UI = {
     }
     if (G.phase === 'playing') {
       const freeArm = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
-      $('hint').textContent = this.vikingAim ? this.vikingHint() : this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
+      $('hint').textContent = this.relicAim >= 0 ? this.relicHint() : this.vikingAim ? this.vikingHint() : this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
         : freeArm ? tr(`🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`,
           `🌾 Free land: click once more to send ${fmt(G.human.troops * this.ratio)} soldiers into the attack`)
         : this.upgradeMode ? this.upgradeHint()
@@ -2281,6 +2283,11 @@ const UI = {
     }, () => h.troops);
   },
 
+  // 📿 La relique visée (1er clic) : ce qu'un 2e clic lancera
+  relicHint() {
+    return tr(`📿 Expédition vers la relique avec ${fmt(Game.human.troops * this.ratio)} soldats : clique encore une fois sur la relique pour lancer · Échap pour annuler`,
+      `📿 Expedition to the relic with ${fmt(Game.human.troops * this.ratio)} soldiers: click the relic once more to launch · Esc to cancel`);
+  },
   // 📿 Envoyer une armée (selon le curseur « Envoyer ») chercher la relique id
   relicFetch(id) {
     const G = Game, h = G.human;
@@ -2941,6 +2948,9 @@ const UI = {
     // (terres libres : il faut deux clics de suite pour les attaquer, voir plus bas)
     const armed = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
     this.freeArm = 0;
+    // (📿 relique visée d'un 1er clic : un 2e clic sur elle lance l'expédition ; tout autre clic l'oublie)
+    const relicAimed = this.relicAim;
+    this.relicAim = -1;
     if (G.phase === 'spawn') {
       // (🏟️ placement « Places prévues » : le clic choisit la place de départ libre la plus proche)
       if (G.spotMode && G.startSpotNear(i) >= 0) i = G.startSpotNear(i);
@@ -2968,7 +2978,16 @@ const UI = {
       if (run && run.pid !== h.id) return this.relicChase(run);
       if (run) return this.relicSupport(run); // (la sienne : des renforts)
       const relicId = Render.relicSpotAt(sx, sy);
-      if (relicId >= 0) return this.relicFetch(relicId);
+      if (relicId >= 0) {
+        // (comme un assaut : un 1er clic vise la relique, un 2e clic sur elle lance l'expédition ; pas de clic de
+        //  trop qui envoie des soldats. Sans 2e clic : une relique qu'on ne peut pas prendre dit tout de suite
+        //  pourquoi ; une armée qui s'en empare s'intercepte, et une expédition déjà en route se renforce, d'un clic)
+        const relic = G.relics.find(r => r.id === relicId);
+        const mine = G.relicRuns.some(r => r.pid === h.id && r.phase === 'go' && r.aim === relicId);
+        const ok = relic && relic.run < 0 && !mine && G.relicEligible(h.id, relic.tile, relic.region) && G.relicRoom(h.id) > 0;
+        if (ok && relicAimed !== relicId) { this.relicAim = relicId; return; }
+        return this.relicFetch(relicId);
+      }
     }
     if (this.plan && this.planClick(i)) return;
     // Pose d'un mur : le clic choisit jusqu'où il va
@@ -3083,6 +3102,7 @@ function setupInput(canvas) {
   // Clic droit : annule une construction ou un assaut en préparation, sinon ouvre le menu d'actions
   canvas.addEventListener('contextmenu', e => {
     e.preventDefault();
+    if (UI.relicAim >= 0) { UI.relicAim = -1; return; } // (📿 relique visée : le clic droit l'oublie)
     if (UI.selectedBuild || UI.plan || UI.wallFor >= 0 || UI.tradeFor >= 0) { UI.selectBuild(0); UI.cancelPlan(); UI.cancelWall(); UI.cancelTrade(); return; }
     if (UI.upgradeMode) return UI.setUpgradeMode(false); // (⬆️ le clic droit arrête aussi la souris d'amélioration)
     UI.openActionMenu(e.clientX, e.clientY);
