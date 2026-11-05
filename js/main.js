@@ -439,13 +439,20 @@ const UI = {
         const opts = [...g.querySelectorAll('option')];
         if (g.id === 'customMaps') opts.sort((a, b) => a.textContent.localeCompare(b.textContent));
         const arena = opts.some(o => ARENA_MAPS[o.value]);
+        const item = o => {
+          const m = o.textContent.match(/^(.*) \((\d+)\)$/), name = m ? m[1] : o.textContent;
+          const meta = !m ? '' : arena ? tr(`${m[2]} joueurs`, `${m[2]} players`) : m[2];
+          return `<button type="button" data-map="${escapeHtml(o.value)}"><span>${escapeHtml(name)}</span>` +
+            (meta ? `<span class="meta">${escapeHtml(meta)}</span>` : '') + '</button>';
+        };
+        // (🌿 les cartes arène : deux colonnes, les classiques à gauche, les cartes de gloire à droite)
+        const glory = arena ? opts.filter(o => ARENA_MAPS[o.value] && ARENA_MAPS[o.value].glory) : [];
+        const body = glory.length
+          ? `<div class="opts cols2"><div class="col"><div class="colTitle">${tr('Classiques', 'Classic')}</div>${opts.filter(o => !glory.includes(o)).map(item).join('')}</div>` +
+            `<div class="col"><div class="colTitle">${tr('🌿 Gloire', '🌿 Glory')}</div>${glory.map(item).join('')}</div></div>`
+          : `<div class="opts">${opts.map(item).join('')}</div>`;
         return `<details class="grpBox"><summary class="grp">${iconSVG(g.dataset.icon)}${escapeHtml(g.label)}` +
-          `<span class="cnt">${opts.length}</span></summary><div class="opts">${opts.map(o => {
-            const m = o.textContent.match(/^(.*) \((\d+)\)$/), name = m ? m[1] : o.textContent;
-            const meta = !m ? '' : arena ? tr(`${m[2]} joueurs`, `${m[2]} players`) : m[2];
-            return `<button type="button" data-map="${escapeHtml(o.value)}"><span>${escapeHtml(name)}</span>` +
-              (meta ? `<span class="meta">${escapeHtml(meta)}</span>` : '') + '</button>';
-          }).join('')}</div></details>`;
+          `<span class="cnt">${opts.length}</span></summary>${body}</details>`;
       }).join('');
     // (ouvrir une section referme les autres)
     panel.querySelectorAll('details.grpBox').forEach(d => d.addEventListener('toggle', () => {

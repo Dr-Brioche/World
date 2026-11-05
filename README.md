@@ -1288,6 +1288,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.31** : 🗺️ dans le choix des cartes, les **cartes arène** sont sur deux colonnes : les classiques à gauche, les **cartes de gloire** à droite (l'une sous l'autre sur un téléphone) ; L'Octogone de la Gloire affiche « 8 joueurs » comme les autres
 - **v0.98.30** : ✔ dans le choix du drapeau d'un scénario, un petit **V vert** à côté des campagnes déjà gagnées en solo, et des factions à défis dont tous les défis ont été réussis (gardé dans le navigateur)
 - **v0.98.29** : 📜 dans le choix du drapeau d'un scénario, les factions sont rangées de la plus importante à la moins importante (les Francs d'abord pour Charlemagne, Saladin pour les Croisades), avec **(Campagne)** ou **(Défis)** à côté du nom
 - **v0.98.28** : 🌿 **la gloire** et une nouvelle carte arène, **L'Octogone de la Gloire** (8 joueurs) : une île en octogone au terrain naturel, avec 9 **mines de gloire** enclavées (un sanctuaire dans un anneau de sommets au centre, 8 lacs à une seule chaussée entre deux voisins) ; chaque mine de gloire remplit une **jauge de gloire** commune, en haut au milieu, de la couleur de son royaume (plus vite au niveau 2) ; pleine, le plus glorieux gagne · 🚧 un **mur** ne peut plus fermer complètement un passage : il reste toujours un chemin pour aller prendre chaque ville

@@ -53,7 +53,7 @@ const ARENA_MAPS = {
   melee: { name: tr('La Mêlée', 'The Melee'), W: 400, H: 400, players: 20,
     desc: tr('20 royaumes serrés en cercle sur une petite île, autour d\'un centre riche : pas de place, des voisins dès la première minute.', '20 kingdoms packed in a circle on a small island, around a rich centre: no room, neighbours from the very first minute.') },
   // 🌿 la première carte de gloire : une île en octogone, des mines de gloire enclavées (lacs, sommets) à prendre et tenir
-  gloire: { name: tr("L'Octogone de la Gloire", 'The Octagon of Glory'), W: 500, H: 500, players: 8,
+  gloire: { name: tr("L'Octogone de la Gloire", 'The Octagon of Glory'), W: 500, H: 500, players: 8, glory: true, // (glory : une carte de gloire, rangée à part dans le menu)
     desc: tr('Une île en octogone et 9 mines de gloire, enfermées dans des lacs ou des sommets avec un seul petit accès : tiens-les pour remplir la jauge de gloire.', 'An octagonal island and 9 glory mines, shut in by lakes or peaks with a single small way in: hold them to fill the glory gauge.') },
 };
 
