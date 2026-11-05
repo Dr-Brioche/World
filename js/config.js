@@ -588,10 +588,10 @@ const PORT_LEVELS = [
   null,
   { name: tr('Port', 'Port'),       gold: 3, boatSpeed: 0, slots: 0, img: 'img/port1.webp', size: 3 },
   { name: tr('Grand port', 'Great port'), gold: 8, boatSpeed: 5, landingCost: 1,   slots: 1, radius: 7, img: 'img/port2.webp', size: 4.6, upgradeCost: 400 },
-  { name: tr('Port royal', 'Royal port'), gold: 16, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 6.2, upgradeCost: 2000, garrison: 10, bonus: 1 },
+  { name: tr('Port royal', 'Royal port'), gold: 16, boatSpeed: 9, landingCost: 0.5, slots: 3, radius: 8, img: 'img/port3.webp', size: 6.2, upgradeCost: 2000, garrison: 25, bonus: 1 },
 ];
 // slots / radius = comme l'église : moulins ou casernes qu'on peut construire autour du port
-// garrison = petite garnison qui défend le port royal (comme un fort en bois), et se reconstitue
+// garrison = garnison (25 soldats) qui défend le port royal, et se reconstitue
 // bonus = défense en plus dans sa petite muraille (sa zone), comme un fort en bois
 
 // Production des moulins, casernes, églises et ports selon le terrain où ils sont construits
@@ -619,7 +619,7 @@ const TERRAIN_PRODUCTION = {
 // défenseurs), et elle ne suffit pas à tenir un territoire (sans ville ni port fortifié, il reste désorganisé).
 // Une mine fortifiée a sa propre image (IMG : le site minier dans sa palissade, avec sa tour de guet), un peu plus
 // grande (SIZE, en cases, comme les size des MINE_LEVELS).
-const MINE_FORT = { COST: 800, TIME: 30, RADIUS: 4, GARRISON: 50, SIEGE: 10, BONUS: 1, IMG: 'img/mine3.webp', SIZE: 4.4 };
+const MINE_FORT = { COST: 800, TIME: 30, RADIUS: 4, GARRISON: 25, SIEGE: 10, BONUS: 1, IMG: 'img/mine3.webp', SIZE: 4.4 };
 const MINE_LEVELS = [
   null,
   { name: tr('Site minier', 'Mining site'),  img: 'img/mine1.webp', size: 3 },
