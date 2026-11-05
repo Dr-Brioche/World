@@ -571,6 +571,7 @@ const UI = {
       mapSize: $('mapSize').value,
       pacts: $('pacts').value === 'oui',
       spotMode: $('spawnMode').value === 'places', // (🏟️ carte arène : fonder sa capitale à une place prévue)
+      spawnMode: $('spawnMode').value, // (🏟️ carte arène, placement aléatoire : les bots aussi vont aux places prévues)
       seed: this.nextSeed, // (en solo : rien, une graine au hasard ; voir Game.init)
     });
   },
@@ -585,7 +586,7 @@ const UI = {
       opponents: Math.max(0, s.opponents | 0),
       pacts: !!s.pacts,
       // (🏟️ placement des capitales : les places prévues d'une carte arène, au hasard, ou libre ; voir beginOnline)
-      spotMode: s.spawnMode === 'places', spawnRandom: s.spawnMode === 'aleatoire',
+      spotMode: s.spawnMode === 'places', spawnRandom: s.spawnMode === 'aleatoire', spawnMode: s.spawnMode,
     });
     this.refreshHostButtons();
     this.refreshPauseButton();
@@ -610,8 +611,8 @@ const UI = {
     Render.setupMap();
     $('menu').classList.add('hidden');
     $('hud').classList.remove('hidden');
-    $('hint').textContent = Game.spotMode ? tr('👑 Les royaumes rivaux sont déjà installés : clique où tu veux commencer, ta capitale ira à la place de départ libre la plus proche (un écusson doré)',
-      '👑 The rival kingdoms are already settled: click where you want to start, your capital will go to the nearest free starting place (a golden shield)')
+    $('hint').textContent = Game.spotMode ? tr('👑 Choisis ta place : clique où tu veux commencer, ta capitale ira à la place de départ la plus proche (un écusson doré) ; les royaumes rivaux prendront les autres',
+      '👑 Choose your place: click where you want to start, your capital will go to the nearest starting place (a golden shield); the rival kingdoms will take the others')
       : tr('👑 Les royaumes rivaux sont déjà installés : clique sur une terre libre pour fonder ta capitale',
       '👑 The rival kingdoms are already settled: click on free land to found your capital');
     // 🎲 Placement de la capitale « Aléatoire » (menu, en solo) : le jeu la fonde tout de suite, à une place au hasard

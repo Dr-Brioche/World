@@ -64,10 +64,15 @@ const GameRules = {
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
     this.placeDeposits(); // ⛏️ les filons de minerai (voir MINES)
-    // 🏟️ Carte arène : ses places de départ prévues (vides : on y fonde sa capitale). spotMode (placement « Places
-    // prévues ») : le joueur doit en choisir une ; sinon, il se pose où il veut (les bots, eux, prennent des places)
+    // 🏟️ Carte arène : ses places de départ prévues (vides : on y fonde sa capitale). Le placement (menu) :
+    //  - « Libre » : chacun commence où il veut, les bots aussi (n'importe où, pas forcément à une place prévue) ;
+    //  - « Aléatoire » : tout le monde commence à une place prévue tirée au hasard ;
+    //  - « Places prévues » (spotMode) : le joueur choisit sa place parmi TOUTES les places ; les bots prennent
+    //    ensuite celles qui restent (voir startGame, et beginOnline en ligne)
     this.spots = map.spots && map.spots.length ? map.spots.slice() : null;
     this.spotMode = !!(this.spots && opts.spotMode);
+    this.botSpots = !!this.spots && (opts.spotMode || opts.spawnMode === 'aleatoire' || !!opts.spawnRandom); // (les bots vont aux places prévues)
+    this.botsLater = this.spotMode; // (les bots s'installent après les humains)
     this.spawnRandom = !!(opts.online && opts.spawnRandom); // (🌐 placement aléatoire en ligne : chacun est placé au hasard, voir beginOnline)
 
     this.difficulty = DIFFICULTIES[opts.difficulty];
@@ -113,7 +118,7 @@ const GameRules = {
       this.addPlayer(names[k], banners[k], false);
     }
     this.phase = 'spawn';
-    this.spawnBots();
+    if (!this.botsLater) this.spawnBots();
     // (🌐 placement aléatoire en ligne : tout le monde est placé au hasard tout de suite ; il reste quelques secondes
     //  pour regarder la carte avant que la partie commence)
     if (this.spawnRandom) this.placeWaitingHumans();
@@ -1994,10 +1999,13 @@ const GameRules = {
 
   // Les royaumes rivaux s'installent dès l'ouverture de la carte : le joueur voit où ils sont
   // avant de choisir où fonder sa capitale (comme au début d'une partie d'OpenFront)
+  // (🏟️ placement « Places prévues » : ils s'installent seulement après les humains, aux places restantes)
   spawnBots() {
-    // (🏟️ une carte arène : les bots prennent des places prévues au hasard, en laissant une place à chaque humain ;
-    //  s'il y a plus de bots que de places, les autres se posent ailleurs)
-    const free = this.spots ? this.shuffle(this.spots.slice()) : [], humans = this.players.filter(p => p.human).length;
+    // (🏟️ une carte arène, sauf en placement libre : les bots prennent des places prévues libres au hasard, en
+    //  laissant une place à chaque humain pas encore installé ; s'il y a plus de bots que de places, les autres se
+    //  posent ailleurs)
+    const free = this.botSpots ? this.shuffle(this.freeSpots()) : [];
+    const humans = this.players.filter(p => p.human && p.capital === undefined).length;
     for (const p of this.players) {
       if (p.human) continue;
       if (free.length > humans) {
@@ -2708,6 +2716,7 @@ const GameRules = {
   beginOnline() {
     if (this.phase !== 'spawn') return null;
     this.placeWaitingHumans();
+    if (this.botsLater) { this.botsLater = false; this.spawnBots(); } // (🏟️ « Places prévues » : les bots prennent les places restantes)
     this.phase = 'playing';
     return null;
   },
@@ -2738,6 +2747,7 @@ const GameRules = {
   // Le joueur fonde sa capitale : la partie commence
   startGame(humanTile) {
     this.spawnPlayer(this.human, humanTile);
+    if (this.botsLater) { this.botsLater = false; this.spawnBots(); } // (🏟️ « Places prévues » : les bots prennent les places restantes)
     this.phase = 'playing';
   },
 
