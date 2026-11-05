@@ -641,9 +641,9 @@ const MINES = {
   //   reliée ; puis il s'épuise (son compteur, à lui, passe d'un royaume à l'autre) ; le niveau 2 le relance pour
   //   10 minutes de plus, qui rapportent de nouveau 2500 pièces
   gold: { name: tr('Mine d\'or', 'Gold mine'), short: tr('beaucoup d\'or, mais il s\'épuise', 'lots of gold, but it runs out'), icon: '🪙', terrain: 'mountain', count: [4, 6], total: 2500, time: 600 },
-  // 🪨 pierre (une carrière, en colline) : les améliorations, les murs et les ponts coûtent moins cher
+  // 🪨 pierre (une carrière, en colline) : les constructions, les améliorations, les murs et les ponts coûtent moins cher
   //   (−5 % / −10 % par carrière, doublé si reliée : −60 % au plus)
-  stone: { name: tr('Carrière de pierre', 'Stone quarry'), short: tr('améliorations moins chères', 'cheaper upgrades'), icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },
+  stone: { name: tr('Carrière de pierre', 'Stone quarry'), short: tr('constructions moins chères', 'cheaper buildings'), icon: '🪨', terrain: 'hills', count: [4, 6], max: 3, discount: [0, 0.05, 0.1] },
   // 💎 diamant : une longue extraction (20 minutes ; 2 fois plus lente sans route, 50 % plus rapide au niveau 2) ;
   //   au 1er quart 1 000 pièces, au 2e 2 000, au 3e 3 000, et 10 000 à la fin ; puis le filon est épuisé pour tout le monde.
   //   (son compteur passe à celui qui prend la mine : il touche les versements suivants)
@@ -698,8 +698,8 @@ const BUILDINGS = [
   { name: tr('Avant-poste', 'Outpost'), icon: '⛺', tiles: 2, baseCost: 20, hidden: true, desc: tr('base d\'un débarquement', 'base of a landing'),
     img: 'img/avantposte.webp', size: 3.8 }, // (un seul niveau : son image est ici)
   { name: tr('Mine', 'Mine'), icon: '⛏️', tiles: 2, baseCost: 600,
-    desc: tr('sur un filon : fer (troupes plus fortes), or (beaucoup d\'or, mais il s\'épuise), pierre (améliorations moins chères) ou diamant (un trésor) (2 niveaux)',
-      'on an ore vein: iron (stronger troops), gold (lots of gold, but it runs out), stone (cheaper upgrades) or diamond (a treasure) (2 levels)') },
+    desc: tr('sur un filon : fer (troupes plus fortes), or (beaucoup d\'or, mais il s\'épuise), pierre (constructions et améliorations moins chères) ou diamant (un trésor) (2 niveaux)',
+      'on an ore vein: iron (stronger troops), gold (lots of gold, but it runs out), stone (cheaper buildings and upgrades) or diamond (a treasure) (2 levels)') },
   { name: tr('Tour de garde', 'Guard tower'), icon: '🗼', tiles: 2, baseCost: 150,
     desc: tr('tire sur les armées ennemies proches ; prise, elle retombe au niveau 1 (5 niveaux)',
       'shoots enemy armies nearby; if taken, it drops back to level 1 (5 levels)') },

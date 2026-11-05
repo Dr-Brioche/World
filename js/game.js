@@ -3692,7 +3692,12 @@ const GameRules = {
     return 1 - CONFIG.UPKEEP_MAX * Math.min(1, (r - CONFIG.UPKEEP_FROM) / (1 - CONFIG.UPKEEP_FROM));
   },
 
+  // 🪨 Les carrières de pierre font baisser le prix de toutes les constructions (comme celui des améliorations)
   buildCost(p, type, i = -1) {
+    return Math.round(this.rawBuildCost(p, type, i) * (1 - this.mineBonus(p.id, 'stone')));
+  },
+  // Le prix d'une construction, sans la remise des carrières
+  rawBuildCost(p, type, i = -1) {
     // (🌿 une tour de gloire, sur un filon de gloire : son prix à elle)
     if (type === B_MINE && i >= 0 && this.depositAt.get(i) && MINES[this.depositAt.get(i).kind].cost) return MINES[this.depositAt.get(i).kind].cost;
     // (🏰 les châteaux ont leurs prix à eux, dans l'ordre : CASTLE_COSTS ; la capitale, fondée gratuitement, ne compte pas)

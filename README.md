@@ -974,7 +974,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      - 🪙 **Mine d'or** : son filon rapporte **2 500 pièces en 10 minutes** (un peu à chaque production), doublé si reliée.
        Puis il **s'épuise** (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
        **relance pour 10 minutes de plus**, qui rapportent de nouveau **2 500 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée ; la relance du niveau 2 ne sert qu'**une fois par filon** (détruire la mine et la rebâtir ne la remplit pas), et un filon vidé pour de bon ne peut plus recevoir de mine.
-     - 🪨 **Carrière de pierre** (en colline) : les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
+     - 🪨 **Carrière de pierre** (en colline) : les **constructions** (tous les bâtiments), les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
        (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
      - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
        plus rapide au niveau 2), avec une **jauge ronde** autour d'elle. Au 1er **quart**, **1 000 pièces**, au 2e **2 000**, au 3e
@@ -1302,6 +1302,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.39** : 🪨 les **carrières de pierre** font maintenant baisser aussi le prix des **constructions** (châteaux, moulins, casernes, églises, ports, mines, tours…), pas seulement celui des améliorations, des murs et des ponts : −5 % par carrière (−10 % au niveau 2), doublé si elle est reliée, −60 % au plus.
 - **v0.98.38** : 📜 les **règles du jeu** (dans le menu et le bouton 📜 Règles en partie) sont rangées en **12 catégories qu'on déplie d'un clic** (le menu, les cartes, bien débuter, attaquer et défendre, les bâtiments, la Croyance et les reliques, les alliances, la gloire, les scénarios, en ligne, l'écran et les commandes, la victoire), et mises à jour : deux nouvelles parties expliquent **le menu de départ** et **les sortes de cartes** (aléatoires, arènes classiques, arènes de gloire, prédéfinies, scénarios, cartes dessinées), une autre **l'écran de jeu** (la barre du haut, le classement, la barre du bas) ; la tour de gloire et les distances entre grands bâtiments sont dans les bâtiments, la victoire à la gloire et par objectifs dans la victoire ; en Difficile, les bots ne sont plus dits « plus nombreux » (leur nombre se choisit à part).
 - **v0.98.37** : 🐛 sur une **petite carte arène** (Le Trône des Trois), plus de rival en trop : il y a au plus un rival par place prévue (moins la tienne), même si c'est moins que les 3 rivaux minimum des autres cartes
 - **v0.98.36** : 🌿 les 3 tours de gloire ont maintenant la **même base** sur la carte : le corps de la tour de bois, celui de la tour de pierre et la tour centrale de la citadelle font la même largeur (la tour de bois et la tour de pierre étaient trop grandes)
