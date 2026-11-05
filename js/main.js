@@ -125,7 +125,8 @@ const UI = {
       // (🏟️ sur une carte arène : d'office un rival par place prévue, qu'on peut baisser)
       const max = this.maxOpponents(), cur = ARENA_MAPS[this.mapType()] ? max : this.wantOpp;
       $('opponents').innerHTML = '';
-      for (let n = CONFIG.MIN_OPPONENTS; n <= max; n++) {
+      // (au moins MIN_OPPONENTS rivaux ; sur une petite carte arène, comme Le Trône des Trois, autant que de places moins la tienne)
+      for (let n = Math.min(CONFIG.MIN_OPPONENTS, max); n <= max; n++) {
         $('opponents').insertAdjacentHTML('beforeend', `<option value="${n}"${n === Math.min(cur, max) ? ' selected' : ''}>${tr(`${n} royaumes rivaux`, `${n} rival kingdoms`)}</option>`);
       }
     };
@@ -429,7 +430,7 @@ const UI = {
     if (t === 'world') [W, H] = [C.WORLD_MAP_WIDTH, C.WORLD_MAP_HEIGHT];
     else if (t === 'europe') [W, H] = [C.EUROPE_MAP_WIDTH, C.EUROPE_MAP_HEIGHT];
     else if (t === 'azeroth') [W, H] = [C.AZEROTH_MAP_WIDTH, C.AZEROTH_MAP_HEIGHT];
-    else if (ARENA_MAPS[t]) return Math.max(C.MIN_OPPONENTS, ARENA_MAPS[t].players - 1); // (🏟️ une place prévue chacun)
+    else if (ARENA_MAPS[t]) return ARENA_MAPS[t].players - 1; // (🏟️ une place prévue chacun : jamais plus de rivaux que de places)
     else if (t.startsWith('custom:')) {
       const m = CustomMaps.all().find(m => 'custom:' + m.name === t);
       [W, H] = m ? [m.W, m.H] : C.MAP_SIZES.moyen;
