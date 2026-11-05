@@ -38,7 +38,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 
 ## 🕹️ Comment jouer
 
-1. **Fonde ta capitale** : choisis d'abord la **langue** du jeu en haut à droite du menu (🇬🇧 English, par défaut, ou 🇫🇷 Français : la page se recharge dans la nouvelle langue, et le choix est gardé pour les prochaines fois), puis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux, chacun avec son nom dessous : la faction dans un scénario, ou ce qu'il représente dans une partie libre), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
+1. **Fonde ta capitale** : choisis d'abord la **langue** du jeu en haut à droite du menu (🇬🇧 English, par défaut, ou 🇫🇷 Français : la page se recharge dans la nouvelle langue, en gardant les réglages déjà choisis au menu, et le choix est gardé pour les prochaines fois), puis ta bannière (clique sur le drapeau affiché pour ouvrir la liste de tous les drapeaux, chacun avec son nom dessous : la faction dans un scénario, ou ce qu'il représente dans une partie libre), le **type de carte**, la **difficulté** (Facile, Normale, Difficile : les bots y sont avantagés) et le
    **nombre de royaumes rivaux** (de 3 à 20, autant que de drapeaux disponibles ; au plus un rival pour 5 000 cases de carte : 10 sur la petite carte, réglage `CELLS_PER_OPPONENT`) dans le menu. ⏩ **Vitesse de la partie** : en jeu, le bouton ⏩ en haut (à côté de
    Pause) la fait passer à **x1, x1,5, x2 ou x3** : **tout** va plus vite (production, recrutement, marches, assauts, sièges,
    chantiers, croisades…). Le chrono en haut affiche le temps de jeu. Seul celui qui héberge la partie peut la mettre en pause
@@ -1254,6 +1254,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.14** : 🌍 changer de langue au menu garde les réglages déjà choisis (nom du royaume, bannière, carte, taille, pactes, placement, difficulté, adversaires)
 - **v0.98.13** : 🏳️ un royaume sans plus aucune ville réduit à 30 cases au plus se **disperse** (ses dernières terres redeviennent libres) : plus de débris imprenable coincé entre un sommet et un fleuve qui empêche de finir la partie · 🏆 après une victoire et « Continuer », quitter la partie ramène à l'**écran de victoire** (avec son Résumé) au lieu du menu
 - **v0.98.12** : ⚔️ une armée qui **prend une ville ou une zone** ne fait plus de retraite à pied : elle est déjà sur tes terres, ses survivants rejoignent ton royaume tout de suite (la retraite reste pour un assaut repoussé ou bloqué chez l'ennemi)
 - **v0.98.11** : 🎲 en solo, avec le placement **aléatoire**, la partie attend en pause après la fondation de ta capitale : elle commence à ta première conquête (double clic sur une terre) ou avec Espace
