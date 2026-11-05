@@ -10,6 +10,10 @@ const ICONS = { laurel: iconSVG('laurel'), up: iconSVG('up'), ship: iconSVG('shi
 const UI = {
   selectedBuild: 0,
   ratio: 0.3,
+  // ⚔️ Envoi de soldats visé d'un 1er clic (défendre, renforcer un assaut, intercepter…) : { key, at, hint } ; un 2e
+  // clic sur la même chose, dans les FREE_LAND_CLICK_TIME secondes, l'envoie (voir confirmSend) ; null = rien de visé
+  sendArm: null,
+  menuGo: false, // (un choix du menu clic droit vaut le 2e clic)
   relicAim: -1, // 📿 relique visée d'un 1er clic (son id), en attente du 2e clic qui lance l'expédition ; -1 = aucune
   // Assaut choisi par le joueur, en attente de validation : { target, castle, tile, source }
   // (1er clic sur la cible : on la choisit ; 2e clic sur la même cible : l'assaut part)
@@ -275,7 +279,7 @@ const UI = {
     $('attacks').addEventListener('click', e => {
       // (closest : le texte des boutons est remplacé par des icônes, le clic peut tomber sur l'icône)
       const def = e.target.closest('[data-defend]');
-      if (def) return this.defend(+def.dataset.defend);
+      if (def) return this.defend(+def.dataset.defend, key => this.confirmSend(key)); // (2 clics, comme sur la carte)
       // Clic sur « ton château isolé » : la caméra va le voir
       const go = e.target.closest('[data-goto]');
       if (go) {
@@ -378,7 +382,7 @@ const UI = {
       }
       if (e.key === 'Escape' && !$('rulesScreen').classList.contains('hidden')) return this.closeRules(); // (Échap ferme les règles)
       if (e.key === 'Escape' && !$('quitScreen').classList.contains('hidden')) return this.closeQuit(); // (… et « Quitter ? »)
-      if (e.key === 'Escape') { this.setUpgradeMode(false); this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; this.relicAim = -1; }
+      if (e.key === 'Escape') { this.setUpgradeMode(false); this.selectBuild(0); this.cancelPlan(); this.cancelWall(); this.cancelTrade(); this.cancelVikingAim(); this.closeBuildingMenus(); this.freeArm = 0; this.relicAim = -1; this.sendArm = null; }
       // P ou la barre Espace : pause (Espace ne doit pas cliquer le bouton qui a gardé le focus, ni faire défiler la page)
       if (e.key === 'p' || e.key === 'P' || e.code === 'Space') {
         if (e.code === 'Space') { e.preventDefault(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
@@ -2087,7 +2091,7 @@ const UI = {
     }
     if (G.phase === 'playing') {
       const freeArm = this.freeArm && performance.now() - this.freeArm < CONFIG.FREE_LAND_CLICK_TIME * 1000;
-      $('hint').textContent = this.relicAim >= 0 ? this.relicHint() : this.vikingAim ? this.vikingHint() : this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
+      $('hint').textContent = this.relicAim >= 0 ? this.relicHint() : this.sendArmed() ? this.sendArm.hint() : this.vikingAim ? this.vikingHint() : this.wallFor >= 0 ? this.wallHint() : this.tradeFor >= 0 ? this.tradeHint() : this.plan ? this.planHint()
         : freeArm ? tr(`🌾 Terres libres : clique encore une fois pour lancer ${fmt(G.human.troops * this.ratio)} soldats à l'attaque`,
           `🌾 Free land: click once more to send ${fmt(G.human.troops * this.ratio)} soldiers into the attack`)
         : this.upgradeMode ? this.upgradeHint()
@@ -2143,7 +2147,7 @@ const UI = {
     const boats = G.expeditions.filter(e => !e.done && e.pid === h.id); // nos transports en mer
     const runs = G.relicRuns ? G.relicRuns.filter(r => r.pid === h.id) : []; // (📿 nos armées de relique)
     const key = list.map(a => a.id + (G.cutOff(a) ? 'x' : '') + (a.retreatEnd !== undefined ? 'r' : '') + (G.isPreparing(a) ? 'p' : '') +
-      (a.target === h.id && this.hasDefenders(a) ? 'd' : '')).join(',') +
+      (a.target === h.id && this.hasDefenders(a) ? 'd' : '') + (this.sendArmedKey('def' + a.id) ? 'a' : '')).join(',') +
       '|' + boats.map(e => e.id + (e.home !== undefined ? 'h' : '')).join(',') + '|' + runs.map(r => r.id + r.phase + (r.relic ? 'r' : '')).join(',');
     const box = $('attacks');
     if (key !== this.attacksKey) {
@@ -2179,7 +2183,7 @@ const UI = {
           `<b data-troops="${a.id}"></b>` +
           (G.isPreparing(a) // (pas encore entrée sur nos terres : on ne peut pas encore la contrer)
             ? `<button data-defend="${a.id}" disabled title="${tr('Elle marche encore sur ses terres : tu pourras la contrer dès qu\'elle entre sur les tiennes', 'It is still marching on its own lands: you can counter it as soon as it enters yours')}">🛡️ ${tr('Défendre', 'Defend')}</button></div>`
-            : `<button data-defend="${a.id}" title="${tr('Envoyer le % de soldats choisi contre cet assaut', 'Send the chosen % of soldiers against this assault')}">🛡️ ${tr('Défendre', 'Defend')}</button>` +
+            : `<button data-defend="${a.id}" class="${this.sendArmedKey('def' + a.id) ? 'armed' : ''}" title="${tr('Envoyer le % de soldats choisi contre cet assaut (2 clics : le 1er vise, le 2e envoie)', 'Send the chosen % of soldiers against this assault (2 clicks: the 1st aims, the 2nd sends)')}">🛡️ ${this.sendArmedKey('def' + a.id) ? tr('Confirmer', 'Confirm') : tr('Défendre', 'Defend')}</button>` +
               // (🛡️ une armée de défense est partie : une petite croix pour la rappeler, comme un assaut)
               (this.hasDefenders(a) ? `<button class="x" data-recalldef="${a.id}" title="${tr('Rappeler tes défenseurs : ils rentrent à pied, sans perte', 'Call your defenders back: they walk home, with no losses')}">×</button>` : '') + '</div>');
       }).join('') + boats.map(e => {
@@ -2366,7 +2370,9 @@ const UI = {
   },
 
   // Envoyer des soldats (selon le curseur « Envoyer ») contre un assaut ennemi
-  defend(attackId) {
+  // (confirm(clé) : faut-il envoyer les soldats maintenant ? Un 1er clic vise seulement, voir confirmSend ;
+  //  les messages qui disent pourquoi on ne peut pas défendre s'affichent dès le 1er clic)
+  defend(attackId, confirm = () => true) {
     const G = Game, h = G.human;
     // Château isolé ou avant-poste : les défenseurs ne peuvent pas le rejoindre
     const target = G.attacks.find(x => x.id === attackId && !x.done);
@@ -2388,6 +2394,7 @@ const UI = {
       const op = zoneOp >= 0 ? zoneOp : target.targetCastle;
       if (G.building[op] === B_OUTPOST) {
         // Avant-poste : ses soldats stationnés peuvent le défendre (pas ceux du royaume, au-delà des mers)
+        if (G.troopsAt(h.id, op) >= 1 && !confirm('def' + attackId)) return;
         return this.act({ k: 'defend', attack: attackId, troops: G.troopsAt(h.id, op) * this.ratio }, (a, before) => {
           if (a) Music.sound('assault'); // (🔔 le son du départ à l'assaut : les défenseurs partent intercepter l'ennemi)
           if (a) return this.log(tr(`🛡️ ${fmt(before - G.troopsAt(h.id, op))} soldats stationnés à ton avant-poste partent le défendre ` +
@@ -2409,6 +2416,7 @@ const UI = {
         '🚫 It is cut off from your kingdom: your defenders cannot reach it. ' +
         'Click on it to launch an assault that links it to your kingdom.'), 'warn');
     }
+    if (h.troops >= 1 && !confirm('def' + attackId)) return;
     this.act({ k: 'defend', attack: attackId, troops: h.troops * this.ratio }, (a, before) => {
       if (a) Music.sound('assault'); // (🔔 le son du départ à l'assaut : les défenseurs partent intercepter l'ennemi)
       if (a && a.reinforced) this.log(tr(`🛡️ ${fmt(before - h.troops)} soldats renforcent ton armée de défense contre ${G.players[a.attacker].name} (ils la rejoignent dans ${CONFIG.DEFEND_REINFORCE_DELAY} s).`,
@@ -2418,6 +2426,26 @@ const UI = {
       else this.log(tr('Pas assez de soldats pour défendre !', 'Not enough soldiers to defend!'), 'warn');
     }, () => h.troops);
   },
+
+  // ⚔️ Deux clics pour envoyer des soldats (comme un assaut) : le 1er clic vise (key : ce qui est visé) et l'aide en bas
+  // dit ce qui partira ; un 2e clic sur la même chose, dans les FREE_LAND_CLICK_TIME secondes, l'envoie (true).
+  // prev : ce qui était visé avant ce clic (onMapClick l'efface dès le début de chaque clic)
+  confirmSend(key, prev = this.sendArm) {
+    const now = performance.now();
+    if (prev && prev.key === key && now - prev.at < CONFIG.FREE_LAND_CLICK_TIME * 1000) { this.sendArm = null; return true; }
+    const n = () => fmt(Game.human.troops * this.ratio);
+    const what = () => key.startsWith('def') ? [`🛡️ ${n()} défenseurs contre cet assaut`, `🛡️ ${n()} defenders against this assault`]
+      : key.startsWith('run') ? [`⚔️ ${n()} soldats en renfort de ton assaut`, `⚔️ ${n()} soldiers to reinforce your assault`]
+      : key.startsWith('link') ? [`⚔️ un assaut de ${n()} soldats pour relier ce bâtiment isolé`, `⚔️ an assault of ${n()} soldiers to link this isolated building`]
+      : key.startsWith('chase') ? [`📿 ${n()} soldats pour intercepter cette armée`, `📿 ${n()} soldiers to intercept this army`]
+      : key.startsWith('sup') ? [`📿 ${n()} soldats en renfort de ton armée de relique`, `📿 ${n()} soldiers to reinforce your relic army`]
+      : [`📿 ${n()} soldats vers la relique`, `📿 ${n()} soldiers to the relic`];
+    this.sendArm = { key, at: now, hint: () => tr(`${what()[0]} : clique encore une fois pour les envoyer · Échap pour annuler`, `${what()[1]}: click once more to send them · Esc to cancel`) };
+    return false;
+  },
+  // (un envoi de soldats visé d'un 1er clic, encore valable)
+  sendArmed() { return !!this.sendArm && performance.now() - this.sendArm.at < CONFIG.FREE_LAND_CLICK_TIME * 1000; },
+  sendArmedKey(key) { return this.sendArmed() && this.sendArm.key === key; },
 
   // 📿 La relique visée (1er clic) : ce qu'un 2e clic lancera
   relicHint() {
@@ -2594,7 +2622,7 @@ const UI = {
     // (choisir « Attaquer » dans le menu vaut le double clic des terres libres)
     // (pas sur les terres d'un allié de son camp, en mode Factions : ce pacte-là ne se trahit pas)
     const sameCamp = G.owner[i] >= 0 && G.eternalPact(h.id) && G.areAllied(h.id, G.owner[i]);
-    if (G.isLand(i) && !own && !sameCamp) items.push({ label: tr('⚔️ Attaquer', '⚔️ Attack'), run: () => { this.freeArm = performance.now(); this.onMapClick(sx, sy); } });
+    if (G.isLand(i) && !own && !sameCamp) items.push({ label: tr('⚔️ Attaquer', '⚔️ Attack'), run: () => { this.freeArm = performance.now(); this.menuGo = true; this.onMapClick(sx, sy); } });
     // 🔥 Assaut viking prêt : sur une ville (ou un port fortifié) ennemie, le lancer d'ici
     if (h.vikingReady && G.building[i] && G.holdsAlone(G.anchor[i]) && G.owner[i] >= 0 && !own && !G.areAllied(h.id, G.owner[i])) {
       const plan = G.planViking(h.id, i), n = Math.floor(h.troops * this.ratio);
@@ -3092,6 +3120,11 @@ const UI = {
     // (📿 relique visée d'un 1er clic : un 2e clic sur elle lance l'expédition ; tout autre clic l'oublie)
     const relicAimed = this.relicAim;
     this.relicAim = -1;
+    // (⚔️ envoi de soldats visé d'un 1er clic : seul un 2e clic sur la même chose l'envoie ; tout autre clic l'oublie.
+    //  Un choix du menu clic droit vaut le 2e clic)
+    const prevArm = this.sendArm, menuGo = this.menuGo;
+    this.sendArm = null; this.menuGo = false;
+    const confirm = key => menuGo || this.confirmSend(key, prevArm);
     if (G.phase === 'spawn') {
       // (🏟️ placement « Places prévues » : le clic choisit la place de départ libre la plus proche)
       if (G.spotMode && G.startSpotNear(i) >= 0) i = G.startSpotNear(i);
@@ -3111,13 +3144,13 @@ const UI = {
     // Clic sur la bannière d'un assaut contre soi : on envoie des défenseurs
     const banner = Render.bannerAt(sx, sy);
     const assault = banner >= 0 ? G.attacks.find(a => a.id === banner && !a.done) : null;
-    if (assault && assault.target === h.id) return this.defend(banner);
+    if (assault && assault.target === h.id) return this.defend(banner, confirm);
     // 📿 Clic sur la bannière d'une armée de relique (d'un autre royaume) : on l'intercepte ; sur une relique : on
     // envoie une armée la chercher (voir reliques.js)
     if (!this.selectedBuild && !this.plan) {
       const runId = Render.relicRunAt(sx, sy), run = runId >= 0 ? G.relicRuns.find(r => r.id === runId) : null;
-      if (run && run.pid !== h.id) return this.relicChase(run);
-      if (run) return this.relicSupport(run); // (la sienne : des renforts)
+      if (run && run.pid !== h.id) return confirm('chase' + run.id) && this.relicChase(run);
+      if (run) return confirm('sup' + run.id) && this.relicSupport(run); // (la sienne : des renforts)
       const relicId = Render.relicSpotAt(sx, sy);
       if (relicId >= 0) {
         // (comme un assaut : un 1er clic vise la relique, un 2e clic sur elle lance l'expédition ; pas de clic de
@@ -3127,6 +3160,10 @@ const UI = {
         const mine = G.relicRuns.some(r => r.pid === h.id && r.phase === 'go' && r.aim === relicId);
         const ok = relic && relic.run < 0 && !mine && G.relicEligible(h.id, relic.tile, relic.region) && G.relicRoom(h.id) > 0;
         if (ok && relicAimed !== relicId) { this.relicAim = relicId; return; }
+        if (ok) return this.relicFetch(relicId);
+        // (une armée s'empare de la relique, ou ton expédition est déjà en route : 2 clics aussi, pour intercepter
+        //  ou renforcer ; sinon le 1er clic dit tout de suite pourquoi on ne peut pas la prendre)
+        if (relic && (relic.run >= 0 || mine) && !confirm('relic' + relicId)) return;
         return this.relicFetch(relicId);
       }
     }
@@ -3172,7 +3209,7 @@ const UI = {
     }
     // Clic sur un de ses châteaux (ou ports de niveau 3) isolés : assaut pour le relier au royaume
     if (t && G.owner[i] === h.id && !this.selectedBuild && G.holdsAlone(G.anchor[i]) && G.isIsolated(G.anchor[i])) {
-      return this.link(G.anchor[i]);
+      return confirm('link' + G.anchor[i]) && this.link(G.anchor[i]);
     }
     // Clic sur un de ses bâtiments à niveaux : son menu rapide (améliorer / détruire)
     if (BUILDING_LEVELS[t] && G.owner[i] === h.id && (!this.selectedBuild || this.selectedBuild === t)) {
@@ -3204,6 +3241,8 @@ const UI = {
     const attack = confirmed => {
       // (de front : un royaume sans château, ou un morceau de royaume coupé de tous ses châteaux)
       if (target >= 0 && !running && !confirmed && (aimed || !G.isProtected(target) || G.isUnlinked(i))) return this.startPlan(target, aimed ? c : -1, i);
+      // (assaut déjà en cours sur cette cible : un 2e clic envoie les renforts)
+      if (running && !confirmed && !confirm('run' + running.id)) return;
       // L'armée part du royaume ou d'un avant-poste bâti (avec ses soldats stationnés)
       const src = running ? G.sourceOfAttack(running) : G.bestSource(h.id, target, i);
       this.act({ k: 'attack', target, troops: G.troopsAt(h.id, src) * this.ratio, aim: i, src }, err => {
@@ -3247,6 +3286,7 @@ function setupInput(canvas) {
   canvas.addEventListener('contextmenu', e => {
     e.preventDefault();
     if (UI.relicAim >= 0) { UI.relicAim = -1; return; } // (📿 relique visée : le clic droit l'oublie)
+    if (UI.sendArmed()) { UI.sendArm = null; return; } // (⚔️ envoi de soldats visé : le clic droit l'oublie aussi)
     if (UI.selectedBuild || UI.plan || UI.wallFor >= 0 || UI.tradeFor >= 0) { UI.selectBuild(0); UI.cancelPlan(); UI.cancelWall(); UI.cancelTrade(); return; }
     if (UI.upgradeMode) return UI.setUpgradeMode(false); // (⬆️ le clic droit arrête aussi la souris d'amélioration)
     UI.openActionMenu(e.clientX, e.clientY);

@@ -580,7 +580,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Chez toi, elle marche **60 % plus vite** qu'un assaut en terre ennemie.
      Tout le monde la voit venir : ta **bannière** ⚔️ avance sur la carte avec tes soldats ;
      en face, les terres menacées **scintillent à ta couleur**, et le bâtiment visé est entouré d'un **halo** qui pulse.
-     Pendant la marche, reclique sur la cible pour **ajouter des soldats tout de suite** : c'est ce qui fixe l'ampleur de l'assaut.
+     Pendant la marche, reclique 2 fois sur la cible pour **ajouter des soldats tout de suite** : c'est ce qui fixe l'ampleur de l'assaut.
      L'armée entre chez l'ennemi là où commence son chemin (en pointillés dorés) : c'est de là que part la
      **flèche rouge en pointillés** qui la montre jusqu'à sa cible. Le point d'entrée est choisi selon le **vrai trajet**
      depuis sa ville de départ (relief, fleuves, détours autour d'un lac ou des terres ennemies) : l'armée ne fait pas
@@ -611,12 +611,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Défendre** : quand un assaut te vise, une barre courte s'affiche en bas de l'écran : « Écosse attaque · ⚔ 242 · 🛡️ Défendre »
      (les soldats de l'assaut). Le reste (réserve de l'attaquant…) se voit sur la carte, sous son nom.
      Dès que l'armée **entre sur tes terres** (pas avant : pendant sa marche chez elle, tes défenseurs n'iront jamais
-     l'attendre en terre ennemie, et le bouton **🛡️ Défendre** reste grisé), clique sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran)
+     l'attendre en terre ennemie, et le bouton **🛡️ Défendre** reste grisé), clique **2 fois** sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran, qui devient « Confirmer » au 1er clic)
      pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus rapide à pied** (pas forcément le plus proche à vol d'oiseau) et marchent
      à la rencontre de l'ennemi par le **chemin le plus rapide** de tes terres (on voit leur bannière 🛡 avancer, et
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
      groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Contre un même assaut, tu n'envoies qu'**une armée de défense** :
-     si tu recliques, les soldats en plus **la renforcent** (ils la rejoignent en **3 s**, qu'elle soit encore en route
+     si tu recliques (2 fois), les soldats en plus **la renforcent** (ils la rejoignent en **3 s**, qu'elle soit encore en route
      ou déjà au combat) au lieu de former une nouvelle armée ; en attendant, sa bannière les affiche entre parenthèses (« 🛡 467 (+500) »). Une petite croix **×** à côté de **🛡️ Défendre** la **rappelle**, comme
      un assaut : tes défenseurs décrochent tout de suite (en route ou au combat) et rentrent à pied, **sans perte** (ils sont sur tes terres).
      Si l'assaut se termine avant leur arrivée (la ville est prise, ou l'ennemi bat en retraite), ils **battent en retraite
@@ -933,11 +933,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      cathédrale** (pour une deuxième, il t'en faut une autre). Au survol, la souris devient une **croix d'or** si tu peux
      y aller. **Clique sur la relique** pour la viser (un cercle doré en pointillés l'entoure), puis **clique encore une fois** dessus
      pour lancer l'expédition, comme un assaut (Échap ou clic droit pour annuler) : une armée (selon le curseur « Envoyer ») part de ta ville la plus proche, avec une **petite croix d'or**
-     pour la reconnaître (un nouveau clic lui envoie des renforts : hors de tes terres, ils mettent du temps à la rejoindre, comme ceux d'un assaut). Elle ne prend aucune terre en chemin (elle marche sur tes terres, celles de tes alliés, du royaume
+     pour la reconnaître (2 nouveaux clics lui envoient des renforts : hors de tes terres, ils mettent du temps à la rejoindre, comme ceux d'un assaut). Elle ne prend aucune terre en chemin (elle marche sur tes terres, celles de tes alliés, du royaume
      de la relique et les terres libres), et **ne traverse ni la muraille d'une ville ennemie ni ses murs** : elle en fait le tour
      (si aucun chemin n'y mène, la relique ou l'armée à intercepter est à l'abri). Arrivée, elle s'en empare en **10 secondes** (l'anneau jaune), puis la rapporte
      à ta **cathédrale libre la plus proche**, **1/3 plus lentement** ; la relique flotte au-dessus d'elle. En chemin, **tous les
-     voisins peuvent l'intercepter** (un clic sur sa bannière) : au contact, les deux armées **s'arrêtent et se battent**
+     voisins peuvent l'intercepter** (2 clics sur sa bannière) : au contact, les deux armées **s'arrêtent et se battent**
      (on voit leurs soldats tomber, comme un assaut contre des défenseurs ; la prise de la relique attend la fin du combat) ;
      le vainqueur garde ses survivants et prend la relique pour la rapporter chez lui (s'il n'a pas de cathédrale, elle tombe là).
      Une armée qui en poursuit une autre l'attend **15 s** au plus si elle passe derrière une muraille, puis rentre.
@@ -1302,6 +1302,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.42** : 🖱️ **tout envoi de soldats se fait en 2 clics**, comme un assaut : défendre contre un assaut (sur sa bannière, ou le bouton « Défendre » qui devient « Confirmer »), renforcer un assaut ou ton armée de défense, relier un château isolé, intercepter ou renforcer une armée de relique. Le 1er clic vise (l'aide en bas dit combien de soldats partiront), le 2e les envoie ; un autre clic, Échap ou un clic droit annule, et un choix du menu clic droit part tout de suite.
 - **v0.98.41** : 🌿 le bouton **Tour de gloire** affiche maintenant son vrai prix : comme toutes les constructions, la tour de gloire et ses améliorations coûtent moins cher avec des **carrières de pierre** (le bouton montrait toujours 500), et il passe en rouge quand tu n'as pas assez d'or.
 - **v0.98.40** : 🌿 la **tour de gloire** a sa touche à elle : **8** (sur les cartes de gloire), affichée sur son bouton.
 - **v0.98.39** : 🪨 les **carrières de pierre** font maintenant baisser aussi le prix des **constructions** (châteaux, moulins, casernes, églises, ports, mines, tours…), pas seulement celui des améliorations, des murs et des ponts : −5 % par carrière (−10 % au niveau 2), doublé si elle est reliée, −60 % au plus.
