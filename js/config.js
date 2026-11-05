@@ -714,7 +714,7 @@ const BANNERS = [
   { id: "Croissant", name: tr("Croissant", "Crescent"), img: 'img/bannieres/b13.webp', icon: 'img/bannieres/b13s.webp', logo: 'img/bannieres/b13m.webp', color: [125, 55, 190] },
   { id: "Poing", name: tr("Poing", "Fist"), img: 'img/bannieres/b14.webp', icon: 'img/bannieres/b14s.webp', logo: 'img/bannieres/b14m.webp', color: [112, 64, 30] },
   { id: "Corbeau", name: tr("Corbeau", "Raven"), img: 'img/bannieres/b19.webp', icon: 'img/bannieres/b19s.webp', logo: 'img/bannieres/b19m.webp', color: [196, 166, 120] },
-  { id: "Poissons", name: tr("Poissons", "Fish"), img: 'img/bannieres/b15.webp', icon: 'img/bannieres/b15s.webp', logo: 'img/bannieres/b15m.webp', color: [238, 234, 222] },
+  { id: "Poissons", name: tr("Brion", "Brion"), img: 'img/bannieres/b15.webp', icon: 'img/bannieres/b15s.webp', logo: 'img/bannieres/b15m.webp', color: [238, 234, 222] },
   { id: "Hache d'or", name: tr("Hache d'or", "Golden axe"), img: 'img/bannieres/b16.webp', icon: 'img/bannieres/b16s.webp', logo: 'img/bannieres/b16m.webp', color: [150, 150, 146] },
   { id: "Main couronnée", name: tr("Main couronnée", "Crowned hand"), img: 'img/bannieres/b17.webp', icon: 'img/bannieres/b17s.webp', logo: 'img/bannieres/b17m.webp', color: [70, 78, 98] },
   { id: "Croix", name: tr("Croix", "Cross"), img: 'img/bannieres/b18.webp', icon: 'img/bannieres/b18s.webp', logo: 'img/bannieres/b18m.webp', color: [22, 20, 20] },
