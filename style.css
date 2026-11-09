@@ -397,6 +397,9 @@ button:hover { background: #e8d6a8; }
 #gloryGauge { display: flex; height: 14px; background: #d8c8a2; border: 2px solid var(--wood); border-radius: 8px; overflow: hidden; }
 #gloryGauge i { display: block; height: 100%; border-right: 1px solid rgba(40, 25, 10, 0.55); transition: width 0.4s linear; }
 #gloryGauge i.me { box-shadow: inset 0 0 0 2px #ffe08a; }
+#gloryTip { position: fixed; z-index: 30; padding: 4px 9px; font-size: 12px; white-space: nowrap; pointer-events: none; }
+#gloryTip img.bn { height: 16px; vertical-align: -3px; }
+#gloryTip .sub { opacity: 0.85; }
 /* (🤝 un pacte : ses royaumes côte à côte, dans un cadre doré) */
 #gloryGauge b.pact { display: flex; height: 100%; box-sizing: border-box; border: 2px solid #f0c040; border-radius: 4px; overflow: hidden; flex: none; transition: width 0.4s linear; }
 #gloryGauge b.pact i { box-shadow: none; }
