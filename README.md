@@ -1315,6 +1315,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.51** : ⚔️ les **casernes** forment **25 % de soldats en plus** : 2,5 toutes les 10 s pour un camp d'entraînement (au lieu de 2), 5 pour une caserne (au lieu de 4) et 11,25 pour une grande caserne (au lieu de 9). Réglage : `BARRACKS_LEVELS` dans `js/config.js`.
 - **v0.98.50** : 🌿 nouvelle arène de gloire, **Les Trois Trônes (9)** : trois îles du Trône des Trois, **toutes pareilles**, de 3 royaumes chacune, séparées par une **grande mer**, avec au centre l'**îlot de la Couronne** (une tour de gloire qu'on n'atteint qu'en bateau). Rangée dans la colonne 🌿 Gloire du choix de la carte.
 - **v0.98.49** : 🧱🌿 un royaume qui a perdu **toutes ses villes et toutes ses terres** perd aussi ses **mines fortifiées** (et tours de gloire de niveau 3) : il est anéanti, et elles passent d'office, avec leur petite muraille, à celui qui l'a achevé (avant, elles le gardaient en vie et il fallait les assiéger une à une).
 - **v0.98.48** : 🚩 un lieu fortifié **isolé** (ville, port royal, mine fortifiée) ne perd que ses **défenseurs** : ils ne peuvent plus le rejoindre, il faut le **relier** par un assaut ; mais sa **garnison se refait** de nouveau peu à peu, et la **politique de guerre** le renforce aussi (avant, elle ne renforçait que les lieux non isolés).
