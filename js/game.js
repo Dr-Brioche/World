@@ -3545,11 +3545,31 @@ const GameRules = {
   },
   // Toute la gloire gagnée (la jauge commune), et le royaume vivant qui en a le plus
   gloryTotal() { return this.players.reduce((s, p) => s + p.glory, 0); },
-  gloryLeader() {
-    let best = null;
-    for (const p of this.players) if (p.alive && !p.raiders && (!best || p.glory > best.glory)) best = p;
-    return best;
+  // 🌿🤝 Les camps de la gloire : un pacte compte comme un seul camp (la gloire de ses membres s'additionne), un
+  // royaume sans pacte est un camp à lui seul. Du plus glorieux au moins glorieux : [{ pact, members, glory, rep }]
+  // (members : ses royaumes, du plus glorieux au moins glorieux ; rep : celui qui le représente, le fondateur du pacte
+  //  s'il est encore là, sinon son plus glorieux royaume vivant ; null si plus aucun n'est vivant)
+  gloryCamps() {
+    const camps = new Map();
+    for (const p of this.players) {
+      if (p.raiders || (!p.alive && !p.glory)) continue;
+      const pact = p.alive && p.pact >= 0 && this.pacts.has(p.pact) ? p.pact : -1, key = pact >= 0 ? 'p' + pact : 'k' + p.id;
+      if (!camps.has(key)) camps.set(key, { pact, members: [], glory: 0, rep: null });
+      const c = camps.get(key);
+      c.members.push(p);
+      c.glory += p.glory;
+    }
+    for (const c of camps.values()) {
+      c.members.sort((a, b) => b.glory - a.glory || a.id - b.id);
+      const f = c.pact >= 0 ? this.players[this.pacts.get(c.pact).founder] : null;
+      c.rep = f && f.alive && f.pact === c.pact ? f : c.members.find(p => p.alive) || null;
+    }
+    return [...camps.values()].sort((a, b) => b.glory - a.glory || (a.members[0].id - b.members[0].id));
   },
+  // Le camp qui a le plus de gloire, parmi ceux qui ont encore un royaume vivant (null s'il n'y en a pas)
+  gloryLeadCamp() { return this.gloryCamps().find(c => c.rep) || null; },
+  // Le royaume qui représente le camp le plus glorieux (le fondateur de son pacte) : la victoire écrite est à son nom
+  gloryLeader() { const c = this.gloryLeadCamp(); return c ? c.rep : null; },
   // La jauge est-elle pleine ? (on a un vainqueur)
   gloryDone() { return this.gloryMode && this.gloryTotal() >= CONFIG.GLORY.GOAL; },
 
@@ -7461,12 +7481,14 @@ const GameRules = {
       return;
     }
     // 🌿 Carte de gloire : la jauge commune est pleine, le royaume qui a le plus de gloire l'emporte (une seule fois)
+    // (🤝 avec des pactes : tout le pacte le plus glorieux gagne ensemble ; la victoire est écrite au nom de son fondateur)
     if (!this.gloryShown && this.gloryDone()) {
-      const w = this.gloryLeader();
+      const c = this.gloryLeadCamp(), w = c ? c.rep : null, won = !!c && c.members.includes(h);
       this.gloryShown = this.victoryShown = true;
       this.gloryWinner = w ? w.id : -1;
+      this.gloryWinners = c ? c.members.map(p => p.id) : [];
       this.phase = 'over';
-      UI.showEnd(w === h, w === h && botsAlive, 'glory');
+      UI.showEnd(won, won && botsAlive, 'glory');
       return;
     }
     const share = (this.factions ? this.players.filter(p => p === h || this.areAllied(p.id, h.id)) : [h])
@@ -7488,12 +7510,15 @@ const GameRules = {
     if (this.winner !== undefined) return;
     const alive = this.players.filter(p => p.alive && !p.raiders);
     let w = alive.find(p => p.tiles / this.conquerableLand() >= CONFIG.WIN_RATIO);
-    if (!w && this.gloryDone()) w = this.gloryLeader(); // (🌿 la jauge de gloire est pleine)
+    // (🌿 la jauge de gloire est pleine : le camp le plus glorieux gagne, tout son pacte avec lui)
+    let camp = null;
+    if (!w && this.gloryDone()) { camp = this.gloryLeadCamp(); w = camp && camp.rep; }
     if (!w && alive.length === 1) w = alive[0];
     if (!w) return;
     this.winner = w.id;
+    this.gloryWinners = camp ? camp.members.map(p => p.id) : [w.id];
     this.phase = 'over';
-    UI.showEnd(w === h, false, 'online');
+    UI.showEnd(this.gloryWinners.includes(h.id), false, 'online');
   },
 
   // Les terres à conquérir : toutes, sauf celles des pillards (⚔️ les Slaves de Charlemagne : leurs terres sont

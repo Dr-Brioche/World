@@ -107,7 +107,9 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      gloire**, en haut au milieu de l'écran, se remplit pour tout le monde : un **trait de la couleur** de chaque royaume qui
      a de la gloire, du plus grand au plus petit (l'ordre se refait sans cesse), avec ta part et celle du premier ; au
      survol d'un trait, le nom du royaume et sa part de la jauge. Quand elle est **pleine** (8 000 points en tout), le
-     royaume qui a **le plus de gloire l'emporte** (la conquête de 70 % des terres marche toujours aussi). Plus tu tiens de
+     royaume qui a **le plus de gloire l'emporte** (la conquête de 70 % des terres marche toujours aussi ; 🤝 avec des pactes, la
+     gloire d'un pacte compte ensemble, ses royaumes côte à côte dans un cadre doré, et tout le pacte le plus glorieux gagne,
+     la victoire au nom de son fondateur). Plus tu tiens de
      tours, plus ta part grandit vite : prends-les, améliore-les, et va prendre celles des autres ! Les bots les visent aussi.
      Une tour, comme une mine, ne finit **jamais dans la muraille d'une ville** : pas de château à moins de 13 cases d'un
      filon, et la muraille d'une ville s'arrête toujours à 3 cases d'un filon, même améliorée. Réglages : `GLORY` et `MINES.glory` dans `js/config.js`.
@@ -1315,6 +1317,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.52** : 🌿🤝 sur une carte de gloire avec des **pactes**, la gloire des royaumes d'un même pacte **compte ensemble** : dans la jauge, ils sont **côte à côte dans un cadre doré**, et quand la jauge est pleine, si c'est un pacte qui a le plus de gloire, **tous ses membres gagnent** (la victoire est écrite au nom de son fondateur, comme pour les pactes ; « ton pacte X % » s'affiche au-dessus de la jauge).
 - **v0.98.51** : ⚔️ les **casernes** forment **25 % de soldats en plus** : 2,5 toutes les 10 s pour un camp d'entraînement (au lieu de 2), 5 pour une caserne (au lieu de 4) et 11,25 pour une grande caserne (au lieu de 9). Réglage : `BARRACKS_LEVELS` dans `js/config.js`.
 - **v0.98.50** : 🌿 nouvelle arène de gloire, **Les Trois Trônes (9)** : trois îles du Trône des Trois, **toutes pareilles**, de 3 royaumes chacune, séparées par une **grande mer**, avec au centre l'**îlot de la Couronne** (une tour de gloire qu'on n'atteint qu'en bateau). Rangée dans la colonne 🌿 Gloire du choix de la carte.
 - **v0.98.49** : 🧱🌿 un royaume qui a perdu **toutes ses villes et toutes ses terres** perd aussi ses **mines fortifiées** (et tours de gloire de niveau 3) : il est anéanti, et elles passent d'office, avec leur petite muraille, à celui qui l'a achevé (avant, elles le gardaient en vie et il fallait les assiéger une à une).
