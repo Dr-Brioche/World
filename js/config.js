@@ -549,9 +549,9 @@ const MILL_LEVELS = [
 // Ce bonus ne s'additionne pas : c'est la meilleure caserne du royaume qui compte.
 const BARRACKS_LEVELS = [
   null,
-  { name: tr('Camp d\'entraînement', 'Training camp'), troops: 2, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.2 },
-  { name: tr('Caserne', 'Barracks'),              troops: 4, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 4.6, upgradeCost: 400 },
-  { name: tr('Grande caserne', 'Great barracks'),       troops: 9, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 6.0, upgradeCost: 2500 },
+  { name: tr('Camp d\'entraînement', 'Training camp'), troops: 2.5, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.2 },
+  { name: tr('Caserne', 'Barracks'),              troops: 5, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 4.6, upgradeCost: 400 },
+  { name: tr('Grande caserne', 'Great barracks'),       troops: 11.25, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 6.0, upgradeCost: 2500 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain

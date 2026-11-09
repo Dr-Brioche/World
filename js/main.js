@@ -1197,7 +1197,7 @@ const UI = {
       return [tr(`Croyance +${info.faith}`, `Faith +${info.faith}`), places(info.slots), info.castles && tr(`Châteaux +${info.castles}`, `Castles +${info.castles}`)].filter(Boolean);
     }
     if (type === B_BARRACKS) {
-      return [tr(`Soldats +${info.troops} ${every}`, `Soldiers +${info.troops} ${every}`), tr(`Armée max +${info.maxTroops}`, `Max army +${info.maxTroops}`),
+      return [tr(`Soldats +${fmtRate(info.troops)} ${every}`, `Soldiers +${fmtRate(info.troops)} ${every}`), tr(`Armée max +${info.maxTroops}`, `Max army +${info.maxTroops}`),
         info.power > 1 && tr(`Force ${pct(info.power - 1)}`, `Strength ${pct(info.power - 1)}`)].filter(Boolean);
     }
     if (type === B_MINE) return this.minePerks(info);
