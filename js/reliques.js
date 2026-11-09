@@ -135,13 +135,10 @@ Object.assign(GameRules, {
     if (!this.relicDelivMemo || this.relicDelivMemo.sec !== sec || this.relicDelivMemo.map !== this.terrain) this.relicDelivMemo = { sec, map: this.terrain, m: new Map() };
     const key = pid + ':' + tile + ':' + region, memo = this.relicDelivMemo.m;
     if (memo.has(key)) return memo.get(key);
-    const churches = this.relicChurches(pid), goals = new Set(), r = { pid, region };
-    for (const c of churches) for (const j of this.footprint(c, B_CHURCH)) goals.add(j);
-    let ok = goals.size > 0 && !!this.relicPath(pid, tile, goals, this.relicOwners(r, this.owner[tile]));
-    if (!ok && goals.size) {
-      const back = this.relicSeaBack(r, tile);
-      ok = !!(back && this.relicPath(pid, back.pt, goals, this.relicOwners(r, this.owner[back.pt])));
-    }
+    const churches = this.relicChurches(pid), goals = new Map(), r = { pid, region };
+    for (const c of churches) for (const j of this.footprint(c, B_CHURCH)) goals.set(j, c);
+    let ok = goals.size > 0 && !!this.relicPath(pid, tile, new Set(goals.keys()), this.relicOwners(r, this.owner[tile]));
+    if (!ok && goals.size) ok = !!this.relicSeaCarry(r, tile, goals); // (⛵ par un port royal de l'île de la relique)
     memo.set(key, ok);
     return ok;
   },
@@ -271,6 +268,34 @@ Object.assign(GameRules, {
     const [port, pt] = waters.get(path[path.length - 1]);
     return { path: path.concat([pt]), port, pt };
   },
+  // ⛵📿 Rapporter la relique en bateau, depuis la case ft : il faut un de ses ports royaux (niveau 3) sur l'île de la
+  // relique pour embarquer (l'armée y marche) ; elle débarque ensuite à n'importe lequel de ses ports (même de niveau 1
+  // ou 2), puis marche jusqu'à une église de goals (Map case → église). Renvoie { path, church }, ou null.
+  relicSeaCarry(r, ft, goals) {
+    const comp = this.landComp(), isl = comp[ft], W = this.W;
+    if (isl < 0) return null;
+    // (les ports royaux de l'île, et leurs cases : l'armée marche jusqu'au premier atteint)
+    const dep = new Map();
+    for (const a of this.relicPorts(r.pid)) for (const j of this.footprint(a, B_PORT)) if (comp[j] === isl) dep.set(j, a);
+    if (!dep.size) return null;
+    const walk1 = dep.has(ft) ? [ft] : this.relicPath(r.pid, ft, new Set(dep.keys()), this.relicOwners(r, this.owner[ft]));
+    if (!walk1) return null;
+    const port = dep.get(walk1[walk1.length - 1]), starts = [];
+    for (const j of this.footprint(port, B_PORT)) this.forNeighbors(j, n => { if (this.navigable(n)) starts.push(n); });
+    // (l'arrivée : la mer collée à un autre de ses ports, de n'importe quel niveau)
+    const arr = new Map();
+    for (const a of this.buildingTiles) {
+      if (this.building[a] !== B_PORT || this.owner[a] !== r.pid || a === port) continue;
+      for (const j of this.footprint(a, B_PORT)) this.forNeighbors(j, n => { if (this.navigable(n) && !arr.has(n)) arr.set(n, j); });
+    }
+    if (!starts.length || !arr.size) return null;
+    const sea = this.relicSeaPath(r.pid, starts, new Set(arr.keys()), this.relicOwners(r), new Set()); // (que de l'eau)
+    if (!sea) return null;
+    const pt = arr.get(sea[sea.length - 1]);
+    const walk2 = goals.has(pt) ? [pt] : this.relicPath(r.pid, pt, new Set(goals.keys()), this.relicOwners(r, this.owner[pt]));
+    if (!walk2) return null;
+    return { path: walk1.concat(sea, walk2), church: goals.get(walk2[walk2.length - 1]) };
+  },
   // Les royaumes sur les terres desquels l'armée r peut marcher : le sien, ses alliés, celui de la relique, et celui
   // où elle se trouve
   relicOwners(r, extra = -1) {
@@ -331,8 +356,8 @@ Object.assign(GameRules, {
     if (mine) { this.relicReinforce(mine, troops); return null; }
     // (aucune de ses églises de niveau 3 libres n'est à sa portée, ni à pied ni par un de ses ports royaux : pas d'expédition)
     if (!this.relicDeliverable(pid, relic.tile, relic.region)) return this.relicPorts(pid).length
-      ? tr(`Aucune de tes églises de niveau ${R.CHURCH_LEVEL} libres n'est à portée de cette relique, ni à pied ni par un de tes ports royaux : ton armée ne pourrait pas la rapporter.`, `None of your free level ${R.CHURCH_LEVEL} churches is within reach of this relic, neither on foot nor through one of your royal ports: your army could not bring it back.`)
-      : tr(`Aucune de tes églises de niveau ${R.CHURCH_LEVEL} libres n'est à portée à pied de cette relique (pour une église sur une autre île, il faut un port royal, de niveau 3, qui les relie) : ton armée ne pourrait pas la rapporter.`, `None of your free level ${R.CHURCH_LEVEL} churches is within reach of this relic on foot (for a church on another island, you need a royal port, level 3, linking them): your army could not bring it back.`);
+      ? tr(`Aucune de tes églises de niveau ${R.CHURCH_LEVEL} libres n'est à portée de cette relique, ni à pied ni en bateau (il faut un de tes ports royaux sur l'île de la relique pour embarquer) : ton armée ne pourrait pas la rapporter.`, `None of your free level ${R.CHURCH_LEVEL} churches is within reach of this relic, neither on foot nor by boat (you need one of your royal ports on the relic's island to embark): your army could not bring it back.`)
+      : tr(`Aucune de tes églises de niveau ${R.CHURCH_LEVEL} libres n'est à portée à pied de cette relique (pour une église sur une autre île, il faut un port royal, de niveau 3, sur l'île de la relique) : ton armée ne pourrait pas la rapporter.`, `None of your free level ${R.CHURCH_LEVEL} churches is within reach of this relic on foot (for a church on another island, you need a royal port, level 3, on the relic's island): your army could not bring it back.`);
     const goal = this.relicTileCenter(relic.tile);
     const start = this.relicHome(pid, goal);
     if (start < 0) return tr('Tu n\'as aucune ville d\'où partir.', 'You have no city to set out from.');
@@ -361,6 +386,7 @@ Object.assign(GameRules, {
     if (t.pid === pid) return tr('C\'est ta propre armée !', 'That is your own army!');
     if (this.areAllied(pid, t.pid)) return tr(`${this.players[t.pid].name} est ton allié.`, `${this.players[t.pid].name} is your ally.`);
     if (!this.relicEligible(pid, this.relicPosTile(t), t.region)) return tr('Cette armée est trop loin : elle doit être sur tes terres ou chez un voisin.', 'This army is too far: it must be on your land or in a neighbour\'s.');
+    if (!this.isLand(this.relicPosTile(t))) return tr('Cette armée est en mer : on ne peut pas l\'intercepter avant qu\'elle débarque.', 'This army is at sea: it cannot be intercepted before it lands.'); // (⛵)
     troops = Math.floor(Math.min(troops, p.troops));
     if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     const mine = this.relicRuns.find(r => r.pid === pid && r.phase === 'chase' && r.chase === id);
@@ -495,7 +521,9 @@ Object.assign(GameRules, {
       const t = this.relicRuns.find(x => x.id === r.chase);
       if (!t || this.areAllied(r.pid, t.pid)) return this.relicGoHome(r, '');
       const C = CONFIG, me = this.relicPos(r), at = this.relicPos(t), d = Math.hypot(me.x - at.x, me.y - at.y);
-      if (d <= C.DEFEND_CONTACT) return this.relicEngage(r, t);
+      // (⛵ une armée en mer ne peut pas être interceptée : on l'attend sur la côte)
+      const wet = !this.isLand(Math.floor(at.y) * this.W + Math.floor(at.x)) || !this.isLand(Math.floor(me.y) * this.W + Math.floor(me.x));
+      if (d <= C.DEFEND_CONTACT && !wet) return this.relicEngage(r, t);
       if (second) {
         // (par les terres, sans passer la muraille d'une ville ennemie : trajet corrigé toutes les secondes près d'elle,
         //  toutes les 3 secondes plus loin ; plus de chemin jusqu'à elle : elle est à l'abri, l'armée rentre)
@@ -540,15 +568,14 @@ Object.assign(GameRules, {
     for (const c of churches) for (const j of this.footprint(c, B_CHURCH)) goals.set(j, c);
     const ft = Math.floor(from.y) * this.W + Math.floor(from.x);
     const path = this.relicPath(r.pid, ft, new Set(goals.keys()), this.relicOwners(r, this.owner[ft]));
-    // (⛵ pas de chemin à pied : en bateau jusqu'à un de ses ports royaux, puis à pied jusqu'à l'église)
+    // (⛵ pas de chemin à pied : en bateau, depuis un de ses ports royaux de l'île de la relique, jusqu'à un de ses ports,
+    //  puis à pied jusqu'à l'église : voir relicSeaCarry)
     if (!path) {
-      const back = this.relicSeaBack(r, ft);
-      const land = back && this.relicPath(r.pid, back.pt, new Set(goals.keys()), this.relicOwners(r, this.owner[back.pt]));
-      if (land) {
-        const church = goals.get(land[land.length - 1]);
+      const boat = this.relicSeaCarry(r, ft, goals);
+      if (boat) {
         r.phase = 'carry';
-        r.church = church;
-        r.route = this.walkRoute(r.pid, from, this.relicMid(church), r.troops, slow, false, back.path.concat(land.slice(1)), CONFIG.RELIC.SEA_COST);
+        r.church = boat.church;
+        r.route = this.walkRoute(r.pid, from, this.relicMid(boat.church), r.troops, slow, false, boat.path, CONFIG.RELIC.SEA_COST);
         return true;
       }
     }
@@ -737,7 +764,7 @@ Object.assign(GameRules, {
     // Intercepter une armée qui s'empare d'une relique, ou l'emporte, si on est nettement plus fort
     for (const t of this.relicRuns) {
       if ((t.phase !== 'carry' && t.phase !== 'take') || t.pid === p.id || this.areAllied(p.id, t.pid)) continue;
-      if (!this.relicEligible(p.id, this.relicPosTile(t), t.region)) continue;
+      if (!this.relicEligible(p.id, this.relicPosTile(t), t.region) || !this.isLand(this.relicPosTile(t))) continue; // (⛵ pas en mer)
       const need = t.troops * this.troopPower(t.pid) / power * 1.6;
       if (need < p.troops * 0.6) { this.launchRelicChase(p.id, t.id, Math.max(need, p.troops * 0.3)); return; }
     }
