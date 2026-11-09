@@ -17,8 +17,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 16 **🏟️ cartes arène** symétriques
-  (La Couronne, Le Cratère, Le Labyrinthe, Les Mille Ponts, La Mer Intérieure, La Mêlée à 20 joueurs… et 2 arènes de gloire : L'Octogone de la Gloire et Le Trône des Trois), 3 cartes **prédéfinies**
+  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 17 **🏟️ cartes arène** symétriques
+  (La Couronne, Le Cratère, Le Labyrinthe, Les Mille Ponts, La Mer Intérieure, La Mêlée à 20 joueurs… et 3 arènes de gloire : L'Octogone de la Gloire, Le Trône des Trois et Les Trois Trônes), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**,
   **Charlemagne (768)** : l'Europe de Charlemagne, avec ses 15 factions historiques, **La guerre de Cent Ans (1337)** :
@@ -123,6 +123,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      chaque frontière, une **rivière** coule du massif à la mer, avec **deux îles de gloire** à partager : l'**île du Gué**,
      à mi-chemin, reliée à chaque rive par une petite chaussée, et l'**île du Cirque**, près de la côte, dans un anneau de
      sommets où l'on n'entre que par l'étroite vallée de la rivière. 7 tours pour 3 royaumes.
+   - **🌿 Les Trois Trônes (9)** : **trois îles du Trône des Trois**, toutes **pareilles** (même forme, même terrain, un peu
+     plus petites), de **3 royaumes** chacune, séparées par une **grande mer** : chaque île tourne un côté vers le centre, et
+     au milieu de la mer, l'**îlot de la Couronne** (une tour de gloire) ne s'atteint qu'en bateau. On se bat d'abord à trois
+     sur son île, puis par la mer pour les tours des autres îles. 22 tours pour 9 royaumes : chaque tour y donne
+     **0,4 fois** sa gloire habituelle, pour que la jauge ne se remplisse pas trop vite.
      Sur une carte arène, le menu propose d'office un rival par place prévue.
      Réglages : `ARENA_MAPS` et le dessin des cartes dans `js/arenamap.js`.
    🗺️ **Choix de la carte** : les cartes sont rangées par sortes (aléatoires, arène, prédéfinies, scénarios, dessinées),
@@ -1310,6 +1315,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.50** : 🌿 nouvelle arène de gloire, **Les Trois Trônes (9)** : trois îles du Trône des Trois, **toutes pareilles**, de 3 royaumes chacune, séparées par une **grande mer**, avec au centre l'**îlot de la Couronne** (une tour de gloire qu'on n'atteint qu'en bateau). Rangée dans la colonne 🌿 Gloire du choix de la carte.
 - **v0.98.49** : 🧱🌿 un royaume qui a perdu **toutes ses villes et toutes ses terres** perd aussi ses **mines fortifiées** (et tours de gloire de niveau 3) : il est anéanti, et elles passent d'office, avec leur petite muraille, à celui qui l'a achevé (avant, elles le gardaient en vie et il fallait les assiéger une à une).
 - **v0.98.48** : 🚩 un lieu fortifié **isolé** (ville, port royal, mine fortifiée) ne perd que ses **défenseurs** : ils ne peuvent plus le rejoindre, il faut le **relier** par un assaut ; mais sa **garnison se refait** de nouveau peu à peu, et la **politique de guerre** le renforce aussi (avant, elle ne renforçait que les lieux non isolés).
 - **v0.98.47** : 🚩 une ville **encerclée** est bien **isolée** même quand un de ses **murs** dépasse de sa muraille (les cases du mur comptaient comme « de la terre autour » : elle passait pour reliée et recevait des renforts) · une ville, un port royal ou une mine fortifiée isolés ne reçoivent plus de renforts : leur garnison ne se refait plus toute seule (retiré en v0.98.48).
