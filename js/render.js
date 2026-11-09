@@ -2375,6 +2375,7 @@ const Render = {
     for (const f of this.floaters) {
       const t = (now - f.start) / LIFE; // 0 → 1
       const x = ox + f.x * s, y = oy + f.y * s - 6 - t * 28; // il monte...
+      if (x < -80 || y < -40 || x > this.vw + 80 || y > this.vh + 40) continue; // (⏱️ hors de l'écran : on ne le dessine pas)
       ctx.globalAlpha = t < 0.7 ? 1 : (1 - t) / 0.3;        // ...puis s'efface
       ctx.strokeStyle = 'rgba(20,12,4,0.85)';
       ctx.fillStyle = f.color;

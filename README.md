@@ -103,7 +103,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **1 000** (une tour de pierre) et **2 500** (une citadelle) ; au **niveau 3**, elle a sa **petite fortification** :
      **25 soldats de garnison**, comme une mine fortifiée (un assaut doit l'assiéger). Elle donne à son royaume **1, 1,6
      puis 2,2 points de gloire par seconde** selon son niveau. Toutes les 5 secondes, au-dessus de chaque tour, un petit
-     **« +X 🌿 »** montre la gloire gagnée (en or pour les tiennes, en blanc pour celles des autres). Une seule **jauge de
+     **« +X 🌿 »** montre la gloire gagnée (au-dessus de tes tours seulement : comme pour la production des autres bâtiments, chacun ne voit que la sienne). Une seule **jauge de
      gloire**, en haut au milieu de l'écran, se remplit pour tout le monde : un **trait de la couleur** de chaque royaume qui
      a de la gloire, du plus grand au plus petit (l'ordre se refait sans cesse), avec ta part et celle du premier ; au
      survol d'un trait, le nom du royaume et sa part de la jauge. Quand elle est **pleine** (8 000 points en tout), le
@@ -1317,6 +1317,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.54** : ⏱️ affichage plus léger : le « +X 🌿 » de gloire ne s'affiche plus qu'au-dessus de **tes** tours de gloire, comme la production des autres bâtiments (moulins, casernes, ports, mines : on ne voit que la sienne), et les nombres qui flottent hors de l'écran ne sont plus dessinés.
 - **v0.98.53** : 🌿 Les Trois Trônes : l'**îlot de la Couronne**, au milieu de la mer, est **deux fois plus grand** (24 cases de rayon au lieu de 12), avec plus de place autour de sa tour de gloire.
 - **v0.98.52** : 🌿🤝 sur une carte de gloire avec des **pactes**, la gloire des royaumes d'un même pacte **compte ensemble** : dans la jauge, ils sont **côte à côte dans un cadre doré**, et quand la jauge est pleine, si c'est un pacte qui a le plus de gloire, **tous ses membres gagnent** (la victoire est écrite au nom de son fondateur, comme pour les pactes ; « ton pacte X % » s'affiche au-dessus de la jauge).
 - **v0.98.51** : ⚔️ les **casernes** forment **25 % de soldats en plus** : 2,5 toutes les 10 s pour un camp d'entraînement (au lieu de 2), 5 pour une caserne (au lieu de 4) et 11,25 pour une grande caserne (au lieu de 9). Réglage : `BARRACKS_LEVELS` dans `js/config.js`.
