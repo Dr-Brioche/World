@@ -950,9 +950,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      le vainqueur garde ses survivants et prend la relique pour la rapporter chez lui (s'il n'a pas de cathédrale, elle tombe là).
      Une armée qui en poursuit une autre l'attend **15 s** au plus si elle passe derrière une muraille, puis rentre.
      ⛵ **Une relique sur une île** (une terre où tu n'as aucune ville) se va chercher **en bateau** : il faut un **port royal**
-     (port de niveau 3). L'armée part d'un de tes ports royaux, débarque sur l'île, prend la relique, la rapporte en bateau
-     jusqu'à un de tes ports royaux, puis à pied jusqu'à ta cathédrale (le bateau va 2,5 fois plus vite que la marche ; un
-     bateau sur l'eau, à la place de la croix, la signale). On peut aussi poursuivre une armée de relique en bateau.
+     (port de niveau 3). L'armée part d'un de tes ports royaux et débarque sur l'île pour prendre la relique. Pour la
+     **rapporter par la mer**, il faut un de tes **ports royaux sur l'île de la relique** : l'armée y embarque, puis débarque à
+     **n'importe lequel de tes ports** (même de niveau 1) et marche jusqu'à ta cathédrale (le bateau va 2,5 fois plus vite que
+     la marche ; un bateau sur l'eau, à la place de la croix, la signale). Sans chemin pour la rapporter (à pied ou par un
+     port royal de son île), l'expédition ne part pas. On peut poursuivre une armée de relique en bateau, mais **en mer, on ne
+     peut pas l'intercepter** : on l'attend sur la côte.
      Tes armées de relique ont leur barre en bas de l'écran, comme les assauts : sa **petite croix** la **rappelle à tout
      moment** (elle rentre sans perte ; si elle portait la relique, elle la **pose là où elle est**).
      **Clique sur ta propre armée de relique** (à l'aller ou au retour) pour lui envoyer des renforts : sur tes terres, ils
@@ -1317,6 +1320,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.56** : 📿⛵ pour **rapporter une relique par la mer**, il faut un de tes **ports royaux sur l'île de la relique** (l'armée y embarque) ; elle débarque ensuite à **n'importe lequel de tes ports**, même de niveau 1 ou 2, et marche jusqu'à l'église (avant, il fallait un port royal à l'arrivée) · une armée de relique **en mer ne peut pas être interceptée** (on l'attend sur la côte).
 - **v0.98.55** : 📿 une **expédition de relique** ne part plus si aucune de tes **églises de niveau 3 libres** n'est à sa portée : il faut pouvoir y rapporter la relique **à pied**, ou, pour une église sur une **autre île**, par un de tes **ports royaux** (niveau 3). Avant, l'armée partait, prenait la relique… puis la reposait faute de chemin. Le survol de la relique et le clic disent pourquoi.
 - **v0.98.54** : ⏱️ affichage plus léger : le « +X 🌿 » de gloire ne s'affiche plus qu'au-dessus de **tes** tours de gloire, comme la production des autres bâtiments (moulins, casernes, ports, mines : on ne voit que la sienne), et les nombres qui flottent hors de l'écran ne sont plus dessinés.
 - **v0.98.53** : 🌿 Les Trois Trônes : l'**îlot de la Couronne**, au milieu de la mer, est **deux fois plus grand** (24 cases de rayon au lieu de 12), avec plus de place autour de sa tour de gloire.
