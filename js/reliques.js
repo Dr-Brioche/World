@@ -127,6 +127,24 @@ Object.assign(GameRules, {
     const going = this.relicRuns.filter(x => x !== r && x.pid === pid && (x.phase === 'go' || x.phase === 'take') && (!r || x.id < r.id)).length;
     return this.relicChurches(pid, r).length - going;
   },
+  // 📿 Une relique prise en tile pourrait-elle être rapportée à une église de niveau 3 libre de pid ? À pied (sans passer
+  // de muraille ennemie), ou en bateau jusqu'à un de ses ports royaux puis à pied jusqu'à l'église (comme relicCarry).
+  // Sinon, on ne peut même pas lancer l'expédition. (⏱️ gardé en mémoire une seconde : l'aide au survol le demande souvent)
+  relicDeliverable(pid, tile, region) {
+    const sec = Math.floor(this.tick / CONFIG.TICKS_PER_SECOND);
+    if (!this.relicDelivMemo || this.relicDelivMemo.sec !== sec || this.relicDelivMemo.map !== this.terrain) this.relicDelivMemo = { sec, map: this.terrain, m: new Map() };
+    const key = pid + ':' + tile + ':' + region, memo = this.relicDelivMemo.m;
+    if (memo.has(key)) return memo.get(key);
+    const churches = this.relicChurches(pid), goals = new Set(), r = { pid, region };
+    for (const c of churches) for (const j of this.footprint(c, B_CHURCH)) goals.add(j);
+    let ok = goals.size > 0 && !!this.relicPath(pid, tile, goals, this.relicOwners(r, this.owner[tile]));
+    if (!ok && goals.size) {
+      const back = this.relicSeaBack(r, tile);
+      ok = !!(back && this.relicPath(pid, back.pt, goals, this.relicOwners(r, this.owner[back.pt])));
+    }
+    memo.set(key, ok);
+    return ok;
+  },
   // pid peut-il aller vers cette case ? Elle est sur ses terres ou chez un voisin (ou la relique est apparue chez lui
   // ou chez un voisin)
   relicEligible(pid, tile, region) {
@@ -311,6 +329,10 @@ Object.assign(GameRules, {
     // (une armée à nous y va déjà : ces soldats la rejoignent)
     const mine = this.relicRuns.find(r => r.pid === pid && r.phase === 'go' && r.aim === id);
     if (mine) { this.relicReinforce(mine, troops); return null; }
+    // (aucune de ses églises de niveau 3 libres n'est à sa portée, ni à pied ni par un de ses ports royaux : pas d'expédition)
+    if (!this.relicDeliverable(pid, relic.tile, relic.region)) return this.relicPorts(pid).length
+      ? tr(`Aucune de tes églises de niveau ${R.CHURCH_LEVEL} libres n'est à portée de cette relique, ni à pied ni par un de tes ports royaux : ton armée ne pourrait pas la rapporter.`, `None of your free level ${R.CHURCH_LEVEL} churches is within reach of this relic, neither on foot nor through one of your royal ports: your army could not bring it back.`)
+      : tr(`Aucune de tes églises de niveau ${R.CHURCH_LEVEL} libres n'est à portée à pied de cette relique (pour une église sur une autre île, il faut un port royal, de niveau 3, qui les relie) : ton armée ne pourrait pas la rapporter.`, `None of your free level ${R.CHURCH_LEVEL} churches is within reach of this relic on foot (for a church on another island, you need a royal port, level 3, linking them): your army could not bring it back.`);
     const goal = this.relicTileCenter(relic.tile);
     const start = this.relicHome(pid, goal);
     if (start < 0) return tr('Tu n\'as aucune ville d\'où partir.', 'You have no city to set out from.');
