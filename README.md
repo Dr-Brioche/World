@@ -127,7 +127,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      sommets où l'on n'entre que par l'étroite vallée de la rivière. 7 tours pour 3 royaumes.
    - **🌿 Les Trois Trônes (9)** : **trois îles du Trône des Trois**, toutes **pareilles** (même forme, même terrain, un peu
      plus petites), de **3 royaumes** chacune, séparées par une **grande mer** : chaque île tourne un côté vers le centre, et
-     au milieu de la mer, l'**îlot de la Couronne** (une tour de gloire) ne s'atteint qu'en bateau. On se bat d'abord à trois
+     au milieu de la mer, l'**îlot de la Couronne** (une colline boisée de 24 cases de rayon, avec une tour de gloire) ne s'atteint qu'en bateau. On se bat d'abord à trois
      sur son île, puis par la mer pour les tours des autres îles. 22 tours pour 9 royaumes : chaque tour y donne
      **0,4 fois** sa gloire habituelle, pour que la jauge ne se remplisse pas trop vite.
      Sur une carte arène, le menu propose d'office un rival par place prévue.
@@ -1317,6 +1317,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.53** : 🌿 Les Trois Trônes : l'**îlot de la Couronne**, au milieu de la mer, est **deux fois plus grand** (24 cases de rayon au lieu de 12), avec plus de place autour de sa tour de gloire.
 - **v0.98.52** : 🌿🤝 sur une carte de gloire avec des **pactes**, la gloire des royaumes d'un même pacte **compte ensemble** : dans la jauge, ils sont **côte à côte dans un cadre doré**, et quand la jauge est pleine, si c'est un pacte qui a le plus de gloire, **tous ses membres gagnent** (la victoire est écrite au nom de son fondateur, comme pour les pactes ; « ton pacte X % » s'affiche au-dessus de la jauge).
 - **v0.98.51** : ⚔️ les **casernes** forment **25 % de soldats en plus** : 2,5 toutes les 10 s pour un camp d'entraînement (au lieu de 2), 5 pour une caserne (au lieu de 4) et 11,25 pour une grande caserne (au lieu de 9). Réglage : `BARRACKS_LEVELS` dans `js/config.js`.
 - **v0.98.50** : 🌿 nouvelle arène de gloire, **Les Trois Trônes (9)** : trois îles du Trône des Trois, **toutes pareilles**, de 3 royaumes chacune, séparées par une **grande mer**, avec au centre l'**îlot de la Couronne** (une tour de gloire qu'on n'atteint qu'en bateau). Rangée dans la colonne 🌿 Gloire du choix de la carte.

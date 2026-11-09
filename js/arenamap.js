@@ -590,9 +590,10 @@ function generateArenaMap(type, seed) {
       throneIsland(cx + D * DMath.cos(ang), cy + D * DMath.sin(ang), ang + Math.PI, S);
     }
     // (l'îlot de la Couronne : une colline boisée au milieu de la mer, avec sa tour de gloire)
-    for (let y = Math.floor(cy - 16); y <= cy + 16; y++) for (let x = Math.floor(cx - 16); x <= cx + 16; x++) {
+    // (24 cases de rayon, deux fois la taille d'avant)
+    for (let y = Math.floor(cy - 30); y <= cy + 30; y++) for (let x = Math.floor(cx - 30); x <= cx + 30; x++) {
       const d = DMath.hypot(x + 0.5 - cx, y + 0.5 - cy), w = wobble(x - cx, y - cy);
-      if (inMap(x, y) && d < 12 + 2 * w) terrain[y * W + x] = d < 6 ? T.HILLS : fbm(forestNoise, x / 6, y / 6, 2) > 0.55 ? T.FOREST : T.PLAINS;
+      if (inMap(x, y) && d < 24 + 4 * w) terrain[y * W + x] = d < 10 ? T.HILLS : fbm(forestNoise, x / 6, y / 6, 2) > 0.55 ? T.FOREST : T.PLAINS;
     }
     deposit(cx - 1, cy - 1, 'glory');
   }
