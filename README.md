@@ -1317,6 +1317,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.55** : 📿 une **expédition de relique** ne part plus si aucune de tes **églises de niveau 3 libres** n'est à sa portée : il faut pouvoir y rapporter la relique **à pied**, ou, pour une église sur une **autre île**, par un de tes **ports royaux** (niveau 3). Avant, l'armée partait, prenait la relique… puis la reposait faute de chemin. Le survol de la relique et le clic disent pourquoi.
 - **v0.98.54** : ⏱️ affichage plus léger : le « +X 🌿 » de gloire ne s'affiche plus qu'au-dessus de **tes** tours de gloire, comme la production des autres bâtiments (moulins, casernes, ports, mines : on ne voit que la sienne), et les nombres qui flottent hors de l'écran ne sont plus dessinés.
 - **v0.98.53** : 🌿 Les Trois Trônes : l'**îlot de la Couronne**, au milieu de la mer, est **deux fois plus grand** (24 cases de rayon au lieu de 12), avec plus de place autour de sa tour de gloire.
 - **v0.98.52** : 🌿🤝 sur une carte de gloire avec des **pactes**, la gloire des royaumes d'un même pacte **compte ensemble** : dans la jauge, ils sont **côte à côte dans un cadre doré**, et quand la jauge est pleine, si c'est un pacte qui a le plus de gloire, **tous ses membres gagnent** (la victoire est écrite au nom de son fondateur, comme pour les pactes ; « ton pacte X % » s'affiche au-dessus de la jauge).
