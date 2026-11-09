@@ -1111,12 +1111,19 @@ const UI = {
     this.gloryKey = key;
     const goal = CONFIG.GLORY.GOAL, total = G.gloryTotal(), h = G.human;
     const pct = v => (v / goal * 100).toFixed(1).replace('.0', '');
-    const lead = G.gloryLeader(), first = lead && lead !== h && lead.glory > 0 ? tr(` · 1er : ${lead.name} ${pct(lead.glory)} %`, ` · 1st: ${lead.name} ${pct(lead.glory)}%`) : '';
-    $('gloryTitle').textContent = tr(`🌿 Gloire ${pct(Math.min(goal, total))} % · toi ${pct(h.glory)} %`, `🌿 Glory ${pct(Math.min(goal, total))}% · you ${pct(h.glory)}%`) + first;
-    $('gloryGauge').innerHTML = G.players.filter(p => p.glory > 0).sort((a, b) => b.glory - a.glory)
-      .map(p => `<i class="${p === h ? 'me' : ''}" style="width:${Math.min(100, p.glory / goal * 100)}%;background:rgb(${p.color})" title="${escapeHtml(p.name)} : ${pct(p.glory)} %"></i>`).join('');
-    bar.title = tr(`La jauge de gloire : chaque mine de gloire la remplit de la couleur de son royaume. Pleine, le royaume qui en a le plus l'emporte.`,
-      `The glory gauge: each glory mine fills it with its kingdom's colour. When it is full, the kingdom with the most wins.`);
+    // (🤝 les royaumes d'un même pacte sont côte à côte, dans un cadre doré : leur gloire compte ensemble)
+    const camps = G.gloryCamps().filter(c => c.glory > 0), mine = camps.find(c => c.members.includes(h));
+    const lead = camps.find(c => c.rep), name = c => c.pact >= 0 ? G.pactName(c.rep || c.members[0]) : c.members[0].name;
+    const first = lead && lead !== mine ? tr(` · 1er : ${name(lead)} ${pct(lead.glory)} %`, ` · 1st: ${name(lead)} ${pct(lead.glory)}%`) : '';
+    const you = mine && mine.pact >= 0 ? tr(` · ton pacte ${pct(mine.glory)} %`, ` · your pact ${pct(mine.glory)}%`) : '';
+    $('gloryTitle').textContent = tr(`🌿 Gloire ${pct(Math.min(goal, total))} % · toi ${pct(h.glory)} %`, `🌿 Glory ${pct(Math.min(goal, total))}% · you ${pct(h.glory)}%`) + you + first;
+    const seg = p => `<i class="${p === h ? 'me' : ''}" style="width:${Math.min(100, p.glory / goal * 100)}%;background:rgb(${p.color})" title="${escapeHtml(p.name)} : ${pct(p.glory)} %"></i>`;
+    $('gloryGauge').innerHTML = camps.map(c => c.pact < 0 || c.members.length < 2 ? c.members.filter(p => p.glory > 0).map(seg).join('')
+      // (un pacte : son cadre fait la largeur de sa gloire, et ses royaumes s'y partagent la place)
+      : `<b class="pact" style="width:${Math.min(100, c.glory / goal * 100)}%" title="${escapeHtml(name(c))} : ${pct(c.glory)} %">` +
+        c.members.filter(p => p.glory > 0).map(p => seg(p).replace(/width:[^%]*%/, `width:${(p.glory / c.glory * 100).toFixed(2)}%`)).join('') + '</b>').join('');
+    bar.title = tr(`La jauge de gloire : chaque tour de gloire la remplit de la couleur de son royaume (les royaumes d'un même pacte côte à côte, dans un cadre doré). Pleine, le royaume, ou le pacte, qui en a le plus l'emporte.`,
+      `The glory gauge: each glory tower fills it with its kingdom's colour (kingdoms of the same pact side by side, in a golden frame). When it is full, the kingdom, or the pact, with the most wins.`);
   },
 
   // ⛏️ Les mines d'un royaume, pour la barre de résumé : « · ⛏️ 3 (⚒️ 2 🪙 1) » (rien s'il n'en a pas)
@@ -1698,19 +1705,26 @@ const UI = {
       if (t) { $('endTitle').textContent = t[0]; $('endText').textContent = t[1]; }
     }
     // 🌿 Carte de gloire : la jauge est pleine
-    if (kind === 'glory') {
-      const w = Game.players[Game.gloryWinner], pc = q => Math.round(q.glory / Math.max(1, Game.gloryTotal()) * 100);
+    if (kind === 'glory' || (kind === 'online' && Game.gloryDone())) {
+      // (🤝 avec un pacte : tout le pacte gagne, la victoire écrite au nom de son fondateur)
+      const ids = Game.gloryWinners || [], team = ids.map(id => Game.players[id]);
+      const w = Game.players[kind === 'online' ? Game.winner : Game.gloryWinner], total = Math.max(1, Game.gloryTotal());
+      const pc = v => Math.round(v / total * 100), sum = team.reduce((s, q) => s + q.glory, 0);
+      const pact = team.length > 1 && w && w.pact >= 0 ? Game.pactName(w) : '', others = team.filter(q => q !== w).map(q => q.name).join(', ');
       $('endTitle').textContent = win ? tr('🌿 La gloire éternelle !', '🌿 Eternal glory!') : tr('🌿 La gloire t\'échappe...', '🌿 Glory slips away...');
-      $('endText').textContent = win
-        ? tr(`La jauge de gloire est pleine, et ${pc(h)} % de cette gloire est à ${h.name} : les chroniques ne retiendront que ton nom.`, `The glory gauge is full, and ${pc(h)}% of that glory belongs to ${h.name}: the chronicles will remember only your name.`)
-        : tr(`La jauge de gloire est pleine : ${w ? w.name : '?'} en a le plus (${w ? pc(w) : 0} %), et l'emporte. ${h.name} n'en avait que ${pc(h)} %.`, `The glory gauge is full: ${w ? w.name : '?'} has the most (${w ? pc(w) : 0}%), and wins. ${h.name} had only ${pc(h)}%.`);
+      $('endText').textContent = pact
+        ? (win ? tr(`La jauge de gloire est pleine, et le ${pact} en a le plus (${pc(sum)} %) : victoire de ${w.name}, avec ${others}${w === h ? '' : ' (dont toi)'} !`, `The glory gauge is full, and the ${pact} has the most (${pc(sum)}%): victory for ${w.name}, with ${others}${w === h ? '' : ' (you among them)'}!`)
+          : tr(`La jauge de gloire est pleine : le ${pact} en a le plus (${pc(sum)} %), victoire de ${w.name}, avec ${others}. ${h.name} n'en avait que ${pc(h.glory)} %.`, `The glory gauge is full: the ${pact} has the most (${pc(sum)}%), victory for ${w.name}, with ${others}. ${h.name} had only ${pc(h.glory)}%.`))
+        : win
+        ? tr(`La jauge de gloire est pleine, et ${pc(h.glory)} % de cette gloire est à ${h.name} : les chroniques ne retiendront que ton nom.`, `The glory gauge is full, and ${pc(h.glory)}% of that glory belongs to ${h.name}: the chronicles will remember only your name.`)
+        : tr(`La jauge de gloire est pleine : ${w ? w.name : '?'} en a le plus (${w ? pc(w.glory) : 0} %), et l'emporte. ${h.name} n'en avait que ${pc(h.glory)} %.`, `The glory gauge is full: ${w ? w.name : '?'} has the most (${w ? pc(w.glory) : 0}%), and wins. ${h.name} had only ${pc(h.glory)}%.`);
     }
     // 🌐 En ligne : vaincu, on peut regarder la suite ; la partie finie, on dit qui l'emporte
     if (kind === 'spectate') {
       $('endText').textContent = tr(`Le royaume de ${h.name} est tombé. La partie continue pour les autres : tu peux regarder la suite.`,
         `The kingdom of ${h.name} has fallen. The game goes on for the others: you can watch the rest.`);
     }
-    const w = kind === 'online' ? Game.players[Game.winner] : null;
+    const w = kind === 'online' && !Game.gloryDone() ? Game.players[Game.winner] : null;
     if (w && !win) {
       $('endTitle').textContent = tr('🏁 Partie terminée', '🏁 Game over');
       $('endText').textContent = Game.gloryDone() ? tr(`La jauge de gloire est pleine : ${w.name} l'emporte, avec ${Math.round(w.glory / Math.max(1, Game.gloryTotal()) * 100)} % de la gloire.`, `The glory gauge is full: ${w.name} wins, with ${Math.round(w.glory / Math.max(1, Game.gloryTotal()) * 100)}% of the glory.`)
