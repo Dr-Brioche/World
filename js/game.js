@@ -3983,12 +3983,17 @@ const GameRules = {
     for (const k of best.values()) { heart[k] = 1; hasHeart.add(owner[k]); }
     // (un autre morceau, tenu par une ville ou un port fortifié : un cœur aussi, quelle que soit sa taille, sauf si
     //  la ville est encerclée : il ne reste que la zone de sa muraille, pas une case de terre autour)
+    // (🧱 les cases d'un mur, fini ou en chantier, et la petite muraille d'une mine fortifiée ne sont pas « de la terre
+    //  autour » : une ville encerclée dont un mur dépasse de sa muraille reste isolée)
+    let sites = null;
     for (let k = 0; k < size.length; k++) {
       if (heart[k] || !held[k] || (anyOutpost[k] && !hasCastle[k])) continue;
       const o = owner[k];
+      if (!sites) { sites = new Set(); for (const w of this.walls) if (!w.done) for (const t of w.tiles) sites.add(t); }
       for (let q = start[k], end = start[k] + size[k]; q < end; q++) {
         const i = order[q];
-        if (!(this.castleProtects(o, i) || this.portBonus(o, i) > 0)) { heart[k] = 1; break; } // (de la terre hors des murailles)
+        if (this.wallAt[i] || sites.has(i)) continue;
+        if (!(this.castleProtects(o, i) || this.portBonus(o, i) > 0 || this.mineFortBonus(o, i) > 0)) { heart[k] = 1; break; } // (de la terre hors des murailles)
       }
     }
     // (un royaume qui n'a plus que des zones d'avant-poste : son plus grand morceau reste son cœur)
@@ -7357,6 +7362,8 @@ const GameRules = {
       const max = this.garrisonMax(c);
       if (!max || max === Infinity || this.owner[c] < 0 || besieged.has(c)) continue;
       if (this.cm && this.cm.leo && !this.cm.leo.done && c === this.cm.capital.papaute) continue; // (799 : émeute à Rome)
+      // (🚩 un lieu fortifié isolé, coupé de son royaume, ne reçoit plus de renforts : sa garnison ne se refait pas)
+      if (this.garrison[c] < max && this.warFort(c) && this.isIsolated(c)) continue;
       // (une garnison renforcée au-delà de son maximum, par des soldats alliés, n'est pas réduite)
       if (this.garrison[c] < max) this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);
     }
