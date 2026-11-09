@@ -3561,25 +3561,25 @@ const GameRules = {
   },
   // La politique de guerre du royaume p est-elle en cours ?
   warActive(p) { return p.warLevel > 0 && this.tick < p.warUntil; },
-  // Soldats de garnison en plus pour ce lieu fortifié (0 s'il est isolé : les renforts ne peuvent pas le rejoindre)
+  // Soldats de garnison en plus pour ce lieu fortifié (même isolé)
   warBonus(a) {
     const o = this.owner[a];
-    if (o < 0 || !this.warActive(this.players[o]) || this.isIsolated(a)) return 0;
+    if (o < 0 || !this.warActive(this.players[o])) return 0; // (🚩 même isolé : seuls les défenseurs ne peuvent plus le rejoindre)
     return this.players[o].warLevel * CONFIG.WAR_POLICY.GARRISON;
   },
   // Le royaume p vient de perdre un lieu fortifié (pris par taker) : +GARRISON soldats de garnison de plus dans tous
-  // ses autres lieux fortifiés non isolés, tout de suite, et le compte à rebours repart de zéro
+  // ses autres lieux fortifiés (même isolés), tout de suite, et le compte à rebours repart de zéro
   warPolicy(p, taker) {
     if (!p.alive) return;
     const W = CONFIG.WAR_POLICY;
     p.warLevel = (this.warActive(p) ? p.warLevel : 0) + 1;
     p.warUntil = this.tick + W.TIME * CONFIG.TICKS_PER_SECOND;
     for (const a of this.buildingTiles) {
-      if (this.owner[a] === p.id && this.warFort(a) && !this.isIsolated(a)) this.garrison[a] += W.GARRISON;
+      if (this.owner[a] === p.id && this.warFort(a)) this.garrison[a] += W.GARRISON;
     }
     const bonus = p.warLevel * W.GARRISON;
-    if (p.isHuman) UI.log(tr(`🛡️ Politique de guerre : tu as perdu un lieu fortifié, tes autres villes, ports royaux et mines fortifiées (non isolés) ont +${bonus} soldats de garnison pendant ${W.TIME} s !`,
-      `🛡️ War policy: you lost a fortified place, your other cities, royal ports and fortified mines (not cut off) get +${bonus} garrison soldiers for ${W.TIME} s!`), 'good');
+    if (p.isHuman) UI.log(tr(`🛡️ Politique de guerre : tu as perdu un lieu fortifié, tes autres villes, ports royaux et mines fortifiées ont +${bonus} soldats de garnison pendant ${W.TIME} s !`,
+      `🛡️ War policy: you lost a fortified place, your other cities, royal ports and fortified mines get +${bonus} garrison soldiers for ${W.TIME} s!`), 'good');
     else if (taker && taker.isHuman) UI.log(tr(`🛡️ ${p.name} proclame la politique de guerre : ses lieux fortifiés ont +${bonus} soldats de garnison pendant ${W.TIME} s.`,
       `🛡️ ${p.name} proclaims a war policy: their fortified places get +${bonus} garrison soldiers for ${W.TIME} s.`), 'warn', p);
   },
@@ -7362,8 +7362,6 @@ const GameRules = {
       const max = this.garrisonMax(c);
       if (!max || max === Infinity || this.owner[c] < 0 || besieged.has(c)) continue;
       if (this.cm && this.cm.leo && !this.cm.leo.done && c === this.cm.capital.papaute) continue; // (799 : émeute à Rome)
-      // (🚩 un lieu fortifié isolé, coupé de son royaume, ne reçoit plus de renforts : sa garnison ne se refait pas)
-      if (this.garrison[c] < max && this.warFort(c) && this.isIsolated(c)) continue;
       // (une garnison renforcée au-delà de son maximum, par des soldats alliés, n'est pas réduite)
       if (this.garrison[c] < max) this.garrison[c] = Math.min(max, this.garrison[c] + max * CONFIG.GARRISON_REGEN / TPS);
     }
