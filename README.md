@@ -690,12 +690,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    en partent, ses défenseurs y vont, et il n'est pas englobé. Seuls les morceaux **sans ville** sont pris.
    **🚩 Château isolé** : les **châteaux** et les **ports de niveau 3** savent se défendre seuls (avec leur
    garnison). Un château (ou port) n'est isolé que s'il est **complètement encerclé** : il ne lui reste que les terres de
-   sa muraille, sans une case de terre autour. Il **reste alors à son royaume**, avec ces terres,
+   sa muraille (et ses murs, s'il en a bâti), sans une case de terre autour. Il **reste alors à son royaume**, avec ces terres,
    **isolé** au milieu des terres ennemies.
    - Un château (ou port) isolé **continue de produire** pour son royaume (avec les moulins et casernes de sa zone) :
      il est juste plus difficile à défendre.
-   - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend.
-     Aucune armée ne peut partir de lui.
+   - Son royaume **ne peut plus lui envoyer de défenseurs** : seule sa garnison le défend, et elle **ne se refait plus**
+     (aucun renfort, pas de politique de guerre). Aucune armée ne peut partir de lui. Pareil pour une mine fortifiée isolée.
    - Sur la carte, chacun de tes châteaux (ou ports royaux) isolés porte un **petit fanion rouge** sur le côté.
    - Pour le sauver, **clique sur ton château (ou port) isolé** : tu lances un **assaut classique** (marche depuis ta cité la plus proche,
      renforts…) depuis ton royaume, qui traverse les terres ennemies (en évitant leurs murailles) pour le rejoindre.
@@ -1308,6 +1308,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.47** : 🚩 une ville **encerclée** est bien **isolée** même quand un de ses **murs** dépasse de sa muraille (les cases du mur comptaient comme « de la terre autour » : elle passait pour reliée et recevait des renforts) · une ville, un port royal ou une mine fortifiée **isolés ne reçoivent plus de renforts** : leur garnison ne se refait plus toute seule (avant, elle remontait de 5 % par seconde entre deux assauts).
 - **v0.98.46** : 🛡️ la **politique de guerre** dure maintenant **2 min** (au lieu de 1 min 30) · ✝️ la **Croyance ne se sert plus du chemin d'un assaut en cours** : tant que l'assaut n'a pas réussi, ses cases comptent pour la Croyance comme des terres du royaume attaqué (elle ne s'étendait plus depuis le chemin, mais le choisissait comme point d'appui et avançait le long de lui) · 🧱🌿 une **mine fortifiée** (ou une **tour de gloire de niveau 3**) **tient** comme une petite place forte : quand son royaume est coupé ou désorganisé, elle et sa petite muraille ne passent plus à celui qui l'a coupé, elle reste isolée et il faut **l'assiéger** pour la prendre ; la Croyance ne la convertit pas, et un royaume qui en garde une ne se disperse pas.
 - **v0.98.45** : 📿 une **expédition de relique** (et une interception) part maintenant de ta ville **la plus rapide à rejoindre à pied**, comme un assaut, et plus de la plus proche à vol d'oiseau (qui pouvait l'obliger à un long détour autour d'un lac, d'un sommet ou d'une muraille) · 🔥 une ville (ou un port fortifié) **rasée par des Vikings** déclenche aussi la **politique de guerre** de son maître, comme une ville prise par un assaut (il était déjà galvanisé).
 - **v0.98.44** : 🌿⛏️ en posant une **tour de gloire**, seuls les **filons de gloire** sont proposés (et entourés), et en posant une **mine**, seuls les **filons de minerai** · **zone interdite autour des filons** (mines et tours de gloire) : pas de **château** à moins de **13 cases**, ni d'**église** ou de **port** à moins de **10** (cercles rouges pendant la pose), ni de **capitale** à moins de 13 (sauf aux places prévues des arènes) · la **muraille d'une ville s'arrête toujours à 3 cases d'un filon**, même quand la ville s'améliore : une mine ou une tour de gloire ne finit plus jamais enfermée dans une ville, on peut toujours aller la prendre (les villes déjà bâties au début des scénarios gardent leur muraille). Réglages : `DEPOSIT_CASTLE_DISTANCE`, `DEPOSIT_CHURCH_DISTANCE`, `DEPOSIT_SPAWN_DISTANCE`, `DEPOSIT_WALL_GAP` dans `js/config.js`.
