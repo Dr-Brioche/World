@@ -61,6 +61,12 @@ const ARENA_MAPS = {
   // (ox : le centre du triangle est décalé, pour que l'île soit au milieu de la carte)
   trois: { name: tr('Le Trône des Trois', 'The Throne of Three'), W: 340, H: 380, players: 3, glory: true, ox: 34,
     desc: tr('Une île en triangle pour 3 royaumes : au cœur d\'un massif à 3 cols, le Trône ; sur chaque frontière, une rivière et ses deux îles de gloire, dont une dans un cirque de sommets qu\'on n\'atteint que par l\'étroite vallée de la rivière.', 'A triangular island for 3 kingdoms: in the heart of a massif with 3 passes, the Throne; on each border, a river and its two glory islands, one of them in a cirque of peaks reachable only through the narrow river valley.') },
+  // 🌿 trois îles du Trône des Trois (la même forme), de 3 royaumes chacune, séparées par une grande mer ; au centre,
+  // l'îlot de la Couronne. (scale : la taille de chaque île, par rapport à celle du Trône des Trois ; dist : la distance
+  // du centre de la carte au centre de chaque île ; gloryRate : 22 tours de gloire pour 9 royaumes, la jauge ne se
+  // remplit pas 3 fois plus vite que sur le Trône des Trois)
+  troistrones: { name: tr('Les Trois Trônes', 'The Three Thrones'), W: 700, H: 640, oy: 82, players: 9, glory: true, gloryRate: 0.4, scale: 0.85, dist: 232,
+    desc: tr('3 îles toutes pareilles, de 3 royaumes chacune (le Trône des Trois), séparées par une grande mer : sur chaque île, un Trône et 6 îles de gloire ; au milieu de la mer, l\'îlot de la Couronne, qu\'on n\'atteint qu\'en bateau.', '3 identical islands of 3 kingdoms each (the Throne of Three), split by a wide sea: on each island, a Throne and 6 glory islands; in the middle of the sea, the Crown islet, reachable only by boat.') },
 };
 
 function generateArenaMap(type, seed) {
@@ -506,20 +512,31 @@ function generateArenaMap(type, seed) {
     for (let k = 0; k < 8; k++) m.relicSpots.push(at(...polar(14, k * part + half)));
   }
 
-  if (type === 'trois') {
-    // 🌿 Le Trône des Trois : une île en triangle aux coins arrondis, 3 royaumes dans les coins. Au centre, un grand
-    // massif (montagnes, et un anneau de sommets) percé de 3 cols étroits, un face à chaque frontière : au fond, le
-    // Trône (une tour de gloire). Sur chaque frontière, du massif à la mer, coule une rivière (on la passe à gué,
-    // lentement) avec deux îles de gloire : l'île du Gué, à mi-chemin, reliée à chaque rive par une petite chaussée,
-    // et l'île du Cirque, près de la côte, enfermée dans un anneau de sommets : on n'y entre que par l'étroite vallée
-    // de la rivière, sur ses sentiers de berge.
-    // Chaque royaume a son lac, ses forêts, une carrière, du fer vers le massif et deux mines d'or sur ses flancs.
-    const part = 120 * DEG, half = part / 2, inn = 72, cirque = 103;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const { r, phi, fx, fy } = fold(x, y, 3), i = y * W + x, w = wobble(fx, fy), w2 = wobble(fx, fy, 2);
+  // 🌿 L'île du Trône des Trois, posée en (icx, icy), tournée de rot (en radians) et à l'échelle S : une île en triangle
+  // aux coins arrondis, 3 royaumes dans les coins. Au centre, un grand massif (montagnes, et un anneau de sommets)
+  // percé de 3 cols étroits, un face à chaque frontière : au fond, le Trône (une tour de gloire). Sur chaque frontière,
+  // du massif à la mer, coule une rivière (on la passe à gué, lentement) avec deux îles de gloire : l'île du Gué, à
+  // mi-chemin, reliée à chaque rive par une petite chaussée, et l'île du Cirque, près de la côte, enfermée dans un
+  // anneau de sommets : on n'y entre que par l'étroite vallée de la rivière, sur ses sentiers de berge.
+  // Chaque royaume a son lac, ses forêts, une carrière, du fer vers le massif et deux mines d'or sur ses flancs.
+  // (le terrain se calcule dans les coordonnées de l'île, avant rotation et échelle : plusieurs îles posées ainsi ont
+  //  exactement la même forme et le même terrain)
+  const throneIsland = (icx, icy, rot, S) => {
+    const part = 120 * DEG, half = part / 2, inn = 72, cirque = 103, reach = 190 * S;
+    const cr = DMath.cos(rot), sr = DMath.sin(rot);
+    // (un point de l'île, donné en coordonnées de l'île, sur la carte)
+    const place = (r, a) => [icx + S * r * DMath.cos(a + rot), icy + S * r * DMath.sin(a + rot)];
+    for (let y = Math.max(0, Math.floor(icy - reach)); y < Math.min(H, icy + reach); y++) for (let x = Math.max(0, Math.floor(icx - reach)); x < Math.min(W, icx + reach); x++) {
+      // (la case ramenée dans l'île : décalée, tournée de -rot, puis à l'échelle 1)
+      const dx = x + 0.5 - icx, dy = y + 0.5 - icy, ux = (dx * cr + dy * sr) / S, uy = (-dx * sr + dy * cr) / S;
+      const r = DMath.hypot(ux, uy);
+      let phi = DMath.atan2(uy, ux) % part;
+      if (phi < 0) phi += part;
+      if (phi > half) phi = part - phi;
+      const fx = r * DMath.cos(phi), fy = r * DMath.sin(phi), i = y * W + x, w = wobble(fx, fy), w2 = wobble(fx, fy, 2);
       // (la côte : un triangle aux coins arrondis, ses côtés face aux frontières ; un peu de dentelle)
       const coast = 118 / DMath.pow(DMath.cos(Math.min(phi, half - 0.02)), 0.62) + 5 * w2 + 2 * w;
-      if (r > coast) { terrain[i] = T.WATER; continue; }
+      if (r > coast) continue; // (la mer : déjà là)
       let t = land(fx, fy, 0.64, 0.82);
       const dIn = DMath.hypot(fx - inn, fy), dCi = DMath.hypot(fx - cirque, fy);
       // (le lac de chaque royaume, derrière sa capitale, un peu de côté)
@@ -543,15 +560,41 @@ function generateArenaMap(type, seed) {
     }
     for (let k = 0; k < 3; k++) {
       const a = k * part + half, b = k * part; // (a : l'axe du royaume k ; b : la frontière entre deux royaumes)
-      spot(...polar(140, a));
-      deposit(...polar(166, a).map(v => v - 1), 'stone');
-      deposit(...polar(84, a).map(v => v - 1), 'iron');
-      for (const s of [-1, 1]) deposit(...polar(100, a + s * 16 * DEG).map(v => v - 1), 'gold'); // (entre la capitale et ses lacs)
-      deposit(...polar(inn, b).map(v => v - 1), 'glory');    // (l'île du Gué)
-      deposit(...polar(cirque, b).map(v => v - 1), 'glory'); // (l'île du Cirque)
+      spot(...place(140, a));
+      deposit(...place(166, a).map(v => v - 1), 'stone');
+      deposit(...place(84, a).map(v => v - 1), 'iron');
+      for (const s of [-1, 1]) deposit(...place(100, a + s * 16 * DEG).map(v => v - 1), 'gold'); // (entre la capitale et ses lacs)
+      deposit(...place(inn, b).map(v => v - 1), 'glory');    // (l'île du Gué)
+      deposit(...place(cirque, b).map(v => v - 1), 'glory'); // (l'île du Cirque)
     }
-    deposit(cx - 1, cy - 1, 'glory'); // (le Trône)
-    for (let k = 0; k < 3; k++) m.relicSpots.push(at(...polar(9, k * part + half)));
+    deposit(icx - 1, icy - 1, 'glory'); // (le Trône)
+    for (let k = 0; k < 3; k++) m.relicSpots.push(at(...place(9, k * part + half)));
+  };
+
+  if (type === 'trois') {
+    // 🌿 Le Trône des Trois : une seule île, au milieu de la carte (voir throneIsland)
+    terrain.fill(T.WATER);
+    throneIsland(cx, cy, 0, 1);
+  }
+
+  if (type === 'troistrones') {
+    // 🌿 Les Trois Trônes : 3 îles du Trône des Trois, toutes pareilles (même forme, même terrain), de 3 royaumes
+    // chacune, autour d'une grande mer ; au milieu de la mer, l'îlot de la Couronne (une tour de gloire), qu'on
+    // n'atteint qu'en bateau. Chaque île tourne un de ses côtés vers le centre : ses voisins d'île sont loin, de
+    // l'autre côté d'une large mer.
+    terrain.fill(T.WATER);
+    const S = A.scale, D = A.dist;
+    for (let k = 0; k < 3; k++) {
+      const ang = -90 * DEG + k * 120 * DEG;
+      // (le côté de l'île qui regarde le centre : sa frontière b = 0 doit pointer vers le centre de la carte)
+      throneIsland(cx + D * DMath.cos(ang), cy + D * DMath.sin(ang), ang + Math.PI, S);
+    }
+    // (l'îlot de la Couronne : une colline boisée au milieu de la mer, avec sa tour de gloire)
+    for (let y = Math.floor(cy - 16); y <= cy + 16; y++) for (let x = Math.floor(cx - 16); x <= cx + 16; x++) {
+      const d = DMath.hypot(x + 0.5 - cx, y + 0.5 - cy), w = wobble(x - cx, y - cy);
+      if (inMap(x, y) && d < 12 + 2 * w) terrain[y * W + x] = d < 6 ? T.HILLS : fbm(forestNoise, x / 6, y / 6, 2) > 0.55 ? T.FOREST : T.PLAINS;
+    }
+    deposit(cx - 1, cy - 1, 'glory');
   }
 
   // (petites variations de couleur pour un rendu moins plat)
