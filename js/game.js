@@ -3532,9 +3532,9 @@ const GameRules = {
       if (d.kind !== 'glory' || this.building[d.a] !== B_MINE || this.owner[d.a] < 0 || this.underConstruction(d.a)) continue;
       const p = this.players[this.owner[d.a]];
       p.glory += this.gloryRate(d.a);
-      // (toutes les FLOAT_EVERY secondes, au-dessus de chaque tour : « +X 🌿 », la gloire gagnée pendant ce temps, pour la
-      //  voir couler : en or pour les tiennes, en blanc pour celles des autres)
-      if (show) Render.floatText(d.a, B_MINE, `+${fmtRate(this.gloryRate(d.a) * every)} 🌿`, p.isHuman ? '#ffd75e' : '#f2ece0', 8); // (8 cases plus haut : au-dessus de la tour)
+      // (toutes les FLOAT_EVERY secondes, au-dessus de chacune de TES tours : « +X 🌿 », la gloire gagnée pendant ce temps,
+      //  pour la voir couler ; comme la production des autres bâtiments, on ne voit que la sienne)
+      if (show && p.isHuman) Render.floatText(d.a, B_MINE, `+${fmtRate(this.gloryRate(d.a) * every)} 🌿`, '#ffd75e', 8); // (8 cases plus haut : au-dessus de la tour)
     }
   },
   // Gloire par seconde de la tour de gloire a : selon son niveau (MINES.glory.rate), et la carte (ARENA_MAPS.gloryRate :
