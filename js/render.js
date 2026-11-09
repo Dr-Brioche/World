@@ -2061,6 +2061,25 @@ const Render = {
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
     '<path d="M16 2L28 16h-7v13h-10V16H4z" fill="#f0c94a" stroke="#3a2512" stroke-width="2" stroke-linejoin="round"/>' +
     '<path d="M16 7l7 8" stroke="#fff4c2" stroke-width="1.5" stroke-linecap="round"/></svg>') + '") 16 2, pointer',
+  // 🔥 Pendant la visée d'un assaut viking : une flamme (son « point chaud » : la pointe de la flamme, en haut)
+  VIKING_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
+    '<path d="M15 2c1 5 7 8 8 15c.7 5-2.6 11-8 11s-9-4.3-8.4-9.6c.4-3.4 2.4-5 3.4-8.4c1.4 2 1.6 3.8 1.6 5.6C13.8 12 13 7 15 2z" fill="#e8501c" stroke="#2a1404" stroke-width="1.8" stroke-linejoin="round"/>' +
+    '<path d="M15.4 13c.6 3 4 4.6 4 8.6c0 2.7-2 4.6-4.4 4.6s-4.2-1.8-4-4.4c.2-1.7 1.3-2.6 1.9-4.2c.8 1 1 2 1 3c1-2.2 1.6-4.6 1.5-7.6z" fill="#f7b733"/>' +
+    '<path d="M15.2 20.5c.3 1.5 1.8 2.3 1.8 4c0 1.2-.9 2-2 2s-1.9-.8-1.8-2c.1-.8.6-1.3 1-2" fill="#fff1b0"/></svg>') + '") 15 2, pointer',
+  // 🔥 La cible viking survolée (ville ou port fortifié ennemi), si l'assaut y est possible : son plan, sinon null
+  // (⏱️ gardé en mémoire tant qu'on survole le même bâtiment, et une seconde au plus)
+  vikingTargetUnderMouse() {
+    const G = Game, h = G.human, i = this.hover;
+    if (!UI.vikingAim || !h || !h.alive || i < 0 || !G.building[i]) return null;
+    const c = G.anchor[i], o = G.owner[c];
+    if (o < 0 || o === h.id || G.areAllied(h.id, o) || !G.holdsAlone(c)) return null;
+    const sec = Math.floor(G.tick / CONFIG.TICKS_PER_SECOND), m = this.vikingMemo;
+    if (m && m.c === c && m.sec === sec) return m.plan;
+    const plan = G.uiCall(() => G.planViking(h.id, i));
+    this.vikingMemo = { c, sec, plan: plan.error ? null : plan };
+    return this.vikingMemo.plan;
+  },
   // 📿 Sur une relique qu'on peut aller chercher (ou une armée de relique à intercepter) : une croix d'or
   RELIC_CURSOR: 'url("data:image/svg+xml,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
@@ -2147,7 +2166,11 @@ const Render = {
   drawSelectable(ox, oy) {
     const G = Game, a = UI.wallFor >= 0 || UI.tradeFor >= 0 ? -1 : this.selectableAt(this.hover);
     // épée sur une cible attaquable, main médiévale ailleurs ; pendant une construction, le curseur de pose (voir UI)
-    const cursor = UI.upgradeMode ? this.UPGRADE_CURSOR : UI.selectedBuild || UI.wallFor >= 0 || UI.tradeFor >= 0 ? ''
+    // (🔥 visée viking : la flamme partout, et sur une cible possible, une bulle rappelle combien de soldats partiront)
+    if (UI.vikingAim && this.mouse && this.vikingTargetUnderMouse()) {
+      this.castleTip = { x: this.mouse.x, y: this.mouse.y, text: tr(`🔥 ${fmt(Math.floor(G.human.troops * UI.ratio))} soldats`, `🔥 ${fmt(Math.floor(G.human.troops * UI.ratio))} soldiers`), color: '#a3261f' };
+    }
+    const cursor = UI.vikingAim ? this.VIKING_CURSOR : UI.upgradeMode ? this.UPGRADE_CURSOR : UI.selectedBuild || UI.wallFor >= 0 || UI.tradeFor >= 0 ? ''
       : this.relicActionUnderMouse() ? this.RELIC_CURSOR : this.attackableUnderMouse(a) ? this.SWORD_CURSOR : this.HAND_CURSOR;
     // (on garde le dernier curseur choisi : le navigateur réécrit l'adresse de l'image à sa façon)
     if (this.curCursor !== cursor) { this.curCursor = cursor; this.canvas.style.cursor = cursor; }
