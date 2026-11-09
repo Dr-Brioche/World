@@ -963,12 +963,14 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (pierre). Il y en a environ 5 de fer, 5 d'or, 5 de pierre et 2 de diamant par carte. Une mine a **2 niveaux**, ne se
      démolit pas, et rapporte **2 fois plus** si une **route** la relie à une de tes villes (une ville à moins de **30 cases**,
      sur la même terre). Elle passe à qui prend ses terres, avec l'état de son filon. 🎯 Une mine ennemie **se vise directement**,
-     comme une église ou un port (sauf si elle est dans la muraille d'une ville : il faut d'abord prendre la ville, et la mine part avec elle).
+     comme une église ou un port (une mine ne finit jamais dans la muraille d'une ville : voir plus bas).
      🧱 **Fortifier** (mine de niveau 2, 💰 **800**, **30 s** de travaux) : une **petite muraille** de 4 cases autour de la mine.
      La **Croyance** ne convertit plus rien dedans ; une **garnison de 25 soldats** la garde (elle se reconstitue) et attend
      l'ennemi derrière la muraille : un assaut doit l'**assiéger 10 s**, et elle se défend seule, sans que tu envoies d'armée.
      Mais ce n'est pas une ville : **aucune armée n'en part** (ni assaut ni défenseurs), et elle **ne suffit pas à tenir un
-     territoire** (sans ville ni port fortifié, il reste désorganisé). Prise, elle reste fortifiée pour son nouveau maître.
+     territoire** (sans ville ni port fortifié, il reste désorganisé). Elle **tient** pourtant d'elle-même : si son royaume est
+     coupé ou désorganisé, elle reste à lui, isolée, et il faut l'assiéger ; mais un royaume qui a perdu **toutes ses villes et
+     toutes ses terres** la perd d'office, au profit de celui qui l'a anéanti. Prise, elle reste fortifiée pour son nouveau maître.
      Réglages : `MINE_FORT` dans `js/config.js`.
      - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
        **3 mines au plus** (+48 % au maximum).
@@ -1308,6 +1310,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.49** : 🧱🌿 un royaume qui a perdu **toutes ses villes et toutes ses terres** perd aussi ses **mines fortifiées** (et tours de gloire de niveau 3) : il est anéanti, et elles passent d'office, avec leur petite muraille, à celui qui l'a achevé (avant, elles le gardaient en vie et il fallait les assiéger une à une).
 - **v0.98.48** : 🚩 un lieu fortifié **isolé** (ville, port royal, mine fortifiée) ne perd que ses **défenseurs** : ils ne peuvent plus le rejoindre, il faut le **relier** par un assaut ; mais sa **garnison se refait** de nouveau peu à peu, et la **politique de guerre** le renforce aussi (avant, elle ne renforçait que les lieux non isolés).
 - **v0.98.47** : 🚩 une ville **encerclée** est bien **isolée** même quand un de ses **murs** dépasse de sa muraille (les cases du mur comptaient comme « de la terre autour » : elle passait pour reliée et recevait des renforts) · une ville, un port royal ou une mine fortifiée isolés ne reçoivent plus de renforts : leur garnison ne se refait plus toute seule (retiré en v0.98.48).
 - **v0.98.46** : 🛡️ la **politique de guerre** dure maintenant **2 min** (au lieu de 1 min 30) · ✝️ la **Croyance ne se sert plus du chemin d'un assaut en cours** : tant que l'assaut n'a pas réussi, ses cases comptent pour la Croyance comme des terres du royaume attaqué (elle ne s'étendait plus depuis le chemin, mais le choisissait comme point d'appui et avançait le long de lui) · 🧱🌿 une **mine fortifiée** (ou une **tour de gloire de niveau 3**) **tient** comme une petite place forte : quand son royaume est coupé ou désorganisé, elle et sa petite muraille ne passent plus à celui qui l'a coupé, elle reste isolée et il faut **l'assiéger** pour la prendre ; la Croyance ne la convertit pas, et un royaume qui en garde une ne se disperse pas.
