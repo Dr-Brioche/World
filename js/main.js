@@ -1117,13 +1117,36 @@ const UI = {
     const first = lead && lead !== mine ? tr(` · 1er : ${name(lead)} ${pct(lead.glory)} %`, ` · 1st: ${name(lead)} ${pct(lead.glory)}%`) : '';
     const you = mine && mine.pact >= 0 ? tr(` · ton pacte ${pct(mine.glory)} %`, ` · your pact ${pct(mine.glory)}%`) : '';
     $('gloryTitle').textContent = tr(`🌿 Gloire ${pct(Math.min(goal, total))} % · toi ${pct(h.glory)} %`, `🌿 Glory ${pct(Math.min(goal, total))}% · you ${pct(h.glory)}%`) + you + first;
-    const seg = p => `<i class="${p === h ? 'me' : ''}" style="width:${Math.min(100, p.glory / goal * 100)}%;background:rgb(${p.color})" title="${escapeHtml(p.name)} : ${pct(p.glory)} %"></i>`;
+    // (au survol d'une couleur, une bulle : le royaume et sa part de la jauge, voir gloryTip ; data-pid : son royaume)
+    const seg = p => `<i class="${p === h ? 'me' : ''}" data-pid="${p.id}" style="width:${Math.min(100, p.glory / goal * 100)}%;background:rgb(${p.color})"></i>`;
     $('gloryGauge').innerHTML = camps.map(c => c.pact < 0 || c.members.length < 2 ? c.members.filter(p => p.glory > 0).map(seg).join('')
       // (un pacte : son cadre fait la largeur de sa gloire, et ses royaumes s'y partagent la place)
-      : `<b class="pact" style="width:${Math.min(100, c.glory / goal * 100)}%" title="${escapeHtml(name(c))} : ${pct(c.glory)} %">` +
+      : `<b class="pact" style="width:${Math.min(100, c.glory / goal * 100)}%">` +
         c.members.filter(p => p.glory > 0).map(p => seg(p).replace(/width:[^%]*%/, `width:${(p.glory / c.glory * 100).toFixed(2)}%`)).join('') + '</b>').join('');
-    bar.title = tr(`La jauge de gloire : chaque tour de gloire la remplit de la couleur de son royaume (les royaumes d'un même pacte côte à côte, dans un cadre doré). Pleine, le royaume, ou le pacte, qui en a le plus l'emporte.`,
+    $('gloryTitle').title = tr(`La jauge de gloire : chaque tour de gloire la remplit de la couleur de son royaume (les royaumes d'un même pacte côte à côte, dans un cadre doré). Pleine, le royaume, ou le pacte, qui en a le plus l'emporte.`,
       `The glory gauge: each glory tower fills it with its kingdom's colour (kingdoms of the same pact side by side, in a golden frame). When it is full, the kingdom, or the pact, with the most wins.`);
+    // (la jauge vient d'être redessinée : la bulle de la couleur survolée suit)
+    if (!this.gloryTipOn) {
+      this.gloryTipOn = true;
+      $('gloryGauge').addEventListener('mousemove', e => { this.gloryMouse = { x: e.clientX, y: e.clientY }; this.gloryTip(); });
+      $('gloryGauge').addEventListener('mouseleave', () => { this.gloryMouse = null; this.gloryTip(); });
+    }
+    if (this.gloryMouse) this.gloryTip();
+  },
+  // 🌿 La bulle de la jauge de gloire : sous la souris, la bannière et le nom du royaume dont c'est la couleur, et sa
+  // part de la jauge (et, s'il est dans un pacte, la part de tout le pacte)
+  gloryTip() {
+    const G = Game, tip = $('gloryTip'), m = this.gloryMouse;
+    const el = m && document.elementFromPoint(m.x, m.y), seg = el && el.closest && el.closest('#gloryGauge i');
+    const p = seg ? G.players[+seg.dataset.pid] : null;
+    if (!p) { tip.classList.add('hidden'); return; }
+    const goal = CONFIG.GLORY.GOAL, pct = v => fmtRate(Math.round(v / goal * 1000) / 10);
+    const camp = p.alive && p.pact >= 0 ? G.gloryCamps().find(c => c.pact === p.pact) : null;
+    tip.innerHTML = `${this.bannerImg(p)} <b>${escapeHtml(p.name)}</b> : ${pct(p.glory)} ${tr('% de la gloire', '% of the glory')}` +
+      (camp && camp.members.length > 1 ? `<br><span class="sub">🤝 ${escapeHtml(G.pactName(p))} : ${pct(camp.glory)} %</span>` : '');
+    tip.classList.remove('hidden');
+    tip.style.left = Math.max(4, Math.min(innerWidth - tip.offsetWidth - 4, m.x - tip.offsetWidth / 2)) + 'px';
+    tip.style.top = (m.y + 18) + 'px';
   },
 
   // ⛏️ Les mines d'un royaume, pour la barre de résumé : « · ⛏️ 3 (⚒️ 2 🪙 1) » (rien s'il n'en a pas)
