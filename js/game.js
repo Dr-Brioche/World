@@ -7046,19 +7046,33 @@ const GameRules = {
   // Le royaume p n'est-il plus qu'un débris ? Aucune ville, aucun port fortifié, aucun avant-poste, et au plus
   // REMNANT_TILES cases (souvent coincées entre un sommet et un fleuve, où personne ne peut l'atteindre : la partie
   // ne pourrait jamais finir). Pas les pillards (leurs terres sont à part) ni un royaume qui attend son heure (dormant).
-  // (🧱🌿 une mine fortifiée, ou une tour de gloire de niveau 3, le fait tenir aussi : il faut l'assiéger pour l'anéantir)
+  // (🧱🌿 ses mines fortifiées, et tours de gloire de niveau 3, ne le font pas tenir : sans ville ni terres, il les perd ;
+  //  on ne compte pas les cases de leur petite muraille, voir scatterKingdom)
   remnantOnly(p) {
-    if (p.raiders || p.dormant || p.tiles > CONFIG.REMNANT_TILES || p.bCount[B_OUTPOST]) return false;
-    if ([...this.fortMines].some(a => this.owner[a] === p.id && this.building[a] === B_MINE)) return false;
-    return !this.strongholds(p.id, false).length;
+    if (p.raiders || p.dormant || p.bCount[B_OUTPOST] || this.strongholds(p.id, false).length) return false;
+    let tiles = p.tiles;
+    if (tiles > CONFIG.REMNANT_TILES) for (const a of this.fortMines) if (this.owner[a] === p.id && this.building[a] === B_MINE) tiles -= this.mineZone(a).length;
+    return tiles <= CONFIG.REMNANT_TILES;
   },
   // Un royaume réduit à un débris se disperse : il est anéanti (par celui qui lui a pris ses dernières terres), et
   // ses dernières cases redeviennent des terres libres, avec leurs bâtiments
   scatterKingdom(p) {
     const by = p.lastHitBy !== undefined && this.players[p.lastHitBy].alive ? p.lastHitBy : -1;
     UI.log(tr(`🏳️ Les derniers fidèles ${this.deName(p.name)} se dispersent : ce royaume sans ville disparaît.`, `🏳️ The last loyal followers of ${p.name} scatter: this kingdom without a city vanishes.`), p.isHuman ? 'warn' : '', p);
+    const forts = [...this.fortMines].filter(a => this.owner[a] === p.id && this.building[a] === B_MINE);
     this.eliminate(p.id, by);
     for (const e of this.expeditions) if (e.pid === p.id) e.done = true;
+    // (🧱🌿 ses mines fortifiées, et tours de gloire de niveau 3, passent d'office à celui qui l'a anéanti, avec leur
+    //  petite muraille ; leurs garnisons se rendent. Sans vainqueur, elles disparaissent avec le reste)
+    if (by >= 0) {
+      for (const a of forts) {
+        this.garrison[a] = 0;
+        for (const i of this.mineZone(a)) this.setOwner(i, by);
+        for (const j of this.footprint(a, B_MINE)) if (this.owner[j] === p.id) this.setOwner(j, by);
+      }
+      if (forts.length && this.players[by].isHuman) UI.log(tr(`🧱 ${forts.length > 1 ? `Les ${forts.length} mines fortifiées` : 'La mine fortifiée'} ${this.deName(p.name)} ${forts.length > 1 ? 'passent' : 'passe'} à toi : sans ville ni terres, ${forts.length > 1 ? 'elles ne tiennent' : 'elle ne tient'} plus.`,
+        `🧱 ${possessive(p.name)} fortified mine${forts.length > 1 ? 's' : ''} ${forts.length > 1 ? 'are' : 'is'} yours: with no city and no land, ${forts.length > 1 ? 'they' : 'it'} can no longer hold out.`), 'good', p);
+    }
     for (const a of this.buildingTiles.slice()) if (this.owner[a] === p.id) this.removeBuilding(a);
     for (let i = 0; i < this.N; i++) if (this.owner[i] === p.id) this.setOwner(i, -1);
   },
