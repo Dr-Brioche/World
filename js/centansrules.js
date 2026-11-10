@@ -303,9 +303,9 @@ Object.assign(GameRules, {
       const bo = this.hyP('bourgogne');
       // (le traité de Troyes ne se signe que si la Bourgogne est du côté anglais, et la reine à Paris… chez les Anglais)
       if (en.alive && fr.alive && this.hyCampOf(bo.id) === 'angleterre') {
-        this.hyAddLegit(en.id, C.LEGIT.TROYES);
+        this.hyAddLegit(en.id, this.reward(en, C.LEGIT.TROYES)); // (🎁 selon la difficulté, pour le joueur : voir rewardK)
         this.hyAddLegit(fr.id, C.LEGIT.TROYES_FRANCE);
-        this.hyEvent('troyes', {}, tr('📜 1420 : par le traité de Troyes, Henri V devient l\'héritier du royaume de France.', '📜 1420: by the Treaty of Troyes, Henry V becomes heir to the kingdom of France.'), '', en);
+        this.hyEvent('troyes', { legit: this.reward(en, C.LEGIT.TROYES) }, tr('📜 1420 : par le traité de Troyes, Henri V devient l\'héritier du royaume de France.', '📜 1420: by the Treaty of Troyes, Henry V becomes heir to the kingdom of France.'), '', en);
       }
     }
     if (once('orleans', 1428)) this.hyEnglishAssault('orleans', 'Orléans', army);
@@ -907,8 +907,8 @@ Object.assign(GameRules, {
   hyOffer(key, data, role = 'angleterre') {
     const E = CENTANS.ENGLAND, hy = this.hy;
     (hy.offers = hy.offers || {})[key] = Object.assign({ role }, data);
-    const vars = key === 'bretigny' ? { gold: fmt(E.BRETIGNY.GOLD), legit: E.BRETIGNY.LEGIT, legit2: E.BRETIGNY.REFUSE_LEGIT }
-      : key === 'jeanne' ? { gold: fmt(CENTANS.JOAN.REFUSE_GOLD) } : { gold: fmt(E.PEASANTS.GOLD), pct: Math.round(E.PEASANTS.TROOPS * 100) };
+    const h = this.human, vars = key === 'bretigny' ? { gold: fmt(this.reward(h, E.BRETIGNY.GOLD)), legit: E.BRETIGNY.LEGIT, legit2: this.reward(h, E.BRETIGNY.REFUSE_LEGIT) }
+      : key === 'jeanne' ? { gold: fmt(this.reward(h, CENTANS.JOAN.REFUSE_GOLD)) } : { gold: fmt(E.PEASANTS.GOLD), pct: Math.round(E.PEASANTS.TROOPS * 100) };
     const ev = (role === 'france' ? CENTANS.EVENTS : CENTANS.ENGLAND_EVENTS)[key], g = CENTANS.GAINS[key];
     // (📜 sous les choix, ce qui s'est vraiment passé ; le choix historique est marqué : voir HISTORY)
     UI.parchment(Object.assign({}, ev, { history: CENTANS.HISTORY[key] || '', gain: g ? g[role] || g['*'] || '' : '' }), vars,
@@ -928,21 +928,21 @@ Object.assign(GameRules, {
     if (key === 'jeanne') {
       const fr = this.hyP('france');
       if (pick === 'listen') { this.hy.joan = { state: 'ready' }; return; }
-      fr.gold += CENTANS.JOAN.REFUSE_GOLD;
-      if (fr.isHuman) UI.log(tr(`📜 Tu t'écartes de l'histoire (+${fmt(CENTANS.JOAN.REFUSE_GOLD)} d'or) : Jeanne rentre à Domrémy, sans armée ni étendard. La partie continue, à toi d'écrire la suite.`, `📜 You step away from history (+${fmt(CENTANS.JOAN.REFUSE_GOLD)} gold): Joan goes home to Domrémy, with no army and no standard. The game goes on: the rest is yours to write.`), 'good');
+      fr.gold += this.reward(fr, CENTANS.JOAN.REFUSE_GOLD);
+      if (fr.isHuman) UI.log(tr(`📜 Tu t'écartes de l'histoire (+${fmt(this.reward(fr, CENTANS.JOAN.REFUSE_GOLD))} d'or) : Jeanne rentre à Domrémy, sans armée ni étendard. La partie continue, à toi d'écrire la suite.`, `📜 You step away from history (+${fmt(this.reward(fr, CENTANS.JOAN.REFUSE_GOLD))} gold): Joan goes home to Domrémy, with no army and no standard. The game goes on: the rest is yours to write.`), 'good');
       return;
     }
     if (key === 'bretigny') {
       if (pick === 'accept') {
         this.hyStartTruce(data.truce, true);
-        en.gold += E.BRETIGNY.GOLD;
+        en.gold += this.reward(en, E.BRETIGNY.GOLD);
         this.hyAddLegit(en.id, -E.BRETIGNY.LEGIT);
-        if (en.isHuman) UI.log(tr(`🕊️ La paix de Brétigny est signée : +${fmt(E.BRETIGNY.GOLD)} d'or, mais tu renonces à la couronne de France (−${E.BRETIGNY.LEGIT} de Légitimité).`,
-          `🕊️ The peace of Brétigny is signed: +${fmt(E.BRETIGNY.GOLD)} gold, but you renounce the crown of France (−${E.BRETIGNY.LEGIT} Legitimacy).`), 'good');
+        if (en.isHuman) UI.log(tr(`🕊️ La paix de Brétigny est signée : +${fmt(this.reward(en, E.BRETIGNY.GOLD))} d'or, mais tu renonces à la couronne de France (−${E.BRETIGNY.LEGIT} de Légitimité).`,
+          `🕊️ The peace of Brétigny is signed: +${fmt(this.reward(en, E.BRETIGNY.GOLD))} gold, but you renounce the crown of France (−${E.BRETIGNY.LEGIT} Legitimacy).`), 'good');
       } else {
-        this.hyAddLegit(en.id, E.BRETIGNY.REFUSE_LEGIT);
-        if (en.isHuman) UI.log(tr(`⚔️ Tu refuses la paix : la guerre continue, et tes partisans te savent gré de ne rien céder (+${E.BRETIGNY.REFUSE_LEGIT} de Légitimité).`,
-          `⚔️ You refuse the peace: the war goes on, and your supporters are grateful that you yield nothing (+${E.BRETIGNY.REFUSE_LEGIT} Legitimacy).`), 'good');
+        this.hyAddLegit(en.id, this.reward(en, E.BRETIGNY.REFUSE_LEGIT));
+        if (en.isHuman) UI.log(tr(`⚔️ Tu refuses la paix : la guerre continue, et tes partisans te savent gré de ne rien céder (+${this.reward(en, E.BRETIGNY.REFUSE_LEGIT)} de Légitimité).`,
+          `⚔️ You refuse the peace: the war goes on, and your supporters are grateful that you yield nothing (+${this.reward(en, E.BRETIGNY.REFUSE_LEGIT)} Legitimacy).`), 'good');
       }
     }
     if (key === 'paysans') {

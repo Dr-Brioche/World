@@ -708,3 +708,23 @@ button:disabled .ico { opacity: 0.6; }
 /* (le menu de départ sur un écran moyen ou petit : moins de marges, pour garder un maximum de place aux réglages) */
 @media (max-width: 900px) { #menu > .card { padding: 22px 26px; } }
 @media (max-width: 520px) { #menu > .card { padding: 16px 14px; } #menu > .card .langRow { margin-right: -8px; } }
+
+/* 📜 Les actions de campagne : un bouton toujours visible à droite, et son panneau */
+#campBtn { position: fixed; right: 8px; top: 50%; transform: translateY(-50%); z-index: 6; padding: 8px 10px; cursor: pointer;
+  font-family: Cinzel, Georgia, serif; font-weight: bold; font-size: 13px; color: var(--ink, #2b1d0e); writing-mode: vertical-rl; text-orientation: mixed;
+  border: 2px solid #b8862b; box-shadow: 0 0 0 2px rgba(255, 215, 120, 0.35), 0 3px 10px rgba(0, 0, 0, 0.35); }
+#campBtn:hover, #campBtn.on { background: #fff3cf; }
+#campBtn.ready::after { content: ''; position: absolute; top: -5px; left: -5px; width: 12px; height: 12px; border-radius: 50%; background: #3f8a33; border: 2px solid #eaf6d8; }
+#campPanel { position: fixed; right: 52px; top: 50%; transform: translateY(-50%); z-index: 6; width: 360px; max-width: calc(100vw - 70px);
+  max-height: 80vh; overflow-y: auto; padding: 10px 12px; font-size: 13px; }
+#campPanel h3 { margin: 0 0 6px; font-family: Cinzel, Georgia, serif; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+#campPanel h3 button { border: 0; background: none; cursor: pointer; font-size: 16px; }
+#campPanel .sec { border-top: 1px solid rgba(110, 70, 20, 0.3); padding: 7px 0 5px; }
+#campPanel .sec b { font-family: Cinzel, Georgia, serif; }
+#campPanel .sec p { margin: 3px 0 5px; line-height: 1.35; }
+#campPanel .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+#campPanel button.act { padding: 4px 8px; cursor: pointer; font-size: 12px; }
+#campPanel button.act:disabled { opacity: 0.5; cursor: not-allowed; }
+#campPanel .why { font-size: 11px; font-style: italic; opacity: 0.8; }
+#campPanel select { max-width: 170px; font-size: 12px; }
+@media (max-width: 760px) { #campBtn { top: auto; bottom: 150px; transform: none; } #campPanel { top: auto; bottom: 60px; transform: none; } }

@@ -159,7 +159,8 @@ Object.assign(GameRules, {
     st.state[k] = ok ? 'done' : 'failed';
     if (ok) UI.noteChallengeDone(k); // (✔ gardé dans le navigateur : voir UI.factionDone)
     if (ok) {
-      const m = vow ? V.MULT : 1, gold = (c.reward.gold || 0) * m, faith = (c.reward.faith || 0) * m;
+      // (🎁 selon la difficulté : voir EVENT_REWARD)
+      const m = (vow ? V.MULT : 1) * this.rewardK(h), gold = Math.round((c.reward.gold || 0) * m), faith = Math.round((c.reward.faith || 0) * m);
       h.gold += gold;
       if (faith) this.defisFaith(faith);
       Music.sound('diamond'); // (le carillon d'une récompense)
@@ -179,9 +180,9 @@ Object.assign(GameRules, {
     this.faithCache = null;
   },
   defisRewardText(r, m = 1) {
-    const parts = [];
-    if (r.gold) parts.push(`+${fmt(r.gold * m)} 💰`);
-    if (r.faith) parts.push(this.hy ? tr(`+${r.faith * m} de Légitimité`, `+${r.faith * m} Legitimacy`) : tr(`+${r.faith * m} de Croyance`, `+${r.faith * m} Faith`));
+    const parts = [], g = Math.round((r.gold || 0) * m), f = Math.round((r.faith || 0) * m);
+    if (r.gold) parts.push(`+${fmt(g)} 💰`);
+    if (r.faith) parts.push(this.hy ? tr(`+${f} de Légitimité`, `+${f} Legitimacy`) : tr(`+${f} de Croyance`, `+${f} Faith`));
     return parts.join(', ');
   },
 
@@ -206,7 +207,7 @@ Object.assign(GameRules, {
   // Pour le cadre des objectifs : [{ text, done, gone, vow }]
   challenges() {
     const st = this.defisState();
-    return this.challengeList().map((c, k) => ({ text: `${c.text} (${this.defisRewardText(c.reward, k === st.vow ? DEFIS.VOW.MULT : 1)})`,
+    return this.challengeList().map((c, k) => ({ text: `${c.text} (${this.defisRewardText(c.reward, (k === st.vow ? DEFIS.VOW.MULT : 1) * this.rewardK(this.human))})`,
       done: st.state[k] === 'done', gone: st.state[k] === 'failed', vow: k === st.vow }));
   },
 });

@@ -2402,7 +2402,7 @@ const GameRules = {
     if (!cm.lombardWarned && this.tick >= cm.lombardTick - C.LOMBARDS_WARNING * TPS && lomb.alive && pope.alive) {
       cm.lombardWarned = true;
       // (🏔️ le joueur des Francs choisit : franchir les Alpes, comme Charlemagne, ou rester ; voir cmChoose)
-      if (this.human === franks) this.cmOffer('lombards', { army: fmt(army), secs: C.LOMBARDS_WARNING, n: fmt(Math.floor(franks.troops * C.ITALY.SHARE)), gold: fmt(C.ITALY.STAY_GOLD) });
+      if (this.human === franks) this.cmOffer('lombards', { army: fmt(army), secs: C.LOMBARDS_WARNING, n: fmt(Math.floor(franks.troops * C.ITALY.SHARE)), gold: fmt(this.reward(franks, C.ITALY.STAY_GOLD)) });
       else UI.log(lomb.isHuman
         ? tr('⚔️ Ton armée se rassemble : bientôt, les Lombards pourront marcher sur Rome !', '⚔️ Your army is gathering: soon the Lombards will be able to march on Rome!')
         : tr(`⚠️ Didier, roi des Lombards, lève une armée de ${fmt(army)} soldats pour marcher sur Rome ! Le pape appelle les Francs au secours`,
@@ -2413,10 +2413,11 @@ const GameRules = {
     // ✝️ Succès « Empire chrétien » : les terres des Francs touchent celles de Rome
     if (!cm.christian && franks.alive && pope.alive && this.neighborStats(franks.id).has(pope.id)) {
       cm.christian = true;
-      franks.faithBonus = (franks.faithBonus || 0) + C.CHRISTIAN_EMPIRE;
+      const ce = this.reward(franks, C.CHRISTIAN_EMPIRE);
+      franks.faithBonus = (franks.faithBonus || 0) + ce;
       this.faithCache = null;
-      this.cmEvent('christian', { faith: C.CHRISTIAN_EMPIRE }, tr(`✝️ Les terres des Francs touchent celles de Rome : c'est l'« Empire chrétien » (+${C.CHRISTIAN_EMPIRE} de Croyance).`,
-        `✝️ The Franks' lands reach those of Rome: the "Christian Empire" is born (+${C.CHRISTIAN_EMPIRE} Faith).`), '', franks);
+      this.cmEvent('christian', { faith: ce }, tr(`✝️ Les terres des Francs touchent celles de Rome : c'est l'« Empire chrétien » (+${ce} de Croyance).`,
+        `✝️ The Franks' lands reach those of Rome: the "Christian Empire" is born (+${ce} Faith).`), '', franks);
     }
     if (!cm.lombardMarched && this.tick >= cm.lombardTick) {
       cm.lombardMarched = true;
@@ -2482,8 +2483,8 @@ const GameRules = {
           UI.log(tr(`🏔️ Tes ${fmt(n)} soldats franchissent les Alpes et surgissent devant ${this.placeNames.get(pavia) || 'Pavie'} !`, `🏔️ Your ${fmt(n)} soldiers cross the Alps and appear before ${this.placeNames.get(pavia) || 'Pavia'}!`), 'good');
         } else UI.log(tr('🏔️ Les cols des Alpes sont fermés : aucune route vers Pavie. Frappe les Lombards par tes terres.', '🏔️ The Alpine passes are closed: no road to Pavia. Strike the Lombards through your lands.'), 'warn');
       } else if (pick === 'stay') {
-        fr.gold += I.STAY_GOLD;
-        UI.log(tr(`📜 Tu t'écartes de l'histoire (+${fmt(I.STAY_GOLD)} d'or) : pas d'expédition d'Italie, Rome devra tenir seule. La partie continue, à toi d'écrire la suite.`, `📜 You step away from history (+${fmt(I.STAY_GOLD)} gold): no Italian expedition, Rome will have to hold out alone. The game goes on: the rest is yours to write.`), 'good');
+        fr.gold += this.reward(fr, I.STAY_GOLD);
+        UI.log(tr(`📜 Tu t'écartes de l'histoire (+${fmt(this.reward(fr, I.STAY_GOLD))} d'or) : pas d'expédition d'Italie, Rome devra tenir seule. La partie continue, à toi d'écrire la suite.`, `📜 You step away from history (+${fmt(this.reward(fr, I.STAY_GOLD))} gold): no Italian expedition, Rome will have to hold out alone. The game goes on: the rest is yours to write.`), 'good');
       }
     }
     return null;
@@ -2545,10 +2546,11 @@ const GameRules = {
     const barca = cm.sites.get(C.OBJECTIVES.find(o => o.kind === 'site').at.join(','));
     if (!cm.elephant && barca >= 0 && this.owner[barca] === franks.id) {
       cm.elephant = true;
-      franks.gold += C.ELEPHANT.GOLD;
-      franks.faithBonus = (franks.faithBonus || 0) + C.ELEPHANT.FAITH;
+      const eg = this.reward(franks, C.ELEPHANT.GOLD), ef = this.reward(franks, C.ELEPHANT.FAITH);
+      franks.gold += eg;
+      franks.faithBonus = (franks.faithBonus || 0) + ef;
       this.faithCache = null;
-      this.cmEvent('elephant', { gold: fmt(C.ELEPHANT.GOLD), faith: C.ELEPHANT.FAITH }, null);
+      this.cmEvent('elephant', { gold: fmt(eg), faith: ef }, null);
     }
     // 799 : le pape Léon III agressé (le joueur des Francs, quand il a déjà rempli beaucoup d'objectifs)
     const romeTile = cm.capital.papaute, R = C.LEO;
@@ -2743,6 +2745,14 @@ const GameRules = {
     return CHARLEMAGNE.OBJECTIVES.map((o, k) => ({ text: this.objectiveText(o), done: !!cm.done[k], gone: o.kind === 'rome' && !!cm.romeFell }));
   },
 
+  // 🎁 Une récompense d'événement (de choix, de défi) pour p : multipliée selon la difficulté s'il est joueur (voir
+  // EVENT_REWARD) ; un bot la reçoit telle quelle
+  rewardK(p) {
+    const sc = this.cr || this.hy || this.cm;
+    return p && p.isHuman && sc ? CONFIG.EVENT_REWARD[sc.diff] || 1 : 1;
+  },
+  reward(p, n) { return Math.round(n * this.rewardK(p)); },
+
   // 👑 Charlemagne couronné empereur : tous ses objectifs sont remplis (et Rome est toujours au pape, ou à lui)
   empireWon() {
     if (!this.cm && !this.hy && !this.cr) return false;
@@ -2838,6 +2848,7 @@ const GameRules = {
         case 'crHire': return this.cr ? this.crHire(pid, o.target) : null; // (🗡️ engager les Assassins, voir croisadesrules.js)
         case 'crTribute': return this.cr ? this.crTribute(pid) : null;
         case 'crLoan': return this.cr ? this.crLoan(pid) : null; // (🏦 emprunter au Temple, voir ordres.js)
+        case 'crMerc': return this.cr ? this.crHireMerc(pid) : null; // (⚔️ louer des mercenaires au Temple, voir ordres.js)
       }
       return null;
     } finally { this.inUpdate = false; }
