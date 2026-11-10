@@ -1320,6 +1320,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.60** : ⛵ Les Croisades : quand tu joues un roi croisé (Richard, Philippe Auguste, l'Empereur…) ou Venise, les armées des grands moments par la mer (Chypre et Acre en 1191, la Sicile, Zara, Constantinople…) **débarquent devant la ville visée**, comme pour un bot, au lieu de rejoindre seulement ta réserve : Richard peut enfin passer la mer jusqu'à Chypre et la Terre sainte (comme l'histoire, par Messine). Sans cible possible, les soldats te rejoignent comme avant.
 - **v0.98.59** : 🛡️ dans les **campagnes** (Charlemagne, Cent Ans, Croisades), un objectif rempli n'est plus barré comme s'il était fini : il est marqué d'un **bouclier vert** et de la mention **« tenu »**, car il se perd si tu perds la ville (ou la Croyance, l'or…) ; il faut tous les tenir en même temps pour gagner. Les ⭐ défis réussis, eux, restent cochés et barrés (ils sont acquis).
 - **v0.98.58** : 🌿 au **survol d'une couleur de la jauge de gloire**, une **bulle** donne la bannière et le nom du royaume, et sa part de la gloire (et, s'il est dans un pacte, la part de tout le pacte) ; elle reste affichée pendant que la jauge se remplit (l'ancienne infobulle disparaissait à chaque mise à jour).
 - **v0.98.57** : 🔥 pendant la visée d'un **assaut viking**, la souris devient une **flamme**, et au survol d'une cible possible (ville ou port fortifié ennemi), une **bulle** rappelle combien de **soldats** partiront (selon le curseur « Envoyer »).
