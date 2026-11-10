@@ -201,12 +201,16 @@ Object.assign(GameRules, {
     const p = this.crP(role);
     if (!p.alive) return false;
     const vars = { army: fmt(army) };
-    if (p.isHuman) {
+    // (un joueur : une armée qui marche par les terres rejoint simplement la sienne ; une flotte (coast), elle, le débarque
+    //  devant la première cible possible, comme pour un bot : c'est son seul moyen de passer la mer jusqu'à Chypre ou
+    //  Acre. Aucune cible possible : les soldats le rejoignent)
+    const joinHuman = () => {
       p.troops += army;
       this.crEvent(key, vars, null);
       UI.log(tr(`⚔️ Une grande armée te rejoint : +${fmt(army)} soldats !`, `⚔️ A great army joins you: +${fmt(army)} soldiers!`), 'good');
       return true;
-    }
+    };
+    if (p.isHuman && !coast) return joinHuman();
     for (const name of targets) {
       const c = this.crCity(name), d = c >= 0 ? this.owner[c] : -1;
       if (d < 0 || d === p.id || this.areAllied(p.id, d) || this.attackBlocked(p.id, d)) continue;
@@ -214,6 +218,14 @@ Object.assign(GameRules, {
       let landed = null;
       const spot = this.hyLanding(p.id, d, c, coast);
       if (spot >= 0) landed = this.hyLandArmy(p.id, c, spot, army, {});
+      if (p.isHuman) {
+        if (!landed) continue;
+        this.crEvent(key, vars, null);
+        UI.log(tr(`⛵ Ta flotte débarque ${fmt(army)} croisés devant ${this.crCityName(c)} : ils marchent sur la ville ! (la petite croix de leur barre, en bas, les rappelle)`,
+          `⛵ Your fleet lands ${fmt(army)} crusaders before ${this.crCityName(c)}: they march on the city! (the small cross on their bar, at the bottom, calls them back)`), 'good');
+        if (this.players[d].isHuman) Music.sound('enemyAssault');
+        return true;
+      }
       if (!landed) {
         // (pas de place pour débarquer : l'armée marche depuis ses terres, si elles touchent celles de la cible)
         p.troops += army;
@@ -223,7 +235,7 @@ Object.assign(GameRules, {
       if (this.players[d].isHuman) Music.sound('enemyAssault');
       return true;
     }
-    return false;
+    return p.isHuman ? joinHuman() : false;
   },
 
   // --- Chaque seconde : le calendrier et tous les mécanismes du scénario ---
