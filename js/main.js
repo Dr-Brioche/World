@@ -258,7 +258,21 @@ const UI = {
     // 📜 Règles : le jeu se met en pause, et les règles complètes s'affichent (les mêmes que sur l'écran de départ)
     $('rulesBtn').addEventListener('click', () => this.openRules());
     // 👑 Le cadre des objectifs se replie (ou se déplie) d'un clic
-    $('objectives').addEventListener('click', () => { this.objFolded = !this.objFolded; $('objectives').dataset.key = ''; this.refreshObjectives(); });
+    $('objectives').addEventListener('click', e => {
+      // 🎯 Clic sur un objectif qui a un lieu (« prendre Acre ») : la caméra y va (un 2e clic : le lieu suivant, s'il y en a
+      //  plusieurs) ; ailleurs (le titre, un objectif sans lieu) : replier ou déplier le cadre
+      const li = e.target.closest('[data-obj]');
+      const at = li && Game.objectiveLinePlaces(li.dataset.obj[0] === 'd', +li.dataset.obj.slice(1));
+      if (at && at.length) {
+        const n = this.objGo && this.objGo.line === li.dataset.obj ? (this.objGo.n + 1) % at.length : 0;
+        this.objGo = { line: li.dataset.obj, n };
+        const c = at[n], half = (Game.building[c] ? Game.sizeOf(Game.building[c]) : 1) / 2;
+        Render.centerOn(c % Game.W + half, ((c / Game.W) | 0) + half);
+        Render.flashAt = { tile: c, until: performance.now() + 1600 }; // (un cercle qui pulse sur le lieu, voir render.js)
+        return;
+      }
+      this.objFolded = !this.objFolded; $('objectives').dataset.key = ''; this.refreshObjectives();
+    });
     // Souris sur ⛏️ dans la barre du haut : nos mines clignotent sur la carte (voir Render.drawFlashingMines)
     $('minesBox').addEventListener('mouseenter', () => { this.flashMines = true; });
     $('minesBox').addEventListener('mouseleave', () => { this.flashMines = false; });
@@ -721,6 +735,7 @@ const UI = {
         `👑 October 768: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or Space) to start!`), 'good');
       // 📜 (les Francs : un parchemin raconte le contexte ; les grands événements suivront, voir stepCharlemagne)
       if (f.id === 'francs') this.parchment(CHARLEMAGNE.EVENTS.intro);
+      this.mechanicsParchment(CHARLEMAGNE, f.id, tr('Octobre 768', 'October 768'));
       Game.offerVow(); // (🙏 le vœu solennel : jurer un des défis de sa faction, voir defis.js)
     }
     // ⚜️ Scénario « La guerre de Cent Ans » : chacun est déjà dans son royaume de 1337 ; la partie attend en pause
@@ -741,6 +756,7 @@ const UI = {
       // 📜 (le roi de France : un parchemin raconte le contexte ; les grands événements suivront, voir stepHyEvents)
       if (f.id === 'france') this.parchment(CENTANS.EVENTS.intro);
       if (f.id === 'angleterre') this.parchment(CENTANS.ENGLAND_EVENTS.intro); // (🦁 sa campagne à lui)
+      this.mechanicsParchment(CENTANS, f.id, tr('Mai 1337', 'May 1337'));
       Game.offerVow(); // (🙏 le vœu solennel : jurer un des défis de sa faction, voir defis.js)
     }
     // ✝️ Scénario « Les Croisades » : chacun est déjà dans son royaume de 1187 ; la partie attend en pause
@@ -751,6 +767,7 @@ const UI = {
       this.log(tr(`✝️ Juillet 1187 : tu es ${f.leader} (${f.name}), à ${f.capital[2]}. La partie est en pause : repère-toi, puis ▶ Reprendre (ou Espace) pour commencer !`,
         `✝️ July 1187: you are ${f.leader} (${f.name}), in ${f.capital[2]}. The game is paused: get your bearings, then ▶ Resume (or Space) to start!`), 'good');
       if (CROISADES.INTROS[f.id]) this.parchment(CROISADES.INTROS[f.id]);
+      this.mechanicsParchment(CROISADES, f.id, tr('Juillet 1187', 'July 1187'));
       Game.offerVow(); // (🙏 le vœu solennel : jurer un des défis de sa faction, voir defis.js)
     }
   },
@@ -1035,9 +1052,21 @@ const UI = {
   parchment(ev, vars = {}, choices = null) {
     const fill = t => (t || '').replace(/\{(\w+)\}/g, (m, k) => vars[k] !== undefined ? vars[k] : m);
     (this.parchments = this.parchments || []).push({ date: fill(ev.date), title: fill(ev.title), text: fill(ev.text), todo: fill(ev.todo),
-      gain: fill(ev.gain), history: choices ? fill(ev.history) : '',
+      gain: fill(ev.gain), history: choices ? fill(ev.history) : '', rules: ev.rules || null,
       choices: choices && choices.map(c => ({ key: c.key, pick: c.pick, label: fill(c.label), hist: !!c.hist })) });
     if (!this.parchmentOn) this.nextParchment();
+  },
+  // 📖 Au début d'une campagne : ce qui y change (ses règles propres, pour toutes les factions, puis pour la tienne),
+  // sur un parchemin qui suit le récit d'ouverture (S : CROISADES, CENTANS ou CHARLEMAGNE ; voir MECHANICS)
+  mechanicsParchment(S, role, date) {
+    const M = S.MECHANICS;
+    if (!M) return;
+    const mine = (M.roles && M.roles[role]) || [];
+    this.parchment({ date, title: tr('Ce qui change dans cette campagne', 'What changes in this campaign'),
+      text: mine.length ? tr('Les règles propres à cette époque, et en dernier celles de ta faction :', 'The rules of this era, and your faction\'s own at the end:')
+        : tr('Les règles propres à cette époque :', 'The rules of this era:'),
+      rules: M.all.concat(mine.length ? [[tr(`Pour ta faction : ${Game.human.name}`, `For your faction: ${Game.human.name}`)]] : [], mine),
+      todo: tr('Tout cela se relit dans le menu, « Règles du jeu ». Observe tes terres, puis ▶ Reprendre.', 'All this can be read again in the menu, « Rules of the game ». Survey your lands, then ▶ Resume.') });
   },
   nextParchment() {
     const ev = this.parchments.shift();
@@ -1048,6 +1077,10 @@ const UI = {
     $('pTitle').textContent = ev.title;
     $('pText').textContent = ev.text;
     $('pTodo').innerHTML = ev.todo ? `<b>${tr('Tes conseillers murmurent :', 'Your counsellors whisper:')}</b> ${escapeHtml(ev.todo)}` : '';
+    // (📖 les mécaniques d'une campagne : une liste « titre : explication », voir mechanicsParchment)
+    // (une ligne sans explication : un petit titre, celui des règles de ta faction)
+    $('pRules').innerHTML = ev.rules ? '<ul>' + ev.rules.map(([t, x]) => x === undefined ? `<li class="sep">${escapeHtml(t)}</li>`
+      : `<li><b>${escapeHtml(t)}</b> : ${escapeHtml(x)}</li>`).join('') + '</ul>' : '';
     $('pGain').innerHTML = ev.gain ? `<b>${tr('🎁 Ce que ça te rapporte :', '🎁 What it brings you:')}</b> ${escapeHtml(ev.gain)}` : '';
     $('pHist').innerHTML = ev.history ? `<b>${tr('📜 Déroulement historique :', '📜 What really happened:')}</b> ${escapeHtml(ev.history)}` : '';
     // (un parchemin à choix : ses boutons à la place de « Poursuivre », et il ne se referme qu'en choisissant)
@@ -1944,16 +1977,17 @@ const UI = {
       // (un objectif perdu pour de bon, comme Rome prise par les Lombards, ou un défi manqué : barré, en rouge, avec ✖)
       // (🛡️ un objectif de la victoire rempli n'est que « tenu » : il se perd si on perd la ville, la Croyance… ; il n'est
       //  donc pas barré, juste marqué d'un bouclier ; un ⭐ défi réussi, lui, l'est pour de bon : coché et barré)
-      const items = (l, lost, held) => l.map(o => `<li class="${o.gone ? 'gone' : o.done ? (held ? 'held' : 'done') : ''}">${o.vow ? '🙏 ' : ''}${escapeHtml(o.text)}` +
+      // (🎯 data-obj : clic sur la ligne → la caméra va voir ses lieux, voir le clic plus haut)
+      const items = (l, lost, held) => l.map((o, k) => `<li data-obj="${held ? 'o' : 'd'}${k}" class="${o.gone ? 'gone' : o.done ? (held ? 'held' : 'done') : ''}${Game.objectiveLinePlaces(!held, k).length ? ' go' : ''}">${o.vow ? '🙏 ' : ''}${escapeHtml(o.text)}` +
         `${o.gone ? lost : o.done && held ? `<span class="heldT">${tr(' (tenu)', ' (held)')}</span>` : ''}</li>`).join('');
       box.innerHTML = `<div class="t"><span>${escapeHtml(title)}</span>` +
         `<span>${n}/${count.length} ${this.objFolded ? '▸' : '▾'}</span></div>` +
         (this.objFolded ? '' : (list.length ? `<ul>${items(list, tr(' (perdu à jamais)', ' (lost forever)'), true)}</ul>` : '') +
           (defis.length ? (list.length ? `<div class="t defisT"><span>${tr('⭐ Défis', '⭐ Challenges')}</span><span>${defis.filter(o => o.done).length}/${defis.length}</span></div>` : '') +
             `<ul class="defis">${items(defis, tr(' (manqué)', ' (failed)'))}</ul>` : ''));
-      box.title = !list.length ? tr('Des défis en plus, pour la gloire et une récompense (🙏 : ton vœu) · clic : replier ou déplier', 'Extra challenges, for glory and a reward (🙏: your vow) · click: fold or unfold')
-        : Game.hy || Game.cr ? tr('Tous tenus en même temps : la victoire ! (🛡️ tenu : rempli pour l\'instant, mais il se perd si tu perds la ville ou le reste ; ⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All held at the same time: victory! (🛡️ held: complete for now, but lost if you lose the city or the rest; ⭐ challenges: for glory) · click: fold or unfold')
-        : tr('Tous tenus en même temps : tu es couronné empereur ! (🛡️ tenu : rempli pour l\'instant, mais il se perd si tu perds la ville ou le reste ; ⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All held at the same time: you are crowned emperor! (🛡️ held: complete for now, but lost if you lose the city or the rest; ⭐ challenges: for glory) · click: fold or unfold');
+      box.title = !list.length ? tr('Des défis en plus, pour la gloire et une récompense (🙏 : ton vœu) · clic sur un défi : la carte va voir où il est · clic sur le titre : replier ou déplier', 'Extra challenges, for glory and a reward (🙏: your vow) · click a challenge: the map shows where it is · click the title: fold or unfold')
+        : Game.hy || Game.cr ? tr('Tous tenus en même temps : la victoire ! (🛡️ tenu : rempli pour l\'instant, mais il se perd si tu perds la ville ou le reste ; ⭐ les défis : pour la gloire) · clic sur un objectif : la carte va voir où il est · clic sur le titre : replier ou déplier', 'All held at the same time: victory! (🛡️ held: complete for now, but lost if you lose the city or the rest; ⭐ challenges: for glory) · click an objective: the map shows where it is · click the title: fold or unfold')
+        : tr('Tous tenus en même temps : tu es couronné empereur ! (🛡️ tenu : rempli pour l\'instant, mais il se perd si tu perds la ville ou le reste ; ⭐ les défis : pour la gloire) · clic sur un objectif : la carte va voir où il est · clic sur le titre : replier ou déplier', 'All held at the same time: you are crowned emperor! (🛡️ held: complete for now, but lost if you lose the city or the rest; ⭐ challenges: for glory) · click an objective: the map shows where it is · click the title: fold or unfold');
     }
   },
   // Sous la barre du haut (qui peut tenir sur 2 lignes sur un écran étroit) : les objectifs, puis (sur un téléphone)

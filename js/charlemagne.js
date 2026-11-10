@@ -126,6 +126,26 @@ const CHARLEMAGNE = {
     romeFalls: tr('l\'objectif « Rome » est perdu pour toujours : tu ne pourras plus être couronné empereur.', 'the « Rome » objective is lost for ever: you can no longer be crowned emperor.'),
     lombards: tr('si les Lombards prennent Rome, l\'objectif « Rome » est perdu pour toujours.', 'if the Lombards take Rome, the « Rome » objective is lost for ever.'),
   },
+  // 📖 Ce qui change dans cette campagne : un parchemin au début de la partie (voir MECHANICS dans croisades.js)
+  MECHANICS: {
+    all: [
+      [tr('📜 Les grands événements', '📜 The great events'), tr('ils arrivent selon le temps ou ce que tu fais, sur un parchemin qui met en pause ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'they arrive depending on time or on what you do, on a parchment that pauses the game; when there is a choice, the historical one is marked 📜.')],
+      [tr('🏰 Pas de nouvelle ville', '🏰 No new cities'), tr('on améliore les siennes et on prend celles des autres. La Bavière, l\'Aquitaine et les Asturies ont des garnisons 50 % plus fortes.', 'you upgrade your own and take other kingdoms\' cities. Bavaria, Aquitaine and Asturias have 50% stronger garrisons.')],
+      [tr('✝️ La Croyance', '✝️ Faith'), tr('elle prend les terres deux fois moins vite qu\'en partie classique.', 'it takes land half as fast as in a classic game.')],
+      [tr('⚔️ Les Slaves', '⚔️ The Slavs'), tr('au nord-est, des pillards : leurs terres sont imprenables, et leurs razzias, toujours plus grosses, rasent leur cible.', 'in the north-east, raiders: their land cannot be taken, and their ever bigger raids raze their target.')],
+      [tr('⛏️ Les mines historiques', '⛏️ Historic mines'), tr('chaque faction en a une (son nom s\'affiche au survol).', 'every faction has one (its name shows on hover).')],
+      [tr('🎯 Les objectifs', '🎯 Objectives'), tr('en haut à gauche : tous tenus en même temps, c\'est la victoire. Clique sur un objectif : la carte te montre où il est.', 'at the top left: all held at the same time is victory. Click an objective: the map shows you where it is.')],
+    ],
+    roles: {
+      francs: [
+        [tr('🤝 Le pacte sacré', '🤝 The sacred pact'), tr('toi, ton frère Carloman et le pape êtes alliés. Carloman meurt au bout de quelques minutes : son royaume te revient.', 'you, your brother Carloman and the pope are allies. Carloman dies after a few minutes: his kingdom comes to you.')],
+        [tr('⛪ Rome', '⛪ Rome'), tr('le pape n\'a pas d\'armée, juste une grosse garnison. Quand les Lombards marchent sur Rome, envoie des soldats renforcer sa garnison (si tes terres touchent les siennes). Si Rome tombe, l\'objectif « Rome » est perdu pour toujours.', 'the pope has no army, only a large garrison. When the Lombards march on Rome, send soldiers to reinforce its garrison (if your land touches his). If Rome falls, the « Rome » objective is lost forever.')],
+        [tr('🏔 Roncevaux', '🏔 Roncevaux'), tr('ta première ville prise en Espagne te coûte 30 % de soldats (Roland tombe à l\'arrière-garde).', 'your first city taken in Spain costs you 30% of your soldiers (Roland falls in the rearguard).')],
+        [tr('✝️ L\'Empire chrétien', '✝️ The Christian Empire'), tr('quand tes terres touchent celles de Rome : +100 de Croyance pour toujours.', 'when your land reaches Rome\'s: +100 Faith forever.')],
+      ],
+    },
+  },
+
   EVENTS: {
     intro: {
       date: tr('Octobre de l\'an de grâce 768', 'October, in the year of grace 768'),

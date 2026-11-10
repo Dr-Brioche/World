@@ -344,6 +344,7 @@ button:hover { background: #e8d6a8; }
 #objectives .t { display: flex; justify-content: space-between; gap: 8px; font-family: Cinzel, Georgia, serif; font-weight: bold; }
 #objectives ul { list-style: none; margin: 4px 0 0; padding: 0; }
 #objectives li { position: relative; margin: 3px 0; padding-left: 16px; }
+#objectives li.go:hover { text-decoration: underline dotted; color: #ffe08a; } /* (🎯 un objectif qui a un lieu : clic → la carte y va) */
 #objectives li::before { content: '•'; position: absolute; left: 4px; }
 #objectives li.done { text-decoration: line-through; opacity: 0.55; }
 /* (la coche, la croix et l'étoile : de petits dessins, jamais d'emoji) */
@@ -678,6 +679,12 @@ button:disabled .ico { opacity: 0.6; }
 #parchment .pHist { border-top: 1px solid rgba(110, 70, 30, 0.45); padding-top: 10px; margin-top: 14px; font-style: italic; font-size: 0.93em; }
 #parchment .pHist b { color: #7a1a10; font-style: normal; }
 #parchment .pGain:empty, #parchment .pHist:empty { display: none; }
+/* (📖 les mécaniques d'une campagne, au début : une liste « titre : explication ») */
+#parchment .pRules ul { list-style: none; margin: 0 0 12px; padding: 0; font-size: 14px; line-height: 1.4; text-align: left; }
+#parchment .pRules li { margin: 0 0 7px; padding-left: 10px; border-left: 2px solid rgba(110, 70, 20, 0.35); }
+#parchment .pRules b { font-family: 'Uncial Antiqua', Cinzel, Georgia, serif; font-weight: normal; color: #5a2a0a; }
+#parchment .pRules:empty { display: none; }
+#parchment .pRules li.sep { border: 0; padding: 6px 0 0; margin-top: 10px; border-top: 1px solid rgba(110, 70, 20, 0.35); font-family: Cinzel, Georgia, serif; font-weight: bold; color: #7a1f0a; text-align: center; }
 #parchment .pChoices .sealBtn small { display: block; font-size: 11px; opacity: 0.85; margin-top: 2px; font-family: Georgia, serif; }
 #parchment .pChoices .sealBtn.hist { box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45), 0 0 0 2px #d9a520; }
 /* (le bouton : un sceau de cire rouge) */

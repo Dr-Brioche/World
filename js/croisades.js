@@ -102,6 +102,12 @@ const CROISADES = {
   // RANSOM_SHARE de l'or de l'Angleterre y part chaque seconde ; elle va à l'Empereur. Tant qu'elle n'est pas payée,
   // l'Angleterre recrute CAPTIVE fois moins vite.
   RANSOM: { facile: 1500, normal: 2500, difficile: 3500 }, RANSOM_SHARE: 0.5, CAPTIVE: 0.6,
+  // 🧭 Le retour de Richard (octobre 1192, un parchemin pour le joueur anglais, juste avant la capture) :
+  //  - par l'Autriche, déguisé (comme dans l'histoire) : il est pris, et c'est la rançon ci-dessus ;
+  //  - par la mer, autour de l'Espagne : FLEET pièces (selon la difficulté) pour une flotte sûre ; pas de capture ;
+  //  - rester en Terre sainte : pas de capture, mais son frère Jean intrigue en Angleterre : jusqu'en STAY_UNTIL,
+  //    le royaume recrute STAY_RECRUIT fois moins vite.
+  RETURN: { AT: 1192.85, FLEET: { facile: 800, normal: 1300, difficile: 1800 }, STAY_UNTIL: 1194, STAY_RECRUIT: 0.8 },
   // 👑 La succession de Saladin (mars 1193) : l'Égypte (les terres à l'ouest de EGYPT_LON) passe à son fils al-Aziz ;
   // si le joueur garde tout, une guerre civile lui coûte CIVIL_WAR de son armée
   SUCCESSION: { EGYPT_LON: 33.9, CIVIL_WAR: 0.35, FAITH: 60 },
@@ -348,6 +354,15 @@ const CROISADES = {
       todo: tr('Pendant {secs} secondes, le sabre et l\'épée restent au fourreau entre Saladin et les croisés. La croisade est finie : chacun reprend sa liberté.',
         'For {secs} seconds, sabre and sword stay sheathed between Saladin and the crusaders. The crusade is over: each regains his freedom.'),
     },
+    richardReturn: {
+      who: ['angleterre'],
+      date: tr('Octobre 1192', 'October 1192'),
+      title: tr('Le retour du roi', 'The king\'s return'),
+      text: tr('La paix est signée : il est temps de rentrer. Mais la route est pleine d\'ennemis. Philippe Auguste guette les côtes de France, et le duc Léopold d\'Autriche, que tu as humilié devant Acre en jetant sa bannière dans le fossé, n\'a rien oublié. Par où passeras-tu ?',
+        'Peace is signed: it is time to go home. But the road is full of enemies. Philip Augustus watches the coasts of France, and Duke Leopold of Austria, whom you humiliated before Acre by throwing his banner into the ditch, has forgotten nothing. Which way will you go?'),
+      todo: tr('Un roi qui se déguise n\'est plus protégé par sa couronne… Une flotte coûte cher, mais la mer n\'a pas de duc.',
+        'A king in disguise is no longer protected by his crown… A fleet is costly, but the sea has no duke.'),
+    },
     captured: {
       who: ['angleterre', 'empire', 'france'],
       date: tr('Décembre 1192', 'December 1192'),
@@ -449,6 +464,65 @@ const CROISADES = {
     },
   },
   // Les premiers parchemins : un par faction jouable, au début de la partie
+  // 📖 Ce qui change dans cette campagne : un parchemin au début de la partie (après le récit), pour toutes les
+  // factions (all), puis ce qui est propre à la faction jouée (roles). Chaque ligne : [titre, explication].
+  MECHANICS: {
+    all: [
+      [tr('📅 Le temps', '📅 Time'), tr('de juillet 1187 à 1204, en 50 minutes environ (l\'année est en haut). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from July 1187 to 1204, in about 50 minutes (the year is at the top). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
+      [tr('🏰 Pas de nouvelle ville', '🏰 No new cities'), tr('on améliore les siennes et on prend celles des autres.', 'you upgrade your own and take other kingdoms\' cities.')],
+      [tr('✝️ La Croyance', '✝️ Faith'), tr('elle ne convertit les terres qu\'entre chrétiens et musulmans (jamais entre deux rois chrétiens), et deux fois moins vite qu\'en partie classique.', 'it converts land only between Christians and Muslims (never between two Christian kings), and half as fast as in a classic game.')],
+      [tr('📿 La Vraie Croix', '📿 The True Cross'), tr('une relique gardée à Damas : celui qui la tient gagne +150 de Croyance.', 'a relic kept in Damascus: whoever holds it gains +150 Faith.')],
+      [tr('🗡️ Les Assassins', '🗡️ The Assassins'), tr('clic droit sur un royaume → les engager contre lui (1 500 d\'or : il perd 25 % de ses soldats et ne recrute plus pendant 45 s). Clic droit sur leurs terres → leur payer tribut (600 d\'or : ils t\'épargnent 5 minutes).', 'right-click a kingdom → hire them against it (1,500 gold: it loses 25% of its soldiers and stops recruiting for 45 s). Right-click their lands → pay them tribute (600 gold: they spare you for 5 minutes).')],
+      [tr('🏦 La banque du Temple', '🏦 The bank of the Temple'), tr('un royaume chrétien peut emprunter : clic droit sur les terres des Templiers → 2 000 d\'or tout de suite, 2 500 rendus peu à peu sur ton revenu (environ 3 minutes).', 'a Christian kingdom can borrow: right-click the Templars\' lands → 2,000 gold now, 2,500 paid back little by little from your income (about 3 minutes).')],
+      [tr('🤝 Les pactes et les paix de l\'histoire', '🤝 The pacts and peaces of history'), tr('les alliances de 1187 sont déjà en place, et certains royaumes ne se font pas la guerre (une trêve, un mariage…). Les bots ne les rompent jamais ; toi, tu peux (une paix est rompue dès que tu attaques).', 'the alliances of 1187 are already in place, and some kingdoms do not fight each other (a truce, a marriage…). Bots never break them; you can (a peace is broken as soon as you attack).')],
+      [tr('🎯 Les objectifs', '🎯 Objectives'), tr('en haut à gauche : tous tenus en même temps, c\'est la victoire. Clique sur un objectif : la carte te montre où il est.', 'at the top left: all held at the same time is victory. Click an objective: the map shows you where it is.')],
+    ],
+    roles: {
+      ayyoubides: [
+        [tr('🦁 Saladin', '🦁 Saladin'), tr('tant qu\'il vit, tes soldats se battent 10 % mieux. En 1188, tes armées assiègent les forteresses des ordres (Baghras, Safed, Belvoir).', 'while he lives, your soldiers fight 10% better. In 1188, your armies besiege the orders\' fortresses (Baghras, Safed, Belvoir).')],
+        [tr('👑 Ta succession', '👑 Your succession'), tr('Saladin meurt en 1193 : partager l\'empire (l\'Égypte à ton frère, ton allié) ou tout garder (une guerre civile te coûte des soldats).', 'Saladin dies in 1193: share the empire (Egypt to your brother, your ally) or keep everything (a civil war costs you soldiers).')],
+      ],
+      templiers: [
+        [tr('✠ Les commanderies d\'Occident', '✠ The commanderies of the West'), tr('peu de terres, mais des forteresses imprenables, une armée et un recrutement bien plus grands que tes terres ne le permettraient, et des chevaliers 25 % plus forts.', 'little land, but impregnable fortresses, an army and recruitment much bigger than your land would allow, and knights 25% stronger.')],
+        [tr('🏦 Tu es la banque', '🏦 You are the bank'), tr('les rois chrétiens t\'empruntent ton or (2 000) et te le rendent avec 25 % d\'intérêt.', 'Christian kings borrow your gold (2,000) and pay it back with 25% interest.')],
+        [tr('⚔️ La haine de Saladin', '⚔️ Saladin\'s hatred'), tr('la paix de Jaffa (1192) ne te protège pas, et Saladin te vise deux fois plus. Les Assassins ne peuvent rien contre toi, et te versent 1 d\'or par seconde.', 'the peace of Jaffa (1192) does not protect you, and Saladin targets you twice as much. The Assassins can do nothing against you, and pay you 1 gold per second.')],
+        [tr('🏝️ Chypre', '🏝️ Cyprus'), tr('en 1191, Richard te propose l\'île ; en 1192, les Chypriotes se révoltent (la revendre, ou écraser la révolte).', 'in 1191, Richard offers you the island; in 1192, the Cypriots revolt (sell it back, or crush the revolt).')],
+      ],
+      hospitaliers: [
+        [tr('✠ Les commanderies d\'Occident', '✠ The commanderies of the West'), tr('peu de terres, mais des forteresses imprenables (le Krak), une armée bien plus grande que tes terres ne le permettraient, et des chevaliers 25 % plus forts.', 'little land, but impregnable fortresses (the Krak), an army much bigger than your land would allow, and knights 25% stronger.')],
+        [tr('⚔️ La haine de Saladin', '⚔️ Saladin\'s hatred'), tr('la paix de Jaffa ne te protège pas, et Saladin te vise deux fois plus ; les Assassins ne peuvent rien contre toi.', 'the peace of Jaffa does not protect you, and Saladin targets you twice as much; the Assassins can do nothing against you.')],
+      ],
+      jerusalem: [
+        [tr('🛡️ Le plus dur', '🛡️ The hardest'), tr('il ne te reste que Tyr et quelques villes isolées (les rescapés de Hattin : 80 % de ton armée). Saladin marche sur Jérusalem puis sur Tyr dès 1187.', 'only Tyre and a few isolated cities remain to you (the survivors of Hattin: 80% of your army). Saladin marches on Jerusalem then Tyre from 1187.')],
+        [tr('🤝 Outremer', '🤝 Outremer'), tr('les rois croisés rejoignent ton pacte en 1188, et les ordres militaires secourent tes villes attaquées.', 'the crusader kings join your pact in 1188, and the military orders rescue your attacked cities.')],
+        [tr('🗡️ Conrad', '🗡️ Conrad'), tr('en 1192, les Assassins le tuent… sauf si tu leur as payé tribut.', 'in 1192, the Assassins kill him… unless you have paid them tribute.')],
+      ],
+      angleterre: [
+        [tr('🦁 Richard Cœur de Lion', '🦁 Richard the Lionheart'), tr('tant qu\'il règne (et n\'est pas captif), tes soldats se battent 15 % mieux (25 % après Arsouf).', 'while he reigns (and is not a captive), your soldiers fight 15% better (25% after Arsuf).')],
+        [tr('⛵ Ta croisade', '⛵ Your crusade'), tr('ton royaume est loin de la Terre sainte : en 1190 (Vézelay), tu choisis de prendre la croix. Une armée embarque, débarque à Chypre puis devant Acre. Si tu restes, ces événements n\'ont pas lieu.', 'your kingdom is far from the Holy Land: in 1190 (Vézelay), you choose to take the cross. An army embarks, lands on Cyprus then before Acre. If you stay, these events do not happen.')],
+        [tr('⛓️ Le retour (fin 1192)', '⛓️ The return (late 1192)'), tr('tu choisis ta route : par l\'Autriche (comme dans l\'histoire), Richard est capturé et sa rançon coûte la moitié de ton or jusqu\'à être payée ; par la mer (de l\'or tout de suite) ou en restant en Terre sainte, il n\'est pas pris.', 'you choose your route: through Austria (as in history), Richard is captured and his ransom costs half your gold until paid; by sea (gold right away) or by staying in the Holy Land, he is not taken.')],
+        [tr('👑 Jean sans Terre', '👑 John Lackland'), tr('en 1199, Richard meurt : le royaume recrute 15 % moins vite.', 'in 1199, Richard dies: the kingdom recruits 15% slower.')],
+      ],
+      france: [
+        [tr('⛵ Ta croisade', '⛵ Your crusade'), tr('en 1190 (Vézelay), tu choisis de prendre la croix : une armée embarque et débarque devant Acre. En 1191, tu peux rentrer (l\'héritage de Flandre : de l\'or) ou rester (de la Croyance).', 'in 1190 (Vézelay), you choose to take the cross: an army embarks and lands before Acre. In 1191, you can go home (the Flemish inheritance: gold) or stay (Faith).')],
+        [tr('🕊️ Tes paix', '🕊️ Your peaces'), tr('l\'Empire ne t\'attaque pas (le traité d\'Ivois).', 'the Empire does not attack you (the treaty of Ivois).')],
+      ],
+      empire: [
+        [tr('🦅 Barberousse', '🦅 Barbarossa'), tr('en 1189, tu choisis de partir par la route de terre : une grande armée surgit devant Konya.', 'in 1189, you choose to set out by the land route: a great army appears before Konya.')],
+        [tr('🌊 Le Saleph (juin 1190)', '🌊 The Saleph (June 1190)'), tr('si tu ne tiens pas le gué de Séleucie, Barberousse se noie et tu perds 40 % de ton armée ; si tu le tiens, tes soldats se battent 10 % mieux.', 'if you do not hold the ford of Seleucia, Barbarossa drowns and you lose 40% of your army; if you hold it, your soldiers fight 10% better.')],
+        [tr('💰 La rançon de Richard', '💰 Richard\'s ransom'), tr('si Richard est pris (fin 1192), sa rançon te revient. En 1194, Henri VI débarque en Sicile.', 'if Richard is taken (late 1192), his ransom comes to you. In 1194, Henry VI lands in Sicily.')],
+      ],
+      byzance: [
+        [tr('🤝 Le pacte secret', '🤝 The secret pact'), tr('en 1189, Saladin te propose une alliance contre les croisés (jusqu\'en 1192), ou tu les laisses passer (de la Croyance).', 'in 1189, Saladin offers you an alliance against the crusaders (until 1192), or you let them pass (Faith).')],
+        [tr('⚠️ La quatrième croisade', '⚠️ The Fourth Crusade'), tr('Venise est en paix avec toi jusqu\'en 1201… puis la croisade peut se tourner contre Constantinople.', 'Venice is at peace with you until 1201… then the crusade may turn against Constantinople.')],
+      ],
+      venise: [
+        [tr('💰 La Sérénissime', '💰 The Serenissima'), tr('tes comptoirs te rapportent 25 d\'or toutes les 5 secondes.', 'your trading posts bring you 25 gold every 5 seconds.')],
+        [tr('⛵ La quatrième croisade', '⛵ The Fourth Crusade'), tr('vers 1202, les croisés ne peuvent pas payer ta flotte : accepte le marché, et ils prennent Zara puis Constantinople pour toi ; refuse, et tu gardes de l\'or.', 'around 1202, the crusaders cannot pay for your fleet: accept the bargain, and they take Zara then Constantinople for you; refuse, and you keep some gold.')],
+      ],
+    },
+  },
+
   INTROS: {
     templiers: {
       date: tr('Juillet 1187', 'July 1187'), title: tr('Les pauvres chevaliers du Christ', 'The Poor Knights of Christ'),
@@ -524,6 +598,7 @@ const CROISADES = {
     philipCross: tr('Philippe part de Vézelay avec Richard ; il hiverne à Messine et débarque devant Acre en avril 1191, deux mois avant lui.', 'Philip leaves Vézelay with Richard; he winters in Messina and lands before Acre in April 1191, two months before him.'),
     barbarossa: tr('Barberousse part de Ratisbonne le 11 mai 1189 par la route de terre ; il bat les Turcs devant Konya en mai 1190, puis se noie dans le Saleph le 10 juin 1190 : sa grande armée se disperse.', 'Barbarossa leaves Regensburg on 11 May 1189 by the land route; he defeats the Turks before Konya in May 1190, then drowns in the Saleph on 10 June 1190: his great army scatters.'),
     venice: tr('Venise accepte le marché ; faute d\'argent, les croisés prennent Zara pour elle (1202), puis Constantinople (1203), qu\'ils mettent à sac en avril 1204. La croisade n\'atteint jamais la Terre sainte.', 'Venice accepts the bargain; short of money, the crusaders take Zara for it (1202), then Constantinople (1203), which they sack in April 1204. The crusade never reaches the Holy Land.'),
+    richardReturn: tr('Richard quitte Acre le 9 octobre 1192. Une tempête le jette sur la côte de l\'Adriatique ; il traverse l\'Autriche déguisé en pèlerin, mais il est reconnu près de Vienne en décembre et enfermé à Dürnstein. Il ne sera libéré qu\'en février 1194, contre 150 000 marcs d\'argent.', 'Richard leaves Acre on 9 October 1192. A storm throws him onto the Adriatic coast; he crosses Austria disguised as a pilgrim, but is recognised near Vienna in December and locked up in Dürnstein. He is only freed in February 1194, for 150,000 marks of silver.'),
     philipLeaves: tr('Le 31 juillet 1191, malade et brouillé avec Richard, Philippe quitte Acre ; rentré en France, il profite de l\'absence de Richard pour attaquer la Normandie.', 'On 31 July 1191, ill and at odds with Richard, Philip leaves Acre; back in France, he takes advantage of Richard\'s absence to attack Normandy.'),
     byzantineTreaty: tr('Isaac II Ange s\'allie bien à Saladin et retarde Barberousse en Thrace ; l\'empereur doit menacer Constantinople pour obtenir le passage vers l\'Asie.', 'Isaac II Angelos does ally with Saladin and delays Barbarossa in Thrace; the emperor has to threaten Constantinople to win the crossing to Asia.'),
     saladinDies: tr('Saladin meurt à Damas le 4 mars 1193 ; ses fils se partagent son empire (al-Aziz l\'Égypte, al-Afdal Damas), jusqu\'à ce que son frère al-Adil le réunisse en 1200.', 'Saladin dies in Damascus on 4 March 1193; his sons divide his empire (al-Aziz Egypt, al-Afdal Damascus), until his brother al-Adil reunites it in 1200.'),
@@ -554,6 +629,7 @@ const CROISADES = {
     conrad: { jerusalem: tr('−{lost} soldats, et ton royaume ne recrute plus pendant {secs} s.', '−{lost} soldiers, and your kingdom recruits nobody for {secs} s.') },
     conradSpared: { jerusalem: tr('rien à perdre : ton tribut aux Assassins t\'a protégé.', 'nothing lost: your tribute to the Assassins protected you.') },
     jaffa: { '*': tr('pendant {secs} s, aucun assaut entre Saladin (et l\'Égypte) et les croisés ; les rois d\'Occident quittent le pacte de la Croisade.', 'for {secs} s, no assault between Saladin (and Egypt) and the crusaders; the kings of the West leave the pact of the Crusade.') },
+    richardReturn: { angleterre: tr('par l\'Autriche, Richard sera pris (une rançon de {ransom} d\'or, recrutement −40 % jusqu\'à ce qu\'elle soit payée) ; la flotte coûte {cost} d\'or tout de suite ; rester coûte 20 % de recrutement jusqu\'en 1194. La flotte ou rester sauvent le défi « Pas de Dürnstein ».', 'through Austria, Richard will be taken (a ransom of {ransom} gold, recruitment −40% until it is paid); the fleet costs {cost} gold right away; staying costs 20% recruitment until 1194. The fleet or staying save the « No Dürnstein » challenge.') },
     captured: { angleterre: tr('une rançon de {gold} d\'or : la moitié de ton or y part chaque seconde jusqu\'à ce qu\'elle soit payée ; d\'ici là, ton recrutement baisse de 40 % et le bonus de Richard disparaît.', 'a ransom of {gold} gold: half your gold goes to it every second until it is paid; until then, your recruitment drops by 40% and Richard\'s bonus is gone.'), empire: tr('la rançon de Richard ({gold} d\'or) te sera versée, peu à peu, par l\'Angleterre.', 'Richard\'s ransom ({gold} gold) will be paid to you, little by little, by England.'), '*': tr('rien pour toi, mais l\'Angleterre est affaiblie le temps de payer {gold} d\'or.', 'nothing for you, but England is weakened while it pays {gold} gold.') },
     sicily: { empire: tr('{army} soldats débarquent en Sicile et marchent sur Palerme pour toi.', '{army} soldiers land in Sicily and march on Palermo for you.') },
     isaacBlinded: { byzance: tr('−{lost} soldats, et ton empire ne recrute plus pendant 45 s.', '−{lost} soldiers, and your empire recruits nobody for 45 s.') },
@@ -583,6 +659,11 @@ const CROISADES = {
     venice: [
       { pick: 'go', hist: true, label: tr('⛵ Accepter le marché : la croisade frappera Zara, puis Constantinople, pour toi', '⛵ Accept the bargain: the crusade will strike Zara, then Constantinople, for you') },
       { pick: 'stay', label: tr('💰 Refuser : garder ta flotte pour le commerce (+{gold} d\'or ; ni Zara ni Constantinople)', '💰 Refuse: keep your fleet for trade (+{gold} gold; neither Zara nor Constantinople)') },
+    ],
+    richardReturn: [
+      { pick: 'austria', hist: true, label: tr('🦁 Par l\'Adriatique et l\'Autriche, déguisé en pèlerin (gratuit, mais Léopold veille…)', '🦁 Through the Adriatic and Austria, disguised as a pilgrim (free, but Leopold is watching…)') },
+      { pick: 'fleet', need: true, label: tr('⛵ Par la mer, autour de l\'Espagne, sur une flotte sûre (−{cost} d\'or ; pas de capture)', '⛵ By sea, around Spain, on a safe fleet (−{cost} gold; no capture)') },
+      { pick: 'stay', label: tr('✝️ Rester en Terre sainte (pas de capture ; mais Jean intrigue : −20 % de recrutement jusqu\'en 1194)', '✝️ Stay in the Holy Land (no capture; but John plots: −20% recruitment until 1194)') },
     ],
     cyprusSale: [
       { pick: 'sell', hist: true, label: tr('💰 Vendre Chypre aux Templiers (+{price} d\'or)', '💰 Sell Cyprus to the Templars (+{price} gold)') },
@@ -751,7 +832,7 @@ const CROISADES = {
       { kind: 'hold', places: ['Jérusalem'], byYear: 1193, text: tr('Ce que Richard n\'a pas osé : prendre Jérusalem avant 1193', 'What Richard did not dare: take Jerusalem before 1193'), reward: { gold: 3000, faith: 80 } },
       { kind: 'hold', places: ['Paris'], text: tr('Le vassal qui voulait être roi : prendre Paris', 'The vassal who would be king: take Paris'), reward: { gold: 3000 } },
       { kind: 'hold', places: ['Messine'], byYear: 1191, text: tr('Les Grecs de Messine : prendre Messine avant 1191', 'The Greeks of Messina: take Messina before 1191'), reward: { gold: 1500 } },
-      { kind: 'noCapture', untilYear: 1194, text: tr('Pas de Dürnstein : que Richard ne soit jamais capturé', 'No Dürnstein: Richard must never be captured'), reward: { faith: 50 } },
+      { kind: 'noCapture', untilYear: 1194, text: tr('Pas de Dürnstein : que Richard ne soit jamais capturé (au retour, fin 1192 : ne pas passer par l\'Autriche)', 'No Dürnstein: Richard must never be captured (on the way home, late 1192: avoid Austria)'), reward: { faith: 50 } },
       { kind: 'crFlag', flag: 'cyprusSold', byYear: 1192, text: tr('Le roi marchand : vendre Chypre aux Templiers', 'The merchant king: sell Cyprus to the Templars'), reward: { gold: 1000 } },
     ],
     france: [

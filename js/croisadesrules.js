@@ -394,7 +394,11 @@ Object.assign(GameRules, {
     if (once('conrad', 1192.32) && jer.alive) this.crConrad();
     // 1192 : la paix de Jaffa ; les rois rentrent chez eux
     if (once('jaffa', 1192.67)) this.crJaffa();
-    if (once('captured', 1192.95) && en.alive && !(en.isHuman && this.crOff('angleterre', 'captured'))) {
+    // 🧭 Le retour de Richard : le joueur anglais choisit sa route (l'Autriche, comme dans l'histoire : il y sera pris)
+    if (once('richardReturn', C.RETURN.AT) && en.alive && en.isHuman && !this.crOff('angleterre', 'captured')) {
+      this.crOffer('richardReturn', { cost: fmt(C.RETURN.FLEET[cr.diff]), costN: C.RETURN.FLEET[cr.diff], ransom: fmt(C.RANSOM[cr.diff]) });
+    }
+    if (once('captured', 1192.95) && en.alive && !cr.richardSafe && !(en.isHuman && this.crOff('angleterre', 'captured'))) {
       const gold = C.RANSOM[cr.diff];
       cr.ransom = { left: gold, total: gold, paid: false };
       this.crEvent('captured', { gold: fmt(gold) }, tr(`⛓️ Richard Cœur de Lion est prisonnier en Autriche ! Rançon : ${fmt(gold)} pièces d'or.`, `⛓️ Richard the Lionheart is a prisoner in Austria! Ransom: ${fmt(gold)} gold.`), '', en);
@@ -534,8 +538,12 @@ Object.assign(GameRules, {
     cr.offers[key] = data;
     const vars = Object.assign({ gold: fmt(1500), faith: key === 'saladinDies' ? C.SUCCESSION.FAITH : 60, pct: Math.round(C.SUCCESSION.CIVIL_WAR * 100) }, data);
     // (📜 sous les choix, ce qui s'est vraiment passé ; le choix historique est marqué : voir HISTORY)
-    UI.parchment(Object.assign({}, C.EVENTS[key], { history: C.HISTORY[key] || '', gain: this.crGain(key) }), vars,
-      C.CHOICES[key].map(c => ({ key, pick: c.pick, label: c.label, hist: !!c.hist })));
+    // (un choix qui coûte trop cher pour ton trésor : caché, et on te dit ce qui te manque)
+    const short = C.CHOICES[key].some(c => c.need) && this.human.gold < (data.costN || 0)
+      ? tr(` (⛵ pas de flotte : il te manque ${fmt((data.costN || 0) - this.human.gold)} d'or)`, ` (⛵ no fleet: you are ${fmt((data.costN || 0) - this.human.gold)} gold short)`) : '';
+    UI.parchment(Object.assign({}, C.EVENTS[key], { history: C.HISTORY[key] || '', gain: this.crGain(key) + short }), vars,
+      // (need : un choix qui coûte de l'or ; caché si on n'a pas de quoi le payer)
+      C.CHOICES[key].filter(c => !c.need || this.human.gold >= (data.costN || 0)).map(c => ({ key, pick: c.pick, label: c.label, hist: !!c.hist })));
   },
   // Le joueur a choisi (ordre « hyChoice »)
   crChoose(pid, key, pick) {
@@ -567,6 +575,19 @@ Object.assign(GameRules, {
         if (p.isHuman) UI.log(tr(`📜 Tu t'écartes de l'histoire (+${fmt(K.STAY_GOLD)} d'or${cross !== 'venise' ? `, −${K.STAY_FAITH} de Croyance` : ''}) : la suite de cette croisade n'aura pas lieu pour toi. La partie continue, à toi d'écrire la suite.`,
           `📜 You step away from history (+${fmt(K.STAY_GOLD)} gold${cross !== 'venise' ? `, −${K.STAY_FAITH} Faith` : ''}): the rest of this crusade will not happen for you. The game goes on: the rest is yours to write.`), 'good');
       }
+      return;
+    }
+    if (key === 'richardReturn') {
+      const en = this.crP('angleterre'), R = C.RETURN, data = cr.lastOffer || {};
+      if (pick === 'fleet' && en.gold >= (data.costN || 0)) {
+        en.gold -= data.costN || 0;
+        cr.richardSafe = true;
+        UI.log(tr(`⛵ Ta flotte contourne l'Espagne : Richard rentre sain et sauf en Angleterre (−${fmt(data.costN || 0)} d'or).`, `⛵ Your fleet sails around Spain: Richard returns home safe and sound (−${fmt(data.costN || 0)} gold).`), 'good');
+      } else if (pick === 'stay') {
+        cr.richardSafe = true;
+        cr.johnPlot = R.STAY_UNTIL;
+        UI.log(tr(`✝️ Richard reste en Terre sainte : pas de Dürnstein. Mais son frère Jean intrigue : −20 % de recrutement jusqu'en ${R.STAY_UNTIL}.`, `✝️ Richard stays in the Holy Land: no Dürnstein. But his brother John plots: −20% recruitment until ${R.STAY_UNTIL}.`), 'good');
+      } else UI.log(tr('🦁 Richard prend la route de l\'Autriche, déguisé en pèlerin…', '🦁 Richard takes the road through Austria, disguised as a pilgrim…'), 'warn');
       return;
     }
     if (key === 'philipLeaves') {
@@ -724,6 +745,7 @@ Object.assign(GameRules, {
     if (p.role === 'angleterre') {
       if (cr.ransom && !cr.ransom.paid) k *= C.CAPTIVE;
       if (cr.john) k *= C.JOHN;
+      if (cr.johnPlot && this.crYear() < cr.johnPlot) k *= C.RETURN.STAY_RECRUIT; // (🧭 Richard resté en Terre sainte)
     }
     if (p.role === 'empire' && this.tick < cr.civilWarUntil) k *= 0.5;
     return k;

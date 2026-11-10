@@ -125,6 +125,34 @@ const CENTANS = {
   // 📜 Les grands événements (voir centansrules.js) : à l'année year, un parchemin s'ouvre pour le joueur du roi de
   // France (un simple message pour les autres) ; « {clé} » est remplacé par un nombre du jeu. Le conseil, à mots
   // couverts, des conseillers du roi : pas de mode d'emploi, pour rester dans l'histoire.
+  // 📖 Ce qui change dans cette campagne : un parchemin au début de la partie (voir MECHANICS dans croisades.js)
+  MECHANICS: {
+    all: [
+      [tr('📅 Le temps', '📅 Time'), tr('de 1337 à 1453, en 45 minutes environ (l\'année et les rois sont en haut). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from 1337 to 1453, in about 45 minutes (the year and the kings are at the top). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
+      [tr('🏰 Pas de nouvelle ville', '🏰 No new cities'), tr('on améliore les siennes et on prend celles des autres.', 'you upgrade your own and take other kingdoms\' cities.')],
+      [tr('👑 La Légitimité', '👑 Legitimacy'), tr('elle remplace la Croyance : tes villes, tes églises, le sacre à Reims la font monter ; un roi captif, fou ou pas sacré en perd.', 'it replaces Faith: your cities, your churches and the coronation at Reims raise it; a captive, mad or uncrowned king loses some.')],
+      [tr('⚖️ Les grands vassaux', '⚖️ The great vassals'), tr('Bourgogne, Bretagne, Flandre et Navarre suivent le roi le plus légitime, et changent de camp. Clic droit sur leurs terres → acheter leur fidélité (500 d\'or). Attaquer un vassal le fâche.', 'Burgundy, Brittany, Flanders and Navarre follow the most legitimate king, and switch sides. Right-click their lands → buy their loyalty (500 gold). Attacking a vassal angers it.')],
+      [tr('🏹 Arcs longs et canons', '🏹 Longbows and cannons'), tr('en rase campagne, l\'armée anglaise se bat 30 % mieux… jusqu\'aux canons des frères Bureau (1439) : les sièges du roi de France deviennent bien plus courts.', 'in open country, the English army fights 30% better… until the Bureau brothers\' cannons (1439): the King of France\'s sieges become much shorter.')],
+      [tr('☠️ La Peste noire (1348)', '☠️ The Black Death (1348)'), tr('elle saute de ville en ville et tue des soldats. Clic droit sur une de tes villes → fermer ses portes.', 'it jumps from town to town and kills soldiers. Right-click one of your cities → close its gates.')],
+      [tr('🔥 Chevauchées et compagnies', '🔥 Raids and companies'), tr('les chevauchées anglaises et les Grandes Compagnies pillent et rasent des villes. 🕊️ Des trêves arrêtent parfois la guerre entre les deux rois.', 'English raids and the Great Companies plunder and raze cities. 🕊️ Truces sometimes stop the war between the two kings.')],
+      [tr('🎯 Les objectifs', '🎯 Objectives'), tr('en haut à gauche : tous tenus en même temps, c\'est la victoire. Clique sur un objectif : la carte te montre où il est.', 'at the top left: all held at the same time is victory. Click an objective: the map shows you where it is.')],
+    ],
+    roles: {
+      france: [
+        [tr('⛓️ Le roi captif', '⛓️ The captive king'), tr('à Poitiers (1356), le roi Jean peut être pris : sa rançon se paie toute seule, avec la moitié de ton or.', 'at Poitiers (1356), King John can be captured: his ransom pays itself, with half your gold.')],
+        [tr('🤪 Charles VI le Fou', '🤪 Charles VI the Mad'), tr('par crises, ton royaume recrute deux fois moins vite.', 'in fits, your kingdom recruits half as fast.')],
+        [tr('⚜️ Jeanne d\'Arc (1429)', '⚜️ Joan of Arc (1429)'), tr('si tu l\'écoutes, elle chevauche avec l\'assaut de ton choix (bouton ⚜️) : il se bat mieux et assiège plus vite ; mais si son armée est battue, elle est prise.', 'if you listen to her, she rides with the assault of your choice (⚜️ button): it fights better and besieges faster; but if her army is beaten, she is captured.')],
+      ],
+      angleterre: [
+        [tr('⚓ Les ports de la Manche', '⚓ The Channel ports'), tr('ils nourrissent tes armées sur le continent : garde-les. Tu débarques en Normandie, comme Édouard III.', 'they feed your armies on the continent: keep them. You land in Normandy, like Edward III.')],
+        [tr('💰 Les rançons', '💰 Ransoms'), tr('les chevaliers vaincus paient : le roi d\'Écosse (Neville\'s Cross), le roi de France (Poitiers)…', 'defeated knights pay: the King of Scots (Neville\'s Cross), the King of France (Poitiers)…')],
+      ],
+      bourgogne: [[tr('⚖️ Grand vassal', '⚖️ Great vassal'), tr('tu choisis ton roi : ta fidélité penche vers le plus légitime ; en 1419, le meurtre de Montereau peut te jeter dans les bras de l\'Anglais.', 'you choose your king: your loyalty leans towards the most legitimate one; in 1419, the murder at Montereau may throw you into the English king\'s arms.')]],
+      bretagne: [[tr('⚖️ Grand vassal', '⚖️ Great vassal'), tr('ta fidélité penche vers le roi le plus légitime ; la guerre de Succession de Bretagne (1341) déchire ton duché.', 'your loyalty leans towards the most legitimate king; the War of the Breton Succession (1341) tears your duchy apart.')]],
+      ecosse: [[tr('🤝 L\'Auld Alliance', '🤝 The Auld Alliance'), tr('tu es l\'alliée de la France contre l\'Angleterre ; ton roi peut être pris (Neville\'s Cross) et rançonné.', 'you are France\'s ally against England; your king can be captured (Neville\'s Cross) and ransomed.')]],
+    },
+  },
+
   EVENTS: {
     intro: {
       date: tr('Mai de l\'an de grâce 1337', 'May, in the year of grace 1337'),

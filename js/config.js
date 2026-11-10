@@ -42,6 +42,7 @@ const CONFIG = {
   // en dessous de 85 % du zoom « toute la carte », elle est complète à 60 % ; on peut dézoomer jusqu'à 45 %
   PARCHMENT_ZOOM: [0.85, 0.6, 0.45],
   PLACE_NAME_ZOOM: 1.4,      // 🏷️ les noms des villes historiques s'écrivent à partir de ce zoom (× le zoom de la carte entière)
+  KINGDOM_NAME_FADE: 0.35,  // 🧹 de près (quand les noms des villes s'écrivent), les noms des royaumes s'estompent jusqu'à cette opacité
   // Décor autour de la carte (une vieille carte marine) : on le voit en dézoomant ; la vue ne va jamais plus loin
   DECOR_IMAGE: 'img/decor_mer.webp',
   DECOR_SIZE: 2.6,           // largeur du décor, en largeurs de carte (la carte est au milieu)

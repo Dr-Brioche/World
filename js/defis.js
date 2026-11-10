@@ -68,6 +68,36 @@ Object.assign(GameRules, {
     const a = cm.capital[token] !== undefined ? cm.capital[token] : cm.sites.has(token) ? cm.sites.get(token) : -1;
     return a >= 0 && this.building[a] ? a : -1;
   },
+  // 🎯 Les lieux d'un objectif (ou d'un défi) : clic sur sa ligne, en haut à gauche → la caméra va les voir (voir main.js).
+  // On montre d'abord ceux qui ne sont pas encore à nous. Rien pour un objectif sans lieu (or, Croyance…).
+  objectivePlaces(o) {
+    const h = this.human, sc = this.cm || this.hy || this.cr, out = [];
+    const add = a => { if (a !== undefined && a >= 0 && !out.includes(a)) out.push(a); };
+    const place = t => add(this.cm ? this.defisPlace(t) : this.hy ? this.hyCity(t) : this.crCity(t));
+    for (const t of o.places || []) place(t);
+    for (const t of o.cities || []) place(t);
+    if (o.city) place(o.city);
+    if (o.name) place(o.name);
+    if (o.role && sc.capital) add(sc.capital[o.role]);
+    if (o.at && this.cm) add(this.cm.sites.get(o.at.join(',')));
+    if (o.kind === 'cross' && this.cr) place(CROISADES.TRUE_CROSS);
+    if (o.kind === 'crowned' && this.hy) place('Reims');
+    if (o.kind === 'ports' && this.hy) for (const t of CENTANS.CHANNEL_PORTS) place(t); // (⚓ les ports de la Manche)
+    if (o.kind === 'rome' && this.cm) add(this.cm.capital.papaute);
+    if (o.kind === 'mines') for (const d of this.deposits) if (d.historic) add(d.a);
+    // (une ville de tel niveau : notre plus grande ville)
+    if (o.kind === 'citadel' || o.kind === 'level') {
+      let best = -1;
+      for (const c of this.castles) if (this.owner[c] === h.id && (best < 0 || this.level[c] > this.level[best])) best = c;
+      add(best);
+    }
+    return out.filter(a => this.owner[a] !== h.id).concat(out.filter(a => this.owner[a] === h.id));
+  },
+  // Les lieux de la ligne k : des objectifs (defi faux) ou des ⭐ défis
+  objectiveLinePlaces(defi, k) {
+    const list = defi ? this.challengeList() : this.hy ? this.hyObjList() : this.cr ? this.crObjList() : this.cm ? CHARLEMAGNE.OBJECTIVES : null;
+    return list && list[k] ? this.objectivePlaces(list[k]) : [];
+  },
   defisHolds(places) {
     const h = this.human;
     return places.every(t => { const a = this.defisPlace(t); return a >= 0 && this.owner[a] === h.id; });
