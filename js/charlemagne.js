@@ -96,6 +96,36 @@ const CHARLEMAGNE = {
   // Les textes des parchemins (date, titre, récit, et le conseil, à mots couverts, des conseillers du roi : pas de
   // mode d'emploi, pour rester dans l'histoire) ; « {clé} » est remplacé par un nombre du jeu.
   // Ils s'ouvrent quand le joueur est les Francs ; sinon, un simple message les remplace.
+  // ⚔️ 773 : l'expédition d'Italie (le parchemin à choix « Didier marche sur Rome ») : SHARE des soldats des Francs
+  // franchissent les Alpes et surgissent devant Pavie ; ou STAY_GOLD d'or, et le pape se défend seul
+  ITALY: { SHARE: 0.35, STAY_GOLD: 1000 },
+  // 📜 Ce qui s'est vraiment passé, sous les choix des parchemins
+  HISTORY: {
+    lombards: tr('En 773, Charlemagne franchit les Alpes au Mont-Cenis et assiège Pavie pendant neuf mois ; en juin 774, Didier se rend, finit ses jours au monastère de Corbie, et Charles se fait couronner roi des Lombards.', 'In 773, Charlemagne crosses the Alps at Mont Cenis and besieges Pavia for nine months; in June 774, Desiderius surrenders, ends his days at the monastery of Corbie, and Charles is crowned King of the Lombards.'),
+  },
+  // Les choix des parchemins (hist : le choix qu'on a fait dans l'histoire)
+  CHOICES: {
+    lombards: [
+      { pick: 'go', hist: true, label: tr('🏔️ Franchir les Alpes : {n} soldats surgissent devant Pavie, la capitale de Didier', '🏔️ Cross the Alps: {n} soldiers appear before Pavia, Desiderius\'s capital') },
+      { pick: 'stay', label: tr('🏰 Rester en Francie (+{gold} d\'or) : le pape devra se défendre seul', '🏰 Stay in Francia (+{gold} gold): the pope will have to defend himself') },
+    ],
+  },
+  // 🎁 Ce que chaque grand événement donne (ou coûte) au joueur, dit clairement sur son parchemin
+  GAINS: {
+    carloman: tr('le royaume de Carloman (ses terres et ses villes) passe sous ta couronne.', 'Carloman\'s kingdom (its lands and cities) passes to your crown.'),
+    aquitaine: tr('les anciennes terres aquitaines passent au duc Hunald : il faut les reprendre (Fronsac tient encore pour toi).', 'the old Aquitanian lands pass to Duke Hunald: they must be retaken (Fronsac still holds for you).'),
+    christian: tr('+{faith} de Croyance, pour toujours.', '+{faith} Faith, for ever.'),
+    widukind: tr('{army} Saxons marchent sur tes terres : défends Eresburg.', '{army} Saxons march on your lands: defend Eresburg.'),
+    tassilo: tr('la Bavière et les Avars sont alliés pour toujours : Ratisbonne sera plus dure à prendre.', 'Bavaria and the Avars are allied for ever: Regensburg will be harder to take.'),
+    irene: tr('rien pour toi directement : Byzance perd la moitié de ses soldats et de ses garnisons, et ne recrute plus pendant {secs} s.', 'nothing for you directly: Byzantium loses half its soldiers and garrisons, and recruits nobody for {secs} s.'),
+    elephant: tr('+{gold} d\'or et +{faith} de Croyance.', '+{gold} gold and +{faith} Faith.'),
+    leo: tr('la garnison de Rome tombe de moitié : remplis-la en {secs} s (clic droit sur les terres du pape, « Envoyer des soldats »), sinon l\'objectif « Rome » est perdu tant qu\'elle n\'est pas pleine.', 'Rome\'s garrison falls by half: fill it within {secs} s (right-click the pope\'s lands, « Send soldiers »), or the « Rome » objective is lost until it is full.'),
+    vikings: tr('{army} Vikings débarquent près de {city} : défends-la ; ils reviendront tant que le roi danois régnera.', '{army} Vikings land near {city}: defend it; they will come back as long as the Danish king reigns.'),
+    raids: tr('{army} pillards razzient les terres de {victim} : ils peuvent frapper les tiennes aussi.', '{army} raiders plunder the lands of {victim}: they may strike yours too.'),
+    roncevaux: tr('−{lost} soldats, tombés avec Roland à Roncevaux.', '−{lost} soldiers, fallen with Roland at Roncevaux.'),
+    romeFalls: tr('l\'objectif « Rome » est perdu pour toujours : tu ne pourras plus être couronné empereur.', 'the « Rome » objective is lost for ever: you can no longer be crowned emperor.'),
+    lombards: tr('si les Lombards prennent Rome, l\'objectif « Rome » est perdu pour toujours.', 'if the Lombards take Rome, the « Rome » objective is lost for ever.'),
+  },
   EVENTS: {
     intro: {
       date: tr('Octobre de l\'an de grâce 768', 'October, in the year of grace 768'),

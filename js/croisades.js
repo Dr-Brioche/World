@@ -263,6 +263,23 @@ const CROISADES = {
       todo: tr('Les soldats de l\'Empereur se battent avec une ardeur nouvelle : la Terre sainte n\'est plus qu\'à quelques marches.',
         'The Emperor\'s soldiers fight with new zeal: the Holy Land is only a few marches away.'),
     },
+    // ⛵ Juillet 1190 : Richard et Philippe partent de Vézelay (un parchemin à choix pour le joueur : partir ou rester)
+    richardCross: {
+      who: ['angleterre'],
+      date: tr('4 juillet 1190', '4 July 1190'),
+      title: tr('Le départ de Vézelay', 'The departure from Vézelay'),
+      text: tr('Pour payer sa croisade, Richard a tout vendu, charges, châteaux et villes : « je vendrais Londres, si je trouvais un acheteur ». Ses cent navires sont partis de Dartmouth faire le tour de l\'Espagne ; lui doit les retrouver à Marseille, avec Philippe Auguste. Mais le royaume reste sans roi, et son frère Jean guette la couronne.',
+        'To pay for his crusade, Richard has sold everything, offices, castles and towns: "I would sell London, if I could find a buyer". His hundred ships have left Dartmouth to sail round Spain; he is to meet them at Marseille, with Philip Augustus. But the kingdom is left without a king, and his brother John has his eye on the crown.'),
+      todo: tr('Qui part en croisade gagne la gloire de Dieu ; qui reste garde ses terres.', 'Whoever goes on crusade wins the glory of God; whoever stays keeps his lands.'),
+    },
+    philipCross: {
+      who: ['france'],
+      date: tr('4 juillet 1190', '4 July 1190'),
+      title: tr('Le départ de Vézelay', 'The departure from Vézelay'),
+      text: tr('À Vézelay, Philippe Auguste et Richard Cœur de Lion jurent de partir ensemble et de partager le butin. Les Génois ont promis des navires pour l\'armée de France. Mais le roi d\'Angleterre tient la moitié de ton royaume, de la Normandie à l\'Aquitaine : partir avec lui, c\'est lui laisser les mains libres… ou le tenir à l\'œil.',
+        'At Vézelay, Philip Augustus and Richard the Lionheart swear to leave together and share the spoils. The Genoese have promised ships for the army of France. But the King of England holds half your kingdom, from Normandy to Aquitaine: going with him means leaving him a free hand… or keeping an eye on him.'),
+      todo: tr('Un roi qui part est un roi qui revient… s\'il revient.', 'A king who leaves is a king who comes back… if he comes back.'),
+    },
     messina: {
       who: ['angleterre', 'france'],
       date: tr('Hiver 1190', 'Winter 1190'),
@@ -496,30 +513,99 @@ const CROISADES = {
         'A crusade is first of all ships… and those who hire out the ships choose the route.'),
     },
   },
-  // Les choix des parchemins : pour chaque événement, ses boutons (pick : le choix, voir crChoose)
+  // ⛵ La croisade du joueur (Richard, Philippe, Barberousse, Venise) : en partant, SHARE de ses soldats embarquent
+  // (ils débarquent avec l'armée de l'événement, devant sa première cible) ; en restant, STAY_GOLD d'or, mais
+  // STAY_FAITH de Croyance en moins, et la suite de son histoire n'a pas lieu (voir crOff)
+  CRUSADE: { SHARE: 0.35, STAY_GOLD: 2000, STAY_FAITH: 50 },
+
+  // 📜 Ce qui s'est vraiment passé, sous les choix des parchemins (voir UI.parchment)
+  HISTORY: {
+    richardCross: tr('Richard part de Vézelay le 4 juillet 1190 ; il hiverne à Messine, prend Chypre en mai 1191 et débarque devant Acre en juin. Pendant ce temps, son frère Jean intrigue en Angleterre.', 'Richard leaves Vézelay on 4 July 1190; he winters in Messina, takes Cyprus in May 1191 and lands before Acre in June. Meanwhile, his brother John plots in England.'),
+    philipCross: tr('Philippe part de Vézelay avec Richard ; il hiverne à Messine et débarque devant Acre en avril 1191, deux mois avant lui.', 'Philip leaves Vézelay with Richard; he winters in Messina and lands before Acre in April 1191, two months before him.'),
+    barbarossa: tr('Barberousse part de Ratisbonne le 11 mai 1189 par la route de terre ; il bat les Turcs devant Konya en mai 1190, puis se noie dans le Saleph le 10 juin 1190 : sa grande armée se disperse.', 'Barbarossa leaves Regensburg on 11 May 1189 by the land route; he defeats the Turks before Konya in May 1190, then drowns in the Saleph on 10 June 1190: his great army scatters.'),
+    venice: tr('Venise accepte le marché ; faute d\'argent, les croisés prennent Zara pour elle (1202), puis Constantinople (1203), qu\'ils mettent à sac en avril 1204. La croisade n\'atteint jamais la Terre sainte.', 'Venice accepts the bargain; short of money, the crusaders take Zara for it (1202), then Constantinople (1203), which they sack in April 1204. The crusade never reaches the Holy Land.'),
+    philipLeaves: tr('Le 31 juillet 1191, malade et brouillé avec Richard, Philippe quitte Acre ; rentré en France, il profite de l\'absence de Richard pour attaquer la Normandie.', 'On 31 July 1191, ill and at odds with Richard, Philip leaves Acre; back in France, he takes advantage of Richard\'s absence to attack Normandy.'),
+    byzantineTreaty: tr('Isaac II Ange s\'allie bien à Saladin et retarde Barberousse en Thrace ; l\'empereur doit menacer Constantinople pour obtenir le passage vers l\'Asie.', 'Isaac II Angelos does ally with Saladin and delays Barbarossa in Thrace; the emperor has to threaten Constantinople to win the crossing to Asia.'),
+    saladinDies: tr('Saladin meurt à Damas le 4 mars 1193 ; ses fils se partagent son empire (al-Aziz l\'Égypte, al-Afdal Damas), jusqu\'à ce que son frère al-Adil le réunisse en 1200.', 'Saladin dies in Damascus on 4 March 1193; his sons divide his empire (al-Aziz Egypt, al-Afdal Damascus), until his brother al-Adil reunites it in 1200.'),
+    cyprusSale: tr('En 1191, Richard vend Chypre aux Templiers pour 100 000 besants.', 'In 1191, Richard sells Cyprus to the Templars for 100,000 bezants.'),
+    cyprusBuy: tr('En 1191, les Templiers achètent Chypre à Richard, pour 100 000 besants.', 'In 1191, the Templars buy Cyprus from Richard, for 100,000 bezants.'),
+    cyprusRevolt: tr('En avril 1192, les Chypriotes se soulèvent contre les Templiers, qui rendent l\'île ; elle est revendue à Guy de Lusignan, l\'ancien roi de Jérusalem.', 'In April 1192, the Cypriots rise against the Templars, who give the island back; it is sold on to Guy of Lusignan, the former King of Jerusalem.'),
+  },
+
+  // 🎁 Ce que chaque grand événement donne (ou coûte) au joueur, dit clairement sur son parchemin (selon sa faction ;
+  // '*' : pour tous). « {clé} » devient un nombre du jeu.
+  GAINS: {
+    saladinNorth: { ayyoubides: tr('une armée de {army} soldats assiège la forteresse pour toi (ses survivants te rejoignent ensuite).', 'an army of {army} soldiers besieges the fortress for you (its survivors join you afterwards).'), '*': tr('l\'armée de Saladin ({army} soldats) assiège ta forteresse : tiens bon derrière ses murs.', 'Saladin\'s army ({army} soldiers) besieges your fortress: hold fast behind its walls.') },
+    safedSiege: { ayyoubides: tr('une armée de {army} soldats assiège la forteresse pour toi.', 'an army of {army} soldiers besieges the fortress for you.'), '*': tr('l\'armée de Saladin ({army} soldats) assiège ta forteresse.', 'Saladin\'s army ({army} soldiers) besieges your fortress.') },
+    belvoirSiege: { ayyoubides: tr('une armée de {army} soldats assiège la forteresse pour toi.', 'an army of {army} soldiers besieges the fortress for you.'), '*': tr('l\'armée de Saladin ({army} soldats) assiège ta forteresse.', 'Saladin\'s army ({army} soldiers) besieges your fortress.') },
+    jerusalemSiege: { ayyoubides: tr('une armée de {army} soldats marche sur Jérusalem pour toi.', 'an army of {army} soldiers marches on Jerusalem for you.'), '*': tr('l\'armée de Saladin ({army} soldats) marche sur ta ville : défends-la !', 'Saladin\'s army ({army} soldiers) marches on your city: defend it!') },
+    tyreSiege: { ayyoubides: tr('une armée de {army} soldats marche sur Tyr pour toi.', 'an army of {army} soldiers marches on Tyre for you.'), '*': tr('l\'armée de Saladin ({army} soldats) marche sur Tyr : défends-la !', 'Saladin\'s army ({army} soldiers) marches on Tyre: defend it!') },
+    gisors: { '*': tr('les rois d\'Angleterre et de France et l\'Empereur reçoivent +{gold} d\'or (la dîme saladine) et rejoignent le pacte de la Croisade, alliés d\'Outremer.', 'the Kings of England and France and the Emperor receive +{gold} gold (the Saladin tithe) and join the pact of the Crusade, allies of Outremer.') },
+    guy: { jerusalem: tr('+{army} soldats rejoignent ton armée.', '+{army} soldiers join your army.') },
+    richardKing: { angleterre: tr('tant que Richard vit (et n\'est pas prisonnier), tous tes soldats sont 15 % plus forts au combat.', 'as long as Richard lives (and is not a prisoner), all your soldiers are 15% stronger in battle.'), '*': tr('rien pour toi, mais les soldats d\'Angleterre sont désormais 15 % plus forts.', 'nothing for you, but England\'s soldiers are now 15% stronger.') },
+    acreSiege: { jerusalem: tr('{army} soldats d\'Occident débarquent devant Acre et l\'assiègent pour toi.', '{army} soldiers from the West land before Acre and besiege it for you.'), '*': tr('{army} croisés débarquent devant Acre : la ville est en danger.', '{army} crusaders land before Acre: the city is in danger.') },
+    konya: { empire: tr('ton armée de croisade ({army} soldats) surgit devant Konya et l\'assiège.', 'your crusading army ({army} soldiers) appears before Konya and besieges it.') },
+    saleph: { empire: tr('−{lost} soldats : sans leur empereur, beaucoup rentrent chez eux.', '−{lost} soldiers: without their emperor, many go home.') },
+    salephBridge: { empire: tr('Barberousse vit : tous tes soldats sont 10 % plus forts, jusqu\'à la paix de Jaffa (1192).', 'Barbarossa lives: all your soldiers are 10% stronger, until the peace of Jaffa (1192).') },
+    messina: { '*': tr('+{gold} d\'or : le roi Tancrède de Sicile achète la paix.', '+{gold} gold: King Tancred of Sicily buys peace.') },
+    cyprus: { angleterre: tr('ton armée de croisade ({army} soldats, avec ceux qui ont embarqué) débarque à Chypre et marche sur Nicosie : prends-la, et tu auras un port en Méditerranée.', 'your crusading army ({army} soldiers, with those who embarked) lands on Cyprus and marches on Nicosia: take it, and you will have a port in the Mediterranean.') },
+    kingsArrive: { angleterre: tr('ton armée de croisade débarque devant Acre (ou la prochaine ville musulmane de la côte) et l\'assiège.', 'your crusading army lands before Acre (or the next Muslim city on the coast) and besieges it.'), france: tr('ton armée de croisade débarque devant Acre (ou la prochaine ville musulmane de la côte) et l\'assiège.', 'your crusading army lands before Acre (or the next Muslim city on the coast) and besieges it.'), '*': tr('les armées des rois d\'Occident débarquent devant Acre.', 'the armies of the kings of the West land before Acre.') },
+    arsuf: { angleterre: tr('tous tes soldats sont 10 % plus forts (en plus des 15 % de Richard), tant que Richard vit et n\'est pas prisonnier.', 'all your soldiers are 10% stronger (on top of Richard\'s 15%), as long as Richard lives and is not a prisoner.'), '*': tr('rien de plus pour toi, mais les soldats de Richard sont désormais 25 % plus forts.', 'nothing more for you, but Richard\'s soldiers are now 25% stronger.') },
+    conrad: { jerusalem: tr('−{lost} soldats, et ton royaume ne recrute plus pendant {secs} s.', '−{lost} soldiers, and your kingdom recruits nobody for {secs} s.') },
+    conradSpared: { jerusalem: tr('rien à perdre : ton tribut aux Assassins t\'a protégé.', 'nothing lost: your tribute to the Assassins protected you.') },
+    jaffa: { '*': tr('pendant {secs} s, aucun assaut entre Saladin (et l\'Égypte) et les croisés ; les rois d\'Occident quittent le pacte de la Croisade.', 'for {secs} s, no assault between Saladin (and Egypt) and the crusaders; the kings of the West leave the pact of the Crusade.') },
+    captured: { angleterre: tr('une rançon de {gold} d\'or : la moitié de ton or y part chaque seconde jusqu\'à ce qu\'elle soit payée ; d\'ici là, ton recrutement baisse de 40 % et le bonus de Richard disparaît.', 'a ransom of {gold} gold: half your gold goes to it every second until it is paid; until then, your recruitment drops by 40% and Richard\'s bonus is gone.'), empire: tr('la rançon de Richard ({gold} d\'or) te sera versée, peu à peu, par l\'Angleterre.', 'Richard\'s ransom ({gold} gold) will be paid to you, little by little, by England.'), '*': tr('rien pour toi, mais l\'Angleterre est affaiblie le temps de payer {gold} d\'or.', 'nothing for you, but England is weakened while it pays {gold} gold.') },
+    sicily: { empire: tr('{army} soldats débarquent en Sicile et marchent sur Palerme pour toi.', '{army} soldiers land in Sicily and march on Palermo for you.') },
+    isaacBlinded: { byzance: tr('−{lost} soldats, et ton empire ne recrute plus pendant 45 s.', '−{lost} soldiers, and your empire recruits nobody for 45 s.') },
+    germanCrusade: { empire: tr('{army} croisés allemands débarquent en Terre sainte pour toi.', '{army} German crusaders land in the Holy Land for you.'), '*': tr('{army} croisés allemands débarquent en Terre sainte.', '{army} German crusaders land in the Holy Land.') },
+    henryDies: { empire: tr('pendant {secs} s, ton recrutement est divisé par deux.', 'for {secs} s, your recruitment is halved.') },
+    richardDies: { angleterre: tr('plus de bonus de force de Richard, et sous Jean sans Terre, ton recrutement baisse de 15 %.', 'no more strength bonus from Richard, and under John Lackland, your recruitment drops by 15%.'), '*': tr('rien pour toi, mais l\'Angleterre perd son roi guerrier.', 'nothing for you, but England loses its warrior king.') },
+    zara: { venise: tr('−60 de Croyance (le pape t\'excommunie), mais {army} croisés débarquent devant Zara pour toi.', '−60 Faith (the pope excommunicates you), but {army} crusaders land before Zara for you.'), '*': tr('{army} croisés débarquent devant Zara.', '{army} crusaders land before Zara.') },
+    constantinople1: { venise: tr('{army} croisés débarquent devant Constantinople pour toi.', '{army} crusaders land before Constantinople for you.'), '*': tr('{army} croisés et Vénitiens attaquent Constantinople : défends-la !', '{army} crusaders and Venetians attack Constantinople: defend it!') },
+    sack: { venise: tr('{army} croisés donnent l\'assaut final à Constantinople pour toi.', '{army} crusaders make the final assault on Constantinople for you.'), '*': tr('{army} croisés donnent l\'assaut final à Constantinople : défends-la !', '{army} crusaders make the final assault on Constantinople: defend it!') },
+  },
+
+  // Les choix des parchemins : pour chaque événement, ses boutons (pick : le choix, voir crChoose ; hist : le choix
+  // qu'on a fait dans l'histoire, voir HISTORY)
   CHOICES: {
+    richardCross: [
+      { pick: 'go', hist: true, label: tr('⛵ Prendre la croix : {n} soldats embarquent (ils débarqueront à Chypre, puis devant Acre)', '⛵ Take the cross: {n} soldiers embark (they will land on Cyprus, then before Acre)') },
+      { pick: 'stay', label: tr('🏰 Rester garder l\'Angleterre (+{gold} d\'or, −{faith} de Croyance ; la croisade de Richard n\'aura pas lieu)', '🏰 Stay and guard England (+{gold} gold, −{faith} Faith; Richard\'s crusade will not happen)') },
+    ],
+    philipCross: [
+      { pick: 'go', hist: true, label: tr('⛵ Prendre la croix : {n} soldats embarquent (ils débarqueront devant Acre)', '⛵ Take the cross: {n} soldiers embark (they will land before Acre)') },
+      { pick: 'stay', label: tr('🏰 Rester en France (+{gold} d\'or, −{faith} de Croyance ; ta croisade n\'aura pas lieu)', '🏰 Stay in France (+{gold} gold, −{faith} Faith; your crusade will not happen)') },
+    ],
+    barbarossa: [
+      { pick: 'go', hist: true, label: tr('🦅 Partir par la route de terre : {army} croisés et {n} de tes soldats (ils surgiront devant Konya)', '🦅 Set out by the land route: {army} crusaders and {n} of your soldiers (they will appear before Konya)') },
+      { pick: 'stay', label: tr('🏰 Rester dans l\'Empire (+{gold} d\'or, −{faith} de Croyance ; ni Konya ni le Saleph)', '🏰 Stay in the Empire (+{gold} gold, −{faith} Faith; neither Konya nor the Saleph)') },
+    ],
+    venice: [
+      { pick: 'go', hist: true, label: tr('⛵ Accepter le marché : la croisade frappera Zara, puis Constantinople, pour toi', '⛵ Accept the bargain: the crusade will strike Zara, then Constantinople, for you') },
+      { pick: 'stay', label: tr('💰 Refuser : garder ta flotte pour le commerce (+{gold} d\'or ; ni Zara ni Constantinople)', '💰 Refuse: keep your fleet for trade (+{gold} gold; neither Zara nor Constantinople)') },
+    ],
     cyprusSale: [
-      { pick: 'sell', label: tr('💰 Vendre Chypre aux Templiers (+{price} d\'or)', '💰 Sell Cyprus to the Templars (+{price} gold)') },
+      { pick: 'sell', hist: true, label: tr('💰 Vendre Chypre aux Templiers (+{price} d\'or)', '💰 Sell Cyprus to the Templars (+{price} gold)') },
       { pick: 'keep', label: tr('🏝️ Garder l\'île', '🏝️ Keep the island') },
     ],
     cyprusBuy: [
-      { pick: 'buy', label: tr('🏝️ Acheter Chypre (−{price} d\'or)', '🏝️ Buy Cyprus (−{price} gold)') },
-      { pick: 'refuse', label: tr('✋ Refuser : le Temple garde son or', '✋ Refuse: the Temple keeps its gold') },
+      { pick: 'buy', hist: true, label: tr('🏝️ Acheter Chypre (−{price} d\'or)', '🏝️ Buy Cyprus (−{price} gold)') },
+      { pick: 'refuse', label: tr('🚫 Refuser : le Temple garde son or', '🚫 Refuse: the Temple keeps its gold') },
     ],
     cyprusRevolt: [
-      { pick: 'resell', label: tr('💰 Revendre l\'île à Guy de Lusignan (+{gold} d\'or)', '💰 Sell the island back to Guy of Lusignan (+{gold} gold)') },
+      { pick: 'resell', hist: true, label: tr('💰 Revendre l\'île à Guy de Lusignan (+{gold} d\'or)', '💰 Sell the island back to Guy of Lusignan (+{gold} gold)') },
       { pick: 'keep', label: tr('⚔️ Écraser la révolte (−{pct} % de tes soldats)', '⚔️ Crush the revolt (−{pct}% of your soldiers)') },
     ],
     philipLeaves: [
-      { pick: 'home', label: tr('🏰 Rentrer en France (+{gold} d\'or de l\'héritage de Flandre, la croisade sans toi)', '🏰 Go home to France (+{gold} gold from the Flemish inheritance, the crusade goes on without you)') },
+      { pick: 'home', hist: true, label: tr('🏰 Rentrer en France (+{gold} d\'or de l\'héritage de Flandre, la croisade sans toi)', '🏰 Go home to France (+{gold} gold from the Flemish inheritance, the crusade goes on without you)') },
       { pick: 'stay', label: tr('✝️ Rester en Terre sainte (+{faith} de Croyance)', '✝️ Stay in the Holy Land (+{faith} Faith)') },
     ],
     saladinDies: [
-      { pick: 'share', label: tr('🤝 Partager : l\'Égypte va à ton frère al-Aziz, ton allié (+{faith} de Croyance)', '🤝 Share: Egypt goes to your brother al-Aziz, your ally (+{faith} Faith)') },
+      { pick: 'share', hist: true, label: tr('🤝 Partager : l\'Égypte va à ton frère al-Aziz, ton allié (+{faith} de Croyance)', '🤝 Share: Egypt goes to your brother al-Aziz, your ally (+{faith} Faith)') },
       { pick: 'keep', label: tr('⚔️ Tout garder : la guerre civile (−{pct} % de tes soldats)', '⚔️ Keep everything: civil war (−{pct}% of your soldiers)') },
     ],
     byzantineTreaty: [
-      { pick: 'saladin', label: tr('🤝 S\'allier à Saladin (jusqu\'à la paix de Jaffa)', '🤝 Ally with Saladin (until the peace of Jaffa)') },
+      { pick: 'saladin', hist: true, label: tr('🤝 S\'allier à Saladin (jusqu\'à la paix de Jaffa)', '🤝 Ally with Saladin (until the peace of Jaffa)') },
       { pick: 'refuse', label: tr('✝️ Refuser : laisser passer les croisés (+{faith} de Croyance)', '✝️ Refuse: let the crusaders pass (+{faith} Faith)') },
     ],
   },

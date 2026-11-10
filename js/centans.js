@@ -101,7 +101,7 @@ const CENTANS = {
   // ⚔️ Les grandes armées des événements (Crécy, Calais, Poitiers, Azincourt, Orléans), selon la difficulté
   EVENT_ARMY: { facile: 1800, normal: 2500, difficile: 3200 },
   // ⚜️ Jeanne d'Arc (1429) : l'armée qu'elle accompagne se bat JOAN_POWER mieux et assiège JOAN_SIEGE fois plus vite
-  JOAN: { YEAR: 1429, POWER: 0.4, SIEGE: 0.5, BACK: 5 },
+  JOAN: { YEAR: 1429, POWER: 0.4, SIEGE: 0.5, BACK: 5, REFUSE_GOLD: 1500 }, // (REFUSE_GOLD : la renvoyer à Domrémy)
   // ⚖️ Le traité d'Arras (1435) : la Bourgogne revient au roi de France (si sa Légitimité dépasse celle de l'Anglais)
   ARRAS: 1435,
 
@@ -722,14 +722,39 @@ const CENTANS = {
         'A crowned king no longer has to prove his legitimacy: he has only to defend it.'),
     },
   },
-  // Les choix des parchemins du roi d'Angleterre : pour chaque événement, ses boutons (pick : le choix, voir hyChoose)
+  // 📜 Ce qui s'est vraiment passé, sous les choix des parchemins (voir UI.parchment)
+  HISTORY: {
+    bretigny: tr('Le 8 mai 1360, Édouard III signe la paix de Brétigny : il renonce à la couronne de France, mais garde l\'Aquitaine agrandie, Calais et Ponthieu, et la rançon du roi Jean. La guerre reprend neuf ans plus tard.', 'On 8 May 1360, Edward III signs the peace of Brétigny: he renounces the crown of France, but keeps an enlarged Aquitaine, Calais and Ponthieu, and King John\'s ransom. War resumes nine years later.'),
+    paysans: tr('En juin 1381, le jeune Richard II, quatorze ans, va au-devant des rebelles à Smithfield ; leur chef Wat Tyler y est tué, le roi promet tout, et la révolte se disperse… avant que ses promesses soient reniées.', 'In June 1381, the young Richard II, aged fourteen, rides out to meet the rebels at Smithfield; their leader Wat Tyler is killed there, the king promises everything, and the revolt disperses… before his promises are broken.'),
+    jeanne: tr('En mars 1429, à Chinon, Charles VII fait examiner Jeanne par des théologiens, puis lui confie une armée : elle délivre Orléans en mai, et le fait sacrer à Reims en juillet.', 'In March 1429, at Chinon, Charles VII has Joan examined by theologians, then gives her an army: she relieves Orléans in May, and has him crowned at Reims in July.'),
+  },
+  // 🎁 Ce que chaque grand événement donne (ou coûte) au joueur, dit clairement sur son parchemin (selon son camp ;
+  // '*' : pour les deux)
+  GAINS: {
+    ecluse: { france: tr('tes ports retombent au niveau 1, et pas d\'expédition par la mer pendant 120 s.', 'your ports fall back to level 1, and no expedition by sea for 120 s.'), '*': tr('la flotte française est détruite : ses ports retombent au niveau 1 et elle ne peut plus traverser la mer pendant 120 s.', 'the French fleet is destroyed: its ports fall back to level 1 and it cannot cross the sea for 120 s.') },
+    larochelle: { angleterre: tr('tes ports retombent au niveau 1, et pas d\'expédition par la mer pendant 120 s.', 'your ports fall back to level 1, and no expedition by sea for 120 s.'), '*': tr('la flotte anglaise est détruite : ses ports retombent au niveau 1 et elle ne peut plus traverser la mer pendant 120 s.', 'the English fleet is destroyed: its ports fall back to level 1 and it cannot cross the sea for 120 s.') },
+    bretagne: { '*': tr('la Bretagne perd la moitié de ses soldats, et Montfort se tourne vers le roi d\'Angleterre.', 'Brittany loses half its soldiers, and Montfort turns to the King of England.') },
+    dauphine: { france: tr('le Dauphiné, autour de Grenoble, passe d\'un coup à ton royaume.', 'the Dauphiné, around Grenoble, passes to your kingdom at once.'), '*': tr('le Dauphiné passe au roi de France.', 'the Dauphiné passes to the King of France.') },
+    jacquerie: { france: tr('pendant 60 s, ton recrutement baisse de 40 %, et la garnison de Paris tombe de moitié.', 'for 60 s, your recruitment drops by 40%, and the garrison of Paris falls by half.'), '*': tr('le roi de France recrute 40 % de moins pendant 60 s.', 'the King of France recruits 40% less for 60 s.') },
+    armagnacs: { france: tr('−25 % de tes soldats, et la Bourgogne s\'éloigne de toi.', '−25% of your soldiers, and Burgundy drifts away from you.'), '*': tr('le roi de France perd 25 % de ses soldats.', 'the King of France loses 25% of his soldiers.') },
+    troyes: { france: tr('−60 de Légitimité.', '−60 Legitimacy.'), angleterre: tr('+100 de Légitimité : te voilà héritier du royaume de France.', '+100 Legitimacy: you are now heir to the kingdom of France.') },
+    jeanne: { france: tr('Jeanne accompagne ta prochaine armée : +40 % de force, sièges 50 % plus rapides, et +15 de Légitimité par ville prise. Battue, elle est capturée.', 'Joan rides with your next army: +40% strength, sieges 50% faster, and +15 Legitimacy per city taken. Defeated, she is captured.'), angleterre: tr('l\'armée qu\'elle accompagne est 40 % plus forte et assiège 50 % plus vite : bats-la, et Jeanne sera prise.', 'the army she rides with is 40% stronger and besieges 50% faster: beat it, and Joan will be taken.') },
+    folie: { france: tr('toutes les 100 s, le roi a une crise de 30 s : pendant ses crises, ton recrutement est divisé par deux et ta Légitimité baisse de 30.', 'every 100 s, the king has a 30 s fit: during his fits, your recruitment is halved and your Legitimacy drops by 30.'), '*': tr('le roi de France a des crises de folie : pendant ses crises, il recrute deux fois moins.', 'the King of France has fits of madness: during his fits, he recruits half as much.') },
+    bureau: { france: tr('tes sièges durent 55 % de moins.', 'your sieges are 55% shorter.'), '*': tr('les sièges du roi de France durent 55 % de moins.', 'the King of France\'s sieges are 55% shorter.') },
+  },
+  // Les choix des parchemins : pour chaque événement, ses boutons (pick : le choix, voir hyChoose ; hist : le choix
+  // qu'on a fait dans l'histoire, voir HISTORY)
   CHOICES: {
+    jeanne: [
+      { pick: 'listen', hist: true, label: tr('⚜️ Confier une armée à Jeanne (elle accompagne ta prochaine armée)', '⚜️ Give Joan an army (she rides with your next army)') },
+      { pick: 'refuse', label: tr('🚫 La renvoyer à Domrémy (+{gold} d\'or ; pas de Jeanne d\'Arc)', '🚫 Send her back to Domrémy (+{gold} gold; no Joan of Arc)') },
+    ],
     bretigny: [
-      { pick: 'accept', label: tr('🕊️ Signer la paix (trêve, +{gold} d\'or, −{legit} de Légitimité)', '🕊️ Sign the peace (truce, +{gold} gold, −{legit} Legitimacy)') },
+      { pick: 'accept', hist: true, label: tr('🕊️ Signer la paix (trêve, +{gold} d\'or, −{legit} de Légitimité)', '🕊️ Sign the peace (truce, +{gold} gold, −{legit} Legitimacy)') },
       { pick: 'refuse', label: tr('⚔️ Refuser : la guerre continue (+{legit2} de Légitimité)', '⚔️ Refuse: the war goes on (+{legit2} Legitimacy)') },
     ],
     paysans: [
-      { pick: 'smithfield', label: tr('🤝 Rencontrer les rebelles à Smithfield (−{gold} d\'or)', '🤝 Meet the rebels at Smithfield (−{gold} gold)') },
+      { pick: 'smithfield', hist: true, label: tr('🤝 Rencontrer les rebelles à Smithfield (−{gold} d\'or)', '🤝 Meet the rebels at Smithfield (−{gold} gold)') },
       { pick: 'repress', label: tr('⚔️ Réprimer la révolte (−{pct} % de tes soldats)', '⚔️ Crush the revolt (−{pct}% of your soldiers)') },
     ],
   },

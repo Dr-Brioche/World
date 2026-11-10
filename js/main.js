@@ -1029,11 +1029,14 @@ const UI = {
   // Plusieurs événements à la fois : ils attendent leur tour. Une fois le dernier refermé, la partie reprend
   // (si elle tournait avant le premier).
   // choices (facultatif) : un parchemin à choix (🦁 la campagne du roi d'Angleterre, 🙏 le vœu) : des boutons
-  // [{ key, pick, label }] à la place de « Poursuivre » ; le choix est un ordre « hyChoice » (voir Game.hyChoose, Game.chooseVow)
+  // [{ key, pick, label, hist }] à la place de « Poursuivre » ; le choix est un ordre « hyChoice » (voir Game.hyChoose, Game.chooseVow)
+  // (hist : le choix qu'on a fait dans l'histoire, marqué 📜 ; ev.history : sous les choix, ce qui s'est vraiment passé ;
+  //  ev.gain : « 🎁 Ce que ça te rapporte », ce que l'événement donne ou coûte au joueur, dit clairement)
   parchment(ev, vars = {}, choices = null) {
     const fill = t => (t || '').replace(/\{(\w+)\}/g, (m, k) => vars[k] !== undefined ? vars[k] : m);
     (this.parchments = this.parchments || []).push({ date: fill(ev.date), title: fill(ev.title), text: fill(ev.text), todo: fill(ev.todo),
-      choices: choices && choices.map(c => ({ key: c.key, pick: c.pick, label: fill(c.label) })) });
+      gain: fill(ev.gain), history: choices ? fill(ev.history) : '',
+      choices: choices && choices.map(c => ({ key: c.key, pick: c.pick, label: fill(c.label), hist: !!c.hist })) });
     if (!this.parchmentOn) this.nextParchment();
   },
   nextParchment() {
@@ -1045,10 +1048,13 @@ const UI = {
     $('pTitle').textContent = ev.title;
     $('pText').textContent = ev.text;
     $('pTodo').innerHTML = ev.todo ? `<b>${tr('Tes conseillers murmurent :', 'Your counsellors whisper:')}</b> ${escapeHtml(ev.todo)}` : '';
+    $('pGain').innerHTML = ev.gain ? `<b>${tr('🎁 Ce que ça te rapporte :', '🎁 What it brings you:')}</b> ${escapeHtml(ev.gain)}` : '';
+    $('pHist').innerHTML = ev.history ? `<b>${tr('📜 Déroulement historique :', '📜 What really happened:')}</b> ${escapeHtml(ev.history)}` : '';
     // (un parchemin à choix : ses boutons à la place de « Poursuivre », et il ne se referme qu'en choisissant)
     this.parchmentChoices = ev.choices || null;
     $('pClose').classList.toggle('hidden', !!ev.choices);
-    $('pChoices').innerHTML = (ev.choices || []).map((c, k) => `<button type="button" class="sealBtn" data-k="${k}">${escapeHtml(c.label)}</button>`).join('');
+    $('pChoices').innerHTML = (ev.choices || []).map((c, k) => `<button type="button" class="sealBtn${c.hist ? ' hist' : ''}" data-k="${k}">${escapeHtml(c.label)}` +
+      (c.hist ? `<small>${tr('📜 comme dans l\'histoire', '📜 as in history')}</small>` : '') + '</button>').join('');
     // (on relance l'animation : la feuille se déroule à chaque parchemin)
     const sheet = document.querySelector('#parchment .sheet');
     sheet.style.animation = 'none'; void sheet.offsetWidth; sheet.style.animation = '';

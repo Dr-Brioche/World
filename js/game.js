@@ -1837,7 +1837,7 @@ const GameRules = {
     const dx = (c % this.W) + half - x, dy = ((c / this.W) | 0) + half - y;
     return dx * dx + dy * dy <= R * R;
   },
-  // La case (x, y) est-elle dans la muraille (le rayon R) du château c ? ⛰️ Seulement si on la rejoint depuis la ville
+  // La case (x, y) est-elle dans la muraille (le rayon R) du château c ? 🏔️ Seulement si on la rejoint depuis la ville
   // sans passer un sommet ni la mer (voir wallsReach) : une muraille ne s'étend jamais de l'autre côté d'une zone
   // infranchissable (plus de bout de muraille coupé de sa ville, qu'aucune armée ne pourrait assiéger).
   inCastleRange(c, x, y, R) {
@@ -2401,7 +2401,8 @@ const GameRules = {
     const army = Math.round(cm.lombardArmy * Math.min(1, cities / Math.max(1, cm.lombardCities)));
     if (!cm.lombardWarned && this.tick >= cm.lombardTick - C.LOMBARDS_WARNING * TPS && lomb.alive && pope.alive) {
       cm.lombardWarned = true;
-      if (this.human === franks) this.cmEvent('lombards', { army: fmt(army), secs: C.LOMBARDS_WARNING });
+      // (🏔️ le joueur des Francs choisit : franchir les Alpes, comme Charlemagne, ou rester ; voir cmChoose)
+      if (this.human === franks) this.cmOffer('lombards', { army: fmt(army), secs: C.LOMBARDS_WARNING, n: fmt(Math.floor(franks.troops * C.ITALY.SHARE)), gold: fmt(C.ITALY.STAY_GOLD) });
       else UI.log(lomb.isHuman
         ? tr('⚔️ Ton armée se rassemble : bientôt, les Lombards pourront marcher sur Rome !', '⚔️ Your army is gathering: soon the Lombards will be able to march on Rome!')
         : tr(`⚠️ Didier, roi des Lombards, lève une armée de ${fmt(army)} soldats pour marcher sur Rome ! Le pape appelle les Francs au secours`,
@@ -2453,8 +2454,39 @@ const GameRules = {
   // 📜 Un grand événement du scénario : un parchemin pour le joueur des Francs (voir EVENTS dans charlemagne.js),
   // ou un simple message (log, s'il y en a un) pour les autres
   cmEvent(key, vars, log, kind = 'warn', who) {
-    if (this.human.role === 'francs') UI.parchment(CHARLEMAGNE.EVENTS[key], vars);
+    if (this.human.role === 'francs') UI.parchment(Object.assign({}, CHARLEMAGNE.EVENTS[key], { gain: CHARLEMAGNE.GAINS[key] || '' }), vars);
     else if (log) UI.log(log, kind, who);
+  },
+  // 📜 Un parchemin à choix pour le joueur des Francs (la partie attend sa réponse : voir cmChoose) ; sous les choix,
+  // ce qui s'est vraiment passé (HISTORY), et le choix historique marqué
+  cmOffer(key, vars, data = {}) {
+    const C = CHARLEMAGNE;
+    (this.cm.offers = this.cm.offers || {})[key] = data;
+    UI.parchment(Object.assign({}, C.EVENTS[key], { history: C.HISTORY[key] || '', gain: C.GAINS[key] || '' }), vars,
+      C.CHOICES[key].map(c => ({ key, pick: c.pick, label: c.label, hist: !!c.hist })));
+  },
+  // Le joueur des Francs a choisi (ordre « hyChoice »)
+  cmChoose(pid, key, pick) {
+    const cm = this.cm, offers = cm.offers || {}, C = CHARLEMAGNE;
+    if (!offers[key] || this.players[pid] !== this.human || this.human.role !== 'francs' || !C.CHOICES[key].some(c => c.pick === pick)) return null;
+    delete offers[key];
+    const fr = this.players[pid], I = C.ITALY;
+    if (key === 'lombards') {
+      const lomb = this.players.find(p => p.role === 'lombards'), pavia = cm.capital.lombards;
+      if (pick === 'go' && lomb && lomb.alive && pavia >= 0 && this.owner[pavia] === lomb.id) {
+        // (🏔️ une part de l'armée franchit les Alpes et surgit devant Pavie, comme en 773)
+        const n = Math.floor(fr.troops * I.SHARE), spot = this.hyLanding(fr.id, lomb.id, pavia, false);
+        const a = n >= 1 && spot >= 0 && this.hyLandArmy(fr.id, pavia, spot, n, {});
+        if (a) {
+          fr.troops -= n;
+          UI.log(tr(`🏔️ Tes ${fmt(n)} soldats franchissent les Alpes et surgissent devant ${this.placeNames.get(pavia) || 'Pavie'} !`, `🏔️ Your ${fmt(n)} soldiers cross the Alps and appear before ${this.placeNames.get(pavia) || 'Pavia'}!`), 'good');
+        } else UI.log(tr('🏔️ Les cols des Alpes sont fermés : aucune route vers Pavie. Frappe les Lombards par tes terres.', '🏔️ The Alpine passes are closed: no road to Pavia. Strike the Lombards through your lands.'), 'warn');
+      } else if (pick === 'stay') {
+        fr.gold += I.STAY_GOLD;
+        UI.log(tr(`📜 Tu t'écartes de l'histoire (+${fmt(I.STAY_GOLD)} d'or) : pas d'expédition d'Italie, Rome devra tenir seule. La partie continue, à toi d'écrire la suite.`, `📜 You step away from history (+${fmt(I.STAY_GOLD)} gold): no Italian expedition, Rome will have to hold out alone. The game goes on: the rest is yours to write.`), 'good');
+      }
+    }
+    return null;
   },
 
   // ⚔️ 769 : le duc Hunald II soulève l'Aquitaine. Ses anciennes terres encore aux Francs passent à lui (avec ce qui y
@@ -2802,7 +2834,7 @@ const GameRules = {
         case 'hyChev': return this.hyChevauchee(pid, o.a, o.troops);
         case 'hyJoan': return this.hyArmJoan();
         case 'hyChoice': // (🦁 un choix d'un parchemin du roi d'Angleterre, ou 🙏 le vœu du début de partie)
-          return o.key === 'vow' ? this.chooseVow(pid, o.pick) : this.cr ? this.crChoose(pid, o.key, o.pick) : this.hyChoose(pid, o.key, o.pick);
+          return o.key === 'vow' ? this.chooseVow(pid, o.pick) : this.cr ? this.crChoose(pid, o.key, o.pick) : this.cm ? this.cmChoose(pid, o.key, o.pick) : this.hyChoose(pid, o.key, o.pick);
         case 'crHire': return this.cr ? this.crHire(pid, o.target) : null; // (🗡️ engager les Assassins, voir croisadesrules.js)
         case 'crTribute': return this.cr ? this.crTribute(pid) : null;
         case 'crLoan': return this.cr ? this.crLoan(pid) : null; // (🏦 emprunter au Temple, voir ordres.js)
@@ -4606,7 +4638,7 @@ const GameRules = {
     return path;
   },
 
-  // ⛰️ Les cases de la muraille du château c qu'on rejoint depuis la ville sans sortir de la muraille ni passer un
+  // 🏔️ Les cases de la muraille du château c qu'on rejoint depuis la ville sans sortir de la muraille ni passer un
   // sommet (ou la mer) : le vrai « pied du mur ». Une case du cercle de l'autre côté d'une montagne infranchissable
   // n'en est pas : une armée qui y arrive ne peut pas assiéger la ville de là, elle doit en faire le tour.
   // (gardé en mémoire tant que la carte ne change pas)
