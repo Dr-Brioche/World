@@ -395,7 +395,6 @@ button:hover { background: #e8d6a8; }
 .msg.betray { border-left-color: var(--danger); }
 .msg.betray button:first-child { background: #e9b5a8; }
 .msg.betray button:last-child { background: var(--parchment-dark); }
-#traitor { color: var(--danger); font-weight: bold; }
 /* 🌿 La jauge de gloire, en haut au milieu (sous la barre du haut : voir UI.refreshGlory) */
 #gloryBar { left: 50%; transform: translateX(-50%); width: min(360px, 46vw); padding: 3px 8px 5px; text-align: center; font-size: 12px; z-index: 6; }
 #gloryTitle { font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -409,7 +408,6 @@ button:hover { background: #e8d6a8; }
 #gloryGauge b.pact { display: flex; height: 100%; box-sizing: border-box; border: 2px solid #f0c040; border-radius: 4px; overflow: hidden; flex: none; transition: width 0.4s linear; }
 #gloryGauge b.pact i { box-shadow: none; }
 #gloryGauge b.pact i.me { box-shadow: inset 0 -3px 0 #ffe08a; }
-#warBox { color: var(--good); font-weight: bold; } /* (🛡️ politique de guerre en cours) */
 .msg.upgrade img { display: block; width: 120px; margin: 4px auto; }
 /* avantages d'un bâtiment : un par ligne, avec un tiret */
 .perks { list-style: none; margin: 4px 0 0; padding: 0; font-weight: bold; }
@@ -728,3 +726,17 @@ button:disabled .ico { opacity: 0.6; }
 #campPanel .why { font-size: 11px; font-style: italic; opacity: 0.8; }
 #campPanel select { max-width: 170px; font-size: 12px; }
 @media (max-width: 760px) { #campBtn { top: auto; bottom: 150px; transform: none; } #campPanel { top: auto; bottom: 60px; transform: none; } }
+
+/* 📋 La barre des effets en cours (sous la barre du haut, centrée comme elle) : une pastille par effet */
+#effectsBar { top: 52px; left: calc((100% - 296px) / 2); transform: translateX(-50%); width: max-content; max-width: calc(100% - 330px); padding: 4px 8px;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; font-size: 12px; }
+#effectsBar .fx { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; cursor: help;
+  border: 1px solid rgba(110, 70, 20, 0.35); background: rgba(255, 248, 225, 0.6); }
+#effectsBar .fx b { font-family: Cinzel, Georgia, serif; }
+#effectsBar .fx.good { border-color: #4a7a2a; background: rgba(120, 180, 80, 0.2); }
+#effectsBar .fx.good .v { color: #1f5a1a; font-weight: bold; }
+#effectsBar .fx.bad { border-color: #a3261f; background: rgba(200, 60, 40, 0.15); }
+#effectsBar .fx.bad .v { color: #a3261f; font-weight: bold; }
+#effectsBar .fx .t { opacity: 0.75; font-variant-numeric: tabular-nums; }
+@media (max-width: 1100px) { #effectsBar { left: 8px; right: 296px; transform: none; width: auto; max-width: none; } }
+@media (max-width: 760px) { #effectsBar { right: 8px; } }

@@ -2008,6 +2008,13 @@ const UI = {
   // le cadre de la musique, puis les messages ; chacun juste sous le précédent, pour qu'ils ne se chevauchent pas
   placeTopPanels(box, shown) {
     let y = $('topbar').getBoundingClientRect().bottom + 6;
+    // (📋 la barre des effets en cours, juste sous la barre du haut ; à droite des objectifs quand il y a la place)
+    const fx = $('effectsBar');
+    if (!fx.classList.contains('hidden')) {
+      fx.style.top = Math.round(y - 2) + 'px';
+      const r = fx.getBoundingClientRect();
+      if (!shown || r.left < box.getBoundingClientRect().right + 6) y = r.bottom + 6;
+    }
     if (shown) { box.style.top = Math.round(y) + 'px'; y = box.getBoundingClientRect().bottom + 6; }
     const music = $('musicBox'), phone = window.innerWidth <= 760;
     music.style.top = phone ? Math.round(y) + 'px' : '';
@@ -2022,13 +2029,7 @@ const UI = {
     const parts = [`📅 ${Math.floor(G.hyYear())}`], tips = [tr(`Année ${Math.floor(G.hyYear())}`, `Year ${Math.floor(G.hyYear())}`)];
     if (fr.alive) { parts.push(`⚜️ ${G.hyKing().name}`); tips.push(tr(`Roi de France : ${G.hyKing().name}`, `King of France: ${G.hyKing().name}`)); }
     if (en.alive) tips.push(tr(`Roi d'Angleterre : ${G.hyEngKing().name}`, `King of England: ${G.hyEngKing().name}`));
-    if (G.hyTruce()) {
-      const n = Math.ceil((hy.truceUntil - G.tick) / TPS);
-      parts.push(`🕊️ ${n} s`); tips.push(tr(`Trêve entre les deux rois : encore ${n} s`, `Truce between the two kings: ${n} s left`));
-    }
-    if (hy.ransom && !hy.ransom.paid) { parts.push(`⛓️ ${fmt(hy.ransom.left)}`); tips.push(tr(`Le roi est captif : sa rançon (${fmt(hy.ransom.left)} pièces à payer) prend la moitié de l'or du roi de France`, `The king is a captive: his ransom (${fmt(hy.ransom.left)} gold left) takes half of the King of France's gold`)); }
-    if (G.tick < (hy.fitUntil || 0)) { parts.push('🤪'); tips.push(tr('Le roi est en pleine crise de folie : il recrute moitié moins', 'The king is in a fit of madness: he recruits half as fast')); }
-    if (hy.sick.size) { parts.push(`☠️ ${hy.sick.size}`); tips.push(tr(`La peste : ${hy.sick.size} villes malades`, `The plague: ${hy.sick.size} sick cities`)); }
+    // (la trêve, la rançon, la folie, la peste… : dans la barre des effets en cours, voir refreshEffects)
     const txt = parts.join(' · ');
     if (this.hyBoxText !== txt) { this.hyBoxText = txt; $('hyBox').textContent = txt; $('hyBox').title = tips.join('\n'); }
   },
@@ -2117,18 +2118,99 @@ const UI = {
   refreshCrBox() {
     const G = Game, cr = G.cr, TPS = CONFIG.TICKS_PER_SECOND, h = G.human, y = G.crYear();
     const parts = [`📅 ${Math.floor(y)}`], tips = [tr(`Année ${Math.floor(y)}`, `Year ${Math.floor(y)}`)];
-    if (G.crTruce()) {
-      const n = Math.ceil((cr.truceUntil - G.tick) / TPS);
-      parts.push(`🕊️ ${n} s`); tips.push(tr(`La paix de Jaffa : pas d'assaut entre Saladin et les croisés pendant ${n} s`, `The peace of Jaffa: no assault between Saladin and the crusaders for ${n} s`));
-    }
-    if (cr.ransom && !cr.ransom.paid) { parts.push(`⛓️ ${fmt(cr.ransom.left)}`); tips.push(tr(`Richard est captif : sa rançon (${fmt(cr.ransom.left)} pièces à payer) prend la moitié de l'or de l'Angleterre`, `Richard is a captive: his ransom (${fmt(cr.ransom.left)} gold left) takes half of England's gold`)); }
-    const stun = (cr.stun.get(h.id) || 0) - G.tick;
-    if (stun > 0) { parts.push(`🗡️ ${Math.ceil(stun / TPS)} s`); tips.push(tr('Frappé par les Assassins (ou la guerre civile) : tu ne recrutes plus', 'Struck by the Assassins (or civil war): you recruit no more')); }
-    const loan = cr.loans.get(h.id);
-    if (loan) { parts.push(`🏦 ${fmt(loan.left)}`); tips.push(tr(`Ta dette au Temple : ${fmt(loan.left)} pièces (tu la rembourses peu à peu, chaque seconde)`, `Your debt to the Temple: ${fmt(loan.left)} gold (you repay it little by little, every second)`)); }
-    if (G.crProtected(h.id)) tips.push(tr(`Ton tribut au Vieux de la Montagne te protège encore ${Math.ceil(((cr.tributeUntil.get(h.id) || 0) - G.tick) / TPS)} s`, `Your tribute to the Old Man of the Mountain still protects you for ${Math.ceil(((cr.tributeUntil.get(h.id) || 0) - G.tick) / TPS)} s`));
+    // (la paix de Jaffa, la rançon de Richard, les Assassins, la dette au Temple… : dans la barre des effets, voir refreshEffects)
     const txt = parts.join(' · ');
     if (this.hyBoxText !== txt) { this.hyBoxText = txt; $('hyBox').textContent = txt; $('hyBox').title = tips.join('\n'); }
+  },
+  // 📋 Les effets en cours sur ton royaume, en court : { k: 'good' | 'bad' | 'info', t: titre, v: l'effet, s: le temps
+  // qui reste (en tours), tip: le détail au survol }. Pour toutes les parties (politique de guerre, après-guerre…) et
+  // chaque campagne (Richard captif, la trêve, la peste, les Assassins…).
+  effects() {
+    const G = Game, h = G.human, TPS = CONFIG.TICKS_PER_SECOND, out = [], pct = x => Math.round(x * 100);
+    const add = (k, t, v, tip, s) => out.push({ k, t, v, tip, s });
+    // --- Toutes les parties ---
+    if (G.warActive(h)) add('good', tr('🛡️ Politique de guerre', '🛡️ War policy'), tr(`garnisons +${h.warLevel * CONFIG.WAR_POLICY.GARRISON}`, `garrisons +${h.warLevel * CONFIG.WAR_POLICY.GARRISON}`),
+      tr('Tu as perdu un lieu fortifié : tes autres villes, ports royaux et mines fortifiées ont des soldats de garnison en plus ; chaque nouvelle perte ajoute un bonus et relance le compte à rebours.', 'You lost a fortified place: your other cities, royal ports and fortified mines have extra garrison soldiers; each new loss adds a bonus and restarts the countdown.'), h.warUntil - G.tick);
+    if (G.isTraitor(h)) add('bad', tr('🗡️ Traître', '🗡️ Traitor'), tr(`défense −${pct(1 - CONFIG.TRAITOR_DEFENSE_MALUS)} %`, `defence −${pct(1 - CONFIG.TRAITOR_DEFENSE_MALUS)}%`),
+      tr('Tu as trahi un pacte : tes terres coûtent moins cher à prendre.', 'You betrayed a pact: your land is cheaper to take.'), h.traitorUntil - G.tick);
+    // (sans toucher à l'état du jeu : on ne garde que les effets pas encore finis)
+    const rally = (h.rallyEnds || []).filter(t => t > G.tick), post = (h.postWarEnds || []).filter(t => t > G.tick);
+    const ra = Math.min(CONFIG.RALLY_MAX, rally.length * CONFIG.RALLY_BONUS), pw = Math.min(CONFIG.POST_WAR_MAX, post.length * CONFIG.POST_WAR_MALUS);
+    if (ra > 0) add('good', tr('🔥 Galvanisé', '🔥 Rallied'), tr(`troupes +${pct(ra)} %`, `troops +${pct(ra)}%`), tr('Ton peuple, galvanisé par une défaite, produit plus de soldats.', 'Your people, rallied by a defeat, produce more soldiers.'), Math.max(...rally) - G.tick);
+    if (pw > 0) add('bad', tr('⚰️ Après-guerre', '⚰️ Post-war'), tr(`troupes −${pct(pw)} %`, `troops −${pct(pw)}%`), tr('Ton royaume panse ses blessures après une victoire : il produit moins de soldats.', 'Your kingdom licks its wounds after a victory: it produces fewer soldiers.'), Math.max(...post) - G.tick);
+    if (h.levyEnd && G.tick < h.levyEnd) add('good', tr('📯 Levée en masse', '📯 Mass levy'), tr('recrutement accru', 'recruitment raised'), tr('Le recrutement de masse de ta caserne est en cours.', 'Your barracks\' mass levy is under way.'), h.levyEnd - G.tick);
+    if (h.crisisUntil > G.tick) add('bad', tr('👑 Crise', '👑 Crisis'), tr('plus de recrues', 'no recruits'), tr('Ton royaume est en crise : il ne recrute plus.', 'Your kingdom is in crisis: it recruits no more.'), h.crisisUntil - G.tick);
+    // --- ✝️ Les Croisades ---
+    if (G.cr) {
+      const cr = G.cr, C = CROISADES, y = G.crYear(), role = h.role;
+      if (G.crTruce()) add('info', tr('🕊️ Paix de Jaffa', '🕊️ Peace of Jaffa'), tr('pas d\'assaut Saladin ↔ croisés', 'no assault Saladin ↔ crusaders'), tr('Pas d\'assaut entre Saladin et les croisés (sauf contre les ordres militaires).', 'No assault between Saladin and the crusaders (except against the military orders).'), cr.truceUntil - G.tick);
+      const captive = cr.ransom && !cr.ransom.paid;
+      if (role === 'angleterre') {
+        if (captive) add('bad', tr('⛓️ Richard captif', '⛓️ Richard captive'), tr(`recrutement −${pct(1 - C.CAPTIVE)} % · rançon ${fmt(cr.ransom.left)}`, `recruitment −${pct(1 - C.CAPTIVE)}% · ransom ${fmt(cr.ransom.left)}`),
+          tr('Richard est prisonnier en Autriche : la moitié de ton or part chaque seconde pour sa rançon ; d\'ici là, tu recrutes moins et il ne mène plus tes armées.', 'Richard is a prisoner in Austria: half your gold goes to his ransom every second; until then you recruit less and he no longer leads your armies.'));
+        else if (cr.richard) add('good', tr('🦁 Richard Cœur de Lion', '🦁 Richard the Lionheart'), tr(`force +${pct(C.RICHARD.HERO + (cr.arsuf ? C.RICHARD.ARSUF : 0))} %`, `strength +${pct(C.RICHARD.HERO + (cr.arsuf ? C.RICHARD.ARSUF : 0))}%`), tr('Tant que Richard règne (et n\'est pas captif), tes soldats se battent mieux (plus encore après Arsouf).', 'While Richard reigns (and is not captive), your soldiers fight better (even more after Arsuf).'));
+        if (cr.john) add('bad', tr('👑 Jean sans Terre', '👑 John Lackland'), tr(`recrutement −${pct(1 - C.JOHN)} %`, `recruitment −${pct(1 - C.JOHN)}%`), tr('Depuis la mort de Richard, Jean sans Terre règne : le royaume recrute moins.', 'Since Richard\'s death, John Lackland reigns: the kingdom recruits less.'));
+        if (cr.johnPlot && y < cr.johnPlot) add('bad', tr('🗝️ Jean intrigue', '🗝️ John plots'), tr(`recrutement −${pct(1 - C.RETURN.STAY_RECRUIT)} % jusqu'en ${cr.johnPlot}`, `recruitment −${pct(1 - C.RETURN.STAY_RECRUIT)}% until ${cr.johnPlot}`), tr('Richard est resté en Terre sainte : son frère Jean intrigue en Angleterre.', 'Richard stayed in the Holy Land: his brother John plots in England.'));
+      }
+      if (role === 'empire' && captive) add('good', tr('⛓️ Rançon de Richard', '⛓️ Richard\'s ransom'), tr(`+${fmt(cr.ransom.left)} à recevoir`, `+${fmt(cr.ransom.left)} to receive`), tr('L\'Angleterre te paie peu à peu la rançon de Richard.', 'England pays you Richard\'s ransom little by little.'));
+      if (role === 'empire' && cr.salephBridge && y < 1192.67) add('good', tr('🌉 Barberousse vit', '🌉 Barbarossa lives'), tr(`force +${pct(C.SALEPH.HERO)} %`, `strength +${pct(C.SALEPH.HERO)}%`), tr('Barberousse a passé le Saleph sur le pont : tes soldats se battent mieux jusqu\'à la fin de la croisade.', 'Barbarossa crossed the Saleph on the bridge: your soldiers fight better until the end of the crusade.'));
+      if (role === 'empire' && G.tick < cr.civilWarUntil) add('bad', tr('⚔️ Guerre civile', '⚔️ Civil war'), tr('recrutement −50 %', 'recruitment −50%'), tr('L\'Empire se déchire après la mort d\'Henri VI.', 'The Empire tears itself apart after Henry VI\'s death.'), cr.civilWarUntil - G.tick);
+      if (role === 'ayyoubides' && y < 1193.17) add('good', tr('🦁 Saladin', '🦁 Saladin'), tr(`force +${pct(C.SALADIN.POWER)} %`, `strength +${pct(C.SALADIN.POWER)}%`), tr('Tant que Saladin vit, tes soldats se battent mieux.', 'While Saladin lives, your soldiers fight better.'));
+      if (h.order) add('good', tr('✠ Moines-soldats', '✠ Soldier-monks'), tr(`force +${pct(C.ORDERS.POWER)} %`, `strength +${pct(C.ORDERS.POWER)}%`), tr('Les chevaliers de ton ordre sont la meilleure chevalerie d\'Orient ; tes recrues viennent de toutes les commanderies d\'Occident.', 'Your order\'s knights are the finest chivalry of the East; your recruits come from all the commanderies of the West.'));
+      if (role === 'venise') add('good', tr('💰 Comptoirs', '💰 Trading posts'), tr(`+${C.VENICE.GOLD} d'or / ${C.VENICE.EVERY} s`, `+${C.VENICE.GOLD} gold / ${C.VENICE.EVERY} s`), tr('Les comptoirs de la Sérénissime t\'enrichissent.', 'The Serenissima\'s trading posts make you rich.'));
+      const stun = (cr.stun.get(h.id) || 0) - G.tick;
+      if (stun > 0) add('bad', tr('🗡️ Frappé', '🗡️ Struck'), tr('plus de recrues', 'no recruits'), tr('Frappé par les Assassins (ou en plein désordre) : tu ne recrutes plus.', 'Struck by the Assassins (or in turmoil): you recruit no more.'), stun);
+      if (G.crProtected(h.id)) add('good', tr('🛡️ Tribut payé', '🛡️ Tribute paid'), tr('les Assassins t\'épargnent', 'the Assassins spare you'), tr('Ton tribut au Vieux de la Montagne te protège.', 'Your tribute to the Old Man of the Mountain protects you.'), cr.tributeUntil.get(h.id) - G.tick);
+      const loan = cr.loans.get(h.id);
+      if (loan) add('info', tr('🏦 Dette au Temple', '🏦 Debt to the Temple'), tr(`${fmt(Math.round(loan.left))} à rendre`, `${fmt(Math.round(loan.left))} to repay`), tr('Tu la rembourses peu à peu, chaque seconde, sur tes revenus.', 'You repay it little by little, every second, from your income.'));
+      for (const f of cr.fleets) if (f.pid === h.id) add('info', tr('⛵ Ta flotte en mer', '⛵ Your fleet at sea'), f.troops ? tr(`${fmt(f.troops)} soldats`, `${fmt(f.troops)} soldiers`) : '', tr('Ta flotte traverse la mer : elle arrive à destination au bout du compte à rebours.', 'Your fleet is crossing the sea: it reaches its destination when the countdown ends.'), f.arrive - G.tick);
+    }
+    // --- ⚜️ La guerre de Cent Ans ---
+    if (G.hy) {
+      const hy = G.hy, C = CENTANS, y = G.hyYear(), role = h.role;
+      if (G.hyTruce()) add('info', tr('🕊️ Trêve', '🕊️ Truce'), tr('pas d\'assaut entre les deux rois', 'no assault between the two kings'), tr('Une trêve entre le roi de France et le roi d\'Angleterre.', 'A truce between the King of France and the King of England.'), hy.truceUntil - G.tick);
+      if (hy.ransom && !hy.ransom.paid) {
+        if (role === 'france') add('bad', tr('⛓️ Le roi captif', '⛓️ The king captive'), tr(`rançon ${fmt(hy.ransom.left)} · ½ de ton or`, `ransom ${fmt(hy.ransom.left)} · ½ of your gold`), tr('Le roi Jean est prisonnier des Anglais : la moitié de ton or part pour sa rançon, et ta Légitimité en souffre.', 'King John is a prisoner of the English: half your gold goes to his ransom, and your Legitimacy suffers.'));
+        if (role === 'angleterre') add('good', tr('⛓️ Rançon du roi Jean', '⛓️ King John\'s ransom'), tr(`+${fmt(hy.ransom.left)} à recevoir`, `+${fmt(hy.ransom.left)} to receive`), tr('Le roi de France te paie peu à peu sa rançon.', 'The King of France pays you his ransom little by little.'));
+      }
+      if (role === 'france') {
+        if (G.tick < (hy.fitUntil || 0)) add('bad', tr('🤪 Crise de folie', '🤪 Fit of madness'), tr('recrutement ÷2', 'recruitment ÷2'), tr('Charles VI est en pleine crise : le royaume recrute deux fois moins.', 'Charles VI is in a fit: the kingdom recruits half as fast.'), hy.fitUntil - G.tick);
+        if (G.tick < (hy.jacquerieUntil || 0)) add('bad', tr('🔥 La Jacquerie', '🔥 The Jacquerie'), tr('recrutement −40 %', 'recruitment −40%'), tr('Les paysans se soulèvent : le royaume recrute moins.', 'The peasants rise: the kingdom recruits less.'), hy.jacquerieUntil - G.tick);
+        if (G.hyKing().wise) add('good', tr('📚 Charles V le Sage', '📚 Charles V the Wise'), tr(`améliorations −${pct(1 - C.WISE_UPGRADE)} %`, `upgrades −${pct(1 - C.WISE_UPGRADE)}%`), tr('Un roi sage bâtit plus qu\'il ne brûle : tes améliorations coûtent moins cher.', 'A wise king builds more than he burns: your upgrades cost less.'));
+        if (y >= C.CANNONS) add('good', tr('💣 Les canons des Bureau', '💣 The Bureau cannons'), tr(`sièges −${pct(1 - C.CANNON_SIEGE)} %`, `sieges −${pct(1 - C.CANNON_SIEGE)}%`), tr('L\'artillerie des frères Bureau : tes sièges sont bien plus courts.', 'The Bureau brothers\' artillery: your sieges are much shorter.'));
+        if (y < C.LONGBOW_END) add('bad', tr('🏹 Arcs longs anglais', '🏹 English longbows'), tr(`l'Anglais +${pct(C.LONGBOW)} % en rase campagne`, `the English +${pct(C.LONGBOW)}% in open country`), tr('En rase campagne (pas pendant un siège), l\'armée anglaise se bat mieux, jusqu\'à Formigny.', 'In open country (not during a siege), the English army fights better, until Formigny.'));
+        const j = hy.joan;
+        if (j && j.state !== 'captured') add('good', tr('⚜️ Jeanne d\'Arc', '⚜️ Joan of Arc'), j.state === 'army' ? tr('en campagne', 'on campaign') : j.state === 'back' ? tr('revient', 'returning') : tr('prête (bouton ⚜️)', 'ready (⚜️ button)'), tr(`Son armée se bat ${pct(C.JOAN.POWER)} % mieux et assiège plus vite.`, `Her army fights ${pct(C.JOAN.POWER)}% better and besieges faster.`));
+      }
+      if (role === 'angleterre') {
+        if (y < C.LONGBOW_END) add('good', tr('🏹 Arcs longs', '🏹 Longbows'), tr(`+${pct(C.LONGBOW)} % en rase campagne`, `+${pct(C.LONGBOW)}% in open country`), tr('En rase campagne (pas pendant un siège), ton armée se bat mieux, jusqu\'à Formigny (1450).', 'In open country (not during a siege), your army fights better, until Formigny (1450).'));
+        const n = G.hyChannelPorts(h.id);
+        if (n) add('good', tr('⚓ Ports de la Manche', '⚓ Channel ports'), tr(`recrutement +${pct(C.PORT_SUPPLY * n)} %`, `recruitment +${pct(C.PORT_SUPPLY * n)}%`), tr(`Tu tiens ${n} port(s) de la Manche : ils nourrissent tes armées.`, `You hold ${n} Channel port(s): they feed your armies.`));
+      }
+      if ((role === 'france' && G.hyKing().hero) || (role === 'angleterre' && G.hyEngKing().hero)) add('good', role === 'france' ? tr('🗡️ Du Guesclin', '🗡️ Du Guesclin') : tr('🗡️ Henri V', '🗡️ Henry V'), tr(`force +${pct(C.HERO_POWER)} %`, `strength +${pct(C.HERO_POWER)}%`), tr('Un grand capitaine mène tes armées : tes soldats se battent mieux.', 'A great captain leads your armies: your soldiers fight better.'));
+      if (hy.sick.size) add('bad', tr('☠️ La peste', '☠️ The plague'), tr(`${hy.sick.size} villes malades`, `${hy.sick.size} sick cities`), tr('La peste noire saute de ville en ville et tue des soldats ; clic droit sur ta ville : fermer ses portes.', 'The Black Death jumps from town to town and kills soldiers; right-click your city: close its gates.'));
+      if (h.noNavyUntil > G.tick) add('bad', tr('⚓ Flotte détruite', '⚓ Fleet destroyed'), tr('pas d\'expédition par la mer', 'no sea expedition'), tr('Ta flotte a été détruite : pas d\'expédition par la mer pour l\'instant.', 'Your fleet was destroyed: no sea expedition for now.'), h.noNavyUntil - G.tick);
+    }
+    // --- 👑 Charlemagne ---
+    if (G.cm) {
+      const cm = G.cm;
+      if (cm.leo && !cm.leo.done && G.tick < cm.leo.end) add('bad', tr('✝️ Léon III agressé', '✝️ Leo III attacked'), tr('remplis la garnison de Rome', 'fill Rome\'s garrison'), tr('Les conjurés tiennent Rome : remplis sa garnison avant la fin du compte à rebours, sinon l\'objectif « Rome » se perd.', 'The conspirators hold Rome: fill its garrison before the countdown ends, or the « Rome » objective is lost.'), cm.leo.end - G.tick);
+      if (cm.lombardWarned && !cm.lombardMarched && cm.lombardTick > G.tick) add('bad', tr('⚔️ Les Lombards', '⚔️ The Lombards'), tr('marchent sur Rome', 'march on Rome'), tr('Didier marche sur Rome : frappe les Lombards ou renforce la garnison de Rome.', 'Desiderius marches on Rome: strike the Lombards or reinforce Rome\'s garrison.'), cm.lombardTick - G.tick);
+      if (cm.christian && h.role === 'francs') add('good', tr('✝️ Empire chrétien', '✝️ Christian Empire'), tr('Croyance +' + G.reward(h, CHARLEMAGNE.CHRISTIAN_EMPIRE), 'Faith +' + G.reward(h, CHARLEMAGNE.CHRISTIAN_EMPIRE)), tr('Tes terres touchent celles de Rome.', 'Your lands reach Rome\'s.'));
+    }
+    return out;
+  },
+  // 📋 La barre des effets en cours (redessinée seulement quand son texte change)
+  refreshEffects() {
+    const bar = $('effectsBar'), G = Game, TPS = CONFIG.TICKS_PER_SECOND;
+    const list = G.human && G.human.alive && G.phase === 'playing' ? this.effects() : [];
+    const time = t => { const n = Math.max(0, Math.ceil(t / TPS)); return n >= 60 ? `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}` : `${n} s`; };
+    const html = list.map(e => `<span class="fx ${e.k}" title="${escapeHtml(Icons.strip(e.tip))}"><b>${escapeHtml(e.t)}</b>` +
+      (e.v ? ` <span class="v">${escapeHtml(e.v)}</span>` : '') + (e.s > 0 ? ` <span class="t">${time(e.s)}</span>` : '') + '</span>').join('');
+    const was = bar.classList.contains('hidden');
+    bar.classList.toggle('hidden', !list.length);
+    if (bar.dataset.html !== html) { bar.dataset.html = html; bar.innerHTML = html; }
+    if (was !== !list.length) $('objectives').dataset.key = ''; // (les objectifs et les messages se replacent dessous)
   },
   // ⚜️ Jeanne d'Arc : le bouton n'apparaît que pour le roi de France, quand elle est là
   refreshJoanBar() {
@@ -2172,11 +2254,7 @@ const UI = {
     // Durée de la partie (le temps de jeu : la pause l'arrête)
     const secs = Math.floor(G.tick / CONFIG.TICKS_PER_SECOND), hh = Math.floor(secs / 3600), mm = Math.floor(secs / 60) % 60;
     $('clock').textContent = (hh ? hh + ':' + String(mm).padStart(2, '0') : mm) + ':' + String(secs % 60).padStart(2, '0');
-    const traitorSecs = Math.ceil((h.traitorUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
-    $('traitor').classList.toggle('hidden', !G.isTraitor(h));
-    $('traitor').textContent = tr(`🗡️ Traître : défense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)} % `,
-      `🗡️ Traitor: defense -${Math.round((1 - CONFIG.TRAITOR_DEFENSE_MALUS) * 100)}% `) +
-      `(${Math.floor(traitorSecs / 60)}:${String(traitorSecs % 60).padStart(2, '0')})`;
+    this.refreshEffects(); // (📋 la barre des effets en cours, sous la barre du haut : traître, politique de guerre, campagnes…)
     this.refreshGlory(); // (🌿 la jauge de gloire)
     // 📿 Tes reliques gardées (affiché dès que la première relique est apparue, parties classiques : voir reliques.js ;
     //  celles d'un autre royaume se voient en le survolant, voir refreshKingdomTip)
@@ -2187,11 +2265,6 @@ const UI = {
       $('relics').textContent = mine;
       $('relicBox').title = tr(`Reliques gardées dans tes églises : ${mine} (chacune : +${CONFIG.RELIC.FAITH} de Croyance)`, `Relics kept in your churches: ${mine} (each: +${CONFIG.RELIC.FAITH} Faith)`);
     }
-    // 🛡️ Politique de guerre en cours : le bonus de garnison et le temps qui reste
-    const warOn = G.warActive(h), warSecs = Math.ceil((h.warUntil - G.tick) / CONFIG.TICKS_PER_SECOND);
-    $('warBox').classList.toggle('hidden', !warOn);
-    if (warOn) $('warBox').textContent = tr(`🛡️ Politique de guerre : garnisons +${h.warLevel * CONFIG.WAR_POLICY.GARRISON} `,
-      `🛡️ War policy: garrisons +${h.warLevel * CONFIG.WAR_POLICY.GARRISON} `) + `(${Math.floor(warSecs / 60)}:${String(warSecs % 60).padStart(2, '0')})`;
     $('ratioVal').textContent = `${Math.round(this.ratio * 100)}${tr(' %', '%')} (${fmt(h.troops * this.ratio)})`;
 
     document.querySelectorAll('.build[data-type]').forEach(btn => {
