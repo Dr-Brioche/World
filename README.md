@@ -1320,6 +1320,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.59** : 🛡️ dans les **campagnes** (Charlemagne, Cent Ans, Croisades), un objectif rempli n'est plus barré comme s'il était fini : il est marqué d'un **bouclier vert** et de la mention **« tenu »**, car il se perd si tu perds la ville (ou la Croyance, l'or…) ; il faut tous les tenir en même temps pour gagner. Les ⭐ défis réussis, eux, restent cochés et barrés (ils sont acquis).
 - **v0.98.58** : 🌿 au **survol d'une couleur de la jauge de gloire**, une **bulle** donne la bannière et le nom du royaume, et sa part de la gloire (et, s'il est dans un pacte, la part de tout le pacte) ; elle reste affichée pendant que la jauge se remplit (l'ancienne infobulle disparaissait à chaque mise à jour).
 - **v0.98.57** : 🔥 pendant la visée d'un **assaut viking**, la souris devient une **flamme**, et au survol d'une cible possible (ville ou port fortifié ennemi), une **bulle** rappelle combien de **soldats** partiront (selon le curseur « Envoyer »).
 - **v0.98.56** : 📿⛵ pour **rapporter une relique par la mer**, il faut un de tes **ports royaux sur l'île de la relique** (l'armée y embarque) ; elle débarque ensuite à **n'importe lequel de tes ports**, même de niveau 1 ou 2, et marche jusqu'à l'église (avant, il fallait un port royal à l'arrivée) · une armée de relique **en mer ne peut pas être interceptée** (on l'attend sur la côte).
