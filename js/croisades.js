@@ -26,7 +26,8 @@ const CROISADES = {
   // avance régulièrement)
   YEAR_START: 1187.5,
   YEAR_END: 1204.3,
-  CALENDAR: [[0, 1187.5], [27, 1193.25], [50, 1204.3]],
+  // (v0.98.66 : chaque année dure 30 % de plus qu'avant : 27 → 35 et 50 → 65 minutes)
+  CALENDAR: [[0, 1187.5], [35.1, 1193.25], [65, 1204.3]],
   // Les frontières de 1187 serpentent un peu (voir claimLands)
   BORDER_WARP: { AMP: 6, SCALE: 22 },
   START_ARMY: 0.35,         // au départ, chaque faction a 35 % de son armée maximum…
@@ -472,7 +473,7 @@ const CROISADES = {
   // factions (all), puis ce qui est propre à la faction jouée (roles). Chaque ligne : [titre, explication].
   MECHANICS: {
     all: [
-      [tr('📅 Le temps', '📅 Time'), tr('de juillet 1187 à 1204, en 50 minutes environ (l\'année est en haut). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from July 1187 to 1204, in about 50 minutes (the year is at the top). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
+      [tr('📅 Le temps', '📅 Time'), tr('de juillet 1187 à 1204, en 65 minutes environ (l\'année est en haut). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from July 1187 to 1204, in about 65 minutes (the year is at the top). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
       [tr('🏰 Pas de nouvelle ville', '🏰 No new cities'), tr('on améliore les siennes et on prend celles des autres.', 'you upgrade your own and take other kingdoms\' cities.')],
       [tr('✝️ La Croyance', '✝️ Faith'), tr('elle ne convertit les terres qu\'entre chrétiens et musulmans (jamais entre deux rois chrétiens), et deux fois moins vite qu\'en partie classique.', 'it converts land only between Christians and Muslims (never between two Christian kings), and half as fast as in a classic game.')],
       [tr('📿 La Vraie Croix', '📿 The True Cross'), tr('une relique gardée à Damas : celui qui la tient gagne +150 de Croyance.', 'a relic kept in Damascus: whoever holds it gains +150 Faith.')],

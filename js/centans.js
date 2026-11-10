@@ -21,7 +21,7 @@ const CENTANS = {
   // 📅 Le calendrier : la guerre dure de 1337 à 1453, en GAME_MINUTES minutes de jeu (l'année s'affiche en haut)
   YEAR_START: 1337,
   YEAR_END: 1453,
-  GAME_MINUTES: 45,
+  GAME_MINUTES: 58.5, // (v0.98.66 : chaque année dure 30 % de plus : 45 → 58,5 minutes)
   // Les frontières de 1337 serpentent un peu (au lieu de suivre les lignes droites des contours, voir lands) : chaque
   // case est décalée de AMP cases au plus, par un bruit doux qui ondule sur environ SCALE cases (voir claimLands)
   BORDER_WARP: { AMP: 8, SCALE: 26 },
@@ -128,7 +128,7 @@ const CENTANS = {
   // 📖 Ce qui change dans cette campagne : un parchemin au début de la partie (voir MECHANICS dans croisades.js)
   MECHANICS: {
     all: [
-      [tr('📅 Le temps', '📅 Time'), tr('de 1337 à 1453, en 45 minutes environ (l\'année et les rois sont en haut). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from 1337 to 1453, in about 45 minutes (the year and the kings are at the top). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
+      [tr('📅 Le temps', '📅 Time'), tr('de 1337 à 1453, en une heure environ (l\'année et les rois sont en haut). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from 1337 to 1453, in about an hour (the year and the kings are at the top). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
       [tr('🏰 Pas de nouvelle ville', '🏰 No new cities'), tr('on améliore les siennes et on prend celles des autres.', 'you upgrade your own and take other kingdoms\' cities.')],
       [tr('👑 La Légitimité', '👑 Legitimacy'), tr('elle remplace la Croyance : tes villes, tes églises, le sacre à Reims la font monter ; un roi captif, fou ou pas sacré en perd.', 'it replaces Faith: your cities, your churches and the coronation at Reims raise it; a captive, mad or uncrowned king loses some.')],
       [tr('⚖️ Les grands vassaux', '⚖️ The great vassals'), tr('Bourgogne, Bretagne, Flandre et Navarre suivent le roi le plus légitime, et changent de camp. Achète leur fidélité (500 d\'or) avec le bouton « Vassaux », à droite de l\'écran (ou clic droit sur leurs terres). Attaquer un vassal le fâche.', 'Burgundy, Brittany, Flanders and Navarre follow the most legitimate king, and switch sides. Buy their loyalty (500 gold) with the « Vassals » button, on the right of the screen (or right-click their lands). Attacking a vassal angers it.')],
