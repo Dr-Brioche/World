@@ -4043,21 +4043,28 @@ const GameRules = {
       const key = owner[k] + ':' + land[order[start[k]]];
       if (!best.has(key) || size[k] > size[best.get(key)]) best.set(key, k);
     }
-    for (const k of best.values()) { heart[k] = 1; hasHeart.add(owner[k]); }
-    // (un autre morceau, tenu par une ville ou un port fortifié : un cœur aussi, quelle que soit sa taille, sauf si
-    //  la ville est encerclée : il ne reste que la zone de sa muraille, pas une case de terre autour)
-    // (🧱 les cases d'un mur, fini ou en chantier, et la petite muraille d'une mine fortifiée ne sont pas « de la terre
-    //  autour » : une ville encerclée dont un mur dépasse de sa muraille reste isolée)
+    // (🧱 « de la terre autour » : une case du morceau hors des murailles. Les cases d'un mur, fini ou en chantier, et
+    //  la petite muraille d'une mine fortifiée n'en sont pas : une ville encerclée dont un mur dépasse de sa muraille
+    //  reste isolée)
     let sites = null;
-    for (let k = 0; k < size.length; k++) {
-      if (heart[k] || !held[k] || (anyOutpost[k] && !hasCastle[k])) continue;
+    const landAround = k => {
       const o = owner[k];
       if (!sites) { sites = new Set(); for (const w of this.walls) if (!w.done) for (const t of w.tiles) sites.add(t); }
       for (let q = start[k], end = start[k] + size[k]; q < end; q++) {
         const i = order[q];
         if (this.wallAt[i] || sites.has(i)) continue;
-        if (!(this.castleProtects(o, i) || this.portBonus(o, i) > 0 || this.mineFortBonus(o, i) > 0)) { heart[k] = 1; break; } // (de la terre hors des murailles)
+        if (!(this.castleProtects(o, i) || this.portBonus(o, i) > 0 || this.mineFortBonus(o, i) > 0)) return true;
       }
+      return false;
+    };
+    // (🚩 le plus grand morceau d'une terre n'est un cœur que s'il a de la terre autour : une ville encerclée, seule à son
+    //  royaume sur ce continent (Naples, au milieu des terres du pape), n'est que la zone de sa muraille : isolée)
+    for (const k of best.values()) if (!held[k] || landAround(k)) { heart[k] = 1; hasHeart.add(owner[k]); }
+    // (un autre morceau, tenu par une ville ou un port fortifié : un cœur aussi, quelle que soit sa taille, sauf si
+    //  la ville est encerclée : il ne reste que la zone de sa muraille, pas une case de terre autour)
+    for (let k = 0; k < size.length; k++) {
+      if (heart[k] || !held[k] || (anyOutpost[k] && !hasCastle[k])) continue;
+      if (landAround(k)) { heart[k] = 1; hasHeart.add(owner[k]); }
     }
     // (un royaume qui n'a plus que des zones d'avant-poste : son plus grand morceau reste son cœur)
     for (let o = 0; o < main.length; o++) if (main[o] >= 0 && !hasHeart.has(o)) heart[main[o]] = 1;
