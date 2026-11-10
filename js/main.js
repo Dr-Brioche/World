@@ -1936,16 +1936,18 @@ const UI = {
       box.dataset.key = key;
       const count = list.length ? list : defis, n = count.filter(o => o.done).length;
       // (un objectif perdu pour de bon, comme Rome prise par les Lombards, ou un défi manqué : barré, en rouge, avec ✖)
-      const items = (l, lost) => l.map(o => `<li class="${o.gone ? 'gone' : o.done ? 'done' : ''}">${o.vow ? '🙏 ' : ''}${escapeHtml(o.text)}` +
-        `${o.gone ? lost : ''}</li>`).join('');
+      // (🛡️ un objectif de la victoire rempli n'est que « tenu » : il se perd si on perd la ville, la Croyance… ; il n'est
+      //  donc pas barré, juste marqué d'un bouclier ; un ⭐ défi réussi, lui, l'est pour de bon : coché et barré)
+      const items = (l, lost, held) => l.map(o => `<li class="${o.gone ? 'gone' : o.done ? (held ? 'held' : 'done') : ''}">${o.vow ? '🙏 ' : ''}${escapeHtml(o.text)}` +
+        `${o.gone ? lost : o.done && held ? `<span class="heldT">${tr(' (tenu)', ' (held)')}</span>` : ''}</li>`).join('');
       box.innerHTML = `<div class="t"><span>${escapeHtml(title)}</span>` +
         `<span>${n}/${count.length} ${this.objFolded ? '▸' : '▾'}</span></div>` +
-        (this.objFolded ? '' : (list.length ? `<ul>${items(list, tr(' (perdu à jamais)', ' (lost forever)'))}</ul>` : '') +
+        (this.objFolded ? '' : (list.length ? `<ul>${items(list, tr(' (perdu à jamais)', ' (lost forever)'), true)}</ul>` : '') +
           (defis.length ? (list.length ? `<div class="t defisT"><span>${tr('⭐ Défis', '⭐ Challenges')}</span><span>${defis.filter(o => o.done).length}/${defis.length}</span></div>` : '') +
             `<ul class="defis">${items(defis, tr(' (manqué)', ' (failed)'))}</ul>` : ''));
       box.title = !list.length ? tr('Des défis en plus, pour la gloire et une récompense (🙏 : ton vœu) · clic : replier ou déplier', 'Extra challenges, for glory and a reward (🙏: your vow) · click: fold or unfold')
-        : Game.hy || Game.cr ? tr('Tous remplis en même temps : la victoire ! (⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All complete at the same time: victory! (⭐ challenges: for glory) · click: fold or unfold')
-        : tr('Tous remplis : tu es couronné empereur ! (⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All complete: you are crowned emperor! (⭐ challenges: for glory) · click: fold or unfold');
+        : Game.hy || Game.cr ? tr('Tous tenus en même temps : la victoire ! (🛡️ tenu : rempli pour l\'instant, mais il se perd si tu perds la ville ou le reste ; ⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All held at the same time: victory! (🛡️ held: complete for now, but lost if you lose the city or the rest; ⭐ challenges: for glory) · click: fold or unfold')
+        : tr('Tous tenus en même temps : tu es couronné empereur ! (🛡️ tenu : rempli pour l\'instant, mais il se perd si tu perds la ville ou le reste ; ⭐ les défis : pour la gloire) · clic : replier ou déplier', 'All held at the same time: you are crowned emperor! (🛡️ held: complete for now, but lost if you lose the city or the rest; ⭐ challenges: for glory) · click: fold or unfold');
     }
   },
   // Sous la barre du haut (qui peut tenir sur 2 lignes sur un écran étroit) : les objectifs, puis (sur un téléphone)
