@@ -93,6 +93,10 @@ const CROISADES = {
   //    grands que leurs petites terres ne le permettraient, et des chevaliers POWER plus forts.
   ORDERS: { HELP_FROM: 1188, HELP_EVERY: 90, HELP_SHARE: 0.4, HELP_MIN: 150, LOAN: 2000, INTEREST: 0.25, REPAY_TIME: 180,
     AI_LOAN_EVERY: 150, AI_LOAN_GOLD: 300, TEMPLE_GOLD: 3000, SALADIN_HATE: 2, ASSASSIN_GOLD: 1, ARMY: 10, POWER: 0.25 },
+  // ⚔️ Les mercenaires du Temple : un prince chrétien paie GOLD pièces aux Templiers (un joueur templier, lui, paie ses
+  // commanderies d'Occident) et reçoit tout de suite TROOPS soldats, une fois toutes les COOLDOWN secondes au plus
+  // (selon la difficulté : plus de soldats, moins cher, en Facile)
+  MERCENARIES: { GOLD: { facile: 1500, normal: 2000, difficile: 2500 }, TROOPS: { facile: 1500, normal: 1200, difficile: 900 }, COOLDOWN: 300 },
   // 🏝️ Chypre : en SALE, Richard (s'il tient Nicosie) vend l'île aux Templiers pour PRICE pièces ; en REVOLT, les
   // Chypriotes se révoltent contre eux, et les Templiers la revendent (RESALE pièces) à Guy de Lusignan, l'ancien roi de
   // Jérusalem (elle va au royaume de Jérusalem) ; un joueur templier peut la garder, mais perd REVOLT_LOSS de ses
@@ -473,9 +477,13 @@ const CROISADES = {
       [tr('✝️ La Croyance', '✝️ Faith'), tr('elle ne convertit les terres qu\'entre chrétiens et musulmans (jamais entre deux rois chrétiens), et deux fois moins vite qu\'en partie classique.', 'it converts land only between Christians and Muslims (never between two Christian kings), and half as fast as in a classic game.')],
       [tr('📿 La Vraie Croix', '📿 The True Cross'), tr('une relique gardée à Damas : celui qui la tient gagne +150 de Croyance.', 'a relic kept in Damascus: whoever holds it gains +150 Faith.')],
       [tr('🗡️ Les Assassins', '🗡️ The Assassins'), tr('clic droit sur un royaume → les engager contre lui (1 500 d\'or : il perd 25 % de ses soldats et ne recrute plus pendant 45 s). Clic droit sur leurs terres → leur payer tribut (600 d\'or : ils t\'épargnent 5 minutes).', 'right-click a kingdom → hire them against it (1,500 gold: it loses 25% of its soldiers and stops recruiting for 45 s). Right-click their lands → pay them tribute (600 gold: they spare you for 5 minutes).')],
-      [tr('🏦 La banque du Temple', '🏦 The bank of the Temple'), tr('un royaume chrétien peut emprunter : clic droit sur les terres des Templiers → 2 000 d\'or tout de suite, 2 500 rendus peu à peu sur ton revenu (environ 3 minutes).', 'a Christian kingdom can borrow: right-click the Templars\' lands → 2,000 gold now, 2,500 paid back little by little from your income (about 3 minutes).')],
+      [tr('🏦 Le bouton « Temple · Assassins »', '🏦 The « Temple · Assassins » button'), tr('à droite de l\'écran, toujours visible : tout ce qu\'on peut marchander y est réuni (aussi par un clic droit sur leurs terres). Un rond vert : une action est possible.', 'on the right of the screen, always visible: everything you can bargain for is gathered there (also by right-clicking their lands). A green dot: an action is available.')],
+      [tr('🏦 La banque du Temple', '🏦 The bank of the Temple'), tr('un royaume chrétien peut emprunter 2 000 d\'or tout de suite, et en rend 2 500 peu à peu sur son revenu (environ 3 minutes).', 'a Christian kingdom can borrow 2,000 gold right now, and pays back 2,500 little by little from its income (about 3 minutes).')],
+      [tr('⚔️ Les mercenaires du Temple', '⚔️ The Temple\'s mercenaries'), tr('un royaume chrétien loue des chevaliers aux Templiers : 1 500 / 1 200 / 900 soldats tout de suite (Facile / Normal / Difficile) pour 1 500 / 2 000 / 2 500 d\'or, une fois toutes les 5 minutes. De quoi lever une grosse armée d\'un coup.', 'a Christian kingdom hires knights from the Templars: 1,500 / 1,200 / 900 soldiers at once (Easy / Normal / Hard) for 1,500 / 2,000 / 2,500 gold, once every 5 minutes. Enough to raise a big army in one go.')],
+      [tr('⛵ La route de la mer', '⛵ The sea route'), tr('la carte va de l\'Atlantique à Bagdad : les flottes des rois croisés partent de leur port (Dartmouth, Gênes, Venise) et on les voit traverser la mer ; Richard contourne l\'Espagne par le détroit de Gibraltar. Tes ports peuvent faire de même.', 'the map runs from the Atlantic to Baghdad: the crusader kings\' fleets leave from their port (Dartmouth, Genoa, Venice) and you see them cross the sea; Richard sails around Spain through the Strait of Gibraltar. Your ports can do the same.')],
       [tr('🤝 Les pactes et les paix de l\'histoire', '🤝 The pacts and peaces of history'), tr('les alliances de 1187 sont déjà en place, et certains royaumes ne se font pas la guerre (une trêve, un mariage…). Les bots ne les rompent jamais ; toi, tu peux (une paix est rompue dès que tu attaques).', 'the alliances of 1187 are already in place, and some kingdoms do not fight each other (a truce, a marriage…). Bots never break them; you can (a peace is broken as soon as you attack).')],
       [tr('🎯 Les objectifs', '🎯 Objectives'), tr('en haut à gauche : tous tenus en même temps, c\'est la victoire. Clique sur un objectif : la carte te montre où il est.', 'at the top left: all held at the same time is victory. Click an objective: the map shows you where it is.')],
+      [tr('🎁 Les récompenses', '🎁 Rewards'), tr('l\'or, la Croyance et les soldats que t\'apportent les événements, les choix et les défis : +25 % en Facile, −25 % en Difficile.', 'the gold, Faith and soldiers that events, choices and challenges bring you: +25% on Easy, −25% on Hard.')],
     ],
     roles: {
       ayyoubides: [
@@ -484,7 +492,7 @@ const CROISADES = {
       ],
       templiers: [
         [tr('✠ Les commanderies d\'Occident', '✠ The commanderies of the West'), tr('peu de terres, mais des forteresses imprenables, une armée et un recrutement bien plus grands que tes terres ne le permettraient, et des chevaliers 25 % plus forts.', 'little land, but impregnable fortresses, an army and recruitment much bigger than your land would allow, and knights 25% stronger.')],
-        [tr('🏦 Tu es la banque', '🏦 You are the bank'), tr('les rois chrétiens t\'empruntent ton or (2 000) et te le rendent avec 25 % d\'intérêt.', 'Christian kings borrow your gold (2,000) and pay it back with 25% interest.')],
+        [tr('🏦 Tu es la banque', '🏦 You are the bank'), tr('les rois chrétiens t\'empruntent ton or (2 000) et te le rendent avec 25 % d\'intérêt ; ceux qui louent tes mercenaires te paient. Toi, tu fais venir des chevaliers de tes commanderies d\'Occident (bouton à droite).', 'Christian kings borrow your gold (2,000) and pay it back with 25% interest; those who hire your mercenaries pay you. You bring knights over from your commanderies of the West (button on the right).')],
         [tr('⚔️ La haine de Saladin', '⚔️ Saladin\'s hatred'), tr('la paix de Jaffa (1192) ne te protège pas, et Saladin te vise deux fois plus. Les Assassins ne peuvent rien contre toi, et te versent 1 d\'or par seconde.', 'the peace of Jaffa (1192) does not protect you, and Saladin targets you twice as much. The Assassins can do nothing against you, and pay you 1 gold per second.')],
         [tr('🏝️ Chypre', '🏝️ Cyprus'), tr('en 1191, Richard te propose l\'île ; en 1192, les Chypriotes se révoltent (la revendre, ou écraser la révolte).', 'in 1191, Richard offers you the island; in 1192, the Cypriots revolt (sell it back, or crush the revolt).')],
       ],
@@ -591,6 +599,17 @@ const CROISADES = {
   // (ils débarquent avec l'armée de l'événement, devant sa première cible) ; en restant, STAY_GOLD d'or, mais
   // STAY_FAITH de Croyance en moins, et la suite de son histoire n'a pas lieu (voir crOff)
   CRUSADE: { SHARE: 0.35, STAY_GOLD: 2000, STAY_FAITH: 50 },
+  // ⛵ Les flottes des croisades, qu'on voit traverser la carte : elles partent de leur port (from, [longitude, latitude],
+  // en mer) l'année depart et arrivent en vue de leur cible (to) l'année arrive, quand leur armée débarque (l'événement
+  // off : sans lui, la flotte ne part pas). La flotte de Richard part de Dartmouth et passe par le détroit de Gibraltar.
+  FLEETS: [
+    { role: 'angleterre', off: 'cyprus', from: [-3.55, 50.25], depart: 1190.52, to: [33.2, 34.55], arrive: 1191.35,
+      name: tr('La flotte de Richard', 'Richard\'s fleet'), port: tr('Dartmouth', 'Dartmouth'), dest: tr('Chypre', 'Cyprus') },
+    { role: 'france', off: 'kingsArriveFr', from: [8.9, 44.3], depart: 1190.7, to: [34.85, 32.95], arrive: 1191.3,
+      name: tr('La flotte de Philippe Auguste', 'Philip Augustus\'s fleet'), port: tr('Gênes', 'Genoa'), dest: tr('Acre', 'Acre') },
+    { role: 'venise', off: 'zara', from: [12.45, 45.3], depart: 1202.6, to: [15.0, 44.1], arrive: 1202.85,
+      name: tr('La flotte de la quatrième croisade', 'The fleet of the Fourth Crusade'), port: tr('Venise', 'Venice'), dest: tr('Zara', 'Zara') },
+  ],
 
   // 📜 Ce qui s'est vraiment passé, sous les choix des parchemins (voir UI.parchment)
   HISTORY: {
@@ -1079,8 +1098,9 @@ const CROISADES = {
     {
       id: 'espagne', name: tr('Castille', 'Castile'), leader: tr('le roi Alphonse VIII', 'King Alfonso VIII'), flag: 'cr_espagne', color: [210, 112, 42],
       defensive: true, slowAI: 3, camp: 'chretiens',
-      capital: [-4.02, 39.86, tr('Tolède', 'Toledo'), 'Tolède'], cities: [[2.17, 41.39, tr('Barcelone', 'Barcelona'), 'Barcelone']], churches: [],
-      lands: [[[-6.5, 38.8], [-6.5, 43.9], [-1.8, 43.4], [-0.5, 42.8], [0.6, 42.7], [1.5, 42.55], [3.05, 42.45], [3.4, 41.8], [2.0, 41.0],
+      // (les royaumes chrétiens d'Espagne et le Portugal de Sanche Ier, réunis sous la Castille)
+      capital: [-4.02, 39.86, tr('Tolède', 'Toledo'), 'Tolède'], cities: [[2.17, 41.39, tr('Barcelone', 'Barcelona'), 'Barcelone'], [-9.14, 38.72, tr('Lisbonne', 'Lisbon'), 'Lisbonne']], churches: [],
+      lands: [[[-6.8, 38.9], [-8.5, 38.5], [-10.8, 38.5], [-10.8, 44.3], [-1.8, 43.4], [-0.5, 42.8], [0.6, 42.7], [1.5, 42.55], [3.05, 42.45], [3.4, 41.8], [2.0, 41.0],
         [0.6, 40.3], [-0.3, 39.5], [-2.0, 38.8]]],
       desc: '',
     },
@@ -1090,7 +1110,7 @@ const CROISADES = {
       capital: [-4.78, 37.89, tr('Cordoue', 'Córdoba'), 'Cordoue'], cities: [[-4.98, 34.03, tr('Fès', 'Fez'), 'Fès'], [10.18, 36.80, tr('Tunis', 'Tunis'), 'Tunis']],
       churches: [],
       // (al-Andalus et le Maghreb, jusqu'au Sahara)
-      lands: [[[-6.5, 31.0], [-6.5, 38.8], [-2.0, 38.8], [-0.3, 39.5], [0.6, 38.8], [0.0, 37.5], [-2.0, 36.6], [3.0, 37.0], [8.0, 37.3], [11.0, 37.3],
+      lands: [[[-10.8, 29.5], [-10.8, 38.5], [-8.5, 38.5], [-6.8, 38.9], [-2.0, 38.8], [-0.3, 39.5], [0.6, 38.8], [0.0, 37.5], [-2.0, 36.6], [3.0, 37.0], [8.0, 37.3], [11.0, 37.3],
         [11.5, 35.0], [11.5, 32.5], [8.0, 32.0], [2.0, 31.0]]],
       desc: '',
     },

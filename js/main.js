@@ -258,6 +258,19 @@ const UI = {
     // 📜 Règles : le jeu se met en pause, et les règles complètes s'affichent (les mêmes que sur l'écran de départ)
     $('rulesBtn').addEventListener('click', () => this.openRules());
     // 👑 Le cadre des objectifs se replie (ou se déplie) d'un clic
+    // 📜 Le bouton des actions de campagne (à droite) : ouvre ou ferme leur panneau ; un bouton du panneau : son ordre
+    $('campBtn').addEventListener('click', () => { this.campOpen = !this.campOpen; this.campKey = ''; this.refreshCampPanel(); });
+    $('campPanel').addEventListener('change', e => { if (e.target.id === 'campTarget') this.campTarget = +e.target.value; });
+    $('campPanel').addEventListener('click', e => {
+      if (e.target.closest('[data-campclose]')) { this.campOpen = false; return this.refreshCampPanel(); }
+      const b = e.target.closest('button[data-camp]');
+      if (!b || b.disabled) return;
+      const a = (this.campActs || [])[+b.dataset.camp];
+      if (!a) return;
+      const o = Object.assign({}, a.order);
+      if (a.pick) { if (!(this.campTarget >= 0)) return; o.target = this.campTarget; }
+      this.act(o, err => { if (err) this.log(err, 'warn'); else if (a.ok) this.log(a.ok(), 'good'); this.campKey = ''; this.refreshCampPanel(); });
+    });
     $('objectives').addEventListener('click', e => {
       // 🎯 Clic sur un objectif qui a un lieu (« prendre Acre ») : la caméra y va (un 2e clic : le lieu suivant, s'il y en a
       //  plusieurs) ; ailleurs (le titre, un objectif sans lieu) : replier ou déplier le cadre
@@ -545,7 +558,7 @@ const UI = {
       factions: tr("Azeroth, avec les 3 camps (Alliance, Horde, Fléau) déjà en place.", 'Azeroth, with the 3 factions (Alliance, Horde, Scourge) already in place.'),
       charlemagne: tr("L'Europe de 768 et ses 15 factions historiques.", 'Europe in 768 and its 15 historical factions.'),
       centans: tr("La France de 1337 : l'Angleterre contre la France.", 'France in 1337: England against France.'),
-      croisades: tr('De Londres à Bagdad, en 1187, au lendemain de Hattin.', 'From London to Baghdad, in 1187, the day after Hattin.'),
+      croisades: tr('De l\'Atlantique à Bagdad, en 1187, au lendemain de Hattin.', 'From the Atlantic to Baghdad, in 1187, the day after Hattin.'),
     })[t] || '';
   },
   showMapPreview(t) {
@@ -746,6 +759,7 @@ const UI = {
       'Legitimacy: who is the true king? Your cities, your churches, the coronation at Reims… The great vassals follow the most legitimate king.')
       : tr('Croyance (tes églises) : plus que ton voisin ennemi, tu convertis peu à peu ses terres', 'Faith (your churches): with more than an enemy neighbour, you slowly convert their land');
     $('hyBox').classList.toggle('hidden', !Game.hy && !Game.cr);
+    this.campOpen = false; this.campKey = ''; this.campTarget = -1; // (📜 les actions de campagne : voir refreshCampPanel)
     this.joanBar.classList.add('hidden');
     if (Game.hy) {
       const h = Game.human, f = this.hyFaction(h.banner), half = Game.sizeOf(B_CASTLE) / 2;
@@ -2018,6 +2032,87 @@ const UI = {
     const txt = parts.join(' · ');
     if (this.hyBoxText !== txt) { this.hyBoxText = txt; $('hyBox').textContent = txt; $('hyBox').title = tips.join('\n'); }
   },
+  // 📜 Les actions propres à la campagne, toutes au même endroit (un bouton toujours visible à droite, et son panneau) :
+  // les Croisades (🏦 la banque du Temple, ⚔️ ses mercenaires, 🗡️ les Assassins), la guerre de Cent Ans (⚖️ les vassaux).
+  // Chaque section : { title, text, acts: [{ label, err, order, pick (vise le royaume choisi dans la liste), ok }] }.
+  campSections() {
+    const G = Game, h = G.human, out = [];
+    if (G.cr) {
+      const tp = G.crTemple(), O = CROISADES.ORDERS, as = G.crAssassins(), A = CROISADES.ASSASSINS;
+      if (tp && h.id === tp.id) {
+        let n = 0, owed = 0;
+        for (const [, l] of G.cr.loans) { n++; owed += l.left; }
+        out.push({ title: tr('🏦 Ta banque', '🏦 Your bank'), text: tr(`Les rois chrétiens t'empruntent ${fmt(O.LOAN)} d'or et t'en rendent ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}. Prêts en cours : ${n} (${fmt(Math.round(owed))} d'or à te rendre).`,
+          `Christian kings borrow ${fmt(O.LOAN)} gold from you and repay ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}. Loans running: ${n} (${fmt(Math.round(owed))} gold owed to you).`), acts: [] });
+      } else if (tp && h.camp === 'chretiens') {
+        const loan = G.cr.loans.get(h.id);
+        out.push({ title: tr('🏦 La banque du Temple', '🏦 The bank of the Temple'),
+          text: loan ? tr(`Tu dois encore ${fmt(Math.round(loan.left))} d'or au Temple : il se rembourse peu à peu sur tes revenus.`, `You still owe the Temple ${fmt(Math.round(loan.left))} gold: it is repaid little by little from your income.`)
+            : tr(`Emprunte ${fmt(O.LOAN)} d'or tout de suite ; tu en rendras ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}, peu à peu, sur tes revenus (environ ${Math.round(O.REPAY_TIME / 60)} minutes).`, `Borrow ${fmt(O.LOAN)} gold right now; you will repay ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}, little by little, from your income (about ${Math.round(O.REPAY_TIME / 60)} minutes).`),
+          acts: [{ label: tr(`🏦 Emprunter ${fmt(O.LOAN)}`, `🏦 Borrow ${fmt(O.LOAN)}`), err: G.crLoanError(h.id), order: { k: 'crLoan' } }] });
+      }
+      if (tp && h.camp === 'chretiens') {
+        const m = G.crMercOffer(h.id), mine = h.id === tp.id;
+        out.push({ title: mine ? tr('⚔️ Les commanderies d\'Occident', '⚔️ The commanderies of the West') : tr('⚔️ Les mercenaires du Temple', '⚔️ The Temple\'s mercenaries'),
+          text: (mine ? tr(`Fais venir ${fmt(m.troops)} chevaliers et sergents d'Occident pour ${fmt(m.gold)} d'or`, `Bring ${fmt(m.troops)} knights and sergeants from the West for ${fmt(m.gold)} gold`)
+            : tr(`Loue ${fmt(m.troops)} chevaliers et sergents au Temple pour ${fmt(m.gold)} d'or`, `Hire ${fmt(m.troops)} knights and sergeants from the Temple for ${fmt(m.gold)} gold`))
+            + tr(` : ils te rejoignent tout de suite. Une fois toutes les ${Math.round(CROISADES.MERCENARIES.COOLDOWN / 60)} minutes.`, `: they join you at once. Once every ${Math.round(CROISADES.MERCENARIES.COOLDOWN / 60)} minutes.`),
+          acts: [{ label: tr(`⚔️ +${fmt(m.troops)} soldats (💰 ${fmt(m.gold)})`, `⚔️ +${fmt(m.troops)} soldiers (💰 ${fmt(m.gold)})`), err: G.crMercError(h.id), order: { k: 'crMerc' } }] });
+      }
+      if (as && h.id !== as.id) {
+        const foes = G.players.filter(p => p.alive && p.tiles > 0 && p.id !== h.id && p.id !== as.id && !p.raiders && !p.order)
+          .sort((a, b) => b.troops - a.troops || a.id - b.id);
+        if (!foes.some(p => p.id === this.campTarget)) this.campTarget = foes.length ? foes[0].id : -1;
+        const t = this.campTarget >= 0 ? G.players[this.campTarget] : null;
+        out.push({ title: tr('🗡️ Les Assassins du Vieux de la Montagne', '🗡️ The Assassins of the Old Man of the Mountain'),
+          text: G.crProtected(h.id) ? tr('Ton tribut te protège de leurs poignards.', 'Your tribute protects you from their daggers.')
+            : tr(`Engage-les contre un royaume (${fmt(A.HIRE)} d'or : il perd ${Math.round(A.KILL * 100)} % de ses soldats et ne recrute plus pendant ${A.STUN} s), ou paie-leur tribut (${fmt(A.TRIBUTE)} d'or : ils t'épargnent ${Math.round(A.SAFE / 60)} minutes).`,
+              `Hire them against a kingdom (${fmt(A.HIRE)} gold: it loses ${Math.round(A.KILL * 100)}% of its soldiers and stops recruiting for ${A.STUN} s), or pay them tribute (${fmt(A.TRIBUTE)} gold: they spare you for ${Math.round(A.SAFE / 60)} minutes).`),
+          select: foes.map(p => [p.id, p.name]),
+          acts: [{ label: tr(`🗡️ Engager (💰 ${fmt(A.HIRE)})`, `🗡️ Hire (💰 ${fmt(A.HIRE)})`), err: t ? G.crHireError(h.id, t.id) : tr('Choisis un royaume.', 'Choose a kingdom.'), order: { k: 'crHire' }, pick: true },
+            { label: tr(`🛡️ Payer tribut (💰 ${fmt(A.TRIBUTE)})`, `🛡️ Pay tribute (💰 ${fmt(A.TRIBUTE)})`), err: G.crTributeError(h.id), order: { k: 'crTribute' } }] });
+      }
+    }
+    if (G.hy) {
+      const V = CENTANS.VASSALS, camp = G.hyCampOf(h.id);
+      const vassals = G.players.filter(p => p.alive && p.id !== h.id && G.hy.loyalty[p.role] !== undefined);
+      if (vassals.length) out.push({ title: tr('⚖️ Les grands vassaux', '⚖️ The great vassals'),
+        text: tr(`Ils suivent le roi le plus légitime. Achète leur fidélité : ${fmt(V.BRIBE_GOLD)} d'or = ${V.BRIBE} points vers ton camp (à +${V.JOIN}, ils rejoignent le roi de France ; à −${V.JOIN}, le roi d'Angleterre).`,
+          `They follow the most legitimate king. Buy their loyalty: ${fmt(V.BRIBE_GOLD)} gold = ${V.BRIBE} points towards your side (at +${V.JOIN}, they join the King of France; at −${V.JOIN}, the King of England).`),
+        acts: vassals.map(v => ({ label: `${v.name} : ${Math.round(G.hy.loyalty[v.role])} (💰 ${fmt(V.BRIBE_GOLD)})`,
+          err: !camp ? tr('Seuls les deux rois et leurs alliés achètent la fidélité des vassaux.', 'Only the two kings and their allies buy the loyalty of vassals.') : h.gold < V.BRIBE_GOLD ? tr(`Il faut ${fmt(V.BRIBE_GOLD)} pièces d'or.`, `You need ${fmt(V.BRIBE_GOLD)} gold.`) : null,
+          order: { k: 'hyBribe', to: v.id }, ok: () => `🎁 ${v.name} : ${G.hyLoyaltyText(v.id)}` })) });
+      if (G.hy.plagueOn) out.push({ title: tr('☠️ La peste', '☠️ The plague'), text: tr('Clic droit sur une de tes villes → fermer ses portes : la peste n\'y entre pas, mais elle ne produit plus.', 'Right-click one of your cities → close its gates: the plague cannot get in, but it produces nothing.'), acts: [] });
+      if (h.role === 'angleterre') out.push({ title: tr('🔥 La chevauchée', '🔥 The chevauchée'), text: tr('Clic droit sur une ville ennemie → une chevauchée : tes soldats la pillent et la brûlent, sans la garder.', 'Right-click an enemy city → a chevauchée: your soldiers plunder and burn it, without keeping it.'), acts: [] });
+    }
+    return out;
+  },
+  refreshCampPanel() {
+    const G = Game, btn = $('campBtn'), panel = $('campPanel'), live = G.phase === 'playing' && G.human && G.human.alive;
+    const secs = live ? this.campSections() : [];
+    btn.classList.toggle('hidden', !secs.length);
+    if (!secs.length) { panel.classList.add('hidden'); return; }
+    const label = G.cr ? tr('🏦 Temple · 🗡️ Assassins', '🏦 Temple · 🗡️ Assassins') : tr('⚖️ Vassaux', '⚖️ Vassals');
+    if (btn.dataset.label !== label) { btn.dataset.label = label; btn.textContent = label; btn.title = tr('Les actions propres à cette campagne (clic : ouvrir ou fermer)', 'This campaign\'s own actions (click: open or close)'); }
+    this.campActs = [];
+    const html = `<h3><span>${G.cr ? tr('✝️ Marchander', '✝️ Bargain') : tr('⚜️ Les affaires du royaume', '⚜️ Affairs of the realm')}</span><button type="button" data-campclose>✖</button></h3>` + secs.map(sec => {
+      const acts = sec.acts.map(a => {
+        const k = this.campActs.push(a) - 1;
+        return `<button type="button" class="act" data-camp="${k}"${a.err ? ` disabled title="${escapeHtml(Icons.strip(a.err))}"` : ''}>${escapeHtml(a.label)}</button>`;
+      }).join('');
+      const why = sec.acts.filter(a => a.err && sec.acts.length === 1).map(a => `<div class="why">${escapeHtml(a.err)}</div>`).join('');
+      const sel = sec.select ? `<select id="campTarget">${sec.select.map(([id, n]) => `<option value="${id}"${id === this.campTarget ? ' selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>` : '';
+      return `<div class="sec"><b>${escapeHtml(sec.title)}</b><p>${escapeHtml(sec.text)}</p><div class="row">${sel}${acts}</div>${why}</div>`;
+    }).join('');
+    // (le petit rond vert sur le bouton : une action est possible en ce moment)
+    btn.classList.toggle('ready', this.campActs.some(a => !a.err && !a.pick));
+    btn.classList.toggle('on', !!this.campOpen);
+    panel.classList.toggle('hidden', !this.campOpen);
+    // (pas de redessin pendant qu'on choisit dans la liste : elle se refermerait)
+    if (!this.campOpen || html === this.campKey || document.activeElement === $('campTarget')) return;
+    this.campKey = html;
+    panel.innerHTML = html;
+  },
   // ✝️ Les Croisades : l'année, et ce qui pèse sur le royaume (la paix de Jaffa, la rançon de Richard, les Assassins)
   refreshCrBox() {
     const G = Game, cr = G.cr, TPS = CONFIG.TICKS_PER_SECOND, h = G.human, y = G.crYear();
@@ -2064,6 +2159,7 @@ const UI = {
     $('faith').textContent = fmt(Math.round(G.faithOf(h.id)));
     if (G.hy) this.refreshHyBox();
     if (G.cr) this.refreshCrBox();
+    this.refreshCampPanel();
     // ⛏️ Nos mines : leur nombre (le détail par minerai au survol), seulement quand on en a
     const mines = MINE_KINDS.map(k => [k, G.minesOf(h.id, k).length]).filter(([, n]) => n);
     $('minesBox').classList.toggle('hidden', !mines.length);
@@ -2684,6 +2780,10 @@ const UI = {
       const O = CROISADES.ORDERS, err = G.crLoanError(h.id);
       items.push({ label: tr(`🏦 Emprunter au Temple (💰 +${fmt(O.LOAN)}, à rendre ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))} sur tes revenus)`, `🏦 Borrow from the Temple (💰 +${fmt(O.LOAN)}, to repay ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))} out of your income)`),
         disabled: err || undefined, run: err ? undefined : () => this.act({ k: 'crLoan' }, e => { if (e) this.log(e, 'warn'); }) });
+      // (⚔️ louer des mercenaires au Temple : aussi dans le panneau « Temple · Assassins », à droite)
+      const m = G.crMercOffer(h.id), me = G.crMercError(h.id);
+      items.push({ label: tr(`⚔️ Louer ${fmt(m.troops)} mercenaires au Temple (💰 ${fmt(m.gold)}, une fois toutes les ${Math.round(CROISADES.MERCENARIES.COOLDOWN / 60)} min)`, `⚔️ Hire ${fmt(m.troops)} mercenaries from the Temple (💰 ${fmt(m.gold)}, once every ${Math.round(CROISADES.MERCENARIES.COOLDOWN / 60)} min)`),
+        disabled: me || undefined, run: me ? undefined : () => this.act({ k: 'crMerc' }, e => { if (e) this.log(e, 'warn'); }) });
     }
     if (!as) return;
     if (o === as.id) {

@@ -1729,6 +1729,8 @@ const Render = {
       const t = Math.min(1, (G.tick - c.start) / Math.max(1, c.arrive - c.start));
       this.drawBoat(ox, oy, c.path, t, c.pid, null, '🛶');
     }
+    // ⛵ (✝️ les Croisades) les flottes des rois croisés, de leur port jusqu'à leur cible
+    if (G.cr) for (const f of G.cr.fleets) this.drawBoat(ox, oy, f.path, Math.min(1, (G.tick - f.start) / Math.max(1, f.arrive - f.start)), f.pid, f.troops || null);
     for (const e of G.expeditions) {
       // soldats à bord (ils diminuent un peu pendant la traversée)
       const t = Math.min(1, (G.tick - e.start) / Math.max(1, e.arrive - e.start));

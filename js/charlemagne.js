@@ -135,6 +135,7 @@ const CHARLEMAGNE = {
       [tr('⚔️ Les Slaves', '⚔️ The Slavs'), tr('au nord-est, des pillards : leurs terres sont imprenables, et leurs razzias, toujours plus grosses, rasent leur cible.', 'in the north-east, raiders: their land cannot be taken, and their ever bigger raids raze their target.')],
       [tr('⛏️ Les mines historiques', '⛏️ Historic mines'), tr('chaque faction en a une (son nom s\'affiche au survol).', 'every faction has one (its name shows on hover).')],
       [tr('🎯 Les objectifs', '🎯 Objectives'), tr('en haut à gauche : tous tenus en même temps, c\'est la victoire. Clique sur un objectif : la carte te montre où il est.', 'at the top left: all held at the same time is victory. Click an objective: the map shows you where it is.')],
+      [tr('🎁 Les récompenses', '🎁 Rewards'), tr('l\'or, la Croyance et les soldats que t\'apportent les événements, les choix et les défis : +25 % en Facile, −25 % en Difficile.', 'the gold, Faith and soldiers that events, choices and challenges bring you: +25% on Easy, −25% on Hard.')],
     ],
     roles: {
       francs: [

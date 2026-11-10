@@ -28,7 +28,7 @@ const CONFIG = {
   CHARLEMAGNE_MAP_HEIGHT: 620,
   CENTANS_MAP_WIDTH: 600,  // taille de la carte du scénario « La guerre de Cent Ans » (la France et les îles Britanniques)
   CENTANS_MAP_HEIGHT: 780,
-  CROISADES_MAP_WIDTH: 860, // taille de la carte du scénario « Les Croisades » (de Londres à Bagdad, la Terre sainte agrandie)
+  CROISADES_MAP_WIDTH: 948, // taille de la carte du scénario « Les Croisades » (de Londres à Bagdad, la Terre sainte agrandie)
   CROISADES_MAP_HEIGHT: 544,
   MIN_OPPONENTS: 3,
   // Royaume coupé en morceaux : tout morceau tenu par une ville (ou un port fortifié) est un cœur, à part entière (ses
@@ -317,6 +317,9 @@ const CONFIG = {
   WAR_EFFECT_TIME: 30,
   CAPTURE_TRUCE: 30,           // une ville (château), une église ou un port qui vient d'être conquis ne peut pas être attaqué pendant 30 s
   FAITH_CAPTURE_TRUCE: 15,     // ✝️ une église, un port ou une mine pris par un assaut ne peut pas être converti par la Croyance pendant 15 s
+  // 🎁 Les récompenses des événements historiques, des choix et des défis des campagnes (pour le joueur, pas les bots) :
+  // multipliées selon la difficulté (Facile : +25 %, Difficile : −25 %)
+  EVENT_REWARD: { facile: 1.25, normal: 1, difficile: 0.75 },
   ELIMINATION_BOUNTY: 500,     // anéantir un royaume rapporte une prime de 500 pièces, plus le trésor qui lui restait
   POST_WAR_MALUS: 0.25,
   RALLY_BONUS: 0.25,

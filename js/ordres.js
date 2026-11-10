@@ -77,6 +77,36 @@ Object.assign(GameRules, {
     else if (tp.isHuman) UI.log(tr(`🏦 ${p.name} emprunte ${fmt(O.LOAN)} pièces au Temple : il t'en rendra ${fmt(due)}.`, `🏦 ${p.name} borrows ${fmt(O.LOAN)} gold from the Temple: they will repay you ${fmt(due)}.`), 'good', p);
     return null;
   },
+  // --- ⚔️ Les mercenaires du Temple ---
+  // Le prix et le nombre de soldats (selon la difficulté), et dans combien de secondes pid pourra en louer de nouveau
+  crMercOffer(pid) {
+    const M = CROISADES.MERCENARIES, d = this.cr.diff, next = this.cr.merc.get(pid) || 0;
+    return { gold: M.GOLD[d], troops: M.TROOPS[d], wait: Math.max(0, Math.ceil((next - this.tick) / CONFIG.TICKS_PER_SECOND)) };
+  },
+  // Pourquoi pid ne peut pas louer de mercenaires au Temple (null s'il le peut)
+  crMercError(pid) {
+    const tp = this.crTemple(), p = this.players[pid], m = this.crMercOffer(pid);
+    if (!tp) return tr('Il n\'y a plus de Templiers.', 'There are no Templars left.');
+    if (p.camp !== 'chretiens') return tr('Le Temple ne loue ses chevaliers qu\'aux princes chrétiens.', 'The Temple hires out its knights only to Christian princes.');
+    if (pid !== tp.id && this.attacks.some(a => !a.done && a.attacker === pid && a.target === tp.id)) return tr('Le Temple ne sert pas qui l\'attaque.', 'The Temple does not serve those who attack it.');
+    if (m.wait > 0) return tr(`Les prochains mercenaires seront prêts dans ${m.wait} s (une fois toutes les ${Math.round(CROISADES.MERCENARIES.COOLDOWN / 60)} minutes).`, `The next mercenaries will be ready in ${m.wait} s (once every ${Math.round(CROISADES.MERCENARIES.COOLDOWN / 60)} minutes).`);
+    if (p.gold < m.gold) return tr(`Il te faut ${fmt(m.gold)} pièces d'or.`, `You need ${fmt(m.gold)} gold.`);
+    return null;
+  },
+  // pid loue des mercenaires (ordre « crMerc ») : il paie, et ses soldats arrivent tout de suite
+  crHireMerc(pid) {
+    const err = this.crMercError(pid);
+    if (err) return err;
+    const tp = this.crTemple(), p = this.players[pid], m = this.crMercOffer(pid);
+    p.gold -= m.gold;
+    if (pid !== tp.id) tp.gold += m.gold; // (l'or va au Temple ; un joueur templier, lui, paie ses commanderies)
+    p.troops += m.troops;
+    this.cr.merc.set(pid, this.tick + CROISADES.MERCENARIES.COOLDOWN * CONFIG.TICKS_PER_SECOND);
+    if (p.isHuman) UI.log(pid === tp.id ? tr(`⚔️ Tes commanderies d'Occident t'envoient ${fmt(m.troops)} chevaliers et sergents (−${fmt(m.gold)} d'or) !`, `⚔️ Your commanderies of the West send you ${fmt(m.troops)} knights and sergeants (−${fmt(m.gold)} gold)!`)
+      : tr(`⚔️ Le Temple te loue ${fmt(m.troops)} chevaliers et sergents (−${fmt(m.gold)} d'or) : ils te rejoignent tout de suite !`, `⚔️ The Temple hires out ${fmt(m.troops)} knights and sergeants to you (−${fmt(m.gold)} gold): they join you at once!`), 'good', tp);
+    else if (tp.isHuman) UI.log(tr(`⚔️ ${p.name} te loue des mercenaires : +${fmt(m.gold)} d'or pour le Temple.`, `⚔️ ${p.name} hires your mercenaries: +${fmt(m.gold)} gold for the Temple.`), 'good', p);
+    return null;
+  },
   // Chaque seconde : les débiteurs remboursent une part égale de leur dette (en REPAY_TIME secondes, s'ils ont l'or) ;
   // si le Temple tombe, les dettes s'effacent
   crStepLoans() {
@@ -117,7 +147,7 @@ Object.assign(GameRules, {
   crCyprusSale() {
     const cr = this.cr, C = CROISADES.CYPRUS, en = this.crP('angleterre'), tp = this.crTemple();
     if (!tp || !en.alive || this.crHolder('Nicosie') !== 'angleterre') return;
-    if (en.isHuman) return this.crOffer('cyprusSale', { price: fmt(C.PRICE) });
+    if (en.isHuman) return this.crOffer('cyprusSale', { price: fmt(this.reward(en, C.PRICE)) });
     if (tp.isHuman) {
       if (tp.gold >= C.PRICE) return this.crOffer('cyprusBuy', { price: fmt(C.PRICE) });
       return UI.log(tr(`🏝️ Richard voulait te vendre Chypre pour ${fmt(C.PRICE)} pièces, mais le trésor du Temple n'y suffit pas.`, `🏝️ Richard wanted to sell you Cyprus for ${fmt(C.PRICE)} gold, but the Temple's treasury is not enough.`), 'warn', en);
@@ -129,29 +159,29 @@ Object.assign(GameRules, {
     if (!tp || !en.alive) return;
     const pay = tp.isHuman ? C.PRICE : Math.min(C.PRICE, tp.gold);
     tp.gold -= pay;
-    en.gold += C.PRICE;
+    en.gold += this.reward(en, C.PRICE); // (🎁 le joueur anglais : selon la difficulté)
     this.crGiveIsland(en, tp);
     cr.cyprusSold = cr.cyprusBought = true;
     this.crEvent('cyprusSold', {}, tr('🏝️ 1191 : Richard Cœur de Lion vend Chypre aux Templiers.', '🏝️ 1191: Richard the Lionheart sells Cyprus to the Templars.'), '', tp);
-    if (en.isHuman) UI.log(tr(`💰 Chypre est vendue au Temple : +${fmt(C.PRICE)} pièces d'or.`, `💰 Cyprus is sold to the Temple: +${fmt(C.PRICE)} gold.`), 'good');
+    if (en.isHuman) UI.log(tr(`💰 Chypre est vendue au Temple : +${fmt(this.reward(en, C.PRICE))} pièces d'or.`, `💰 Cyprus is sold to the Temple: +${fmt(this.reward(en, C.PRICE))} gold.`), 'good');
     if (tp.isHuman) UI.log(tr(`🏝️ Chypre est au Temple (−${fmt(pay)} pièces d'or).`, `🏝️ Cyprus belongs to the Temple (−${fmt(pay)} gold).`), 'good');
   },
   // Avril 1192 : les Chypriotes se révoltent ; les Templiers revendent l'île à Guy de Lusignan (au royaume de Jérusalem)
   crCyprusRevolt() {
     const tp = this.crTemple(), jer = this.crP('jerusalem');
     if (!tp || this.crHolder('Nicosie') !== 'templiers') return;
-    if (tp.isHuman) return this.crOffer('cyprusRevolt', { gold: fmt(CROISADES.CYPRUS.RESALE), pct: Math.round(CROISADES.CYPRUS.REVOLT_LOSS * 100) });
+    if (tp.isHuman) return this.crOffer('cyprusRevolt', { gold: fmt(this.reward(tp, CROISADES.CYPRUS.RESALE)), pct: Math.round(CROISADES.CYPRUS.REVOLT_LOSS * 100) });
     if (jer.alive) this.crResellCyprus();
   },
   crResellCyprus() {
     const C = CROISADES.CYPRUS, tp = this.crTemple(), jer = this.crP('jerusalem');
     if (!tp) return;
-    tp.gold += C.RESALE;
+    tp.gold += this.reward(tp, C.RESALE);
     if (jer.alive) {
       this.crGiveIsland(tp, jer);
       if (jer.isHuman) UI.log(tr('🏝️ Guy de Lusignan rachète Chypre aux Templiers : l\'île rejoint ton royaume.', '🏝️ Guy of Lusignan buys Cyprus back from the Templars: the island joins your kingdom.'), 'good', tp);
     }
-    if (tp.isHuman) UI.log(tr(`💰 Tu revends Chypre à Guy de Lusignan : +${fmt(C.RESALE)} pièces d'or.`, `💰 You sell Cyprus back to Guy of Lusignan: +${fmt(C.RESALE)} gold.`), 'good');
+    if (tp.isHuman) UI.log(tr(`💰 Tu revends Chypre à Guy de Lusignan : +${fmt(this.reward(tp, C.RESALE))} pièces d'or.`, `💰 You sell Cyprus back to Guy of Lusignan: +${fmt(this.reward(tp, C.RESALE))} gold.`), 'good');
     else if (!jer.isHuman) UI.log(tr('🏝️ 1192 : révolte à Nicosie ; les Templiers revendent Chypre à Guy de Lusignan.', '🏝️ 1192: revolt in Nicosia; the Templars sell Cyprus back to Guy of Lusignan.'), '', tp);
   },
   // Les choix des parchemins de Chypre (voir crApplyChoice) : true si key en est un

@@ -360,7 +360,7 @@ function generateCentAnsMap(seed) {
 // de la carte garde ses vraies proportions.
 // (la loupe : centrée sur la Galilée, 2,8 fois plus grande au centre, de moins en moins jusqu'à 11 degrés autour :
 //  large, pour que la déformation se répartisse sur la mer et le désert ; voir loupeFwd)
-const CROISADES_PROJ = { lon0: -6, lonSpan: 54, latTop: 52.6, latBottom: 27, wrap: false,
+const CROISADES_PROJ = { lon0: -11.5, lonSpan: 59.5, latTop: 52.6, latBottom: 27, wrap: false,
   loupe: { lon: 35.6, lat: 33.2, R: 11, M: 2.8 } };
 // Les fleuves, lacs, déserts et reliefs de l'Orient des croisades, en plus de ceux de l'Europe
 const CROISADES_RIVERS = [
