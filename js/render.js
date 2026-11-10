@@ -1953,6 +1953,27 @@ const Render = {
     ctx.restore();
   },
 
+  // 🎯 Le lieu d'un objectif sur lequel on vient de cliquer (en haut à gauche) : des cercles dorés qui se resserrent
+  drawObjectiveFlash(ox, oy) {
+    const f = this.flashAt, G = Game;
+    if (!f) return;
+    const left = f.until - performance.now();
+    if (left <= 0) { this.flashAt = null; return; }
+    const a = f.tile, half = (G.building[a] ? G.sizeOf(G.building[a]) : 1) / 2, s = this.cam.scale;
+    const x = ox + (a % G.W + half) * s, y = oy + (((a / G.W) | 0) + half) * s, ctx = this.ctx;
+    const t = (performance.now() % 800) / 800, base = Math.max(20, s * half * 2);
+    ctx.save();
+    for (const k of [0, 0.5]) {
+      const u = (t + k) % 1;
+      ctx.beginPath();
+      ctx.arc(x, y, base * (2.2 - 1.4 * u), 0, Math.PI * 2);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = `rgba(255,211,77,${(u * Math.min(1, left / 400)).toFixed(2)})`;
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+
   // Petite étiquette au-dessus d'un bâtiment : garnison, soldats stationnés, temps de construction
   drawBuildingLabel(a, type, x, y) {
     const G = Game, ctx = this.ctx, parts = [];
@@ -2830,17 +2851,51 @@ const Render = {
     // (sous le bâtiment : sous sa grande image quand on est près, sinon sous son petit anneau)
     const below = CONFIG.BUILDING_DRAW_SCALE * (s >= 3 ? 0.85 : 0.58);
     ctx.font = `${size}px 'Uncial Antiqua', 'IM Fell English', Georgia, serif`;
+    // 🧹 Pour que la carte reste lisible : un nom ne s'écrit que s'il a la place (ni sur un autre nom, ni sur l'image d'une
+    //  autre ville) ; sinon on essaie au-dessus de son bâtiment, sinon on ne l'écrit pas (son nom reste au survol).
+    //  Les lieux des objectifs passent en premier, puis les grandes villes, puis les ports et les églises.
+    const goals = this.objectiveSites(), items = [], icons = [];
+    for (const [a, name] of G.placeNames) {
+      const b = G.building[a];
+      if (G.anchor[a] !== a || (b !== B_CASTLE && b !== B_CHURCH && b !== B_PORT)) continue;
+      const n = G.sizeOf(b), bx = ox + (a % W + n / 2) * s, by = oy + (((a / W) | 0) + n / 2) * s, r = n * s * below;
+      if (bx < -200 || by < -80 || bx > this.vw + 200 || by > this.vh + 80) continue;
+      icons.push({ a, x0: bx - r, x1: bx + r, y0: by - r, y1: by + r });
+      const prio = (goals.has(a) ? 100 : 0) + (b === B_CASTLE ? 10 + (G.level[a] || 1) : b === B_PORT ? 4 : 3);
+      items.push({ a, name, bx, by, r, prio, w: ctx.measureText(name).width + size * 0.4 });
+    }
+    items.sort((p, q) => q.prio - p.prio || p.a - q.a);
+    const placed = [], hit = (x0, x1, y0, y1, a) => placed.some(q => x0 < q.x1 && x1 > q.x0 && y0 < q.y1 && y1 > q.y0)
+      || icons.some(q => q.a !== a && x0 < q.x1 && x1 > q.x0 && y0 < q.y1 && y1 > q.y0);
     ctx.lineJoin = 'round';
     ctx.lineWidth = Math.max(2.5, size / 3.5);
     ctx.strokeStyle = ink ? 'rgba(240,226,190,0.85)' : 'rgba(20,12,4,0.75)';
     ctx.fillStyle = ink ? '#3b2a17' : '#f6e7c1';
-    for (const [a, name] of G.placeNames) {
-      const b = G.building[a];
-      if (G.anchor[a] !== a || (b !== B_CASTLE && b !== B_CHURCH && b !== B_PORT)) continue;
-      const n = G.sizeOf(b), cx = ox + (a % W + n / 2) * s, cy = oy + (((a / W) | 0) + n / 2) * s + n * s * below + size * 0.8;
-      if (cx < -200 || cy < -50 || cx > this.vw + 200 || cy > this.vh + 50) continue;
-      this.drawArcText(name, cx, cy, size);
+    for (const it of items) {
+      // (un lieu d'objectif s'écrit toujours : au pire, sous son bâtiment, même sur l'image d'une ville voisine)
+      const spots = [it.by + it.r + size * 0.8, it.by - it.r - size * 0.75];
+      for (let k = 0; k < spots.length + (it.prio >= 100 ? 1 : 0); k++) {
+        const cy = spots[k] ?? spots[0], x0 = it.bx - it.w / 2, x1 = it.bx + it.w / 2, y0 = cy - size * 0.65, y1 = cy + size * 0.6;
+        if (k < spots.length && hit(x0, x1, y0, y1, it.a)) continue;
+        placed.push({ x0, x1, y0, y1 });
+        this.drawArcText(it.name, it.bx, cy, size);
+        break;
+      }
     }
+  },
+  // 🎯 Les lieux des objectifs et des défis du joueur (leurs noms passent en premier sur la carte) ; recalculés une fois
+  // par seconde de jeu
+  objectiveSites() {
+    const G = Game, t = Math.floor(G.tick / CONFIG.TICKS_PER_SECOND);
+    if (this.objSites && this.objSites.t === t) return this.objSites.set;
+    const set = new Set();
+    if (G.human && (G.cm || G.hy || G.cr)) {
+      const n = G.objectives().length, m = G.challenges().length;
+      for (let k = 0; k < n; k++) for (const a of G.objectiveLinePlaces(false, k)) set.add(a);
+      for (let k = 0; k < m; k++) for (const a of G.objectiveLinePlaces(true, k)) set.add(a);
+    }
+    this.objSites = { t, set };
+    return set;
   },
   // Écrit le texte le long d'un petit arc qui sourit (ses bouts remontent, comme pour entourer la ville au-dessus),
   // centré sur (cx, cy)
@@ -3151,6 +3206,11 @@ const Render = {
     // Ils restent toujours dans leur royaume (voir updateLabels) : trop petits, ils n'apparaissent qu'en zoomant.
     this.updateLabels();
     const ink = this.parch ? this.parchmentAlpha() > 0.5 : false;
+    // 🧹 (quand on est assez près pour lire les noms des villes, ceux des royaumes s'estompent : ils ne les cachent plus)
+    const cityZoom = (this.fitScale || 1) * CONFIG.PLACE_NAME_ZOOM;
+    const fade = G.placeNames.size && s >= cityZoom ? Math.max(CONFIG.KINGDOM_NAME_FADE, 1 - (s / cityZoom - 1) * 0.6) : 1;
+    ctx.save();
+    ctx.globalAlpha = fade;
     for (const p of G.players) {
       const L = p.label;
       if (!p.alive || p.tiles === 0 || !L) continue;
@@ -3176,12 +3236,14 @@ const Render = {
       this.drawBannerImage(p, tx - tw / 2 - bw * (1 - (B.shield ? 0.5 : B.foot ?? BANNER_FOOT)) - 2, ty + size * 0.5, size * 1.5);
       Icons.text(ctx, troops, tx, ty);
     }
+    ctx.restore();
 
     if (!oldMap) {
       this.drawCastleAssaultPreview(ox, oy);
       this.drawHoveredBuildings(ox, oy);
       this.drawSelectable(ox, oy);
       this.drawFlashingMines(ox, oy);
+      this.drawObjectiveFlash(ox, oy);
       this.drawWorks(ox, oy);
       this.drawFloaters(ox, oy);
     }

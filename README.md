@@ -228,6 +228,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      faction a sa propre histoire et ses objectifs, ou **(Défis)** quand elle n'a que des défis (réglage : `FACTION_ORDER`
      dans `js/config.js`). Un petit **✔ vert** marque ce que tu as déjà réussi en solo : la campagne gagnée, ou, pour une
      faction à défis, tous ses défis réussis (pas forcément dans la même partie). C'est gardé dans ton navigateur. Règles du scénario :
+     - 📖 au début (dans les trois campagnes), un parchemin **« Ce qui change dans cette campagne »** résume ses règles
+       propres, puis celles de ta faction ;
      - **pas de nouvelles villes** : on améliore les siennes, on prend celles des autres (le bouton Château disparaît) ;
      - ✝️ la **Croyance** prend les terres voisines **2 fois moins vite** que dans une partie classique (chacun commence
        déjà avec beaucoup d'églises ; réglage `FAITH_SPEED` dans `js/charlemagne.js`) ;
@@ -294,7 +296,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      - 🏰 **Barcelone** est une **ville de niveau 2** à la **garnison 4 fois plus forte** (200 soldats) tant que Cordoue
        la tient : dure à prendre en début de partie ;
      - **victoire des Francs** : remplir les **9 objectifs de Charlemagne**, listés dans un **cadre en haut à gauche**
-       (un clic le replie ; un objectif rempli est **barré en gris avec un ✔**) :
+       (un clic sur son titre le replie, un clic sur un objectif montre son lieu sur la carte ; un objectif rempli est marqué 🛡️ « tenu ») :
        soumettre la **Bavière** (prendre Ratisbonne, 788), devenir **roi des Lombards** (prendre Pavie, 774), soumettre
        les **Saxons** (prendre Eresburg et abattre l'Irminsul, 772), abattre le **Ring des Avars** (796), créer la
        **Marche d'Espagne** (prendre Barcelone, 801), bâtir une **capitale impériale** comme Aix-la-Chapelle (une ville de
@@ -454,7 +456,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      **Séleucie** (il passe alors sur le pont, et ses soldats se battent mieux) ; Byzance s'allie en secret à Saladin (un
      choix pour le joueur byzantin) ; l'hiver à Messine ; **Richard prend Chypre**, puis les rois débarquent devant Acre ;
      **Philippe rentre en France** (un choix pour le joueur français) ; Arsouf ; les **Assassins tuent Conrad** (sauf s'il
-     leur paie tribut) ; la **paix de Jaffa** (une trêve) ; **Richard captif** en Autriche (sa rançon part chez l'Empereur) ;
+     leur paie tribut) ; la **paix de Jaffa** (une trêve) ; **Richard captif** en Autriche (sa rançon part chez l'Empereur ; si tu joues Richard, tu choisis en 1192 ta route de retour : par l'Autriche il est pris, par la mer contre de l'or ou en restant en Terre sainte il ne l'est pas) ;
      la **mort de Saladin** (son héritage se partage : un choix pour le joueur) ; Henri VI conquiert la Sicile ; Isaac Ange
      aveuglé ; la croisade allemande ; la mort de Richard à Châlus ; puis la **quatrième croisade** : Venise loue sa
      flotte, prend **Zara** (excommuniée) et attaque **Constantinople** (1203, puis le sac d'avril 1204). Une faction bot
@@ -1320,6 +1322,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.62** : 📖 **chaque campagne explique ses mécaniques au début** : après le récit d'ouverture, un parchemin « Ce qui change dans cette campagne » liste ses règles propres (Croisades : la Croyance entre chrétiens et musulmans, la Vraie Croix, les Assassins, la banque du Temple, les pactes et paix de l'histoire ; Cent Ans : la Légitimité, les grands vassaux, arcs longs et canons, la peste… ; Charlemagne : Rome, les Slaves, les mines…), puis celles de ta faction (Richard, les Templiers, Barberousse, Venise, Jeanne d'Arc…). 🎯 **Clic sur un objectif ou un défi** (en haut à gauche) : la carte va voir où il est, avec des cercles dorés (« Prendre Acre » → Acre ; un 2e clic → le lieu suivant). 🧭 **Richard peut éviter Dürnstein** : fin 1192, tu choisis ta route de retour : par l'Autriche (comme dans l'histoire : capturé, rançon), par la mer autour de l'Espagne (800 / 1 300 / 1 800 d'or, pas de capture) ou en restant en Terre sainte (pas de capture, mais −20 % de recrutement jusqu'en 1194) ; le défi « Pas de Dürnstein » devient faisable. 🧹 **Carte moins chargée** : de près, un nom de ville ne s'écrit que s'il a la place (sinon au-dessus de sa ville, sinon pas du tout ; les lieux de tes objectifs toujours), et les noms des royaumes s'estompent pour ne plus cacher les villes.
 - **v0.98.61** : 📜 **les choix historiques** dans les campagnes. À certains grands moments, un parchemin te laisse choisir, et le choix **marqué 📜 « comme dans l'histoire »** est celui qu'on a vraiment fait ; sous les choix, le **déroulement historique** raconte ce qui s'est passé. Nouveaux choix : **le départ de Vézelay** pour Richard et pour Philippe Auguste (1190), **Barberousse à Ratisbonne** (1189), **le marché de Venise** (1201), **l'expédition d'Italie** de Charlemagne contre les Lombards (773) et **Jeanne d'Arc à Chinon** pour le roi de France (1429) ; les choix existants (Chypre, Philippe qui rentre, le pacte byzantin, la mort de Saladin, Brétigny, la révolte des paysans) ont aussi leur déroulement historique. **Partir en croisade est une vraie expédition** : 35 % de tes soldats embarquent (ou prennent la route) et débarquent devant leur cible à la date de l'histoire (Chypre puis Acre pour Richard, Acre pour Philippe, Konya pour Barberousse, Pavie pour Charlemagne). **Rester** rapporte de l'or, mais tu quittes le fil de l'histoire : la suite de cette histoire (Messine, Arsouf, la captivité de Richard, le Saleph, Zara…) n'a plus lieu pour toi, ni ses effets ; la partie continue, à toi d'écrire la suite. Enfin, chaque parchemin dit clairement, dans un cadre vert, **🎁 ce que l'événement te rapporte ou te coûte** (+800 d'or à Messine, +10 % de force à Arsouf, la rançon de Richard…).
 - **v0.98.60** : ⛵ Les Croisades : quand tu joues un roi croisé (Richard, Philippe Auguste, l'Empereur…) ou Venise, les armées des grands moments par la mer (Chypre et Acre en 1191, la Sicile, Zara, Constantinople…) **débarquent devant la ville visée**, comme pour un bot, au lieu de rejoindre seulement ta réserve : Richard peut enfin passer la mer jusqu'à Chypre et la Terre sainte (comme l'histoire, par Messine). Sans cible possible, les soldats te rejoignent comme avant.
 - **v0.98.59** : 🛡️ dans les **campagnes** (Charlemagne, Cent Ans, Croisades), un objectif rempli n'est plus barré comme s'il était fini : il est marqué d'un **bouclier vert** et de la mention **« tenu »**, car il se perd si tu perds la ville (ou la Croyance, l'or…) ; il faut tous les tenir en même temps pour gagner. Les ⭐ défis réussis, eux, restent cochés et barrés (ils sont acquis).
