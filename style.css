@@ -672,6 +672,14 @@ button:disabled .ico { opacity: 0.6; }
 #parchment .pTodo { border-top: 1px solid rgba(110, 70, 30, 0.45); padding-top: 10px; margin-bottom: 14px; }
 #parchment .pTodo b { font-family: 'Uncial Antiqua', Cinzel, Georgia, serif; font-weight: normal; color: #7a1a10; }
 #parchment .pTodo:empty { display: none; }
+/* (🎁 ce que l'événement rapporte ou coûte, et 📜 sous les choix, ce qui s'est vraiment passé) */
+#parchment .pGain { background: rgba(70, 120, 40, 0.12); border-left: 3px solid #4a7a2a; padding: 6px 10px; margin-bottom: 12px; }
+#parchment .pGain b, #parchment .pHist b { font-family: 'Uncial Antiqua', Cinzel, Georgia, serif; font-weight: normal; color: #2f5a1a; }
+#parchment .pHist { border-top: 1px solid rgba(110, 70, 30, 0.45); padding-top: 10px; margin-top: 14px; font-style: italic; font-size: 0.93em; }
+#parchment .pHist b { color: #7a1a10; font-style: normal; }
+#parchment .pGain:empty, #parchment .pHist:empty { display: none; }
+#parchment .pChoices .sealBtn small { display: block; font-size: 11px; opacity: 0.85; margin-top: 2px; font-family: Georgia, serif; }
+#parchment .pChoices .sealBtn.hist { box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45), 0 0 0 2px #d9a520; }
 /* (le bouton : un sceau de cire rouge) */
 #parchment .sealBtn {
   display: block; margin: 0 auto; padding: 10px 26px; border: none; border-radius: 22px; cursor: pointer;

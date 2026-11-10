@@ -21,7 +21,7 @@ Object.assign(GameRules, {
       loans: new Map(), loansGiven: 0, helpReady: new Map(), helped: new Map(), nextLoan: CROISADES.ORDERS.AI_LOAN_EVERY * CONFIG.TICKS_PER_SECOND,
       cyprusSold: false, cyprusBought: false, truceUntil: 0, ransom: null, stun: new Map(), tributeUntil: new Map(),
       tributePaid: new Set(), hireReady: new Map(), richard: false, arsuf: false, salephBridge: false, john: false,
-      civilWarUntil: 0, nextRaid: C.RAIDS.FIRST * CONFIG.TICKS_PER_SECOND, nextAssassin: C.ASSASSINS.AI_EVERY * CONFIG.TICKS_PER_SECOND };
+      civilWarUntil: 0, off: new Set(), embarked: {}, nextRaid: C.RAIDS.FIRST * CONFIG.TICKS_PER_SECOND, nextAssassin: C.ASSASSINS.AI_EVERY * CONFIG.TICKS_PER_SECOND };
     // Les factions (le joueur incarne celle de sa bannière)
     for (const f of C.factions) {
       const b = BANNERS.findIndex(x => x.set === 'croisades' && x.id === f.id);
@@ -188,10 +188,20 @@ Object.assign(GameRules, {
   crCrusader(pid) { return pid >= 0 && ['jerusalem', 'antioche', 'angleterre', 'france', 'empire'].includes(this.players[pid].role); },
   crSaracen(pid) { return pid >= 0 && ['ayyoubides', 'egypte'].includes(this.players[pid].role); },
   // 📜 Un grand événement : un parchemin pour le joueur s'il est concerné (who), sinon un simple message
+  // (🎁 avec, sous le récit, ce que l'événement rapporte ou coûte au joueur : voir GAINS)
   crEvent(key, vars, log, kind = 'warn', who) {
-    const ev = CROISADES.EVENTS[key];
-    if (ev && ev.who.includes(this.human.role)) UI.parchment(ev, vars);
+    const ev = CROISADES.EVENTS[key], role = this.human.role;
+    if (this.crOff(role, key)) return; // (📜 une histoire que le joueur a quittée : sa suite n'a pas lieu pour lui)
+    if (ev && ev.who.includes(role)) UI.parchment(Object.assign({}, ev, { gain: this.crGain(key) }), vars);
     else if (log) UI.log(log, kind, who);
+  },
+  crGain(key) { const g = CROISADES.GAINS[key]; return g ? g[this.human.role] || g['*'] || '' : ''; },
+  // 📜 Le joueur de cette faction a quitté le fil de l'histoire (il n'est pas parti en croisade) : ces événements de son
+  // histoire n'ont plus lieu (ni parchemin, ni effet pour lui)
+  crOff(role, key) {
+    const L = { angleterre: ['messina', 'cyprus', 'kingsArrive', 'kingsArriveEn', 'arsuf', 'captured'], france: ['messina', 'kingsArrive', 'kingsArriveFr', 'philipLeaves'],
+      empire: ['konya', 'saleph', 'salephBridge'], venise: ['zara', 'constantinople1', 'sack'] }[role];
+    return !!this.cr && this.cr.off.has(role) && !!L && L.includes(key);
   },
   // Une grande armée d'un événement : un bot débarque (ou surgit) près de la ville visée et marche sur elle ; le joueur
   // reçoit plutôt les soldats, et choisit lui-même où frapper. targets : les villes visées, la première encore à
@@ -200,6 +210,8 @@ Object.assign(GameRules, {
   crCampaign(role, key, targets, army, coast, log, foes) {
     const p = this.crP(role);
     if (!p.alive) return false;
+    // (⛵ le joueur est parti en croisade : ses soldats embarqués débarquent avec cette armée, devant sa première cible)
+    if (p.isHuman && this.cr.embarked[role]) { army += this.cr.embarked[role]; this.cr.embarked[role] = 0; }
     const vars = { army: fmt(army) };
     // (un joueur : une armée qui marche par les terres rejoint simplement la sienne ; une flotte (coast), elle, le débarque
     //  devant la première cible possible, comme pour un bot : c'est son seul moyen de passer la mer jusqu'à Chypre ou
@@ -210,7 +222,6 @@ Object.assign(GameRules, {
       UI.log(tr(`⚔️ Une grande armée te rejoint : +${fmt(army)} soldats !`, `⚔️ A great army joins you: +${fmt(army)} soldiers!`), 'good');
       return true;
     };
-    if (p.isHuman && !coast) return joinHuman();
     for (const name of targets) {
       const c = this.crCity(name), d = c >= 0 ? this.owner[c] : -1;
       if (d < 0 || d === p.id || this.areAllied(p.id, d) || this.attackBlocked(p.id, d)) continue;
@@ -221,8 +232,10 @@ Object.assign(GameRules, {
       if (p.isHuman) {
         if (!landed) continue;
         this.crEvent(key, vars, null);
-        UI.log(tr(`⛵ Ta flotte débarque ${fmt(army)} croisés devant ${this.crCityName(c)} : ils marchent sur la ville ! (la petite croix de leur barre, en bas, les rappelle)`,
-          `⛵ Your fleet lands ${fmt(army)} crusaders before ${this.crCityName(c)}: they march on the city! (the small cross on their bar, at the bottom, calls them back)`), 'good');
+        UI.log(coast ? tr(`⛵ Ta flotte débarque ${fmt(army)} soldats devant ${this.crCityName(c)} : ils marchent sur la ville ! (la petite croix de leur barre, en bas, les rappelle)`,
+          `⛵ Your fleet lands ${fmt(army)} soldiers before ${this.crCityName(c)}: they march on the city! (the small cross on their bar, at the bottom, calls them back)`)
+          : tr(`⚔️ Ton armée de ${fmt(army)} soldats surgit devant ${this.crCityName(c)} et marche sur la ville ! (la petite croix de sa barre, en bas, la rappelle)`,
+            `⚔️ Your army of ${fmt(army)} soldiers appears before ${this.crCityName(c)} and marches on the city! (the small cross on its bar, at the bottom, calls it back)`), 'good');
         if (this.players[d].isHuman) Music.sound('enemyAssault');
         return true;
       }
@@ -288,9 +301,19 @@ Object.assign(GameRules, {
       jer.troops += R(E * 0.5);
       this.crEvent('guy', { army: fmt(R(E * 0.5)) }, null);
     }
+    const K = C.CRUSADE, cross = (p, key, data) => this.crOffer(key, Object.assign({ n: fmt(Math.floor(p.troops * K.SHARE)), gold: fmt(K.STAY_GOLD), faith: K.STAY_FAITH }, data));
     if (once('barbarossa', 1189.36) && em.alive) {
-      em.troops += R(E * 1.5);
-      this.crEvent('barbarossa', { army: fmt(R(E * 1.5)) }, tr('🦅 1189 : Barberousse part en croisade avec la plus grande armée d\'Occident.', '🦅 1189: Barbarossa sets out on crusade with the greatest army of the West.'), '');
+      // (⛵ le joueur : il choisit de partir, ou de rester ; voir crApplyChoice)
+      if (em.isHuman) cross(em, 'barbarossa', { army: R(E * 1.5) });
+      else {
+        em.troops += R(E * 1.5);
+        this.crEvent('barbarossa', { army: fmt(R(E * 1.5)) }, tr('🦅 1189 : Barberousse part en croisade avec la plus grande armée d\'Occident.', '🦅 1189: Barbarossa sets out on crusade with the greatest army of the West.'), '');
+      }
+    }
+    // ⛵ Juillet 1190 : Richard et Philippe partent de Vézelay (le joueur choisit de partir ou de rester)
+    if (once('vezelay', 1190.5)) {
+      if (en.alive && en.isHuman) cross(en, 'richardCross', {});
+      if (fr.alive && fr.isHuman) cross(fr, 'philipCross', {});
     }
     if (once('richardKing', 1189.51) && en.alive) {
       cr.richard = true;
@@ -334,33 +357,33 @@ Object.assign(GameRules, {
       else this.crApplyChoice('byzantineTreaty', 'saladin');
     }
     // 1190 : Barberousse devant Konya, puis le Saleph
-    if (once('konya', 1190.3) && this.crHolder('Konya') !== 'empire') {
+    if (once('konya', 1190.3) && this.crHolder('Konya') !== 'empire' && !this.crOff(em.isHuman ? 'empire' : '', 'konya')) {
       this.crCampaign('empire', 'konya', ['Konya'], R(E * 1.6), false,
         n => tr(`⚔️ L'armée de Barberousse surgit devant ${n} !`, `⚔️ Barbarossa's army appears before ${n}!`));
     }
-    if (once('saleph', 1190.44) && em.alive) this.crSaleph();
+    if (once('saleph', 1190.44) && em.alive && !(em.isHuman && this.crOff('empire', 'saleph'))) this.crSaleph();
     if (once('messina', 1190.8)) {
       const gold = 800;
-      for (const p of [en, fr]) if (p.alive) p.gold += gold;
+      for (const p of [en, fr]) if (p.alive && !(p.isHuman && this.crOff(p.role, 'messina'))) p.gold += gold; // (📜 resté chez lui : pas de Messine)
       this.crEvent('messina', { gold: fmt(gold) }, null);
     }
     // 1191 : la croisade des rois : Philippe devant Acre, Richard à Chypre puis devant Acre
-    if (once('philipArrives', 1191.3)) this.crCampaign('france', 'kingsArriveFr', ['Acre', 'Jaffa', 'Jérusalem'], R(E * 1.4), true,
+    if (once('philipArrives', 1191.3) && !(fr.isHuman && this.crOff('france', 'kingsArriveFr'))) this.crCampaign('france', 'kingsArriveFr', ['Acre', 'Jaffa', 'Jérusalem'], R(E * 1.4), true,
       n => tr(`⛵ Philippe Auguste débarque devant ${n} !`, `⛵ Philip Augustus lands before ${n}!`), 'musulmans');
-    if (once('cyprus', 1191.35) && this.crHolder('Nicosie') === 'chypre') {
+    if (once('cyprus', 1191.35) && this.crHolder('Nicosie') === 'chypre' && !(en.isHuman && this.crOff('angleterre', 'cyprus'))) {
       this.crCampaign('angleterre', 'cyprus', ['Nicosie'], R(E * 0.8), true,
         n => tr(`⛵ Richard débarque à Chypre et marche sur ${n} !`, `⛵ Richard lands on Cyprus and marches on ${n}!`));
     }
     if (once('kingsArrive', 1191.43)) {
-      const done = this.crCampaign('angleterre', 'kingsArriveEn', ['Acre', 'Jaffa', 'Jérusalem'], R(E * 1.8), true,
+      const done = en.isHuman && this.crOff('angleterre', 'kingsArriveEn') ? false : this.crCampaign('angleterre', 'kingsArriveEn', ['Acre', 'Jaffa', 'Jérusalem'], R(E * 1.8), true,
         n => tr(`⛵ Richard Cœur de Lion débarque devant ${n} !`, `⛵ Richard the Lionheart lands before ${n}!`), 'musulmans');
       if (done || en.alive || fr.alive) this.crEvent('kingsArrive', {}, null);
     }
-    if (once('philipLeaves', 1191.58) && fr.alive) {
+    if (once('philipLeaves', 1191.58) && fr.alive && !(fr.isHuman && this.crOff('france', 'philipLeaves'))) {
       if (fr.isHuman) this.crOffer('philipLeaves', {});
       else this.crApplyChoice('philipLeaves', 'home');
     }
-    if (once('arsuf', 1191.68) && en.alive && cr.richard) {
+    if (once('arsuf', 1191.68) && en.alive && cr.richard && !(en.isHuman && this.crOff('angleterre', 'arsuf'))) {
       cr.arsuf = true;
       this.crEvent('arsuf', {}, tr('⚔️ 1191 : Richard bat Saladin à Arsouf.', '⚔️ 1191: Richard defeats Saladin at Arsuf.'), '');
     }
@@ -371,7 +394,7 @@ Object.assign(GameRules, {
     if (once('conrad', 1192.32) && jer.alive) this.crConrad();
     // 1192 : la paix de Jaffa ; les rois rentrent chez eux
     if (once('jaffa', 1192.67)) this.crJaffa();
-    if (once('captured', 1192.95) && en.alive) {
+    if (once('captured', 1192.95) && en.alive && !(en.isHuman && this.crOff('angleterre', 'captured'))) {
       const gold = C.RANSOM[cr.diff];
       cr.ransom = { left: gold, total: gold, paid: false };
       this.crEvent('captured', { gold: fmt(gold) }, tr(`⛓️ Richard Cœur de Lion est prisonnier en Autriche ! Rançon : ${fmt(gold)} pièces d'or.`, `⛓️ Richard the Lionheart is a prisoner in Austria! Ransom: ${fmt(gold)} gold.`), '', en);
@@ -405,18 +428,21 @@ Object.assign(GameRules, {
       this.crEvent('richardDies', {}, tr('⚱️ 1199 : Richard Cœur de Lion meurt à Châlus ; Jean sans Terre lui succède.', '⚱️ 1199: Richard the Lionheart dies at Châlus; John Lackland succeeds him.'), '', en);
     }
     if (once('reunify', 1200.5)) this.crReunify();
-    if (once('venice', 1201.3) && ve.alive) this.crEvent('venice', {}, tr('⛵ 1201 : les barons de la quatrième croisade louent la flotte de Venise.', '⛵ 1201: the barons of the Fourth Crusade hire the fleet of Venice.'), '');
-    if (once('zara', 1202.85) && ve.alive && this.crHolder('Zara') !== 'venise') {
+    if (once('venice', 1201.3) && ve.alive) {
+      if (ve.isHuman) cross(ve, 'venice', {}); // (⛵ le joueur : accepter le marché, ou refuser)
+      else this.crEvent('venice', {}, tr('⛵ 1201 : les barons de la quatrième croisade louent la flotte de Venise.', '⛵ 1201: the barons of the Fourth Crusade hire the fleet of Venice.'), '');
+    }
+    if (once('zara', 1202.85) && ve.alive && this.crHolder('Zara') !== 'venise' && !(ve.isHuman && this.crOff('venise', 'zara'))) {
       ve.faithBonus = (ve.faithBonus || 0) - C.VENICE.EXCOMMUNICATION;
       this.faithCache = null;
       this.crCampaign('venise', 'zara', ['Zara'], R(E * 1.3), true,
         n => tr(`⛵ La flotte vénitienne débarque les croisés devant ${n} !`, `⛵ The Venetian fleet lands the crusaders before ${n}!`));
     }
-    if (once('constantinople1', 1203.5) && ve.alive && this.crHolder('Constantinople') !== 'venise') {
+    if (once('constantinople1', 1203.5) && ve.alive && this.crHolder('Constantinople') !== 'venise' && !(ve.isHuman && this.crOff('venise', 'constantinople1'))) {
       this.crCampaign('venise', 'constantinople1', ['Constantinople'], R(E * 1.6), true,
         n => tr(`⛵ Les croisés et les Vénitiens attaquent ${n} !`, `⛵ The crusaders and the Venetians attack ${n}!`));
     }
-    if (once('sack', 1204.27) && ve.alive && this.crHolder('Constantinople') !== 'venise') {
+    if (once('sack', 1204.27) && ve.alive && this.crHolder('Constantinople') !== 'venise' && !(ve.isHuman && this.crOff('venise', 'sack'))) {
       this.crCampaign('venise', 'sack', ['Constantinople'], R(E * (ve.isHuman ? 1.5 : 2.4)), true,
         n => tr(`🔥 L'assaut final des croisés sur ${n} !`, `🔥 The crusaders' final assault on ${n}!`));
     }
@@ -507,12 +533,15 @@ Object.assign(GameRules, {
     const C = CROISADES, cr = this.cr;
     cr.offers[key] = data;
     const vars = Object.assign({ gold: fmt(1500), faith: key === 'saladinDies' ? C.SUCCESSION.FAITH : 60, pct: Math.round(C.SUCCESSION.CIVIL_WAR * 100) }, data);
-    UI.parchment(C.EVENTS[key], vars, C.CHOICES[key].map(c => ({ key, pick: c.pick, label: c.label })));
+    // (📜 sous les choix, ce qui s'est vraiment passé ; le choix historique est marqué : voir HISTORY)
+    UI.parchment(Object.assign({}, C.EVENTS[key], { history: C.HISTORY[key] || '', gain: this.crGain(key) }), vars,
+      C.CHOICES[key].map(c => ({ key, pick: c.pick, label: c.label, hist: !!c.hist })));
   },
   // Le joueur a choisi (ordre « hyChoice »)
   crChoose(pid, key, pick) {
     const cr = this.cr;
     if (!cr.offers[key] || pid !== this.human.id || !CROISADES.CHOICES[key].some(c => c.pick === pick)) return null;
+    cr.lastOffer = cr.offers[key];
     delete cr.offers[key];
     this.crApplyChoice(key, pick);
     return null;
@@ -520,6 +549,26 @@ Object.assign(GameRules, {
   crApplyChoice(key, pick) {
     const C = CROISADES, cr = this.cr, h = this.human;
     if (this.crOrderChoice(key, pick)) { this.version++; return; } // (🏝️ les choix de Chypre : voir ordres.js)
+    // ⛵ Partir en croisade, ou rester (Richard, Philippe, Barberousse, Venise)
+    const cross = { richardCross: 'angleterre', philipCross: 'france', barbarossa: 'empire', venice: 'venise' }[key];
+    if (cross) {
+      const p = this.crP(cross), K = C.CRUSADE, data = cr.offers[key] || cr.lastOffer || {};
+      if (pick === 'go') {
+        // (une part de ses soldats embarque, avec l'armée de l'événement : ils débarquent ensemble devant la première cible)
+        const n = Math.floor(p.troops * (cross === 'venise' ? 0 : K.SHARE));
+        p.troops -= n;
+        cr.embarked[cross] = (cr.embarked[cross] || 0) + n + (data.army || 0);
+        if (p.isHuman) UI.log(cross === 'venise' ? tr('⛵ Marché conclu : la croisade frappera Zara, puis Constantinople, pour Venise.', '⛵ Bargain struck: the crusade will strike Zara, then Constantinople, for Venice.')
+          : tr(`⛵ Tu prends la croix : ${fmt(n + (data.army || 0))} soldats partent ; ils débarqueront devant leur première cible.`, `⛵ You take the cross: ${fmt(n + (data.army || 0))} soldiers set out; they will land before their first target.`), 'good');
+      } else {
+        cr.off.add(cross);
+        p.gold += K.STAY_GOLD;
+        if (cross !== 'venise') { p.faithBonus = (p.faithBonus || 0) - K.STAY_FAITH; this.faithCache = null; }
+        if (p.isHuman) UI.log(tr(`📜 Tu t'écartes de l'histoire (+${fmt(K.STAY_GOLD)} d'or${cross !== 'venise' ? `, −${K.STAY_FAITH} de Croyance` : ''}) : la suite de cette croisade n'aura pas lieu pour toi. La partie continue, à toi d'écrire la suite.`,
+          `📜 You step away from history (+${fmt(K.STAY_GOLD)} gold${cross !== 'venise' ? `, −${K.STAY_FAITH} Faith` : ''}): the rest of this crusade will not happen for you. The game goes on: the rest is yours to write.`), 'good');
+      }
+      return;
+    }
     if (key === 'philipLeaves') {
       const fr = this.crP('france');
       if (pick === 'home') {

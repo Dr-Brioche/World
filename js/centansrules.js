@@ -128,7 +128,8 @@ Object.assign(GameRules, {
   hyEvent(key, vars, log, kind = 'warn', who) {
     const role = this.human.role;
     const ev = role === 'france' ? CENTANS.EVENTS[key] : role === 'angleterre' ? CENTANS.ENGLAND_EVENTS[key] : null;
-    if (ev) UI.parchment(ev, vars);
+    const g = CENTANS.GAINS[key], gain = g ? g[role] || g['*'] || '' : ''; // (🎁 ce que ça lui rapporte, ou coûte)
+    if (ev) UI.parchment(Object.assign({}, ev, { gain }), vars);
     else if (log) UI.log(log, kind, who);
   },
 
@@ -309,8 +310,12 @@ Object.assign(GameRules, {
     }
     if (once('orleans', 1428)) this.hyEnglishAssault('orleans', 'Orléans', army);
     if (once('jeanne', C.JOAN.YEAR) && fr.alive) {
-      hy.joan = { state: 'ready' };
-      this.hyEvent('jeanne', {}, tr('⚜️ 1429 : Jeanne d\'Arc rejoint l\'armée du roi de France.', '⚜️ 1429: Joan of Arc joins the army of the King of France.'), '', fr);
+      // (⚜️ le joueur du roi de France choisit : confier une armée à Jeanne, comme Charles VII, ou la renvoyer)
+      if (fr.isHuman) this.hyOffer('jeanne', {}, 'france');
+      else {
+        hy.joan = { state: 'ready' };
+        this.hyEvent('jeanne', {}, tr('⚜️ 1429 : Jeanne d\'Arc rejoint l\'armée du roi de France.', '⚜️ 1429: Joan of Arc joins the army of the King of France.'), '', fr);
+      }
     }
     if (once('arras', C.ARRAS)) {
       const bo = this.hyP('bourgogne'), legit = this.faithAll();
@@ -898,17 +903,21 @@ Object.assign(GameRules, {
   },
   // 📜 Un parchemin à choix pour le joueur anglais (la paix de Brétigny, la révolte des paysans) : la partie attend sa
   // réponse (voir UI.parchment et hyChoose) ; data : ce qu'il faut garder pour appliquer le choix (la trêve…)
-  hyOffer(key, data) {
+  // (role : le roi qui choisit ; ⚜️ Jeanne d'Arc : le roi de France)
+  hyOffer(key, data, role = 'angleterre') {
     const E = CENTANS.ENGLAND, hy = this.hy;
-    (hy.offers = hy.offers || {})[key] = data;
+    (hy.offers = hy.offers || {})[key] = Object.assign({ role }, data);
     const vars = key === 'bretigny' ? { gold: fmt(E.BRETIGNY.GOLD), legit: E.BRETIGNY.LEGIT, legit2: E.BRETIGNY.REFUSE_LEGIT }
-      : { gold: fmt(E.PEASANTS.GOLD), pct: Math.round(E.PEASANTS.TROOPS * 100) };
-    UI.parchment(CENTANS.ENGLAND_EVENTS[key], vars, CENTANS.CHOICES[key].map(c => ({ key, pick: c.pick, label: c.label })));
+      : key === 'jeanne' ? { gold: fmt(CENTANS.JOAN.REFUSE_GOLD) } : { gold: fmt(E.PEASANTS.GOLD), pct: Math.round(E.PEASANTS.TROOPS * 100) };
+    const ev = (role === 'france' ? CENTANS.EVENTS : CENTANS.ENGLAND_EVENTS)[key], g = CENTANS.GAINS[key];
+    // (📜 sous les choix, ce qui s'est vraiment passé ; le choix historique est marqué : voir HISTORY)
+    UI.parchment(Object.assign({}, ev, { history: CENTANS.HISTORY[key] || '', gain: g ? g[role] || g['*'] || '' : '' }), vars,
+      CENTANS.CHOICES[key].map(c => ({ key, pick: c.pick, label: c.label, hist: !!c.hist })));
   },
   // Le joueur anglais a choisi (ordre « hyChoice »)
   hyChoose(pid, key, pick) {
     const hy = this.hy, offers = hy.offers || {};
-    if (!offers[key] || this.players[pid] !== this.hyP('angleterre')) return null;
+    if (!offers[key] || this.players[pid] !== this.hyP(offers[key].role || 'angleterre')) return null;
     if (!CENTANS.CHOICES[key].some(c => c.pick === pick)) return null;
     this.hyApplyChoice(key, pick, offers[key]);
     delete offers[key];
@@ -916,6 +925,13 @@ Object.assign(GameRules, {
   },
   hyApplyChoice(key, pick, data = {}) {
     const E = CENTANS.ENGLAND, en = this.hyP('angleterre');
+    if (key === 'jeanne') {
+      const fr = this.hyP('france');
+      if (pick === 'listen') { this.hy.joan = { state: 'ready' }; return; }
+      fr.gold += CENTANS.JOAN.REFUSE_GOLD;
+      if (fr.isHuman) UI.log(tr(`📜 Tu t'écartes de l'histoire (+${fmt(CENTANS.JOAN.REFUSE_GOLD)} d'or) : Jeanne rentre à Domrémy, sans armée ni étendard. La partie continue, à toi d'écrire la suite.`, `📜 You step away from history (+${fmt(CENTANS.JOAN.REFUSE_GOLD)} gold): Joan goes home to Domrémy, with no army and no standard. The game goes on: the rest is yours to write.`), 'good');
+      return;
+    }
     if (key === 'bretigny') {
       if (pick === 'accept') {
         this.hyStartTruce(data.truce, true);
