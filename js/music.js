@@ -150,12 +150,28 @@ const Music = {
   },
   // 🔔 Un petit son du jeu (voir CONFIG.MUSIC.SOUNDS), par-dessus la musique d'ambiance (rien si le joueur a coupé
   // la musique, ni si le même son vient de se jouer)
-  // Un seul petit son à la fois : un son qui arrive pendant qu'un autre joue le coupe net et démarre tout de suite
-  // (plusieurs événements d'un coup s'enchaînent ainsi sans attendre)
+  // Les sons se superposent (un nouveau son ne coupe pas celui qui joue) ; le même son ne revient pas avant SOUND_GAP
+  // secondes, sauf ceux de SOUND_QUEUE (la construction) : plusieurs à la fois s'enchaînent, l'un après l'autre
   sound(key) {
     const M = CONFIG.MUSIC, src = M.SOUNDS[key], now = performance.now(), last = this.lastSound = this.lastSound || {};
-    if (!this.on || !src || now - (last[key] || -Infinity) < M.SOUND_GAP * 1000) return;
+    if (!this.on || !src) return;
+    // (🔨 un son qui s'enchaîne, comme la construction : s'il en joue déjà un, celui-ci attend son tour, juste après)
+    const Q = M.SOUND_QUEUE && M.SOUND_QUEUE[key];
+    if (Q) {
+      const next = this.nextSound = this.nextSound || {}, at = Math.max(now, next[key] || 0);
+      if (at - now > Q.GAP * 1000 * Q.MAX) return; // (déjà trop en attente)
+      next[key] = at + Q.GAP * 1000;
+      if (at > now) { setTimeout(() => this.playSound(key, src), at - now); return; }
+      return this.playSound(key, src);
+    }
+    if (now - (last[key] || -Infinity) < M.SOUND_GAP * 1000) return;
     last[key] = now;
+    this.playSound(key, src);
+  },
+  // Joue le son key maintenant (et son écho, s'il en a un)
+  playSound(key, src) {
+    const M = CONFIG.MUSIC;
+    if (!this.on) return;
     // (les sons se superposent : un nouveau son ne coupe pas le précédent ; on garde la liste de ceux qui jouent,
     //  pour pouvoir tous les couper avec la musique)
     this.effects = this.effects || new Set();

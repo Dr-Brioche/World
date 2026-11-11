@@ -1291,6 +1291,7 @@ const GameRules = {
   faithInterval(diff) {
     const pace = CONFIG.FAITH_PACE;
     if (diff <= 0) return Infinity;
+    diff /= CONFIG.FAITH_GAP_SCALE; // (il faut FAITH_GAP_SCALE fois plus d'écart pour la même vitesse)
     if (diff <= pace[0][0]) return pace[0][1] * pace[0][0] / diff;
     for (let k = 1; k < pace.length; k++) {
       const [d1, s1] = pace[k - 1], [d2, s2] = pace[k];
@@ -4568,7 +4569,7 @@ const GameRules = {
       const x = i % W;
       let ok; // cette case peut-elle servir de départ ? (calculé seulement si besoin)
       for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
-        if (n < 0 || own[n] !== target || seen.has(n) || !this.claimable(n)) continue;
+        if (n < 0 || seen.has(n) || !this.claimable(n) || !(own[n] === target || this.isTargetLand(n, target, pid))) continue;
         if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
         if (!ok) break;
         seen.add(n);
@@ -4789,17 +4790,37 @@ const GameRules = {
   // Pour un assaut sur le château (ou l'église) c : peut-on passer par cette case ? Oui si elle est au
   // défenseur et n'est pas protégée par un de ses AUTRES châteaux (la zone du château visé, elle, est passable,
   // mais castlePath arrête le chemin à sa muraille : on l'assiège depuis là).
-  castlePassable(c) {
+  castlePassable(c, attacker = -1) {
     const target = this.owner[c], isCastle = this.building[c] === B_CASTLE;
     const R = isCastle ? this.castleInfo(c).radius : 0;
     // (⏱️ hors de la muraille de c : dans celle d'une autre de ses villes ? le masque de castleWalls le dit d'un coup)
     const walls = target >= 0 ? this.castleWalls(target) : null;
     return i => {
-      if (this.owner[i] !== target || this.wallAt[i]) return false; // (aucun assaut ne franchit un mur)
+      // (aucun assaut ne franchit un mur ; la route d'un autre assaut en cours à travers target compte comme ses terres)
+      if (this.wallAt[i] || !this.isTargetLand(i, target, attacker)) return false;
       if (isCastle && this.inCastleRange(c, i % this.W, (i / this.W) | 0, R)) return true;
       if (this.anchor[i] === c) return true; // le bâtiment visé lui-même
       return !walls[i];
     };
+  },
+
+  // ⚔️ La case t compte-t-elle comme une terre de target pour un assaut d'attacker ? Les siennes, bien sûr, et aussi
+  // les cases de la route d'un assaut d'un AUTRE royaume encore en cours à travers target : tant qu'il n'est pas joué,
+  // sa route n'est que visuelle (voir regions), elle ne barre pas le chemin des autres assauts (qui peuvent la prendre,
+  // comme une terre de target)
+  isTargetLand(t, target, attacker = -1) {
+    const o = this.owner[t];
+    if (o === target) return true;
+    if (o < 0 || target < 0 || o === attacker) return false;
+    return this.routeCross().get(t) === target;
+  },
+  // Les cases des routes d'assauts en cours : case → royaume traversé (voir pendingRoutes ; gardé tant que la carte ne change pas)
+  routeCross() {
+    if (this.routeCrossVersion !== this.version || !this.routeCrossMap) {
+      this.routeCrossMap = new Map(this.pendingRoutes());
+      this.routeCrossVersion = this.version;
+    }
+    return this.routeCrossMap;
   },
 
   // Chemin le plus court de la frontière de pid jusqu'au château c, en contournant les
@@ -4812,7 +4833,7 @@ const GameRules = {
   // MARCH_OWN_LAND_BONUS), et pas seulement le bout de frontière le plus proche de la cible.
   castlePath(pid, c, source) {
     if (!this.building[c]) return null; // (plus de bâtiment là : rasé, démoli…)
-    const passable = this.castlePassable(c), foot = new Set(this.footprint(c, this.building[c]));
+    const passable = this.castlePassable(c, pid), foot = new Set(this.footprint(c, this.building[c]));
     const h = this.sizeOf(this.building[c]) / 2;
     const dep = this.departurePoint(pid, c % this.W + h, ((c / this.W) | 0) + h, source), W = this.W;
     // La marche jusqu'au point d'entrée compte le VRAI chemin sur nos terres depuis la ville de départ (relief, fleuves,
@@ -5391,6 +5412,11 @@ const GameRules = {
     }
     const zone = this.landingZone(pid, i);
     if (zone.anchor < 0) return { error: tr('Pas assez de place sur cette côte pour un avant-poste.', 'Not enough room on this coast for an outpost.') };
+    // (🐛 un débarquement prend d'un coup sa zone, sans combat : collée à nos propres terres, ce serait un morceau de
+    //  territoire pris gratuitement. Là, on attaque par la terre.)
+    if (zone.tiles.some(j => { let touch = false; this.forNeighbors(j, n => { if (this.owner[n] === pid) touch = true; }); return touch; })) {
+      return { error: tr('Trop près de tes terres : un débarquement ne peut pas toucher ton propre territoire (attaque par la terre).', 'Too close to your land: a landing cannot touch your own territory (attack by land).') };
+    }
     // Le port le plus rapide pour y aller
     let best = null;
     for (const a of ports) {
@@ -5960,7 +5986,7 @@ const GameRules = {
       // et ne passe pas les murailles : il s'arrête au pied du mur
       const castle = a.target >= 0 && a.targetCastle < 0 && a.link === undefined &&
         (this.building[t] === B_CASTLE || this.building[t] === B_OUTPOST || this.castleProtects(a.target, t) || this.mineFortBonus(a.target, t) > 0);
-      if (!a.set.has(t) || this.owner[t] !== a.target || around === 0 || outside || castle || this.wallAt[t] || (pass && !pass(t))) {
+      if (!a.set.has(t) || !this.isTargetLand(t, a.target, a.attacker) || around === 0 || outside || castle || this.wallAt[t] || (pass && !pass(t))) {
         a.list[idx] = a.list[a.list.length - 1];
         a.list.pop();
         a.set.delete(t);
@@ -6958,7 +6984,7 @@ const GameRules = {
       // Assaut de jonction : il touche le morceau de son château isolé, c'est gagné
       if (a.link >= 0 && this.touchesSet(t, a.piece, a.attacker)) return this.linkArrives(a);
       this.forNeighbors(t, n => {
-        if (this.owner[n] === a.target && this.claimable(n) && !a.set.has(n)) {
+        if (this.claimable(n) && !a.set.has(n) && this.isTargetLand(n, a.target, a.attacker)) {
           a.set.add(n);
           a.list.push(n);
         }
@@ -6980,7 +7006,7 @@ const GameRules = {
   assaultPassable(a) {
     const c = a.targetCastle;
     if (a.target < 0 || c < 0 || a.link !== undefined || this.owner[c] !== a.target || !this.building[c]) return null;
-    return this.castlePassable(c);
+    return this.castlePassable(c, a.attacker);
   },
 
   resumeAssault(a) {
