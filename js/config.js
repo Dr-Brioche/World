@@ -239,7 +239,10 @@ const CONFIG = {
   // x(1 + LEVY_BOOST) quand l'armée est vide, encore x3 environ à LEVY_FROM (35 %) de l'armée maximum ; puis ça décroît
   // vite, jusqu'à rien à LEVY_TO (65 %) : à plus de la moitié de l'armée maximum, il ne sert presque plus à rien.
   LEVY_COST: 3000,
-  LEVY_INSTANT: 0.1,         // ... et dès son lancement, des soldats tout de suite : 10 % de l'armée maximum du royaume
+  // ... et dès son lancement, des soldats tout de suite : une part de l'armée maximum du royaume, selon sa place au
+  // classement (part des terres) : [place jusqu'à laquelle ça vaut, part] ; 1er : 3 %, 2e : 5 %, 3e : 8 %, 4e à 6e : 10 %,
+  // et 20 % au-delà (les petits royaumes se relèvent plus vite)
+  LEVY_INSTANT: [[1, 0.03], [2, 0.05], [3, 0.08], [6, 0.10], [Infinity, 0.20]],
   LEVY_TIME: 60,
   LEVY_BOOST: 2.5,
   LEVY_FROM: 0.35,
