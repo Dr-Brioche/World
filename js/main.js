@@ -3317,10 +3317,10 @@ const UI = {
   levyText() {
     const best = (1 + CONFIG.LEVY_BOOST * Game.levySize(Game.human)).toFixed(1); // (armée vide)
     const now = fmt(Game.levyInstant(Game.human));
-    return tr(`Recrutement de masse (💰 ${fmt(CONFIG.LEVY_COST)}) : +${now} soldats tout de suite (${Math.round(CONFIG.LEVY_INSTANT * 100)} % de ton armée maximum), puis ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s ` +
+    return tr(`Recrutement de masse (💰 ${fmt(CONFIG.LEVY_COST)}) : +${now} soldats tout de suite (${Math.round(Game.levyInstantShare(Game.human) * 100)} % de ton armée maximum : ${Game.landRank(Game.human) === 1 ? '1er' : Game.landRank(Game.human) + 'e'} au classement des terres), puis ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s ` +
       `(pour toi, jusqu'à x${best.replace('.', ',')} quand elle est presque vide ; plus guère d'effet au-delà de la moitié de ton armée maximum). ` +
       'Plus ton royaume est petit face au plus grand, plus il est fort.',
-      `Mass recruitment (💰 ${fmt(CONFIG.LEVY_COST)}): +${now} soldiers right away (${Math.round(CONFIG.LEVY_INSTANT * 100)}% of your max army), then your army rebuilds much faster for ${CONFIG.LEVY_TIME} s ` +
+      `Mass recruitment (💰 ${fmt(CONFIG.LEVY_COST)}): +${now} soldiers right away (${Math.round(Game.levyInstantShare(Game.human) * 100)}% of your max army: #${Game.landRank(Game.human)} in land), then your army rebuilds much faster for ${CONFIG.LEVY_TIME} s ` +
       `(for you, up to x${best} when it is nearly empty; hardly any effect above half of your max army). ` +
       'The smaller your kingdom compared to the largest one, the stronger it is.');
   },

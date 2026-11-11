@@ -998,8 +998,20 @@ const GameRules = {
     return null;
   },
 
-  // Combien de soldats un recrutement de masse donne tout de suite à p (LEVY_INSTANT de son armée maximum)
-  levyInstant(p) { return Math.round(this.maxTroops(p) * CONFIG.LEVY_INSTANT); },
+  // Combien de soldats un recrutement de masse donne tout de suite à p : une part de son armée maximum, selon sa place
+  // au classement des terres (voir LEVY_INSTANT)
+  levyInstant(p) { return Math.round(this.maxTroops(p) * this.levyInstantShare(p)); },
+  levyInstantShare(p) {
+    const rank = this.landRank(p);
+    for (const [upTo, share] of CONFIG.LEVY_INSTANT) if (rank <= upTo) return share;
+    return 0;
+  },
+  // La place de p au classement des terres (1 = le plus grand), parmi les royaumes vivants (sans les pillards)
+  landRank(p) {
+    let rank = 1;
+    for (const q of this.players) if (q !== p && q.alive && !q.raiders && (q.tiles > p.tiles || (q.tiles === p.tiles && q.id < p.id))) rank++;
+    return rank;
+  },
   // Lancer un recrutement de masse : LEVY_COST pièces, des soldats tout de suite (levyInstant), puis un recrutement
   // accéléré pendant LEVY_TIME s. Renvoie une erreur, ou null.
   startLevy(p, a) {
