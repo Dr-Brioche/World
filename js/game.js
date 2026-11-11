@@ -1236,6 +1236,14 @@ const GameRules = {
     // (routes d'assauts en cours : on n'y touche pas, et pour la Croyance elles n'existent pas encore : chaque case
     //  compte comme une case du royaume attaqué, tant que l'assaut n'a pas réussi)
     const routeOf = new Map(this.pendingRoutes()), routes = new Set(routeOf.keys());
+    // (🛣️ et tout le chemin d'un assaut en cours : le chemin prévu jusqu'à sa cible et le couloir autour. Tant que
+    //  l'assaut n'est pas résolu, la Croyance n'y touche pas, ni d'un côté ni de l'autre : sinon elle ronge le départ
+    //  de sa route, et l'armée est repoussée sans fin)
+    for (const a of this.attacks) {
+      if (a.done || a.won || a.castleTaken || a.target < 0) continue;
+      for (const t of a.pathTiles || a.path || []) routes.add(t);
+      if (a.limitZone) for (const t of a.limitZone) routes.add(t);
+    }
     const sites = new Set();
     for (const w of this.walls) if (!w.done) for (const t of w.tiles) sites.add(t);
     // On ne prêche que depuis une zone de royaume : pas une zone d'avant-poste, pas un morceau coupé de ses villes
@@ -4318,6 +4326,12 @@ const GameRules = {
     const r = this.regions(true, target), pieces = []; // (⏱️ le découpage des seules terres de target : voir regions)
     const routes = new Set(), open = new Set();
     for (const [t] of this.pendingRoutes()) if (this.owner[t] === target) routes.add(t); else open.add(t);
+    // (✝️ après une conversion : le couloir d'un assaut en cours de target, son chemin et ses abords, lui reste aussi)
+    if (faith) for (const a of this.attacks) {
+      if (a.done || a.won || a.castleTaken || a.attacker !== target || a.target < 0) continue;
+      for (const t of a.pathTiles || a.path || []) if (this.owner[t] === target) routes.add(t);
+      if (a.limitZone) for (const t of a.limitZone) if (this.owner[t] === target) routes.add(t);
+    }
     // (✝️ après une conversion par la Croyance : un morceau coupé seulement par la route d'un assaut en cours n'est
     //  pas pris ; la route n'est pas encore une vraie conquête, elle lui revient si l'assaut échoue)
     const byRoute = tiles => faith && open.size && tiles.some(i => {
@@ -6574,8 +6588,18 @@ const GameRules = {
       }
       // Déjà relié au royaume (par un autre chemin) : les soldats rejoignent sa défense
       if (!this.isIsolated(a.link)) return this.linkArrives(a);
-      // Fin de la préparation : on recalcule le chemin, la frontière a pu bouger
-      if (this.tick === a.startTick) {
+      // Fin de la préparation : on recalcule le chemin, la frontière a pu bouger… sauf si l'ancien tient toujours (il
+      // part encore de nos terres, traverse toujours les terres visées et touche encore le morceau du bâtiment isolé) :
+      // la Croyance de l'ennemi, qui ronge nos terres pendant la marche, ne doit pas repousser l'armée plus loin
+      let keepPath = this.tick === a.startTick && a.path && a.path.length && this.countNeighborsOwnedBy(a.path[0], a.attacker) > 0
+        && a.path.every(t => this.owner[t] === a.target && !this.wallAt[t]);
+      if (keepPath) {
+        const piece = this.castlePiece(a.link), end = a.path[a.path.length - 1];
+        let touch = false;
+        this.forNeighbors(end, n => { if (piece.has(n)) touch = true; });
+        if (touch) a.piece = piece; else keepPath = false;
+      }
+      if (this.tick === a.startTick && !keepPath) {
         const route = this.linkRoute(a.attacker, a.link, a.target);
         if (!route) {
           if (this.players[a.attacker].isHuman) UI.log(tr('🚫 Le passage vers ton bâtiment isolé est bloqué : assaut annulé.', '🚫 The way to your isolated building is blocked: assault cancelled.'), 'warn');
@@ -6641,6 +6665,15 @@ const GameRules = {
       if (t < 0) {
         // Plus aucune case à prendre devant l'armée : un assaut vers un objectif reprend sa route (voir resumeAssault)
         if (this.resumeAssault(a)) continue;
+        // (🛣️ un assaut de jonction barré en route, par un autre royaume ou une muraille : il cherche un nouveau chemin,
+        //  une fois par tour, au lieu d'abandonner)
+        if (a.link >= 0 && a.rerouteTick !== this.tick && !this.isPreparing(a)) {
+          a.rerouteTick = this.tick;
+          if (this.rerouteAssault(a)) {
+            for (const t of this.buildFrontier(a.attacker, a.target)) if (a.limitZone.has(t) && !a.set.has(t)) { a.set.add(t); a.list.push(t); }
+            continue;
+          }
+        }
         const p = this.players[a.attacker];
         if (p.isHuman && a.target >= 0 && this.players[a.target].alive) {
           const c = a.targetCastle;

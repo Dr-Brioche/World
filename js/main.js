@@ -269,7 +269,7 @@ const UI = {
       if (!a) return;
       const o = Object.assign({}, a.order);
       if (a.pick) { if (!(this.campTarget >= 0)) return; o.target = this.campTarget; }
-      this.act(o, err => { if (err) this.log(err, 'warn'); else if (a.ok) this.log(a.ok(), 'good'); this.campKey = ''; this.refreshCampPanel(); });
+      this.actOnce('camp:' + o.k, o, err => { if (err) this.log(err, 'warn'); else if (a.ok) this.log(a.ok(), 'good'); this.campKey = ''; this.refreshCampPanel(); });
     });
     $('objectives').addEventListener('click', e => {
       // 🎯 Clic sur un objectif qui a un lieu (« prendre Acre ») : la caméra y va (un 2e clic : le lieu suivant, s'il y en a
@@ -1014,6 +1014,15 @@ const UI = {
   act(o, done, before) {
     if (Game.online) return Net.sendOrder(o, done, before);
     this.runMine(o, done, before);
+  },
+  // ⏳ Comme act, mais un seul ordre de ce genre (key) à la fois : tant que le précédent n'est pas revenu (en ligne, le
+  // serveur met un moment à répondre), les clics suivants sont ignorés. Pour les boutons qu'on clique vite plusieurs
+  // fois (croisade, recrutement de masse, relique…). (au bout de 5 s sans réponse, le verrou saute quand même)
+  actOnce(key, o, done, before) {
+    const P = this.pendingActs || (this.pendingActs = new Map()), now = performance.now();
+    if (P.has(key) && now - P.get(key) < 5000) return;
+    P.set(key, now);
+    this.act(o, (...args) => { P.delete(key); if (done) done(...args); }, before);
   },
   // Exécute un de nos ordres et affiche son résultat (en ligne : au tour où il revient du serveur)
   runMine(o, done, before) {
@@ -2716,7 +2725,7 @@ const UI = {
   // 📿 Envoyer une armée (selon le curseur « Envoyer ») chercher la relique id
   relicFetch(id) {
     const G = Game, h = G.human;
-    this.act({ k: 'relic', id, troops: h.troops * this.ratio }, (err, before) => {
+    this.actOnce('relic', { k: 'relic', id, troops: h.troops * this.ratio }, (err, before) => {
       if (err) return this.log(err, 'warn');
       Music.sound('assault');
       this.log(tr(`📿 ${fmt(before - h.troops)} soldats partent chercher la relique ! Il faudra la rapporter à ton église de niveau ${CONFIG.RELIC.CHURCH_LEVEL} : défends-les en chemin.`,
@@ -3186,7 +3195,7 @@ const UI = {
     const now = performance.now();
     if (now - (this.lastCrusade || 0) < CONFIG.CRUSADE_CLICK_GAP * 1000) return;
     this.lastCrusade = now;
-    this.act({ k: 'crusade', a }, err => {
+    this.actOnce('crusade', { k: 'crusade', a }, err => {
       if (err) return this.log(err, 'warn');
       Music.sound('crusade'); // (🔔 le son de la croisade)
       this.log(tr(`✝️ Croisade religieuse lancée : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance pendant ${CONFIG.CRUSADE_TIME} s ! Tes prêcheurs vont convertir les terres voisines bien plus vite.`,
@@ -3257,7 +3266,7 @@ const UI = {
   },
   levy(a) {
     const now = fmt(Game.levyInstant(Game.human)); // (les soldats donnés tout de suite, comptés avant le lancement)
-    this.act({ k: 'levy', a }, err => {
+    this.actOnce('levy', { k: 'levy', a }, err => {
       if (err) return this.log(err, 'warn');
       Music.sound('levy'); // (🔔 le son des renforts)
       this.log(tr(`⚔️ Recrutement de masse lancé : +${now} soldats tout de suite, puis ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s (surtout si elle est petite) !`,
