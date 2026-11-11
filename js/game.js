@@ -3050,9 +3050,7 @@ const GameRules = {
         p.troops += shown;
       }
       // Le joueur ne voit que la production de ses propres bâtiments
-      // (sous 10 : une décimale, pour qu'une caserne qui donne 0,4 soldat ne s'affiche pas comme une qui en donne 1,4)
-      const num = shown < 10 ? (Math.round(shown * 10) / 10).toString().replace('.', LANG === 'fr' ? ',' : '.') : Math.round(shown);
-      if (p.isHuman && shown >= 0.1) Render.floatText(a, t, `+${num} ${t === B_BARRACKS ? '⚔️' : '💰'}`);
+      if (p.isHuman && shown >= 0.5) Render.floatText(a, t, `+${Math.round(shown)} ${t === B_BARRACKS ? '⚔️' : '💰'}`);
     }
   },
 
