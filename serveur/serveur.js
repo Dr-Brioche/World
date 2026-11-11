@@ -177,6 +177,7 @@ function cleanSettings(s) {
     difficulty: DIFFICULTIES.includes(s.difficulty) ? s.difficulty : 'normal',
     opponents: Math.max(0, Math.min(30, s.opponents | 0)),
     spawnMode: SPAWN_MODES.includes(s.spawnMode) ? s.spawnMode : 'libre',
+    glory: !!s.glory, // (🌿🎲 carte aléatoire en mode « Gloire »)
   };
 }
 // La prochaine partie publique : une carte au hasard

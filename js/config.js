@@ -269,6 +269,12 @@ const CONFIG = {
   // jauge pour tous, en haut au milieu, se remplit de la gloire de chacun. Quand elle est pleine (GOAL points en tout),
   // le royaume qui en a le plus l'emporte.
   GLORY: { GOAL: 8000, FLOAT_EVERY: 5 }, // (FLOAT_EVERY : toutes les combien de secondes « +X 🌿 » s'affiche au-dessus des tours)  // secondes (vraies) entre deux clics qui lancent une croisade : pas de croisades en rafale par erreur
+  // 🌿🎲 Le mode « Gloire » des cartes aléatoires (menu des cartes, colonne « Mode ») : des filons de gloire posés au
+  // hasard, de préférence dans des creux de montagne (une petite vallée entourée de montagnes). Leur nombre suit le
+  // nombre de royaumes de la partie : PER_PLAYER par royaume, plus EXTRA (entre MIN et MAX).
+  // HOLLOW_R : le rayon (en cases) où l'on compte les montagnes autour du creux ; SPACING : deux filons de gloire sont
+  // au moins à cette part de l'écart « idéal » (les terres partagées entre eux) l'un de l'autre.
+  RANDOM_GLORY: { PER_PLAYER: 0.5, EXTRA: 1, MIN: 3, MAX: 12, HOLLOW_R: 7, SPACING: 0.6 },
   // Vitesse de la conversion selon l'écart de Croyance : [écart, secondes pour convertir une case].
   // (entre deux lignes, on passe en douceur de l'une à l'autre ; plus petit que 20 : encore plus lent ;
   //  500 d'écart : 2 cases par seconde ; 1000 : 5 par seconde ; au-delà, ça accélère de moins en moins :
@@ -681,6 +687,8 @@ const MINES = {
       { name: tr('Citadelle de gloire', 'Glory citadel'), img: 'img/gloire3.webp', size: 3.8, upgradeCost: 2500 }] }, // (size : la largeur de l'image, en cases, réglée pour que les 3 tours aient la même base : le corps de la tour de bois, celui de la tour de pierre et la tour centrale de la citadelle font tous environ 1,7 case de large)
 };
 const MINE_KINDS = ['iron', 'gold', 'stone', 'diamond', 'glory'];
+// 🎲 Les cartes aléatoires (créées à chaque partie) : elles seules ont le mode « Gloire » du menu (voir RANDOM_GLORY)
+const RANDOM_MAP_TYPES = ['normal', 'continental', 'naval'];
 
 // 🗼 Les 5 niveaux de la tour de garde (pas encore disponible : voir CONFIG.TOWERS) : chaque seconde,
 // elle abat damage soldats des armées ennemies qui se battent à moins de range cases d'elle (la plus proche d'abord).

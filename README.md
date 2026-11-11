@@ -17,7 +17,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
 ## 📜 Le jeu en bref
 
 - 🗺️ **Une carte différente à chaque partie** : plaines, forêts, déserts, collines, montagnes, sommets enneigés, fleuves, lacs et mers,
-  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale), 17 **🏟️ cartes arène** symétriques
+  avec 4 sortes de cartes : 3 cartes **aléatoires** (Normale, Continentale, Base navale ; en mode Normal ou **🌿 Gloire**), 17 **🏟️ cartes arène** symétriques
   (La Couronne, Le Cratère, Le Labyrinthe, Les Mille Ponts, La Mer Intérieure, La Mêlée à 20 joueurs… et 3 arènes de gloire : L'Octogone de la Gloire, Le Trône des Trois et Les Trois Trônes), 3 cartes **prédéfinies**
   (**Monde** et **Europe**, les vraies cartes, et **Azeroth**, le monde de Warcraft au temps du Norfendre) en départ classique,
   et des **📜 scénarios** : une carte avec des camps et des départs imposés (**Azeroth : les Factions**,
@@ -149,6 +149,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - **Continentale** : pas de mer, que de la terre, bordée de **montagnes infranchissables** en guise de limite
      de carte ; les fleuves s'y jettent dans de **grands lacs**.
    - **Base navale** : **plusieurs grandes îles** ; les ports et les expéditions maritimes deviennent essentiels.
+   🌿 **Mode Gloire** : à droite des cartes aléatoires, une colonne **Mode** a deux boutons, **Normal** (par défaut) et
+   **🌿 Gloire**. En mode Gloire, la carte aléatoire reçoit des **tours de gloire** posées au hasard, de préférence dans des
+   **creux de montagne** (un petit vallon de terre basse entouré de montagnes et de sommets), loin les unes des autres et des
+   autres filons, et toujours sur une grande terre qu'on peut atteindre. Leur **nombre suit le nombre de royaumes** : environ
+   une pour deux royaumes, plus une (3 au moins, 12 au plus ; réglage `RANDOM_GLORY` dans `js/config.js`). La partie se
+   joue alors comme sur une carte de gloire : la jauge de gloire, et la victoire au plus glorieux. Marche aussi en ligne.
    📏 **Taille de la carte** (pour les cartes aléatoires, au format 16:9) : **Petite** (300 x 169 cases), **Moyenne**
    (650 x 366) ou **Grande** (1000 x 562). Une grande carte a plus d'îlots, de fleuves et de lacs, et une partie plus longue.
    🗺️ **Cartes prédéfinies** (les vraies cartes, avec un peu de hasard dans les forêts et les côtes) :
@@ -1337,6 +1343,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.74** : 🌿 **mode Gloire pour les cartes aléatoires** : dans le choix des cartes, à côté des cartes aléatoires (Normale, Continentale, Base navale), une colonne **Mode** avec deux boutons, **Normal** (par défaut) et **🌿 Gloire**. En mode Gloire, des **tours de gloire** sont posées au hasard sur la carte, de préférence dans des **creux de montagne**, et leur nombre suit le nombre de royaumes (environ une pour deux, plus une : de 3 à 12) ; la jauge de gloire et la victoire à la gloire s'y ajoutent, comme sur les cartes de gloire. Le mode choisi s'affiche sur le bouton de la carte (« Normale · 🌿 Gloire ») et dans sa description ; en ligne, l'hôte d'un salon le choisit aussi.
 - **v0.98.73** : la production affichée au-dessus des moulins et des casernes revient à des nombres entiers (arrondis), sans décimale.
 - **v0.98.72** : ⚔️ **les niveaux des casernes comptent vraiment** : plus on a de casernes, moins chacune produit (−10 % de rendement par caserne en plus), mais ce que les niveaux 2 et 3 ajoutent baisse maintenant **3 fois moins vite** (réglage `BARRACKS_UPGRADE_DIMINISHING`) : avec 54 casernes, une caserne de niveau 1 donne ≈ 0,4 soldat, de niveau 2 ≈ 1,4, de niveau 3 ≈ 3,8 (au lieu de 0,4 / 0,8 / 1,8). · 🧱 **défendre une mine fortifiée** (ou une tour de gloire fortifiée) reliée au royaume se fait aussitôt, comme une ville : les défenseurs sortent de ses murs au lieu de marcher depuis la ville la plus proche. · ✂️ **la Croyance referme les langues de terre** : une case dans un couloir étroit du royaume converti (1 à 3 cases de large, entre deux de tes terres) passe avant les cases qui avancent vers les églises et les ports (réglage `FAITH_NECK`) ; avec +100 de Croyance, une langue de 2 cases de large est presque entièrement refermée en 90 s, au lieu d'à moitié.
 - **v0.98.71** : ✝️ **la Croyance ne repousse plus les assauts sans fin** : tant qu'un assaut est en cours, elle ne touche plus à rien de son chemin (sa route, le chemin prévu jusqu'à sa cible et le couloir autour), ni d'un côté ni de l'autre, et un morceau coupé par la conversion ne t'apporte pas ce couloir. Un **assaut de jonction** (pour relier une ville encerclée) garde son chemin à la fin de sa marche s'il est toujours bon, au lieu d'en recalculer un plus loin parce que la Croyance ennemie a rongé ses terres pendant la marche ; et s'il est barré en route (par un autre royaume, une muraille), il cherche un nouveau chemin au lieu d'abandonner. Avant, une ville encerclée chez un royaume à forte Croyance ne pouvait presque jamais être reliée : son armée était repoussée en arrière à chaque fois. · ⏳ **plus de clics en rafale** : en ligne, tant que l'ordre d'une croisade, d'un recrutement de masse, d'une expédition de relique ou d'un bouton du panneau de campagne n'est pas revenu du serveur, les clics suivants sont ignorés (on ne lance plus plusieurs croisades d'un coup à cause de la latence).
