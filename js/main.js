@@ -428,7 +428,7 @@ const UI = {
   MENU_KEY: 'medievalEmperor.menu',
   saveMenu() {
     const name = $('name').value.trim(), v = id => $(id).value;
-    const s = { banner: this.banner, mapType: v('mapType'), mapSize: v('mapSize'), pacts: v('pacts'), spawnMode: v('spawnMode'),
+    const s = { banner: this.banner, mapType: v('mapType'), mapMode: v('mapMode'), mapSize: v('mapSize'), pacts: v('pacts'), spawnMode: v('spawnMode'),
       difficulty: v('difficulty'), opponents: v('opponents'),
       // (le nom, s'il n'est pas celui par défaut : sinon on laisse celui de la nouvelle langue)
       name: name && name !== 'Mon Royaume' && name !== 'My Kingdom' ? name : '' };
@@ -446,6 +446,7 @@ const UI = {
       $(id).dispatchEvent(new Event('change'));
     };
     set('mapType', s.mapType); // (d'abord la carte : elle règle la taille, le placement, les bannières et les rivaux possibles)
+    set('mapMode', s.mapMode);
     set('mapSize', s.mapSize);
     set('pacts', s.pacts);
     set('spawnMode', s.spawnMode);
@@ -497,7 +498,13 @@ const UI = {
         };
         // (🌿 les cartes arène : deux colonnes, les classiques à gauche, les cartes de gloire à droite)
         const glory = arena ? opts.filter(o => ARENA_MAPS[o.value] && ARENA_MAPS[o.value].glory) : [];
-        const body = glory.length
+        // (🎲 les cartes aléatoires : deux colonnes, les cartes à gauche, et à droite le mode, « Normal » ou « Gloire »)
+        const random = opts.every(o => RANDOM_MAP_TYPES.includes(o.value));
+        const mode = (v, label) => `<button type="button" data-mode="${v}"><span>${label}</span></button>`;
+        const body = random
+          ? `<div class="opts cols2"><div class="col"><div class="colTitle">${tr('Cartes', 'Maps')}</div>${opts.map(item).join('')}</div>` +
+            `<div class="col"><div class="colTitle">${tr('Mode', 'Mode')}</div>${mode('normal', tr('Normal', 'Normal'))}${mode('gloire', tr('🌿 Gloire', '🌿 Glory'))}</div></div>`
+          : glory.length
           ? `<div class="opts cols2"><div class="col"><div class="colTitle">${tr('Classiques', 'Classic')}</div>${opts.filter(o => !glory.includes(o)).map(item).join('')}</div>` +
             `<div class="col"><div class="colTitle">${tr('🌿 Gloire', '🌿 Glory')}</div>${glory.map(item).join('')}</div></div>`
           : `<div class="opts">${opts.map(item).join('')}</div>`;
@@ -510,8 +517,10 @@ const UI = {
     }));
     const show = () => {
       const o = sel.selectedOptions[0];
-      btn.innerHTML = `${iconSVG(o.parentNode.dataset.icon)}<span>${escapeHtml(o.textContent)}</span><span>▾</span>`;
-      panel.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.map === sel.value));
+      const glory = this.randomGloryPicked() ? tr(' · 🌿 Gloire', ' · 🌿 Glory') : ''; // (🌿🎲 le mode « Gloire » d'une carte aléatoire)
+      btn.innerHTML = `${iconSVG(o.parentNode.dataset.icon)}<span>${escapeHtml(o.textContent)}${glory}</span><span>▾</span>`;
+      panel.querySelectorAll('button[data-map]').forEach(b => b.classList.toggle('active', b.dataset.map === sel.value));
+      panel.querySelectorAll('button[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === $('mapMode').value));
       if (!panel.classList.contains('hidden')) this.showMapPreview(sel.value);
     };
     btn.addEventListener('click', e => {
@@ -530,6 +539,13 @@ const UI = {
     });
     panel.addEventListener('mouseleave', () => this.showMapPreview(sel.value));
     panel.addEventListener('click', e => {
+      // (🌿🎲 un bouton du mode : on le choisit, le panneau reste ouvert pour choisir la carte)
+      const m = e.target.closest('button[data-mode]');
+      if (m) {
+        $('mapMode').value = m.dataset.mode;
+        $('mapMode').dispatchEvent(new Event('change'));
+        return;
+      }
       const b = e.target.closest('button[data-map]');
       if (!b) return;
       sel.value = b.dataset.map;
@@ -537,8 +553,11 @@ const UI = {
       panel.classList.add('hidden');
     });
     sel.addEventListener('change', show);
+    $('mapMode').addEventListener('change', show);
     show();
   },
+  // 🌿🎲 Le mode « Gloire » est-il choisi, pour une carte aléatoire ? (sur les autres cartes, il ne change rien)
+  randomGloryPicked(t = $('mapType').value) { return $('mapMode').value === 'gloire' && RANDOM_MAP_TYPES.includes(t); },
 
   // 🗺️ L'aperçu d'une carte, dans le choix des cartes. Les cartes prédéfinies et les scénarios ne changent pas : une
   // image tirée du jeu (img/cartes/). Les autres sont créées à chaque partie : une petite carte dessinée (un exemple :
@@ -566,7 +585,9 @@ const UI = {
     if (!box) return;
     const o = $('mapType').querySelector(`option[value="${CSS.escape(t)}"]`);
     panel.querySelector('.pvName').textContent = o ? o.textContent : '';
-    panel.querySelector('.pvDesc').textContent = this.mapDesc(t);
+    panel.querySelector('.pvDesc').textContent = this.mapDesc(t) + (this.randomGloryPicked(t)
+      ? tr(' Mode Gloire : des tours de gloire à bâtir, cachées dans les creux des montagnes (plus il y a de royaumes, plus il y en a) ; le premier à remplir la jauge de gloire gagne.',
+        ' Glory mode: glory towers to build, hidden in the mountain hollows (the more kingdoms, the more towers); the first to fill the glory gauge wins.') : '');
     this.mapPreviews = this.mapPreviews || new Map();
     this.previewWanted = t;
     let el = this.mapPreviews.get(t);
@@ -677,6 +698,7 @@ const UI = {
       pacts: $('pacts').value === 'oui',
       spotMode: $('spawnMode').value === 'places', // (🏟️ carte arène : fonder sa capitale à une place prévue)
       spawnMode: $('spawnMode').value, // (🏟️ carte arène, placement aléatoire : les bots aussi vont aux places prévues)
+      glory: this.randomGloryPicked(), // (🌿🎲 carte aléatoire en mode « Gloire » : voir Game.placeRandomGlory)
       seed: this.nextSeed, // (en solo : rien, une graine au hasard ; voir Game.init)
     });
   },
@@ -690,6 +712,7 @@ const UI = {
       difficulty: DIFFICULTIES[s.difficulty] ? s.difficulty : 'normal',
       opponents: Math.max(0, s.opponents | 0),
       pacts: !!s.pacts,
+      glory: !!s.glory, // (🌿🎲 carte aléatoire en mode « Gloire »)
       // (🏟️ placement des capitales : les places prévues d'une carte arène, au hasard, ou libre ; voir beginOnline)
       spotMode: s.spawnMode === 'places', spawnRandom: s.spawnMode === 'aleatoire', spawnMode: s.spawnMode,
     });
@@ -888,7 +911,7 @@ const UI = {
     $('netJoin').addEventListener('click', () => { if ($('netCode').value.trim()) Net.joinRoom($('netCode').value); });
     $('netCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('netJoin').click(); });
     // (l'hôte d'un salon privé change un réglage : tout le salon le voit ; les scénarios restent pour le jeu en solo)
-    for (const id of ['mapType', 'mapSize', 'pacts', 'difficulty', 'opponents', 'spawnMode']) {
+    for (const id of ['mapType', 'mapMode', 'mapSize', 'pacts', 'difficulty', 'opponents', 'spawnMode']) {
       $(id).addEventListener('change', () => {
         if (!Net.room) return;
         if (id === 'mapType' && !CONFIG.NET.MAPS.includes($('mapType').value)) {
@@ -925,7 +948,7 @@ const UI = {
   netSettings() {
     const m = $('mapType').value;
     return { mapType: CONFIG.NET.MAPS.includes(m) ? m : 'normal', mapSize: $('mapSize').value, pacts: $('pacts').value === 'oui',
-      difficulty: $('difficulty').value, opponents: +$('opponents').value, spawnMode: $('spawnMode').value };
+      difficulty: $('difficulty').value, opponents: +$('opponents').value, spawnMode: $('spawnMode').value, glory: this.randomGloryPicked() };
   },
   netStatus(text, kind = '') {
     $('netStatus').textContent = text;
@@ -987,6 +1010,8 @@ const UI = {
       $('mapSize').dispatchEvent(new Event('change'));
     }
     $('pacts').value = st.pacts ? 'oui' : 'non';
+    const mode = st.glory ? 'gloire' : 'normal'; // (🌿🎲 le mode des cartes aléatoires)
+    if ($('mapMode').value !== mode) { $('mapMode').value = mode; $('mapMode').dispatchEvent(new Event('change')); }
     if (DIFFICULTIES[st.difficulty]) $('difficulty').value = st.difficulty;
     // (le placement des capitales : « Places prévues » n'existe que sur une carte arène)
     const sp = $('spawnMode').querySelector(`option[value="${st.spawnMode}"]`);

@@ -65,6 +65,8 @@ const GameRules = {
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
     this.placeDeposits(); // ⛏️ les filons de minerai (voir MINES)
+    // (🌿🎲 le mode « Gloire » d'une carte aléatoire : ses filons de gloire sont posés plus bas, une fois les royaumes connus)
+    this.randomGlory = !!opts.glory && RANDOM_MAP_TYPES.includes(this.mapType);
     this.gloryMode = this.deposits.some(d => d.kind === 'glory'); // (🌿 une carte de gloire : la jauge et sa victoire)
     // 🏟️ Carte arène : ses places de départ prévues (vides : on y fonde sa capitale). Le placement (menu) :
     //  - « Libre » : chacun commence où il veut, les bots aussi (n'importe où, pas forcément à une place prévue) ;
@@ -125,6 +127,8 @@ const GameRules = {
     for (let k = 0; k < bots && k < banners.length && names[k]; k++) {
       this.addPlayer(names[k], banners[k], false);
     }
+    // 🌿🎲 Carte aléatoire en mode « Gloire » : ses filons de gloire (avant que les capitales se posent : elles restent loin)
+    if (this.randomGlory) { this.placeRandomGlory(this.players.length); this.gloryMode = this.deposits.some(d => d.kind === 'glory'); }
     this.phase = 'spawn';
     if (!this.botsLater) this.spawnBots();
     // (🌐 placement aléatoire en ligne : tout le monde est placé au hasard tout de suite ; il reste quelques secondes
@@ -674,6 +678,71 @@ const GameRules = {
         made++;
       }
     }
+  },
+  // 🌿🎲 Les filons de gloire d'une carte aléatoire en mode « Gloire » (voir CONFIG.RANDOM_GLORY) : leur nombre suit le
+  // nombre de royaumes (players). Chacun va de préférence dans un « creux de montagne » : un carré de 2x2 cases de
+  // terre basse (pas de montagne), avec beaucoup de montagnes et de sommets tout autour. Ils restent loin les uns des
+  // autres, et des autres filons ; et jamais dans un recoin fermé (une vallée enfermée par les sommets, ou un îlot) :
+  // seulement sur une grande terre, qu'on peut atteindre à pied.
+  placeRandomGlory(players) {
+    const RG = CONFIG.RANDOM_GLORY, W = this.W, H = this.H, T = this.terrain, R = RG.HOLLOW_R, TPS = CONFIG.TICKS_PER_SECOND;
+    const want = Math.max(RG.MIN, Math.min(RG.MAX, Math.round(players * RG.PER_PLAYER) + RG.EXTRA));
+    // 1. Les grandes terres : on numérote les morceaux de terre (les fleuves se traversent, la mer et les sommets non) ;
+    //    un filon de gloire ne va que sur un morceau d'au moins 4 % des terres
+    const part = new Int32Array(this.N).fill(-1), sizes = [];
+    for (let i = 0; i < this.N; i++) {
+      if (part[i] >= 0 || !this.isLand(i)) continue;
+      const k = sizes.length, stack = [i];
+      let n = 0;
+      part[i] = k;
+      while (stack.length) {
+        const j = stack.pop();
+        n++;
+        this.forNeighbors(j, v => { if (part[v] < 0 && this.isLand(v)) { part[v] = k; stack.push(v); } });
+      }
+      sizes.push(n);
+    }
+    const big = k => k >= 0 && sizes[k] >= this.landCount * 0.04;
+    // 2. Le nombre de montagnes (et de sommets) autour de chaque case, d'un coup : une table des sommes
+    const hi = j => T[j] === TERRAIN.MOUNTAIN || T[j] === TERRAIN.PEAK || T[j] === TERRAIN.SNOW;
+    const S = new Int32Array((W + 1) * (H + 1));
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      S[(y + 1) * (W + 1) + x + 1] = (hi(y * W + x) ? 1 : 0) + S[y * (W + 1) + x + 1] + S[(y + 1) * (W + 1) + x] - S[y * (W + 1) + x];
+    }
+    const box = (x0, y0, x1, y1) => { // (les montagnes du rectangle [x0, x1] x [y0, y1], bords compris)
+      x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W - 1, x1); y1 = Math.min(H - 1, y1);
+      return S[(y1 + 1) * (W + 1) + x1 + 1] - S[y0 * (W + 1) + x1 + 1] - S[(y1 + 1) * (W + 1) + x0] + S[y0 * (W + 1) + x0];
+    };
+    // 3. Les places possibles et leur note : la part de montagnes autour (sans compter le creux lui-même), un peu au hasard
+    const low = j => this.claimable(j) && !hi(j);
+    const spots = [];
+    for (let y = R; y < H - R - 2; y++) for (let x = R; x < W - R - 2; x++) {
+      const a = y * W + x, cells = [a, a + 1, a + W, a + W + 1];
+      if (!cells.every(low) || cells.some(j => this.depositTile[j]) || !big(part[a])) continue;
+      // (le creux lui-même, 6 x 6 cases autour du filon : surtout de la terre basse, un vrai petit vallon, pas une fente
+      //  dans la roche ; ce qui l'entoure, jusqu'à HOLLOW_R cases : le plus de montagnes possible)
+      const inner = box(x - 2, y - 2, x + 3, y + 3);
+      if (inner > 12) continue;
+      const ring = box(x - R, y - R, x + 1 + R, y + 1 + R) - inner;
+      const area = (2 * R + 2) ** 2 - 36;
+      spots.push({ a, x, y, score: (ring / area - inner / 72) * (0.8 + 0.4 * this.rand()) });
+    }
+    spots.sort((p, q) => q.score - p.score || p.a - q.a);
+    // 4. On prend les meilleures, assez loin les unes des autres (sinon, on rapproche un peu, jusqu'à en avoir assez)
+    let gap = Math.sqrt(this.landCount / want) * RG.SPACING;
+    for (let made = 0; made < want && gap >= CONFIG.MINE_SPACING; gap *= 0.8) {
+      for (const sp of spots) {
+        if (made >= want) break;
+        const far = this.deposits.every(d => DMath.hypot(d.a % W - sp.x, ((d.a / W) | 0) - sp.y) >= (d.kind === 'glory' ? gap : CONFIG.MINE_SPACING));
+        if (!far) continue;
+        const d = { a: sp.a, kind: 'glory', left: MINES.gold.time * TPS, progress: 0, paid: 0 };
+        this.deposits.push(d);
+        this.depositAt.set(sp.a, d);
+        for (const j of [sp.a, sp.a + 1, sp.a + W, sp.a + W + 1]) { this.depositTile[j] = 1; T[j] = TERRAIN.HILLS; } // (🌿 la gloire : sur une colline)
+        made++;
+      }
+    }
+    this.depositCapMemo = null;
   },
   // Retire le filon qui couvre la case j (un château de départ posé dessus)
   removeDeposit(j) {
