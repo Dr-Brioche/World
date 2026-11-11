@@ -8,7 +8,7 @@
 //  - gold, army, land, level, faith, kills : avoir n pièces d'or, n soldats, pct % des terres, une ville de niveau n,
 //    n de Croyance (de Légitimité), anéanti n royaumes ;
 //  - count : avoir n bâtiments de la sorte b ('church', 'port', 'mine', 'outpost') ;
-//  - walls, vikings, razed : n murs bâtis, n assauts vikings lancés, n villes rasées (raids, chevauchées) ;
+//  - walls, vikings, razed : n murs bâtis, n assauts vikings lancés, n villes mises à sac (raids, chevauchées, Vikings des campagnes) ;
 //  - destroy : que la faction role ait disparu ;
 //  - obj : un objectif du scénario (voir OBJECTIVES), comme { kind: 'noEnglish' } ;
 //  - king, joan (guerre de Cent Ans) : que le roi Jean ait été capturé, que Jeanne d'Arc ait été prise ;
