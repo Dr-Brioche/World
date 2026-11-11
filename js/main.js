@@ -350,6 +350,7 @@ const UI = {
       });
     });
 
+    this.setupLbFold();
     // pointerdown plutôt que click : le classement est redessiné souvent
     $('lb').addEventListener('pointerdown', e => {
       const btn = e.target.closest('button[data-ally]');
@@ -555,6 +556,24 @@ const UI = {
     sel.addEventListener('change', show);
     $('mapMode').addEventListener('change', show);
     show();
+  },
+  // 🔽 La flèche du titre « Royaumes » : un clic (sur la flèche ou le titre) cache le classement, un autre le remontre.
+  // Le choix est gardé dans le navigateur pour les parties suivantes.
+  LB_FOLD_KEY: 'medievalEmperor.lbFolded',
+  setupLbFold() {
+    const side = $('side'), btn = $('lbFold');
+    const apply = folded => {
+      side.classList.toggle('folded', folded);
+      btn.title = folded ? tr('Montrer le classement des royaumes', 'Show the kingdoms leaderboard') : tr('Cacher le classement des royaumes', 'Hide the kingdoms leaderboard');
+    };
+    let folded = false;
+    try { folded = localStorage.getItem(this.LB_FOLD_KEY) === '1'; } catch (e) { /* (navigateur sans stockage) */ }
+    apply(folded);
+    $('lbHead').addEventListener('click', () => {
+      folded = !side.classList.contains('folded');
+      apply(folded);
+      try { localStorage.setItem(this.LB_FOLD_KEY, folded ? '1' : '0'); } catch (e) { /* (sans stockage : tant pis) */ }
+    });
   },
   // 🌿🎲 Le mode « Gloire » est-il choisi, pour une carte aléatoire ? (sur les autres cartes, il ne change rien)
   randomGloryPicked(t = $('mapType').value) { return $('mapMode').value === 'gloire' && RANDOM_MAP_TYPES.includes(t); },
