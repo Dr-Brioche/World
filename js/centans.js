@@ -45,6 +45,28 @@ const CENTANS = {
   // BRIBE_GOLD pièces = ±BRIBE de fidélité (clic droit sur ses terres).
   VASSALS: { DRIFT: 0.004, LEGIT_SCALE: 2, PULL: 60, JOIN: 35, LEAVE: 15, ATTACKED: 25, BRIBE_GOLD: 500, BRIBE: 15,
     AI_BRIBE_EVERY: 60 },
+  // 🤝 Quand le joueur incarne un grand vassal (la Bretagne, la Bourgogne), il reste libre : il ne peut pas demander à
+  // entrer dans un camp, mais de temps en temps (la première fois après FIRST secondes, puis toutes les EVERY secondes,
+  // au hasard entre les deux), un des deux rois lui propose de devenir son vassal contre de l'or (GOLD pièces, adapté à
+  // la difficulté). Le plus souvent (HIST_CHANCE), c'est l'allié historique du moment qui propose (voir ALLIES), et il
+  // paie davantage (+HIST_BONUS). Accepter : on entre dans son camp (son pacte) pour toute la partie, et les offres
+  // s'arrêtent ; refuser : on reste libre, et une autre offre viendra plus tard.
+  VASSAL_OFFER: { FIRST: 150, EVERY: [240, 360], GOLD: 1500, HIST_CHANCE: 0.75, HIST_BONUS: 0.5,
+    // l'allié historique de chaque grand vassal jouable, à partir de chaque année : [année, camp, pourquoi]
+    ALLIES: {
+      bretagne: [
+        [1337, 'france', tr('le duc Jean III est un fidèle du roi de France', 'Duke John III is loyal to the King of France')],
+        [1341, 'angleterre', tr('Jean de Montfort, qui dispute le duché à Charles de Blois, appelle les Anglais à l\'aide', 'John of Montfort, who disputes the duchy with Charles of Blois, calls the English for help')],
+        [1381, 'france', tr('le second traité de Guérande : le duc Jean IV fait la paix avec le roi de France', 'the second treaty of Guérande: Duke John IV makes peace with the King of France')],
+        [1423, 'angleterre', tr('le traité d\'Amiens : le duc Jean V rejoint les Anglais et les Bourguignons', 'the treaty of Amiens: Duke John V joins the English and the Burgundians')],
+        [1427, 'france', tr('Arthur de Richemont, frère du duc, est connétable de France', 'Arthur de Richemont, the duke\'s brother, is Constable of France')],
+      ],
+      bourgogne: [
+        [1337, 'france', tr('le duc de Bourgogne est le premier pair du royaume', 'the Duke of Burgundy is the first peer of the realm')],
+        [1419, 'angleterre', tr('le meurtre de Jean sans Peur à Montereau jette Philippe le Bon dans les bras des Anglais (traité de Troyes, 1420)', 'the murder of John the Fearless at Montereau throws Philip the Good into the arms of the English (treaty of Troyes, 1420)')],
+        [1435, 'france', tr('le traité d\'Arras : Philippe le Bon se réconcilie avec Charles VII', 'the treaty of Arras: Philip the Good makes peace with Charles VII')],
+      ],
+    } },
 
   // 🏹 Les arcs longs anglais : en rase campagne (pas pendant un siège), l'armée du roi d'Angleterre se bat
   // LONGBOW fois mieux (Crécy, Poitiers, Azincourt), jusqu'à LONGBOW_END (Formigny : les canons français)
@@ -114,6 +136,32 @@ const CENTANS = {
     { from: 1422, name: tr('Charles VII', 'Charles VII') },
   ],
   // (les rois d'Angleterre, pour les messages ; Henri V rend ses soldats plus forts : voir HERO_POWER)
+  // 👑 Les dirigeants des autres factions jouables, année par année (pour la barre du haut : celui du joueur ; voir
+  // Game.hyRuler). Le roi de France et le roi d'Angleterre : KINGS et ENGLISH_KINGS.
+  RULERS: {
+    bretagne: [
+      { from: 1337, name: tr('Jean III', 'John III') },
+      { from: 1341, name: tr('Jean de Montfort', 'John of Montfort') },
+      { from: 1345, name: tr('Jean IV', 'John IV') },
+      { from: 1399, name: tr('Jean V', 'John V') },
+      { from: 1442, name: tr('François Ier', 'Francis I') },
+      { from: 1450, name: tr('Pierre II', 'Peter II') },
+    ],
+    bourgogne: [
+      { from: 1337, name: tr('Eudes IV', 'Odo IV') },
+      { from: 1349, name: tr('Philippe de Rouvres', 'Philip of Rouvres') },
+      { from: 1363, name: tr('Philippe le Hardi', 'Philip the Bold') },
+      { from: 1404, name: tr('Jean sans Peur', 'John the Fearless') },
+      { from: 1419, name: tr('Philippe le Bon', 'Philip the Good') },
+    ],
+    ecosse: [
+      { from: 1337, name: tr('David II', 'David II') },
+      { from: 1371, name: tr('Robert II', 'Robert II') },
+      { from: 1390, name: tr('Robert III', 'Robert III') },
+      { from: 1406, name: tr('Jacques Ier', 'James I') },
+      { from: 1437, name: tr('Jacques II', 'James II') },
+    ],
+  },
   ENGLISH_KINGS: [
     { from: 1337, name: tr('Édouard III', 'Edward III') },
     { from: 1377, name: tr('Richard II', 'Richard II') },
@@ -128,7 +176,7 @@ const CENTANS = {
   // 📖 Ce qui change dans cette campagne : un parchemin au début de la partie (voir MECHANICS dans croisades.js)
   MECHANICS: {
     all: [
-      [tr('📅 Le temps', '📅 Time'), tr('de 1337 à 1453, en une heure environ (l\'année et les rois sont en haut). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from 1337 to 1453, in about an hour (the year and the kings are at the top). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
+      [tr('📅 Le temps', '📅 Time'), tr('de 1337 à 1453, en une heure environ (l\'année et ton souverain du moment sont en haut ; au survol, les deux rois). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from 1337 to 1453, in about an hour (the year and your ruler of the moment are at the top; hover for the two kings). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
       [tr('🏰 Pas de nouvelle ville', '🏰 No new cities'), tr('on améliore les siennes et on prend celles des autres.', 'you upgrade your own and take other kingdoms\' cities.')],
       [tr('👑 La Légitimité', '👑 Legitimacy'), tr('elle remplace la Croyance : tes villes, tes églises, le sacre à Reims la font monter ; un roi captif, fou ou pas sacré en perd.', 'it replaces Faith: your cities, your churches and the coronation at Reims raise it; a captive, mad or uncrowned king loses some.')],
       [tr('⚖️ Les grands vassaux', '⚖️ The great vassals'), tr('Bourgogne, Bretagne, Flandre et Navarre suivent le roi le plus légitime, et changent de camp. Achète leur fidélité (500 d\'or) avec le bouton « Vassaux », à droite de l\'écran (ou clic droit sur leurs terres). Attaquer un vassal le fâche.', 'Burgundy, Brittany, Flanders and Navarre follow the most legitimate king, and switch sides. Buy their loyalty (500 gold) with the « Vassals » button, on the right of the screen (or right-click their lands). Attacking a vassal angers it.')],
@@ -148,8 +196,8 @@ const CENTANS = {
         [tr('⚓ Les ports de la Manche', '⚓ The Channel ports'), tr('ils nourrissent tes armées sur le continent : garde-les. Tu débarques en Normandie, comme Édouard III.', 'they feed your armies on the continent: keep them. You land in Normandy, like Edward III.')],
         [tr('💰 Les rançons', '💰 Ransoms'), tr('les chevaliers vaincus paient : le roi d\'Écosse (Neville\'s Cross), le roi de France (Poitiers)…', 'defeated knights pay: the King of Scots (Neville\'s Cross), the King of France (Poitiers)…')],
       ],
-      bourgogne: [[tr('⚖️ Grand vassal', '⚖️ Great vassal'), tr('tu choisis ton roi : ta fidélité penche vers le plus légitime ; en 1419, le meurtre de Montereau peut te jeter dans les bras de l\'Anglais.', 'you choose your king: your loyalty leans towards the most legitimate one; in 1419, the murder at Montereau may throw you into the English king\'s arms.')]],
-      bretagne: [[tr('⚖️ Grand vassal', '⚖️ Great vassal'), tr('ta fidélité penche vers le roi le plus légitime ; la guerre de Succession de Bretagne (1341) déchire ton duché.', 'your loyalty leans towards the most legitimate king; the War of the Breton Succession (1341) tears your duchy apart.')]],
+      bourgogne: [[tr('⚖️ Grand vassal', '⚖️ Great vassal'), tr('tu choisis ton roi : ta fidélité penche vers le plus légitime ; en 1419, le meurtre de Montereau peut te jeter dans les bras de l\'Anglais.', 'you choose your king: your loyalty leans towards the most legitimate one; in 1419, the murder at Montereau may throw you into the English king\'s arms.')], [tr('🤝 Les offres des rois', '🤝 The kings\' offers'), tr('tu commences libre, et tu ne peux pas demander à entrer dans un camp ; mais de temps en temps, un des deux rois te propose de devenir son vassal contre de l\'or (le plus souvent ton allié historique du moment, qui paie 50 % de plus). Accepter : l\'or, et tu rejoins son camp pour toute la partie ; refuser : tu restes libre.', 'you start free, and you cannot ask to join a side; but from time to time, one of the two kings offers to make you his vassal for gold (most often your historical ally of the moment, who pays 50% more). Accept: the gold, and you join his side for the whole game; refuse: you stay free.')]],
+      bretagne: [[tr('⚖️ Grand vassal', '⚖️ Great vassal'), tr('ta fidélité penche vers le roi le plus légitime ; la guerre de Succession de Bretagne (1341) déchire ton duché.', 'your loyalty leans towards the most legitimate king; the War of the Breton Succession (1341) tears your duchy apart.')], [tr('🤝 Les offres des rois', '🤝 The kings\' offers'), tr('tu commences libre, et tu ne peux pas demander à entrer dans un camp ; mais de temps en temps, un des deux rois te propose de devenir son vassal contre de l\'or (le plus souvent ton allié historique du moment, qui paie 50 % de plus). Accepter : l\'or, et tu rejoins son camp pour toute la partie ; refuser : tu restes libre.', 'you start free, and you cannot ask to join a side; but from time to time, one of the two kings offers to make you his vassal for gold (most often your historical ally of the moment, who pays 50% more). Accept: the gold, and you join his side for the whole game; refuse: you stay free.')]],
       ecosse: [[tr('🤝 L\'Auld Alliance', '🤝 The Auld Alliance'), tr('tu es l\'alliée de la France contre l\'Angleterre ; ton roi peut être pris (Neville\'s Cross) et rançonné.', 'you are France\'s ally against England; your king can be captured (Neville\'s Cross) and ransomed.')]],
     },
   },
@@ -774,6 +822,11 @@ const CENTANS = {
   // Les choix des parchemins : pour chaque événement, ses boutons (pick : le choix, voir hyChoose ; hist : le choix
   // qu'on a fait dans l'histoire, voir HISTORY)
   CHOICES: {
+    // (🤝 un roi propose au joueur, un grand vassal, d'entrer dans son camp : voir VASSAL_OFFER et hyVassalOffer)
+    vassalage: [
+      { pick: 'accept', label: tr('🤝 Prêter hommage à {king} (+{gold} d\'or ; tu rejoins son camp pour toute la partie)', '🤝 Pay homage to {king} (+{gold} gold; you join his side for the whole game)') },
+      { pick: 'refuse', label: tr('🛡️ Refuser : rester libre (une autre offre viendra plus tard)', '🛡️ Refuse: stay free (another offer will come later)') },
+    ],
     jeanne: [
       { pick: 'listen', hist: true, label: tr('⚜️ Confier une armée à Jeanne (elle accompagne ta prochaine armée)', '⚜️ Give Joan an army (she rides with your next army)') },
       { pick: 'refuse', label: tr('🚫 La renvoyer à Domrémy (+{gold} d\'or ; pas de Jeanne d\'Arc)', '🚫 Send her back to Domrémy (+{gold} gold; no Joan of Arc)') },

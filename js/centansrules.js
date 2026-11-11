@@ -123,6 +123,18 @@ Object.assign(GameRules, {
   // Le roi de France du moment (voir KINGS)
   hyKing() { return CENTANS.KINGS[this.hy.kingIdx]; },
   hyEngKing() { return CENTANS.ENGLISH_KINGS[this.hy.engIdx]; },
+  // 👑 Le dirigeant d'une faction cette année : le roi de France, le roi d'Angleterre, ou un duc / roi de RULERS
+  // (null pour une faction sans liste)
+  hyRuler(role) {
+    if (role === 'france') return this.hyKing();
+    if (role === 'angleterre') return this.hyEngKing();
+    const list = CENTANS.RULERS[role];
+    if (!list) return null;
+    const y = this.hyYear();
+    let r = list[0];
+    for (const x of list) if (y >= x.from) r = x;
+    return r;
+  },
   // 📜 Un grand événement : un parchemin pour le joueur du roi de France (voir EVENTS dans centans.js) ou du roi
   // d'Angleterre (ENGLAND_EVENTS : sa campagne à lui), un simple message (log, s'il y en a un) pour les autres
   hyEvent(key, vars, log, kind = 'warn', who) {
@@ -163,6 +175,7 @@ Object.assign(GameRules, {
     this.stepKings(y);
     this.stepHyEvents(y);
     this.stepVassals();
+    this.stepVassalOffer(y);
     this.hySeeAttacks();
     this.stepPlague(y);
     this.stepCompagnies(y);
@@ -432,6 +445,48 @@ Object.assign(GameRules, {
         if (target) this.hyBribe(king.id, hy.role[target]);
       }
     }
+  },
+  // 🤝 Le joueur incarne un grand vassal (la Bretagne, la Bourgogne) : de temps en temps, un des deux rois lui propose
+  // d'entrer dans son camp, contre de l'or (le plus souvent son allié historique du moment, qui paie plus). Le joueur
+  // ne peut pas le demander lui-même. Voir VASSAL_OFFER.
+  stepVassalOffer(y) {
+    const hy = this.hy, h = this.human, O = CENTANS.VASSAL_OFFER, TPS = CONFIG.TICKS_PER_SECOND;
+    const allies = O.ALLIES[h.role];
+    if (!allies || !h.alive || h.pactBroken || this.hyCampOf(h.id) || (hy.offers && hy.offers.vassalage)) return;
+    if (hy.nextVassalOffer === undefined) hy.nextVassalOffer = this.tick + O.FIRST * TPS;
+    if (this.tick < hy.nextVassalOffer) return;
+    const [lo, hi] = O.EVERY;
+    hy.nextVassalOffer = this.tick + Math.round((lo + this.rand() * (hi - lo)) * TPS);
+    // (l'allié historique de cette année, et l'autre roi)
+    let row = allies[0];
+    for (const r of allies) if (y >= r[0]) row = r;
+    const histCamp = row[1], other = histCamp === 'france' ? 'angleterre' : 'france';
+    let camp = this.rand() < O.HIST_CHANCE ? histCamp : other;
+    if (!this.hyP(camp).alive) camp = camp === histCamp ? other : histCamp;
+    if (!this.hyP(camp).alive) return;
+    const hist = camp === histCamp;
+    this.hyVassalOffer(camp, hist, hist ? row[2] : '');
+  },
+  // Le parchemin de l'offre : le roi (camp), son or ; hist : c'est l'allié historique du moment (why : pourquoi)
+  hyVassalOffer(camp, hist, why) {
+    const hy = this.hy, h = this.human, O = CENTANS.VASSAL_OFFER;
+    const gold = this.reward(h, Math.round(O.GOLD * (hist ? 1 + O.HIST_BONUS : 1)));
+    (hy.offers = hy.offers || {}).vassalage = { role: h.role, camp, gold };
+    const fr = camp === 'france', king = fr ? tr(`le roi de France ${this.hyKing().name}`, `the King of France ${this.hyKing().name}`)
+      : tr(`le roi d'Angleterre ${this.hyEngKing().name}`, `the King of England ${this.hyEngKing().name}`);
+    const year = Math.floor(this.hyYear());
+    UI.parchment({
+      date: String(year),
+      title: fr ? tr('⚜️ Une offre du roi de France', '⚜️ An offer from the King of France') : tr('🦁 Une offre du roi d\'Angleterre', '🦁 An offer from the King of England'),
+      text: tr(`Un messager porte une lettre scellée : ${king} t'offre ${fmt(gold)} pièces d'or si tu lui prêtes hommage, comme son vassal. Tu entrerais dans son camp, avec ses alliés, pour toute la guerre ; ses ennemis deviendraient les tiens.`,
+        `A messenger brings a sealed letter: ${king} offers you ${fmt(gold)} gold if you pay him homage, as his vassal. You would join his side, with his allies, for the whole war; his enemies would become yours.`),
+      todo: hist ? tr('Cette alliance a vraiment eu lieu à cette époque : notre roi pourrait y gagner beaucoup.', 'This alliance really happened at this time: our lord could gain a great deal.')
+        : tr('Ce roi n\'est pas notre allié naturel en ce moment… mais son or est bon.', 'This king is not our natural ally right now… but his gold is good.'),
+      gain: tr(`accepter : +${fmt(gold)} d'or, et tu rejoins le camp ${fr ? 'du roi de France' : 'du roi d\'Angleterre'} jusqu'à la fin de la partie (tu ne pourras plus en sortir) ; refuser : rien, tu restes libre.`,
+        `accept: +${fmt(gold)} gold, and you join the side of the King of ${fr ? 'France' : 'England'} until the end of the game (you can no longer leave it); refuse: nothing, you stay free.`),
+      history: why ? tr(`à cette époque, ${why}.`, `at this time, ${why}.`) : '',
+    }, { king: fr ? this.hyKing().name : this.hyEngKing().name, gold: fmt(gold) },
+    CENTANS.CHOICES.vassalage.map(c => ({ key: 'vassalage', pick: c.pick, label: c.label, hist: hist && c.pick === 'accept' })));
   },
   // Un vassal change de camp
   hySetCamp(p, camp) {
@@ -925,6 +980,19 @@ Object.assign(GameRules, {
   },
   hyApplyChoice(key, pick, data = {}) {
     const E = CENTANS.ENGLAND, en = this.hyP('angleterre');
+    // 🤝 L'offre d'un roi au joueur, un grand vassal : il entre dans son camp (s'il est toujours là), et touche l'or
+    if (key === 'vassalage') {
+      const v = this.hyP(data.role);
+      if (pick !== 'accept' || !v.alive || this.hyCampOf(v.id) || !this.hyP(data.camp).alive) {
+        if (v.isHuman && pick !== 'accept') UI.log(tr('🛡️ Tu renvoies le messager : ton duché reste libre.', '🛡️ You send the messenger away: your duchy stays free.'));
+        return;
+      }
+      v.gold += data.gold;
+      this.hySetCamp(v, data.camp);
+      if (v.isHuman) UI.log(tr(`🤝 Tu prêtes hommage : +${fmt(data.gold)} d'or. Te voici dans le camp ${data.camp === 'france' ? 'du roi de France' : 'du roi d\'Angleterre'}.`,
+        `🤝 You pay homage: +${fmt(data.gold)} gold. You are now on the side of the King of ${data.camp === 'france' ? 'France' : 'England'}.`), 'good');
+      return;
+    }
     if (key === 'jeanne') {
       const fr = this.hyP('france');
       if (pick === 'listen') { this.hy.joan = { state: 'ready' }; return; }

@@ -340,6 +340,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        +100, pour le roi de France) qui glisse vers le roi le plus légitime : au-delà de ±35, ils rejoignent son camp, et
        le quittent sous ±15. Le roi qui attaque un vassal le perd (−25) ; clic droit sur ses terres : **acheter sa
        fidélité** (💰 500 = ±15). Elle s'affiche au survol de ses terres. Les rois bots achètent aussi leurs vassaux ;
+     - 🤝 **les offres des rois** : si tu joues un grand vassal (la Bretagne, la Bourgogne), tu commences **libre**, et tu
+       ne peux pas demander à entrer dans un camp ; mais de temps en temps (la première fois après 2 min 30, puis toutes les
+       4 à 6 min), un des deux rois te propose, sur un parchemin, de **devenir son vassal contre de l'or** (💰 1 500, selon la
+       difficulté). Le plus souvent (3 fois sur 4), c'est ton **allié historique** du moment qui propose, et il paie 50 % de
+       plus (le choix est marqué 📜, avec ce qui s'est vraiment passé) : pour la Bretagne, l'Angleterre de 1341 (Jean de
+       Montfort) à 1381 (second traité de Guérande) et de 1423 (traité d'Amiens) à 1427, la France sinon ; pour la
+       Bourgogne, l'Angleterre de 1419 (Montereau) à 1435 (traité d'Arras), la France sinon. **Accepter** : l'or, et tu
+       rejoins son camp (son pacte) pour toute la partie ; **refuser** : tu restes libre, une autre offre viendra plus tard
+       (réglage `VASSAL_OFFER` dans `js/centans.js`) ;
      - 🏹 **les arcs longs** : en rase campagne (pas pendant un siège), l'armée du roi d'Angleterre se bat 30 % mieux,
        jusqu'en 1450 ; 💣 à partir de **1439**, les **canons des frères Bureau** rendent les sièges du roi de France plus
        de 2 fois plus courts ;
@@ -1007,15 +1016,17 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      coupé ou désorganisé, elle reste à lui, isolée, et il faut l'assiéger ; mais un royaume qui a perdu **toutes ses villes et
      toutes ses terres** la perd d'office, au profit de celui qui l'a anéanti. Prise, elle reste fortifiée pour son nouveau maître.
      Réglages : `MINE_FORT` dans `js/config.js`.
-     - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), doublé si elle est reliée :
-       **3 mines au plus** (+48 % au maximum).
-     - 🪙 **Mine d'or** : son filon rapporte **2 500 pièces en 10 minutes** (un peu à chaque production), doublé si reliée.
+     - ⚒️ **Mine de fer** : **toutes tes troupes** sont plus fortes, **+4 %** (+8 % au niveau 2), le bonus de la mine est doublé si elle est reliée (+8 %, ou +16 % au niveau 2) :
+       seules tes **3 meilleures mines** comptent (+48 % au maximum).
+     - 🪙 **Mine d'or** : son filon rapporte **2 500 pièces en 10 minutes** (un peu à chaque production) ; reliée, chaque versement est doublé :
+       **5 000 pièces** en 10 minutes (la durée ne change pas).
        Puis il **s'épuise** (une jauge dorée autour d'elle montre le temps qui reste) ; l'améliorer au niveau 2 le
        **relance pour 10 minutes de plus**, qui rapportent de nouveau **2 500 pièces**. Chaque mine d'or a **son propre compteur** : prise par un autre, elle reste épuisée ; la relance du niveau 2 ne sert qu'**une fois par filon** (détruire la mine et la rebâtir ne la remplit pas), et un filon vidé pour de bon ne peut plus recevoir de mine.
      - 🪨 **Carrière de pierre** (en colline) : les **constructions** (tous les bâtiments), les **améliorations**, les **murs** et les **ponts** coûtent moins cher, **−5 %**
        (−10 % au niveau 2), doublé si elle est reliée : **3 carrières au plus** (−60 % au maximum).
-     - 💎 **Mine de diamant** : une longue extraction de **20 minutes** (2 fois plus lente sans route vers une ville, 50 %
-       plus rapide au niveau 2), avec une **jauge ronde** autour d'elle. Au 1er **quart**, **1 000 pièces**, au 2e **2 000**, au 3e
+     - 💎 **Mine de diamant** : une longue extraction de **20 minutes** avec une route vers une ville (**sans route, 2 fois
+       plus lente** : 40 min ; 50 % plus rapide au niveau 2 : 13 min 20, ou 26 min 40 sans route). La route change **la
+       vitesse, pas l'or** : le filon rapporte 16 000 pièces dans tous les cas. Une **jauge ronde** l'entoure. Au 1er **quart**, **1 000 pièces**, au 2e **2 000**, au 3e
        **3 000**, et à la fin **10 000 pièces** d'un coup (16 000 en tout), puis le filon est **épuisé pour tout le monde**. Attention : si on te la vole, le
        chrono continue pour le nouveau maître, qui touche les versements suivants !
      À gauche de chaque mine (la tienne comme celles des autres), une **petite bulle ronde** montre l'icône de ce qui y est
@@ -1345,6 +1356,8 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.78** : 📜 **les règles en deux onglets dans les scénarios** : en partie, le bouton **Règles** d'un scénario (Charlemagne, la guerre de Cent Ans, les Croisades) montre d'abord **les règles du scénario** (ce qui change à cette époque, puis pour ta faction : le parchemin du début de partie), et un second onglet **les règles classiques**. · 👑 **guerre de Cent Ans : ton souverain en haut** : la barre du haut donne l'année et le dirigeant de **ta** faction à cette date (pour la Bretagne : Jean III, Jean de Montfort, Jean IV, Jean V… ; pour la Bourgogne : Eudes IV, Philippe le Hardi, Jean sans Peur, Philippe le Bon ; pour l'Écosse : David II, les Robert, les Jacques ; pour l'Angleterre, son roi), et les deux rois au survol. · 🔍 **règles plus claires** : pour chaque mine, ce que change vraiment la **route** vers une ville (fer et pierre : le bonus est doublé ; or : chaque versement est doublé, 5 000 pièces en 10 min ; **diamant : l'or ne change pas**, 16 000 en tout, mais sans route l'extraction est 2 fois plus lente, 40 min au lieu de 20) et le **niveau 2** ; les infobulles des mines le disent aussi (« or versé ×2 », « extraction 2 fois plus rapide (le même or) »…) ; la **caserne** donne déjà ×1,3 de force au niveau 1, et c'est ta meilleure caserne qui compte ; les bonus de terrain et de route des moulins et casernes sont chiffrés.
+- **v0.98.77** : 🤝 **guerre de Cent Ans : les rois achètent les grands vassaux** : si tu joues la **Bretagne** ou la **Bourgogne**, de temps en temps (pas trop souvent : toutes les 4 à 6 min), le roi de France ou le roi d'Angleterre te propose de **devenir son vassal contre de l'or**. Le plus souvent, c'est ton **allié historique** du moment (la Bretagne et l'Angleterre de Jean de Montfort, la Bourgogne et l'Angleterre après Montereau…), qui paie 50 % de plus. Accepter : l'or, et tu rejoins son camp pour toute la partie ; refuser : tu restes libre. Tu ne peux pas le demander toi-même.
 - **v0.98.76** : 📜 dans le choix du drapeau d'un scénario, seules les **grandes campagnes** sont marquées **(Campagne)** : les Francs de Charlemagne, la France et l'Angleterre de la guerre de Cent Ans, et pour les Croisades Saladin, Richard, Philippe Auguste, Barberousse, Jérusalem et Byzance. Les petites factions (la Bretagne, la Bourgogne, l'Écosse, les Templiers, les Hospitaliers, Venise…) sont marquées **(Défis)**, même si elles ont quelques objectifs à elles ; leur ✔ vert vient quand tous leurs défis sont réussis.
 - **v0.98.75** : 🔽 une **petite flèche** dans le titre « Royaumes » du classement (en haut à droite) **cache ou montre le tableau** des royaumes et de leurs % de terres (un clic sur le titre marche aussi) ; une fois caché, il ne reste que le titre, et ton choix est gardé pour les parties suivantes.
 - **v0.98.74** : 🌿 **mode Gloire pour les cartes aléatoires** : dans le choix des cartes, à côté des cartes aléatoires (Normale, Continentale, Base navale), une colonne **Mode** avec deux boutons, **Normal** (par défaut) et **🌿 Gloire**. En mode Gloire, des **tours de gloire** sont posées au hasard sur la carte, de préférence dans des **creux de montagne**, et leur nombre suit le nombre de royaumes (environ une pour deux, plus une : de 3 à 12) ; la jauge de gloire et la victoire à la gloire s'y ajoutent, comme sur les cartes de gloire. Le mode choisi s'affiche sur le bouton de la carte (« Normale · 🌿 Gloire ») et dans sa description ; en ligne, l'hôte d'un salon le choisit aussi.
