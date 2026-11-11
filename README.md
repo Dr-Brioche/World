@@ -886,10 +886,12 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (et un mur dont une case est prise aussi). `Échap` ou clic droit annule la pose. **Les bots aussi bâtissent des murs** :
      ils ferment le passage par où un voisin ennemi viendrait assiéger leur ville.
    - ⛪ **Église** : elle coûte cher, mais **se construit n'importe où** sur ton territoire,
-     **sauf trop près de tes châteaux** : elle doit rester hors de portée de leur muraille, même améliorée
-     au maximum (quand tu places une église, un **cercle rouge** entoure chacun de tes châteaux).
-     De même, un nouveau château ne peut pas être construit trop près d'une de tes églises.
-     📏 **Distances entre grands bâtiments** (dans tous les sens, cercles rouges) : château ↔ château **28 cases** (leurs murailles ne se touchent qu'avec une cité impériale),
+     **sauf trop près des châteaux** : elle doit rester hors de portée de leur muraille, même améliorée
+     au maximum (quand tu places une église, un **cercle rouge** entoure chaque château).
+     De même, un nouveau château ne peut pas être construit trop près d'une église.
+     📏 **Distances entre grands bâtiments** (dans tous les sens, cercles rouges ; **les bâtiments des autres royaumes
+     comptent aussi** : une ville ou une église ennemie juste de l'autre côté de ta frontière t'interdit de bâtir collé
+     à elle) : château ↔ château **28 cases** (leurs murailles ne se touchent qu'avec une cité impériale),
      château ↔ église ou port **20 cases**, église ↔ église, port ↔ port ou église ↔ port **15 cases**.
      Elle permet de construire des **moulins ou casernes autour d'elle**, même hors de la muraille d'un château
      (quand tu choisis un moulin ou une caserne, sa zone s'affiche en pointillés clairs).
@@ -1334,6 +1336,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.67** : 🚫 **les zones d'exclusion valent pour tout le monde** : les cercles rouges des grands bâtiments (28 cases entre deux villes, 20 entre une ville et une église ou un port, 15 entre églises et ports, 12 entre un avant-poste et une ville, et l'écart entre tours de garde) ne viennent plus seulement de tes bâtiments, mais aussi de ceux des **autres royaumes**. Si un ennemi a bâti une ville ou une église juste de l'autre côté de ta frontière, tu ne peux plus construire collé à elle (et lui non plus près des tiens) ; les cercles s'affichent pendant la pose.
 - **v0.98.66** : 📅 **les années passent 30 % moins vite** dans les campagnes à calendrier : la guerre de Cent Ans dure environ une heure (au lieu de 45 minutes), les Croisades environ 65 minutes (au lieu de 50) ; chaque événement historique arrive donc un peu plus tard, avec plus de temps pour se préparer entre deux (réglages `GAME_MINUTES` dans `js/centans.js` et `CALENDAR` dans `js/croisades.js`). Charlemagne, qui compte en minutes, ne change pas.
 - **v0.98.65** : 🚩 une ville **encerclée** (sans une case de terre hors de sa muraille) est maintenant **isolée** même quand elle est **la seule de son royaume sur ce continent** : avant, le plus grand morceau d'un royaume sur chaque terre comptait toujours comme un « cœur ». Naples, seule ville sicilienne d'Italie, entourée par tes terres : isolée, ses défenseurs ne peuvent plus la rejoindre (il faut la relier par un assaut).
 - **v0.98.64** : 📋 **la barre des effets en cours**, juste sous la barre du haut : une pastille par effet qui pèse sur ton royaume en ce moment, en vert s'il t'aide, en rouge s'il te gêne, avec le temps qui reste et le détail au survol. Pour toutes les parties : 🛡️ politique de guerre (garnisons +50…), 🔥 galvanisé (troupes +25 %…), ⚰️ après-guerre (troupes −25 %…), 🗡️ traître, 📯 levée en masse. Dans les campagnes : ⛓️ Richard captif (recrutement −40 % · rançon), 🦁 Richard / Saladin / Barberousse (force +…), 👑 Jean sans Terre, 🕊️ la paix de Jaffa, 🗡️ frappé par les Assassins, 🛡️ tribut payé, 🏦 ta dette au Temple, ⛵ ta flotte en mer, 💰 les comptoirs de Venise ; les trêves, le roi Jean captif, la folie de Charles VI, la Jacquerie, la peste, les arcs longs, les canons, les ports de la Manche, Du Guesclin, Jeanne d'Arc ; Léon III agressé, la marche des Lombards, l'Empire chrétien. (La politique de guerre et le statut de traître quittent la barre du haut pour y aller.)

@@ -377,16 +377,18 @@ const GameRules = {
     return k >= 0 && (r.held[k] || r.anyOutpost[k]);
   },
 
-  // Les grands bâtiments d'un royaume (châteaux, églises, ports) gardent leurs distances entre eux, dans tous
-  // les sens : une église ou un port reste hors de la muraille de ses châteaux (même améliorés), deux églises
-  // (ou ports) ne se collent pas, deux châteaux non plus. Et pas de château trop près d'un de ses avant-postes.
+  // Les grands bâtiments (châteaux, églises, ports) gardent leurs distances entre eux, dans tous les sens : une
+  // église ou un port reste hors de la muraille des châteaux (même améliorés), deux églises (ou ports) ne se collent
+  // pas, deux châteaux non plus. Et pas de château trop près d'un avant-poste.
+  // (🚫 v0.98.67 : les bâtiments de TOUS les royaumes ont leur zone d'exclusion, pas seulement les siens : on ne bâtit
+  //  pas collé à une ville ou une église ennemie, de l'autre côté de la frontière)
   // Renvoie les cercles interdits (cercles rouges) pour construire ce type de bâtiment : le centre du nouveau
   // bâtiment ne doit être dans aucun d'eux.
   placementCircles(pid, type) {
     if (type !== B_CASTLE && type !== B_CHURCH && type !== B_PORT && type !== B_TOWER) return [];
     const C = CONFIG, circles = [];
     for (const a of this.buildingTiles) {
-      if (this.owner[a] !== pid) continue;
+      if (this.owner[a] < 0) continue; // (un bâtiment sans maître, comme une ruine : pas de cercle)
       const b = this.building[a];
       let R = 0;
       if (type === B_TOWER) R = b === B_TOWER ? TOWER_DISTANCE : 0; // (🗼 les tours de garde : loin les unes des autres)
@@ -3887,14 +3889,14 @@ const GameRules = {
       }
       if (i >= 0 && this.owner[i] === p.id && this.churchCastleConflict(p.id, i, type)) {
         return type === B_CASTLE
-          ? tr('Trop près d\'un de tes châteaux, églises, ports ou avant-postes (cercle rouge) : ' +
-            'pour un château près d\'un avant-poste, conquiers d\'abord des terres autour de lui.', 'Too close to one of your castles, churches, ports or outposts (red circle): ' +
+          ? tr('Trop près d\'un château, d\'une église, d\'un port ou d\'un avant-poste, à toi ou à un autre royaume (cercle rouge) : ' +
+            'pour un château près d\'un avant-poste, conquiers d\'abord des terres autour de lui.', 'Too close to a castle, church, port or outpost, yours or another kingdom\'s (red circle): ' +
             'for a castle near an outpost, first conquer land around it.')
-          : type === B_TOWER ? tr(`Trop près d'une autre de tes tours de garde (cercle rouge) : il faut ${TOWER_DISTANCE} cases entre deux tours.`,
-            `Too close to another of your guard towers (red circle): keep ${TOWER_DISTANCE} tiles between two towers.`)
-          : tr('Trop près (cercle rouge) : une église ou un port reste hors de la muraille de tes châteaux (même améliorés), ' +
-            'et loin de tes autres églises et ports.', 'Too close (red circle): a church or a port stays outside the walls of your castles (even upgraded ones), ' +
-            'and far from your other churches and ports.');
+          : type === B_TOWER ? tr(`Trop près d'une autre tour de garde (cercle rouge) : il faut ${TOWER_DISTANCE} cases entre deux tours.`,
+            `Too close to another guard tower (red circle): keep ${TOWER_DISTANCE} tiles between two towers.`)
+          : tr('Trop près (cercle rouge) : une église ou un port reste hors de la muraille des châteaux (même améliorés), ' +
+            'et loin des autres églises et ports, les tiens comme ceux des autres royaumes.', 'Too close (red circle): a church or a port stays outside the walls of castles (even upgraded ones), ' +
+            'and far from other churches and ports, yours as well as other kingdoms\'.');
       }
       if (type === B_PORT && i >= 0 && !this.footprint(i, type).some(j => this.isCoastal(j))) {
         return tr('Un port se construit au bord de la mer ou d\'un fleuve.', 'A port is built on the shore of the sea or a river.');
