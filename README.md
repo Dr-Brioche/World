@@ -340,6 +340,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
        +100, pour le roi de France) qui glisse vers le roi le plus légitime : au-delà de ±35, ils rejoignent son camp, et
        le quittent sous ±15. Le roi qui attaque un vassal le perd (−25) ; clic droit sur ses terres : **acheter sa
        fidélité** (💰 500 = ±15). Elle s'affiche au survol de ses terres. Les rois bots achètent aussi leurs vassaux ;
+     - 🤝 **les offres des rois** : si tu joues un grand vassal (la Bretagne, la Bourgogne), tu commences **libre**, et tu
+       ne peux pas demander à entrer dans un camp ; mais de temps en temps (la première fois après 2 min 30, puis toutes les
+       4 à 6 min), un des deux rois te propose, sur un parchemin, de **devenir son vassal contre de l'or** (💰 1 500, selon la
+       difficulté). Le plus souvent (3 fois sur 4), c'est ton **allié historique** du moment qui propose, et il paie 50 % de
+       plus (le choix est marqué 📜, avec ce qui s'est vraiment passé) : pour la Bretagne, l'Angleterre de 1341 (Jean de
+       Montfort) à 1381 (second traité de Guérande) et de 1423 (traité d'Amiens) à 1427, la France sinon ; pour la
+       Bourgogne, l'Angleterre de 1419 (Montereau) à 1435 (traité d'Arras), la France sinon. **Accepter** : l'or, et tu
+       rejoins son camp (son pacte) pour toute la partie ; **refuser** : tu restes libre, une autre offre viendra plus tard
+       (réglage `VASSAL_OFFER` dans `js/centans.js`) ;
      - 🏹 **les arcs longs** : en rase campagne (pas pendant un siège), l'armée du roi d'Angleterre se bat 30 % mieux,
        jusqu'en 1450 ; 💣 à partir de **1439**, les **canons des frères Bureau** rendent les sièges du roi de France plus
        de 2 fois plus courts ;
@@ -1345,6 +1354,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.77** : 🤝 **guerre de Cent Ans : les rois achètent les grands vassaux** : si tu joues la **Bretagne** ou la **Bourgogne**, de temps en temps (pas trop souvent : toutes les 4 à 6 min), le roi de France ou le roi d'Angleterre te propose de **devenir son vassal contre de l'or**. Le plus souvent, c'est ton **allié historique** du moment (la Bretagne et l'Angleterre de Jean de Montfort, la Bourgogne et l'Angleterre après Montereau…), qui paie 50 % de plus. Accepter : l'or, et tu rejoins son camp pour toute la partie ; refuser : tu restes libre. Tu ne peux pas le demander toi-même.
 - **v0.98.76** : 📜 dans le choix du drapeau d'un scénario, seules les **grandes campagnes** sont marquées **(Campagne)** : les Francs de Charlemagne, la France et l'Angleterre de la guerre de Cent Ans, et pour les Croisades Saladin, Richard, Philippe Auguste, Barberousse, Jérusalem et Byzance. Les petites factions (la Bretagne, la Bourgogne, l'Écosse, les Templiers, les Hospitaliers, Venise…) sont marquées **(Défis)**, même si elles ont quelques objectifs à elles ; leur ✔ vert vient quand tous leurs défis sont réussis.
 - **v0.98.75** : 🔽 une **petite flèche** dans le titre « Royaumes » du classement (en haut à droite) **cache ou montre le tableau** des royaumes et de leurs % de terres (un clic sur le titre marche aussi) ; une fois caché, il ne reste que le titre, et ton choix est gardé pour les parties suivantes.
 - **v0.98.74** : 🌿 **mode Gloire pour les cartes aléatoires** : dans le choix des cartes, à côté des cartes aléatoires (Normale, Continentale, Base navale), une colonne **Mode** avec deux boutons, **Normal** (par défaut) et **🌿 Gloire**. En mode Gloire, des **tours de gloire** sont posées au hasard sur la carte, de préférence dans des **creux de montagne**, et leur nombre suit le nombre de royaumes (environ une pour deux, plus une : de 3 à 12) ; la jauge de gloire et la victoire à la gloire s'y ajoutent, comme sur les cartes de gloire. Le mode choisi s'affiche sur le bouton de la carte (« Normale · 🌿 Gloire ») et dans sa description ; en ligne, l'hôte d'un salon le choisit aussi.
