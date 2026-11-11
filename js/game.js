@@ -923,11 +923,15 @@ const GameRules = {
     return null;
   },
 
-  // Lancer un recrutement de masse : LEVY_COST pièces, recrutement accéléré pendant LEVY_TIME s. Renvoie une erreur, ou null.
+  // Combien de soldats un recrutement de masse donne tout de suite à p (LEVY_INSTANT de son armée maximum)
+  levyInstant(p) { return Math.round(this.maxTroops(p) * CONFIG.LEVY_INSTANT); },
+  // Lancer un recrutement de masse : LEVY_COST pièces, des soldats tout de suite (levyInstant), puis un recrutement
+  // accéléré pendant LEVY_TIME s. Renvoie une erreur, ou null.
   startLevy(p, a) {
     const err = this.levyError(p, a);
     if (err) return err;
     p.gold -= CONFIG.LEVY_COST;
+    p.troops += this.levyInstant(p); // (⚔️ les premières recrues arrivent aussitôt)
     p.levyEnd = this.tick + CONFIG.LEVY_TIME * CONFIG.TICKS_PER_SECOND;
     const h = this.human;
     if (!p.isHuman && h && h.alive && this.neighborStats(p.id).has(h.id)) {
