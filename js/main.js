@@ -3197,10 +3197,11 @@ const UI = {
   // --- ⚔️ Recrutement de masse (grande caserne, niveau 3) ---
   levyText() {
     const best = (1 + CONFIG.LEVY_BOOST * Game.levySize(Game.human)).toFixed(1); // (armée vide)
-    return tr(`Recrutement de masse (💰 ${fmt(CONFIG.LEVY_COST)}) : ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s ` +
+    const now = fmt(Game.levyInstant(Game.human));
+    return tr(`Recrutement de masse (💰 ${fmt(CONFIG.LEVY_COST)}) : +${now} soldats tout de suite (${Math.round(CONFIG.LEVY_INSTANT * 100)} % de ton armée maximum), puis ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s ` +
       `(pour toi, jusqu'à x${best.replace('.', ',')} quand elle est presque vide ; plus guère d'effet au-delà de la moitié de ton armée maximum). ` +
       'Plus ton royaume est petit face au plus grand, plus il est fort.',
-      `Mass recruitment (💰 ${fmt(CONFIG.LEVY_COST)}): your army rebuilds much faster for ${CONFIG.LEVY_TIME} s ` +
+      `Mass recruitment (💰 ${fmt(CONFIG.LEVY_COST)}): +${now} soldiers right away (${Math.round(CONFIG.LEVY_INSTANT * 100)}% of your max army), then your army rebuilds much faster for ${CONFIG.LEVY_TIME} s ` +
       `(for you, up to x${best} when it is nearly empty; hardly any effect above half of your max army). ` +
       'The smaller your kingdom compared to the largest one, the stronger it is.');
   },
@@ -3255,11 +3256,12 @@ const UI = {
     btn.title = left ? this.levyRunning(left) : err || this.levyText();
   },
   levy(a) {
+    const now = fmt(Game.levyInstant(Game.human)); // (les soldats donnés tout de suite, comptés avant le lancement)
     this.act({ k: 'levy', a }, err => {
       if (err) return this.log(err, 'warn');
       Music.sound('levy'); // (🔔 le son des renforts)
-      this.log(tr(`⚔️ Recrutement de masse lancé : ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s (surtout si elle est petite) !`,
-        `⚔️ Mass recruitment launched: your army rebuilds much faster for ${CONFIG.LEVY_TIME} s (especially if it is small)!`), 'good');
+      this.log(tr(`⚔️ Recrutement de masse lancé : +${now} soldats tout de suite, puis ton armée se reforme bien plus vite pendant ${CONFIG.LEVY_TIME} s (surtout si elle est petite) !`,
+        `⚔️ Mass recruitment launched: +${now} soldiers right away, then your army rebuilds much faster for ${CONFIG.LEVY_TIME} s (especially if it is small)!`), 'good');
     });
   },
 

@@ -794,7 +794,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      | 3. Grande caserne | +125 % | **x7** (+350 soldats) | **+150 %** | 💰 2500 |
 
      ⚔️ **Recrutement de masse** (avec une **grande caserne**, niveau 3 : bouton dans son menu, et dans la barre des
-     constructions) : pour **💰 3000**, ton royaume recrute **bien plus vite pendant 60 s** (un seul à la fois). C'est
+     constructions) : pour **💰 3000**, tu reçois **tout de suite 10 % de ton armée maximum** en soldats (réglage
+     `LEVY_INSTANT`), puis ton royaume recrute **bien plus vite pendant 60 s** (un seul à la fois). C'est
      d'autant plus fort que ton armée est **petite** : au plus fort quand elle est presque vide, encore 80 % de l'effet à 35 % de
      ton armée maximum ; puis l'effet tombe vite (plus rien à 65 %). Idéal pour se refaire après une grosse bataille.
      Et il **favorise les petits royaumes** : son effet dépend de ton armée maximum comparée à celle du **plus grand royaume**.
@@ -1336,6 +1337,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.70** : ⚔️ le **recrutement de masse** (grande caserne, 💰 3000) donne en plus, dès son lancement, **10 % de ton armée maximum en soldats tout de suite** (réglage `LEVY_INSTANT` dans `js/config.js`), avant les 60 s de recrutement accéléré. Les bots en profitent aussi quand ils le lancent.
 - **v0.98.69** : 🏳️ une **ville isolée** (ou un port royal, une mine fortifiée), coupée de son royaume, a de nouveau **un petit drapeau blanc à côté d'elle**, plus grand qu'avant, et maintenant **chez tous les royaumes** (avant : un petit fanion rouge, seulement sur tes propres villes) : on voit d'un coup d'œil les villes ennemies encerclées, que leurs défenseurs ne peuvent plus rejoindre.
 - **v0.98.68** : 📜 **les règles expliquent les niveaux et les routes** : deux nouvelles rubriques dans « Règles du jeu », juste après « Les bâtiments ». **⬆️ Les niveaux des bâtiments** : un tableau par bâtiment (moulin, caserne, ville, église, port), avec le prix de chaque amélioration et ce qu'elle donne (or, soldats, armée maximum, force, muraille, défense, places, garnison, siège, chemins, routes commerciales, Croyance, bateaux…), plus les mines, la tour de gloire et l'effet du terrain. **🛣️ Les routes** : ce que rapporte chaque route (ville → moulins et casernes de sa muraille, port → ville, église → route ou ville, moulin au bord d'une route, mine → ville, routes commerciales), avec leurs portées selon le niveau de la ville. · 📋 la barre de résumé d'un **royaume survolé** ne cache plus la barre des effets en cours de ton royaume : elle s'affiche juste dessous (et sur une carte de gloire, la barre des effets passe sous la jauge de gloire).
 - **v0.98.67** : 🚫 **les zones d'exclusion valent pour tout le monde** : les cercles rouges des grands bâtiments (28 cases entre deux villes, 20 entre une ville et une église ou un port, 15 entre églises et ports, 12 entre un avant-poste et une ville, et l'écart entre tours de garde) ne viennent plus seulement de tes bâtiments, mais aussi de ceux des **autres royaumes**. Si un ennemi a bâti une ville ou une église juste de l'autre côté de ta frontière, tu ne peux plus construire collé à elle (et lui non plus près des tiens) ; les cercles s'affichent pendant la pose.
