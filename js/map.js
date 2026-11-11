@@ -688,7 +688,9 @@ function addVolcanoes(terrain, W, H) {
 // Petite file de priorité (tas binaire) pour chercher le chemin le plus court
 // (la carte s'en sert pour tracer les fleuves, et le jeu pour les chemins des armées)
 class MinHeap {
-  constructor() { this.keys = []; this.vals = []; }
+  // (⏱️ pop renvoie toujours le même petit tableau [clé, valeur], à lire tout de suite : const [d, i] = heap.pop() ;
+  //  pas un nouveau tableau à chaque fois, des millions de fois par recherche de chemin)
+  constructor() { this.keys = []; this.vals = []; this.top = [0, 0]; }
   get size() { return this.keys.length; }
   push(k, v) {
     const K = this.keys, V = this.vals;
@@ -702,7 +704,8 @@ class MinHeap {
     K[i] = k; V[i] = v;
   }
   pop() {
-    const K = this.keys, V = this.vals, top = [K[0], V[0]];
+    const K = this.keys, V = this.vals, top = this.top;
+    top[0] = K[0]; top[1] = V[0];
     const k = K.pop(), v = V.pop();
     if (K.length) {
       let i = 0;

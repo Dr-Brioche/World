@@ -375,7 +375,11 @@ const CONFIG = {
   // ...sauf en territoire désorganisé (personne n'y tient le terrain) : au-delà de DISORGANIZED_LOSS_FROM soldats, les
   // pertes par case n'augmentent plus (une grosse armée y va plus vite, sans perdre plus d'hommes par case)
   DISORGANIZED_LOSS_FROM: 500,
-  REGIONS_REUSE: 5,            // (technique) tours de jeu pendant lesquels le découpage en morceaux peut servir tel quel
+  MAP_CHUNK: 256,              // (technique) taille, en pixels, des tuiles de l'image de la carte (voir Render.setupMap)
+  MAP_MIP_EVERY: 200,          // (technique) de loin : les versions réduites d'une tuile qui change sont refaites au plus toutes les 200 ms
+  PATH_START_SLACK: 60,        // (technique) un chemin d'assaut part de la frontière à au plus 60 cases de plus que l'entrée la plus proche de la cible
+  ROADS_REUSE: 10,             // (technique) tours de jeu pendant lesquels les routes servent telles quelles si seules des terres ont changé de mains
+  REGIONS_REUSE: 10,           // (technique) tours de jeu pendant lesquels le découpage en morceaux peut servir tel quel
   AI_PLAN_REUSE: 8,            // (technique) secondes pendant lesquelles un bot garde son plan d'assaut contre un voisin
   AI_PLANS_PER_TURN: 1,        // (technique) plans d'assaut neufs qu'un bot calcule au plus à chaque réflexion (les autres attendent)
   AI_BLOCK_TIME: 60,           // un assaut de bot qui s'arrête de lui-même (passage bloqué, rien à prendre) : il écarte cette cible 60 s

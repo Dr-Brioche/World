@@ -59,11 +59,23 @@ const Render = {
   setupMap() {
     const G = Game, F = G.N <= CONFIG.SMOOTH_FINE_MAX_TILES ? 4 : 2;
     this.F = F;
-    this.off = document.createElement('canvas');
-    this.off.width = G.W * F;
-    this.off.height = G.H * F;
-    this.offCtx = this.off.getContext('2d');
-    this.img = this.offCtx.createImageData(G.W * F, G.H * F);
+    // (⏱️ l'image de la carte est découpée en tuiles de MAP_CHUNK x MAP_CHUNK pixels, chacune son petit canevas : quand
+    //  des cases changent, on ne recopie que les tuiles touchées, et on ne dessine que celles qui sont à l'écran ; une
+    //  seule très grande image, modifiée à chaque instant, obligeait le navigateur à tout retraiter à chaque image)
+    this.off = { width: G.W * F, height: G.H * F }; // (la taille de toute l'image ; voir chunks)
+    this.img = new ImageData(G.W * F, G.H * F);
+    const CH = CONFIG.MAP_CHUNK, cols = Math.ceil(G.W * F / CH), rows = Math.ceil(G.H * F / CH);
+    this.chunkCols = cols;
+    this.chunks = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const x = c * CH, y = r * CH, w = Math.min(CH, G.W * F - x), h = Math.min(CH, G.H * F - y);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      // (et ses versions réduites, de moitié puis du quart : de loin, on dessine celle qui a à peu près la taille de
+      //  l'écran, au lieu de réduire toute la grande image à chaque image ; refaites quand la tuile change)
+      const mips = [1, 2].map(n => { const m = document.createElement('canvas'); m.width = Math.max(1, Math.ceil(w / 2 ** n)); m.height = Math.max(1, Math.ceil(h / 2 ** n)); return m; });
+      this.chunks.push({ canvas, ctx: canvas.getContext('2d'), mips, x, y, w, h, dirty: null });
+    }
     this.tileCol = new Uint8ClampedArray(G.N * 3); // couleur de chaque case
     this.tileKey = new Int32Array(G.N);            // « sorte » de case : royaume, terrain, frontière (voir paintTile)
     this.sub = new Int32Array(G.N * 4);            // grille 2 x 2 par case : la case dont chaque quart prend la couleur
@@ -94,7 +106,7 @@ const Render = {
     this.forests = null;
     for (let i = 0; i < G.N; i++) this.fineTile(i);
     for (let i = 0; i < G.N; i++) this.writeTile(i);
-    this.offCtx.putImageData(this.img, 0, 0);
+    for (const k of this.chunks) { k.ctx.putImageData(this.img, -k.x, -k.y, k.x, k.y, k.w, k.h); this.chunkMips(k); }
     // Nouvelle partie : on oublie les dessins gardés en mémoire de la partie d'avant
     // (Game.version repart de 0 : sans ça, ils pourraient être repris tels quels)
     this.hlCanvas = null; this.hlKey = null;
@@ -679,6 +691,20 @@ const Render = {
     });
   },
 
+  // Les versions réduites d'une tuile de l'image (moitié, puis quart), lissées
+  chunkMips(k) {
+    k.mipDirty = false;
+    k.mipTime = performance.now();
+    let src = k.canvas;
+    for (const m of k.mips) {
+      const c = m.getContext('2d');
+      c.imageSmoothingEnabled = true;
+      c.imageSmoothingQuality = 'medium';
+      c.drawImage(src, 0, 0, m.width, m.height);
+      src = m;
+    }
+  },
+
   flush() {
     if (!this.dirtyList || !this.dirtyList.length) return;
     // (on ne recopie que le rectangle qui contient les cases changées : sur une grande carte, c'est bien plus rapide)
@@ -693,13 +719,23 @@ const Render = {
     const again = new Set(near);
     for (const i of near) G.forNeighbors(i, n => again.add(n));
     for (const i of again) this.fineTile(i);
+    // (chaque tuile de l'image garde le rectangle de ses pixels changés : voir setupMap)
+    const CH = CONFIG.MAP_CHUNK, cols = this.chunkCols, touched = [];
     for (const i of again) {
       this.writeTile(i);
       const x = i % W, y = (i / W) | 0;
       if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      const px = x * F, py = y * F, k = this.chunks[((py / CH) | 0) * cols + ((px / CH) | 0)], d = k.dirty;
+      if (!d) { k.dirty = [px, py, px + F, py + F]; touched.push(k); }
+      else { if (px < d[0]) d[0] = px; if (py < d[1]) d[1] = py; if (px + F > d[2]) d[2] = px + F; if (py + F > d[3]) d[3] = py + F; }
     }
     this.dirtyList.length = 0;
-    this.offCtx.putImageData(this.img, 0, 0, x0 * F, y0 * F, (x1 - x0 + 1) * F, (y1 - y0 + 1) * F);
+    for (const k of touched) {
+      const [ax, ay, bx, by] = k.dirty;
+      k.ctx.putImageData(this.img, -k.x, -k.y, ax, ay, bx - ax, by - ay);
+      k.dirty = null;
+      k.mipDirty = true; // (ses versions réduites sont refaites quand on en a besoin : voir draw)
+    }
     // (et la carte parchemin, vue de très loin : voir buildParchment)
     for (const i of near) this.paintParchment(i);
     this.parchCtx.putImageData(this.parchImg, 0, 0, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
@@ -3060,7 +3096,21 @@ const Render = {
     }
     // (de loin, l'image est réduite : on la lisse un peu pour éviter le scintillement ; de près, pixels nets)
     ctx.imageSmoothingEnabled = s < this.F;
-    ctx.drawImage(this.off, ox, oy, G.W * s, G.H * s);
+    // (les tuiles de l'image à l'écran ; leurs bords tombent sur des pixels entiers, partagés entre deux tuiles
+    //  voisines : pas de fine ligne entre elles)
+    {
+      const k = s / this.F, edge = v => Math.round(v);
+      // (de loin, une version réduite : la moitié quand un pixel de l'image fait moins d'un demi-pixel à l'écran
+      //  (compte tenu de la densité de l'écran), le quart sous un quart de pixel)
+      const kd = k * this.dpr, lv = kd <= 0.25 ? 2 : kd <= 0.5 ? 1 : 0, now = performance.now();
+      for (const c of this.chunks) {
+        const x0 = edge(ox + c.x * k), y0 = edge(oy + c.y * k), x1 = edge(ox + (c.x + c.w) * k), y1 = edge(oy + (c.y + c.h) * k);
+        if (x1 < 0 || y1 < 0 || x0 > this.vw || y0 > this.vh) continue;
+        // (une tuile qui a changé : ses versions réduites sont refaites, au plus toutes les MAP_MIP_EVERY ms)
+        if (lv && c.mipDirty && now - (c.mipTime || 0) > CONFIG.MAP_MIP_EVERY) this.chunkMips(c);
+        ctx.drawImage(lv ? c.mips[lv - 1] : c.canvas, x0, y0, x1 - x0, y1 - y0);
+      }
+    }
     // Dernier cran de dézoom : la carte parchemin (voir buildParchment)
     const pa = this.parch ? this.parchmentAlpha() : 0;
     if (pa > 0) {

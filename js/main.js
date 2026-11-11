@@ -3045,6 +3045,28 @@ const UI = {
         });
       } });
     }
+    // ⚓ Un de ses ports : envoyer des renforts par la mer à ses avant-postes, ou en rapatrier les soldats qui y
+    // attendent (comme sur l'avant-poste lui-même ; les plus proches du port d'abord, 3 au plus)
+    if (own && G.building[i] === B_PORT) {
+      const port = G.anchor[i], W = G.W, d2 = a => (a % W - port % W) ** 2 + (((a / W) | 0) - ((port / W) | 0)) ** 2;
+      const mine = [...G.outposts.keys()].filter(a => G.owner[a] === h.id).sort((a, b) => d2(a) - d2(b)).slice(0, 3);
+      if (!mine.length) items.push({ label: `${ICONS.boatIn} ${tr('Renforts / rapatrier', 'Reinforce / bring back')}`, disabled: tr('Tu n\'as aucun avant-poste de l\'autre côté de la mer.', 'You have no outpost across the sea.') });
+      const send = Math.floor(h.troops * this.ratio), many = mine.length > 1;
+      mine.forEach((a, k) => {
+        const where = many ? tr(` (avant-poste ${k + 1}, le ${k ? 'suivant' : 'plus proche'})`, ` (outpost ${k + 1}, ${k ? 'the next one' : 'the nearest'})`) : '';
+        items.push({ label: `${ICONS.boatIn} ${tr(`Renforts : ${fmt(send)} soldats par la mer vers ton avant-poste`, `Reinforce: ${fmt(send)} soldiers by sea to your outpost`)}${where}`,
+          disabled: send < 1 ? tr('Pas assez de soldats : augmente le curseur « Envoyer ».', 'Not enough soldiers: raise the "Send" slider.') : undefined,
+          run: () => this.act({ k: 'reinforce', a, troops: h.troops * this.ratio }, err => {
+            if (err) this.log(err, 'warn'); else this.log(tr('⛵ Des renforts partent par la mer vers ton avant-poste !', '⛵ Reinforcements set sail for your outpost!'), 'good');
+          }) });
+        const o = G.outposts.get(a), n = o ? Math.floor(o.stationed) : 0;
+        items.push({ label: `${ICONS.boatOut} ${tr(`Rapatrier ${fmt(n)} soldats de ton avant-poste`, `Bring back ${fmt(n)} soldiers from your outpost`)}${where}`,
+          disabled: n < 1 ? tr('Aucun soldat n\'attend à cet avant-poste (sa garnison, elle, reste sur place).', 'No soldiers are waiting at this outpost (its garrison stays there).') : undefined,
+          run: () => this.act({ k: 'repatriate', a }, err => {
+            if (err) this.log(err, 'warn'); else this.log(tr(`🚢 ${fmt(n)} soldats rembarquent vers ton port.`, `🚢 ${fmt(n)} soldiers re-embark for your port.`), 'good');
+          }) });
+      });
+    }
     // Sur un fleuve dont les deux rives sont à nous (ou une à nous, l'autre à un allié) : construire un pont
     if (G.terrain[i] === TERRAIN.RIVER) {
       const plan = G.planBridge(h.id, i);
@@ -3740,7 +3762,14 @@ function main() {
     if (Game.online) Net.pump(); // (🌐 en ligne : la partie avance au rythme des tours du serveur)
     else if (Game.phase === 'playing' && !Game.paused) {
       acc += dt * Game.speed; // (partie accélérée : x2 = 2 tours de jeu au lieu d'un, tout va 2 fois plus vite)
-      while (acc >= step) { Game.update(); acc -= step; }
+      // (⏱️ pas plus de quelques tours par image, ni plus de 30 ms de calcul : si l'ordinateur prend du retard, la partie
+      //  ralentit un instant au lieu de vouloir tout rattraper d'un coup, ce qui la figeait de plus en plus)
+      const t0 = performance.now();
+      let n = 0;
+      while (acc >= step) {
+        Game.update(); acc -= step;
+        if (++n >= 3 * Game.speed || performance.now() - t0 > 30) { acc = Math.min(acc, step); break; }
+      }
     }
     // (⏸ la musique d'ambiance se met en pause avec la partie ; pas pendant la lecture d'un parchemin)
     Music.hold(Game.phase === 'playing' && Game.paused && !UI.parchmentOn);

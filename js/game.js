@@ -5,6 +5,9 @@
 // les « hérite » et ne garde que les données de la partie (carte, royaumes, attaques…).
 // Pourquoi deux objets ? Un objet avec plus de ~128 éléments devient beaucoup plus lent dans
 // le navigateur : séparer les règles et les données garde le jeu rapide.
+// (les 4 directions d'une traversée à gué, voir fordAcross)
+const FORD_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
 const GameRules = {
   phase: 'menu', // 'menu' → 'spawn' → 'playing' → 'over'
   paused: false,
@@ -60,7 +63,10 @@ const GameRules = {
     this.version = 0; // augmente à chaque changement de la carte
     // (calculs gardés en mémoire d'une partie à l'autre : on les oublie)
     this.regionsCache = null; this.regionsVersion = -1; this.nbStatsVersion = -1; this.nbStatsTick = undefined; this.assaultPlans = new Map();
-    this.roadsVersion = -1; this.walledPortsVersion = -1; this.slotVersion = -1; this.slotCache = null;
+    this.roadsVersion = -1; this.roadsCache = null; this.roadsSig = undefined; this.roadsTick = -1; // (⏱️ voir roads)
+    this.regionsOne = null; this.fieldBuf = null; this.fieldBufUI = null; // (⏱️ voir regionsAt et ownLandField)
+    this.cityTilesM = null; this.cityTilesUI = null; // (⏱️ voir cityTiles)
+    this.walledPortsVersion = -1; this.slotVersion = -1; this.slotCache = null;
     this.routeCache = new Map(); // tracés des routes déjà calculés (voir roadRoute)
     this.landCount = 0;
     for (let i = 0; i < this.N; i++) if (this.claimable(i)) this.landCount++; // (les fleuves ne se possèdent pas)
@@ -182,7 +188,7 @@ const GameRules = {
   // (uiCall), sans rien y garder.
   MEMO_KEYS: ['slotCache', 'slotCheckTick', 'slotSig', 'slotTick', 'slotVersion', 'faithCache', 'faithVersion', 'faithTick',
     'regionsCache', 'regionsVersion', 'regionsTick', 'cityCache', 'cityCacheTick', 'nbStatsCache', 'nbStatsVersion', 'nbStatsTick',
-    'assaultPlans', 'routeCache', 'roadsCache', 'roadsVersion', 'roadChurches', 'mineBonusKey', 'mineBonusCache'],
+    'assaultPlans', 'routeCache', 'roadsCache', 'roadsVersion', 'roadChurches', 'roadsSig', 'roadsTick', 'mineBonusKey', 'mineBonusCache'],
   uiCall(fn) {
     const keys = this.MEMO_KEYS, saved = keys.map(k => this[k]);
     // (⏱️ l'affichage garde à part ce qu'il a calculé ainsi, tant que la partie n'a pas bougé : même tour, même carte,
@@ -3174,6 +3180,14 @@ const GameRules = {
   roads() {
     if (this.inUI() && this.roadsCache) return this.roadsCache; // (🌐 l'affichage lit la mémoire : voir uiCall)
     if (this.roadsVersion === this.version) return this.roadsCache;
+    // (⏱️ les routes ne changent vraiment que quand un bâtiment change (posé, détruit, pris, amélioré, une mine épuisée) :
+    //  si seules des terres ont changé de mains, le dernier tracé sert encore pendant ROADS_REUSE tours de jeu ; avant,
+    //  elles étaient recalculées à chaque case conquise, une dizaine de fois par seconde sur une grande carte)
+    const sig = this.buildingSig();
+    if (this.roadsCache && this.roadsSig === sig && this.tick >= this.roadsTick && this.tick - this.roadsTick < CONFIG.ROADS_REUSE) return this.roadsCache;
+    // (🌐 calculées par l'affichage : à jour pour cette version de la carte, mais jamais resservies par l'empreinte)
+    this.roadsSig = this.inUI() ? undefined : sig;
+    this.roadsTick = this.tick;
     const links = new Map();
     // Un moulin ou une caserne dans la muraille d'une ville de niveau 2 ou 3 : une route le relie à elle.
     // Entre plusieurs villes (dans la muraille de chacune), il a une route par ville (ROAD_MAX_CITIES au plus) :
@@ -3231,6 +3245,16 @@ const GameRules = {
   // (dans la muraille d'une ville, ce sont les routes de la ville qui comptent : voir roads)
   // Renvoie 0 (pas de route), 1 (au bord d'un chemin de terre) ou 2 (au bord d'une route de pierre, vers une cité
   // impériale : bonus plus fort, voir IMPERIAL).
+  // ⏱️ Une empreinte des bâtiments : elle change dès qu'un bâtiment est posé, détruit, pris ou amélioré, qu'une mine
+  // s'épuise, ou qu'un mur est bâti ou perdu (voir roads)
+  buildingSig() {
+    let h = (this.buildingTiles.length * 31 + this.walls.length * 7 + this.walls.filter(w => w.done).length) | 0;
+    for (const a of this.buildingTiles) {
+      const b = this.building[a], v = a * 7 + b * 131 + (this.owner[a] + 1) * 1031 + this.level[a] * 8191 + (b === B_MINE && this.mineSpent(a) ? 3 : 0);
+      h = (Math.imul(h, 16777619) ^ v) | 0;
+    }
+    return h;
+  },
   onRoad(pid, a, type, links = this.roads()) {
     const cells = this.footprint(a, type);
     if (cells.some(j => this.castleProtects(pid, j))) return 0;
@@ -4085,7 +4109,7 @@ const GameRules = {
   //  fresh = true : toujours à jour, pour décider des encerclements.)
   // (⏱️ only : le découpage des seules terres de ce royaume, toujours à jour, sans toucher à la mémoire du découpage
   //  complet ; sur une très grande carte, captureEnclaves n'a besoin que de celles du royaume coupé)
-  regions(fresh = false, only = -1) {
+  regions(fresh = false, only = -1, tag = '') {
     if (only < 0 && this.inUI()) { // (🌐 voir uiCall)
       if (this.regionsCache) return this.regionsCache;
       // (⏱️ la mémoire des règles est vide, par exemple juste après la perte d'un bâtiment : l'affichage garde son
@@ -4106,7 +4130,10 @@ const GameRules = {
     }
     // (order est réutilisé d'un calcul à l'autre : ceux qui s'en servent en recopient tout de suite un morceau ;
     //  le découpage d'un seul royaume a ses propres tableaux, pour ne pas abîmer celui de toute la carte)
-    const ob = only >= 0 ? 'regionsOrderOne' : 'regionsOrder', pb = only >= 0 ? 'regionsPosOne' : 'regionsPos';
+    // (⏱️ tag : regionsAt a ses propres tableaux, pour ne pas abîmer un découpage d'un royaume encore utilisé ailleurs,
+    //  comme dans captureEnclaves ; et 🌐 un calcul de l'affichage (uiCall) les siens, pour ne jamais toucher ceux des règles)
+    if (only >= 0 && this.peeking) tag += 'UI';
+    const ob = only >= 0 ? 'regionsOrderOne' + tag : 'regionsOrder', pb = only >= 0 ? 'regionsPosOne' + tag : 'regionsPos';
     if (!this[ob] || this[ob].length !== this.N) this[ob] = new Int32Array(this.N);
     const comp = new Int32Array(this.N).fill(-1), order = this[ob];
     const size = [], start = [], owner = [], outpost = [], anyOutpost = [], colony = [], hasCastle = [], held = [];
@@ -4217,7 +4244,9 @@ const GameRules = {
     for (let o = 0; o < main.length; o++) if (main[o] >= 0 && !hasHeart.has(o)) heart[main[o]] = 1;
     // outpost[k] = avant-poste bâti du morceau k (-1 s'il n'y en a pas) ; heart[k] = 1 si k est un cœur du royaume
     const r = { comp, order, size, start, owner, main, heart, outpost, anyOutpost, colony, hasCastle, held };
-    if (only >= 0) return r;
+    // (le découpage d'un seul royaume fait pour regionsAt : gardé tant que la carte ne change pas ; le suivant, qui
+    //  réutilise ses tableaux, le remplace)
+    if (only >= 0) { if (tag === 'At') this.regionsOne = { o: only, v: this.version, r }; return r; }
     this.regionsCache = r;
     this.regionsVersion = this.version;
     return this.regionsCache;
@@ -4316,8 +4345,14 @@ const GameRules = {
 
   // Le découpage, à jour pour la case i : si elle a changé de mains depuis le dernier calcul, on le refait
   regionsAt(i) {
-    const r = this.regions(), k = r.comp[i];
-    return k < 0 ? (this.owner[i] < 0 ? r : this.regions(true)) : r.owner[k] !== this.owner[i] ? this.regions(true) : r;
+    const r = this.regions(), k = r.comp[i], o = this.owner[i];
+    if (k < 0 ? o < 0 : r.owner[k] === o) return r;
+    if (o < 0) return this.regions(true);
+    // (⏱️ la case a changé de mains depuis le dernier découpage : on ne refait que celui de son royaume, toujours à
+    //  jour (le même résultat pour lui, bien plus court que toute la carte), gardé tant que la carte ne change pas)
+    const one = this.peeking ? null : this.regionsOne;
+    if (one && one.o === o && one.v === this.version) return one.r;
+    return this.regions(true, o, 'At');
   },
 
   // Toutes les cases de fleuve de la carte (calculées une seule fois par carte)
@@ -4853,8 +4888,14 @@ const GameRules = {
     const heap = new MinHeap(), terrain = this.terrain, grid = target >= 0 ? this.defenseGrid(target) : null;
     const cost = TERRAIN_INFO.map(t => t && t.cost);
     const defense = i => cost[terrain[i]] + (grid ? grid[i] : 0); // (= tileDefense(target, i))
+    // (⏱️ « A* » : la recherche est guidée vers le but. Chaque case coûte au moins 1, donc il reste au moins la distance
+    //  (en cases, sans diagonale) jusqu'au rectangle du but : on trouve le même chemin le plus facile, en explorant bien
+    //  moins de cases qu'en s'étalant dans tous les sens)
+    let gx0 = W, gy0 = this.H, gx1 = -1, gy1 = -1;
+    for (const g of goal) { const gx = g % W, gy = (g / W) | 0; if (gx < gx0) gx0 = gx; if (gx > gx1) gx1 = gx; if (gy < gy0) gy0 = gy; if (gy > gy1) gy1 = gy; }
+    const left = n => { const x = n % W, y = (n / W) | 0; return Math.max(0, gx0 - x, x - gx1) + Math.max(0, gy0 - y, y - gy1); };
     const relax = (n, nd, from) => {
-      if (seen[n] !== stamp || nd < dist[n]) { seen[n] = stamp; dist[n] = nd; prev[n] = from; heap.push(nd, n); }
+      if (seen[n] !== stamp || nd < dist[n]) { seen[n] = stamp; dist[n] = nd; prev[n] = from; heap.push(nd + left(n), n); }
     };
     const start = (i, extra = 0) => relax(i, defense(i) + extra, -1);
     if (allowFord) this.riverTiles(); // (prépare riverSide)
@@ -4863,31 +4904,41 @@ const GameRules = {
     else if (from >= 0) start(from);
     else {
       // départ : les cases passables qui touchent nos terres (on part de nos cases, bien moins nombreuses que la carte)
+      // (⏱️ notées d'abord, puis seules celles qui ne sont pas beaucoup plus loin de la cible que la plus proche, à
+      //  PATH_START_SLACK cases près, servent de départ : sur un très grand royaume, ses milliers de cases de frontière
+      //  à l'autre bout ne feraient que ralentir la recherche)
+      const cand = [], addStart = (i, extra = 0) => cand.push(i, extra);
       const own = this.owner;
       for (let i = 0; i < N; i++) {
         if (own[i] !== pid) continue;
         const x = i % W;
         let ok;
-        for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
+        // (les 4 voisins écrits à la main : pas de petit tableau neuf pour chacune de nos cases)
+        for (let k = 0; k < 4; k++) {
+          const n = k === 0 ? (x > 0 ? i - 1 : -1) : k === 1 ? (x < W - 1 ? i + 1 : -1) : k === 2 ? (i >= W ? i - W : -1) : (i < N - W ? i + W : -1);
           if (n < 0 || own[n] === pid || (!walk && seen[n] === stamp) || !passable(n)) continue;
           if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
           if (!ok) break;
-          start(n, walk ? walk(i) : 0);
+          addStart(n, walk ? walk(i) : 0);
         }
         // (un fleuve entre nos terres et les siennes : l'armée le passe à gué, lentement ; ça « coûte » FORD_PATH_COST
         //  par case de fleuve, pour préférer un passage par la terre ou un pont quand il y en a un)
         if (allowFord && this.riverSide[i]) {
           this.fordAcross(i, pid, (n, gap, bridged) => {
             if (ok === undefined) ok = source === undefined ? this.isBase(i) : this.sourceOf(i) === source;
-            if (ok) start(n, (walk ? walk(i) : 0) + (bridged ? gap : gap * CONFIG.FORD_PATH_COST));
+            if (ok) addStart(n, (walk ? walk(i) : 0) + (bridged ? gap : gap * CONFIG.FORD_PATH_COST));
           }, n => own[n] !== pid && passable(n));
         }
       }
+      let minLeft = Infinity;
+      for (let k = 0; k < cand.length; k += 2) minLeft = Math.min(minLeft, left(cand[k]));
+      for (let k = 0; k < cand.length; k += 2) if (left(cand[k]) <= minLeft + CONFIG.PATH_START_SLACK) start(cand[k], cand[k + 1]);
     }
     while (heap.size) {
-      const [d, i] = heap.pop();
+      const i = heap.pop()[1];
       if (done[i] === stamp) continue;
       done[i] = stamp;
+      const d = dist[i];
       if (goal.has(i)) {
         const path = [];
         for (let j = i; j >= 0; j = prev[j]) path.push(j);
@@ -4981,18 +5032,21 @@ const GameRules = {
   // leurs bâtiments détruits). S'il n'avait plus que ça, il est anéanti. (vérifié une fois par seconde)
   stepTinyIslands() {
     if (this.tick % CONFIG.TICKS_PER_SECOND !== 0) return;
-    const size = this.landSize(), comp = this.landComp(), W = this.W, own = this.owner;
-    const islets = new Map(); // numéro de l'îlot → ses cases
-    for (let i = 0; i < this.N; i++) {
-      if (own[i] < 0 || size[i] >= CONFIG.MIN_SPAWN_LAND) continue;
-      if (!islets.has(comp[i])) islets.set(comp[i], []);
+    const W = this.W, own = this.owner;
+    // (⏱️ les îlots ne changent jamais : leur liste de cases est faite une fois par carte)
+    if (!this.isletList || this.isletFor !== this.terrain) {
+      const size = this.landSize(), comp = this.landComp(), all = new Map();
+      for (let i = 0; i < this.N; i++) if (comp[i] >= 0 && size[i] < CONFIG.MIN_SPAWN_LAND) { if (!all.has(comp[i])) all.set(comp[i], []); all.get(comp[i]).push(i); }
+      this.isletList = [...all.values()];
+      this.isletFor = this.terrain;
     }
-    if (!islets.size) return;
-    for (let i = 0; i < this.N; i++) if (comp[i] >= 0 && islets.has(comp[i])) islets.get(comp[i]).push(i);
+    // (seulement les îlots où un royaume tient des terres)
+    const islets = this.isletList.filter(tiles => tiles.some(t => own[t] >= 0));
+    if (!islets.length) return;
     // (une case où un ennemi pourrait poser le pied : de la terre, pas un fleuve, sans bâtiment ni mur, hors des murailles)
     const free = j => this.isLand(j) && this.terrain[j] !== TERRAIN.RIVER && !this.building[j] && !this.wallAt[j]
       && (own[j] < 0 || !(this.castleProtects(own[j], j) || this.portBonus(own[j], j) > 0));
-    for (const tiles of islets.values()) {
+    for (const tiles of islets) {
       if (tiles.some(t => t % W < W - 1 && free(t) && free(t + 1) && free(t + W) && free(t + W + 1))) continue;
       const losers = new Set();
       for (const t of tiles) {
@@ -6302,14 +6356,18 @@ const GameRules = {
       B.seen[i] = -stamp;
       if (goal.has(i)) { found = goal.get(i); break; }
       const x = i % W;
-      for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
-        if (n < 0 || B.seen[n] === -stamp || !this.isLand(n)) continue;
+      const step = n => { // (les 4 voisins, sans petit tableau neuf à chaque case)
+        if (B.seen[n] === -stamp || !this.isLand(n)) return;
         const o = own[n], terrain = march(n);
         const cost = o === pid ? terrain : o === enemy && enemy >= 0 ? terrain * slow : -1;
-        if (cost < 0) continue;
+        if (cost < 0) return;
         const nd = d + cost;
         if (B.seen[n] !== stamp || nd < B.dist[n]) { B.seen[n] = stamp; B.dist[n] = nd; heap.push(nd, n); }
-      }
+      };
+      if (x > 0) step(i - 1);
+      if (x < W - 1) step(i + 1);
+      if (i >= W) step(i - W);
+      if (i < N - W) step(i + W);
       // (un fleuve qui coupe ses terres : on le passe à gué, voir fordAcross ; pour un assaut, aussi le fleuve qui
       //  sépare ses terres de celles de l'ennemi : sinon une ville juste en face, de l'autre côté de l'eau, serait
       //  ignorée au profit d'une ville lointaine, reliée par la terre)
@@ -6328,12 +6386,18 @@ const GameRules = {
   // fonction case → distance (Infinity si on ne l'atteint pas à pied). Gardé en mémoire tant que la carte ne change pas
   // (l'aperçu du chemin d'assaut le demande souvent).
   // Cases dans la muraille d'une ville de leur propre royaume (1 = oui). Gardé en mémoire tant que la carte ne change pas.
+  // (⏱️ comme les routes : refait dès qu'un bâtiment change ; si seules des terres ont changé de mains, il sert encore
+  //  pendant ROADS_REUSE tours de jeu. 🌐 L'affichage a sa propre mémoire, toujours à jour : les règles ne dépendent
+  //  jamais de ce qu'il a calculé, ni quand)
   cityTiles() {
-    if (this.cityTilesVersion === this.version && this.cityTilesBuf) return this.cityTilesBuf;
-    const mask = this.cityTilesBuf && this.cityTilesBuf.length === this.N ? this.cityTilesBuf.fill(0) : new Uint8Array(this.N);
+    const ui = this.inUI() || this.peeking, m = ui ? (this.cityTilesUI || (this.cityTilesUI = {})) : (this.cityTilesM || (this.cityTilesM = {}));
+    if (m.buf && m.buf.length === this.N) {
+      if (m.version === this.version) return m.buf;
+      if (!ui && m.sig === this.buildingSig() && this.tick >= m.tick && this.tick - m.tick < CONFIG.ROADS_REUSE) return m.buf;
+    }
+    const mask = m.buf && m.buf.length === this.N ? m.buf.fill(0) : new Uint8Array(this.N);
     for (const c of this.castles) if (this.owner[c] >= 0) for (const i of this.castleZone(c, this.owner[c])) mask[i] = 1;
-    this.cityTilesBuf = mask;
-    this.cityTilesVersion = this.version;
+    m.buf = mask; m.version = this.version; m.tick = this.tick; m.sig = ui ? undefined : this.buildingSig();
     return mask;
   },
 
@@ -6345,11 +6409,16 @@ const GameRules = {
   },
 
   ownLandField(pid, from) {
-    const N = this.N, W = this.W, own = this.owner;
-    if (!this.fieldBuf || this.fieldBuf.seen.length !== N) this.fieldBuf = { dist: new Float64Array(N), seen: new Int32Array(N), stamp: 0, key: '' };
-    const B = this.fieldBuf, key = pid + ':' + from + ':' + this.version;
-    if (B.key !== key) {
+    const N = this.N, W = this.W, own = this.owner, TPS = CONFIG.TICKS_PER_SECOND;
+    // (⏱️ le calcul sert pendant 1 s pour ce royaume et ce point de départ, même si quelques cases ont changé de mains :
+    //  ce n'est qu'une estimation de la marche, et un bot essaie souvent plusieurs cibles depuis la même ville.
+    //  L'affichage a sa propre mémoire : 🌐 les règles ne doivent jamais dépendre de ce qu'il a calculé, ni quand)
+    const ui = this.inUI() || this.peeking, bk = ui ? 'fieldBufUI' : 'fieldBuf';
+    if (!this[bk] || this[bk].seen.length !== N) this[bk] = { dist: new Float64Array(N), seen: new Int32Array(N), stamp: 0, key: '', tick: -1 };
+    const B = this[bk], key = pid + ':' + from;
+    if (B.key !== key || this.tick < B.tick || this.tick - B.tick >= TPS) {
       B.key = key;
+      B.tick = this.tick;
       const stamp = ++B.stamp, heap = new MinHeap(), ford = this.fordCost(this.defenderSpeed(500)), cost = this.marchCost(pid);
       this.riverTiles(); // (prépare riverSide)
       if (from >= 0 && from < N && own[from] === pid) { B.seen[from] = stamp; B.dist[from] = 0; heap.push(0, from); }
@@ -6362,10 +6431,12 @@ const GameRules = {
         const [d, i] = heap.pop();
         if (B.seen[i] === -stamp) continue;
         B.seen[i] = -stamp;
+        // (les 4 voisins écrits à la main : pas de petit tableau neuf à chaque case)
         const x = i % W;
-        for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i >= W ? i - W : -1, i < N - W ? i + W : -1]) {
-          if (n >= 0 && own[n] === pid && this.isLand(n)) visit(n, d + cost(n));
-        }
+        if (x > 0 && own[i - 1] === pid && this.isLand(i - 1)) visit(i - 1, d + cost(i - 1));
+        if (x < W - 1 && own[i + 1] === pid && this.isLand(i + 1)) visit(i + 1, d + cost(i + 1));
+        if (i >= W && own[i - W] === pid && this.isLand(i - W)) visit(i - W, d + cost(i - W));
+        if (i < N - W && own[i + W] === pid && this.isLand(i + W)) visit(i + W, d + cost(i + W));
         if (this.riverSide[i]) this.fordAcross(i, pid, (n, gap, bridged) => {
           visit(n, d + (bridged ? gap : gap * ford) + cost(n));
         });
@@ -6421,7 +6492,7 @@ const GameRules = {
   // (want : quelles cases d'en face on cherche ; par défaut, celles de pid)
   fordAcross(i, pid, fn, want = j => this.owner[j] === pid) {
     const W = this.W, x0 = i % W, y0 = (i / W) | 0;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    for (const [dx, dy] of FORD_DIRS) { // (⏱️ une liste fixe : pas 5 petits tableaux neufs à chaque appel)
       let bridged = true;
       for (let k = 1; k <= 4; k++) {
         const x = x0 + dx * k, y = y0 + dy * k;
