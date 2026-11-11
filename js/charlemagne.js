@@ -90,7 +90,7 @@ const CHARLEMAGNE = {
   // dans les TIME secondes, l'objectif « Rome » est perdu tant qu'elle n'est pas pleine
   LEO: { OBJECTIVES: 5, TIME: 120 },
   // 799 : les premiers Vikings. À partir de START minutes, toutes les EVERY secondes, les Danois (s'il en reste)
-  // débarquent ARMY guerriers près d'une ville côtière des Francs (un raid : elle est rasée s'ils la prennent)
+  // débarquent ARMY guerriers près d'une ville côtière des Francs (un raid : s'ils la prennent, elle est mise à sac : voir Game.sackCity)
   VIKINGS: { START: { facile: 25, normal: 20, difficile: 16 }, EVERY: 150, ARMY: { facile: 500, normal: 800, difficile: 1200 } },
 
   // Les textes des parchemins (date, titre, récit, et le conseil, à mots couverts, des conseillers du roi : pas de
@@ -132,7 +132,7 @@ const CHARLEMAGNE = {
       [tr('📜 Les grands événements', '📜 The great events'), tr('ils arrivent selon le temps ou ce que tu fais, sur un parchemin qui met en pause ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'they arrive depending on time or on what you do, on a parchment that pauses the game; when there is a choice, the historical one is marked 📜.')],
       [tr('🏰 Pas de nouvelle ville', '🏰 No new cities'), tr('on améliore les siennes et on prend celles des autres. La Bavière, l\'Aquitaine et les Asturies ont des garnisons 50 % plus fortes.', 'you upgrade your own and take other kingdoms\' cities. Bavaria, Aquitaine and Asturias have 50% stronger garrisons.')],
       [tr('✝️ La Croyance', '✝️ Faith'), tr('elle prend les terres deux fois moins vite qu\'en partie classique.', 'it takes land half as fast as in a classic game.')],
-      [tr('⚔️ Les Slaves', '⚔️ The Slavs'), tr('au nord-est, des pillards : leurs terres sont imprenables, et leurs razzias, toujours plus grosses, rasent leur cible.', 'in the north-east, raiders: their land cannot be taken, and their ever bigger raids raze their target.')],
+      [tr('⚔️ Les Slaves', '⚔️ The Slavs'), tr('au nord-est, des pillards : leurs terres sont imprenables, et leurs razzias, toujours plus grosses, mettent leur cible à sac (elle retombe au niveau 1 et perd ses bâtiments).', 'in the north-east, raiders: their land cannot be taken, and their ever bigger raids sack their target (it falls back to level 1 and loses its buildings).')],
       [tr('⛏️ Les mines historiques', '⛏️ Historic mines'), tr('chaque faction en a une (son nom s\'affiche au survol).', 'every faction has one (its name shows on hover).')],
       [tr('🎯 Les objectifs', '🎯 Objectives'), tr('en haut à gauche : tous tenus en même temps, c\'est la victoire. Clique sur un objectif : la carte te montre où il est.', 'at the top left: all held at the same time is victory. Click an objective: the map shows you where it is.')],
       [tr('🎁 Les récompenses', '🎁 Rewards'), tr('l\'or, la Croyance et les soldats que t\'apportent les événements, les choix et les défis : +25 % en Facile, −25 % en Difficile.', 'the gold, Faith and soldiers that events, choices and challenges bring you: +25% on Easy, −25% on Hard.')],
@@ -304,7 +304,7 @@ const CHARLEMAGNE = {
     ],
     danois: [
       { kind: 'vikings', n: 3, text: tr('Les fureurs du Nord : lancer 3 assauts vikings', 'Fury from the North: launch 3 Viking assaults'), reward: { gold: 1000 } },
-      { kind: 'razed', n: 3, text: tr('Rien que des cendres : raser 3 villes', 'Nothing but ashes: raze 3 cities'), reward: { gold: 1500 } },
+      { kind: 'razed', n: 3, text: tr('Rien que des cendres : mettre 3 villes à sac', 'Nothing but ashes: sack 3 cities'), reward: { gold: 1500 } },
       { kind: 'walls', n: 2, text: tr('Le Danevirke : bâtir 2 murs', 'The Danevirke: build 2 walls'), reward: { gold: 750 } },
       { kind: 'hold', places: ['-0.12,51.51'], text: tr('Un siècle d\'avance : prendre Londres', 'A century early: take London'), reward: { gold: 2500 } },
     ],

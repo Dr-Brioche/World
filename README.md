@@ -266,15 +266,15 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
          ne se reconstitue plus : remplis-la en envoyant des soldats au pape (clic droit sur ses terres) dans les
          **2 minutes**, sinon l'objectif « Rome » est perdu tant qu'elle n'est pas pleine ;
        - 🔥 **799, les premiers Vikings** : à partir de la 25ᵉ, 20ᵉ ou 16ᵉ minute, toutes les 2 min 30, les Danois
-         débarquent (500, 800 ou 1 200 guerriers) près d'une ville côtière des Francs, et la rasent s'ils la prennent ;
+         débarquent (500, 800 ou 1 200 guerriers) près d'une ville côtière des Francs, et la mettent à sac s'ils la prennent (elle reste debout, mais retombe au niveau 1 et perd ses moulins, casernes et murs) ;
      - 🏷️ **les noms des villes** : de près, chaque ville et église historique porte son nom, écrit en lettres
        médiévales sous elle (Paris, Aix, Pavie, Rome…) ; aussi au survol de la ville ;
      - ⚔️ **les Slaves, pillards du nord-est** : leurs terres sont **imprenables**, ni par les armes ni par la Croyance
        (on ne peut que se défendre contre eux) et ils ne s'étendent pas, mais ils lancent des **razzias** sur un voisin au hasard (toutes les 150 s en
        Facile, 110 s en Normal, 80 s en Difficile, après 2 min 30), de plus en plus grosses (600 guerriers en Normal,
        puis +20 % à chaque fois, jusqu'à **5 000 guerriers** au plus ; la première épargne la Bavière). Une razzia qui
-       prend sa cible la **rase** (avec ses moulins et casernes), pille de l'or et rentre : les terres restent au
-       défenseur. Quand leurs terres touchent celles des **Francs**, ils les visent **en premier**, d'autant plus souvent
+       prend sa cible la **met à sac** : la ville reste debout et à son maître, mais elle **retombe au niveau 1** et perd
+       tous ses moulins, casernes et murs ; les pillards emportent de l'or et rentrent, les terres restent au défenseur. Quand leurs terres touchent celles des **Francs**, ils les visent **en premier**, d'autant plus souvent
        et plus fort que la partie est difficile (une razzia sur cinq en Facile, une sur deux en Normal, quatre sur cinq en
        Difficile, avec 20 % puis 40 % de guerriers en plus). Ils ne razzient **jamais les lieux des objectifs** de
        Charlemagne (Ratisbonne, Pavie, Eresburg, le Ring des Avars, Barcelone, Rome, les mines historiques) : la partie
@@ -357,8 +357,8 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      - ☠️ **la peste noire** (1348) part de Marseille et saute de ville en ville : une ville malade perd des soldats, sa
        garnison fond et ses moulins et casernes tournent au ralenti, pendant 45 s. Clic droit sur une de tes villes :
        **fermer ses portes** (40 s : la peste n'y entre pas, mais elle ne produit plus rien) ;
-     - 🔥 **les chevauchées** : l'armée anglaise pille et rase une ville du camp français (sans la garder) et rentre
-       avec son butin ; le joueur anglais en lance d'un clic droit sur une ville ennemie. 🗡️ **les Grandes Compagnies**
+     - 🔥 **les chevauchées** : l'armée anglaise pille une ville du camp français (sans la garder : elle reste debout,
+       mais retombe au niveau 1 et perd tous ses moulins, casernes et murs) et rentre avec son butin ; le joueur anglais en lance d'un clic droit sur une ville ennemie. 🗡️ **les Grandes Compagnies**
        (de 1357 à 1445, deux fois plus pendant les trêves ; parties en Castille de 1366 à 1369) surgissent dans le pays
        et razzient une ville ;
      - 💰 **les rançons** : une armée battue d'au moins 300 soldats paie rançon au vainqueur pour ses chevaliers tombés ;
@@ -522,7 +522,7 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      Légitimité) dès qu'il est réussi. Ils s'affichent sous les objectifs, dans le cadre en haut à gauche (✔ réussi,
      ✖ manqué : certains ont une limite de temps, d'autres se jouent dans la durée, comme « ne perdre aucune ville
      pendant 20 min »). Quelques exemples : les Lombards veulent **prendre Paris**, les Saxons bâtir 4 églises
-     « au cas où », les Danois **raser 3 villes** et prendre Londres un siècle d'avance, Cordoue **venger 732** en
+     « au cas où », les Danois **mettre 3 villes à sac** et prendre Londres un siècle d'avance, Cordoue **venger 732** en
      prenant Tours, les Asturies prendre Cordoue ; le roi de France **prendre Londres** ou bouter l'Anglais sans
      Jeanne, avant 1429 ; le roi d'Angleterre tenir le **vœu du héron** (Paris avant 1360), l'Écosse jouer à
      **Braveheart** à Londres, la Bretagne prendre Cherbourg et Harfleur comme la **Lionne de Bretagne**…
@@ -1356,6 +1356,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.79** : 🔥 **dans les campagnes, les pillards mettent les villes à sac au lieu de les raser** : les Grandes Compagnies et les chevauchées anglaises (guerre de Cent Ans), les razzias des Slaves et les Vikings danois (Charlemagne), les razzias des Coumans (Croisades)… La ville **reste debout et à son maître**, mais elle **retombe au niveau 1** et perd **tous ses bâtiments** (moulins, casernes, murs, amélioration en cours), et sa garnison redevient celle d'une petite ville ; pareil pour une église ou un port (avec les moulins et casernes de ses places), et une mine retombe au niveau 1 et perd sa fortification. Seul un avant-poste brûle encore. Le pillard emporte son butin pour chaque bâtiment brûlé (et la ville elle-même). Dans une partie normale, l'**assaut viking** rase toujours sa cible. Le défi des Danois devient « mettre 3 villes à sac ».
 - **v0.98.78** : 📜 **les règles en deux onglets dans les scénarios** : en partie, le bouton **Règles** d'un scénario (Charlemagne, la guerre de Cent Ans, les Croisades) montre d'abord **les règles du scénario** (ce qui change à cette époque, puis pour ta faction : le parchemin du début de partie), et un second onglet **les règles classiques**. · 👑 **guerre de Cent Ans : ton souverain en haut** : la barre du haut donne l'année et le dirigeant de **ta** faction à cette date (pour la Bretagne : Jean III, Jean de Montfort, Jean IV, Jean V… ; pour la Bourgogne : Eudes IV, Philippe le Hardi, Jean sans Peur, Philippe le Bon ; pour l'Écosse : David II, les Robert, les Jacques ; pour l'Angleterre, son roi), et les deux rois au survol. · 🔍 **règles plus claires** : pour chaque mine, ce que change vraiment la **route** vers une ville (fer et pierre : le bonus est doublé ; or : chaque versement est doublé, 5 000 pièces en 10 min ; **diamant : l'or ne change pas**, 16 000 en tout, mais sans route l'extraction est 2 fois plus lente, 40 min au lieu de 20) et le **niveau 2** ; les infobulles des mines le disent aussi (« or versé ×2 », « extraction 2 fois plus rapide (le même or) »…) ; la **caserne** donne déjà ×1,3 de force au niveau 1, et c'est ta meilleure caserne qui compte ; les bonus de terrain et de route des moulins et casernes sont chiffrés.
 - **v0.98.77** : 🤝 **guerre de Cent Ans : les rois achètent les grands vassaux** : si tu joues la **Bretagne** ou la **Bourgogne**, de temps en temps (pas trop souvent : toutes les 4 à 6 min), le roi de France ou le roi d'Angleterre te propose de **devenir son vassal contre de l'or**. Le plus souvent, c'est ton **allié historique** du moment (la Bretagne et l'Angleterre de Jean de Montfort, la Bourgogne et l'Angleterre après Montereau…), qui paie 50 % de plus. Accepter : l'or, et tu rejoins son camp pour toute la partie ; refuser : tu restes libre. Tu ne peux pas le demander toi-même.
 - **v0.98.76** : 📜 dans le choix du drapeau d'un scénario, seules les **grandes campagnes** sont marquées **(Campagne)** : les Francs de Charlemagne, la France et l'Angleterre de la guerre de Cent Ans, et pour les Croisades Saladin, Richard, Philippe Auguste, Barberousse, Jérusalem et Byzance. Les petites factions (la Bretagne, la Bourgogne, l'Écosse, les Templiers, les Hospitaliers, Venise…) sont marquées **(Défis)**, même si elles ont quelques objectifs à elles ; leur ✔ vert vient quand tous leurs défis sont réussis.

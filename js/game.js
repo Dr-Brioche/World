@@ -1163,6 +1163,10 @@ const GameRules = {
   // au défenseur (la route des Vikings lui revient), et les survivants rembarquent (voir endAttack).
   vikingRaid(a, c) {
     if (!this.building[c]) return this.endAttack(a); // (la cible n'existe plus : rasée entre-temps)
+    // (⚔️ dans une campagne, les pillards (razzias, chevauchées, Grandes Compagnies, raids, et même les Vikings des
+    //  événements) ne rasent pas leur cible : elle reste debout, mais elle est mise à sac ; un avant-poste, lui, brûle.
+    //  Dans une partie normale, l'assaut viking rase toujours sa cible.)
+    if ((a.raid || this.cm || this.hy || this.cr) && this.building[c] !== B_OUTPOST) return this.sackCity(a, c);
     const p = this.players[a.attacker], d = this.players[a.target];
     const ruins = [c, ...this.linkedBuildings(c)], label = this.targetLabel(c); // (son nom, avant qu'elle ne soit rasée)
     const city = this.building[c] === B_CASTLE, what = city ? tr('une ville', 'a city') : tr('un port fortifié', 'a fortified port');
@@ -1172,19 +1176,7 @@ const GameRules = {
     for (const b of ruins) this.removeBuilding(b);
     if (city) p.razedCount = (p.razedCount || 0) + 1; // (⭐ les villes rasées, pour les défis : voir defis.js)
     if (d.isHuman && city) Music.sound('cityLost'); // (🔔 une de nos villes rasée : le son de la ville perdue)
-    const loot = ruins.length * (a.loot !== undefined ? a.loot : a.raid ? CHARLEMAGNE.RAIDS.LOOT : CONFIG.VIKING_LOOT);
-    if (a.raid) { // (⚔️ une razzia des Slaves, une chevauchée anglaise, les Grandes Compagnies : leur propre message)
-      p.gold += loot;
-      a.razed = true; // (ils rentrent : les terres de leur passage reviennent au défenseur, sans « assaut échoué »)
-      const n = ruins.length, s = n > 1 ? 's' : '';
-      if (p.isHuman) UI.log(tr(`🔥 Ta chevauchée a pillé ${label} : ${n} bâtiment${s} brûlé${s}, 💰 ${fmt(loot)} de butin ! Elle rentre.`,
-        `🔥 Your chevauchée plundered ${label}: ${n} building${s} burned, 💰 ${fmt(loot)} of loot! It heads home.`), 'good', d);
-      else if (d.isHuman && a.raidWho) UI.log(tr(`🔥 ${a.raidWho} ont pillé ${label} : ${n} bâtiment${s} rasé${s} ! Ils repartent avec leur butin.`,
-        `🔥 ${a.raidWho} plundered ${label}: ${n} building${s} razed! They leave with their loot.`), 'warn', p);
-      else if (d.isHuman) UI.log(tr(`⚔️ Les ${p.name} ont razzié ${label} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} rasé${ruins.length > 1 ? 's' : ''} ! Ils rentrent chez eux avec leur butin.`,
-        `⚔️ The ${p.name} have raided ${label}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} razed! They head home with their loot.`), 'warn', p);
-      return this.endAttack(a);
-    }
+    const loot = ruins.length * (a.loot !== undefined ? a.loot : CONFIG.VIKING_LOOT);
     p.gold += loot;
     // (🔥 comme un assaut qui prend une ville : le pillard a l'après-guerre, le perdant est galvanisé, et
     //  🛡️ il proclame la politique de guerre : ses autres lieux fortifiés ont plus de garnison)
@@ -1194,6 +1186,50 @@ const GameRules = {
       `🔥 Your Vikings razed ${what} of ${d.name}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} destroyed, 💰 ${fmt(loot)} of loot! They set sail home.`), 'good', d);
     else if (d.isHuman) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} ont rasé une de tes ${city ? 'villes' : 'places fortes'} : ${ruins.length} bâtiment${ruins.length > 1 ? 's' : ''} détruit${ruins.length > 1 ? 's' : ''} !`,
       `🔥 ${possessive(p.name)} Vikings razed one of your ${city ? 'cities' : 'strongholds'}: ${ruins.length} building${ruins.length > 1 ? 's' : ''} destroyed!`), 'warn', p);
+    return this.endAttack(a);
+  },
+  // ⚔️ Les pillards des campagnes (une razzia des Slaves ou des Saxons, une chevauchée anglaise, les Grandes Compagnies,
+  // les raids des Croisades…) ne rasent pas leur cible : ils la mettent à sac. La ville (ou le port fortifié) reste
+  // debout et à son maître, mais elle retombe au niveau 1 : ses moulins, ses casernes et ses murs brûlent, sa garnison
+  // se réduit à celle d'une petite ville. Chaque bâtiment brûlé (et la ville elle-même) rapporte du butin au pillard.
+  // (pareil pour une église ou un port, avec les moulins et casernes de ses places ; une mine retombe au niveau 1 et
+  //  perd sa fortification)
+  sackCity(a, c) {
+    const p = this.players[a.attacker], d = this.players[a.target], label = this.targetLabel(c), city = this.building[c] === B_CASTLE;
+    const burned = this.linkedBuildings(c), wasLevel = this.level[c] || 1;
+    if (this.building[c] === B_MINE) this.fortMines.delete(c); // (sa petite muraille est abattue)
+    // (une cible déjà passée au pillard, comme une église prise d'un coup : ses cases reviennent au défenseur)
+    for (const j of this.footprint(c, this.building[c])) if (this.owner[j] === a.attacker) this.setOwner(j, a.target);
+    for (const b of burned) this.removeBuilding(b);
+    for (const w of this.walls.filter(w => w.castle === c)) this.removeWall(w); // (ses murs sont abattus)
+    this.level[c] = 1;
+    this.works.delete(c); // (une amélioration en cours est perdue)
+    this.garrison[c] = Math.min(this.garrison[c] || 0, this.garrisonMax(c) || 0);
+    this.version++;
+    this.regionsCache = null; this.slotCache = null; this.depositCapMemo = null; // (sa muraille rétrécit)
+    if (city) p.razedCount = (p.razedCount || 0) + 1; // (⭐ les villes pillées, pour les défis : voir defis.js)
+    if (d.isHuman && city) Music.sound('cityLost'); // (🔔 une de nos villes mise à sac : le son de la ville perdue)
+    const loot = (burned.length + 1) * (a.loot !== undefined ? a.loot : a.raid ? CHARLEMAGNE.RAIDS.LOOT : CONFIG.VIKING_LOOT);
+    p.gold += loot;
+    if (!a.raid) { // (🔥 un assaut viking : comme une ville prise, l'après-guerre, la galvanisation et la politique de guerre)
+      const fort = this.warFort(c);
+      this.warEffects(a);
+      if (fort && d.alive) this.warPolicy(d, p);
+    }
+    a.razed = true; // (ils rentrent : les terres de leur passage reviennent au défenseur, sans « assaut échoué »)
+    const n = burned.length, s = n > 1 ? 's' : '';
+    const fr = `${n ? `${n} bâtiment${s} brûlé${s}` : 'rien à brûler autour'}${wasLevel > 1 ? `, ${city ? 'la ville' : 'il'} retombe au niveau 1` : ''}`;
+    const en = `${n ? `${n} building${s} burned` : 'nothing to burn around it'}${wasLevel > 1 ? `, ${city ? 'the city' : 'it'} falls back to level 1` : ''}`;
+    if (p.isHuman) UI.log(a.raid ? tr(`🔥 Ta chevauchée a pillé ${label} : ${fr}, 💰 ${fmt(loot)} de butin ! Elle rentre.`,
+      `🔥 Your chevauchée plundered ${label}: ${en}, 💰 ${fmt(loot)} of loot! It heads home.`)
+      : tr(`🔥 Tes Vikings ont mis à sac ${label} : ${fr}, 💰 ${fmt(loot)} de butin ! Ils rembarquent.`,
+        `🔥 Your Vikings sacked ${label}: ${en}, 💰 ${fmt(loot)} of loot! They set sail home.`), 'good', d);
+    else if (d.isHuman && !a.raid) UI.log(tr(`🔥 Les Vikings ${this.deName(p.name)} ont mis à sac ${label} : ${fr} ! Elle reste à toi.`,
+      `🔥 ${possessive(p.name)} Vikings sacked ${label}: ${en}! It stays yours.`), 'warn', p);
+    else if (d.isHuman && a.raidWho) UI.log(tr(`🔥 ${a.raidWho} ont pillé ${label} : ${fr} ! Elle reste à toi. Ils repartent avec leur butin.`,
+      `🔥 ${a.raidWho} plundered ${label}: ${en}! It stays yours. They leave with their loot.`), 'warn', p);
+    else if (d.isHuman) UI.log(tr(`⚔️ Les ${p.name} ont mis à sac ${label} : ${fr} ! Elle reste à toi. Ils rentrent chez eux avec leur butin.`,
+      `⚔️ The ${p.name} have sacked ${label}: ${en}! It stays yours. They head home with their loot.`), 'warn', p);
     return this.endAttack(a);
   },
   // Des soldats rembarquent sur la côte `from` et rentrent au port le plus proche (ils rejoignent l'armée en arrivant)
@@ -6843,7 +6879,7 @@ const GameRules = {
       // Prise de l'église, du port ou de l'avant-poste visé : l'assaut s'arrête là
       const b = this.building[t];
       if (a.targetCastle >= 0 && b && b !== B_CASTLE && this.anchor[t] === a.targetCastle) {
-        if (a.raid) return this.vikingRaid(a, a.targetCastle); // (⚔️ une razzia rase sa cible, sans la garder)
+        if (a.raid) return this.vikingRaid(a, a.targetCastle); // (⚔️ une razzia met sa cible à sac, sans la garder : voir sackCity)
         if (linked) this.takeLinked(a, linked, hosted);
         this.onTargetTaken(a, b, !!linked);
         return this.endAttack(a);
