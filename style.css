@@ -740,3 +740,9 @@ button:disabled .ico { opacity: 0.6; }
 #effectsBar .fx .t { opacity: 0.75; font-variant-numeric: tabular-nums; }
 @media (max-width: 1100px) { #effectsBar { left: 8px; right: 296px; transform: none; width: auto; max-width: none; } }
 @media (max-width: 760px) { #effectsBar { right: 8px; } }
+
+/* 📈 Les tableaux des niveaux des bâtiments, dans les règles */
+.rules table.lvl { border-collapse: collapse; margin: 4px 0 6px; font-size: 12px; max-width: 100%; display: block; overflow-x: auto; }
+.rules table.lvl th, .rules table.lvl td { border: 1px solid rgba(110, 70, 20, 0.3); padding: 2px 6px; text-align: center; white-space: nowrap; }
+.rules table.lvl th { background: rgba(110, 70, 20, 0.12); font-family: Cinzel, Georgia, serif; }
+.rules table.lvl td:first-child { text-align: left; font-weight: bold; }

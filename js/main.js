@@ -1146,7 +1146,9 @@ const UI = {
     // toujours au même endroit : centrée juste sous la barre de nos infos, en haut de l'écran
     const bar = $('topbar').getBoundingClientRect(), glory = Game.gloryMode ? $('gloryBar').getBoundingClientRect() : null;
     tip.style.left = (bar.left + bar.width / 2) + 'px';
-    tip.style.top = ((glory ? glory.bottom : bar.bottom) + 6) + 'px'; // (🌿 sous la jauge de gloire)
+    // (🌿 sous la jauge de gloire ; 📋 et sous la barre des effets en cours de ton royaume, pour ne pas la cacher)
+    const fx = $('effectsBar'), fxr = fx.classList.contains('hidden') ? null : fx.getBoundingClientRect();
+    tip.style.top = (Math.max(glory ? glory.bottom : bar.bottom, fxr ? fxr.bottom : 0) + 6) + 'px';
     tip.classList.remove('hidden');
   },
 
@@ -2009,9 +2011,11 @@ const UI = {
   placeTopPanels(box, shown) {
     let y = $('topbar').getBoundingClientRect().bottom + 6;
     // (📋 la barre des effets en cours, juste sous la barre du haut ; à droite des objectifs quand il y a la place)
-    const fx = $('effectsBar');
+    const fx = $('effectsBar'), glory = $('gloryBar');
     if (!fx.classList.contains('hidden')) {
-      fx.style.top = Math.round(y - 2) + 'px';
+      // (🌿 sur une carte de gloire : sous la jauge de gloire, qui est elle aussi juste sous la barre du haut)
+      const gy = glory.classList.contains('hidden') ? 0 : glory.getBoundingClientRect().bottom + 6;
+      fx.style.top = Math.round(Math.max(y, gy) - 2) + 'px';
       const r = fx.getBoundingClientRect();
       if (!shown || r.left < box.getBoundingClientRect().right + 6) y = r.bottom + 6;
     }
@@ -2138,7 +2142,7 @@ const UI = {
     const ra = Math.min(CONFIG.RALLY_MAX, rally.length * CONFIG.RALLY_BONUS), pw = Math.min(CONFIG.POST_WAR_MAX, post.length * CONFIG.POST_WAR_MALUS);
     if (ra > 0) add('good', tr('🔥 Galvanisé', '🔥 Rallied'), tr(`troupes +${pct(ra)} %`, `troops +${pct(ra)}%`), tr('Ton peuple, galvanisé par une défaite, produit plus de soldats.', 'Your people, rallied by a defeat, produce more soldiers.'), Math.max(...rally) - G.tick);
     if (pw > 0) add('bad', tr('⚰️ Après-guerre', '⚰️ Post-war'), tr(`troupes −${pct(pw)} %`, `troops −${pct(pw)}%`), tr('Ton royaume panse ses blessures après une victoire : il produit moins de soldats.', 'Your kingdom licks its wounds after a victory: it produces fewer soldiers.'), Math.max(...post) - G.tick);
-    if (h.levyEnd && G.tick < h.levyEnd) add('good', tr('📯 Levée en masse', '📯 Mass levy'), tr('recrutement accru', 'recruitment raised'), tr('Le recrutement de masse de ta caserne est en cours.', 'Your barracks\' mass levy is under way.'), h.levyEnd - G.tick);
+    if (h.levyEnd && G.tick < h.levyEnd) add('good', tr('🔔 Levée en masse', '🔔 Mass levy'), tr('recrutement accru', 'recruitment raised'), tr('Le recrutement de masse de ta caserne est en cours.', 'Your barracks\' mass levy is under way.'), h.levyEnd - G.tick);
     if (h.crisisUntil > G.tick) add('bad', tr('👑 Crise', '👑 Crisis'), tr('plus de recrues', 'no recruits'), tr('Ton royaume est en crise : il ne recrute plus.', 'Your kingdom is in crisis: it recruits no more.'), h.crisisUntil - G.tick);
     // --- ✝️ Les Croisades ---
     if (G.cr) {
