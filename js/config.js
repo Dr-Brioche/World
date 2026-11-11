@@ -281,6 +281,7 @@ const CONFIG = {
   //  2000 : 7 par seconde, 3000 : 8,5, et 5000 et plus : 10 cases par seconde, le maximum)
   FAITH_PACE: [[20, 30], [100, 5], [200, 1], [500, 0.5], [1000, 0.2], [2000, 1 / 7], [3000, 1 / 8.5], [5000, 0.1]],
   FAITH_SPEED: 1.25,         // ...et tout ce tableau va 25 % plus vite (1 = vitesse du tableau, 1.5 = +50 %)
+  FAITH_GAP_SCALE: 2,        // ...et il faut 2 fois plus d'écart pour la même vitesse : un écart de 200 convertit comme 100 dans le tableau
   // ...mais un écart mince par rapport à sa propre Croyance avance moins vite : pleine vitesse (celle du tableau) à
   // partir de 2 fois plus de Croyance que le voisin (0.5 : l'écart fait la moitié de sa Croyance) ; en dessous, la
   // vitesse baisse en douceur (FAITH_DOMINANCE_POWER : plus petit = baisse plus douce) : 1,5 fois plus : 85 % de la
@@ -497,6 +498,9 @@ const CONFIG = {
     // 🔁 Un son joué deux fois de suite : la deuxième fois DELAY secondes après la première, un peu plus aiguë
     // (RATE : 1.08 = 8 % plus aiguë, et un peu plus rapide), et un peu moins forte (GAIN)
     SOUND_ECHO: { build: { DELAY: 0.22, RATE: 1.08, GAIN: 0.85 } },
+    // 🔨 Plusieurs bâtiments finis en même temps : leurs sons s'enchaînent, l'un après l'autre (GAP secondes entre deux,
+    // MAX en attente au plus), au lieu de n'en entendre qu'un (pour ces sons-là, SOUND_GAP ne compte pas)
+    SOUND_QUEUE: { build: { GAP: 0.7, MAX: 6 } },
   },
 
   // --- 📿 Les reliques saintes (parties classiques seulement, pas les scénarios : voir reliques.js) ---
@@ -568,11 +572,12 @@ const MILL_LEVELS = [
 // maxTroops = soldats en plus dans l'armée maximum,
 // power = force de TOUS les soldats du royaume au combat (1.2 = chaque soldat vaut 1,2 soldat).
 // Ce bonus ne s'additionne pas : c'est la meilleure caserne du royaume qui compte.
+// (⚔️ v0.98.81 : la production de soldats de chaque niveau baisse d'un quart : 2,5 → 1,875, 5 → 3,75, 11,25 → 8,4375)
 const BARRACKS_LEVELS = [
   null,
-  { name: tr('Camp d\'entraînement', 'Training camp'), troops: 2.5, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.2 },
-  { name: tr('Caserne', 'Barracks'),              troops: 5, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 4.6, upgradeCost: 400 },
-  { name: tr('Grande caserne', 'Great barracks'),       troops: 11.25, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 6.0, upgradeCost: 2500 },
+  { name: tr('Camp d\'entraînement', 'Training camp'), troops: 1.875, maxTroops: 25, power: 1.3, img: 'img/caserne1.webp', size: 3.2 },
+  { name: tr('Caserne', 'Barracks'),              troops: 3.75, maxTroops: 50, power: 1.8, img: 'img/caserne2.webp', size: 4.6, upgradeCost: 400 },
+  { name: tr('Grande caserne', 'Great barracks'),       troops: 8.4375, maxTroops: 350, power: 2.5, img: 'img/caserne3.webp', size: 6.0, upgradeCost: 2500 },
 ];
 
 // Les 3 niveaux du château. Le bonus s'ajoute à la défense du terrain
