@@ -5979,6 +5979,8 @@ const GameRules = {
       if (!around && a.viking === t) around = 1;
       // (🤝 une armée venue par les terres d'un allié entre chez l'ennemi par la case collée à ces terres)
       if (!around && a.passageStart === t && this.owner[a.passage] !== a.target) around = 1;
+      // (l'armée arrivée au bout de sa marche alors que ses terres ont reculé : elle entre d'où elle est, voir stepAttack)
+      if (!around && a.entryStart === t) around = 1;
       const score = around / TERRAIN_INFO[this.terrain[t]].cost;
       // Un assaut vers un objectif ne sort pas de son couloir (limitZone)
       const outside = a.limitZone && !a.limitZone.has(t);
@@ -6801,8 +6803,20 @@ const GameRules = {
       a.set = new Set(a.list);
       // Assaut sur un château : le chemin est-il toujours libre ?
       if (a.targetCastle >= 0 && !a.castleTaken) {
-        const path = this.owner[a.targetCastle] === a.target
+        let path = this.owner[a.targetCastle] === a.target
           ? this.castlePath(a.attacker, a.targetCastle, this.sourceOfAttack(a)) : null;
+        // (l'armée est arrivée au bout de sa marche, à a.startTile : si ses terres ont reculé derrière elle pendant ce
+        //  temps (une ville prise dans son dos…), elle ne revole pas jusqu'à leur nouvelle frontière pour recommencer :
+        //  elle attaque d'où elle est)
+        const end = a.startTile, W = this.W;
+        if (path && end >= 0 && DMath.hypot(path[0] % W - end % W, ((path[0] / W) | 0) - ((end / W) | 0)) > 8) {
+          const here = this.pathFromHere(a, end);
+          if (here) { path = here; a.entryStart = here[0]; }
+        }
+        if (!path && end >= 0 && this.owner[a.targetCastle] === a.target) {
+          const here = this.pathFromHere(a, end);
+          if (here) { path = here; a.entryStart = here[0]; }
+        }
         if (!path) {
           if (this.players[a.attacker].isHuman) UI.log(tr('🚫 Le passage vers le château est bloqué : assaut annulé.', '🚫 The way to the castle is blocked: assault cancelled.'), 'warn');
           this.aiBlock(a);
@@ -6811,6 +6825,7 @@ const GameRules = {
         a.pathTiles = path;
         a.limitZone = this.corridor(a.targetCastle, path);
         a.frontTile = path[0];
+        if (a.entryStart !== undefined && !a.set.has(path[0])) { a.list.push(path[0]); a.set.add(path[0]); }
       }
     }
     if (a.link >= 0) {
@@ -7007,6 +7022,18 @@ const GameRules = {
     const c = a.targetCastle;
     if (a.target < 0 || c < 0 || a.link !== undefined || this.owner[c] !== a.target || !this.building[c]) return null;
     return this.castlePassable(c, a.attacker);
+  },
+
+  // Le chemin de l'assaut a vers son objectif depuis la case end (là où l'armée est arrivée), même si ses terres n'y
+  // touchent plus : depuis end elle-même si elle est au royaume visé, ou depuis ses voisines (null s'il n'y en a pas)
+  pathFromHere(a, end) {
+    const c = a.targetCastle;
+    if (c < 0 || !this.building[c] || this.owner[c] !== a.target) return null;
+    const passable = this.castlePassable(c, a.attacker), starts = [];
+    if (passable(end)) starts.push([end, 0]);
+    else this.forNeighbors(end, n => { if (passable(n)) starts.push([n, 0]); });
+    if (!starts.length) return null;
+    return this.stopAtWalls(c, this.searchPath(a.attacker, starts, new Set(this.footprint(c, this.building[c])), passable, a.target, undefined, undefined, true));
   },
 
   resumeAssault(a) {
