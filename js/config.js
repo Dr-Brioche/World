@@ -138,6 +138,10 @@ const CONFIG = {
   TROOP_GROWTH_SQRT: 0.016,
   // Rendement décroissant des casernes, comme les moulins : rendement = 1 / (1 + 0.1 × (casernes - 1))
   BARRACKS_DIMINISHING: 0.1,
+  // ... mais ce que les niveaux 2 et 3 ajoutent (au-delà du camp d'entraînement) baisse 3 fois moins vite :
+  // améliorer ses casernes vaut toujours le coup, même quand on en a beaucoup
+  // (ex. avec 54 casernes : niveau 1 ≈ 0,4 soldat, niveau 2 ≈ 1,4, niveau 3 ≈ 3,8, toutes les 10 s)
+  BARRACKS_UPGRADE_DIMINISHING: 0.03,
   // Élan de départ : au début de la partie, le recrutement va plus vite (x3 au tout début : +200 %), puis ce bonus
   // diminue peu à peu jusqu'à disparaître au bout de EARLY_GROWTH_TIME secondes (la fin de partie ne change pas)
   EARLY_GROWTH_BONUS: 2,
@@ -223,7 +227,9 @@ const CONFIG = {
   FAITH_ROAD_BONUS: 0.5,
   FAITH_LURE: 6,             // la Croyance avance en courbes vers les églises et les ports voisins (comme la foi
   FAITH_LURE_RANGE: 30,      //   qui gagne les villages) : attirée par ceux à moins de 30 cases...
-  FAITH_WAVE: 2,             // ...et son front ondule un peu (au lieu d'avancer en ligne droite)
+  FAITH_WAVE: 2,
+  FAITH_NECK: 10,            // ...mais un couloir étroit du converti (1 ou 2 cases de large, entre deux terres du prêcheur)
+                             //   se referme d'abord (+10 ; +6 pour 3 cases de large) : la Croyance coupe les langues de terre             // ...et son front ondule un peu (au lieu d'avancer en ligne droite)
   FAITH_DISORGANIZED: 2,     // un royaume désorganisé (sans ville ni port fortifié) se fait convertir 2 fois plus vite
   // Croisade religieuse : une cathédrale (église de niveau 3) peut en lancer une pour 2500 pièces :
   // +1000 de Croyance pour le royaume pendant 60 s (une croisade à la fois par cathédrale)

@@ -1262,6 +1262,21 @@ const GameRules = {
       (lures.get(o) || lures.set(o, []).get(o)).push([a % W + h, ((a / W) | 0) + h]);
     }
     const R = CONFIG.FAITH_LURE_RANGE;
+    // (✂️ largeur d'un couloir de o en (x, y) dans la direction (dx, dy), fermé des deux côtés par pid à 3 cases au plus ;
+    //  0 s'il ne l'est pas ; les routes d'assauts comptent comme des terres du royaume attaqué, voir plus haut)
+    const ownAt = (xx, yy, pid) => (routeOf.has(yy * W + xx) ? routeOf.get(yy * W + xx) : own[yy * W + xx]) === pid;
+    const span = (x, y, dx, dy, pid, o) => {
+      let a = 0, b = 0;
+      for (const [side, sgn] of [[0, -1], [1, 1]]) {
+        for (let k = 1; k <= 3; k++) {
+          const xx = x + dx * k * sgn, yy = y + dy * k * sgn;
+          if (xx < 0 || yy < 0 || xx >= W || yy >= H) break;
+          if (ownAt(xx, yy, pid)) { if (side) b = k; else a = k; break; }
+          if (own[yy * W + xx] !== o) break;
+        }
+      }
+      return a && b ? a + b - 1 : 0;
+    };
     for (let i = 0; i < N; i++) {
       const o = own[i];
       if (o < 0 || !due.has(o)) continue;
@@ -1291,7 +1306,11 @@ const GameRules = {
         if (d < R) lure = Math.max(lure, 1 - d / R);
       }
       const wave = DMath.sin(x * 0.19 + DMath.sin(y * 0.11 + pid) * 2.5) + DMath.sin(y * 0.17 + DMath.sin(x * 0.13 + pid * 2) * 2.5);
-      const score = mine + (4 - theirs) * 2 + lure * CONFIG.FAITH_LURE + wave * CONFIG.FAITH_WAVE / 2 + this.rand();
+      // ✂️ Un goulot : la case est dans un couloir étroit du converti, avec des terres du prêcheur de part et d'autre (en
+      // ligne, à 3 cases au plus) : le refermer passe avant d'avancer vers les églises (sinon les langues de terre restent)
+      const wide = Math.min(span(x, y, 1, 0, pid, o) || 9, span(x, y, 0, 1, pid, o) || 9);
+      const neck = wide <= 2 ? CONFIG.FAITH_NECK : wide === 3 ? CONFIG.FAITH_NECK * 0.6 : 0;
+      const score = mine + (4 - theirs) * 2 + neck + lure * CONFIG.FAITH_LURE + wave * CONFIG.FAITH_WAVE / 2 + this.rand();
       const key = pid * 1000 + o, n = preachers.get(pid);
       let list = best.get(key);
       if (list && list.length >= n && list[list.length - 1].score >= score) continue;
@@ -2983,13 +3002,22 @@ const GameRules = {
       const mills = road && road.mills ? this.portMillBonus(road.mills) : 0;
       return info.gold * (eff + bonus + mills) * this.terrainFactor(a, t);
     }
-    const v = (t === B_MILL ? info.gold : info.troops) * eff;
+    // (⚔️ une caserne : sa base, celle du camp d'entraînement, subit le rendement décroissant ; ce que ses niveaux
+    //  ajoutent, beaucoup moins : voir BARRACKS_UPGRADE_DIMINISHING)
+    const base = t === B_BARRACKS ? BARRACKS_LEVELS[1].troops : 0;
+    const v = t === B_MILL ? info.gold * eff
+      : !owner ? info.troops : base * eff + (info.troops - base) * this.barracksUpgradeEfficiency(owner);
     return v * (1 + bonus) * this.terrainFactor(a, t);
   },
 
   // Rendement des casernes d'un royaume : plus il en a, moins chacune produit (voir BARRACKS_DIMINISHING)
   barracksEfficiency(p) {
     return 1 / (1 + CONFIG.BARRACKS_DIMINISHING * Math.max(0, p.bCount[B_BARRACKS] - 1));
+  },
+
+  // Rendement de ce que les niveaux d'une caserne ajoutent : il baisse 3 fois moins vite (voir BARRACKS_UPGRADE_DIMINISHING)
+  barracksUpgradeEfficiency(p) {
+    return 1 / (1 + CONFIG.BARRACKS_UPGRADE_DIMINISHING * Math.max(0, p.bCount[B_BARRACKS] - 1));
   },
 
   // Rendement des moulins et des ports d'un royaume : plus il en a, moins chacun rapporte
@@ -3022,7 +3050,9 @@ const GameRules = {
         p.troops += shown;
       }
       // Le joueur ne voit que la production de ses propres bâtiments
-      if (p.isHuman && shown >= 0.5) Render.floatText(a, t, `+${Math.round(shown)} ${t === B_BARRACKS ? '⚔️' : '💰'}`);
+      // (sous 10 : une décimale, pour qu'une caserne qui donne 0,4 soldat ne s'affiche pas comme une qui en donne 1,4)
+      const num = shown < 10 ? (Math.round(shown * 10) / 10).toString().replace('.', LANG === 'fr' ? ',' : '.') : Math.round(shown);
+      if (p.isHuman && shown >= 0.1) Render.floatText(a, t, `+${num} ${t === B_BARRACKS ? '⚔️' : '💰'}`);
     }
   },
 
@@ -6390,6 +6420,9 @@ const GameRules = {
     if (src >= 0) return mid(src);
     // (armée bloquée dans ses châteaux isolés : les défenseurs sortent du château attaqué)
     if (a.targetCastle >= 0 && this.building[a.targetCastle] === B_CASTLE && this.troopsInCastles(pid)) return mid(a.targetCastle);
+    // (🧱 une mine fortifiée ou une tour de gloire fortifiée, reliée au royaume : comme une ville, ses murs accueillent
+    //  aussitôt les défenseurs, ils sortent d'elle ; isolée, personne ne la rejoint : voir cutOff)
+    if (a.targetCastle >= 0 && this.owner[a.targetCastle] === pid && this.mineFortified(a.targetCastle)) return mid(a.targetCastle);
     const goal = this.defenseGoal(a);
     const fast = this.fastestCity(pid, Math.floor(goal.y) * W + Math.floor(goal.x), this.strongholds(pid, true));
     if (fast >= 0) return mid(fast);
