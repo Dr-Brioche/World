@@ -136,6 +136,32 @@ const CENTANS = {
     { from: 1422, name: tr('Charles VII', 'Charles VII') },
   ],
   // (les rois d'Angleterre, pour les messages ; Henri V rend ses soldats plus forts : voir HERO_POWER)
+  // 👑 Les dirigeants des autres factions jouables, année par année (pour la barre du haut : celui du joueur ; voir
+  // Game.hyRuler). Le roi de France et le roi d'Angleterre : KINGS et ENGLISH_KINGS.
+  RULERS: {
+    bretagne: [
+      { from: 1337, name: tr('Jean III', 'John III') },
+      { from: 1341, name: tr('Jean de Montfort', 'John of Montfort') },
+      { from: 1345, name: tr('Jean IV', 'John IV') },
+      { from: 1399, name: tr('Jean V', 'John V') },
+      { from: 1442, name: tr('François Ier', 'Francis I') },
+      { from: 1450, name: tr('Pierre II', 'Peter II') },
+    ],
+    bourgogne: [
+      { from: 1337, name: tr('Eudes IV', 'Odo IV') },
+      { from: 1349, name: tr('Philippe de Rouvres', 'Philip of Rouvres') },
+      { from: 1363, name: tr('Philippe le Hardi', 'Philip the Bold') },
+      { from: 1404, name: tr('Jean sans Peur', 'John the Fearless') },
+      { from: 1419, name: tr('Philippe le Bon', 'Philip the Good') },
+    ],
+    ecosse: [
+      { from: 1337, name: tr('David II', 'David II') },
+      { from: 1371, name: tr('Robert II', 'Robert II') },
+      { from: 1390, name: tr('Robert III', 'Robert III') },
+      { from: 1406, name: tr('Jacques Ier', 'James I') },
+      { from: 1437, name: tr('Jacques II', 'James II') },
+    ],
+  },
   ENGLISH_KINGS: [
     { from: 1337, name: tr('Édouard III', 'Edward III') },
     { from: 1377, name: tr('Richard II', 'Richard II') },
@@ -150,7 +176,7 @@ const CENTANS = {
   // 📖 Ce qui change dans cette campagne : un parchemin au début de la partie (voir MECHANICS dans croisades.js)
   MECHANICS: {
     all: [
-      [tr('📅 Le temps', '📅 Time'), tr('de 1337 à 1453, en une heure environ (l\'année et les rois sont en haut). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from 1337 to 1453, in about an hour (the year and the kings are at the top). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
+      [tr('📅 Le temps', '📅 Time'), tr('de 1337 à 1453, en une heure environ (l\'année et ton souverain du moment sont en haut ; au survol, les deux rois). Les grands moments arrivent à leur date, sur un parchemin ; quand il y a un choix, celui de l\'histoire est marqué 📜.', 'from 1337 to 1453, in about an hour (the year and your ruler of the moment are at the top; hover for the two kings). The great moments arrive on their date, on a parchment; when there is a choice, the historical one is marked 📜.')],
       [tr('🏰 Pas de nouvelle ville', '🏰 No new cities'), tr('on améliore les siennes et on prend celles des autres.', 'you upgrade your own and take other kingdoms\' cities.')],
       [tr('👑 La Légitimité', '👑 Legitimacy'), tr('elle remplace la Croyance : tes villes, tes églises, le sacre à Reims la font monter ; un roi captif, fou ou pas sacré en perd.', 'it replaces Faith: your cities, your churches and the coronation at Reims raise it; a captive, mad or uncrowned king loses some.')],
       [tr('⚖️ Les grands vassaux', '⚖️ The great vassals'), tr('Bourgogne, Bretagne, Flandre et Navarre suivent le roi le plus légitime, et changent de camp. Achète leur fidélité (500 d\'or) avec le bouton « Vassaux », à droite de l\'écran (ou clic droit sur leurs terres). Attaquer un vassal le fâche.', 'Burgundy, Brittany, Flanders and Navarre follow the most legitimate king, and switch sides. Buy their loyalty (500 gold) with the « Vassals » button, on the right of the screen (or right-click their lands). Attacking a vassal angers it.')],

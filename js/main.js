@@ -257,6 +257,7 @@ const UI = {
     document.querySelectorAll('.hostOnly').forEach(b => b.classList.toggle('hidden', !this.isHost()));
     // 📜 Règles : le jeu se met en pause, et les règles complètes s'affichent (les mêmes que sur l'écran de départ)
     $('rulesBtn').addEventListener('click', () => this.openRules());
+    $('rulesTabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) this.showRulesTab(b.dataset.tab); });
     // 👑 Le cadre des objectifs se replie (ou se déplie) d'un clic
     // 📜 Le bouton des actions de campagne (à droite) : ouvre ou ferme leur panneau ; un bouton du panneau : son ordre
     $('campBtn').addEventListener('click', () => { this.campOpen = !this.campOpen; this.campKey = ''; this.refreshCampPanel(); });
@@ -900,12 +901,33 @@ const UI = {
     return escapeHtml(names.length ? tr(`${Game.pactName(p)} : avec ${names.join(', ')}`, `${Game.pactName(p)}: with ${names.join(', ')}`) : tr('Aucun pacte', 'No pact'));
   },
 
+  // 📜 Les règles en partie. Dans un scénario (Charlemagne, la guerre de Cent Ans, les Croisades) : deux onglets, les
+  // règles du scénario d'abord (ce qui change à cette époque, puis pour ta faction : le parchemin du début de partie,
+  // voir mechanicsParchment), et les règles classiques du jeu
   openRules() {
     if (!$('rulesBody').firstChild) $('rulesBody').appendChild(document.querySelector('.rulesBox .rules.' + LANG).cloneNode(true));
+    const G = Game, S = G.cm ? CHARLEMAGNE : G.hy ? CENTANS : G.cr ? CROISADES : null, M = S && S.MECHANICS;
+    $('rulesTabs').classList.toggle('hidden', !M);
+    if (M) {
+      const role = BANNERS[G.human.banner].id, mine = (M.roles && M.roles[role]) || [];
+      const li = ([t, x]) => `<li><b>${escapeHtml(t)}</b> : ${escapeHtml(x)}</li>`;
+      $('rulesScen').innerHTML = `<h2>${escapeHtml(tr('Ce qui change dans cette campagne', 'What changes in this campaign'))}</h2>` +
+        `<ul>${M.all.map(li).join('')}` +
+        (mine.length ? `<li class="sep">${escapeHtml(tr(`Pour ta faction : ${G.human.name}`, `For your faction: ${G.human.name}`))}</li>${mine.map(li).join('')}` : '') + '</ul>' +
+        `<p>${escapeHtml(tr('Tes objectifs et tes défis sont en haut à gauche de l\'écran (clique sur l\'un d\'eux pour aller voir où c\'est). Le reste du jeu suit les règles classiques (deuxième onglet).',
+          'Your objectives and challenges are at the top left of the screen (click one to go and see where it is). The rest of the game follows the classic rules (second tab).'))}</p>`;
+    }
+    this.showRulesTab(M ? 'scen' : 'classic'); // (par défaut : les règles du scénario)
     // (on ne remet le jeu en marche en fermant que si c'est nous qui l'avons arrêté ; 🌐 en ligne, la partie continue)
     this.rulesPaused = !Game.online && !Game.paused;
     if (this.rulesPaused) this.togglePause();
     $('rulesScreen').classList.remove('hidden');
+  },
+  showRulesTab(tab) {
+    $('rulesScen').classList.toggle('hidden', tab !== 'scen');
+    $('rulesBody').classList.toggle('hidden', tab !== 'classic');
+    $('rulesTabs').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelector('#rulesScreen .rulesCard').scrollTop = 0;
   },
   closeRules() {
     $('rulesScreen').classList.add('hidden');
@@ -1345,9 +1367,22 @@ const UI = {
     return [tr(`Or +${info.gold} ${every}`, `Gold +${info.gold} ${every}`)];
   },
 
-  // Ce que fait une mine à son niveau (info : voir Game.mineInfo) ; « x2 si reliée » : une route vers une de ses villes
+  // 🛤️ Ce que change la route d'une mine (vers une de ses villes), dit clairement selon son minerai : linked, reliée
+  // ou non (pour le fer, la pierre et l'or, la route double l'effet ; pour le diamant, elle double la vitesse, pas l'or)
+  mineRoadWhat(kind) {
+    const k = CONFIG.MINE_ROAD_FACTOR;
+    return { iron: tr(`force ×${k}`, `strength ×${k}`), stone: tr(`baisse des prix ×${k}`, `discount ×${k}`),
+      gold: tr(`or versé ×${k}`, `gold paid ×${k}`), diamond: tr(`extraction ${k} fois plus rapide (le même or)`, `mining ${k} times faster (the same gold)`) }[kind] || `×${k}`;
+  },
+  mineRoadText(kind, linked) {
+    const k = CONFIG.MINE_ROAD_FACTOR, what = this.mineRoadWhat(kind);
+    return linked ? tr(`🛤️ reliée à une ville : ${what}`, `🛤️ linked to a city: ${what}`)
+      : kind === 'diamond' ? tr(`sans route : extraction ${k} fois plus lente (une route vers une ville la rend normale)`, `no road: mining ${k} times slower (a road to a city makes it normal)`)
+        : tr(`sans route (si reliée à une ville : ${what})`, `no road (if linked to a city: ${what})`);
+  },
+  // Ce que fait une mine à son niveau (info : voir Game.mineInfo) ; une route vers une de ses villes : voir mineRoadText
   minePerks(info) {
-    const m = MINES[info.kind], x2 = tr(`×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville`, `×${CONFIG.MINE_ROAD_FACTOR} if linked to a city`);
+    const m = MINES[info.kind], x2 = tr(`Si reliée à une ville : ${this.mineRoadWhat(info.kind)}`, `If linked to a city: ${this.mineRoadWhat(info.kind)}`);
     if (info.kind === 'iron') return [tr(`Force des troupes ${pct(info.power)}`, `Troop strength ${pct(info.power)}`), x2, tr(`${m.max} au plus`, `${m.max} at most`)];
     if (info.kind === 'gold') return [tr(`💰 ${m.total.toLocaleString('fr-FR')} en ${Math.round(m.time / 60)} min`, `💰 ${m.total.toLocaleString('en-US')} in ${Math.round(m.time / 60)} min`),
       x2, tr('puis le filon s\'épuise', 'then the ore vein runs out')];
@@ -1355,8 +1390,9 @@ const UI = {
       x2, tr(`${m.max} au plus`, `${m.max} at most`)];
     if (info.kind === 'glory') return [tr(`🌿 +${fmtRate(info.glory * ((ARENA_MAPS[Game.mapType] && ARENA_MAPS[Game.mapType].gloryRate) || 1))} de gloire par seconde`, `🌿 +${fmtRate(info.glory * ((ARENA_MAPS[Game.mapType] && ARENA_MAPS[Game.mapType].gloryRate) || 1))} glory per second`),
       tr(`La jauge se remplit : pleine (${fmt(CONFIG.GLORY.GOAL)}), le plus glorieux gagne`, `The gauge fills up: when full (${fmt(CONFIG.GLORY.GOAL)}), the most glorious wins`)];
-    return [tr(`💰 ${m.pay.map(fmt).join(', ')} aux 3 premiers quarts, ${fmt(m.final)} à la fin`, `💰 ${m.pay.map(fmt).join(', ')} at each of the first 3 quarters, ${fmt(m.final)} at the end`),
-      tr(`Extraction : ${Math.round(m.time / 60 / info.speed)} min (×0,5 sans route)`, `Extraction: ${Math.round(m.time / 60 / info.speed)} min (×0.5 without a road)`)];
+    const t = m.time / 60 / info.speed, mn = v => `${Math.floor(v)} min${v % 1 ? ` ${Math.round(v % 1 * 60)}` : ''}`;
+    return [tr(`💰 ${m.pay.map(fmt).join(', ')} aux 3 premiers quarts, ${fmt(m.final)} à la fin (${fmt(m.pay.reduce((a, b) => a + b, m.final))} en tout)`, `💰 ${m.pay.map(fmt).join(', ')} at each of the first 3 quarters, ${fmt(m.final)} at the end (${fmt(m.pay.reduce((a, b) => a + b, m.final))} in all)`),
+      tr(`Extraction : ${mn(t)} avec une route vers une ville, ${mn(t * CONFIG.MINE_ROAD_FACTOR)} sans (l'or ne change pas)`, `Mining: ${mn(t)} with a road to a city, ${mn(t * CONFIG.MINE_ROAD_FACTOR)} without (the gold does not change)`)];
   },
 
   // Ce que change une amélioration (par rapport au niveau actuel) : une liste de petits avantages
@@ -1453,7 +1489,7 @@ const UI = {
         if (info.kind === 'stone') txt += tr(` · prix ${pct(-info.discount * k)}`, ` · costs ${pct(-info.discount * k)}`);
         if (info.kind === 'diamond') txt += tr(` · 💎 ${Math.floor(d.progress * 100)} % extrait`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted`);
         if (info.kind === 'glory') txt += tr(` · 🌿 +${fmtRate(G.gloryRate(a))} de gloire par seconde`, ` · 🌿 +${fmtRate(G.gloryRate(a))} glory per second`); // (pas de route qui compte)
-        else txt += k > 1 ? tr(' · 🛤️ reliée', ' · 🛤️ linked') : tr(' · sans route (×2 si reliée à une ville)', ' · no road (×2 if linked to a city)');
+        else txt += ' · ' + this.mineRoadText(info.kind, k > 1);
       }
     }
     if (G.holdsAlone(a) && G.isIsolated(a)) txt += tr(' · 🚩 isolé', ' · 🚩 isolated');
@@ -1472,8 +1508,7 @@ const UI = {
       : d.kind === 'gold' ? tr(` · ⏳ filon : ${clock(d.left / CONFIG.TICKS_PER_SECOND)} d'exploitation`, ` · ⏳ ore vein: ${clock(d.left / CONFIG.TICKS_PER_SECOND)} of mining left`)
       : d.kind === 'diamond' ? tr(` · 💎 extrait à ${Math.floor(d.progress * 100)} % (${d.paid}/4 versements)`, ` · 💎 ${Math.floor(d.progress * 100)}% extracted (${d.paid}/4 payments)`) : '';
     if (d.kind === 'glory') txt += tr(` · 🌿 +${fmtRate(G.gloryRate(a))} de gloire par seconde`, ` · 🌿 +${fmtRate(G.gloryRate(a))} glory per second`); // (la gloire : pas de route qui compte)
-    else if (!G.mineSpent(a)) txt += G.mineLinked(a) ? tr(` · 🛤️ reliée à une ville : ×${CONFIG.MINE_ROAD_FACTOR}`, ` · 🛤️ linked to a city: ×${CONFIG.MINE_ROAD_FACTOR}`)
-      : tr(` · sans route (×${CONFIG.MINE_ROAD_FACTOR} si reliée à une ville)`, ` · no road (×${CONFIG.MINE_ROAD_FACTOR} if linked to a city)`);
+    else if (!G.mineSpent(a)) txt += ' · ' + this.mineRoadText(d.kind, G.mineLinked(a));
     if (G.mineFortified(a)) txt += tr(` · 🧱 fortifiée (🛡️ ${fmt(G.garrison[a])} / ${MINE_FORT.GARRISON})`, ` · 🧱 fortified (🛡️ ${fmt(G.garrison[a])} / ${MINE_FORT.GARRISON})`);
     return txt;
   },
@@ -2082,12 +2117,18 @@ const UI = {
     $('log').style.top = Math.round(y) + 'px';
   },
 
-  // ⚜️ La guerre de Cent Ans : l'année, le roi de France, et ce qui pèse sur le royaume (trêve, rançon, folie, peste)
+  // ⚜️ La guerre de Cent Ans : l'année, le dirigeant de ta faction, et ce qui pèse sur le royaume (trêve, rançon, folie, peste)
   refreshHyBox() {
     const G = Game, hy = G.hy, TPS = CONFIG.TICKS_PER_SECOND, fr = G.hyP('france'), en = G.hyP('angleterre');
     // (en court dans la barre, en détail au survol)
     const parts = [`📅 ${Math.floor(G.hyYear())}`], tips = [tr(`Année ${Math.floor(G.hyYear())}`, `Year ${Math.floor(G.hyYear())}`)];
-    if (fr.alive) { parts.push(`⚜️ ${G.hyKing().name}`); tips.push(tr(`Roi de France : ${G.hyKing().name}`, `King of France: ${G.hyKing().name}`)); }
+    // (👑 dans la barre : le dirigeant de TA faction cette année, le roi de France, le roi d'Angleterre, ou ton duc ;
+    //  au survol : les deux rois, et le tien)
+    const role = G.human.role, mine = G.hyRuler(role);
+    if (mine) parts.push(`${role === 'france' ? '⚜️' : role === 'angleterre' ? '🦁' : '👑'} ${mine.name}`);
+    else if (fr.alive) parts.push(`⚜️ ${G.hyKing().name}`);
+    if (mine && role !== 'france' && role !== 'angleterre') tips.push(tr(`Ton souverain : ${mine.name} (${G.human.name})`, `Your ruler: ${mine.name} (${G.human.name})`));
+    if (fr.alive) tips.push(tr(`Roi de France : ${G.hyKing().name}`, `King of France: ${G.hyKing().name}`));
     if (en.alive) tips.push(tr(`Roi d'Angleterre : ${G.hyEngKing().name}`, `King of England: ${G.hyEngKing().name}`));
     // (la trêve, la rançon, la folie, la peste… : dans la barre des effets en cours, voir refreshEffects)
     const txt = parts.join(' · ');

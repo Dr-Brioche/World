@@ -123,6 +123,18 @@ Object.assign(GameRules, {
   // Le roi de France du moment (voir KINGS)
   hyKing() { return CENTANS.KINGS[this.hy.kingIdx]; },
   hyEngKing() { return CENTANS.ENGLISH_KINGS[this.hy.engIdx]; },
+  // 👑 Le dirigeant d'une faction cette année : le roi de France, le roi d'Angleterre, ou un duc / roi de RULERS
+  // (null pour une faction sans liste)
+  hyRuler(role) {
+    if (role === 'france') return this.hyKing();
+    if (role === 'angleterre') return this.hyEngKing();
+    const list = CENTANS.RULERS[role];
+    if (!list) return null;
+    const y = this.hyYear();
+    let r = list[0];
+    for (const x of list) if (y >= x.from) r = x;
+    return r;
+  },
   // 📜 Un grand événement : un parchemin pour le joueur du roi de France (voir EVENTS dans centans.js) ou du roi
   // d'Angleterre (ENGLAND_EVENTS : sa campagne à lui), un simple message (log, s'il y en a un) pour les autres
   hyEvent(key, vars, log, kind = 'warn', who) {

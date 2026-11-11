@@ -601,6 +601,18 @@ button:disabled .ico { opacity: 0.6; }
 .rulesCard { max-width: 860px; max-height: 88vh; overflow-y: auto; text-align: left; }
 .rulesCard h1 { text-align: center; }
 .rulesCard #rulesClose { display: block; margin: 14px auto 0; }
+/* (📜 les deux onglets des règles dans un scénario : celles du scénario, et les règles classiques) */
+#rulesTabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 0 0 12px; }
+#rulesTabs.hidden { display: none; }
+#rulesTabs button { background: var(--parchment-dark); }
+#rulesTabs button.active { background: var(--gold); box-shadow: 0 0 0 2px var(--ink) inset; font-weight: bold; }
+#rulesScen.hidden, #rulesBody.hidden { display: none; }
+#rulesScen h2 { font-family: Cinzel, Georgia, serif; font-size: 1.1em; margin: 4px 0 6px; text-align: center; }
+#rulesScen p { margin: 0 0 10px; }
+#rulesScen ul { list-style: none; margin: 0 0 12px; padding: 0; line-height: 1.45; }
+#rulesScen li { margin: 0 0 8px; padding-left: 10px; border-left: 2px solid rgba(110, 70, 20, 0.35); }
+#rulesScen li.sep { border: 0; padding: 6px 0 0; margin-top: 12px; border-top: 1px solid rgba(110, 70, 20, 0.35); font-family: Cinzel, Georgia, serif;
+  font-weight: bold; text-align: center; }
 .rules ul { padding-left: 18px; margin: 4px 0; }
 .rules ul li { margin: 6px 0; }
 
