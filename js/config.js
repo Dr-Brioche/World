@@ -805,6 +805,14 @@ const FACTION_ORDER = {
   centans: ['france', 'angleterre', 'bourgogne', 'ecosse', 'bretagne'],
   croisades: ['ayyoubides', 'angleterre', 'france', 'empire', 'jerusalem', 'byzance', 'templiers', 'hospitaliers', 'venise'],
 };
+// 📜 Les grandes campagnes des scénarios : les factions qui ont toute une histoire à elles (beaucoup de parchemins, de
+// choix historiques). Dans le choix du drapeau, elles sont marquées « (Campagne) » ; toutes les autres sont marquées
+// « (Défis) », même si elles ont quelques objectifs à elles (une petite campagne, comme la Bretagne en 1337).
+const CAMPAIGN_FACTIONS = {
+  charlemagne: ['francs'],
+  centans: ['france', 'angleterre'],
+  croisades: ['ayyoubides', 'angleterre', 'france', 'empire', 'jerusalem', 'byzance'],
+};
 function bannersForMap(mapType) {
   const set = ['azeroth', 'charlemagne', 'centans', 'croisades'].includes(mapType) ? mapType : undefined;
   return BANNERS.map((b, k) => k).filter(k => BANNERS[k].set === set);

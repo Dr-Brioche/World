@@ -230,9 +230,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      une mine de diamant.
      Tu choisis ta faction dans le menu (tout le monde sauf Rome, Byzance et Carloman), mais le but est surtout de jouer
      les **Francs** et de bâtir l'empire de Charlemagne. 📜 Dans le choix du drapeau de chaque scénario, les factions sont
-     rangées de la plus importante à la moins importante (les Francs d'abord), avec **(Campagne)** à côté du nom quand la
-     faction a sa propre histoire et ses objectifs, ou **(Défis)** quand elle n'a que des défis (réglage : `FACTION_ORDER`
-     dans `js/config.js`). Un petit **✔ vert** marque ce que tu as déjà réussi en solo : la campagne gagnée, ou, pour une
+     rangées de la plus importante à la moins importante (les Francs d'abord), avec **(Campagne)** à côté du nom pour une
+     grande campagne (toute une histoire à elle : les Francs ; la France et l'Angleterre en 1337 ; Saladin, Richard,
+     Philippe Auguste, Barberousse, Jérusalem et Byzance pour les Croisades), ou **(Défis)** pour les autres, même si elles
+     ont quelques objectifs à elles (une petite campagne, comme la Bretagne, la Bourgogne ou l'Écosse ; réglages :
+     `FACTION_ORDER` et `CAMPAIGN_FACTIONS` dans `js/config.js`). Un petit **✔ vert** marque ce que tu as déjà réussi en solo : la campagne gagnée, ou, pour une
      faction à défis, tous ses défis réussis (pas forcément dans la même partie). C'est gardé dans ton navigateur. Règles du scénario :
      - 📖 au début (dans les trois campagnes), un parchemin **« Ce qui change dans cette campagne »** résume ses règles
        propres, puis celles de ta faction ;
@@ -1343,6 +1345,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.76** : 📜 dans le choix du drapeau d'un scénario, seules les **grandes campagnes** sont marquées **(Campagne)** : les Francs de Charlemagne, la France et l'Angleterre de la guerre de Cent Ans, et pour les Croisades Saladin, Richard, Philippe Auguste, Barberousse, Jérusalem et Byzance. Les petites factions (la Bretagne, la Bourgogne, l'Écosse, les Templiers, les Hospitaliers, Venise…) sont marquées **(Défis)**, même si elles ont quelques objectifs à elles ; leur ✔ vert vient quand tous leurs défis sont réussis.
 - **v0.98.75** : 🔽 une **petite flèche** dans le titre « Royaumes » du classement (en haut à droite) **cache ou montre le tableau** des royaumes et de leurs % de terres (un clic sur le titre marche aussi) ; une fois caché, il ne reste que le titre, et ton choix est gardé pour les parties suivantes.
 - **v0.98.74** : 🌿 **mode Gloire pour les cartes aléatoires** : dans le choix des cartes, à côté des cartes aléatoires (Normale, Continentale, Base navale), une colonne **Mode** avec deux boutons, **Normal** (par défaut) et **🌿 Gloire**. En mode Gloire, des **tours de gloire** sont posées au hasard sur la carte, de préférence dans des **creux de montagne**, et leur nombre suit le nombre de royaumes (environ une pour deux, plus une : de 3 à 12) ; la jauge de gloire et la victoire à la gloire s'y ajoutent, comme sur les cartes de gloire. Le mode choisi s'affiche sur le bouton de la carte (« Normale · 🌿 Gloire ») et dans sa description ; en ligne, l'hôte d'un salon le choisit aussi.
 - **v0.98.73** : la production affichée au-dessus des moulins et des casernes revient à des nombres entiers (arrondis), sans décimale.

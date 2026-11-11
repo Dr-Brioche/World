@@ -685,18 +685,21 @@ const UI = {
     const b = BANNERS[k], S = { charlemagne: CHARLEMAGNE, centans: CENTANS, croisades: CROISADES }[b.set], d = this.doneOf(k);
     if (!S) return false;
     if (this.factionKind(k) === tr('Campagne', 'Campaign')) return !!d.campaign;
+    // (une faction à défis : tous ses défis réussis ; sans défis, sa petite campagne gagnée)
     const n = (S.CHALLENGES && S.CHALLENGES[b.id] || []).length;
-    return n > 0 && (d.defis || []).length >= n;
+    return n > 0 ? (d.defis || []).length >= n : !!d.campaign;
   },
 
-  // 📜 La sorte de jeu d'une faction de scénario (bannière k) : « Campagne » si elle a sa propre histoire (des objectifs à
-  // remplir, comme les Francs de Charlemagne), « Défis » si elle n'a que des défis ; '' hors des scénarios
+  // 📜 La sorte de jeu d'une faction de scénario (bannière k) : « Campagne » pour une grande campagne, toute une histoire
+  // à elle (CAMPAIGN_FACTIONS : les Francs de Charlemagne, la France et l'Angleterre de la guerre de Cent Ans…),
+  // « Défis » pour les autres (même avec quelques objectifs à elles, une petite campagne, comme la Bretagne) ; ''
+  // hors des scénarios, ou pour une faction sans objectifs ni défis
   factionKind(k) {
     const b = BANNERS[k], S = { charlemagne: CHARLEMAGNE, centans: CENTANS, croisades: CROISADES }[b.set];
     if (!S) return '';
-    const story = b.set === 'charlemagne' ? b.id === 'francs' : !!(S.OBJECTIVES && S.OBJECTIVES[b.id]);
-    if (story) return tr('Campagne', 'Campaign');
-    return S.CHALLENGES && S.CHALLENGES[b.id] ? tr('Défis', 'Challenges') : '';
+    if ((CAMPAIGN_FACTIONS[b.set] || []).includes(b.id)) return tr('Campagne', 'Campaign');
+    const small = S.OBJECTIVES && S.OBJECTIVES[b.id], defis = S.CHALLENGES && S.CHALLENGES[b.id];
+    return small || defis ? tr('Défis', 'Challenges') : '';
   },
   // La faction du scénario « La guerre de Cent Ans » de la bannière k (voir centans.js)
   hyFaction(k) { return CENTANS.factions.find(f => f.id === BANNERS[k].id); },
