@@ -1314,23 +1314,34 @@ const Render = {
 
   // Petit fanion rouge (mât et drapeau triangulaire) : marque un de nos bâtiments isolés
   drawIsolatedFlag(x, y) {
-    const ctx = this.ctx, h = 22;
+    const ctx = this.ctx, h = Math.max(30, Math.min(40, this.cam.scale * 3.8)), fw = h * 0.7, fh = h * 0.48;
     ctx.save();
+    ctx.lineJoin = 'round';
+    // le mât
     ctx.lineWidth = 2;
-    ctx.strokeStyle = '#2b1a0c';
+    ctx.strokeStyle = '#3a2412';
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x, y - h);
     ctx.stroke();
+    // le drapeau blanc, qui ondule un peu (vers la gauche, pour ne pas couvrir la ville)
     ctx.beginPath();
-    ctx.moveTo(x, y - h);
-    ctx.lineTo(x - 14, y - h + 5);
-    ctx.lineTo(x, y - h + 10);
+    ctx.moveTo(x, y - h + 1);
+    ctx.bezierCurveTo(x - fw * 0.35, y - h - 3, x - fw * 0.65, y - h + 3, x - fw, y - h + 1);
+    ctx.lineTo(x - fw * 0.85, y - h + fh * 0.5);
+    ctx.lineTo(x - fw, y - h + fh);
+    ctx.bezierCurveTo(x - fw * 0.65, y - h + fh + 2, x - fw * 0.35, y - h + fh - 4, x, y - h + fh);
     ctx.closePath();
-    ctx.fillStyle = '#d0352a';
+    ctx.fillStyle = '#f6f1e2';
     ctx.fill();
     ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(40,25,10,0.8)';
     ctx.stroke();
+    // la pointe dorée en haut du mât
+    ctx.fillStyle = '#d9b44a';
+    ctx.beginPath();
+    ctx.arc(x, y - h - 1.5, 2, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   },
 
@@ -3122,8 +3133,9 @@ const Render = {
       }
       // Par-dessus tous les bâtiments : leurs petites étiquettes
       for (const { i, type, half, px, py } of shown) {
-        // Un de nos châteaux (ou ports royaux) coupé de notre royaume : un petit fanion rouge au-dessus
-        if (G.owner[i] === G.human.id && G.holdsAlone(i) && G.isIsolated(i)) this.drawIsolatedFlag(px - half * s - 4, py + 6);
+        // 🏳️ Une ville (ou un port royal, une mine fortifiée) isolée, coupée de son royaume : un petit drapeau blanc à sa
+        // gauche, pour tous les royaumes (on voit ainsi les villes ennemies encerclées, que leurs défenseurs ne rejoignent plus)
+        if (G.owner[i] >= 0 && G.holdsAlone(i) && G.isIsolated(i)) this.drawIsolatedFlag(px - half * s * CONFIG.BUILDING_DRAW_SCALE - 10, py + 8);
         // Au-dessus du bâtiment : 🛡 sa garnison, ⚔ les soldats stationnés (avant-poste), 🏗️ la construction
         if (s >= 4) {
           // (au-dessus de l'image quand on la voit, sinon au-dessus de l'icône)
