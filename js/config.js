@@ -217,6 +217,8 @@ const CONFIG = {
   ROAD_MAX_CITIES: 3,        // un moulin, une caserne ou un port relié à plusieurs villes : une route par ville (3 au plus), les bonus s'additionnent
   CHURCH_ROAD_DISTANCE: 10,
   CHURCH_CITY_DISTANCE: 25,
+  CHURCH_PORT_DISTANCE: 15,  // ⛪⚓ une église à moins de 15 cases d'un de ses ports (sur la même terre), sans route de port
+                             // assez proche : un chemin la relie directement au port (comme à la route d'un port)
   CHURCH_ROAD_GOLD: 2,
   // Un moulin ou une caserne bâti hors des villes, sur une route (route d'un port ou chemin d'une église) ou juste à
   // côté (à moins de 3 cases de son centre) : +20 % de production
@@ -379,6 +381,11 @@ const CONFIG = {
   // ...sauf en territoire désorganisé (personne n'y tient le terrain) : au-delà de DISORGANIZED_LOSS_FROM soldats, les
   // pertes par case n'augmentent plus (une grosse armée y va plus vite, sans perdre plus d'hommes par case)
   DISORGANIZED_LOSS_FROM: 500,
+  // 🏝️ Contre un lieu isolé (une ville, un port ou un avant-poste que personne ne peut venir défendre, voir cutOff) :
+  // pas de ralentissement pour une grosse armée, au contraire elle va plus vite (comme en territoire désorganisé, mais
+  // sans son bonus DISORGANIZED_SPEED : ses murs tiennent encore), et ses pertes par case n'augmentent plus au-delà de
+  // DISORGANIZED_LOSS_FROM soldats
+  ISOLATED_SPEED: 1,
   MAP_CHUNK: 256,              // (technique) taille, en pixels, des tuiles de l'image de la carte (voir Render.setupMap)
   MAP_MIP_EVERY: 200,          // (technique) de loin : les versions réduites d'une tuile qui change sont refaites au plus toutes les 200 ms
   PATH_START_SLACK: 60,        // (technique) un chemin d'assaut part de la frontière à au plus 60 cases de plus que l'entrée la plus proche de la cible
