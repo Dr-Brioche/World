@@ -647,10 +647,11 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
      (les soldats de l'assaut). Le reste (réserve de l'attaquant…) se voit sur la carte, sous son nom.
      Dès que l'armée **entre sur tes terres** (pas avant : pendant sa marche chez elle, tes défenseurs n'iront jamais
      l'attendre en terre ennemie, et le bouton **🛡️ Défendre** reste grisé), clique **2 fois** sur sa bannière (ou sur **🛡️ Défendre** en bas de l'écran, qui devient « Confirmer » au 1er clic)
-     pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus rapide à pied** (pas forcément le plus proche à vol d'oiseau) et marchent
+     pour envoyer le % de soldats choisi. Ils partent **tout de suite** de ton **château le plus rapide à pied** (pas forcément le plus proche à vol d'oiseau ; pour une tour de gloire ou une mine fortifiée attaquée, elle-même si c'est elle la plus rapide) et marchent
      à la rencontre de l'ennemi par le **chemin le plus rapide** de tes terres (on voit leur bannière 🛡 avancer, et
      leur chemin en pointillés) : comme un assaut, ils vont vite en plaine et lentement dans le relief, et un gros
-     groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne se battent qu'en arrivant. Contre un même assaut, tu n'envoies qu'**une armée de défense** :
+     groupe est plus lent, mais ils sont chez eux : **18 % plus vite** qu'un assaut de même taille. Ils ne passent **jamais** à travers
+     une montagne, l'eau, un fleuve sans pont, un mur ou les terres d'un autre royaume : ils en font le tour, même si c'est plus long. Ils ne se battent qu'en arrivant. Contre un même assaut, tu n'envoies qu'**une armée de défense** :
      si tu recliques (2 fois), les soldats en plus **la renforcent** (ils la rejoignent en **3 s**, qu'elle soit encore en route
      ou déjà au combat) au lieu de former une nouvelle armée ; en attendant, sa bannière les affiche entre parenthèses (« 🛡 467 (+500) »). Une petite croix **×** à côté de **🛡️ Défendre** la **rappelle**, comme
      un assaut : tes défenseurs décrochent tout de suite (en route ou au combat) et rentrent à pied, **sans perte** (ils sont sur tes terres).
@@ -1122,17 +1123,21 @@ bâtis moulins, casernes et châteaux, et écrase les royaumes rivaux pour domin
    - L'avant-poste met **20 secondes à être bâti** après le débarquement (compte à rebours sur la carte).
      Pendant ce temps, ses soldats bâtissent et **ne peuvent rien faire d'autre** (pas d'attaque depuis lui) ;
      on peut déjà l'attaquer. Il n'a **pas encore de garnison** : juste des **soldats affaiblis**, occupés à bâtir
-     (« ⚔ 30 affaiblis » sur la carte) : chacun ne compte que pour 1 au combat (pas 3 comme une garnison), **sans aucun bonus du terrain** (même en montagne : ils ne sont pas encore retranchés) et à **60 % de leur force** (réglage `OUTPOST_BUILDING_DEFENSE`). Une fois bâti, il donne **+1 de défense** autour de lui, et **depuis lui**,
+     (« ⚔ 30 affaiblis » sur la carte) : chacun ne compte que pour 1 au combat (pas 3 comme une garnison), **sans aucun bonus du terrain** (même en montagne : ils ne sont pas encore retranchés) et à **60 % de leur force** (réglage `OUTPOST_BUILDING_DEFENSE`). Une fois bâti, il donne **+0,67 de défense** autour de lui (un tiers de moins que le +1 d'avant la v0.98.85 : réglage `OUTPOST_DEFENSE`), et **depuis lui**,
      tu peux attaquer les ennemis ou prendre des terres libres, comme depuis ton royaume.
    - Tant qu'il n'est pas relié par la terre à ton royaume, il ne compte **que sur ses soldats** (au-delà des
      mers, ton royaume ne peut pas lui envoyer de défenseurs ; une fois relié, ses soldats stationnés rejoignent
      ton armée). **Clique sur ton avant-poste** : sa fenêtre d'info s'ouvre en haut à gauche, et un **menu rapide**
      à côté de lui propose une **nef** pour les **Renforts** (le % choisi part par la mer, depuis un port de niveau 2
-     ou plus) et une **ancre** pour **Rapatrier** (les soldats qui y attendent rembarquent vers ton port le plus proche et rejoignent ton armée ;
+     ou plus relié à ton royaume : jamais depuis un port bâti sur l'île de l'avant-poste) et une **ancre** pour **Rapatrier** (les soldats qui y attendent rembarquent vers ton port le plus proche et rejoignent ton armée ;
      la garnison, elle, reste). Le bouton **🧨 Abandonner** (dans sa fenêtre d'info) fait disparaître l'avant-poste
      (ses terres te restent) : **tous ses soldats**, garnison comprise, rentrent automatiquement par la mer.
      Si c'est l'**ennemi** qui le détruit, ses soldats ont été vaincus : ils sont perdus.
      Si l'avant-poste tombe pendant que des renforts sont en mer, leur bateau **fait demi-tour** jusqu'au port.
+     S'il tombe pendant qu'un de **ses assauts** est en route, l'armée **continue seule** depuis là où elle est : si elle prend
+     une **ville ou un port**, elle est sauvée (elle rejoint ton royaume) ; sinon (une église, une mine, un avant-poste pris,
+     ou un assaut rappelé), ses survivants marchent jusqu'à la **côte la plus proche** et y bâtissent un **nouvel avant-poste**
+     (20 s de construction, soldats affaiblis pendant ce temps).
      Les renforts qui arrivent sur un avant-poste **déjà bâti** complètent sa garnison, et les autres
      stationnent, tout de suite prêts à agir (pas de nouvelle construction à attendre).
    - Si un **château** ou un **port royal** (niveau 3, un poste de commandement comme une ville) **est bâti ou pris dans sa zone**, elle devient une vraie terre de ton royaume, qui partage
@@ -1357,6 +1362,7 @@ ce sont de grandes taches (environ 15 % des plaines et forêts) ; sur la carte *
 
 ## 🆕 Nouveautés
 
+- **v0.98.85** : 🛡️ **les défenseurs ne traversent plus les obstacles** : ils ne foncent plus tout droit à travers une montagne, un lac, la mer, un fleuve sans pont, un mur ou les terres d'un autre royaume ; ils en font le tour par leurs terres, même si c'est plus long. · 🌿 **défense d'une tour de gloire** (ou d'une mine fortifiée) : les défenseurs partent de la place la plus rapide à rejoindre, la tour elle-même ou une ville plus proche du combat. · ⛺ **les avant-postes défendent un tiers de moins** (+0,67 au lieu de +1 ; réglage `OUTPOST_DEFENSE`). · ⚓ les **renforts d'un avant-poste** embarquent dans un port relié au royaume, jamais dans un port bâti sur l'île de l'avant-poste. · ⛺ **avant-poste détruit pendant qu'un de ses assauts est en route** : l'armée ne disparaît plus, elle continue seule depuis là où elle est ; si elle prend une **ville ou un port**, elle est sauvée ; sinon (une église, une mine, un avant-poste pris, ou un assaut rappelé), ses survivants marchent jusqu'à la **côte la plus proche** et y bâtissent un **nouvel avant-poste** (avec ses 20 s de construction et sa faiblesse). · ✔️ vérifié : les soldats perdus par des défenseurs vainqueurs sont bien retirés du royaume (ils partent de ton armée, seuls les survivants y reviennent).
 - **v0.98.84** : 🧹 **petites corrections d'interface** : à la fin d'une partie, le bouton **« Rejouer » devient « Menu »** (il ramène au menu de départ) · la **barre des effets en cours** est bien **centrée** sur l'écran · le **classement** ne déborde plus avec les pactes (les pourcentages restent dans le cadre, les noms se coupent proprement) · quand un ennemi est en **croisade**, sa **bible clignote en or** dans le classement · au survol d'un **port royal**, le nombre de **moulins reliés** s'ajoute à celui des villes · le **menu du clic droit** se met à jour tout seul (un pont qui devient possible pendant que le menu est ouvert s'active) · 🤝 dans la barre du haut, une icône donne les **pactes** de la partie : **verte** s'ils sont permis, **rouge et barrée** s'ils sont interdits, **dorée** dans un scénario · 🌿 la **jauge de gloire** a un **trait noir entre chaque royaume ou pacte**, ne dépasse plus 100 % quand la partie continue après la victoire (« 1er : Pacte de Normandie 106,5 % » corrigé), et à son survol les **tours de gloire clignotent sur la carte** · 🏳️ plus de **drapeaux blancs** (terres sans défense organisée) sur le chemin d'un assaut en cours · ⏳ après une **croisade**, un **recrutement de masse** ou un **assaut viking**, une **ligne dorée fait le tour du bouton** et se raccourcit jusqu'à ce qu'il soit de nouveau prêt.
 - **v0.98.83** : ⚔️ **le recrutement de masse aide surtout les petits royaumes** : les soldats qu'il donne tout de suite dépendent de ta place au classement des terres : **3 %** de ton armée maximum si tu es 1er, **5 %** 2e, **8 %** 3e, **10 %** de la 4e à la 6e place, et **20 %** au-delà (au lieu de 10 % pour tous). L'infobulle du bouton donne ta part et ta place. Réglage : `LEVY_INSTANT` dans `js/config.js`.
 - **v0.98.82** : 🐛 **une armée ne revole plus en arrière** : si, pendant qu'elle marche vers la frontière, ses terres reculent dans son dos (une ville prise, comme Harfleur), elle attaque à son arrivée **depuis là où elle se trouve**, au lieu de « voler » jusqu'à la nouvelle frontière de son royaume pour recommencer sa traversée (par exemple l'assaut anglais sur Cherbourg).

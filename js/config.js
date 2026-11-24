@@ -418,7 +418,8 @@ const CONFIG = {
   MAX_SEA_ASSAULTS: 2,        // débarquements à la fois chez un même royaume au plus (en mer, ou avant-postes chez lui)
   REPATRIATE_SPEED: 5,       // vitesse minimum (cases/s) des bateaux qui rapatrient les soldats d'un avant-poste
   OUTPOST_BUILD_TIME: 20,    // secondes pour bâtir un avant-poste après le débarquement (sans bonus avant)
-  OUTPOST_DEFENSE: 1,        // une fois bâti, bonus de défense autour de lui (comme un fort en bois)
+  OUTPOST_DEFENSE: 0.67,     // une fois bâti, bonus de défense autour de lui (comme un fort en bois ; un tiers de moins
+                             // que le +1 d'avant la v0.98.85)
   OUTPOST_BUILDING_DEFENSE: 0.6, // pendant sa construction, ses défenseurs, occupés à bâtir, ne sont pas retranchés :
                                // pas de bonus du terrain (montagne, colline…), et ils ne se battent qu'à 60 %
   OUTPOST_SIEGE: 10,         // secondes de siège pour prendre un avant-poste (le défenseur peut encore le renforcer)
