@@ -3038,6 +3038,16 @@ const Render = {
     this.castlePreview = null;
     if (UI.plan && G.phase === 'playing') return this.drawAssaultPlan(ox, oy);
     if (G.phase !== 'playing' || h < 0 || UI.selectedBuild || !G.human.alive) return;
+    // (🔥 en visant un assaut viking : son vrai trajet, en bateau depuis le port royal puis à pied depuis la côte du
+    //  débarquement, et pas le chemin par la terre d'un assaut ordinaire)
+    if (UI.vikingAim) {
+      const plan = this.vikingTargetUnderMouse();
+      if (plan) {
+        if (plan.path) this.strokePath(ox, oy, plan.path, '#9fd8ff', 2.5);
+        if (plan.route) this.strokePath(ox, oy, plan.route, '#ffd34d', 2.5);
+      }
+      return;
+    }
     const o = G.owner[h];
     if (!TARGET_TYPES.includes(G.building[h]) || o < 0 || o === G.human.id || G.areAllied(o, G.human.id)) return;
     // Le chemin le plus court, depuis le royaume ou un avant-poste (comme l'assaut qui partira), recalculé

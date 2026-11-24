@@ -1582,7 +1582,7 @@ const GameRules = {
       if (e2 <= dx) { err += dx; y += sty; }
     }
     if (tiles.length < 2) return { error: city >= 0 ? tr('Ces deux villes sont trop proches : pas besoin de mur entre elles.', 'These two cities are too close: no need for a wall between them.') : tr('Le mur est trop court.', 'The wall is too short.') };
-    if (!noSeal && this.wallSeals(tiles)) return { error: tr('Ce mur fermerait complètement un passage : il doit toujours rester un chemin pour aller prendre chaque ville (et chaque lieu à conquérir).', 'This wall would close a passage completely: there must always be a way to go and take every city (and every place to conquer).') };
+    if (!noSeal && this.wallSeals(tiles, c)) return { error: tr('Ce mur fermerait complètement un passage : il doit toujours rester un chemin pour aller prendre chaque ville (et chaque lieu à conquérir).', 'This wall would close a passage completely: there must always be a way to go and take every city (and every place to conquer).') };
     return { tiles, end: city >= 0 ? tiles[tiles.length - 1] : target, sealed, city };
   },
 
@@ -1590,8 +1590,11 @@ const GameRules = {
   // toujours un chemin par la terre (sommets, mer et murs exceptés) vers chaque ville, port, filon ou bâtiment. Les
   // murailles des villes, elles, ne ferment rien : une ville se prend, et on passe. Un mur peut seulement enfermer une
   // toute petite poche vide (WALL_POCKET_MAX cases, sans bâtiment ni filon), contre une montagne par exemple.
+  // 🧱 Exception : le mur de la ville c peut enfermer une poche avec des bâtiments ou des filons (une tour de gloire, une
+  // mine…) si aucune ville ni aucun port fortifié n'y est enfermé et que la ville c reste dehors : en prenant la ville,
+  // l'ennemi abat ses murs (voir stepWalls), et la poche s'ouvre. On peut donc protéger sa tour de gloire avec ses murs.
   // (on part de chaque côté du mur et on cherche à rejoindre les autres côtés, en s'arrêtant tôt : c'est rapide)
-  wallSeals(tiles) {
+  wallSeals(tiles, c = -1) {
     const W = this.W, N = this.N, CAP = 4000;
     // (⏱️ des tableaux gardés d'un appel à l'autre, au lieu d'ensembles : c'est bien plus rapide ; mark[i] === stamp :
     //  case déjà vue par la recherche en cours ; wall[i] === wallStamp : case d'un mur, ce mur-ci ou un mur en chantier)
@@ -1633,6 +1636,8 @@ const GameRules = {
     if (bigStarts.length + closed.length <= 1) return false; // (tous les côtés du mur se rejoignent : rien n'est fermé)
     // (un côté fermé, coupé des autres : une petite poche vide passe, sinon le mur est refusé)
     for (const seen of closed) {
+      // (la poche s'ouvrira quand la ville c sera prise : elle reste dehors, et aucune place forte n'est enfermée)
+      if (c >= 0 && this.building[c] === B_CASTLE && !seen.some(i => this.building[i] === B_CASTLE || this.walledPort(this.anchor[i]))) continue;
       if (seen.length > CONFIG.WALL_POCKET_MAX) return true;
       for (const i of seen) if (this.building[i] || this.depositTile[i]) return true;
     }
@@ -3646,7 +3651,8 @@ const GameRules = {
   // CHURCH_CITY_DISTANCE cases (plus loin pour une ville améliorée, voir roadReach) sur la même terre :
   // { pts, castle } (sauf celles où mène déjà cette route).
   // ROAD_MAX_CITIES chemins au plus, les plus proches d'abord ; [] si aucun. pts = le tracé (coin à angle droit).
-  // (un port seul, sans ville, ne crée pas de chemin : il n'a pas de route)
+  // Sans route de port assez proche, un port à moins de CHURCH_PORT_DISTANCE cases (même seul, sans ville) a un chemin
+  // direct vers l'église : { pts, port, direct }.
   // Une nouvelle ville bâtie près de l'église ajoute un chemin : elle ne remplace pas ceux qui existent.
   churchLinks(pid, a, links = this.roads()) {
     const W = this.W, h = this.sizeOf(B_CHURCH) / 2, x = a % W + h, y = ((a / W) | 0) + h, land = this.landComp();
@@ -3662,6 +3668,20 @@ const GameRules = {
         bestD = q.d;
         road = { port: b, pts, d: q.d, stone: kind === 'paved' }; // (branché sur une route de pierre : voir roads)
         served = this.linkRoads(link).map(([v]) => v);
+      }
+    }
+    // (⛪⚓ pas de route de port assez proche : un port tout près, même sans route (sans ville), a son chemin direct)
+    if (!road) {
+      const hp = this.sizeOf(B_PORT) / 2;
+      for (const b of this.buildingTiles) {
+        if (this.building[b] !== B_PORT || this.owner[b] !== pid || !this.footprint(b, B_PORT).some(j => land[j] === land[a])) continue;
+        const px = b % W + hp, py = ((b / W) | 0) + hp, d = DMath.hypot(px - x, py - y);
+        if (d > CONFIG.CHURCH_PORT_DISTANCE || (road && d >= road.d)) continue;
+        const pts = corner(px, py);
+        if (!pts) continue;
+        road = { port: b, pts, d, stone: false, direct: true };
+        const link = links.get(b);
+        served = link ? this.linkRoads(link).map(([v]) => v) : [];
       }
     }
     const list = road ? [road] : [], hc = this.sizeOf(B_CASTLE) / 2;
@@ -6030,7 +6050,7 @@ const GameRules = {
     let n = a.troops;
     // (territoire désorganisé : au-delà de DISORGANIZED_LOSS_FROM soldats, les pertes par case n'augmentent plus)
     const M = CONFIG.DISORGANIZED_LOSS_FROM;
-    if (n > M && a.target >= 0 && (a.unlinked || this.leaderless(a))) n = M;
+    if (n > M && a.target >= 0 && (a.unlinked || this.leaderless(a) || this.isolatedTarget(a))) n = M;
     let loss = Math.max(CONFIG.NEUTRAL_TILE_COST, n * CONFIG.TILE_LOSS_RATE);
     if (a.viking !== undefined && !a.landed) loss /= 1 + CONFIG.VIKING_BONUS; // (🔥 des Vikings : +VIKING_BONUS de force)
     const free = a.target < 0 ? this.earlyBoost() / (1 + CONFIG.EARLY_GROWTH_BONUS) / CONFIG.FREE_LAND_BOOST : 1;
@@ -6102,6 +6122,15 @@ const GameRules = {
 
   // Assaut contre un royaume qui n'a plus de château (ville) : de front, ou sur une de ses églises ou un de ses ports
   // (pas sur un avant-poste : seuls les soldats débarqués le défendent)
+  // 🏝️ L'assaut a vise-t-il un lieu isolé (ville, port ou avant-poste que personne ne peut venir défendre, voir cutOff) ?
+  // (gardé une seconde : la question revient à chaque tour)
+  isolatedTarget(a) {
+    if (a.targetCastle < 0) return false;
+    const sec = Math.floor(this.tick / CONFIG.TICKS_PER_SECOND);
+    if (a.isoSec !== sec) { a.isoSec = sec; a.iso = this.cutOff(a); }
+    return a.iso;
+  },
+
   leaderless(a) {
     if (a.target < 0 || this.isProtected(a.target)) return false;
     return a.targetCastle < 0 || this.building[a.targetCastle] !== B_OUTPOST;
@@ -7049,6 +7078,10 @@ const GameRules = {
     let speed;
     if (a.target >= 0 && (a.unlinked || this.leaderless(a))) {
       speed = CONFIG.ASSAULT_SPEED * CONFIG.DISORGANIZED_SPEED * (0.5 + 0.5 * Math.sqrt(a.troops / CONFIG.ASSAULT_HEAVY));
+    } else if (a.target >= 0 && this.isolatedTarget(a)) {
+      // (🏝️ un lieu isolé, que personne ne peut venir défendre : une grosse armée va plus vite, voir ISOLATED_SPEED)
+      speed = Math.max(CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_SLOWDOWN),
+        CONFIG.ASSAULT_SPEED * CONFIG.ISOLATED_SPEED * (0.5 + 0.5 * Math.sqrt(a.troops / CONFIG.ASSAULT_HEAVY)));
     } else if (a.target >= 0) {
       speed = Math.max(CONFIG.ASSAULT_MIN_SPEED, CONFIG.ASSAULT_SPEED / (1 + a.troops / CONFIG.ASSAULT_SLOWDOWN));
     } else {
@@ -7134,7 +7167,15 @@ const GameRules = {
         ? this.churchZone(a.targetCastle) : null;
       // (et les moulins et casernes qui occupent ses places, avant qu'il ne change de mains : voir takeLinked)
       const hosted = linked ? this.linkedBuildings(a.targetCastle) : null;
+      // (🏳️ une église ou un port pris en avançant dans des terres sans ville pour les diriger : tout son cercle passe
+      //  d'un coup, avec ses moulins et casernes, comme une église convertie par la Croyance : voir preach)
+      const host = a.targetCastle < 0 && a.target >= 0 && this.building[t] && this.hasSlots(this.anchor[t]) ? this.anchor[t] : -1;
+      const hostZone = host >= 0 ? this.churchZone(host) : null, hostLinked = host >= 0 ? this.linkedBuildings(host) : null;
       this.setOwner(t, a.attacker);
+      if (hostZone) {
+        for (const b of hostLinked) if (this.owner[b] === a.target) this.setOwner(b, a.attacker);
+        this.takeLinked(a, hostZone);
+      }
       // (route tracée vers un objectif : elle ne reste à l'attaquant que s'il le prend, voir revertRoute)
       if (a.target >= 0 && (a.targetCastle >= 0 || a.link !== undefined)) (a.route = a.route || []).push(t);
       // Prise de l'église, du port ou de l'avant-poste visé : l'assaut s'arrête là
