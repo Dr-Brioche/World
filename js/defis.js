@@ -60,6 +60,21 @@ Object.assign(GameRules, {
     if (k === this.defisState().vow && !this.defisLasting(c)) t = Math.min(t, this.defisTick(this.cm ? DEFIS.VOW.MINUTES : undefined, this.hy ? DEFIS.VOW.YEAR : this.cr ? DEFIS.VOW.CR_YEAR : undefined));
     return t;
   },
+  // ⏳ La date limite du défi k, lisible : { label : « 1195 », « juillet 1190 » ou « 30 min », vow : c'est la limite du vœu,
+  // until : un défi qui se tient jusque-là } ; null s'il n'en a pas
+  defisLimit(c, k) {
+    const V = DEFIS.VOW, lasting = this.defisLasting(c), sworn = k === this.defisState().vow && !lasting;
+    let year = lasting ? c.untilYear : c.byYear, min = lasting ? c.until : c.before, vow = false;
+    if (sworn) {
+      if (this.cm) { if (min === undefined || V.MINUTES < min) { min = V.MINUTES; vow = true; } }
+      else { const vy = this.hy ? V.YEAR : V.CR_YEAR; if (year === undefined || vy < year) { year = vy; vow = true; } }
+    }
+    const months = tr(['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
+      ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']);
+    const label = year !== undefined && !this.cm ? (year % 1 ? `${months[Math.floor((year % 1) * 12)]} ${Math.floor(year)}` : `${year}`)
+      : min !== undefined ? tr(`${min} min de jeu`, `${min} min of play`) : '';
+    return label ? { label, vow, until: lasting } : null;
+  },
   // La case d'ancrage d'un lieu (-1 s'il n'existe plus)
   defisPlace(token) {
     if (this.hy) return this.hyCity(token);
@@ -145,18 +160,27 @@ Object.assign(GameRules, {
       if (this.defisLasting(c)) {
         const broken = c.kind === 'noLoss' ? lost : c.kind === 'keep' ? !this.defisHolds(c.places)
           : c.kind === 'alive' ? !this.players.some(p => p.role === c.role && p.alive) : !!((this.hy && this.hy.ransom) || (this.cr && this.cr.ransom));
-        if (broken) return this.defisEnd(k, false);
+        if (broken) return this.defisEnd(k, false, c.kind === 'noLoss' ? tr('tu as perdu une ville', 'you lost a city')
+          : c.kind === 'keep' ? tr('tu as perdu un de ces lieux', 'you lost one of these places')
+          : c.kind === 'alive' ? tr('cette faction a disparu', 'this faction is gone')
+          : this.cr ? tr('Richard a été capturé', 'Richard was captured') : tr('le roi a été capturé', 'the king was captured'));
         if (this.tick >= this.defisTick(c.until, c.untilYear)) this.defisEnd(k, true);
         return;
       }
       if (this.challengeMet(c)) this.defisEnd(k, true);
-      else if (this.tick >= this.defisDeadline(c, k)) this.defisEnd(k, false);
+      else if (this.tick >= this.defisDeadline(c, k)) {
+        const lim = this.defisLimit(c, k);
+        this.defisEnd(k, false, lim ? tr(`pas réussi avant ${lim.label}${lim.vow ? ', la limite de ton vœu' : ''}`, `not done before ${lim.label}${lim.vow ? ', your vow\'s deadline' : ''}`) : '');
+      }
     });
   },
   // Le défi k est réussi (ok) ou manqué : sa récompense, ou (un vœu manqué) sa pénalité
-  defisEnd(k, ok) {
+  // (why : pourquoi il est manqué, affiché à côté du défi barré et dans le message)
+  defisEnd(k, ok, why = '') {
     const st = this.defisState(), c = this.challengeList()[k], h = this.human, V = DEFIS.VOW, vow = k === st.vow;
     st.state[k] = ok ? 'done' : 'failed';
+    if (!ok && why) (st.why = st.why || [])[k] = why;
+    const because = why ? tr(` (${why})`, ` (${why})`) : '';
     if (ok) UI.noteChallengeDone(k); // (✔ gardé dans le navigateur : voir UI.factionDone)
     if (ok) {
       // (🎁 selon la difficulté : voir EVENT_REWARD)
@@ -169,9 +193,9 @@ Object.assign(GameRules, {
       const pay = Math.min(h.gold, V.PENALTY_GOLD);
       h.gold -= pay;
       this.defisFaith(-V.PENALTY_FAITH);
-      UI.log(tr(`💔 Vœu trahi : ${c.text} · −${fmt(pay)} 💰, −${V.PENALTY_FAITH} de ${this.hy ? 'Légitimité' : 'Croyance'}`,
-        `💔 Vow broken: ${c.text} · −${fmt(pay)} 💰, −${V.PENALTY_FAITH} ${this.hy ? 'Legitimacy' : 'Faith'}`), 'warn');
-    } else UI.log(tr(`✖ Défi manqué : ${c.text}`, `✖ Challenge failed: ${c.text}`), 'warn');
+      UI.log(tr(`💔 Vœu trahi : ${c.text}${because} · −${fmt(pay)} 💰, −${V.PENALTY_FAITH} de ${this.hy ? 'Légitimité' : 'Croyance'}`,
+        `💔 Vow broken: ${c.text}${because} · −${fmt(pay)} 💰, −${V.PENALTY_FAITH} ${this.hy ? 'Legitimacy' : 'Faith'}`), 'warn');
+    } else UI.log(tr(`✖ Défi manqué : ${c.text}${because}`, `✖ Challenge failed: ${c.text}${because}`), 'warn');
   },
   // De la Croyance (Charlemagne) ou de la Légitimité (guerre de Cent Ans) pour le joueur
   defisFaith(n) {
@@ -205,9 +229,14 @@ Object.assign(GameRules, {
     return null;
   },
   // Pour le cadre des objectifs : [{ text, done, gone, vow }]
+  // (⏳ un défi encore ouvert donne sa date limite ; un défi manqué, pourquoi : why)
   challenges() {
     const st = this.defisState();
-    return this.challengeList().map((c, k) => ({ text: `${c.text} (${this.defisRewardText(c.reward, (k === st.vow ? DEFIS.VOW.MULT : 1) * this.rewardK(this.human))})`,
-      done: st.state[k] === 'done', gone: st.state[k] === 'failed', vow: k === st.vow }));
+    return this.challengeList().map((c, k) => {
+      const lim = st.state[k] ? null : this.defisLimit(c, k);
+      const when = lim ? (lim.until ? tr(` · ⏳ jusqu'en ${lim.label}`, ` · ⏳ until ${lim.label}`) : tr(` · ⏳ avant ${lim.label}`, ` · ⏳ before ${lim.label}`)) : '';
+      return { text: `${c.text} (${this.defisRewardText(c.reward, (k === st.vow ? DEFIS.VOW.MULT : 1) * this.rewardK(this.human))})${when}`,
+        done: st.state[k] === 'done', gone: st.state[k] === 'failed', vow: k === st.vow, why: (st.why && st.why[k]) || '' };
+    });
   },
 });

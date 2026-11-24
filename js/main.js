@@ -2101,7 +2101,7 @@ const UI = {
     if (this.objFolded === undefined) this.objFolded = window.innerWidth < 760; // (replié d'office sur un petit écran)
     // (le titre et l'aide dépendent du scénario ; on ne redessine que si un objectif ou un texte a changé)
     const title = !list.length ? tr('⭐ Défis', '⭐ Challenges') : Game.hy ? Game.hyObjTitle() : Game.cr ? Game.crObjTitle() : tr('👑 Objectifs de Charlemagne', '👑 Charlemagne\'s objectives');
-    const key = [...list, ...defis].map(o => (o.done ? 1 : 0) + (o.gone ? 'x' : '') + (o.vow ? 'v' : '') + o.text).join('|') + title + (this.objFolded ? 'f' : '');
+    const key = [...list, ...defis].map(o => (o.done ? 1 : 0) + (o.gone ? 'x' : '') + (o.vow ? 'v' : '') + o.text + (o.why || '')).join('|') + title + (this.objFolded ? 'f' : '');
     if (box.dataset.key !== key) {
       box.dataset.key = key;
       const count = list.length ? list : defis, n = count.filter(o => o.done).length;
@@ -2110,7 +2110,7 @@ const UI = {
       //  donc pas barré, juste marqué d'un bouclier ; un ⭐ défi réussi, lui, l'est pour de bon : coché et barré)
       // (🎯 data-obj : clic sur la ligne → la caméra va voir ses lieux, voir le clic plus haut)
       const items = (l, lost, held) => l.map((o, k) => `<li data-obj="${held ? 'o' : 'd'}${k}" class="${o.gone ? 'gone' : o.done ? (held ? 'held' : 'done') : ''}${Game.objectiveLinePlaces(!held, k).length ? ' go' : ''}">${o.vow ? '🙏 ' : ''}${escapeHtml(o.text)}` +
-        `${o.gone ? lost : o.done && held ? `<span class="heldT">${tr(' (tenu)', ' (held)')}</span>` : ''}</li>`).join('');
+        `${o.gone ? (o.why ? escapeHtml(tr(` (manqué : ${o.why})`, ` (failed: ${o.why})`)) : lost) : o.done && held ? `<span class="heldT">${tr(' (tenu)', ' (held)')}</span>` : ''}</li>`).join('');
       box.innerHTML = `<div class="t"><span>${escapeHtml(title)}</span>` +
         `<span>${n}/${count.length} ${this.objFolded ? '▸' : '▾'}</span></div>` +
         (this.objFolded ? '' : (list.length ? `<ul>${items(list, tr(' (perdu à jamais)', ' (lost forever)'), true)}</ul>` : '') +
@@ -2173,8 +2173,10 @@ const UI = {
       } else if (tp && h.camp === 'chretiens') {
         const loan = G.cr.loans.get(h.id);
         out.push({ title: tr('🏦 La banque du Temple', '🏦 The bank of the Temple'),
-          text: loan ? tr(`Tu dois encore ${fmt(Math.round(loan.left))} d'or au Temple : il se rembourse peu à peu sur tes revenus.`, `You still owe the Temple ${fmt(Math.round(loan.left))} gold: it is repaid little by little from your income.`)
-            : tr(`Emprunte ${fmt(O.LOAN)} d'or tout de suite ; tu en rendras ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}, peu à peu, sur tes revenus (environ ${Math.round(O.REPAY_TIME / 60)} minutes).`, `Borrow ${fmt(O.LOAN)} gold right now; you will repay ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}, little by little, from your income (about ${Math.round(O.REPAY_TIME / 60)} minutes).`),
+          text: loan ? tr(`Tu dois encore ${fmt(Math.round(loan.left))} d'or au Temple : il prend ${O.REPAY_STEP} pièces à la fois, quand tu as au moins ${O.REPAY_FROM} d'or. ` + this.crDebtState(loan),
+            `You still owe the Temple ${fmt(Math.round(loan.left))} gold: it takes ${O.REPAY_STEP} gold at a time, when you have at least ${O.REPAY_FROM} gold. ` + this.crDebtState(loan))
+            : tr(`Emprunte ${fmt(O.LOAN)} d'or tout de suite ; tu en rendras ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}, ${O.REPAY_STEP} pièces à la fois quand tu as au moins ${O.REPAY_FROM} d'or. Au bout de ${O.WARN_YEARS[2]} ans de dette impayée (après 2 avertissements), les Assassins du Temple te frappent souvent jusqu'à ce que tu paies, et le Temple ne te prête plus jamais.`,
+              `Borrow ${fmt(O.LOAN)} gold right now; you will repay ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}, ${O.REPAY_STEP} gold at a time when you have at least ${O.REPAY_FROM} gold. After ${O.WARN_YEARS[2]} years of unpaid debt (after 2 warnings), the Temple's Assassins strike you often until you pay, and the Temple never lends to you again.`),
           acts: [{ label: tr(`🏦 Emprunter ${fmt(O.LOAN)}`, `🏦 Borrow ${fmt(O.LOAN)}`), err: G.crLoanError(h.id), order: { k: 'crLoan' } }] });
       }
       if (tp && h.camp === 'chretiens') {
@@ -2287,8 +2289,17 @@ const UI = {
       if (stun > 0) add('bad', tr('🗡️ Frappé', '🗡️ Struck'), tr('plus de recrues', 'no recruits'), tr('Frappé par les Assassins (ou en plein désordre) : tu ne recrutes plus.', 'Struck by the Assassins (or in turmoil): you recruit no more.'), stun);
       if (G.crProtected(h.id)) add('good', tr('🛡️ Tribut payé', '🛡️ Tribute paid'), tr('les Assassins t\'épargnent', 'the Assassins spare you'), tr('Ton tribut au Vieux de la Montagne te protège.', 'Your tribute to the Old Man of the Mountain protects you.'), cr.tributeUntil.get(h.id) - G.tick);
       const loan = cr.loans.get(h.id);
-      if (loan) add('info', tr('🏦 Dette au Temple', '🏦 Debt to the Temple'), tr(`${fmt(Math.round(loan.left))} à rendre`, `${fmt(Math.round(loan.left))} to repay`), tr('Tu la rembourses peu à peu, chaque seconde, sur tes revenus.', 'You repay it little by little, every second, from your income.'));
-      for (const f of cr.fleets) if (f.pid === h.id) add('info', tr('⛵ Ta flotte en mer', '⛵ Your fleet at sea'), f.troops ? tr(`${fmt(f.troops)} soldats`, `${fmt(f.troops)} soldiers`) : '', tr('Ta flotte traverse la mer : elle arrive à destination au bout du compte à rebours.', 'Your fleet is crossing the sea: it reaches its destination when the countdown ends.'), f.arrive - G.tick);
+      if (loan) {
+        // (⏳ le compte à rebours : jusqu'au dernier avertissement, quand les Assassins du Temple viendront se payer)
+        const O = CROISADES.ORDERS, W = O.WARN_YEARS, late = loan.warned >= W.length;
+        const left = late || loan.year === undefined ? undefined : G.crYearTick(loan.year + W[W.length - 1]) - G.tick;
+        add(late || loan.warned ? 'bad' : 'info', tr('🏦 Dette au Temple', '🏦 Debt to the Temple'),
+          tr(`${fmt(Math.round(loan.left))} à rendre`, `${fmt(Math.round(loan.left))} to repay`) + (loan.warned ? ` · ⚠️ ${loan.warned}/${W.length}` : ''),
+          tr(`Le Temple prend ${O.REPAY_STEP} pièces à la fois, quand tu as au moins ${O.REPAY_FROM} d'or. `, `The Temple takes ${O.REPAY_STEP} gold at a time, when you have at least ${O.REPAY_FROM} gold. `) + this.crDebtState(loan), left);
+      }
+      for (const f of cr.fleets) if (f.pid === h.id) add('info', tr('⛵ Ta flotte en mer', '⛵ Your fleet at sea'), f.troops ? tr(`${fmt(f.troops)} soldats`, `${fmt(f.troops)} soldiers`) : '',
+        tr(`Ta flotte traverse la mer : elle arrive à destination au bout du compte à rebours.${f.troops ? ` À bord, tes ${fmt(f.troops)} soldats embarqués ; à l'arrivée, la grande armée de croisade de l'histoire les rejoint, et tous dressent leur camp sur la côte.` : ''}`,
+          `Your fleet is crossing the sea: it reaches its destination when the countdown ends.${f.troops ? ` On board, your ${fmt(f.troops)} embarked soldiers; on arrival, the great crusading army of the story joins them, and they all pitch their camp on the coast.` : ''}`), f.arrive - G.tick);
     }
     // --- ⚜️ La guerre de Cent Ans ---
     if (G.hy) {
@@ -2970,6 +2981,17 @@ const UI = {
     }
   },
 
+  // 🏦 Où en est la dette loan au Temple : les avertissements, et quand les Assassins viendront (ou qu'ils frappent déjà)
+  crDebtState(loan) {
+    const G = Game, O = CROISADES.ORDERS, W = O.WARN_YEARS, n = W.length;
+    if (loan.warned >= n) return tr(`🗡️ ${W[n - 1]} ans de dette impayée : les Assassins du Temple te frappent toutes les ${O.STRIKE_EVERY} s tant que tu n'as pas tout rendu, et le Temple ne te prêtera plus jamais.`,
+      `🗡️ ${W[n - 1]} years of unpaid debt: the Temple's Assassins strike you every ${O.STRIKE_EVERY} s until you have paid it all back, and the Temple will never lend to you again.`);
+    const end = loan.year === undefined ? 0 : Math.max(0, Math.ceil((G.crYearTick(loan.year + W[n - 1]) - G.tick) / CONFIG.TICKS_PER_SECOND));
+    const when = end >= 60 ? `${Math.floor(end / 60)} min ${String(end % 60).padStart(2, '0')}` : `${end} s`;
+    return tr(`Avertissements : ${loan.warned}/${n}. Rembourse tout avant ${W[n - 1]} ans (encore ${when}), sinon ses Assassins viendront se payer.`,
+      `Warnings: ${loan.warned}/${n}. Repay it all within ${W[n - 1]} years (${when} left), or its Assassins will come to collect.`);
+  },
+
   // ✝️ Les Croisades (clic droit) : 🗡️ engager les Assassins contre le royaume visé, ou leur payer tribut (sur leurs terres) ;
   // 🏦 emprunter au Temple (sur les terres des Templiers)
   crActions(items, i) {
@@ -2977,7 +2999,7 @@ const UI = {
     if (o < 0 || o === h.id) return;
     if (tp && o === tp.id && h.camp === 'chretiens') {
       const O = CROISADES.ORDERS, err = G.crLoanError(h.id);
-      items.push({ label: tr(`🏦 Emprunter au Temple (💰 +${fmt(O.LOAN)}, à rendre ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))} sur tes revenus)`, `🏦 Borrow from the Temple (💰 +${fmt(O.LOAN)}, to repay ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))} out of your income)`),
+      items.push({ label: tr(`🏦 Emprunter au Temple (💰 +${fmt(O.LOAN)}, à rendre ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))} : ${O.REPAY_STEP} à la fois dès ${O.REPAY_FROM} d'or, avant ${O.WARN_YEARS[2]} ans)`, `🏦 Borrow from the Temple (💰 +${fmt(O.LOAN)}, to repay ${fmt(Math.round(O.LOAN * (1 + O.INTEREST)))}: ${O.REPAY_STEP} at a time from ${O.REPAY_FROM} gold, within ${O.WARN_YEARS[2]} years)`),
         disabled: err || undefined, run: err ? undefined : () => this.act({ k: 'crLoan' }, e => { if (e) this.log(e, 'warn'); }) });
       // (⚔️ louer des mercenaires au Temple : aussi dans le panneau « Temple · Assassins », à droite)
       const m = G.crMercOffer(h.id), me = G.crMercError(h.id);
