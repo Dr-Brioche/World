@@ -18,7 +18,7 @@ Object.assign(GameRules, {
     const diff = C.RANSOM[want] ? want : 'normal';
     const cr = this.cr = { diff, role: {}, capital: {}, cities: new Map(), churches: new Map(), strong: new Map(), pact: {},
       fired: new Set(), done: {}, gone: {}, offers: {}, peaceBroken: new Set(), fleets: [], merc: new Map(),
-      loans: new Map(), loansGiven: 0, helpReady: new Map(), helped: new Map(), nextLoan: CROISADES.ORDERS.AI_LOAN_EVERY * CONFIG.TICKS_PER_SECOND,
+      loans: new Map(), loansGiven: 0, defaulters: new Set(), helpReady: new Map(), helped: new Map(), nextLoan: CROISADES.ORDERS.AI_LOAN_EVERY * CONFIG.TICKS_PER_SECOND,
       cyprusSold: false, cyprusBought: false, truceUntil: 0, ransom: null, stun: new Map(), tributeUntil: new Map(),
       tributePaid: new Set(), hireReady: new Map(), richard: false, arsuf: false, salephBridge: false, john: false,
       civilWarUntil: 0, off: new Set(), embarked: {}, nextRaid: C.RAIDS.FIRST * CONFIG.TICKS_PER_SECOND, nextAssassin: C.ASSASSINS.AI_EVERY * CONFIG.TICKS_PER_SECOND };
@@ -211,7 +211,8 @@ Object.assign(GameRules, {
     const p = this.crP(role);
     if (!p.alive) return false;
     // (⛵ le joueur est parti en croisade : ses soldats embarqués débarquent avec cette armée, devant sa première cible)
-    if (p.isHuman && this.cr.embarked[role]) { army += this.cr.embarked[role]; this.cr.embarked[role] = 0; }
+    const mine = p.isHuman ? this.cr.embarked[role] || 0 : 0; // (⛵ les soldats du joueur qui ont embarqué)
+    if (mine) { army += mine; this.cr.embarked[role] = 0; }
     const vars = { army: fmt(army) };
     // (un joueur : une armée qui marche par les terres rejoint simplement la sienne ; une flotte (coast), elle, le débarque
     //  devant la première cible possible, comme pour un bot : c'est son seul moyen de passer la mer jusqu'à Chypre ou
@@ -226,6 +227,18 @@ Object.assign(GameRules, {
       const c = this.crCity(name), d = c >= 0 ? this.owner[c] : -1;
       if (d < 0 || d === p.id || this.areAllied(p.id, d) || this.attackBlocked(p.id, d)) continue;
       if (foes && this.players[d].camp !== foes) continue;
+      // (⛺ le joueur débarque par la mer : son armée dresse son camp, un avant-poste, sur la côte près de la ville ; c'est
+      //  lui qui choisit ensuite où frapper, et quand. Elle ne se jette plus d'elle-même sur une ville trop forte)
+      if (p.isHuman && coast) {
+        const camp = this.crCampSpot(p.id, c);
+        if (camp >= 0 && this.plantOutpost(p.id, camp, army, true)) {
+          this.crEvent(key, vars, null);
+          UI.log(tr(`⛵ Ta flotte débarque ${fmt(army)} soldats près de ${this.crCityName(c)}${mine ? ` (tes ${fmt(mine)} soldats embarqués et ${fmt(army - mine)} croisés venus avec la flotte)` : ''} : ils dressent leur camp, un avant-poste (prêt dans ${CONFIG.OUTPOST_BUILD_TIME} s, affaibli d'ici là). À toi de choisir où frapper : clique sur ${this.crCityName(c)} ou une autre ville, et tes soldats partiront du camp.`,
+            `⛵ Your fleet lands ${fmt(army)} soldiers near ${this.crCityName(c)}${mine ? ` (your ${fmt(mine)} embarked soldiers and ${fmt(army - mine)} crusaders who came with the fleet)` : ''}: they pitch their camp, an outpost (ready in ${CONFIG.OUTPOST_BUILD_TIME} s, weakened until then). It is up to you where to strike: click ${this.crCityName(c)} or another city, and your soldiers will set out from the camp.`), 'good');
+          Render.floatText(camp, B_OUTPOST, tr('⛺ Le camp des croisés', '⛺ The crusaders\' camp'));
+          return true;
+        }
+      }
       let landed = null;
       const spot = this.hyLanding(p.id, d, c, coast);
       if (spot >= 0) landed = this.hyLandArmy(p.id, c, spot, army, {});
@@ -249,6 +262,21 @@ Object.assign(GameRules, {
       return true;
     }
     return p.isHuman ? joinHuman() : false;
+  },
+
+  // ⛺ Où l'armée du joueur dresse son camp en débarquant près de la ville c : la côte où l'on peut débarquer (hors des
+  // murailles, voir landable) la plus proche de la ville, à moins de VIKING_RANGE cases ; -1 s'il n'y en a pas
+  crCampSpot(pid, c) {
+    const W = this.W, h = this.sizeOf(this.building[c]) / 2, cx = c % W + h, cy = ((c / W) | 0) + h, R = CONFIG.VIKING_RANGE, spots = [];
+    for (let y = Math.max(0, Math.floor(cy - R)); y <= Math.min(this.H - 1, Math.ceil(cy + R)); y++) {
+      for (let x = Math.max(0, Math.floor(cx - R)); x <= Math.min(W - 1, Math.ceil(cx + R)); x++) {
+        const d = DMath.hypot(x + 0.5 - cx, y + 0.5 - cy), j = y * W + x;
+        if (d <= R && this.isCoastal(j) && this.landable(pid, j)) spots.push([d, j]);
+      }
+    }
+    spots.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    for (const [, j] of spots.slice(0, 12)) if (this.landingZone(pid, j).anchor >= 0) return j;
+    return -1;
   },
 
   // ⛵ Une flotte de croisade part : le chemin par la mer (eau libre seulement, pas les fleuves), de son port jusqu'en vue
@@ -647,7 +675,8 @@ Object.assign(GameRules, {
         p.troops -= n;
         cr.embarked[cross] = (cr.embarked[cross] || 0) + n + (data.army || 0);
         if (p.isHuman) UI.log(cross === 'venise' ? tr('⛵ Marché conclu : la croisade frappera Zara, puis Constantinople, pour Venise.', '⛵ Bargain struck: the crusade will strike Zara, then Constantinople, for Venice.')
-          : tr(`⛵ Tu prends la croix : ${fmt(n + (data.army || 0))} soldats partent ; ils débarqueront devant leur première cible.`, `⛵ You take the cross: ${fmt(n + (data.army || 0))} soldiers set out; they will land before their first target.`), 'good');
+          : tr(`⛵ Tu prends la croix : ${fmt(n + (data.army || 0))} de tes soldats embarquent. À l'arrivée, la grande armée de croisade les rejoint, et tous dressent leur camp sur la côte, près de leur première cible : à toi de choisir où frapper.`,
+            `⛵ You take the cross: ${fmt(n + (data.army || 0))} of your soldiers embark. On arrival, the great crusading army joins them, and they all pitch their camp on the coast, near their first target: it is up to you where to strike.`), 'good');
       } else {
         cr.off.add(cross);
         const stay = this.reward(p, K.STAY_GOLD);

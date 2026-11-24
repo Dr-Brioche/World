@@ -6895,7 +6895,8 @@ const GameRules = {
 
   // ⛺ Des soldats arrivés sur une côte y plantent un avant-poste (comme un débarquement : voir stepExpeditions).
   // Renvoie false si la côte n'est plus possible.
-  plantOutpost(pid, landing, troops) {
+  // (quiet : sans le message du joueur, que l'appelant donne lui-même)
+  plantOutpost(pid, landing, troops, quiet = false) {
     const zone = this.landable(pid, landing) ? this.landingZone(pid, landing) : null;
     if (!zone || zone.anchor < 0) return false;
     const p = this.players[pid], victims = new Set(zone.tiles.map(j => this.owner[j]).filter(o => o >= 0));
@@ -6907,7 +6908,7 @@ const GameRules = {
     this.garrison[zone.anchor] = troops; // (tous les soldats le bâtissent : affaiblis tant qu'il n'est pas bâti)
     const victim = victims.size ? victims.values().next().value : -1;
     this.outposts.set(zone.anchor, { ready: this.tick + CONFIG.OUTPOST_BUILD_TIME * CONFIG.TICKS_PER_SECOND, landing, stationed: 0, victim });
-    if (p.isHuman) {
+    if (p.isHuman && !quiet) {
       UI.log(tr(`⛺ Tes ${fmt(troops)} soldats bâtissent un nouvel avant-poste sur la côte (affaiblis tant qu'il n'est pas bâti, dans ${CONFIG.OUTPOST_BUILD_TIME} s).`,
         `⛺ Your ${fmt(troops)} soldiers are building a new outpost on the coast (weakened until it is built, in ${CONFIG.OUTPOST_BUILD_TIME} s).`), 'good');
       Render.floatText(zone.anchor, B_OUTPOST, tr('⛺ Nouvel avant-poste', '⛺ New outpost'));

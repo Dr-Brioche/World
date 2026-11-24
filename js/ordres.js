@@ -4,7 +4,9 @@
 //  - 🏦 la banque du Temple : un royaume chrétien emprunte de l'or aux Templiers, et le rend avec intérêts (crLoan) ;
 //  - les Assassins versent un tribut aux Templiers (et ne peuvent rien contre les ordres : voir crHireError) ;
 //  - 🏝️ Chypre, vendue par Richard aux Templiers en 1191, puis revendue à Guy de Lusignan en 1192.
-// L'état est dans Game.cr : loans (pid → { left : ce qu'il reste à rendre, due : toute la dette }), loansGiven (le nombre de prêts du Temple),
+// L'état est dans Game.cr : loans (pid → { left : ce qu'il reste à rendre, due : toute la dette, year : l'année de l'emprunt,
+// warned : les avertissements reçus, nextPay / nextStrike : le prochain versement, la prochaine frappe des Assassins }),
+// defaulters (les mauvais payeurs, à qui le Temple ne prête plus), loansGiven (le nombre de prêts du Temple),
 // helpReady (ordre → quand il peut de nouveau secourir), helped (royaume → jusqu'à quand il a déjà été secouru),
 // nextLoan (quand un bot peut de nouveau emprunter), cyprusSold / cyprusBought (pour les défis).
 
@@ -58,7 +60,8 @@ Object.assign(GameRules, {
     if (!tp) return tr('Il n\'y a plus de Templiers.', 'There are no Templars left.');
     if (pid === tp.id) return tr('Le Temple ne se prête pas à lui-même.', 'The Temple does not lend to itself.');
     if (p.camp !== 'chretiens') return tr('Le Temple ne prête qu\'aux princes chrétiens.', 'The Temple lends only to Christian princes.');
-    if (loan) return tr(`Tu dois encore ${fmt(loan.left)} pièces au Temple.`, `You still owe the Temple ${fmt(loan.left)} gold.`);
+    if (loan) return tr(`Tu dois encore ${fmt(Math.round(loan.left))} pièces au Temple.`, `You still owe the Temple ${fmt(Math.round(loan.left))} gold.`);
+    if (this.cr.defaulters.has(pid)) return tr('Le Temple ne prête plus aux mauvais payeurs : tu as laissé traîner ta dette.', 'The Temple no longer lends to bad payers: you let your debt drag on.');
     if (this.attacks.some(a => !a.done && a.attacker === pid && a.target === tp.id)) return tr('Le Temple ne prête pas à qui l\'attaque.', 'The Temple does not lend to those who attack it.');
     // (des Templiers bots prêtent l'or des commanderies d'Occident ; un joueur templier prête le sien)
     if (tp.human && tp.gold < O.LOAN) return tr(`Le trésor du Temple est vide : il lui faudrait ${fmt(O.LOAN)} pièces.`, `The Temple's treasury is empty: it would need ${fmt(O.LOAN)} gold.`);
@@ -71,9 +74,10 @@ Object.assign(GameRules, {
     const O = CROISADES.ORDERS, tp = this.crTemple(), p = this.players[pid], due = Math.round(O.LOAN * (1 + O.INTEREST));
     if (tp.human) tp.gold -= O.LOAN;
     p.gold += O.LOAN;
-    this.cr.loans.set(pid, { left: due, due });
+    this.cr.loans.set(pid, { left: due, due, year: this.crYear(), warned: 0, nextPay: this.tick + O.REPAY_EVERY * CONFIG.TICKS_PER_SECOND, nextStrike: 0 });
     this.cr.loansGiven++;
-    if (p.isHuman) UI.log(tr(`🏦 Le Temple te prête ${fmt(O.LOAN)} pièces d'or : tu en rendras ${fmt(due)}, peu à peu, sur tes revenus.`, `🏦 The Temple lends you ${fmt(O.LOAN)} gold: you will repay ${fmt(due)}, little by little, out of your income.`), 'good', tp);
+    if (p.isHuman) UI.log(tr(`🏦 Le Temple te prête ${fmt(O.LOAN)} pièces d'or : tu en rendras ${fmt(due)}, ${O.REPAY_STEP} à la fois quand tu as au moins ${O.REPAY_FROM} d'or. Rembourse avant ${O.WARN_YEARS[2]} ans, sinon gare aux Assassins !`,
+      `🏦 The Temple lends you ${fmt(O.LOAN)} gold: you will repay ${fmt(due)}, ${O.REPAY_STEP} at a time when you have at least ${O.REPAY_FROM} gold. Repay within ${O.WARN_YEARS[2]} years, or beware the Assassins!`), 'good', tp);
     else if (tp.isHuman) UI.log(tr(`🏦 ${p.name} emprunte ${fmt(O.LOAN)} pièces au Temple : il t'en rendra ${fmt(due)}.`, `🏦 ${p.name} borrows ${fmt(O.LOAN)} gold from the Temple: they will repay you ${fmt(due)}.`), 'good', p);
     return null;
   },
@@ -107,10 +111,12 @@ Object.assign(GameRules, {
     else if (tp.isHuman) UI.log(tr(`⚔️ ${p.name} te loue des mercenaires : +${fmt(m.gold)} d'or pour le Temple.`, `⚔️ ${p.name} hires your mercenaries: +${fmt(m.gold)} gold for the Temple.`), 'good', p);
     return null;
   },
-  // Chaque seconde : les débiteurs remboursent une part égale de leur dette (en REPAY_TIME secondes, s'ils ont l'or) ;
-  // si le Temple tombe, les dettes s'effacent
+  // Chaque seconde : les débiteurs remboursent REPAY_STEP pièces toutes les REPAY_EVERY secondes, s'ils ont au moins
+  // REPAY_FROM pièces ; une dette qui traîne vaut un avertissement à chaque date de WARN_YEARS, et au 3e, les Assassins
+  // du Temple frappent toutes les STRIKE_EVERY secondes jusqu'au dernier sou (voir ORDERS) ; si le Temple tombe, les
+  // dettes s'effacent
   crStepLoans() {
-    const cr = this.cr, O = CROISADES.ORDERS, tp = this.crTemple();
+    const cr = this.cr, O = CROISADES.ORDERS, A = CROISADES.ASSASSINS, TPS = CONFIG.TICKS_PER_SECOND, tp = this.crTemple();
     for (const [pid, loan] of cr.loans) {
       const p = this.players[pid];
       if (!tp || !p.alive) {
@@ -118,13 +124,40 @@ Object.assign(GameRules, {
         if (p.isHuman && p.alive) UI.log(tr('🏦 Le Temple est tombé : ta dette est effacée.', '🏦 The Temple has fallen: your debt is wiped out.'), 'good');
         continue;
       }
-      const pay = Math.max(0, Math.min(loan.left, p.gold, loan.due / O.REPAY_TIME));
-      p.gold -= pay;
-      tp.gold += pay;
-      loan.left -= pay;
+      // (le versement : REPAY_STEP pièces, seulement s'il lui en reste au moins REPAY_FROM)
+      if (this.tick >= loan.nextPay && p.gold >= O.REPAY_FROM) {
+        const pay = Math.min(loan.left, O.REPAY_STEP);
+        p.gold -= pay;
+        tp.gold += pay;
+        loan.left -= pay;
+        loan.nextPay = this.tick + O.REPAY_EVERY * TPS;
+      }
       if (loan.left < 1) {
         cr.loans.delete(pid);
-        if (p.isHuman) UI.log(tr('🏦 Ta dette au Temple est payée.', '🏦 Your debt to the Temple is paid.'), 'good', tp);
+        if (p.isHuman) UI.log(loan.warned >= O.WARN_YEARS.length
+          ? tr('🏦 Ta dette au Temple est enfin payée : ses Assassins te laissent tranquille… mais le Temple ne te prêtera plus jamais.', '🏦 Your debt to the Temple is paid at last: its Assassins leave you alone… but the Temple will never lend to you again.')
+          : tr('🏦 Ta dette au Temple est payée.', '🏦 Your debt to the Temple is paid.'), 'good', tp);
+        continue;
+      }
+      // (les avertissements : à chaque date de WARN_YEARS depuis l'emprunt ; le dernier lâche les Assassins)
+      const age = this.crYear() - (loan.year === undefined ? this.crYear() : loan.year), W = O.WARN_YEARS;
+      if (loan.warned < W.length && age >= W[loan.warned]) {
+        loan.warned++;
+        if (loan.warned === W.length) { cr.defaulters.add(pid); loan.nextStrike = this.tick; }
+        if (p.isHuman) UI.log(loan.warned < W.length
+          ? tr(`🏦 Avertissement du Temple (${loan.warned}/${W.length}) : ta dette de ${fmt(Math.round(loan.left))} pièces traîne. Garde au moins ${O.REPAY_FROM} d'or pour la rembourser ; au bout de ${W[W.length - 1]} ans, ses Assassins viendront se payer.`,
+            `🏦 Warning from the Temple (${loan.warned}/${W.length}): your debt of ${fmt(Math.round(loan.left))} gold is dragging on. Keep at least ${O.REPAY_FROM} gold to repay it; after ${W[W.length - 1]} years, its Assassins will come to collect.`)
+          : tr(`🏦 Dernier avertissement du Temple (${W.length}/${W.length}) : ${W[W.length - 1]} ans de dette impayée ! Ses Assassins te frapperont souvent tant que tu n'auras pas tout rendu (${fmt(Math.round(loan.left))} pièces), et le Temple ne te prêtera plus jamais.`,
+            `🏦 Final warning from the Temple (${W.length}/${W.length}): ${W[W.length - 1]} years of unpaid debt! Its Assassins will strike you often until you have paid it all back (${fmt(Math.round(loan.left))} gold), and the Temple will never lend to you again.`), 'warn', tp);
+      }
+      // (🗡️ le mauvais payeur : les Assassins, tributaires du Temple, frappent toutes les STRIKE_EVERY secondes)
+      if (loan.warned >= W.length && this.tick >= loan.nextStrike && this.crAssassins()) {
+        loan.nextStrike = this.tick + O.STRIKE_EVERY * TPS;
+        const lost = Math.round(p.troops * A.KILL);
+        p.troops -= lost;
+        cr.stun.set(pid, this.tick + A.STUN * TPS);
+        if (p.isHuman) UI.log(tr(`🗡️ Les Assassins du Temple viennent réclamer ta dette : ${fmt(lost)} soldats désertent, et tu ne recrutes plus pendant ${A.STUN} s. Rends les ${fmt(Math.round(loan.left))} pièces (garde au moins ${O.REPAY_FROM} d'or) pour qu'ils cessent.`,
+          `🗡️ The Temple's Assassins come to claim your debt: ${fmt(lost)} soldiers desert, and you recruit no more for ${A.STUN} s. Repay the ${fmt(Math.round(loan.left))} gold (keep at least ${O.REPAY_FROM} gold) to make them stop.`), 'warn', tp);
       }
     }
   },
