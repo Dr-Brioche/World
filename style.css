@@ -102,6 +102,17 @@ html, body {
   padding-left: 22px;
 }
 #lb li { margin: 2px 0; white-space: nowrap; }
+/* (une ligne du classement : une rangée souple qui tient toujours dans le cadre, même dans un pacte : le nom se raccourcit
+   (« … ») pour laisser la place à la part des terres et au bouton d'alliance) */
+#lb .lbRow { display: inline-flex; align-items: center; width: 100%; max-width: 100%; vertical-align: middle; }
+#lb .lbRow .nm { flex: 1 1 auto; width: auto; min-width: 0; }
+#lb .lbRow .lbb, #lb .lbRow .allies, #lb .lbRow .faithB, #lb .lbRow .pct, #lb .lbRow button { flex: none; }
+#lb li.pactGroup .lbRow .allies { width: 12px; } /* (dans un pacte, ses carrés d'alliés sont cachés : juste la place de l'écart de Croyance) */
+#lb .lbRow .pct { width: 38px; }
+#lb .nm .icotext { white-space: nowrap; } /* (une icône devant le nom, comme le pacte : sur la même ligne) */
+/* (✝️ un ennemi en croisade : sa bible clignote en doré) */
+#lb .faithB.crusade { color: #b8860b; }
+#lb .faithB.crusade.on { color: #f0c94a; filter: drop-shadow(0 0 3px #f0c94a); }
 #lb li.me { font-weight: bold; }
 #lb li.ally .nm { color: var(--good); font-weight: bold; }
 /* Royaume qui nous attaque : son nom clignote en rouge (la classe « on » est ajoutée une fois sur deux) */
@@ -340,6 +351,22 @@ button:hover { background: #e8d6a8; }
 /* bouton « Croisade » (avec une cathédrale) : un peu doré pour le distinguer des constructions */
 .build.crusade { border-color: var(--gold); }
 .build.crusade:disabled { opacity: 0.7; cursor: default; }
+/* anneau d'attente d'un pouvoir (croisade, recrutement, viking) : une ligne dorée qui fait le tour du bouton
+   et se raccourcit (dans le sens des aiguilles d'une montre) jusqu'à ce qu'il soit de nouveau prêt.
+   --cd = angle qui reste (0 à 360deg), réglé par UI.cooldownRing */
+.build.cooling::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 8px;
+  padding: 3px;
+  background: conic-gradient(#f0c94a var(--cd, 0deg), rgba(0, 0, 0, 0.25) 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+.build.cooling:disabled { opacity: 0.85; }
 
 #hint {
   bottom: 8px;
@@ -419,6 +446,13 @@ button:hover { background: #e8d6a8; }
 /* (🤝 un pacte : ses royaumes côte à côte, dans un cadre doré) */
 #gloryGauge b.pact { display: flex; height: 100%; box-sizing: border-box; border: 2px solid #f0c040; border-radius: 4px; overflow: hidden; flex: none; transition: width 0.4s linear; }
 #gloryGauge b.pact i { box-shadow: none; }
+/* (une barre noire bien visible entre deux royaumes, ou deux pactes, pour voir la limite de chacun) */
+#gloryGauge i { box-sizing: border-box; }
+#gloryGauge > i, #gloryGauge > b.pact { border-right: 2px solid #120a04; }
+#gloryGauge > i:last-child { border-right-width: 0; }
+#gloryGauge > b.pact:last-child { border-right: 2px solid #f0c040; }
+#gloryGauge b.pact i { border-right: 1px solid rgba(18, 10, 4, 0.8); }
+#gloryGauge b.pact i:last-child { border-right: 0; }
 #gloryGauge b.pact i.me { box-shadow: inset 0 -3px 0 #ffe08a; }
 .msg.upgrade img { display: block; width: 120px; margin: 4px auto; }
 /* avantages d'un bâtiment : un par ligne, avec un tiret */
@@ -751,8 +785,9 @@ button:disabled .ico { opacity: 0.6; }
 #campPanel select { max-width: 170px; font-size: 12px; }
 @media (max-width: 760px) { #campBtn { top: auto; bottom: 150px; transform: none; } #campPanel { top: auto; bottom: 60px; transform: none; } }
 
-/* 📋 La barre des effets en cours (sous la barre du haut, centrée comme elle) : une pastille par effet */
-#effectsBar { top: 52px; left: calc((100% - 296px) / 2); transform: translateX(-50%); width: max-content; max-width: calc(100% - 330px); padding: 4px 8px;
+/* 📋 La barre des effets en cours (sous la barre du haut, centrée sur l'écran ; assez étroite pour ne jamais passer
+   sous le classement, à droite) : une pastille par effet */
+#effectsBar { top: 52px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 610px); padding: 4px 8px;
   display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; font-size: 12px; }
 #effectsBar .fx { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; cursor: help;
   border: 1px solid rgba(110, 70, 20, 0.35); background: rgba(255, 248, 225, 0.6); }
@@ -770,3 +805,13 @@ button:disabled .ico { opacity: 0.6; }
 .rules table.lvl th, .rules table.lvl td { border: 1px solid rgba(110, 70, 20, 0.3); padding: 2px 6px; text-align: center; white-space: nowrap; }
 .rules table.lvl th { background: rgba(110, 70, 20, 0.12); font-family: Cinzel, Georgia, serif; }
 .rules table.lvl td:first-child { text-align: left; font-weight: bold; }
+
+/* 🤝 Les pactes de la partie, dans la barre du haut : deux mains qui se serrent, vertes (permis), rouges et barrées
+   (interdits) ou dorées (les camps d'un scénario) */
+#pactsBox { position: relative; display: inline-flex; align-items: center; cursor: help; }
+#pactsBox .ico { width: 1.6em; height: 1.6em; }
+#pactsBox.on { color: #3f8f2f; }
+#pactsBox.off { color: #b8322a; }
+#pactsBox.scen { color: #c9a227; }
+#pactsBox.off::after { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; border-top: 2.5px solid #b8322a;
+  transform: rotate(-30deg); }

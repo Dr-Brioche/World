@@ -1972,14 +1972,16 @@ const Render = {
     }
   },
 
-  // La souris est sur ⛏️ (barre du haut) : nos mines clignotent sur la carte, pour bien les repérer
+  // La souris est sur ⛏️ (barre du haut) : nos mines clignotent sur la carte, pour bien les repérer ; sur la jauge de
+  // gloire (🌿) : tous les filons de gloire de la carte (tours bâties ou non, à qui que ce soit)
   drawFlashingMines(ox, oy) {
     const G = Game;
-    if (!UI.flashMines || !G.human) return;
+    if ((!UI.flashMines && !UI.flashGlory) || !G.human) return;
     const ctx = this.ctx, s = this.cam.scale, on = Math.floor(performance.now() / 300) % 2 === 0;
+    const list = UI.flashGlory ? G.deposits.filter(d => d.kind === 'glory').map(d => d.a)
+      : G.buildingTiles.filter(a => G.building[a] === B_MINE && G.owner[a] === G.human.id);
     ctx.save();
-    for (const a of G.buildingTiles) {
-      if (G.building[a] !== B_MINE || G.owner[a] !== G.human.id) continue;
+    for (const a of list) {
       const half = G.sizeOf(B_MINE) / 2;
       const x = ox + (a % G.W + half) * s, y = oy + (((a / G.W) | 0) + half) * s;
       const r = Math.max(24, s * half * 2.5); // (assez grand pour se voir même de très loin)

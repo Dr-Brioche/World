@@ -4315,11 +4315,15 @@ const GameRules = {
   disorganizedSpots() {
     if (this.whiteFlagsVersion === this.version) return this.whiteFlags;
     this.whiteFlagsVersion = this.version;
-    const r = this.regions(), spots = [], W = this.W;
+    const r = this.regions(), spots = [], W = this.W, routes = this.routeCross();
     for (let k = 0; k < r.size.length; k++) {
       const o = r.owner[k];
       if (r.size[k] < CONFIG.WHITE_FLAG_MIN_TILES || r.anyOutpost[k] || r.colony[k] || r.held[k]) continue;
       if (this.isProtected(o) && !this.pieceUnlinked(r, k)) continue;
+      // (🚩 pas de drapeau blanc sur le chemin d'un assaut en cours : ce n'est qu'une trace, pas un territoire perdu)
+      let onRoute = 0;
+      for (let q = r.start[k]; q < r.start[k] + r.size[k]; q++) if (routes.has(r.order[q])) onRoute++;
+      if (onRoute * 2 >= r.size[k]) continue;
       // (la case du morceau la plus proche de son centre : le drapeau tombe toujours sur ses terres)
       let sx = 0, sy = 0;
       for (let q = r.start[k]; q < r.start[k] + r.size[k]; q++) { sx += r.order[q] % W; sy += (r.order[q] / W) | 0; }
