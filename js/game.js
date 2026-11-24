@@ -2084,12 +2084,15 @@ const GameRules = {
     if (!o || this.owner[a] !== pid) return tr('Ce n\'est pas un de tes avant-postes.', 'This is not one of your outposts.');
     let best = null;
     for (const port of this.expeditionPorts(pid)) {
+      // (les renforts sont des soldats du royaume : ils embarquent dans un port relié au royaume, jamais dans un port
+      //  bâti sur l'île de l'avant-poste, ou d'un autre avant-poste, que l'armée du royaume ne peut pas rejoindre)
+      if (this.sourceOf(port) !== -1) continue;
       const path = this.boatPath(port, o.landing);
       if (!path) continue;
       const time = path.length / this.buildingInfo(port).boatSpeed;
       if (!best || time < best.time) best = { path, time, port };
     }
-    if (!best) return tr('Aucun de tes ports d\'expédition (niveau 2 ou plus) ne peut rejoindre cet avant-poste.', 'None of your expedition ports (level 2 or higher) can reach this outpost.');
+    if (!best) return tr('Aucun de tes ports d\'expédition (niveau 2 ou plus) reliés au royaume ne peut rejoindre cet avant-poste.', 'None of your expedition ports (level 2 or higher) linked to the kingdom can reach this outpost.');
     troops = Math.floor(Math.min(troops, p.troops));
     if (troops < 1) return tr('Pas assez de soldats !', 'Not enough soldiers!');
     p.troops -= troops;
@@ -6640,9 +6643,10 @@ const GameRules = {
     if (a.targetCastle >= 0 && this.building[a.targetCastle] === B_CASTLE && this.troopsInCastles(pid)) return mid(a.targetCastle);
     // (🧱 une mine fortifiée ou une tour de gloire fortifiée, reliée au royaume : comme une ville, ses murs accueillent
     //  aussitôt les défenseurs, ils sortent d'elle ; isolée, personne ne la rejoint : voir cutOff)
-    if (a.targetCastle >= 0 && this.owner[a.targetCastle] === pid && this.mineFortified(a.targetCastle)) return mid(a.targetCastle);
-    const goal = this.defenseGoal(a);
-    const fast = this.fastestCity(pid, Math.floor(goal.y) * W + Math.floor(goal.x), this.strongholds(pid, true));
+    //  (🌿 mais seulement si c'est elle la plus rapide à rejoindre : une ville plus proche du combat envoie les siens)
+    const goal = this.defenseGoal(a), places = this.strongholds(pid, true);
+    if (a.targetCastle >= 0 && this.owner[a.targetCastle] === pid && this.mineFortified(a.targetCastle)) places.push(a.targetCastle);
+    const fast = this.fastestCity(pid, Math.floor(goal.y) * W + Math.floor(goal.x), places);
     if (fast >= 0) return mid(fast);
     const to = this.attackFront(a);
     let best = null, bestD = Infinity;
@@ -6690,7 +6694,14 @@ const GameRules = {
       // (moins d'un soldat, après un combat perdu : pas de retraite à 0 sur la carte, ils rentrent tout de suite)
       if (this.tick < r.arrive && r.troops >= 1) continue;
       r.done = true;
-      if (this.players[r.pid].alive) this.giveTroops(r.pid, r.source, r.troops);
+      if (!this.players[r.pid].alive) continue;
+      // (⛺ des soldats sans avant-poste arrivés sur la côte : ils en bâtissent un ; la côte n'est plus possible : ils
+      //  rembarquent vers un de leurs ports)
+      if (r.outpostAt !== undefined && r.troops >= 1) {
+        if (!this.plantOutpost(r.pid, r.outpostAt, r.troops)) this.sailHome(r.pid, r.outpostAt, r.troops);
+        continue;
+      }
+      this.giveTroops(r.pid, r.source, r.troops);
     }
     this.returning = this.returning.filter(r => !r.done);
   },
@@ -6703,20 +6714,51 @@ const GameRules = {
 
   // Où vont les défenseurs : la case de leurs terres la plus proche de l'endroit où se bat l'assaut
   // (pour qu'ils y aillent par leurs terres, et pas en ligne droite à travers celles de l'ennemi)
+  // (🛡️ de préférence une case d'où ils rejoignent l'ennemi tout droit, sans obstacle : pas de l'autre côté d'une
+  //  montagne, d'un lac ou d'un mur, ni à travers les terres d'un autre royaume ; voir defLineClear)
   defenseGoal(a) {
     const front = this.attackFront(a), W = this.W, pid = a.target;
     const fx = Math.floor(front.x), fy = Math.floor(front.y);
-    let best = null, bestD = Infinity;
+    let best = null, bestD = Infinity, cands = null;
     for (let r = 0; r <= 8 && !best; r++) {
       for (let y = fy - r; y <= fy + r; y++) {
         for (let x = fx - r; x <= fx + r; x++) {
           if (x < 0 || y < 0 || x >= W || y >= this.H || this.owner[y * W + x] !== pid) continue;
           const d = (x + 0.5 - front.x) ** 2 + (y + 0.5 - front.y) ** 2;
+          (cands = cands || []).push({ x: x + 0.5, y: y + 0.5, d });
           if (d < bestD) { bestD = d; best = { x: x + 0.5, y: y + 0.5 }; }
         }
       }
     }
-    return best || front;
+    if (!best) return front;
+    // (la plus proche de l'ennemi parmi celles d'où la voie est libre, en cherchant un peu plus loin s'il le faut)
+    for (let r = Math.ceil(Math.sqrt(bestD)) + 1; r <= 8; r++) {
+      for (let y = fy - r; y <= fy + r; y++) for (let x = fx - r; x <= fx + r; x++) {
+        if (Math.max(Math.abs(x - fx), Math.abs(y - fy)) !== r) continue; // (seulement le nouvel anneau)
+        if (x < 0 || y < 0 || x >= W || y >= this.H || this.owner[y * W + x] !== pid) continue;
+        cands.push({ x: x + 0.5, y: y + 0.5, d: (x + 0.5 - front.x) ** 2 + (y + 0.5 - front.y) ** 2 });
+      }
+    }
+    cands.sort((p, q) => p.d - q.d || p.y - q.y || p.x - q.x);
+    for (const c of cands) if (this.defLineClear(pid, a.attacker, c, front)) return { x: c.x, y: c.y };
+    return best;
+  },
+
+  // 🛡️ Des défenseurs de pid peuvent-ils aller tout droit du point from au point to (l'armée ennemie de enemy) ?
+  // Pas si la ligne passe par la mer, un lac, un sommet, un fleuve sans pont ou un mur, ni par les terres d'un autre
+  // royaume (ou des terres libres) ; celles de l'ennemi seulement tout près de lui (là où il se bat).
+  // Sinon ils font le tour par leurs terres, même si c'est plus long (voir arriveDefenders).
+  defLineClear(pid, enemy, from, to) {
+    const W = this.W, dx = to.x - from.x, dy = to.y - from.y, len = Math.hypot(dx, dy);
+    const steps = Math.max(1, Math.ceil(len * 2)), near = CONFIG.DEFEND_CONTACT + 1;
+    for (let k = 0; k <= steps; k++) {
+      const f = k / steps, x = Math.floor(from.x + dx * f), y = Math.floor(from.y + dy * f);
+      if (x < 0 || y < 0 || x >= W || y >= this.H) return false;
+      const i = y * W + x, o = this.owner[i];
+      if (!this.isLand(i) || this.wallAt[i] || (this.terrain[i] === TERRAIN.RIVER && !this.bridgeAt[i])) return false;
+      if (o !== pid && !(o === enemy && enemy >= 0 && len * (1 - f) <= near)) return false;
+    }
+    return true;
   },
 
   // Arrivée des défenseurs en route : ils rejoignent le combat. Toutes les secondes, ceux qui marchent encore
@@ -6743,13 +6785,19 @@ const GameRules = {
         if (r.arrive <= this.tick) continue;
         // Tout près de l'ennemi (DEFEND_DIRECT) : droit sur lui ; plus loin : vers la case de leurs terres la plus
         // proche de lui, par leurs terres
-        const { pos, d } = near(r), direct = d <= C.DEFEND_DIRECT, to = direct ? front : goal, end = r.pts[r.pts.length - 1];
+        // (🛡️ jamais tout droit à travers une montagne, l'eau, un mur ou d'autres terres : voir defLineClear)
+        const { pos, d } = near(r), direct = d <= C.DEFEND_DIRECT && this.defLineClear(a.target, a.attacker, pos, front);
+        const to = direct ? front : goal, end = r.pts[r.pts.length - 1];
         if (DMath.hypot(end.x - to.x, end.y - to.y) < 2 && direct === !!r.direct) continue;
         Object.assign(r, this.walkRoute(a.target, { x: pos.x, y: pos.y }, to, r.troops, undefined, direct), { direct });
       }
     }
     for (const r of a.defPending) {
-      if (r.arrive > this.tick && near(r).d <= C.DEFEND_CONTACT) r.arrive = this.tick; // (au contact : ils attaquent)
+      // (au contact : ils attaquent ; pas à travers une montagne ou un lac, voir defLineClear)
+      if (r.arrive > this.tick) {
+        const n = near(r);
+        if (n.d <= C.DEFEND_CONTACT && this.defLineClear(a.target, a.attacker, n.pos, front)) r.arrive = this.tick;
+      }
       if (r.arrive <= this.tick) { a.defenders += r.troops; r.done = true; }
     }
     a.defPending = a.defPending.filter(r => !r.done);
@@ -6759,9 +6807,94 @@ const GameRules = {
   // en plus renforce l'armée de défense déjà partie (voir sendDefenders)
   defendWait() { return 0; },
 
+  // ⛺ L'avant-poste d'où est parti l'assaut a est tombé pendant que son armée marchait : elle ne disparaît pas, elle
+  // continue seule en terre ennemie, comme des Vikings débarqués (sans leur bonus de force ni leur pillage) :
+  // - au pied des murs, le siège continue ;
+  // - sinon, elle marche sur sa cible depuis là où elle se trouve (si un chemin y mène encore) ;
+  // - si elle prend une ville ou un port, elle est sauvée (elle rejoint le royaume) ; sinon (une église, une mine,
+  //   un avant-poste pris, ou un assaut rappelé ou sans chemin), ses survivants marchent jusqu'à la côte la plus proche
+  //   et y bâtissent un nouvel avant-poste, avec son délai de construction et sa faiblesse (voir strandedMarch).
+  orphanAssault(a) {
+    const W = this.W, p = this.players[a.attacker], c = a.targetCastle;
+    a.orphan = true;
+    a.source = -1;
+    if (p.isHuman) UI.log(tr('⛺ L\'avant-poste d\'où est partie ton armée est tombé : elle continue seule. Si elle prend une ville ou un port, elle est sauvée ; sinon elle ira bâtir un nouvel avant-poste sur la côte la plus proche.',
+      '⛺ The outpost your army set out from has fallen: it carries on alone. If it takes a city or a port, it is saved; otherwise it will build a new outpost on the nearest coast.'), 'warn');
+    if (a.siege) return;
+    const pos = this.isPreparing(a) && a.march ? this.walkPosition(a.march) : this.attackFront(a);
+    const px = Math.floor(pos.x), py = Math.floor(pos.y);
+    let route = null, L = -1;
+    if (c >= 0 && this.owner[c] === a.target && this.building[c]) {
+      // (la case de terre visée la plus proche de l'armée, d'où un chemin mène encore à sa cible)
+      const passable = this.castlePassable(c, a.attacker);
+      for (let r = 0; r <= 6 && L < 0; r++) {
+        for (let y = py - r; y <= py + r && L < 0; y++) for (let x = px - r; x <= px + r; x++) {
+          if (Math.max(Math.abs(x - px), Math.abs(y - py)) !== r || x < 0 || y < 0 || x >= W || y >= this.H) continue;
+          if (passable(y * W + x)) { L = y * W + x; break; }
+        }
+      }
+      if (L >= 0) route = this.vikingRoute(a.attacker, c, L);
+    }
+    if (!route) { a.strandedAt = { x: pos.x, y: pos.y }; return this.endAttack(a); }
+    const at = { x: L % W + 0.5, y: ((L / W) | 0) + 0.5 };
+    Object.assign(a, { viking: L, landed: true, startTick: this.tick, prepTicks: 0, startTile: L, marchFrom: at,
+      fromX: at.x, fromY: at.y, frontTile: route[0], pathTiles: route, limitZone: this.corridor(c, route),
+      list: [route[0]], set: new Set([route[0]]), entryStart: undefined });
+  },
+
+  // ⛺ Les n survivants d'un assaut sans avant-poste (voir orphanAssault) marchent, depuis le point from, jusqu'à la côte
+  // la plus proche où l'on peut débarquer, pour y bâtir un nouvel avant-poste (voir stepReturning). Pas de côte :
+  // ils rembarquent vers un de leurs ports (ou, sans port, rejoignent le royaume).
+  strandedMarch(pid, from, n) {
+    if (n < 1) return;
+    const W = this.W, N = this.N, start = Math.floor(from.y) * W + Math.floor(from.x);
+    const seen = new Set([start]), queue = [start];
+    let coast = -1, tries = 0;
+    for (let q = 0; q < queue.length && q < 20000 && coast < 0 && tries < 40; q++) {
+      const i = queue[q];
+      let sea = false;
+      this.forNeighbors(i, n2 => { if (this.navigable(n2)) sea = true; });
+      if (sea && this.landable(pid, i)) { tries++; if (this.landingZone(pid, i).anchor >= 0) { coast = i; break; } }
+      this.forNeighbors(i, n2 => { if (!seen.has(n2) && n2 >= 0 && n2 < N && this.isLand(n2)) { seen.add(n2); queue.push(n2); } });
+    }
+    if (coast < 0) return this.sailHome(pid, start, n);
+    const to = { x: coast % W + 0.5, y: ((coast / W) | 0) + 0.5 };
+    this.returning.push(Object.assign(this.walkRoute(pid, { x: from.x, y: from.y }, to, n, CONFIG.RETREAT_SPEED), { pid, source: -1, to, outpostAt: coast }));
+    if (this.players[pid].isHuman) UI.log(tr(`⛺ Tes ${fmt(n)} soldats sans avant-poste marchent vers la côte la plus proche pour en bâtir un nouveau.`,
+      `⛺ Your ${fmt(n)} soldiers without an outpost march to the nearest coast to build a new one.`), 'warn');
+  },
+
+  // ⛺ Des soldats arrivés sur une côte y plantent un avant-poste (comme un débarquement : voir stepExpeditions).
+  // Renvoie false si la côte n'est plus possible.
+  plantOutpost(pid, landing, troops) {
+    const zone = this.landable(pid, landing) ? this.landingZone(pid, landing) : null;
+    if (!zone || zone.anchor < 0) return false;
+    const p = this.players[pid], victims = new Set(zone.tiles.map(j => this.owner[j]).filter(o => o >= 0));
+    for (const j of zone.tiles) this.setOwner(j, pid);
+    for (const o of victims) {
+      if (this.players[o].isHuman) UI.log(tr(`⛵ ${p.name} a planté un avant-poste sur ta côte ! Vise-le pour le détruire.`, `⛵ ${p.name} has set up an outpost on your coast! Target it to destroy it.`), 'warn', p);
+    }
+    this.placeBuilding(zone.anchor, B_OUTPOST);
+    this.garrison[zone.anchor] = troops; // (tous les soldats le bâtissent : affaiblis tant qu'il n'est pas bâti)
+    const victim = victims.size ? victims.values().next().value : -1;
+    this.outposts.set(zone.anchor, { ready: this.tick + CONFIG.OUTPOST_BUILD_TIME * CONFIG.TICKS_PER_SECOND, landing, stationed: 0, victim });
+    if (p.isHuman) {
+      UI.log(tr(`⛺ Tes ${fmt(troops)} soldats bâtissent un nouvel avant-poste sur la côte (affaiblis tant qu'il n'est pas bâti, dans ${CONFIG.OUTPOST_BUILD_TIME} s).`,
+        `⛺ Your ${fmt(troops)} soldiers are building a new outpost on the coast (weakened until it is built, in ${CONFIG.OUTPOST_BUILD_TIME} s).`), 'good');
+      Render.floatText(zone.anchor, B_OUTPOST, tr('⛺ Nouvel avant-poste', '⛺ New outpost'));
+    }
+    return true;
+  },
+
   stepAttack(a) {
     this.arriveDefenders(a);
     if (this.stepRetreat(a)) return;
+    // ⛺ L'avant-poste d'où est parti l'assaut n'existe plus : relié au royaume (un château l'a remplacé), l'armée en
+    // fait partie ; détruit, elle continue seule (voir orphanAssault)
+    if (a.source >= 0 && !(this.building[a.source] === B_OUTPOST && this.owner[a.source] === a.attacker)) {
+      if (this.owner[a.source] === a.attacker && this.isBase(a.source)) a.source = -1;
+      else { this.orphanAssault(a); if (a.done) return; }
+    }
     // La ville (l'église, le port…) visée a été prise par un autre royaume avant notre arrivée : demi-tour
     if (a.targetCastle >= 0 && this.owner[a.targetCastle] !== a.target) {
       const p = this.players[a.attacker], o = this.owner[a.targetCastle];
@@ -7329,7 +7462,11 @@ const GameRules = {
     // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste) ;
     // des Vikings qui n'ont pas pris leur cible rembarquent là où ils ont débarqué
     const back = a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
+    const c0 = a.targetCastle, saved = c0 >= 0 && this.owner[c0] === a.attacker && (this.building[c0] === B_CASTLE || this.building[c0] === B_PORT);
     if (a.eventArmy) { /* (👑 des Vikings levés pour un événement : ils repartent chez eux, sans grossir l'armée danoise) */ }
+    // (⛺ une armée dont l'avant-poste est tombé : sauvée si elle a pris une ville ou un port, sinon elle va bâtir un
+    //  nouvel avant-poste sur la côte la plus proche, voir orphanAssault)
+    else if (a.orphan && !saved) this.strandedMarch(a.attacker, a.strandedAt || this.attackFront(a), back);
     else if (a.viking !== undefined && !a.won && !a.castleTaken) this.sailHome(a.attacker, a.viking, back, CONFIG.VIKING_RETURN_SPEED);
     else this.walkBack(a, back, passed);
     // Les défenseurs survivants rentrent aussi, et la garnison regagne son château. Ceux qui étaient encore
