@@ -292,7 +292,7 @@ const UI = {
     $('minesBox').addEventListener('mouseleave', () => { this.flashMines = false; });
     $('rulesClose').addEventListener('click', () => this.closeRules());
     // ↩ Quitter la partie : on confirme (le jeu se met en pause), puis retour au menu de départ (la page se recharge,
-    // comme avec « Rejouer » ; la langue, la musique et son volume restent ceux choisis)
+    // comme avec le bouton « Menu » de fin de partie ; la langue, la musique et son volume restent ceux choisis)
     $('quitBtn').addEventListener('click', () => this.openQuit());
     $('quitNo').addEventListener('click', () => this.closeQuit());
     // (🏆 après une victoire et « Continuer » : quitter la partie ramène d'abord à l'écran de victoire, avec son résumé ;
@@ -784,6 +784,14 @@ const UI = {
     bt(B_CASTLE).classList.toggle('hidden', !!(Game.cm || Game.hy || Game.cr));
     bt(B_TOWER).classList.toggle('hidden', !CONFIG.TOWERS);
     this.gloryBtn.classList.toggle('hidden', !Game.gloryMode); // (🌿 la tour de gloire : cartes de gloire seulement)
+    // 🤝 Les pactes de cette partie, en haut : deux mains qui se serrent, vertes s'ils sont permis, rouges (barrées) sinon,
+    // dorées dans un scénario (les camps y sont fixés)
+    const pb = $('pactsBox'), scen = !!(Game.cm || Game.hy || Game.cr || Game.factions);
+    pb.className = Game.pactsAllowed ? 'on' : scen ? 'scen' : 'off';
+    pb.innerHTML = iconSVG('handshake');
+    pb.title = Game.pactsAllowed ? tr('🤝 Pactes autorisés dans cette partie : propose une alliance avec le bouton du classement, ou d\'un clic droit sur un royaume.', '🤝 Pacts allowed in this game: offer an alliance with the leaderboard button, or by right-clicking a kingdom.')
+      : scen ? tr('🤝 Pactes du scénario : les camps sont fixés par l\'histoire, on ne propose pas de nouvelles alliances.', '🤝 Scenario pacts: the sides are set by history, no new alliances can be offered.')
+      : tr('🚫 Pactes interdits dans cette partie : chacun pour soi !', '🚫 Pacts forbidden in this game: every kingdom for itself!');
     this.gloryBtn.classList.toggle('poor', false);
     // 👑 Scénario « Charlemagne » : chacun est déjà dans son royaume de 768 ; la partie attend en pause
     if (Game.cm) {
@@ -1243,18 +1251,22 @@ const UI = {
     if (this.gloryKey === key) return;
     this.gloryKey = key;
     const goal = CONFIG.GLORY.GOAL, total = G.gloryTotal(), h = G.human;
-    const pct = v => (v / goal * 100).toFixed(1).replace('.0', '');
+    // (les parts de chacun : de toute la gloire gagnée une fois la jauge pleine, si la partie a continué après la
+    //  victoire ; sinon une part pouvait dépasser 100 %)
+    const full = Math.max(goal, total);
+    const pct = v => (v / full * 100).toFixed(1).replace('.0', '');
     // (🤝 les royaumes d'un même pacte sont côte à côte, dans un cadre doré : leur gloire compte ensemble)
     const camps = G.gloryCamps().filter(c => c.glory > 0), mine = camps.find(c => c.members.includes(h));
     const lead = camps.find(c => c.rep), name = c => c.pact >= 0 ? G.pactName(c.rep || c.members[0]) : c.members[0].name;
     const first = lead && lead !== mine ? tr(` · 1er : ${name(lead)} ${pct(lead.glory)} %`, ` · 1st: ${name(lead)} ${pct(lead.glory)}%`) : '';
     const you = mine && mine.pact >= 0 ? tr(` · ton pacte ${pct(mine.glory)} %`, ` · your pact ${pct(mine.glory)}%`) : '';
-    $('gloryTitle').textContent = tr(`🌿 Gloire ${pct(Math.min(goal, total))} % · toi ${pct(h.glory)} %`, `🌿 Glory ${pct(Math.min(goal, total))}% · you ${pct(h.glory)}%`) + you + first;
+    const filled = (Math.min(goal, total) / goal * 100).toFixed(1).replace('.0', '');
+    $('gloryTitle').textContent = tr(`🌿 Gloire ${filled} % · toi ${pct(h.glory)} %`, `🌿 Glory ${filled}% · you ${pct(h.glory)}%`) + you + first;
     // (au survol d'une couleur, une bulle : le royaume et sa part de la jauge, voir gloryTip ; data-pid : son royaume)
-    const seg = p => `<i class="${p === h ? 'me' : ''}" data-pid="${p.id}" style="width:${Math.min(100, p.glory / goal * 100)}%;background:rgb(${p.color})"></i>`;
+    const seg = p => `<i class="${p === h ? 'me' : ''}" data-pid="${p.id}" style="width:${Math.min(100, p.glory / full * 100)}%;background:rgb(${p.color})"></i>`;
     $('gloryGauge').innerHTML = camps.map(c => c.pact < 0 || c.members.length < 2 ? c.members.filter(p => p.glory > 0).map(seg).join('')
       // (un pacte : son cadre fait la largeur de sa gloire, et ses royaumes s'y partagent la place)
-      : `<b class="pact" style="width:${Math.min(100, c.glory / goal * 100)}%">` +
+      : `<b class="pact" style="width:${Math.min(100, c.glory / full * 100)}%">` +
         c.members.filter(p => p.glory > 0).map(p => seg(p).replace(/width:[^%]*%/, `width:${(p.glory / c.glory * 100).toFixed(2)}%`)).join('') + '</b>').join('');
     $('gloryTitle').title = tr(`La jauge de gloire : chaque tour de gloire la remplit de la couleur de son royaume (les royaumes d'un même pacte côte à côte, dans un cadre doré). Pleine, le royaume, ou le pacte, qui en a le plus l'emporte.`,
       `The glory gauge: each glory tower fills it with its kingdom's colour (kingdoms of the same pact side by side, in a golden frame). When it is full, the kingdom, or the pact, with the most wins.`);
@@ -1263,6 +1275,9 @@ const UI = {
       this.gloryTipOn = true;
       $('gloryGauge').addEventListener('mousemove', e => { this.gloryMouse = { x: e.clientX, y: e.clientY }; this.gloryTip(); });
       $('gloryGauge').addEventListener('mouseleave', () => { this.gloryMouse = null; this.gloryTip(); });
+      // (🌿 la souris sur la jauge : les filons de gloire de la carte clignotent, voir Render.drawFlashingMines)
+      $('gloryBar').addEventListener('mouseenter', () => { this.flashGlory = true; });
+      $('gloryBar').addEventListener('mouseleave', () => { this.flashGlory = false; });
     }
     if (this.gloryMouse) this.gloryTip();
   },
@@ -1273,7 +1288,7 @@ const UI = {
     const el = m && document.elementFromPoint(m.x, m.y), seg = el && el.closest && el.closest('#gloryGauge i');
     const p = seg ? G.players[+seg.dataset.pid] : null;
     if (!p) { tip.classList.add('hidden'); return; }
-    const goal = CONFIG.GLORY.GOAL, pct = v => fmtRate(Math.round(v / goal * 1000) / 10);
+    const goal = Math.max(CONFIG.GLORY.GOAL, G.gloryTotal()), pct = v => fmtRate(Math.round(v / goal * 1000) / 10);
     const camp = p.alive && p.pact >= 0 ? G.gloryCamps().find(c => c.pact === p.pact) : null;
     tip.innerHTML = `${this.bannerImg(p)} <b>${escapeHtml(p.name)}</b> : ${pct(p.glory)} ${tr('% de la gloire', '% of the glory')}` +
       (camp && camp.members.length > 1 ? `<br><span class="sub">🤝 ${escapeHtml(G.pactName(p))} : ${pct(camp.glory)} %</span>` : '');
@@ -1293,17 +1308,21 @@ const UI = {
   // ✝️ Croyance face à un voisin ennemi, dans le classement : une bible verte si on convertit ses terres,
   // rouge si c'est lui qui convertit les nôtres (rien sinon) ; en petit, à côté, l'écart de Croyance entre nous deux
   // (« +180 » en vert : on gagne ; « −420 » en rouge : on perd)
+  // (✝️ un royaume ennemi en croisade : sa bible clignote en doré, pour montrer d'où vient sa Croyance si haute)
   faithBadge(p) {
     const G = Game, h = G.human;
     if (p.isHuman || !h.alive) return '<span class="faithB"></span>';
     const mine = Math.round(G.faithOf(h.id)), theirs = Math.round(G.faithOf(p.id));
     const win = G.faithEdge(h.id, p.id) > 0, lose = G.faithEdge(p.id, h.id) > 0;
-    if (!win && !lose) return '<span class="faithB"></span>';
+    const crusade = !G.hy && G.crusades.some(c => c.owner === p.id && G.tick < c.end && !c.over);
+    const cru = crusade ? ` crusade${Math.floor(performance.now() / 400) % 2 ? ' on' : ''}` : '';
+    const why = crusade ? tr(` ✝️ ${p.name} est en croisade : +${fmt(CONFIG.CRUSADE_FAITH)} de Croyance tant qu'elle dure.`, ` ✝️ ${p.name} is on crusade: +${fmt(CONFIG.CRUSADE_FAITH)} Faith while it lasts.`) : '';
+    if (!win && !lose) return crusade ? `<span class="faithB${cru}" title="${escapeHtml(tr(`Croyance : toi ${mine}, ${p.name} ${theirs}.`, `Faith: you ${mine}, ${p.name} ${theirs}.`) + why)}">📖</span>` : '<span class="faithB"></span>';
     const title = tr(`Croyance : toi ${mine}, ${p.name} ${theirs} : `, `Faith: you ${mine}, ${p.name} ${theirs}: `) +
       (win ? tr('tes prêcheurs convertissent peu à peu ses terres', 'your preachers are slowly converting their lands')
-        : tr('ses prêcheurs convertissent peu à peu tes terres (bâtis ou améliore des églises !)', 'their preachers are slowly converting your lands (build or upgrade churches!)'));
+        : tr('ses prêcheurs convertissent peu à peu tes terres (bâtis ou améliore des églises !)', 'their preachers are slowly converting your lands (build or upgrade churches!)')) + why;
     const gap = mine - theirs;
-    return `<span class="faithB ${win ? 'good' : 'bad'}" title="${escapeHtml(title)}">📖<sup>${win ? '+' : '−'}${fmt(Math.abs(gap))}</sup></span>`;
+    return `<span class="faithB ${win ? 'good' : 'bad'}${cru}" title="${escapeHtml(title)}">📖<sup>${win ? '+' : '−'}${fmt(Math.abs(gap))}</sup></span>`;
   },
 
   // Petite image de la bannière d'un royaume, pour les messages et les listes
@@ -1444,6 +1463,15 @@ const UI = {
     return [tr(`Or ${pct(next.gold / cur.gold - 1)}`, `Gold ${pct(next.gold / cur.gold - 1)}`)];
   },
 
+  // ⚓ Un port, au survol : son or par versement (sauf noGold), ses routes vers des villes et 🌾 les moulins
+  // de ces villes qui lui rapportent (voir Game.roads)
+  portLinks(a, noGold = false) {
+    const G = Game, link = G.roads().get(a), n = link ? G.linkRoads(link).length : 0, mills = link ? link.mills || 0 : 0;
+    const gold = noGold ? '' : ` · +${String(Math.round(G.buildingOutput(a) * 10) / 10)} 💰 / ${CONFIG.PRODUCTION_INTERVAL} s`;
+    return gold + (n ? tr(` · 🛤️ ${n > 1 ? `${n} villes` : '1 ville'} : +${Math.round(link.bonus * 100)} % · 🌾 ${mills} moulin${mills > 1 ? 's' : ''} relié${mills > 1 ? 's' : ''} : +${Math.round(G.portMillBonus(mills) * 100)} %`,
+      ` · 🛤️ ${n > 1 ? `${n} cities` : '1 city'}: +${Math.round(link.bonus * 100)}% · 🌾 ${mills} linked mill${mills > 1 ? 's' : ''}: +${Math.round(G.portMillBonus(mills) * 100)}%`)
+      : tr(' · 🛤️ relié à aucune ville : ni bonus de route, ni moulins', ' · 🛤️ linked to no city: no road bonus, no mills'));
+  },
   // Le résumé d'un bâtiment (au survol) : son nom, son niveau et ce qu'il rapporte vraiment, en bref
   buildingSummary(a) {
     const G = Game, b = G.building[a], info = G.buildingInfo(a), o = G.owner[a], h = G.human;
@@ -1452,12 +1480,7 @@ const UI = {
       (G.placeNames.has(a) ? ` · ${G.placeNames.get(a)}` : '') + // (🏷️ une ville historique : son nom)
       (o !== h.id ? tr(` ${G.deName(G.players[o].name)}`, ` · ${G.players[o].name}`) : '');
     if (b === B_MILL || b === B_PORT) txt += ` · +${n1(G.buildingOutput(a))} 💰${every}`;
-    if (b === B_PORT) { // (🛤️ ses routes vers des villes, et 🌾 les moulins de ces villes : voir Game.roads)
-      const link = G.roads().get(a), n = link ? G.linkRoads(link).length : 0, mills = link ? link.mills || 0 : 0;
-      txt += n ? tr(` · 🛤️ ${n > 1 ? `${n} villes` : '1 ville'} : +${Math.round(link.bonus * 100)} % · 🌾 ${mills} moulin${mills > 1 ? 's' : ''} : +${Math.round(G.portMillBonus(mills) * 100)} %`,
-        ` · 🛤️ ${n > 1 ? `${n} cities` : '1 city'}: +${Math.round(link.bonus * 100)}% · 🌾 ${mills} mill${mills > 1 ? 's' : ''}: +${Math.round(G.portMillBonus(mills) * 100)}%`)
-        : tr(' · 🛤️ relié à aucune ville : ni bonus de route, ni moulins', ' · 🛤️ linked to no city: no road bonus, no mills');
-    }
+    if (b === B_PORT) txt += this.portLinks(a, true);
     if (b === B_PORT && info.boatSpeed) txt += tr(' · ⛵ expéditions', ' · ⛵ expeditions');
     if (b === B_BARRACKS) txt += tr(` · +${n1(G.buildingOutput(a))} soldats${every}`, ` · +${n1(G.buildingOutput(a))} soldiers${every}`) +
       (info.power > 1 ? tr(` · force ${pct(info.power - 1)}`, ` · strength ${pct(info.power - 1)}`) : '');
@@ -1961,6 +1984,7 @@ const UI = {
       const mine = o === G.human.id, work = G.works.get(a);
       return `${BUILDINGS[b].icon} ${info.name} ${mine ? '' : tr(G.deName(G.players[o].name) + ' ', `· ${G.players[o].name} `)}· ` +
         tr(`🛡️ défense globale ${pct(def)}`, `🛡️ overall defense ${pct(def)}`) +
+        (b === B_PORT ? this.portLinks(a) : '') + // (⚓ un port royal : aussi son or, ses villes et ses moulins reliés)
         (truce ? tr(` · ⏳ inattaquable encore ${Math.ceil(truce)} s`, ` · ⏳ cannot be attacked for ${Math.ceil(truce)} more s`) : '') +
         (work ? { up: tr(' · ⬆️ amélioration en cours', ' · ⬆️ upgrade under way'), build: tr(' · 🏗️ en construction', ' · 🏗️ under construction'),
           down: tr(' · 🧨 démolition en cours', ' · 🧨 demolition under way') }[work.kind]
@@ -2334,6 +2358,7 @@ const UI = {
     const G = Game, h = G.human;
     if (!h) return;
     this.refreshObjectives();
+    this.refreshActionMenu(); // (le menu du clic droit ouvert : une action devenue possible, comme le pont, s'y débloque)
     $('kName').textContent = h.name;
     $('kName').style.color = `rgb(${h.color})`;
     $('gold').textContent = fmt(h.gold);
@@ -2402,12 +2427,12 @@ const UI = {
       const attacking = !p.isHuman && G.attacks.some(a => !a.done && a.attacker === p.id && a.target === h.id);
       const blink = attacking ? (Math.floor(performance.now() / 400) % 2 ? ' attacker' : ' attacker on') : '';
       return `<li class="${p.isHuman ? 'me' : ''}${allied ? ' ally' : ''}${blink}" data-pid="${p.id}"` +
-        `${attacking ? ` title="${tr('Il t\'attaque ! Clique pour voir où.', 'They are attacking you! Click to see where.')}"` : ''}>${this.bannerImg(p, 'lbb')}` +
+        `${attacking ? ` title="${tr('Il t\'attaque ! Clique pour voir où.', 'They are attacking you! Click to see where.')}"` : ''}><span class="lbRow">${this.bannerImg(p, 'lbb')}` +
         `<span class="nm">${allied ? '🤝 ' : ''}${G.isTraitor(p) ? '🗡️ ' : ''}${p.human && !p.isHuman ? '👤 ' : ''}${escapeHtml(p.name)}</span>` +
         `<span class="allies" title="${this.alliesTitle(p)}">` +
         G.allies(p.id).map(o => `<i style="background:rgb(${o.color})"></i>`).join('') + `</span>` +
         `${this.faithBadge(p)}${p.raiders ? `<span class="pct" title="${tr('Pillards : leurs terres sont imprenables, elles ne comptent pas dans les parts', 'Raiders: their lands cannot be taken and do not count in the shares')}">⚔️</span>`
-          : `<span class="pct">${G.landPct(p.tiles)}%</span>`}${btn}</li>`;
+          : `<span class="pct">${G.landPct(p.tiles)}%</span>`}${btn}</span></li>`;
     };
     // Les membres d'un même pacte sont regroupés dans un cadre, avec la part des terres du pacte entier.
     // Les groupes (pactes et royaumes seuls) sont classés selon leurs terres.
@@ -2975,10 +3000,42 @@ const UI = {
   },
 
   // --- Menu d'actions (clic droit sur la carte) : attaquer, construire, débarquer ---
-  openActionMenu(sx, sy) {
-    const G = Game, h = G.human, i = Render.tileAt(sx, sy);
+  // (i : la case visée, gardée quand le menu se met à jour tout seul, voir refreshActionMenu)
+  openActionMenu(sx, sy, i = Render.tileAt(sx, sy)) {
+    const G = Game, h = G.human;
     this.closeActionMenu();
     if (G.phase !== 'playing' || !h.alive || i < 0) return;
+    const items = this.actionItems(sx, sy, i);
+    if (!items.length) return;
+    const el = document.createElement('div');
+    el.className = 'panel actionMenu';
+    el.innerHTML = items.map((it, k) =>
+      `<button data-k="${k}"${it.disabled ? ` disabled title="${escapeHtml(it.disabled)}"` : ''}>${it.label}</button>` +
+      (it.disabled ? `<small>${escapeHtml(it.disabled)}</small>` : '')).join('');
+    el.style.left = Math.min(sx, window.innerWidth - 260) + 'px';
+    el.style.top = Math.min(sy, window.innerHeight - 40 * items.length - 20) + 'px';
+    el.addEventListener('pointerdown', e => e.stopPropagation());
+    el.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-k]');
+      if (!btn || btn.disabled) return;
+      this.closeActionMenu();
+      items[+btn.dataset.k].run();
+    });
+    document.body.appendChild(el);
+    this.actionMenu = el;
+    this.actionMenuAt = { sx, sy, i, el, sig: items.map(it => it.disabled ? 0 : 1).join('') };
+  },
+  // Le menu d'actions ouvert se met à jour tout seul (voir refresh) quand une de ses actions devient possible ou
+  // impossible : par exemple, assez d'or pour bâtir le pont, sans avoir à le refermer et le rouvrir
+  refreshActionMenu() {
+    const at = this.actionMenuAt;
+    if (!at || this.actionMenu !== at.el || !document.body.contains(at.el)) return;
+    const items = this.actionItems(at.sx, at.sy, at.i);
+    if (items.map(it => it.disabled ? 0 : 1).join('') !== at.sig) this.openActionMenu(at.sx, at.sy, at.i);
+  },
+  // Les actions du menu (clic droit) sur la case i : [{ label, run, disabled (la raison) }]
+  actionItems(sx, sy, i) {
+    const G = Game, h = G.human;
     const items = [];
     const own = G.owner[i] === h.id;
     // (choisir « Attaquer » dans le menu vaut le double clic des terres libres)
@@ -3114,24 +3171,9 @@ const UI = {
           });
         } });
     }
-    if (!items.length) return;
-    const el = document.createElement('div');
-    el.className = 'panel actionMenu';
-    el.innerHTML = items.map((it, k) =>
-      `<button data-k="${k}"${it.disabled ? ` disabled title="${escapeHtml(it.disabled)}"` : ''}>${it.label}</button>` +
-      (it.disabled ? `<small>${escapeHtml(it.disabled)}</small>` : '')).join('');
-    el.style.left = Math.min(sx, window.innerWidth - 260) + 'px';
-    el.style.top = Math.min(sy, window.innerHeight - 40 * items.length - 20) + 'px';
-    el.addEventListener('pointerdown', e => e.stopPropagation());
-    el.addEventListener('click', e => {
-      const btn = e.target.closest('button[data-k]');
-      if (!btn || btn.disabled) return;
-      this.closeActionMenu();
-      items[+btn.dataset.k].run();
-    });
-    document.body.appendChild(el);
-    this.actionMenu = el;
+    return items;
   },
+
 
   // Le menu rapide et la fenêtre d'un bâtiment restent à jour pendant qu'ils sont ouverts :
   // le bouton « Améliorer » se débloque tout seul dès qu'on a assez d'or (et se bloque pendant des travaux)
@@ -3188,6 +3230,7 @@ const UI = {
     btn.classList.toggle('hidden', !show);
     if (!show) return;
     const wait = Math.ceil(G.vikingWait(h));
+    this.cooldownRing(btn, h.vikingReady ? G.vikingWait(h) / CONFIG.VIKING_COOLDOWN : 0);
     btn.querySelector('.cost').textContent = h.vikingReady ? (wait > 0 ? `⏳ ${wait} s` : tr('prêt !', 'ready!')) : `💰 ${fmt(CONFIG.VIKING_COST)}`;
     btn.classList.toggle('poor', !h.vikingReady && h.gold < CONFIG.VIKING_COST);
     btn.classList.toggle('active', !!this.vikingAim);
@@ -3274,6 +3317,13 @@ const UI = {
     return free === undefined ? -1 : free;
   },
 
+  // Anneau d'attente autour d'un bouton de pouvoir (croisade, recrutement, viking) : une ligne dorée fait le tour
+  // du bouton et se raccourcit jusqu'à ce qu'on puisse le réutiliser. frac = part du temps qui reste (0 = prêt)
+  cooldownRing(btn, frac) {
+    const f = Math.max(0, Math.min(1, frac || 0));
+    btn.classList.toggle('cooling', f > 0);
+    btn.style.setProperty('--cd', (f * 360).toFixed(1) + 'deg');
+  },
   // Bouton « Croisade » de la barre : caché sans cathédrale ; sinon son prix, ou le temps qui reste
   // si toutes nos cathédrales ont déjà une croisade en cours
   refreshCrusadeBar() {
@@ -3283,6 +3333,7 @@ const UI = {
     const a = this.crusadeChurch(), cost = btn.querySelector('.cost');
     if (a >= 0) {
       const err = G.crusadeError(h, a);
+      this.cooldownRing(btn, 0);
       cost.textContent = `💰 ${fmt(CONFIG.CRUSADE_COST)}`;
       btn.classList.toggle('poor', h.gold < CONFIG.CRUSADE_COST);
       btn.disabled = !!err;
@@ -3293,6 +3344,7 @@ const UI = {
     } else {
       const end = Math.min(...list.map(c => G.crusadeOf(c).end));
       cost.textContent = `⏳ ${Math.ceil((end - G.tick) / CONFIG.TICKS_PER_SECOND)} s`;
+      this.cooldownRing(btn, (end - G.tick) / (CONFIG.CRUSADE_TIME * CONFIG.TICKS_PER_SECOND));
       btn.classList.remove('poor');
       btn.disabled = true;
       btn.title = tr('Croisade en cours : attends qu\'elle se termine pour en relancer une', 'Crusade under way: wait for it to end before launching another');
@@ -3370,6 +3422,7 @@ const UI = {
     if (!list.length) return;
     const left = Math.ceil(G.levyLeft(h)), cost = btn.querySelector('.cost'), err = G.levyError(h, list[0]);
     cost.textContent = left ? `⏳ ${left} s` : `💰 ${fmt(CONFIG.LEVY_COST)}`;
+    this.cooldownRing(btn, G.levyLeft(h) / CONFIG.LEVY_TIME);
     btn.classList.toggle('poor', !left && h.gold < CONFIG.LEVY_COST);
     btn.disabled = !!err;
     btn.title = left ? this.levyRunning(left) : err || this.levyText();

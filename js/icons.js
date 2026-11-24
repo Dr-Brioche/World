@@ -87,6 +87,11 @@ const ICON_DEFS = {
   target: [{ d: 'M12 3a9 9 0 1 1-.01 0z', f: '#f3e3bf', s: '#b8322a', w: 2 }, { d: 'M12 7a5 5 0 1 1-.01 0z', s: '#b8322a', w: 2 },
     { d: 'M12 10.5a1.5 1.5 0 1 1-.01 0z', f: '#b8322a' }, { d: 'M12 12L21 3M17 3h4v4', s: 'c', w: 1.6 }],
   axe: [{ d: 'M8 21L18 6', s: 'c', w: 2 }, { d: 'M13.5 3.5c3 0 6 2 7 5l-4 2.5-5.5-3.5z', f: 'c' }],
+  // 🤝 Deux mains qui se serrent, chacune sortant de sa manche (les pactes de la partie : voir le haut de l'écran ;
+  // les manches prennent la couleur du texte, verte ou rouge selon que les pactes sont permis ou non)
+  handshake: [{ d: 'M1.5 8.5h4.8v7H1.5z', f: 'c', s: '#2a1a0c', w: 1 }, { d: 'M22.5 8.5h-4.8v7h4.8z', f: 'c', s: '#2a1a0c', w: 1 },
+    { d: 'M6.3 9.2c2.6-1.6 5.4-1.8 7.6-.4h3.8v6.4c-2.9 1.9-6.6 2.1-9.6.4H6.3z', f: '#e8c39a', s: '#2a1a0c', w: 1 },
+    { d: 'M8.6 9.4c1.4.3 2.6 1.1 3.4 2.4M10 12.2h4.6M10.4 14h4.2', s: '#2a1a0c', w: 0.9, o: 0.85 }],
   seal: [{ d: 'M4 4h12a3 3 0 0 1 3 3v12H7a3 3 0 0 1-3-3z', f: '#f3e3bf', s: 'c', w: 1.4 }, { d: 'M7.5 8h8M7.5 11h6', s: 'c', w: 1.1, o: 0.7 },
     { d: 'M16 13.5a4 4 0 1 1-.01 0z', f: '#b8322a' }, { d: 'M14 20l-1 3 3-1.5 3 1.5-1-3', f: '#b8322a' }],
   brokenseal: [{ d: 'M4 4h12a3 3 0 0 1 3 3v12H7a3 3 0 0 1-3-3z', f: '#f3e3bf', s: 'c', w: 1.4 },
