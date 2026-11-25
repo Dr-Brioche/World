@@ -1728,8 +1728,7 @@ const GameRules = {
   // WALL_RETREAT_LOSS de ses soldats perdus par obstacle franchi (il rentre à pied, voir walkBack)
   forcedRetreat(a, n) {
     const keep = DMath.pow(1 - CONFIG.WALL_RETREAT_LOSS, n), p = this.players[a.attacker], d = this.players[a.target];
-    a.troops *= keep;
-    for (const r of a.pending) r.troops *= keep;
+    a.troops *= keep; // (les renforts encore en route n'ont pas franchi ces murs : voir pendingTurnBack)
     const lost = Math.round((1 - keep) * 100);
     if (p.isHuman) UI.log(tr(`🧱 ${d.name} a bâti une muraille dans le dos de ton armée : elle bat en retraite d'office, et y perd ${lost} % de ses soldats en la franchissant.`,
       `🧱 ${d.name} built walls behind your army: it is forced to retreat, and loses ${lost}% of its soldiers crossing them.`), 'warn', d);
@@ -1803,7 +1802,6 @@ const GameRules = {
     if (!n) return;
     const keep = DMath.pow(1 - CONFIG.WALL_RETREAT_LOSS, n);
     a.troops *= keep;
-    for (const r of a.pending) r.troops *= keep;
     if (this.players[a.attacker].isHuman) {
       UI.log(tr(`🧱 Pour rentrer, ton armée doit franchir ${n > 1 ? n + ' murs' : 'un mur'} : elle y perd ${Math.round((1 - keep) * 100)} % de ses soldats.`,
         `🧱 To get home, your army must cross ${n > 1 ? n + ' walls' : 'a wall'}: it loses ${Math.round((1 - keep) * 100)}% of its soldiers.`), 'warn');
@@ -4753,7 +4751,7 @@ const GameRules = {
     // (pendant sa marche sur nos terres, les soldats en plus le rejoignent tout de suite, plus bas)
     if (a && target >= 0 && !this.isPreparing(a)) {
       this.takeTroops(pid, source, troops);
-      a.pending.push({ troops, tick: this.tick + this.reinforceTicks(a) });
+      a.pending.push({ troops, tick: this.tick + this.reinforceTicks(a), start: this.tick });
       return null;
     }
     if (!a) {
@@ -5281,7 +5279,7 @@ const GameRules = {
       p.troops -= troops;
       // Pendant la préparation, les soldats s'ajoutent tout de suite ; ensuite, ce sont des renforts
       if (this.isPreparing(a)) a.troops += troops;
-      else a.pending.push({ troops, tick: this.tick + this.reinforceTicks(a) });
+      else a.pending.push({ troops, tick: this.tick + this.reinforceTicks(a), start: this.tick });
       return null;
     }
     const route = this.linkRoute(pid, c);
@@ -7254,8 +7252,33 @@ const GameRules = {
   cancelAttack(pid, attackId) {
     const a = this.attacks.find(a => a.id === attackId && a.attacker === pid && !a.done);
     if (a && a.retreatEnd === undefined && this.isPreparing(a)) { a.calledBack = true; this.endAttack(a); return a; }
-    if (a && a.retreatEnd === undefined) a.retreatEnd = this.tick + CONFIG.RETREAT_TIME * CONFIG.TICKS_PER_SECOND;
+    if (a && a.retreatEnd === undefined) {
+      a.retreatEnd = this.tick + CONFIG.RETREAT_TIME * CONFIG.TICKS_PER_SECOND;
+      this.pendingTurnBack(a); // (↩️ les renforts pas encore arrivés font demi-tour tout de suite, sans perte)
+    }
     return a;
+  },
+
+  // ↩️ Les renforts encore en route vers l'assaut a (pas encore arrivés au combat) font demi-tour là où ils sont,
+  // quand l'assaut est rappelé, repoussé ou détruit : ils ne se sont pas battus, donc ni délai de retraite (RETREAT_TIME)
+  // ni pertes (RETREAT_LOSS) ; ils mettent pour rentrer le temps qu'ils avaient déjà marché.
+  pendingTurnBack(a) {
+    const pid = a.attacker, p = this.players[pid], src = this.sourceOfAttack(a), list = a.pending;
+    a.pending = [];
+    if (!list.length || !p.alive) return;
+    const home = a.marchFrom || { x: p.sumX / Math.max(1, p.tiles) + 0.5, y: p.sumY / Math.max(1, p.tiles) + 0.5 };
+    const front = this.attackFront(a);
+    for (const r of list) {
+      if (!(r.troops > 0)) continue;
+      const total = r.start === undefined ? 0 : r.tick - r.start, walked = r.start === undefined ? 0 : this.tick - r.start;
+      if (walked <= 0 || total <= 0) { this.giveTroops(pid, src, r.troops); continue; } // (pas encore partis)
+      // (où ils en sont, entre leur ville et le front : ils rentrent par le même chemin, aussi long que l'aller déjà fait)
+      const f = Math.min(1, walked / total), at = { x: home.x + (front.x - home.x) * f, y: home.y + (front.y - home.y) * f };
+      const route = this.walkRoute(pid, at, home, r.troops, CONFIG.RETREAT_SPEED, true);
+      route.start = this.tick;
+      route.arrive = this.tick + walked;
+      this.returning.push(Object.assign(route, { pid, source: src, to: home }));
+    }
   },
 
   // Retraite en cours : on ne fait que se défendre, puis on rentre avec les pertes. Renvoie true si c'est le cas.
@@ -7266,8 +7289,7 @@ const GameRules = {
       return true;
     }
     const keep = 1 - CONFIG.RETREAT_LOSS;
-    a.troops *= keep;
-    for (const r of a.pending) r.troops *= keep;
+    a.troops *= keep; // (les renforts pas encore arrivés, eux, ont déjà fait demi-tour sans perte : voir pendingTurnBack)
     this.wallRetreatLoss(a); // (et un mur bâti dans son dos coûte cher à franchir)
     const p = this.players[a.attacker];
     if (p.isHuman) UI.log(tr(`↩️ Retraite terminée : ${fmt(a.troops + a.pending.reduce((s, r) => s + r.troops, 0))} soldats rentrent.`, `↩️ Retreat complete: ${fmt(a.troops + a.pending.reduce((s, r) => s + r.troops, 0))} soldiers come home.`), 'good');
@@ -7503,6 +7525,9 @@ const GameRules = {
     const p = this.players[a.attacker];
     // Les survivants (et les renforts encore en route) rentrent à la maison (ou à leur avant-poste) ;
     // des Vikings qui n'ont pas pris leur cible rembarquent là où ils ont débarqué
+    // (↩️ assaut repoussé, détruit ou rappelé : ses renforts encore en route font demi-tour là où ils sont, sans délai
+    //  ni perte, voir pendingTurnBack ; sinon, ils rentrent avec l'armée, comme avant)
+    if (!(a.eventArmy || a.orphan || a.viking !== undefined || a.won || a.castleTaken || a.calledBack)) this.pendingTurnBack(a);
     const back = a.troops + a.pending.reduce((s, r) => s + r.troops, 0);
     const c0 = a.targetCastle, saved = c0 >= 0 && this.owner[c0] === a.attacker && (this.building[c0] === B_CASTLE || this.building[c0] === B_PORT);
     if (a.eventArmy) { /* (👑 des Vikings levés pour un événement : ils repartent chez eux, sans grossir l'armée danoise) */ }
